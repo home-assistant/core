@@ -3,9 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -59,3 +61,20 @@ async def test_setup_entry_api_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_state_entity_device_snapshots(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test sensor entity is created correctly."""
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert device_entries
+    for device_entry in device_entries:
+        assert device_entry == snapshot(name=f"{device_entry.name}-entry"), (
+            f"device entry snapshot failed for {device_entry.name}"
+        )

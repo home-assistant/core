@@ -1,0 +1,79 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not have custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not have custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: todo
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations:
+    status: todo
+    comment: |
+      Analog RGBCCT Strip are poor supported by HA.
+      See: https://github.com/home-assistant/core/issues/123614
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device.
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: Led count could receive unit of measurement
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: This integration does not have any known issues that require repair.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

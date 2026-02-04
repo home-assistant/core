@@ -51,7 +51,13 @@ def b2_fixture():
 
     with (
         patch("b2sdk.v2.B2Api", return_value=sim) as mock_client,
+        patch(
+            "homeassistant.components.backblaze_b2.b2_client.B2Api", return_value=sim
+        ),
         patch("homeassistant.components.backblaze_b2.B2Api", return_value=sim),
+        patch(
+            "homeassistant.components.backblaze_b2.config_flow.B2Api", return_value=sim
+        ),
         patch.object(
             RawSimulator,
             "get_bucket_by_name",

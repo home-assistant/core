@@ -6,7 +6,7 @@ from typing import cast
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
-from pylamarzocco.models import BackFlush, MachineStatus
+from pylamarzocco.models import BackFlush, MachineStatus, NoWater
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -39,8 +39,15 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="water_tank",
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        is_on_fn=lambda machine: WidgetType.CM_NO_WATER in machine.dashboard.config,
+        is_on_fn=(
+            lambda machine: cast(
+                NoWater, machine.dashboard.config[WidgetType.CM_NO_WATER]
+            ).allarm
+            if WidgetType.CM_NO_WATER in machine.dashboard.config
+            else False
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        bt_offline_mode=True,
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key="brew_active",
@@ -93,7 +100,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        LaMarzoccoBinarySensorEntity(coordinator, description)
+        LaMarzoccoBinarySensorEntity(
+            coordinator, description, entry.runtime_data.bluetooth_coordinator
+        )
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )

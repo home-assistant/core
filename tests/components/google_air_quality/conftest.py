@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from google_air_quality_api.model import AirQualityData
+from google_air_quality_api.model import AirQualityCurrentConditionsData
 import pytest
 
 from homeassistant.components.google_air_quality import CONF_REFERRER
@@ -81,7 +81,9 @@ def mock_client_api() -> Generator[Mock]:
         ),
     ):
         api = mock_api.return_value
-        api.async_air_quality.return_value = AirQualityData.from_dict(responses)
+        api.async_get_current_conditions.return_value = (
+            AirQualityCurrentConditionsData.from_dict(responses)
+        )
 
         yield api
 
