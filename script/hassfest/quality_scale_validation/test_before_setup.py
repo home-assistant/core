@@ -35,7 +35,7 @@ def _get_exception_name(expression: ast.expr) -> str:
 
     if isinstance(expression, ast.Subscript):
         # Raise raise errors[0][0]
-        raise TypeError("Cannot determine exception name from Subscript")
+        return None  # TypeError("Cannot determine exception name from Subscript")
 
     raise TypeError(f"Raise is neither Attribute nor Call nor Name: {type(expression)}")
 
