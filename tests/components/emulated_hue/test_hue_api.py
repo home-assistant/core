@@ -1794,11 +1794,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 
@@ -1822,11 +1822,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 

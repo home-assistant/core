@@ -2914,17 +2914,3 @@ def test_deprecated_support_light_constants_enums(
     import_and_test_deprecated_constant_enum(
         caplog, light, entity_feature, "SUPPORT_", "2026.1"
     )
-
-
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(light.ColorMode),
-)
-def test_deprecated_color_mode_constants_enums(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: light.LightEntityFeature,
-) -> None:
-    """Test deprecated support light constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, light, entity_feature, "COLOR_MODE_", "2026.1"
-    )
