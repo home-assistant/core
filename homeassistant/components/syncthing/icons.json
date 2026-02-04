@@ -1,7 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "syncthing_folder": {
+      "syncthing": {
         "default": "mdi:folder-alert",
         "state": {
           "idle": "mdi:folder",

@@ -1,20 +1,16 @@
-"""Support for Syncthing sensors."""
-
-from collections.abc import Mapping
-from typing import Any
+"""Support for monitoring the Syncthing instance."""
 
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import SyncthingClient
 from .const import (
     DOMAIN,
     FOLDER_PAUSED_RECEIVED,
@@ -59,7 +55,7 @@ class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     _attr_should_poll = False
-    _attr_translation_key = "syncthing_folder"
+    _attr_translation_key = "syncthing"
 
     STATE_ATTRIBUTES = {
         "errors": "errors",
@@ -90,21 +86,14 @@ class FolderSensor(SensorEntity):
         "stateChanged": "state_changed",
     }
 
-    def __init__(
-        self,
-        syncthing: SyncthingClient,
-        server_id: str,
-        folder_id: str,
-        folder_label: str,
-        version: str,
-    ) -> None:
+    def __init__(self, syncthing, server_id, folder_id, folder_label, version):
         """Initialize the sensor."""
         self._syncthing = syncthing
         self._server_id = server_id
         self._folder_id = folder_id
         self._folder_label = folder_label
-        self._state: dict[str, Any] | None = None
-        self._unsub_timer: CALLBACK_TYPE | None = None
+        self._state = None
+        self._unsub_timer = None
 
         self._short_server_id = server_id.split("-")[0]
         self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
@@ -118,9 +107,9 @@ class FolderSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self):
         """Return the state of the sensor."""
-        return self._state["state"] if self._state else None
+        return self._state["state"]
 
     @property
     def available(self) -> bool:
@@ -128,11 +117,11 @@ class FolderSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
 
-    async def async_update_status(self) -> None:
+    async def async_update_status(self):
         """Request folder status and update state."""
         try:
             state = await self._syncthing.database.status(self._folder_id)
@@ -142,11 +131,11 @@ class FolderSensor(SensorEntity):
             self._state = self._filter_state(state)
         self.async_write_ha_state()
 
-    def subscribe(self) -> None:
+    def subscribe(self):
         """Start polling syncthing folder status."""
         if self._unsub_timer is None:
 
-            async def refresh(event_time) -> None:
+            async def refresh(event_time):
                 """Get the latest data from Syncthing."""
                 await self.async_update_status()
 
@@ -155,7 +144,7 @@ class FolderSensor(SensorEntity):
             )
 
     @callback
-    def unsubscribe(self) -> None:
+    def unsubscribe(self):
         """Stop polling syncthing folder status."""
         if self._unsub_timer is not None:
             self._unsub_timer()
@@ -165,9 +154,8 @@ class FolderSensor(SensorEntity):
         """Handle entity which will be added."""
 
         @callback
-        def handle_folder_summary(event: dict[str, Any]) -> None:
-            """Handle folder summary event."""
-            if self._state:
+        def handle_folder_summary(event):
+            if self._state is not None:
                 self._state = self._filter_state(event["data"]["summary"])
                 self.async_write_ha_state()
 
@@ -180,9 +168,8 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_state_changed(event: dict[str, Any]) -> None:
-            """Handle folder state changed event."""
-            if self._state:
+        def handle_state_changed(event):
+            if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_write_ha_state()
 
@@ -195,9 +182,8 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_folder_paused(event: dict[str, Any]) -> None:
-            """Handle folder paused event."""
-            if self._state:
+        def handle_folder_paused(event):
+            if self._state is not None:
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
 
@@ -210,8 +196,7 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_server_unavailable() -> None:
-            """Handle server becoming unavailable."""
+        def handle_server_unavailable():
             self._state = None
             self.unsubscribe()
             self.async_write_ha_state()
@@ -224,8 +209,7 @@ class FolderSensor(SensorEntity):
             )
         )
 
-        async def handle_server_available() -> None:
-            """Handle server becoming available."""
+        async def handle_server_available():
             self.subscribe()
             await self.async_update_status()
 
@@ -242,20 +226,20 @@ class FolderSensor(SensorEntity):
 
         await self.async_update_status()
 
-    def _filter_state(self, state: dict[str, Any]) -> dict[str, Any]:
-        """Filter and map state attributes."""
-        filtered_state: dict[str, Any] = {
+    def _filter_state(self, state):
+        # Select only needed state attributes and map their names
+        state = {
             self.STATE_ATTRIBUTES[key]: value
             for key, value in state.items()
             if key in self.STATE_ATTRIBUTES
         }
 
         # A workaround, for some reason, state of paused folders is an empty string
-        if filtered_state["state"] == "":
-            filtered_state["state"] = "paused"
+        if state["state"] == "":
+            state["state"] = "paused"
 
         # Add some useful attributes
-        filtered_state["id"] = self._folder_id
-        filtered_state["label"] = self._folder_label
+        state["id"] = self._folder_id
+        state["label"] = self._folder_label
 
-        return filtered_state
+        return state

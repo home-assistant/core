@@ -21,7 +21,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
