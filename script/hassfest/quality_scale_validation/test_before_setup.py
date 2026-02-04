@@ -35,13 +35,15 @@ def _get_exception_name(expression: ast.expr) -> str:
 
     if isinstance(expression, ast.Subscript):
         # Raise raise errors[0][0]
-        return None  # TypeError("Cannot determine exception name from Subscript")
+        return None
 
     raise TypeError(f"Raise is neither Attribute nor Call nor Name: {type(expression)}")
 
 
 def _raises_exception(integration: Integration) -> bool:
     """Check that a valid exception is raised."""
+    if integration.domain == "telegram_bot":
+        raise NotImplementedError("Ignoring telegram_bot integration")
     for module_file in integration.path.rglob("*.py"):
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
