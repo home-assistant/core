@@ -57,7 +57,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up an EnOcean gateway for the given config entry."""
 
-    gateway: EnOceanHomeAssistantGateway | None = None
+    gateway: EnOceanHomeAssistantGateway
 
     try:
         gateway = EnOceanHomeAssistantGateway(
