@@ -136,6 +136,9 @@ async def async_unload_entry(
     ]
     for issue_id in issues_to_delete:
         issue_registry.async_delete(DOMAIN, issue_id)
+
+    for coordinator in entry.runtime_data.appliance_coordinators.values():
+        await coordinator.async_shutdown()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
