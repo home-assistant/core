@@ -203,7 +203,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         await self.entity_description.method(self._host.api, self._channel)
 
     @raise_translated_error
-    async def async_ptz_move(self, *, speed: int) -> None:
+    async def async_ptz_move(self, speed: int) -> None:
         """PTZ move with speed."""
         await self._host.api.set_ptz_command(
             self._channel, command=self.entity_description.ptz_cmd, speed=speed
