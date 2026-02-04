@@ -232,6 +232,7 @@ async def async_setup_entry(
     hub = data.hub
     coordinator = data.coordinator
     version = data.version or "unknown"
+    device_name = data.device_name
 
     entities: list[SensorEntity] = [
         QubeSensor(
@@ -239,6 +240,7 @@ async def async_setup_entry(
             hub,
             entry,
             version,
+            device_name,
             description,
         )
         for description in SENSOR_TYPES
@@ -251,6 +253,7 @@ async def async_setup_entry(
             hub,
             entry,
             version,
+            device_name,
         )
     )
 
@@ -270,6 +273,7 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         hub: QubeHub,
         entry: QubeConfigEntry,
         version: str,
+        device_name: str,
         description: QubeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -277,6 +281,7 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._hub = hub
         self._version = version
+        self._device_name = device_name
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
 
     @property
@@ -284,9 +289,9 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         """Return device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=self._hub.label or "Qube Heatpump",
+            name=self._device_name,
             manufacturer="Qube",
-            model="Heatpump",
+            model="Heat Pump",
             sw_version=self._version,
         )
 
@@ -325,11 +330,13 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
         hub: QubeHub,
         entry: QubeConfigEntry,
         version: str,
+        device_name: str,
     ) -> None:
         """Initialize status sensor."""
         super().__init__(coordinator)
         self._hub = hub
         self._version = version
+        self._device_name = device_name
         self._attr_unique_id = f"{entry.unique_id}-status_heatpump"
 
     @property
@@ -337,9 +344,9 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
         """Return device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=self._hub.label or "Qube Heatpump",
+            name=self._device_name,
             manufacturer="Qube",
-            model="Heatpump",
+            model="Heat Pump",
             sw_version=self._version,
         )
 

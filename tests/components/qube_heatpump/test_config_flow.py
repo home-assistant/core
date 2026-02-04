@@ -192,7 +192,9 @@ async def test_reconfigure_flow(
 
 
 async def test_reconfigure_confirm(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
 ) -> None:
     """Test reconfigure confirmation updates entry."""
     mock_config_entry.add_to_hass(hass)

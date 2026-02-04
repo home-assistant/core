@@ -216,7 +216,7 @@ async def test_device_info(
 
         assert device is not None
         assert device.manufacturer == "Qube"
-        assert device.model == "Heatpump"
+        assert device.model == "Heat Pump"
 
 
 async def test_cop_sensor(

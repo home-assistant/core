@@ -23,6 +23,7 @@ class QubeData:
     hub: QubeHub
     coordinator: QubeCoordinator
     version: str
+    device_name: str
 
 
 type QubeConfigEntry = ConfigEntry[QubeData]
@@ -65,10 +66,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
 
     coordinator = QubeCoordinator(hass, hub, entry)
 
+    # Use entry title for device name (e.g., "Qube Heat Pump (192.168.1.50)")
+    device_name = entry.title or "Qube Heat Pump"
+
     entry.runtime_data = QubeData(
         hub=hub,
         coordinator=coordinator,
         version=version,
+        device_name=device_name,
     )
 
     with contextlib.suppress(Exception):
