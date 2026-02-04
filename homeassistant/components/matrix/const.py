@@ -19,6 +19,6 @@ ATTR_MESSAGE_ID = "message_id"  # message id
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
 CONF_HOMESERVER = "homeserver"
-CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
+CONF_ROOMS_REGEX = "^[!#][^:]*:.*"
 
 DEFAULT_HOMESERVER = "https://matrix.org"
