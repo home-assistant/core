@@ -41,7 +41,7 @@ async def test_set_webhooks_failed(
         # first fail with exception, second fail with False
         assert mock_set_webhook.call_count == 2
 
-        # SETUP_ERROR is result of ConfigEntryNotReady("Failed to register webhook with Telegram") in webhooks.py
+        # SETUP_ERROR is result of RuntimeError("Failed to register webhook with Telegram") in webhooks.py
         assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
 
         # test fail after retries

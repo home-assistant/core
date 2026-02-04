@@ -14,7 +14,6 @@ from telegram.ext import Application, ApplicationBuilder, TypeHandler
 from homeassistant.components.http import HomeAssistantRequest, HomeAssistantView
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
@@ -42,7 +41,7 @@ async def async_setup_bot_platform(
 
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        raise ConfigEntryNotReady("Failed to register webhook with Telegram")
+        raise RuntimeError("Failed to register webhook with Telegram")
     _LOGGER.info(
         "[%s %s] Webhook registered with %s",
         bot.username,
