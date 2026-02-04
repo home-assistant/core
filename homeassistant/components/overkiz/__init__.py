@@ -184,6 +184,41 @@ async def _async_migrate_entries(
 ) -> bool:
     """Migrate old entries to new unique IDs."""
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    # Migrate sub-device entities to their own devices
+    # Previously, sub-devices (URL#2, #3, etc.) shared the same device as the parent
+    # Now, each sub-device gets its own device entry
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        unique_id = entity_entry.unique_id
+        # Check if this is a sub-device entity (has #N suffix where N != 1)
+        if "#" in unique_id:
+            # Extract the device URL part (before any entity-specific suffix like "-sensor_key")
+            device_url_part = unique_id.split("-")[0] if "-" in unique_id else unique_id
+            if "#" in device_url_part and not device_url_part.endswith("#1"):
+                # This is a sub-device entity
+                base_device_url = device_url_part.split("#")[0]
+
+                # Check if this entity is still associated with the parent device
+                if entity_entry.device_id:
+                    parent_device = device_registry.async_get(entity_entry.device_id)
+                    if parent_device and (DOMAIN, base_device_url) in parent_device.identifiers:
+                        # Entity is still on parent device, create/get sub-device and move it
+                        sub_device = device_registry.async_get_or_create(
+                            config_entry_id=config_entry.entry_id,
+                            identifiers={(DOMAIN, device_url_part)},
+                            via_device=(DOMAIN, base_device_url),
+                        )
+                        LOGGER.debug(
+                            "Migrating entity '%s' from parent device to sub-device '%s'",
+                            entity_entry.entity_id,
+                            device_url_part,
+                        )
+                        entity_registry.async_update_entity(
+                            entity_entry.entity_id, device_id=sub_device.id
+                        )
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
