@@ -38,6 +38,10 @@ def _get_exception_name(expression: ast.expr) -> str:
 
 def _raises_exception(integration: Integration) -> bool:
     """Check that a valid exception is raised."""
+    if integration.domain == "telegram_bot":
+        raise TypeError(
+            "Ignoring telegram_bot integration due to `raise errors[0][0]`."
+        )
     for module_file in integration.path.rglob("*.py"):
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
