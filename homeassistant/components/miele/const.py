@@ -806,6 +806,8 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
         24813,  # add profile
     )
     appliance_rinse = 24750, 24759, 24773, 24787, 24788
+    intermediate_rinsing = 24758
+    automatic_maintenance = 24778
     descaling = 24751
     brewing_unit_degrease = 24753
     milk_pipework_rinse = 24754
