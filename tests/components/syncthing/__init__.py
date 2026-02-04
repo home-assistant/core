@@ -3,7 +3,19 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from aiosyncthing.exceptions import SyncthingError
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+
+NAME = "Syncthing"
+URL = "http://127.0.0.1:8384"
+TOKEN = "token"
+VERIFY_SSL = True
+
+MOCK_ENTRY = {
+    CONF_NAME: NAME,
+    CONF_URL: URL,
+    CONF_TOKEN: TOKEN,
+    CONF_VERIFY_SSL: VERIFY_SSL,
+}
 
 SERVER_ID = "YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW"
 SERVER_NAME = "This Device"
@@ -99,41 +111,27 @@ MOCK_FOLDER_PAUSED_EVENT = {
 }
 
 
-def create_mock_syncthing_client(
-    raise_connection_error: bool = False,
-) -> MagicMock:
+def create_mock_syncthing_client() -> MagicMock:
     """Create a mocked Syncthing client."""
     mock_client = MagicMock()
     mock_system = MagicMock()
     mock_database = MagicMock()
     mock_events = MagicMock()
 
-    if raise_connection_error:
-        for mock in (
-            mock_system.status,
-            mock_system.version,
-            mock_system.ping,
-            mock_system.config,
-            mock_database.status,
-            mock_events.last_seen_id,
-            mock_events.listen,
-        ):
-            mock.side_effect = SyncthingError("Connection error")
-    else:
-        mock_system.status = AsyncMock(return_value=MOCK_SYSTEM_STATUS)
-        mock_system.version = AsyncMock(return_value=MOCK_SYSTEM_VERSION)
-        mock_system.ping = AsyncMock(return_value=MOCK_PING)
-        mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
-        mock_database.status = AsyncMock(return_value=MOCK_FOLDER_STATUS)
+    mock_system.status = AsyncMock(return_value=MOCK_SYSTEM_STATUS)
+    mock_system.version = AsyncMock(return_value=MOCK_SYSTEM_VERSION)
+    mock_system.ping = AsyncMock(return_value=MOCK_PING)
+    mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
+    mock_database.status = AsyncMock(return_value=MOCK_FOLDER_STATUS)
 
-        async def mock_listen():
-            """Mock events.listen that doesn't block."""
-            while True:
-                await asyncio.sleep(0)
-                yield
+    async def mock_listen():
+        """Mock events.listen that doesn't block."""
+        while True:
+            await asyncio.sleep(0)
+            yield
 
-        mock_events.listen = mock_listen
-        mock_events.last_seen_id = 0
+    mock_events.listen = mock_listen
+    mock_events.last_seen_id = 0
 
     mock_client.system = mock_system
     mock_client.database = mock_database
