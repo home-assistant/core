@@ -31,6 +31,7 @@ runs:
       uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
     - name: Verify base image signature
+      shell: bash
       run: |
         cosign verify \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
@@ -41,6 +42,7 @@ runs:
       id: cache
       continue-on-error: true
       if: ${{ inputs.cache-image != '' }}
+      shell: bash
       run: |
         cosign verify \
           --certificate-oidc-issuer https://token.actions.githubusercontent.com \
@@ -63,5 +65,6 @@ runs:
         labels: ${{ inputs.labels }}
 
     - name: Sign image
+      shell: bash
       run: |
         cosign sign --yes "${{ inputs.tag }}@${{ steps.build.outputs.digest }}"
