@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
-STORAGE_MINOR_VERSION = 2
+STORAGE_MINOR_VERSION = 3
 STORAGE_KEY = DOMAIN
 
 
@@ -92,14 +92,51 @@ class GridPowerSourceType(TypedDict, total=False):
     power_config: PowerConfig
 
 
-class GridSourceType(TypedDict):
-    """Dictionary holding the source of grid energy consumption."""
+class LegacyGridSourceType(TypedDict):
+    """Legacy dictionary holding the source of grid energy consumption.
+
+    This format is deprecated and will be migrated to GridSourceType.
+    """
 
     type: Literal["grid"]
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
     power: NotRequired[list[GridPowerSourceType]]
+
+    cost_adjustment_day: float
+
+
+class GridSourceType(TypedDict):
+    """Dictionary holding a unified grid connection (like batteries).
+
+    Each grid connection represents a single import/export pair with
+    optional power tracking. Multiple grid sources are allowed.
+    """
+
+    type: Literal["grid"]
+
+    # Import meter - kWh consumed from grid
+    # Can be None for export-only or power-only grids migrated from legacy format
+    stat_energy_from: str | None
+
+    # Export meter (optional) - kWh returned to grid (solar/battery export)
+    stat_energy_to: str | None
+
+    # Cost tracking for import
+    stat_cost: str | None  # statistic_id of costs ($) incurred
+    entity_energy_price: str | None  # entity_id providing price ($/kWh)
+    number_energy_price: float | None  # Fixed price ($/kWh)
+
+    # Compensation tracking for export
+    stat_compensation: str | None  # statistic_id of compensation ($) received
+    entity_energy_price_sell: str | None  # entity_id providing sell price ($/kWh)
+    number_energy_price_sell: float | None  # Fixed sell price ($/kWh)
+
+    # Power measurement (optional)
+    # positive when consuming from grid, negative when exporting
+    stat_rate: NotRequired[str]
+    power_config: NotRequired[PowerConfig]
 
     cost_adjustment_day: float
 
@@ -308,23 +345,54 @@ def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[di
     return validate_uniqueness
 
 
-GRID_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("type"): "grid",
-        vol.Required("flow_from"): vol.All(
-            [FLOW_FROM_GRID_SOURCE_SCHEMA],
-            _generate_unique_value_validator("stat_energy_from"),
-        ),
-        vol.Required("flow_to"): vol.All(
-            [FLOW_TO_GRID_SOURCE_SCHEMA],
-            _generate_unique_value_validator("stat_energy_to"),
-        ),
-        vol.Optional("power"): vol.All(
-            [GRID_POWER_SOURCE_SCHEMA],
-            _generate_unique_value_validator("stat_rate"),
-        ),
-        vol.Required("cost_adjustment_day"): vol.Coerce(float),
-    }
+def _grid_ensure_single_price(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Ensure we use a single price source for import."""
+    if (
+        val.get("entity_energy_price") is not None
+        and val.get("number_energy_price") is not None
+    ):
+        raise vol.Invalid("Define either an entity or a fixed number for import price")
+    return val
+
+
+def _grid_ensure_single_sell_price(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Ensure we use a single price source for export."""
+    if (
+        val.get("entity_energy_price_sell") is not None
+        and val.get("number_energy_price_sell") is not None
+    ):
+        raise vol.Invalid("Define either an entity or a fixed number for sell price")
+    return val
+
+
+GRID_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("type"): "grid",
+            # Import meter (can be None for export-only grids from legacy migration)
+            vol.Optional("stat_energy_from"): vol.Any(str, None),
+            # Export meter (optional)
+            vol.Optional("stat_energy_to"): vol.Any(str, None),
+            # Import cost tracking
+            vol.Optional("stat_cost"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            # Export compensation tracking
+            vol.Optional("stat_compensation"): vol.Any(str, None),
+            vol.Optional("entity_energy_price_sell"): vol.Any(str, None),
+            vol.Optional("number_energy_price_sell"): vol.Any(vol.Coerce(float), None),
+            # Power measurement (optional)
+            vol.Optional("stat_rate"): str,
+            vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+            vol.Required("cost_adjustment_day"): vol.Coerce(float),
+        }
+    ),
+    _grid_ensure_single_price,
+    _grid_ensure_single_sell_price,
 )
 SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
@@ -369,11 +437,7 @@ WATER_SOURCE_SCHEMA = vol.Schema(
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
-    types = Counter([val["type"] for val in value])
-
-    if types.get("grid", 0) > 1:
-        raise vol.Invalid("You cannot have more than 1 grid source")
-
+    # Currently no type limits - multiple grid sources are allowed (like batteries)
     return value
 
 
@@ -405,6 +469,80 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
 )
 
 
+def _migrate_legacy_grid_to_unified(
+    old_grid: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Migrate legacy grid format (flow_from/flow_to arrays) to unified format.
+
+    Migration strategy:
+    - Pair flow_from[i] with flow_to[i] when counts match
+    - When counts differ: pair by index, extras get None for the missing side
+    - Power config at index i goes to grid connection at index i
+    - Power-only grids (no flow_from/flow_to) are preserved with null energy stats
+    """
+    flow_from = old_grid.get("flow_from", [])
+    flow_to = old_grid.get("flow_to", [])
+    power_list = old_grid.get("power", [])
+    cost_adj = old_grid.get("cost_adjustment_day", 0.0)
+
+    new_sources: list[dict[str, Any]] = []
+    # Include power_list in max to preserve power-only grids
+    # If all arrays are empty, don't create any grid sources
+    max_len = max(len(flow_from), len(flow_to), len(power_list))
+    if max_len == 0:
+        return []
+
+    for i in range(max_len):
+        source: dict[str, Any] = {
+            "type": "grid",
+            "cost_adjustment_day": cost_adj,
+        }
+
+        # Import fields from flow_from
+        if i < len(flow_from):
+            ff = flow_from[i]
+            source["stat_energy_from"] = ff.get("stat_energy_from") or None
+            source["stat_cost"] = ff.get("stat_cost")
+            source["entity_energy_price"] = ff.get("entity_energy_price")
+            source["number_energy_price"] = ff.get("number_energy_price")
+        else:
+            # Export-only entry - set import to None (validation will flag this)
+            source["stat_energy_from"] = None
+            source["stat_cost"] = None
+            source["entity_energy_price"] = None
+            source["number_energy_price"] = None
+
+        # Export fields from flow_to
+        if i < len(flow_to):
+            ft = flow_to[i]
+            source["stat_energy_to"] = ft.get("stat_energy_to")
+            source["stat_compensation"] = ft.get("stat_compensation")
+            source["entity_energy_price_sell"] = ft.get("entity_energy_price")
+            source["number_energy_price_sell"] = ft.get("number_energy_price")
+        else:
+            source["stat_energy_to"] = None
+            source["stat_compensation"] = None
+            source["entity_energy_price_sell"] = None
+            source["number_energy_price_sell"] = None
+
+        # Power config at index i goes to grid connection at index i
+        if i < len(power_list):
+            power = power_list[i]
+            if "power_config" in power:
+                source["power_config"] = power["power_config"]
+            if "stat_rate" in power:
+                source["stat_rate"] = power["stat_rate"]
+
+        new_sources.append(source)
+
+    return new_sources
+
+
+def _is_legacy_grid_format(source: dict[str, Any]) -> bool:
+    """Check if a grid source is in the legacy format."""
+    return source.get("type") == "grid" and "flow_from" in source
+
+
 class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
     """Energy preferences store with migration support."""
 
@@ -419,6 +557,18 @@ class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
         if old_major_version == 1 and old_minor_version < 2:
             # Add device_consumption_water field if it doesn't exist
             data.setdefault("device_consumption_water", [])
+
+        if old_major_version == 1 and old_minor_version < 3:
+            # Migrate legacy grid format to unified format
+            new_sources: list[dict[str, Any]] = []
+            for source in data.get("energy_sources", []):
+                if _is_legacy_grid_format(source):
+                    # Convert legacy grid to multiple unified grid sources
+                    new_sources.extend(_migrate_legacy_grid_to_unified(source))
+                else:
+                    new_sources.append(source)
+            data["energy_sources"] = new_sources
+
         return data
 
 
@@ -516,27 +666,18 @@ class EnergyManager:
         source: GridSourceType,
         generate_entity_id: Callable[[str, PowerConfig], str],
     ) -> GridSourceType:
-        """Set stat_rate for grid power sources if power_config is specified."""
-        if "power" not in source:
+        """Set stat_rate for grid if power_config is specified."""
+        if "power_config" not in source:
             return source
 
-        processed_power: list[GridPowerSourceType] = []
-        for power in source["power"]:
-            if "power_config" in power:
-                config = power["power_config"]
+        config = source["power_config"]
 
-                # If power_config has stat_rate (standard), just use it directly
-                if "stat_rate" in config:
-                    processed_power.append({**power, "stat_rate": config["stat_rate"]})
-                else:
-                    # For inverted or two-sensor config, set stat_rate to generated entity_id
-                    processed_power.append(
-                        {**power, "stat_rate": generate_entity_id("grid", config)}
-                    )
-            else:
-                processed_power.append(power)
+        # If power_config has stat_rate (standard), just use it directly
+        if "stat_rate" in config:
+            return {**source, "stat_rate": config["stat_rate"]}
 
-        return {**source, "power": processed_power}
+        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        return {**source, "stat_rate": generate_entity_id("grid", config)}
 
     @callback
     def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:
