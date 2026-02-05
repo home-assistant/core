@@ -26,6 +26,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_PATH,
+    CONF_TENANT_ID,
     DOMAIN,
     OAUTH_SCOPES,
 )
@@ -76,9 +77,9 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             },
             CONF_FOLDER_PATH: "backups/home_assistant",
             CONF_FOLDER_ID: "my_folder_id",
+            CONF_TENANT_ID: "mock-tenant-id",
         },
         unique_id="mock_drive_id",
-        minor_version=2,
     )
 
 
