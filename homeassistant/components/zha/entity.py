@@ -119,6 +119,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             return DeviceInfo(
                 identifiers={(DOMAIN, group_proxy.group_device_identifier)},
                 name=group_proxy.group.name,
+                manufacturer="Zigbee",
+                model="Zigbee group",
                 via_device=(DOMAIN, coordinator_ieee),
             )
 
