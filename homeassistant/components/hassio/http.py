@@ -81,7 +81,7 @@ PATHS_ADMIN = re.compile(
     r")$"
 )
 
-# Unauthenticated requests come in for Supervisor panel + add-on images
+# Unauthenticated requests come in for Supervisor panel + app images
 PATHS_NO_AUTH = re.compile(
     r"^(?:"
     r"|app/.*"
@@ -151,7 +151,7 @@ class HassIOView(HomeAssistantView):
 
         Use cases:
         - Onboarding allows restoring backups
-        - Load Supervisor panel and add-on logo unauthenticated
+        - Load Supervisor panel and app logo unauthenticated
         - User upload/restore backups
         """
         # No bullshit

@@ -153,7 +153,7 @@ class HassIO:
 
     @api_data
     def get_ingress_panels(self) -> Coroutine:
-        """Return data for Add-on ingress panels.
+        """Return data for App ingress panels.
 
         This method returns a coroutine.
         """

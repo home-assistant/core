@@ -548,7 +548,7 @@ async def test_zeroconf_addon_server_ignored(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery ignores servers running as add-on."""
+    """Test zeroconf discovery ignores servers running as app."""
     addon_zeroconf_data = deepcopy(ZEROCONF_DATA)
     addon_zeroconf_data.properties["homeassistant_addon"] = (
         "True"  # Zeroconf properties are strings
@@ -569,7 +569,7 @@ async def test_zeroconf_old_schema_addon_not_ignored(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery does NOT ignore add-on servers with old schema version."""
+    """Test zeroconf discovery does NOT ignore app servers with old schema version."""
     old_schema_addon_data = deepcopy(ZEROCONF_DATA)
     old_schema_version = AUTH_SCHEMA_VERSION - 1
     old_schema_addon_data.properties["schema_version"] = str(old_schema_version)

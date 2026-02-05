@@ -79,7 +79,7 @@ class _BackupStore(Store[StoredBackupData]):
             if old_minor_version < 7:
                 # Version 1.7 adds failing addons and folders
                 for backup in data["backups"]:
-                    backup["failed_addons"] = []
+                    backup["failed_apps"] = []
                     backup["failed_folders"] = []
 
         # Note: We allow reading data with major version 2 in which the unused key

@@ -251,7 +251,7 @@ def get_addon_discovery_info_fixture(
     discovery_info: list[Discovery],
     discovery_info_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock get add-on discovery info."""
+    """Mock get app discovery info."""
     supervisor_client.discovery.list.return_value = discovery_info
     supervisor_client.discovery.list.side_effect = discovery_info_side_effect
     return supervisor_client.discovery.list
@@ -274,7 +274,7 @@ def get_discovery_message_fixture(
 
 @pytest.fixture(name="addon_store_info_side_effect")
 def addon_store_info_side_effect_fixture() -> Any | None:
-    """Return the add-on store info side effect."""
+    """Return the app store info side effect."""
     return None
 
 
@@ -283,7 +283,7 @@ def addon_store_info_fixture(
     supervisor_client: AsyncMock,
     addon_store_info_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock Supervisor add-on store info."""
+    """Mock Supervisor app store info."""
     from .hassio.common import mock_addon_store_info  # noqa: PLC0415
 
     return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
@@ -291,7 +291,7 @@ def addon_store_info_fixture(
 
 @pytest.fixture(name="addon_info_side_effect")
 def addon_info_side_effect_fixture() -> Any | None:
-    """Return the add-on info side effect."""
+    """Return the app info side effect."""
     return None
 
 
@@ -299,7 +299,7 @@ def addon_info_side_effect_fixture() -> Any | None:
 def addon_info_fixture(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
 ) -> AsyncMock:
-    """Mock Supervisor add-on info."""
+    """Mock Supervisor app info."""
     from .hassio.common import mock_addon_info  # noqa: PLC0415
 
     return mock_addon_info(supervisor_client, addon_info_side_effect)
@@ -309,7 +309,7 @@ def addon_info_fixture(
 def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
-    """Mock add-on not installed."""
+    """Mock app not installed."""
     from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
     return mock_addon_not_installed(addon_store_info, addon_info)
@@ -319,7 +319,7 @@ def addon_not_installed_fixture(
 def addon_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
-    """Mock add-on already installed but not running."""
+    """Mock app already installed but not running."""
     from .hassio.common import mock_addon_installed  # noqa: PLC0415
 
     return mock_addon_installed(addon_store_info, addon_info)
@@ -329,7 +329,7 @@ def addon_installed_fixture(
 def addon_running_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
-    """Mock add-on already running."""
+    """Mock app already running."""
     from .hassio.common import mock_addon_running  # noqa: PLC0415
 
     return mock_addon_running(addon_store_info, addon_info)
@@ -339,7 +339,7 @@ def addon_running_fixture(
 def install_addon_side_effect_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
-    """Return the install add-on side effect."""
+    """Return the install app side effect."""
 
     from .hassio.common import mock_install_addon_side_effect  # noqa: PLC0415
 
@@ -351,7 +351,7 @@ def install_addon_fixture(
     supervisor_client: AsyncMock,
     install_addon_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock install add-on."""
+    """Mock install app."""
     supervisor_client.store.install_addon.side_effect = install_addon_side_effect
     return supervisor_client.store.install_addon
 
@@ -360,7 +360,7 @@ def install_addon_fixture(
 def start_addon_side_effect_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
-    """Return the start add-on options side effect."""
+    """Return the start app options side effect."""
     from .hassio.common import mock_start_addon_side_effect  # noqa: PLC0415
 
     return mock_start_addon_side_effect(addon_store_info, addon_info)
@@ -370,14 +370,14 @@ def start_addon_side_effect_fixture(
 def start_addon_fixture(
     supervisor_client: AsyncMock, start_addon_side_effect: Any | None
 ) -> AsyncMock:
-    """Mock start add-on."""
+    """Mock start app."""
     supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
     return supervisor_client.addons.start_addon
 
 
 @pytest.fixture(name="restart_addon_side_effect")
 def restart_addon_side_effect_fixture() -> Any | None:
-    """Return the restart add-on options side effect."""
+    """Return the restart app options side effect."""
     return None
 
 
@@ -386,20 +386,20 @@ def restart_addon_fixture(
     supervisor_client: AsyncMock,
     restart_addon_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock restart add-on."""
+    """Mock restart app."""
     supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
     return supervisor_client.addons.restart_addon
 
 
 @pytest.fixture(name="stop_addon")
 def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
-    """Mock stop add-on."""
+    """Mock stop app."""
     return supervisor_client.addons.stop_addon
 
 
 @pytest.fixture(name="addon_options")
 def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
-    """Mock add-on options."""
+    """Mock app options."""
     return addon_info.return_value.options
 
 
@@ -407,7 +407,7 @@ def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
 def set_addon_options_side_effect_fixture(
     addon_options: dict[str, Any],
 ) -> Any | None:
-    """Return the set add-on options side effect."""
+    """Return the set app options side effect."""
     from .hassio.common import mock_set_addon_options_side_effect  # noqa: PLC0415
 
     return mock_set_addon_options_side_effect(addon_options)
@@ -418,7 +418,7 @@ def set_addon_options_fixture(
     supervisor_client: AsyncMock,
     set_addon_options_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock set add-on options."""
+    """Mock set app options."""
     supervisor_client.addons.set_addon_options.side_effect = (
         set_addon_options_side_effect
     )
@@ -427,7 +427,7 @@ def set_addon_options_fixture(
 
 @pytest.fixture(name="uninstall_addon")
 def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
-    """Mock uninstall add-on."""
+    """Mock uninstall app."""
     return supervisor_client.addons.uninstall_addon
 
 
@@ -439,7 +439,7 @@ def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 @pytest.fixture(name="update_addon")
 def update_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
-    """Mock update add-on."""
+    """Mock update app."""
     return supervisor_client.store.update_addon
 
 

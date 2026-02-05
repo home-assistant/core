@@ -88,7 +88,7 @@ TEST_MANAGER_BACKUP = ManagerBackup(
     database_included=True,
     date="1970-01-01T00:00:00.000Z",
     extra_metadata={"instance_id": "abc123", "with_automatic_settings": True},
-    failed_addons=[],
+    failed_apps=[],
     failed_agent_ids=[],
     failed_folders=[],
     folders=[Folder.MEDIA, Folder.SHARE],
@@ -326,9 +326,9 @@ async def test_delete(
             "backups": [
                 {
                     "backup_id": "abc123",
-                    "failed_addons": [
+                    "failed_apps": [
                         {
-                            "name": "Test add-on",
+                            "name": "Test app",
                             "slug": "test_addon",
                             "version": "1.0.0",
                         }

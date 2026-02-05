@@ -165,7 +165,7 @@ async def async_setup_entry(
 
 
 class HassioAddonSensor(HassioAddonEntity, SensorEntity):
-    """Sensor to track a Hass.io add-on attribute."""
+    """Sensor to track a Hass.io app attribute."""
 
     @property
     def native_value(self) -> str:
@@ -176,7 +176,7 @@ class HassioAddonSensor(HassioAddonEntity, SensorEntity):
 
 
 class HassioOSSensor(HassioOSEntity, SensorEntity):
-    """Sensor to track a Hass.io add-on attribute."""
+    """Sensor to track a Hass.io app attribute."""
 
     @property
     def native_value(self) -> str:

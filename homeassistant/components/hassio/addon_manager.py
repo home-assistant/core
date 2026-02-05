@@ -1,4 +1,4 @@
-"""Provide add-on management."""
+"""Provide app management."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
         async def wrapper(
             self: _AddonManagerT, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R:
-            """Wrap an add-on manager method."""
+            """Wrap an app manager method."""
             try:
                 return_value = await func(self, *args, **kwargs)
             except error_type as err:
@@ -66,7 +66,7 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
 
 @dataclass
 class AddonInfo:
-    """Represent the current add-on info state."""
+    """Represent the current app info state."""
 
     available: bool
     hostname: str | None
@@ -77,7 +77,7 @@ class AddonInfo:
 
 
 class AddonState(Enum):
-    """Represent the current state of the add-on."""
+    """Represent the current state of the app."""
 
     NOT_INSTALLED = "not_installed"
     INSTALLING = "installing"
@@ -87,11 +87,11 @@ class AddonState(Enum):
 
 
 class AddonManager:
-    """Manage the add-on.
+    """Manage the app.
 
     Methods may raise AddonError.
-    Only one instance of this class may exist per add-on
-    to keep track of running add-on tasks.
+    Only one instance of this class may exist per app
+    to keep track of running app tasks.
     """
 
     def __init__(
@@ -101,7 +101,7 @@ class AddonManager:
         addon_name: str,
         addon_slug: str,
     ) -> None:
-        """Set up the add-on manager."""
+        """Set up the app manager."""
         self.addon_name = addon_name
         self.addon_slug = addon_slug
         self._hass = hass
@@ -113,7 +113,7 @@ class AddonManager:
         self._supervisor_client = get_supervisor_client(hass)
 
     def task_in_progress(self) -> bool:
-        """Return True if any of the add-on tasks are in progress."""
+        """Return True if any of the app tasks are in progress."""
         return any(
             task and not task.done()
             for task in (
@@ -129,7 +129,7 @@ class AddonManager:
         expected_error_type=SupervisorError,
     )
     async def async_get_addon_discovery_info(self) -> dict:
-        """Return add-on discovery info."""
+        """Return app discovery info."""
         discovery_info = next(
             (
                 msg
@@ -149,7 +149,7 @@ class AddonManager:
         expected_error_type=SupervisorError,
     )
     async def async_get_addon_info(self) -> AddonInfo:
-        """Return and cache manager add-on info."""
+        """Return and cache manager app info."""
         addon_store_info = await self._supervisor_client.store.addon_info(
             self.addon_slug
         )
@@ -177,7 +177,7 @@ class AddonManager:
 
     @callback
     def async_get_addon_state(self, addon_info: InstalledAddonComplete) -> AddonState:
-        """Return the current state of the managed add-on."""
+        """Return the current state of the managed app."""
         addon_state = AddonState.NOT_RUNNING
 
         if addon_info.state == SupervisorAddonState.STARTED:
@@ -194,13 +194,13 @@ class AddonManager:
         expected_error_type=SupervisorError,
     )
     async def async_set_addon_options(self, config: dict) -> None:
-        """Set manager add-on options."""
+        """Set manager app options."""
         await self._supervisor_client.addons.set_addon_options(
             self.addon_slug, AddonsOptions(config=config)
         )
 
     def _check_addon_available(self, addon_info: AddonInfo) -> None:
-        """Check if the managed add-on is available."""
+        """Check if the managed app is available."""
         if not addon_info.available:
             raise AddonError(f"{self.addon_name} app is not available")
 
@@ -208,7 +208,7 @@ class AddonManager:
         "Failed to install the {addon_name} app", expected_error_type=SupervisorError
     )
     async def async_install_addon(self) -> None:
-        """Install the managed add-on."""
+        """Install the managed app."""
         addon_info = await self.async_get_addon_info()
 
         self._check_addon_available(addon_info)
@@ -220,12 +220,12 @@ class AddonManager:
         expected_error_type=SupervisorError,
     )
     async def async_uninstall_addon(self) -> None:
-        """Uninstall the managed add-on."""
+        """Uninstall the managed app."""
         await self._supervisor_client.addons.uninstall_addon(self.addon_slug)
 
     @api_error("Failed to update the {addon_name} app")
     async def async_update_addon(self) -> None:
-        """Update the managed add-on if needed."""
+        """Update the managed app if needed."""
         addon_info = await self.async_get_addon_info()
 
         self._check_addon_available(addon_info)
@@ -245,21 +245,21 @@ class AddonManager:
         "Failed to start the {addon_name} app", expected_error_type=SupervisorError
     )
     async def async_start_addon(self) -> None:
-        """Start the managed add-on."""
+        """Start the managed app."""
         await self._supervisor_client.addons.start_addon(self.addon_slug)
 
     @api_error(
         "Failed to restart the {addon_name} app", expected_error_type=SupervisorError
     )
     async def async_restart_addon(self) -> None:
-        """Restart the managed add-on."""
+        """Restart the managed app."""
         await self._supervisor_client.addons.restart_addon(self.addon_slug)
 
     @api_error(
         "Failed to stop the {addon_name} app", expected_error_type=SupervisorError
     )
     async def async_stop_addon(self) -> None:
-        """Stop the managed add-on."""
+        """Stop the managed app."""
         await self._supervisor_client.addons.stop_addon(self.addon_slug)
 
     @api_error(
@@ -267,7 +267,7 @@ class AddonManager:
         expected_error_type=SupervisorError,
     )
     async def async_create_backup(self) -> None:
-        """Create a partial backup of the managed add-on."""
+        """Create a partial backup of the managed app."""
         addon_info = await self.async_get_addon_info()
         name = f"addon_{self.addon_slug}_{addon_info.version}"
 
@@ -280,7 +280,7 @@ class AddonManager:
         self,
         addon_config: dict[str, Any],
     ) -> None:
-        """Configure the manager add-on, if needed."""
+        """Configure the manager app, if needed."""
         addon_info = await self.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
@@ -291,7 +291,7 @@ class AddonManager:
 
     @callback
     def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that installs the managed add-on.
+        """Schedule a task that installs the managed app.
 
         Only schedule a new install task if the there's no running task.
         """
@@ -310,7 +310,7 @@ class AddonManager:
         addon_config: dict[str, Any],
         catch_error: bool = False,
     ) -> asyncio.Task:
-        """Schedule a task that installs and sets up the managed add-on.
+        """Schedule a task that installs and sets up the managed app.
 
         Only schedule a new install task if the there's no running task.
         """
@@ -331,7 +331,7 @@ class AddonManager:
 
     @callback
     def async_schedule_update_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that updates and sets up the managed add-on.
+        """Schedule a task that updates and sets up the managed app.
 
         Only schedule a new update task if the there's no running task.
         """
@@ -345,7 +345,7 @@ class AddonManager:
 
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that starts the managed add-on.
+        """Schedule a task that starts the managed app.
 
         Only schedule a new start task if the there's no running task.
         """
@@ -358,7 +358,7 @@ class AddonManager:
 
     @callback
     def async_schedule_restart_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that restarts the managed add-on.
+        """Schedule a task that restarts the managed app.
 
         Only schedule a new restart task if the there's no running task.
         """
@@ -375,7 +375,7 @@ class AddonManager:
         addon_config: dict[str, Any],
         catch_error: bool = False,
     ) -> asyncio.Task:
-        """Schedule a task that configures and starts the managed add-on.
+        """Schedule a task that configures and starts the managed app.
 
         Only schedule a new setup task if there's no running task.
         """
@@ -395,10 +395,10 @@ class AddonManager:
     def _async_schedule_addon_operation(
         self, *funcs: Callable, catch_error: bool = False
     ) -> asyncio.Task:
-        """Schedule an add-on task."""
+        """Schedule an app task."""
 
         async def addon_operation() -> None:
-            """Do the add-on operation and catch AddonError."""
+            """Do the app operation and catch AddonError."""
             for func in funcs:
                 try:
                     await func()
@@ -412,4 +412,4 @@ class AddonManager:
 
 
 class AddonError(HomeAssistantError):
-    """Represent an error with the managed add-on."""
+    """Represent an error with the managed app."""

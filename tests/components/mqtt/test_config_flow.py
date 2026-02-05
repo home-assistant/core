@@ -350,7 +350,7 @@ def supervisor_fixture() -> Generator[MagicMock]:
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
 def addon_setup_time_fixture() -> Generator[int]:
-    """Mock add-on setup sleep time."""
+    """Mock app setup sleep time."""
     with patch(
         "homeassistant.components.mqtt.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
@@ -359,7 +359,7 @@ def addon_setup_time_fixture() -> Generator[int]:
 
 @pytest.fixture(autouse=True)
 def mock_get_addon_discovery_info(get_addon_discovery_info: AsyncMock) -> None:
-    """Mock get add-on discovery info."""
+    """Mock get app discovery info."""
 
 
 @pytest.mark.usefixtures("mqtt_client_mock")
@@ -700,7 +700,7 @@ async def test_addon_flow_with_supervisor_addon_running(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on is already installed, and running.
+    Case: The Mosquitto app is already installed, and running.
     """
     # show menu
     result = await hass.config_entries.flow.async_init(
@@ -710,7 +710,7 @@ async def test_addon_flow_with_supervisor_addon_running(
     assert result["menu_options"] == ["addon", "broker"]
     assert result["step_id"] == "user"
 
-    # select install via add-on
+    # select install via app
     mock_try_connection_success.reset_mock()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -754,7 +754,7 @@ async def test_addon_flow_with_supervisor_addon_installed(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on is installed, but not running.
+    Case: The Mosquitto app is installed, but not running.
     """
     # show menu
     result = await hass.config_entries.flow.async_init(
@@ -764,13 +764,13 @@ async def test_addon_flow_with_supervisor_addon_installed(
     assert result["menu_options"] == ["addon", "broker"]
     assert result["step_id"] == "user"
 
-    # select install via add-on
+    # select install via app
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "addon"},
     )
 
-    # add-on installed but not started, so we wait for start-up
+    # app installed but not started, so we wait for start-up
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "start_addon"
     assert result["step_id"] == "start_addon"
@@ -782,7 +782,7 @@ async def test_addon_flow_with_supervisor_addon_installed(
         {"next_step_id": "start_addon"},
     )
 
-    # add-on is running, so entry can be installed
+    # app is running, so entry can be installed
     await hass.async_block_till_done(wait_background_tasks=True)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -820,7 +820,7 @@ async def test_addon_flow_with_supervisor_addon_running_connection_fails(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on is already installed, and running.
+    Case: The Mosquitto app is already installed, and running.
     """
     # show menu
     result = await hass.config_entries.flow.async_init(
@@ -830,7 +830,7 @@ async def test_addon_flow_with_supervisor_addon_running_connection_fails(
     assert result["menu_options"] == ["addon", "broker"]
     assert result["step_id"] == "user"
 
-    # select install via add-on but the connection fails and the flow will be aborted.
+    # select install via app but the connection fails and the flow will be aborted.
     mock_try_connection.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -852,7 +852,7 @@ async def test_addon_not_running_api_error(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on start fails on a API error.
+    Case: The Mosquitto app start fails on a API error.
     """
     start_addon.side_effect = SupervisorError()
 
@@ -867,7 +867,7 @@ async def test_addon_not_running_api_error(
         result["flow_id"],
         {"next_step_id": "addon"},
     )
-    # add-on not installed, so we wait for install
+    # app not installed, so we wait for install
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "start_addon"
     assert result["step_id"] == "start_addon"
@@ -878,7 +878,7 @@ async def test_addon_not_running_api_error(
         {"next_step_id": "install_addon"},
     )
 
-    # add-on start-up failed
+    # app start-up failed
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
@@ -896,7 +896,7 @@ async def test_addon_discovery_info_error(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on start on a discovery error.
+    Case: The Mosquitto app start on a discovery error.
     """
     get_addon_discovery_info.side_effect = AddonError
 
@@ -922,7 +922,7 @@ async def test_addon_discovery_info_error(
         {"next_step_id": "start_addon"},
     )
 
-    # add-on start-up failed
+    # app start-up failed
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
 
@@ -939,7 +939,7 @@ async def test_addon_info_error(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on info could not be retrieved.
+    Case: The Mosquitto app info could not be retrieved.
     """
     addon_info.side_effect = SupervisorError()
 
@@ -955,7 +955,7 @@ async def test_addon_info_error(
         {"next_step_id": "addon"},
     )
 
-    # add-on info failed
+    # app info failed
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_info_failed"
 
@@ -988,7 +988,7 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on is not yet installed nor running.
+    Case: The Mosquitto app is not yet installed nor running.
     """
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -1001,7 +1001,7 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
         result["flow_id"],
         {"next_step_id": "addon"},
     )
-    # add-on not installed, so we wait for install
+    # app not installed, so we wait for install
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "install_addon"
     assert result["step_id"] == "install_addon"
@@ -1012,7 +1012,7 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
         {"next_step_id": "install_addon"},
     )
 
-    # add-on installed but not started, so we wait for start-up
+    # app installed but not started, so we wait for start-up
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "start_addon"
     assert result["step_id"] == "start_addon"
@@ -1050,7 +1050,7 @@ async def test_addon_not_installed_failures(
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
-    Case: The Mosquitto add-on install fails.
+    Case: The Mosquitto app install fails.
     """
     install_addon.side_effect = SupervisorError()
 
@@ -1065,7 +1065,7 @@ async def test_addon_not_installed_failures(
         result["flow_id"],
         {"next_step_id": "addon"},
     )
-    # add-on not installed, so we wait for install
+    # app not installed, so we wait for install
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "install_addon"
     assert result["step_id"] == "install_addon"
@@ -1076,7 +1076,7 @@ async def test_addon_not_installed_failures(
         {"next_step_id": "install_addon"},
     )
 
-    # add-on install failed
+    # app install failed
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
 
@@ -1740,7 +1740,7 @@ async def test_step_reauth(
 async def test_step_hassio_reauth(
     hass: HomeAssistant, mock_try_connection: MagicMock, addon_info: AsyncMock
 ) -> None:
-    """Test that the reauth step works in case the Mosquitto broker add-on was re-installed."""
+    """Test that the reauth step works in case the Mosquitto broker app was re-installed."""
 
     # Set up entry data based on the discovery data, but with a stale password
     entry_data = {
@@ -1825,8 +1825,8 @@ async def test_step_hassio_reauth_no_discovery_info(
     """Test hassio reauth flow defaults to manual flow.
 
     Test that the reauth step defaults to
-    normal reauth flow if fetching add-on discovery info failed,
-    or the broker is not the add-on.
+    normal reauth flow if fetching app discovery info failed,
+    or the broker is not the app.
     """
 
     # Set up entry data based on the discovery data, but with a stale password

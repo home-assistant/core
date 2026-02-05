@@ -1,4 +1,4 @@
-"""Implement the services discovery feature from Hass.io for Add-ons."""
+"""Implement the services discovery feature from Hass.io for Apps."""
 
 from __future__ import annotations
 
@@ -103,7 +103,7 @@ class HassIODiscovery(HomeAssistantView):
         return web.Response()
 
     async def async_rediscover(self, uuid: str) -> None:
-        """Rediscover add-on when config entry is removed."""
+        """Rediscover app when config entry is removed."""
         try:
             data = await self._supervisor_client.discovery.get(UUID(uuid))
         except SupervisorError as err:
@@ -113,7 +113,7 @@ class HassIODiscovery(HomeAssistantView):
 
     async def async_process_new(self, data: Discovery) -> None:
         """Process add discovery entry."""
-        # Read additional Add-on info
+        # Read additional App info
         try:
             addon_info = await self._supervisor_client.addons.addon_info(data.addon)
         except SupervisorError as err:

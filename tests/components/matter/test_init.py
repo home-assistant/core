@@ -241,13 +241,13 @@ async def test_raise_addon_task_in_progress(
     install_addon: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test raise ConfigEntryNotReady if an add-on task is in progress."""
+    """Test raise ConfigEntryNotReady if an app task is in progress."""
     install_event = asyncio.Event()
 
     install_addon_original_side_effect = install_addon.side_effect
 
     async def install_addon_side_effect(slug: str) -> None:
-        """Mock install add-on."""
+        """Mock install app."""
         await install_event.wait()
         await install_addon_original_side_effect(slug)
 
@@ -270,7 +270,7 @@ async def test_raise_addon_task_in_progress(
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
-    # Check that we only call install add-on once if a task is in progress.
+    # Check that we only call install app once if a task is in progress.
     await hass.config_entries.async_reload(entry.entry_id)
     await asyncio.sleep(0.05)
 
@@ -292,7 +292,7 @@ async def test_start_addon(
     install_addon: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test start the Matter Server add-on during entry setup."""
+    """Test start the Matter Server app during entry setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -320,7 +320,7 @@ async def test_install_addon(
     install_addon: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test install and start the Matter add-on during entry setup."""
+    """Test install and start the Matter app during entry setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -349,7 +349,7 @@ async def test_addon_info_failure(
     install_addon: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test failure to get add-on info for Matter add-on during entry setup."""
+    """Test failure to get app info for Matter app during entry setup."""
     addon_info.side_effect = SupervisorError("Boom")
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -422,7 +422,7 @@ async def test_update_addon(
     create_backup_side_effect: Exception | None,
     connect_side_effect: Exception,
 ) -> None:
-    """Test update the Matter add-on during entry setup."""
+    """Test update the Matter app during entry setup."""
     addon_info.return_value.version = addon_version
     addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
@@ -515,7 +515,7 @@ async def test_stop_addon(
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
 ) -> None:
-    """Test stop the Matter add-on on entry unload if entry is disabled."""
+    """Test stop the Matter app on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -553,7 +553,7 @@ async def test_remove_entry(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test remove the config entry."""
-    # test successful remove without created add-on
+    # test successful remove without created app
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -568,7 +568,7 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
-    # test successful remove with created add-on
+    # test successful remove with created app
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",
@@ -595,7 +595,7 @@ async def test_remove_entry(
     create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test add-on stop failure
+    # test app stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     stop_addon.side_effect = SupervisorError()
@@ -638,7 +638,7 @@ async def test_remove_entry(
     create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test add-on uninstall failure
+    # test app uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     uninstall_addon.side_effect = SupervisorError()

@@ -1,4 +1,4 @@
-"""Provide add-on management."""
+"""Provide app management."""
 
 from __future__ import annotations
 
@@ -14,5 +14,5 @@ DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 @singleton(DATA_ADDON_MANAGER)
 @callback
 def get_addon_manager(hass: HomeAssistant) -> AddonManager:
-    """Get the add-on manager."""
+    """Get the app manager."""
     return AddonManager(hass, LOGGER, "Z-Wave JS", ADDON_SLUG)

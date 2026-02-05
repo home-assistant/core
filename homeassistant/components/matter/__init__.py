@@ -212,11 +212,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Matter Server add-on")
+        LOGGER.debug("Stopping Matter Server app")
         try:
             await addon_manager.async_stop_addon()
         except AddonError as err:
-            LOGGER.error("Failed to stop the Matter Server add-on: %s", err)
+            LOGGER.error("Failed to stop the Matter Server app: %s", err)
             return False
 
     return unload_ok
@@ -289,7 +289,7 @@ async def async_remove_config_entry_device(
 
 
 async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Ensure that Matter Server add-on is installed and running."""
+    """Ensure that Matter Server app is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
         addon_info = await addon_manager.async_get_addon_info()
@@ -312,7 +312,7 @@ async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -
 
 @callback
 def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
-    """Ensure that Matter Server add-on is updated and running.
+    """Ensure that Matter Server app is updated and running.
 
     May only be used as part of async_setup_entry above.
     """

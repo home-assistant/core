@@ -887,7 +887,7 @@ async def test_start_addon(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test start the Z-Wave JS add-on during entry setup."""
+    """Test start the Z-Wave JS app during entry setup."""
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -940,7 +940,7 @@ async def test_install_addon(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test install and start the Z-Wave JS add-on during entry setup."""
+    """Test install and start the Z-Wave JS app during entry setup."""
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -988,7 +988,7 @@ async def test_addon_info_failure(
     install_addon: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test failure to get add-on info for Z-Wave JS add-on during entry setup."""
+    """Test failure to get app info for Z-Wave JS app during entry setup."""
     device = "/test"
     network_key = "abc123"
     entry = MockConfigEntry(
@@ -1063,7 +1063,7 @@ async def test_addon_options_changed(
     old_lr_s2_authenticated_key: str,
     new_lr_s2_authenticated_key: str,
 ) -> None:
-    """Test update config entry data on entry setup if add-on options changed."""
+    """Test update config entry data on entry setup if app options changed."""
     addon_options["device"] = new_device
     addon_options["s0_legacy_key"] = new_s0_legacy_key
     addon_options["s2_access_control_key"] = new_s2_access_control_key
@@ -1134,7 +1134,7 @@ async def test_update_addon(
     update_addon_side_effect: Exception | None,
     create_backup_side_effect: Exception | None,
 ) -> None:
-    """Test update the Z-Wave JS add-on during entry setup."""
+    """Test update the Z-Wave JS app during entry setup."""
     device = "/test"
     network_key = "abc123"
     addon_options["device"] = device
@@ -1225,7 +1225,7 @@ async def test_stop_addon(
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
 ) -> None:
-    """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
+    """Test stop the Z-Wave JS app on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
     device = "/test"
     network_key = "abc123"
@@ -1267,7 +1267,7 @@ async def test_remove_entry(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test remove the config entry."""
-    # test successful remove without created add-on
+    # test successful remove without created app
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -1282,7 +1282,7 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
-    # test successful remove with created add-on
+    # test successful remove with created app
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -1307,7 +1307,7 @@ async def test_remove_entry(
     create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test add-on stop failure
+    # test app stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     stop_addon.side_effect = SupervisorError()
@@ -1348,7 +1348,7 @@ async def test_remove_entry(
     create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test add-on uninstall failure
+    # test app uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     uninstall_addon.side_effect = SupervisorError()

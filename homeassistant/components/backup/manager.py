@@ -102,7 +102,7 @@ class ManagerBackup(BaseBackup):
     """Backup class."""
 
     agents: dict[str, AgentBackupStatus]
-    failed_addons: list[AddonInfo]
+    failed_apps: list[AddonInfo]
     failed_agent_ids: list[str]
     failed_folders: list[Folder]
     with_automatic_settings: bool | None
@@ -646,11 +646,11 @@ class BackupManager:
             for agent_backup in result:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
-                        failed_addons = known_backup.failed_addons
+                        failed_apps = known_backup.failed_apps
                         failed_agent_ids = known_backup.failed_agent_ids
                         failed_folders = known_backup.failed_folders
                     else:
-                        failed_addons = []
+                        failed_apps = []
                         failed_agent_ids = []
                         failed_folders = []
                     with_automatic_settings = self.is_our_automatic_backup(
@@ -663,7 +663,7 @@ class BackupManager:
                         date=agent_backup.date,
                         database_included=agent_backup.database_included,
                         extra_metadata=agent_backup.extra_metadata,
-                        failed_addons=failed_addons,
+                        failed_apps=failed_apps,
                         failed_agent_ids=failed_agent_ids,
                         failed_folders=failed_folders,
                         folders=agent_backup.folders,
@@ -720,11 +720,11 @@ class BackupManager:
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
-                    failed_addons = known_backup.failed_addons
+                    failed_apps = known_backup.failed_apps
                     failed_agent_ids = known_backup.failed_agent_ids
                     failed_folders = known_backup.failed_folders
                 else:
-                    failed_addons = []
+                    failed_apps = []
                     failed_agent_ids = []
                     failed_folders = []
                 with_automatic_settings = self.is_our_automatic_backup(
@@ -737,7 +737,7 @@ class BackupManager:
                     date=result.date,
                     database_included=result.database_included,
                     extra_metadata=result.extra_metadata,
-                    failed_addons=failed_addons,
+                    failed_apps=failed_apps,
                     failed_agent_ids=failed_agent_ids,
                     failed_folders=failed_folders,
                     folders=result.folders,
@@ -1450,35 +1450,35 @@ class BackupManager:
             ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
             return
         if failed_agents and not (addon_errors or folder_errors):
-            # No issues with add-ons or folders, but issues with agents
+            # No issues with apps or folders, but issues with agents
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_upload_agents",
                 {"failed_agents": ", ".join(failed_agents)},
             )
         elif addon_errors and not (failed_agents or folder_errors):
-            # No issues with agents or folders, but issues with add-ons
+            # No issues with agents or folders, but issues with apps
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_addons",
                 {
-                    "failed_addons": ", ".join(
+                    "failed_apps": ", ".join(
                         val.addon.name or val.addon.slug
                         for val in addon_errors.values()
                     )
                 },
             )
         elif folder_errors and not (failed_agents or addon_errors):
-            # No issues with agents or add-ons, but issues with folders
+            # No issues with agents or apps, but issues with folders
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_folders",
                 {"failed_folders": ", ".join(folder for folder in folder_errors)},
             )
         else:
-            # Issues with agents, add-ons, and/or folders
+            # Issues with agents, apps, and/or folders
             self._create_automatic_backup_failed_issue(
                 "automatic_backup_failed_agents_addons_folders",
                 {
                     "failed_agents": ", ".join(failed_agents) or "-",
-                    "failed_addons": (
+                    "failed_apps": (
                         ", ".join(
                             val.addon.name or val.addon.slug
                             for val in addon_errors.values()
@@ -1553,9 +1553,9 @@ class KnownBackups:
         self._backups = {
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
-                failed_addons=[
+                failed_apps=[
                     AddonInfo(name=a["name"], slug=a["slug"], version=a["version"])
-                    for a in backup["failed_addons"]
+                    for a in backup["failed_apps"]
                 ],
                 failed_agent_ids=backup["failed_agent_ids"],
                 failed_folders=[Folder(f) for f in backup["failed_folders"]],
@@ -1571,14 +1571,14 @@ class KnownBackups:
         self,
         backup: AgentBackup,
         agent_errors: dict[str, Exception],
-        failed_addons: dict[str, AddonErrorData],
+        failed_apps: dict[str, AddonErrorData],
         failed_folders: dict[Folder, list[tuple[str, str]]],
         unavailable_agents: list[str],
     ) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
             backup_id=backup.backup_id,
-            failed_addons=[val.addon for val in failed_addons.values()],
+            failed_apps=[val.addon for val in failed_apps.values()],
             failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
             failed_folders=list(failed_folders),
         )
@@ -1601,7 +1601,7 @@ class KnownBackup:
     """Persistent backup data."""
 
     backup_id: str
-    failed_addons: list[AddonInfo]
+    failed_apps: list[AddonInfo]
     failed_agent_ids: list[str]
     failed_folders: list[Folder]
 
@@ -1609,9 +1609,9 @@ class KnownBackup:
         """Convert known backup to a dict."""
         return {
             "backup_id": self.backup_id,
-            "failed_addons": [
+            "failed_apps": [
                 {"name": a.name, "slug": a.slug, "version": a.version}
-                for a in self.failed_addons
+                for a in self.failed_apps
             ],
             "failed_agent_ids": self.failed_agent_ids,
             "failed_folders": [f.value for f in self.failed_folders],
@@ -1619,7 +1619,7 @@ class KnownBackup:
 
 
 class StoredAddonInfo(TypedDict):
-    """Stored add-on info."""
+    """Stored app info."""
 
     name: str | None
     slug: str
@@ -1630,7 +1630,7 @@ class StoredKnownBackup(TypedDict):
     """Stored persistent backup data."""
 
     backup_id: str
-    failed_addons: list[StoredAddonInfo]
+    failed_apps: list[StoredAddonInfo]
     failed_agent_ids: list[str]
     failed_folders: list[str]
 

@@ -279,7 +279,7 @@ AddonSelectorConfig = AppSelectorConfig
 
 @SELECTORS.register("addon")
 class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of an add-on, kept for backward compatibility after add-ons -> apps rename."""
+    """Selector of an app, kept for backward compatibility after add-ons -> apps rename."""
 
     selector_type = "addon"
 

@@ -1,4 +1,4 @@
-"""Test add-on panel."""
+"""Test app panel."""
 
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch

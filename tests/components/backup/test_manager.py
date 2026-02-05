@@ -654,7 +654,7 @@ async def test_initiate_backup(
         "database_included": include_database,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
-        "failed_addons": [],
+        "failed_apps": [],
         "failed_agent_ids": expected_failed_agent_ids,
         "failed_folders": [],
         "folders": [],
@@ -709,7 +709,7 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -731,7 +731,7 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -759,7 +759,7 @@ async def test_initiate_backup_with_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -866,7 +866,7 @@ async def test_initiate_backup_with_agent_error(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
-        "failed_addons": [],
+        "failed_apps": [],
         "failed_agent_ids": ["test.remote"],
         "failed_folders": [],
         "folders": [],
@@ -901,7 +901,7 @@ async def test_initiate_backup_with_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": ["test.remote"],
             "failed_folders": [],
         }
@@ -1128,13 +1128,13 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 }
             },
         ),
-        # Add-ons can't be backed up
+        # Apps can't be backed up
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1149,7 +1149,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1160,7 +1160,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_addons",
-                    "translation_placeholders": {"failed_addons": "Test Add-on"},
+                    "translation_placeholders": {"failed_apps": "Test App"},
                 }
             },
         ),
@@ -1190,13 +1190,13 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 }
             },
         ),
-        # Add-ons and folders can't be backed up
+        # Apps and folders can't be backed up
         (
             ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1211,7 +1211,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1223,20 +1223,20 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_agents_addons_folders",
                     "translation_placeholders": {
-                        "failed_addons": "Test Add-on",
+                        "failed_apps": "Test App",
                         "failed_agents": "-",
                         "failed_folders": "media",
                     },
                 },
             },
         ),
-        # Add-ons and folders can't be backed up, one agent unavailable
+        # Apps and folders can't be backed up, one agent unavailable
         (
             ["test.remote", "test.unknown"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1259,7 +1259,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {"type": "backup/generate_with_automatic_settings"},
             {
                 "test_addon": AddonErrorData(
-                    addon=AddonInfo(name="Test Add-on", slug="test", version="0.0"),
+                    addon=AddonInfo(name="Test App", slug="test", version="0.0"),
                     errors=[("test_error", "Boom!")],
                 )
             },
@@ -1271,7 +1271,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_agents_addons_folders",
                     "translation_placeholders": {
-                        "failed_addons": "Test Add-on",
+                        "failed_apps": "Test App",
                         "failed_agents": "test.unknown",
                         "failed_folders": "media",
                     },
@@ -2099,7 +2099,7 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -2121,7 +2121,7 @@ async def test_receive_backup_agent_error(
                 "instance_id": "unknown_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -2149,7 +2149,7 @@ async def test_receive_backup_agent_error(
                 "instance_id": "our_uuid",
                 "with_automatic_settings": True,
             },
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": [
@@ -2281,7 +2281,7 @@ async def test_receive_backup_agent_error(
     assert hass_storage[DOMAIN]["data"]["backups"] == [
         {
             "backup_id": "abc123",
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": ["test.remote"],
             "failed_folders": [],
         }
@@ -3598,7 +3598,7 @@ async def test_initiate_backup_per_agent_encryption(
         "database_included": True,
         "date": ANY,
         "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
-        "failed_addons": [],
+        "failed_apps": [],
         "failed_agent_ids": [],
         "failed_folders": [],
         "folders": [],

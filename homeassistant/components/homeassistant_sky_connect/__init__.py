@@ -127,8 +127,8 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
-            # Add-on startup with type service get started before Core, always (e.g. the
-            # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
+            # App startup with type service get started before Core, always (e.g. the
+            # Multi-Protocol app). Probing the firmware would interfere with the app,
             # so we can't safely probe here. Instead, we must make an educated guess!
             firmware_guess = await guess_firmware_info(hass, config_entry.data[DEVICE])
 

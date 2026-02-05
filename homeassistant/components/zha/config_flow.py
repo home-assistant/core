@@ -171,7 +171,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
                 pid="ffff",
                 serial_number=None,
                 manufacturer="Nabu Casa",
-                description="Silicon Labs Multiprotocol add-on",
+                description="Silicon Labs Multiprotocol app",
             )
 
             ports.append(addon_port)

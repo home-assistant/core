@@ -94,9 +94,9 @@ def mock_delay_save() -> Generator[None]:
                 "backups": [
                     {
                         "backup_id": "abc123",
-                        "failed_addons": [
+                        "failed_apps": [
                             {
-                                "name": "Test add-on",
+                                "name": "Test app",
                                 "slug": "test_addon",
                                 "version": "1.0.0",
                             }
@@ -256,9 +256,9 @@ def mock_delay_save() -> Generator[None]:
                 "backups": [
                     {
                         "backup_id": "abc123",
-                        "failed_addons": [
+                        "failed_apps": [
                             {
-                                "name": "Test add-on",
+                                "name": "Test app",
                                 "slug": "test_addon",
                                 "version": "1.0.0",
                             }

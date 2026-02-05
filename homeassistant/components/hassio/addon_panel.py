@@ -1,4 +1,4 @@
-"""Implement the Ingress Panel feature for Hass.io Add-ons."""
+"""Implement the Ingress Panel feature for Hass.io Apps."""
 
 from http import HTTPStatus
 import logging
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_addon_panel(hass: HomeAssistant, hassio: HassIO) -> None:
-    """Add-on Ingress Panel setup."""
+    """App Ingress Panel setup."""
     hassio_addon_panel = HassIOAddonPanel(hass, hassio)
     hass.http.register_view(hassio_addon_panel)
 
@@ -48,10 +48,10 @@ class HassIOAddonPanel(HomeAssistantView):
         self.hassio = hassio
 
     async def post(self, request: web.Request, addon: str) -> web.Response:
-        """Handle new add-on panel requests."""
+        """Handle new app panel requests."""
         panels = await self.get_panels()
 
-        # Panel exists for add-on slug
+        # Panel exists for app slug
         if addon not in panels or not panels[addon][ATTR_ENABLE]:
             _LOGGER.error("Panel is not enable for %s", addon)
             return web.Response(status=HTTPStatus.BAD_REQUEST)
@@ -62,12 +62,12 @@ class HassIOAddonPanel(HomeAssistantView):
         return web.Response()
 
     async def delete(self, request: web.Request, addon: str) -> web.Response:
-        """Handle remove add-on panel requests."""
+        """Handle remove app panel requests."""
         frontend.async_remove_panel(self.hass, addon)
         return web.Response()
 
     async def get_panels(self) -> dict:
-        """Return panels add-on info data."""
+        """Return panels app info data."""
         try:
             data = await self.hassio.get_ingress_panels()
             return data[ATTR_PANELS]

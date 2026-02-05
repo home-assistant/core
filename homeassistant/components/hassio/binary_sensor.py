@@ -87,7 +87,7 @@ async def async_setup_entry(
 
 
 class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
-    """Binary sensor for Hass.io add-ons."""
+    """Binary sensor for Hass.io apps."""
 
     entity_description: HassioBinarySensorEntityDescription
 

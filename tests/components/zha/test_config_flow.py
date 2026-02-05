@@ -2876,7 +2876,7 @@ async def test_config_flow_ports_no_hassio(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
-    """Test config flow serial port name for multiprotocol add-on."""
+    """Test config flow serial port name for multiprotocol app."""
 
     with (
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True),
@@ -2893,7 +2893,7 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
         ports = await config_flow.list_serial_ports(hass)
 
     assert len(ports) == 1
-    assert ports[0].description == "Silicon Labs Multiprotocol add-on"
+    assert ports[0].description == "Silicon Labs Multiprotocol app"
     assert ports[0].manufacturer == "Nabu Casa"
     assert ports[0].device == "socket://core-silabs-multiprotocol:9999"
 

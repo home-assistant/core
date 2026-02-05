@@ -50,7 +50,7 @@ def generate_result(metadata: dict) -> dict:
     }
     expected_result.update(
         {
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "with_automatic_settings": None,

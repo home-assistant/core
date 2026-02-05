@@ -127,7 +127,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         return placeholders
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
-        """Return add-on info."""
+        """Return app info."""
         try:
             addon_info = await addon_manager.async_get_addon_info()
         except AddonError as err:

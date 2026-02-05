@@ -997,8 +997,8 @@ async def test_supervisor_issue_addon_boot_fail(
 
 
 # Test disabled for now until repair can be re-enabled. First we need a repair
-# specifically for the OTBR add-on to make migration to ZHA easy rather then
-# having this repair encourage uninstall of that add-on and make migration hard.
+# specifically for the OTBR app to make migration to ZHA easy rather then
+# having this repair encourage uninstall of that app and make migration hard.
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
@@ -1010,7 +1010,7 @@ async def test_supervisor_issue_deprecated_addon(
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test fix flow for supervisor issue for deprecated add-on."""
+    """Test fix flow for supervisor issue for deprecated app."""
     mock_resolution_info(
         supervisor_client,
         issues=[

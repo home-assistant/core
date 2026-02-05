@@ -297,44 +297,44 @@
   },
   "services": {
     "addon_restart": {
-      "description": "Restarts an add-on.",
+      "description": "Restarts an app.",
       "fields": {
         "addon": {
-          "description": "The add-on to restart.",
+          "description": "The app to restart.",
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]"
         }
       },
-      "name": "Restart add-on"
+      "name": "Restart app"
     },
     "addon_start": {
-      "description": "Starts an add-on.",
+      "description": "Starts an app.",
       "fields": {
         "addon": {
-          "description": "The add-on to start.",
-          "name": "Add-on"
+          "description": "The app to start.",
+          "name": "App"
         }
       },
-      "name": "Start add-on"
+      "name": "Start app"
     },
     "addon_stdin": {
-      "description": "Writes data to the add-on's standard input.",
+      "description": "Writes data to the app's standard input.",
       "fields": {
         "addon": {
-          "description": "The add-on to write to.",
+          "description": "The app to write to.",
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]"
         }
       },
-      "name": "Write data to add-on stdin"
+      "name": "Write data to app stdin"
     },
     "addon_stop": {
-      "description": "Stops an add-on.",
+      "description": "Stops an app.",
       "fields": {
         "addon": {
-          "description": "The add-on to stop.",
+          "description": "The app to stop.",
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]"
         }
       },
-      "name": "Stop add-on"
+      "name": "Stop app"
     },
     "app_restart": {
       "description": "Restarts a Home Assistant app.",

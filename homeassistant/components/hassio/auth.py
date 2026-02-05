@@ -1,4 +1,4 @@
-"""Implement the auth feature from Hass.io for Add-ons."""
+"""Implement the auth feature from Hass.io for Apps."""
 
 from http import HTTPStatus
 from ipaddress import ip_address

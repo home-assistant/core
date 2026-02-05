@@ -47,7 +47,7 @@ async def async_setup_entry(
             ),
             DemoUpdate(
                 unique_id="update_addon",
-                device_name="Demo add-on",
+                device_name="Demo app",
                 title="AdGuard Home",
                 installed_version="1.0.0",
                 latest_version="1.0.1",

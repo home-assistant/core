@@ -85,7 +85,7 @@ async def async_setup_entry(
 
 
 class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
-    """Update entity to handle updates for the Supervisor add-ons."""
+    """Update entity to handle updates for the Supervisor apps."""
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
@@ -96,12 +96,12 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
 
     @property
     def _addon_data(self) -> dict:
-        """Return the add-on data."""
+        """Return the app data."""
         return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug]
 
     @property
     def auto_update(self) -> bool:
-        """Return true if auto-update is enabled for the add-on."""
+        """Return true if auto-update is enabled for the app."""
         return self._addon_data[ATTR_AUTO_UPDATE]
 
     @property
@@ -121,7 +121,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the icon of the add-on if any."""
+        """Return the icon of the app if any."""
         if not self.available:
             return None
         if self._addon_data[ATTR_ICON]:

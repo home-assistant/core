@@ -48,18 +48,18 @@ async def async_setup_entry(
 
 
 class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
-    """Switch for Hass.io add-ons."""
+    """Switch for Hass.io apps."""
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the add-on is on."""
+        """Return true if the app is on."""
         addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})
         state = addon_data.get(self.entity_description.key)
         return state == ATTR_STARTED
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the icon of the add-on if any."""
+        """Return the icon of the app if any."""
         if not self.available:
             return None
         addon_data = self.coordinator.data[DATA_KEY_ADDONS].get(self._addon_slug, {})

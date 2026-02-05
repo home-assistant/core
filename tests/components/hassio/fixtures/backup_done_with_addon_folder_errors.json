@@ -32,12 +32,12 @@
         "errors": [
           {
             "type": "BackupError",
-            "message": "Can't backup add-on core_ssh: Can't write tarfile: FAKE OS error during add-on backup",
+            "message": "Can't backup app core_ssh: Can't write tarfile: FAKE OS error during app backup",
             "stage": null
           },
           {
             "type": "BackupError",
-            "message": "Can't backup add-on core_whisper: Can't write tarfile: FAKE OS error during add-on backup",
+            "message": "Can't backup app core_whisper: Can't write tarfile: FAKE OS error during app backup",
             "stage": null
           }
         ],
@@ -53,7 +53,7 @@
             "errors": [
               {
                 "type": "BackupError",
-                "message": "Can't write tarfile: FAKE OS error during add-on backup",
+                "message": "Can't write tarfile: FAKE OS error during app backup",
                 "stage": null
               }
             ],
@@ -71,7 +71,7 @@
             "errors": [
               {
                 "type": "BackupError",
-                "message": "Can't write tarfile: FAKE OS error during add-on backup",
+                "message": "Can't write tarfile: FAKE OS error during app backup",
                 "stage": null
               }
             ],

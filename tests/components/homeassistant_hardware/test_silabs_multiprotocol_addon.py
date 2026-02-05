@@ -39,7 +39,7 @@ def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
 
 
 class FakeConfigFlow(ConfigFlow):
-    """Handle a config flow for the silabs multiprotocol add-on."""
+    """Handle a config flow for the silabs multiprotocol app."""
 
     VERSION = 1
 
@@ -60,7 +60,7 @@ class FakeConfigFlow(ConfigFlow):
 
 
 class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
-    """Handle an option flow for the silabs multiprotocol add-on."""
+    """Handle an option flow for the silabs multiprotocol app."""
 
     async def _async_serial_port_settings(
         self,

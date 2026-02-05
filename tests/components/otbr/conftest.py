@@ -130,7 +130,7 @@ def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
 
 @pytest.fixture(name="multiprotocol_addon_manager_mock")
 def multiprotocol_addon_manager_mock_fixture(hass: HomeAssistant):
-    """Mock the Silicon Labs Multiprotocol add-on manager."""
+    """Mock the Silicon Labs Multiprotocol app manager."""
     mock_manager = Mock()
     mock_manager.async_get_channel = Mock(return_value=None)
     with patch.dict(hass.data, {"silabs_multiprotocol_addon_manager": mock_manager}):

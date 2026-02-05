@@ -1,4 +1,4 @@
-"""Manage the Silicon Labs Multiprotocol add-on."""
+"""Manage the Silicon Labs Multiprotocol app."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ SAVE_DELAY = 10
 async def get_multiprotocol_addon_manager(
     hass: HomeAssistant,
 ) -> MultiprotocolAddonManager:
-    """Get the add-on manager."""
+    """Get the app manager."""
     manager = MultiprotocolAddonManager(hass)
     await manager.async_setup()
     return manager
@@ -93,12 +93,12 @@ class WaitingAddonManager(AddonManager):
                 await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
 
     async def async_start_addon_waiting(self) -> None:
-        """Start an add-on."""
+        """Start an app."""
         await self.async_schedule_start_addon()
         await self.async_wait_until_addon_state(AddonState.RUNNING)
 
     async def async_install_addon_waiting(self) -> None:
-        """Install an add-on."""
+        """Install an app."""
         await self.async_schedule_install_addon()
         await self.async_wait_until_addon_state(
             AddonState.RUNNING,
@@ -106,7 +106,7 @@ class WaitingAddonManager(AddonManager):
         )
 
     async def async_uninstall_addon_waiting(self) -> None:
-        """Uninstall an add-on."""
+        """Uninstall an app."""
         try:
             info = await self.async_get_addon_info()
         except AddonError:
@@ -121,7 +121,7 @@ class WaitingAddonManager(AddonManager):
 
 
 class MultiprotocolAddonManager(WaitingAddonManager):
-    """Silicon Labs Multiprotocol add-on manager."""
+    """Silicon Labs Multiprotocol app manager."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the manager."""
@@ -251,13 +251,13 @@ class MultipanProtocol(Protocol):
     ) -> asyncio.Task | None:
         """Set the channel to be used.
 
-        Does nothing if not configured or the multiprotocol add-on is not used.
+        Does nothing if not configured or the multiprotocol app is not used.
         """
 
     async def async_get_channel(self, hass: HomeAssistant) -> int | None:
         """Return the channel.
 
-        Returns None if not configured or the multiprotocol add-on is not used.
+        Returns None if not configured or the multiprotocol app is not used.
         """
 
     async def async_using_multipan(self, hass: HomeAssistant) -> bool:
@@ -270,7 +270,7 @@ class MultipanProtocol(Protocol):
 @singleton(DATA_FLASHER_ADDON_MANAGER)
 @callback
 def get_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the flasher add-on manager."""
+    """Get the flasher app manager."""
     return WaitingAddonManager(
         hass,
         LOGGER,
@@ -298,14 +298,14 @@ def get_zigbee_socket() -> str:
 
 
 def is_multiprotocol_url(url: str) -> bool:
-    """Return if the URL points at the Multiprotocol add-on."""
+    """Return if the URL points at the Multiprotocol app."""
     parsed = yarl.URL(url)
     hostname = hostname_from_addon_slug(SILABS_MULTIPROTOCOL_ADDON_SLUG)
     return parsed.host == hostname
 
 
 class OptionsFlowHandler(OptionsFlow, ABC):
-    """Handle an options flow for the Silicon Labs Multiprotocol add-on."""
+    """Handle an options flow for the Silicon Labs Multiprotocol app."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
@@ -347,7 +347,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         return self.hass.config_entries.options
 
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
-        """Return and cache Silicon Labs Multiprotocol add-on info."""
+        """Return and cache Silicon Labs Multiprotocol app info."""
         try:
             addon_info: AddonInfo = await addon_manager.async_get_addon_info()
         except AddonError as err:
@@ -362,7 +362,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def _async_set_addon_config(
         self, config: dict, addon_manager: AddonManager
     ) -> None:
-        """Set Silicon Labs Multiprotocol add-on config."""
+        """Set Silicon Labs Multiprotocol app config."""
         try:
             await addon_manager.async_set_addon_options(config)
         except AddonError as err:
@@ -409,7 +409,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Install Silicon Labs Multiprotocol add-on."""
+        """Install Silicon Labs Multiprotocol app."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
 
         if not self.install_task:
@@ -440,7 +440,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add-on installation failed."""
+        """App installation failed."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_install_failed",
@@ -450,7 +450,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure the Silicon Labs Multiprotocol add-on."""
+        """Configure the Silicon Labs Multiprotocol app."""
         # pylint: disable=hass-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
@@ -505,7 +505,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         multipan_manager.async_set_channel(multipan_channel)
 
         if new_addon_config != addon_config:
-            # Copy the add-on config to keep the objects separate.
+            # Copy the app config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
             _LOGGER.debug("Reconfiguring addon with %s", new_addon_config)
             await self._async_set_addon_config(new_addon_config, multipan_manager)
@@ -515,7 +515,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start Silicon Labs Multiprotocol add-on."""
+        """Start Silicon Labs Multiprotocol app."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
 
         if not self.start_task:
@@ -544,7 +544,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add-on start failed."""
+        """App start failed."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_start_failed",
@@ -800,7 +800,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_uninstall_multiprotocol_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Uninstall Silicon Labs Multiprotocol add-on."""
+        """Uninstall Silicon Labs Multiprotocol app."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
 
         if not self.stop_task:
@@ -828,7 +828,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_start_flasher_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start Silicon Labs Flasher add-on."""
+        """Start Silicon Labs Flasher app."""
         flasher_manager = get_flasher_addon_manager(self.hass)
 
         if not self.start_task:
@@ -865,7 +865,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_flasher_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Flasher add-on start failed."""
+        """Flasher app start failed."""
         flasher_manager = get_flasher_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_start_failed",
@@ -894,7 +894,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     """Check the multiprotocol addon state, and start it if installed but not started.
 
     Does nothing if Hass.io is not loaded.
-    Raises on error or if the add-on is installed but not started.
+    Raises on error or if the app is installed but not started.
     """
     if not is_hassio(hass):
         return

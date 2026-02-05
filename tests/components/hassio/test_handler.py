@@ -152,7 +152,7 @@ async def test_api_core_info_error(
 async def test_api_core_stats(
     hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test setup with API Add-on stats."""
+    """Test setup with API App stats."""
     aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={"result": "ok", "data": {"memory_percent": 0.01}},
@@ -166,7 +166,7 @@ async def test_api_core_stats(
 async def test_api_supervisor_stats(
     hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test setup with API Add-on stats."""
+    """Test setup with API App stats."""
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/stats",
         json={"result": "ok", "data": {"memory_percent": 0.01}},

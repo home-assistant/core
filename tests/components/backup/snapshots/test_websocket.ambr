@@ -4381,7 +4381,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4466,7 +4466,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4532,7 +4532,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4582,7 +4582,7 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4643,7 +4643,7 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4702,7 +4702,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4768,7 +4768,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4835,7 +4835,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -4902,9 +4902,9 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
             dict({
-              'name': 'Test add-on',
+              'name': 'Test app',
               'slug': 'test_addon',
               'version': '1.0.0',
             }),
@@ -4975,7 +4975,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5041,7 +5041,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5108,7 +5108,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5175,9 +5175,9 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
             dict({
-              'name': 'Test add-on',
+              'name': 'Test app',
               'slug': 'test_addon',
               'version': '1.0.0',
             }),
@@ -5248,7 +5248,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5295,7 +5295,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5358,7 +5358,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5418,7 +5418,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5466,7 +5466,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5514,7 +5514,7 @@
           'instance_id': 'our_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -5787,7 +5787,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5842,7 +5842,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5901,7 +5901,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5951,7 +5951,7 @@
             'instance_id': 'unknown_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -5987,7 +5987,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -6043,7 +6043,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -6099,7 +6099,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),
@@ -6155,7 +6155,7 @@
             'instance_id': 'our_uuid',
             'with_automatic_settings': True,
           }),
-          'failed_addons': list([
+          'failed_apps': list([
           ]),
           'failed_agent_ids': list([
           ]),

@@ -28,7 +28,7 @@ from .coordinator import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
-    """Base entity for a Hass.io add-on."""
+    """Base entity for a Hass.io app."""
 
     _attr_has_entity_name = True
 

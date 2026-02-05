@@ -498,7 +498,7 @@ async def test_agent_info(
                 "database_included": True,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
-                "failed_addons": [],
+                "failed_apps": [],
                 "failed_agent_ids": [],
                 "failed_folders": [],
                 "folders": ["share"],
@@ -520,7 +520,7 @@ async def test_agent_info(
                 "database_included": False,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
-                "failed_addons": [],
+                "failed_apps": [],
                 "failed_agent_ids": [],
                 "failed_folders": [],
                 "folders": ["share"],
@@ -658,7 +658,7 @@ async def test_agent_get_backup(
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
             "extra_metadata": {},
-            "failed_addons": [],
+            "failed_apps": [],
             "failed_agent_ids": [],
             "failed_folders": [],
             "folders": ["share"],
@@ -1113,7 +1113,7 @@ async def test_reader_writer_create_addon_folder_error(
     issue = issue_registry.issues[("backup", "automatic_backup_failed")]
     assert issue.translation_key == "automatic_backup_failed_agents_addons_folders"
     assert issue.translation_placeholders == {
-        "failed_addons": "Advanced SSH & Web Terminal, core_whisper",
+        "failed_apps": "Advanced SSH & Web Terminal, core_whisper",
         "failed_agents": "-",
         "failed_folders": "share, ssl, media",
     }

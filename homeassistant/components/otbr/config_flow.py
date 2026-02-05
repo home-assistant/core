@@ -47,7 +47,7 @@ class AlreadyConfigured(HomeAssistantError):
 
 @callback
 def get_addon_manager(hass: HomeAssistant, slug: str) -> AddonManager:
-    """Get the add-on manager."""
+    """Get the app manager."""
     return AddonManager(hass, _LOGGER, "OpenThread Border Router", slug)
 
 

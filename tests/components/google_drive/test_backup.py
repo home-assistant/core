@@ -48,7 +48,7 @@ TEST_AGENT_BACKUP_RESULT = {
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
     "extra_metadata": {"with_automatic_settings": False},
-    "failed_addons": [],
+    "failed_apps": [],
     "failed_agent_ids": [],
     "failed_folders": [],
     "folders": [],

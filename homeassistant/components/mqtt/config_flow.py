@@ -3980,14 +3980,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return MQTTOptionsFlowHandler()
 
     async def _async_install_addon(self) -> None:
-        """Install the Mosquitto Mqtt broker add-on."""
+        """Install the Mosquitto Mqtt broker app."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_install_addon()
 
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add-on installation failed."""
+        """App installation failed."""
         return self.async_abort(
             reason="addon_install_failed",
             description_placeholders={"addon": self._addon_manager.addon_name},
@@ -3996,7 +3996,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Install Mosquitto Broker add-on."""
+        """Install Mosquitto Broker app."""
         if self.install_task is None:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
 
@@ -4020,7 +4020,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add-on start failed."""
+        """App start failed."""
         return self.async_abort(
             reason="addon_start_failed",
             description_placeholders={"addon": self._addon_manager.addon_name},
@@ -4029,7 +4029,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start Mosquitto Broker add-on."""
+        """Start Mosquitto Broker app."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
         if not self.start_task.done():
@@ -4049,7 +4049,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_progress_done(next_step_id="setup_entry_from_discovery")
 
     async def _async_get_config_and_try(self) -> dict[str, Any] | None:
-        """Get the MQTT add-on discovery info and try the connection."""
+        """Get the MQTT app discovery info and try the connection."""
         if self._hassio_discovery is not None:
             return self._hassio_discovery
         addon_manager: AddonManager = get_addon_manager(self.hass)
@@ -4076,11 +4076,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return None
 
     async def _async_start_addon(self) -> None:
-        """Start the Mosquitto Broker add-on."""
+        """Start the Mosquitto Broker app."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         await addon_manager.async_schedule_start_addon()
 
-        # Sleep some seconds to let the add-on start properly before connecting.
+        # Sleep some seconds to let the app start properly before connecting.
         for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
             await asyncio.sleep(ADDON_SETUP_TIMEOUT)
             # Finish setup using discovery info to test the connection
@@ -4098,7 +4098,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if is_hassio(self.hass):
-            # Offer to set up broker add-on if supervisor is available
+            # Offer to set up broker app if supervisor is available
             self._addon_manager = get_addon_manager(self.hass)
             return self.async_show_menu(
                 step_id="user",
@@ -4127,7 +4127,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Install and start MQTT broker add-on."""
+        """Install and start MQTT broker app."""
         addon_manager = self._addon_manager
 
         try:
@@ -4145,7 +4145,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if addon_info.state == AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
-        # Install the add-on and start it
+        # Install the app and start it
         return await self.async_step_install_addon()
 
     async def async_step_reauth(
@@ -4153,7 +4153,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-authentication with MQTT broker."""
         if is_hassio(self.hass):
-            # Check if entry setup matches the add-on discovery config
+            # Check if entry setup matches the app discovery config
             addon_manager = get_addon_manager(self.hass)
             try:
                 addon_discovery_config = (
@@ -4175,7 +4175,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     != (password := addon_discovery_config.get(CONF_PASSWORD))
                 ):
                     _LOGGER.info(
-                        "Executing autorecovery %s add-on secrets",
+                        "Executing autorecovery %s app secrets",
                         addon_manager.addon_name,
                     )
                     return await self.async_step_reauth_confirm(

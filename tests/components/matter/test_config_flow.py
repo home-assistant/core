@@ -97,12 +97,12 @@ def supervisor_fixture() -> Generator[MagicMock]:
 
 @pytest.fixture(autouse=True)
 def mock_get_addon_discovery_info(get_addon_discovery_info: AsyncMock) -> None:
-    """Mock get add-on discovery info."""
+    """Mock get app discovery info."""
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
 def addon_setup_time_fixture() -> Generator[int]:
-    """Mock add-on setup sleep time."""
+    """Mock app setup sleep time."""
     with patch(
         "homeassistant.components.matter.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ) as addon_setup_time:
@@ -365,7 +365,7 @@ async def test_zeroconf_not_onboarded_running(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test flow Zeroconf discovery when not onboarded and add-on running."""
+    """Test flow Zeroconf discovery when not onboarded and app running."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -410,7 +410,7 @@ async def test_zeroconf_not_onboarded_installed(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test flow Zeroconf discovery when not onboarded and add-on installed."""
+    """Test flow Zeroconf discovery when not onboarded and app installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -458,7 +458,7 @@ async def test_zeroconf_not_onboarded_not_installed(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test flow Zeroconf discovery when not onboarded and add-on not installed."""
+    """Test flow Zeroconf discovery when not onboarded and app not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -713,7 +713,7 @@ async def test_abort_supervisor_discovery_for_other_addon(
     addon_installed: AsyncMock,
     addon_info: AsyncMock,
 ) -> None:
-    """Test hassio discovery flow is aborted for a non official add-on discovery."""
+    """Test hassio discovery flow is aborted for a non official app discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -743,7 +743,7 @@ async def test_supervisor_discovery_addon_not_running(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test discovery with add-on already installed but not running."""
+    """Test discovery with app already installed but not running."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -792,7 +792,7 @@ async def test_supervisor_discovery_addon_not_installed(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test discovery with add-on not installed."""
+    """Test discovery with app not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -845,7 +845,7 @@ async def test_not_addon(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test opting out of add-on on Supervisor."""
+    """Test opting out of app on Supervisor."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -900,7 +900,7 @@ async def test_addon_running(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test add-on already running on Supervisor."""
+    """Test app already running on Supervisor."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1009,7 +1009,7 @@ async def test_addon_running_failures(
     discovery_info_called: bool,
     client_connect_called: bool,
 ) -> None:
-    """Test all failures when add-on is running."""
+    """Test all failures when app is running."""
     get_addon_discovery_info.side_effect = discovery_info_error
     client_connect.side_effect = client_connect_error
     addon_info.side_effect = addon_info_error
@@ -1118,7 +1118,7 @@ async def test_addon_running_failures_zeroconf(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test all failures when add-on is running and not onboarded."""
+    """Test all failures when app is running and not onboarded."""
     get_addon_discovery_info.side_effect = discovery_info_error
     client_connect.side_effect = client_connect_error
     addon_info.side_effect = addon_info_error
@@ -1156,7 +1156,7 @@ async def test_addon_running_already_configured(
     addon_info: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test that only one instance is allowed when add-on is running."""
+    """Test that only one instance is allowed when app is running."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1207,7 +1207,7 @@ async def test_addon_installed(
     start_addon: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test add-on already installed but not running on Supervisor."""
+    """Test app already installed but not running on Supervisor."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1297,7 +1297,7 @@ async def test_addon_installed_failures(
     discovery_info_called: bool,
     client_connect_called: bool,
 ) -> None:
-    """Test add-on start failure when add-on is installed."""
+    """Test app start failure when app is installed."""
     start_addon.side_effect = start_addon_error
     client_connect.side_effect = client_connect_error
 
@@ -1388,7 +1388,7 @@ async def test_addon_installed_failures_zeroconf(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test add-on start failure when add-on is installed and not onboarded."""
+    """Test app start failure when app is installed and not onboarded."""
     start_addon.side_effect = start_addon_error
     client_connect.side_effect = client_connect_error
 
@@ -1426,7 +1426,7 @@ async def test_addon_installed_already_configured(
     start_addon: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test that only one instance is allowed when add-on is installed."""
+    """Test that only one instance is allowed when app is installed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1486,7 +1486,7 @@ async def test_addon_not_installed(
     start_addon: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test add-on not installed."""
+    """Test app not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1533,7 +1533,7 @@ async def test_addon_not_installed_failures(
     addon_info: AsyncMock,
     install_addon: AsyncMock,
 ) -> None:
-    """Test add-on install failure."""
+    """Test app install failure."""
     install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
@@ -1570,7 +1570,7 @@ async def test_addon_not_installed_failures_zeroconf(
     not_onboarded: MagicMock,
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
-    """Test add-on install failure."""
+    """Test app install failure."""
     install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
@@ -1608,7 +1608,7 @@ async def test_addon_not_installed_already_configured(
     client_connect: AsyncMock,
     setup_entry: AsyncMock,
 ) -> None:
-    """Test that only one instance is allowed when add-on is not installed."""
+    """Test that only one instance is allowed when app is not installed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

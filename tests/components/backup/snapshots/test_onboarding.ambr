@@ -23,7 +23,7 @@
           'instance_id': 'abc123',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),
@@ -54,7 +54,7 @@
           'instance_id': 'unknown_uuid',
           'with_automatic_settings': True,
         }),
-        'failed_addons': list([
+        'failed_apps': list([
         ]),
         'failed_agent_ids': list([
         ]),

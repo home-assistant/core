@@ -375,7 +375,7 @@
         "min": 0,
         "max": 1,
         "states": {
-          "0": "Add-on",
+          "0": "App",
           "1": "Standard"
         },
         "valueSize": 1,

@@ -120,7 +120,7 @@ def discovery_info_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="get_addon_discovery_info", autouse=True)
 def get_addon_discovery_info_fixture(get_addon_discovery_info: AsyncMock) -> AsyncMock:
-    """Get add-on discovery info."""
+    """Get app discovery info."""
     return get_addon_discovery_info
 
 
@@ -153,7 +153,7 @@ def mock_supervisor_fixture() -> Generator[None]:
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
 def mock_addon_setup_time() -> Generator[None]:
-    """Mock add-on setup sleep time."""
+    """Mock app setup sleep time."""
     with patch(
         "homeassistant.components.zwave_js.config_flow.ADDON_SETUP_TIMEOUT", new=0
     ):
@@ -631,7 +631,7 @@ async def test_abort_hassio_discovery_with_existing_flow(hass: HomeAssistant) ->
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
 async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> None:
-    """Test hassio discovery flow is aborted for a non official add-on discovery."""
+    """Test hassio discovery flow is aborted for a non official app discovery."""
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -795,7 +795,7 @@ async def test_usb_discovery_addon_not_running(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test usb discovery when add-on is installed but not running."""
+    """Test usb discovery when app is installed but not running."""
     addon_options["device"] = "/dev/incorrect_device"
 
     result = await hass.config_entries.flow.async_init(
@@ -1428,7 +1428,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
+    """Test ESPHome discovery aborts when home ID already configured with unmanaged app."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -1593,7 +1593,7 @@ async def test_discovery_addon_not_running(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test discovery with add-on already installed but not running."""
+    """Test discovery with app already installed but not running."""
     addon_options["device"] = None
 
     result = await hass.config_entries.flow.async_init(
@@ -1706,7 +1706,7 @@ async def test_discovery_addon_not_installed(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test discovery with add-on not installed."""
+    """Test discovery with app not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -1887,7 +1887,7 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
-    """Test usb discovery aborted when existing entry not using add-on."""
+    """Test usb discovery aborted when existing entry not using app."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "ws://localhost:3000"},
@@ -1922,7 +1922,7 @@ async def test_usb_discovery_same_device(
     addon_options: dict[str, Any],
     mock_usb_serial_by_id: MagicMock,
 ) -> None:
-    """Test usb discovery flow is aborted when the add-on device is discovered."""
+    """Test usb discovery flow is aborted when the app device is discovered."""
     addon_options["device"] = USB_DISCOVERY_INFO.device
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1955,7 +1955,7 @@ async def test_abort_usb_discovery_aborts_specific_devices(
 
 @pytest.mark.usefixtures("supervisor")
 async def test_not_addon(hass: HomeAssistant) -> None:
-    """Test opting out of add-on on Supervisor."""
+    """Test opting out of app on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2019,7 +2019,7 @@ async def test_addon_running(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
 ) -> None:
-    """Test add-on already running on Supervisor."""
+    """Test app already running on Supervisor."""
     addon_options["device"] = "/test"
     addon_options["s0_legacy_key"] = "new123"
     addon_options["s2_access_control_key"] = "new456"
@@ -2141,7 +2141,7 @@ async def test_addon_running_failures(
     addon_options: dict[str, Any],
     abort_reason: str,
 ) -> None:
-    """Test all failures when add-on is running."""
+    """Test all failures when app is running."""
     addon_options["device"] = "/test"
     addon_options["network_key"] = "abc123"
 
@@ -2172,7 +2172,7 @@ async def test_addon_running_already_configured(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
 ) -> None:
-    """Test that only one unique instance is allowed when add-on is running."""
+    """Test that only one unique instance is allowed when app is running."""
     addon_options["device"] = "/test_new"
     addon_options["s0_legacy_key"] = "new123"
     addon_options["s2_access_control_key"] = "new456"
@@ -2237,7 +2237,7 @@ async def test_addon_installed(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test add-on already installed but not running on Supervisor."""
+    """Test app already installed but not running on Supervisor."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2351,7 +2351,7 @@ async def test_addon_installed_start_failure(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test add-on start failure when add-on is installed."""
+    """Test app start failure when app is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2459,7 +2459,7 @@ async def test_addon_installed_failures(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test all failures when add-on is installed."""
+    """Test all failures when app is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2548,7 +2548,7 @@ async def test_addon_installed_set_options_failure(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test all failures when add-on is installed."""
+    """Test all failures when app is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2626,7 +2626,7 @@ async def test_addon_installed_set_options_failure(
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_addon_installed_usb_ports_failure(hass: HomeAssistant) -> None:
-    """Test usb ports failure when add-on is installed."""
+    """Test usb ports failure when app is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2660,7 +2660,7 @@ async def test_addon_installed_already_configured(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test that only one unique instance is allowed when add-on is installed."""
+    """Test that only one unique instance is allowed when app is installed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -2775,7 +2775,7 @@ async def test_addon_not_installed(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test add-on not installed."""
+    """Test app not installed."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -2896,7 +2896,7 @@ async def test_install_addon_failure(
     hass: HomeAssistant,
     install_addon: AsyncMock,
 ) -> None:
-    """Test add-on install failure."""
+    """Test app install failure."""
     install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
@@ -3003,7 +3003,7 @@ async def test_reconfigure_not_addon(
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test reconfigure flow and opting out of add-on on Supervisor."""
+    """Test reconfigure flow and opting out of app on Supervisor."""
     entry = integration
     hass.config_entries.async_update_entry(entry, unique_id="1234")
 
@@ -3054,7 +3054,7 @@ async def test_reconfigure_not_addon_with_addon(
     integration: MockConfigEntry,
     stop_addon: AsyncMock,
 ) -> None:
-    """Test reconfigure flow opting out of add-on on Supervisor with add-on."""
+    """Test reconfigure flow opting out of app on Supervisor with app."""
     entry = integration
     hass.config_entries.async_update_entry(
         entry,
@@ -3121,7 +3121,7 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
     integration: MockConfigEntry,
     stop_addon: AsyncMock,
 ) -> None:
-    """Test reconfigure flow opting out of add-on and add-on stop error."""
+    """Test reconfigure flow opting out of app and app stop error."""
     stop_addon.side_effect = SupervisorError("Boom!")
     entry = integration
     hass.config_entries.async_update_entry(
@@ -3255,7 +3255,7 @@ async def test_reconfigure_addon_running(
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
-    """Test reconfigure flow and add-on already running on Supervisor."""
+    """Test reconfigure flow and app already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -3384,7 +3384,7 @@ async def test_reconfigure_addon_running_no_changes(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
-    """Test reconfigure flow without changes, and add-on already running on Supervisor."""
+    """Test reconfigure flow without changes, and app already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -3728,7 +3728,7 @@ async def test_reconfigure_addon_restart_failed(
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
-    """Test reconfigure flow and add-on restart failure."""
+    """Test reconfigure flow and app restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -3812,7 +3812,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     addon_options: dict[str, Any],
     set_addon_options: AsyncMock,
 ) -> None:
-    """Test reconfigure flow and add-on already running with server info failure."""
+    """Test reconfigure flow and app already running with server info failure."""
     old_addon_options = {
         "device": "/test",
         "network_key": "abc123",
@@ -3963,7 +3963,7 @@ async def test_reconfigure_addon_not_installed(
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
-    """Test reconfigure flow and add-on not installed on Supervisor."""
+    """Test reconfigure flow and app not installed on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -4098,7 +4098,7 @@ async def test_reconfigure_migrate_no_addon(
     hass: HomeAssistant,
     integration: MockConfigEntry,
 ) -> None:
-    """Test migration flow fails when not using add-on."""
+    """Test migration flow fails when not using app."""
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": False}
@@ -4189,7 +4189,7 @@ async def test_reconfigure_migrate_with_addon(
     keep_old_devices: bool,
     device_entry_count: int,
 ) -> None:
-    """Test migration flow with add-on."""
+    """Test migration flow with app."""
     version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
@@ -4328,7 +4328,7 @@ async def test_reconfigure_migrate_with_addon(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    # Ensure add-on running would migrate the old settings back into the config entry
+    # Ensure app running would migrate the old settings back into the config entry
     with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -4596,7 +4596,7 @@ async def test_reconfigure_migrate_start_addon_failure(
     restart_addon: AsyncMock,
     set_addon_options: AsyncMock,
 ) -> None:
-    """Test add-on start failure during migration."""
+    """Test app start failure during migration."""
     restart_addon.side_effect = SupervisorError("Boom!")
     entry = integration
     hass.config_entries.async_update_entry(
@@ -5348,7 +5348,7 @@ async def test_addon_rf_region_migrate_network(
     set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
 ) -> None:
-    """Test migration flow with add-on."""
+    """Test migration flow with app."""
     hass.config.country = None
     version_info = get_server_version.return_value
     entry = integration

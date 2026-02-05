@@ -177,7 +177,7 @@ async def test_hassio_addon_discovery(
 
 
 async def test_hassio_addon_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort discovery if the add-on is already configured."""
+    """Test we abort discovery if the app is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "mock-piper", "port": 10200},

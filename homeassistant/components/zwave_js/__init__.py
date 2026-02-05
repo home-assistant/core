@@ -1147,11 +1147,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> 
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Z-Wave JS add-on")
+        LOGGER.debug("Stopping Z-Wave JS app")
         try:
             await addon_manager.async_stop_addon()
         except AddonError as err:
-            LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+            LOGGER.error("Failed to stop the Z-Wave JS app: %s", err)
             return False
 
     return unload_ok
@@ -1182,7 +1182,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> 
 async def async_ensure_addon_running(
     hass: HomeAssistant, entry: ZwaveJSConfigEntry
 ) -> None:
-    """Ensure that Z-Wave JS add-on is installed and running."""
+    """Ensure that Z-Wave JS app is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
         addon_info = await addon_manager.async_get_addon_info()
@@ -1285,7 +1285,7 @@ async def async_ensure_addon_running(
 
 @callback
 def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
-    """Ensure that Z-Wave JS add-on is updated and running."""
+    """Ensure that Z-Wave JS app is updated and running."""
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady

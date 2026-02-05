@@ -881,7 +881,7 @@ async def test_config_flow_thread_addon_already_installed(
             ),
         )
 
-    # The add-on has been installed
+    # The app has been installed
     assert set_addon_options.call_args == call(
         "core_openthread_border_router",
         AddonsOptions(

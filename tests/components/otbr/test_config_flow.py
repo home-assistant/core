@@ -57,7 +57,7 @@ HASSIO_DATA_OTBR = HassioServiceInfo(
 
 @pytest.fixture(name="otbr_addon_info")
 def otbr_addon_info_fixture(addon_info: AsyncMock, addon_installed) -> AsyncMock:
-    """Mock Supervisor otbr add-on info."""
+    """Mock Supervisor otbr app info."""
     addon_info.return_value.available = True
     addon_info.return_value.hostname = ""
     addon_info.return_value.options = {}

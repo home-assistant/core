@@ -406,7 +406,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                     self.entry_id, self.dev_reg, new_data[DATA_KEY_OS]
                 )
 
-        # Remove add-ons that are no longer installed from device registry
+        # Remove apps that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
             for device in self.dev_reg.devices.get_devices_for_config_entry_id(
@@ -436,7 +436,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)
 
-        # If there are new add-ons or mounts, we should reload the config entry so we can
+        # If there are new apps or mounts, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
         if self.data and (
@@ -451,7 +451,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return new_data
 
     async def get_changelog(self, addon_slug: str) -> str | None:
-        """Get the changelog for an add-on."""
+        """Get the changelog for an app."""
         try:
             return await self.supervisor_client.store.addon_changelog(addon_slug)
         except SupervisorNotFoundError:
@@ -487,7 +487,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             if addon[ATTR_STATE] == ATTR_STARTED:
                 started_addons.append(slug)
         #
-        # Update add-on info if its the first update or
+        # Update app info if its the first update or
         # there is at least one entity that needs the data.
         #
         # When entities are added they call async_enable_container_updates
@@ -540,7 +540,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         return (slug, stats.to_dict())
 
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
-        """Return the info for an add-on."""
+        """Return the info for an app."""
         try:
             info = await self.supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:
@@ -556,7 +556,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     def async_enable_container_updates(
         self, slug: str, entity_id: str, types: set[str]
     ) -> CALLBACK_TYPE:
-        """Enable updates for an add-on."""
+        """Enable updates for an app."""
         enabled_updates = self._container_updates[slug]
         for key in types:
             enabled_updates[key].add(entity_id)

@@ -912,7 +912,7 @@ async def test_device_registry_calls(
         ],
     }
 
-    # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
+    # Test that when addon is removed, next update will remove the app and subsequent updates won't
     with (
         patch(
             "homeassistant.components.hassio.HassIO.get_supervisor_info",

@@ -781,7 +781,7 @@ async def backup_addon_before_update(
     addon_name: str | None,
     installed_version: str | None,
 ) -> None:
-    """Prepare for updating an add-on."""
+    """Prepare for updating an app."""
     backup_manager = hass.data[DATA_MANAGER]
     client = get_supervisor_client(hass)
 

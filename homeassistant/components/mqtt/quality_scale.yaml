@@ -97,8 +97,8 @@ rules:
   discovery-update-info:
     status: done
     comment: >
-      If the Mosquitto broker add-on is used to set up MQTT from discovery,
-      and the broker add-on is re-installed,
+      If the Mosquitto broker app is used to set up MQTT from discovery,
+      and the broker app is re-installed,
       MQTT will automatically update from the new brokers credentials.
   repair-issues:
     status: done

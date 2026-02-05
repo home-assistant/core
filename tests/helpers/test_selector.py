@@ -483,7 +483,7 @@ def test_number_selector_schema_error(schema) -> None:
     [({}, ("abc123",), (None,))],
 )
 def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> None:
-    """Test add-on selector."""
+    """Test app selector."""
     _test_selector("addon", schema, valid_selections, invalid_selections)
 
 

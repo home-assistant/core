@@ -1455,8 +1455,8 @@ async def test_setting_up_core_update_when_addon_fails(
 ) -> None:
     """Test setting up core update when single addon fails."""
     addon_installed.side_effect = SupervisorBadRequestError("Addon Test does not exist")
-    addon_stats.side_effect = SupervisorBadRequestError("add-on is not running")
-    addon_changelog.side_effect = SupervisorBadRequestError("add-on is not running")
+    addon_stats.side_effect = SupervisorBadRequestError("app is not running")
+    addon_changelog.side_effect = SupervisorBadRequestError("app is not running")
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
     ):

@@ -34,7 +34,7 @@ MOCK_STORE_ADDONS = [
         advanced=False,
         available=True,
         build=False,
-        description="Test add-on service",
+        description="Test app service",
         homeassistant=None,
         icon=False,
         logo=False,
@@ -52,7 +52,7 @@ MOCK_STORE_ADDONS = [
 MOCK_REPOSITORIES = [
     Repository(
         slug="core",
-        name="Official add-ons",
+        name="Official apps",
         source="core",
         url="https://home-assistant.io/addons",
         maintainer="Home Assistant",
@@ -78,7 +78,7 @@ def mock_addon_store_info(
     supervisor_client: AsyncMock,
     addon_store_info_side_effect: Any | None,
 ) -> AsyncMock:
-    """Mock Supervisor add-on store info."""
+    """Mock Supervisor app store info."""
     supervisor_client.store.addon_info.side_effect = addon_store_info_side_effect
 
     supervisor_client.store.addon_info.return_value = addon_info = Mock(
@@ -103,7 +103,7 @@ def mock_addon_store_info(
 def mock_addon_info(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
 ) -> AsyncMock:
-    """Mock Supervisor add-on info."""
+    """Mock Supervisor app info."""
     supervisor_client.addons.addon_info.side_effect = addon_info_side_effect
 
     supervisor_client.addons.addon_info.return_value = addon_info = Mock(
@@ -130,7 +130,7 @@ def mock_addon_info(
 def mock_addon_not_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
-    """Mock add-on not installed."""
+    """Mock app not installed."""
     addon_store_info.return_value.available = True
     return addon_info
 
@@ -138,7 +138,7 @@ def mock_addon_not_installed(
 def mock_addon_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
-    """Mock add-on already installed but not running."""
+    """Mock app already installed but not running."""
     addon_store_info.return_value.available = True
     addon_store_info.return_value.installed = True
     addon_info.return_value.available = True
@@ -149,7 +149,7 @@ def mock_addon_installed(
 
 
 def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
-    """Mock add-on already running."""
+    """Mock app already running."""
     mock_addon_installed(addon_store_info, addon_info)
     addon_info.return_value.state = "started"
     return addon_info
@@ -158,10 +158,10 @@ def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> As
 def mock_install_addon_side_effect(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
-    """Return the install add-on side effect."""
+    """Return the install app side effect."""
 
     async def install_addon(addon: str):
-        """Mock install add-on."""
+        """Mock install app."""
         addon_store_info.return_value.available = True
         addon_store_info.return_value.installed = True
         addon_info.return_value.available = True
@@ -174,10 +174,10 @@ def mock_install_addon_side_effect(
 def mock_start_addon_side_effect(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
-    """Return the start add-on options side effect."""
+    """Return the start app options side effect."""
 
     async def start_addon(addon: str) -> None:
-        """Mock start add-on."""
+        """Mock start app."""
         addon_store_info.return_value.available = True
         addon_store_info.return_value.installed = True
         addon_info.return_value.available = True
@@ -187,10 +187,10 @@ def mock_start_addon_side_effect(
 
 
 def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | None:
-    """Return the set add-on options side effect."""
+    """Return the set app options side effect."""
 
     async def set_addon_options(slug: str, options: AddonsOptions) -> None:
-        """Mock set add-on options."""
+        """Mock set app options."""
         addon_options.update(options.config)
 
     return set_addon_options

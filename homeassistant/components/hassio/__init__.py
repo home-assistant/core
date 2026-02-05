@@ -304,7 +304,7 @@ HARDWARE_INTEGRATIONS = {
 
 
 def hostname_from_addon_slug(addon_slug: str) -> str:
-    """Return hostname of add-on."""
+    """Return hostname of app."""
     return addon_slug.replace("_", "-")
 
 
@@ -501,7 +501,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)
 
-    # Init add-on ingress panels
+    # Init app ingress panels
     panels_task = hass.async_create_task(
         async_setup_addon_panel(hass, hassio), eager_start=True
     )

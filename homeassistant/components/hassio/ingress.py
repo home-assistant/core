@@ -1,4 +1,4 @@
-"""Hass.io Add-on ingress service."""
+"""Hass.io App ingress service."""
 
 from __future__ import annotations
 

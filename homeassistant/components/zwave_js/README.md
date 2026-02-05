@@ -73,7 +73,7 @@ Z-Wave JS Server can be run as a standalone Node app.
 
 It can also run as part of Z-Wave JS UI, which is also a standalone Node app.
 
-Both apps are available as Home Assistant add-ons. There are also Docker containers etc.
+Both apps are available as Home Assistant apps. There are also Docker containers etc.
 
 [connection_diagram]: docs/z_wave_js_connection.png "Connection Diagram"
 [//]: # (https://docs.google.com/drawings/d/10yrczSRwV4kjQwzDnCLGoAJkePaB0BMVb1sWZeeDO7U/edit?usp=sharing)

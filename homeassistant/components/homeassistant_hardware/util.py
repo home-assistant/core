@@ -78,7 +78,7 @@ class ResetTarget(StrEnum):
 @singleton(OTBR_ADDON_MANAGER_DATA)
 @callback
 def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the OTBR add-on manager."""
+    """Get the OTBR app manager."""
     return WaitingAddonManager(
         hass,
         _LOGGER,
@@ -90,7 +90,7 @@ def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
 @singleton(ZIGBEE_FLASHER_ADDON_MANAGER_DATA)
 @callback
 def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the flasher add-on manager."""
+    """Get the flasher app manager."""
     return WaitingAddonManager(
         hass,
         _LOGGER,
@@ -101,7 +101,7 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
 
 @dataclass(kw_only=True)
 class OwningAddon:
-    """Owning add-on."""
+    """Owning app."""
 
     slug: str
 
@@ -109,12 +109,12 @@ class OwningAddon:
         return WaitingAddonManager(
             hass,
             _LOGGER,
-            f"Add-on {self.slug}",
+            f"App {self.slug}",
             self.slug,
         )
 
     async def is_running(self, hass: HomeAssistant) -> bool:
-        """Check if the add-on is running."""
+        """Check if the app is running."""
         addon_manager = self._get_addon_manager(hass)
 
         try:
@@ -126,7 +126,7 @@ class OwningAddon:
 
     @asynccontextmanager
     async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
-        """Temporarily stop the add-on, restarting it after completion."""
+        """Temporarily stop the app, restarting it after completion."""
         addon_manager = self._get_addon_manager(hass)
 
         try:
@@ -205,7 +205,7 @@ class FirmwareInfo:
 async def get_otbr_addon_firmware_info(
     hass: HomeAssistant, otbr_addon_manager: AddonManager
 ) -> FirmwareInfo | None:
-    """Get firmware info from the OTBR add-on."""
+    """Get firmware info from the OTBR app."""
     try:
         otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
     except AddonError:
