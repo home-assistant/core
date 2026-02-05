@@ -535,9 +535,9 @@ def _find_timer(
 
     # Search by id first
     timer_id: str | None = None
-    if "timer_id" in slots:
+    if "id" in slots:
         has_filter = True
-        timer_id = slots["timer_id"]["value"]
+        timer_id = slots["id"]["value"]
         assert timer_id is not None
 
         matching_timers = [t for t in matching_timers if t.id == timer_id]
