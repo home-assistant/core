@@ -68,6 +68,8 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_FIRST_AVAILABLE = "first_available"
+ATTR_FIRST_AVAILABLE_ENTITY_ID = "first_available_entity_id"
 ATTR_RANGE = "range"
 ATTR_STDEV = "stdev"
 ATTR_SUM = "sum"
@@ -78,6 +80,7 @@ SENSOR_TYPES = {
     ATTR_MEAN: "mean",
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
+    ATTR_FIRST_AVAILABLE: "first_available",
     ATTR_RANGE: "range",
     ATTR_STDEV: "stdev",
     ATTR_SUM: "sum",
@@ -255,6 +258,19 @@ def calc_last(
     return attributes, last
 
 
+def calc_first_available(
+    sensor_values: list[tuple[str, float, State]],
+) -> tuple[dict[str, str | None], float | None]:
+    """Calculate first available value."""
+    first_available_entity_id: str | None = None
+    first_available: float | None = None
+    if sensor_values:
+        first_available_entity_id, first_available, _ = sensor_values[0]
+
+    attributes = {ATTR_FIRST_AVAILABLE_ENTITY_ID: first_available_entity_id}
+    return attributes, first_available
+
+
 def calc_range(
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
@@ -309,6 +325,7 @@ CALC_TYPES: dict[
     "mean": calc_mean,
     "median": calc_median,
     "last": calc_last,
+    "first_available": calc_first_available,
     "range": calc_range,
     "stdev": calc_stdev,
     "sum": calc_sum,
