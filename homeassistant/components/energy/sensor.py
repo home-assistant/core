@@ -258,8 +258,8 @@ class SensorManager:
         """Process grid export compensation sensor (unified format).
 
         The unified grid format uses different field names for export pricing:
-        - entity_energy_price_sell instead of entity_energy_price
-        - number_energy_price_sell instead of number_energy_price
+        - entity_energy_price_export instead of entity_energy_price
+        - number_energy_price_export instead of number_energy_price
         """
         # No export meter configured
         stat_energy_to = config.get("stat_energy_to")
@@ -274,8 +274,8 @@ class SensorManager:
 
         # Check for export pricing fields (different names in unified format)
         if not valid_entity_id(stat_energy_to) or (
-            config.get("entity_energy_price_sell") is None
-            and config.get("number_energy_price_sell") is None
+            config.get("entity_energy_price_export") is None
+            and config.get("number_energy_price_export") is None
         ):
             return
 
@@ -284,8 +284,8 @@ class SensorManager:
         export_config: dict[str, Any] = {
             "stat_energy_to": stat_energy_to,
             "stat_compensation": config.get("stat_compensation"),
-            "entity_energy_price": config.get("entity_energy_price_sell"),
-            "number_energy_price": config.get("number_energy_price_sell"),
+            "entity_energy_price": config.get("entity_energy_price_export"),
+            "number_energy_price": config.get("number_energy_price_export"),
         }
 
         if current_entity := to_remove.pop(key, None):
@@ -369,7 +369,7 @@ class EnergyCostSensor(SensorEntity):
     - number_energy_price: Fixed price per unit
 
     Note: For grid export compensation, the unified format uses different field names
-    (entity_energy_price_sell, number_energy_price_sell). The _process_grid_export_sensor
+    (entity_energy_price_export, number_energy_price_export). The _process_grid_export_sensor
     method in SensorManager creates a wrapper config that maps these to the standard
     field names (entity_energy_price, number_energy_price) so this class can use them.
     """

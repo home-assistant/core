@@ -130,8 +130,8 @@ class GridSourceType(TypedDict):
 
     # Compensation tracking for export
     stat_compensation: str | None  # statistic_id of compensation ($) received
-    entity_energy_price_sell: str | None  # entity_id providing sell price ($/kWh)
-    number_energy_price_sell: float | None  # Fixed sell price ($/kWh)
+    entity_energy_price_export: str | None  # entity_id providing export price ($/kWh)
+    number_energy_price_export: float | None  # Fixed export price ($/kWh)
 
     # Power measurement (optional)
     # positive when consuming from grid, negative when exporting
@@ -345,7 +345,7 @@ def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[di
     return validate_uniqueness
 
 
-def _grid_ensure_single_price(
+def _grid_ensure_single_price_import(
     val: dict[str, Any],
 ) -> dict[str, Any]:
     """Ensure we use a single price source for import."""
@@ -357,15 +357,15 @@ def _grid_ensure_single_price(
     return val
 
 
-def _grid_ensure_single_sell_price(
+def _grid_ensure_single_price_export(
     val: dict[str, Any],
 ) -> dict[str, Any]:
     """Ensure we use a single price source for export."""
     if (
-        val.get("entity_energy_price_sell") is not None
-        and val.get("number_energy_price_sell") is not None
+        val.get("entity_energy_price_export") is not None
+        and val.get("number_energy_price_export") is not None
     ):
-        raise vol.Invalid("Define either an entity or a fixed number for sell price")
+        raise vol.Invalid("Define either an entity or a fixed number for export price")
     return val
 
 
@@ -401,8 +401,10 @@ GRID_SOURCE_SCHEMA = vol.All(
             ),
             # Export compensation tracking
             vol.Optional("stat_compensation", default=None): vol.Any(str, None),
-            vol.Optional("entity_energy_price_sell", default=None): vol.Any(str, None),
-            vol.Optional("number_energy_price_sell", default=None): vol.Any(
+            vol.Optional("entity_energy_price_export", default=None): vol.Any(
+                str, None
+            ),
+            vol.Optional("number_energy_price_export", default=None): vol.Any(
                 vol.Coerce(float), None
             ),
             # Power measurement (optional)
@@ -411,8 +413,8 @@ GRID_SOURCE_SCHEMA = vol.All(
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
         }
     ),
-    _grid_ensure_single_price,
-    _grid_ensure_single_sell_price,
+    _grid_ensure_single_price_import,
+    _grid_ensure_single_price_export,
     _grid_ensure_at_least_one_stat,
 )
 SOLAR_SOURCE_SCHEMA = vol.Schema(
@@ -534,13 +536,15 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
 def _migrate_legacy_grid_to_unified(
     old_grid: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Migrate legacy grid format (flow_from/flow_to arrays) to unified format.
+    """Migrate legacy grid format (flow_from/flow_to/power arrays) to unified format.
 
-    Migration strategy:
-    - Pair flow_from[i] with flow_to[i] when counts match
-    - When counts differ: pair by index, extras get None for the missing side
-    - Power config at index i goes to grid connection at index i
-    - Power-only grids (no flow_from/flow_to) are preserved with null energy stats
+    Each grid connection can have any combination of import, export, and power -
+    all are optional as long as at least one is configured.
+
+    Migration pairs arrays by index position:
+    - flow_from[i], flow_to[i], and power[i] combine into grid connection i
+    - If arrays have different lengths, missing entries get None for that field
+    - The number of grid connections equals max(len(flow_from), len(flow_to), len(power))
     """
     flow_from = old_grid.get("flow_from", [])
     flow_to = old_grid.get("flow_to", [])
@@ -548,7 +552,7 @@ def _migrate_legacy_grid_to_unified(
     cost_adj = old_grid.get("cost_adjustment_day", 0.0)
 
     new_sources: list[dict[str, Any]] = []
-    # Include power_list in max to preserve power-only grids
+    # Number of grid connections = max length across all three arrays
     # If all arrays are empty, don't create any grid sources
     max_len = max(len(flow_from), len(flow_to), len(power_list))
     if max_len == 0:
@@ -579,13 +583,13 @@ def _migrate_legacy_grid_to_unified(
             ft = flow_to[i]
             source["stat_energy_to"] = ft.get("stat_energy_to")
             source["stat_compensation"] = ft.get("stat_compensation")
-            source["entity_energy_price_sell"] = ft.get("entity_energy_price")
-            source["number_energy_price_sell"] = ft.get("number_energy_price")
+            source["entity_energy_price_export"] = ft.get("entity_energy_price")
+            source["number_energy_price_export"] = ft.get("number_energy_price")
         else:
             source["stat_energy_to"] = None
             source["stat_compensation"] = None
-            source["entity_energy_price_sell"] = None
-            source["number_energy_price_sell"] = None
+            source["entity_energy_price_export"] = None
+            source["number_energy_price_export"] = None
 
         # Power config at index i goes to grid connection at index i
         if i < len(power_list):

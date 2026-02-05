@@ -487,12 +487,14 @@ def _validate_grid_source(
                     source_result,
                 )
             )
-        elif (entity_price_sell := source.get("entity_energy_price_sell")) is not None:
+        elif (
+            entity_price_export := source.get("entity_energy_price_export")
+        ) is not None:
             validate_calls.append(
                 functools.partial(
                     _async_validate_price_entity,
                     hass,
-                    entity_price_sell,
+                    entity_price_export,
                     source_result,
                     ENERGY_PRICE_UNITS,
                     ENERGY_PRICE_UNIT_ERROR,
@@ -500,8 +502,8 @@ def _validate_grid_source(
             )
 
         if (
-            source.get("entity_energy_price_sell") is not None
-            or source.get("number_energy_price_sell") is not None
+            source.get("entity_energy_price_export") is not None
+            or source.get("number_energy_price_export") is not None
         ):
             validate_calls.append(
                 functools.partial(

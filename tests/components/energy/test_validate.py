@@ -546,7 +546,7 @@ async def test_validation_grid_price_not_exist(
                     "stat_energy_from": "sensor.grid_consumption_1",
                     "stat_energy_to": "sensor.grid_production_1",
                     "entity_energy_price": "sensor.grid_price_1",
-                    "number_energy_price_sell": 0.10,
+                    "number_energy_price_export": 0.10,
                     "cost_adjustment_day": 0.0,
                 }
             ]

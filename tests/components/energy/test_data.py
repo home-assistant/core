@@ -166,8 +166,8 @@ async def test_grid_power_config_inverted_sets_stat_rate(
                     "stat_compensation": None,
                     "entity_energy_price": None,
                     "number_energy_price": None,
-                    "entity_energy_price_sell": None,
-                    "number_energy_price_sell": None,
+                    "entity_energy_price_export": None,
+                    "number_energy_price_export": None,
                     "power_config": {
                         "stat_rate_inverted": "sensor.grid_power",
                     },
@@ -381,8 +381,8 @@ async def test_grid_power_config_standard_stat_rate(hass: HomeAssistant) -> None
                     "stat_compensation": None,
                     "entity_energy_price": None,
                     "number_energy_price": None,
-                    "entity_energy_price_sell": None,
-                    "number_energy_price_sell": None,
+                    "entity_energy_price_export": None,
+                    "number_energy_price_export": None,
                     "power_config": {
                         "stat_rate": "sensor.grid_power",
                     },
@@ -411,8 +411,8 @@ async def test_grid_new_format_validates_correctly() -> None:
                 "stat_compensation": None,
                 "entity_energy_price": None,
                 "number_energy_price": 0.15,
-                "entity_energy_price_sell": None,
-                "number_energy_price_sell": 0.08,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": 0.08,
                 "cost_adjustment_day": 0,
             },
         ]
@@ -482,8 +482,8 @@ async def test_grid_power_without_power_config(hass: HomeAssistant) -> None:
                     "stat_compensation": None,
                     "entity_energy_price": None,
                     "number_energy_price": None,
-                    "entity_energy_price_sell": None,
-                    "number_energy_price_sell": None,
+                    "entity_energy_price_export": None,
+                    "number_energy_price_export": None,
                     # No power_config, just stat_rate directly
                     "stat_rate": "sensor.grid_power",
                     "cost_adjustment_day": 0,
@@ -548,7 +548,7 @@ async def test_grid_migration_single_import_export(hass: HomeAssistant) -> None:
     assert grid["stat_cost"] == "sensor.grid_cost"
     assert grid["stat_compensation"] is None
     assert grid["entity_energy_price"] is None
-    assert grid["entity_energy_price_sell"] == "sensor.sell_price"
+    assert grid["entity_energy_price_export"] == "sensor.sell_price"
     assert grid["cost_adjustment_day"] == 0.5
 
     # Should not have legacy fields
@@ -613,14 +613,14 @@ async def test_grid_migration_multiple_imports_exports_paired(
     assert grid1["stat_energy_from"] == "sensor.grid_import_1"
     assert grid1["stat_energy_to"] == "sensor.grid_export_1"
     assert grid1["number_energy_price"] == 0.15
-    assert grid1["number_energy_price_sell"] == 0.08
+    assert grid1["number_energy_price_export"] == 0.08
 
     # Second grid: paired import_2 with export_2
     grid2 = manager.data["energy_sources"][1]
     assert grid2["stat_energy_from"] == "sensor.grid_import_2"
     assert grid2["stat_energy_to"] == "sensor.grid_export_2"
     assert grid2["number_energy_price"] == 0.20
-    assert grid2["number_energy_price_sell"] == 0.05
+    assert grid2["number_energy_price_export"] == 0.05
 
 
 async def test_grid_migration_more_imports_than_exports(hass: HomeAssistant) -> None:
@@ -795,8 +795,8 @@ async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
                 "stat_compensation": None,
                 "entity_energy_price": None,
                 "number_energy_price": 0.15,
-                "entity_energy_price_sell": None,
-                "number_energy_price_sell": 0.08,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": 0.08,
                 "cost_adjustment_day": 0,
             }
         ],
@@ -836,10 +836,10 @@ async def test_grid_validation_single_import_price() -> None:
         )
 
 
-async def test_grid_validation_single_sell_price() -> None:
-    """Test that grid validation rejects both entity and number sell price."""
+async def test_grid_validation_single_export_price() -> None:
+    """Test that grid validation rejects both entity and number export price."""
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for sell price"
+        vol.Invalid, match="Define either an entity or a fixed number for export price"
     ):
         ENERGY_SOURCE_SCHEMA(
             [
@@ -847,8 +847,8 @@ async def test_grid_validation_single_sell_price() -> None:
                     "type": "grid",
                     "stat_energy_from": "sensor.grid_import",
                     "stat_energy_to": "sensor.grid_export",
-                    "entity_energy_price_sell": "sensor.sell_price",
-                    "number_energy_price_sell": 0.08,
+                    "entity_energy_price_export": "sensor.sell_price",
+                    "number_energy_price_export": 0.08,
                     "cost_adjustment_day": 0,
                 }
             ]
