@@ -18,12 +18,15 @@ from homeassistant.util.scaling import int_states_in_range
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 from .entity import IntelliClimaECOEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 PRESET_MODES_TO_INTELLICLIMA_MODE = {
-    "forward": str(FanMode.inward),
-    "reverse": str(FanMode.outward),
-    "alternate": str(FanMode.alternate),
-    "sensor": str(FanMode.sensor),
-    "auto": str(FanMode.sensor),
+    "forward": FanMode.inward,
+    "reverse": FanMode.outward,
+    "alternate": FanMode.alternate,
+    "sensor": FanMode.sensor,
+    "auto": FanMode.sensor,
 }
 INTELLICLIMA_MODE_TO_PRESET_MODES = {
     v: k for k, v in PRESET_MODES_TO_INTELLICLIMA_MODE.items() if k != "auto"
@@ -73,7 +76,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device_data.mode_set != FanMode.off
+        return bool(self._device_data.mode_set != FanMode.off)
 
     @property
     def percentage(self) -> int | None:
@@ -103,7 +106,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         ):
             return "auto"
 
-        return INTELLICLIMA_MODE_TO_PRESET_MODES[device_data.mode_set]
+        return INTELLICLIMA_MODE_TO_PRESET_MODES[FanMode(device_data.mode_set)]
 
     @property
     def preset_modes(self) -> list[str]:
