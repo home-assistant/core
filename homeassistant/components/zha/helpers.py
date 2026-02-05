@@ -238,15 +238,16 @@ class GroupEntityReference(NamedTuple):
 class ZHAGroupProxy(LogMixin):
     """Proxy class to interact with the ZHA group instances."""
 
-    _ha_device_id: str
+    _ha_device_id: str | None
 
     def __init__(self, group: Group, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         self.group: Group = group
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+        self._ha_device_id = None
 
     @property
-    def device_id(self) -> str:
+    def device_id(self) -> str | None:
         """Return the HA device registry device id."""
         return self._ha_device_id
 
@@ -885,15 +886,17 @@ class ZHAGatewayProxy(EventBase):
             )
             self.group_proxies[group_info.group_id] = zha_group_proxy
 
-            device_registry = dr.async_get(self.hass)
-            coordinator_ieee = str(self.gateway.state.node_info.ieee)
-            device_registry_device = device_registry.async_get_or_create(
-                config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, zha_group_proxy.group_device_identifier)},
-                name=zha_group_proxy.group.name,
-                via_device=(DOMAIN, coordinator_ieee),
-            )
-            zha_group_proxy.device_id = device_registry_device.id
+            # Only create a device for groups that have entities
+            if zha_group_proxy.group.group_entities:
+                device_registry = dr.async_get(self.hass)
+                coordinator_ieee = str(self.gateway.state.node_info.ieee)
+                device_registry_device = device_registry.async_get_or_create(
+                    config_entry_id=self.config_entry.entry_id,
+                    identifiers={(DOMAIN, zha_group_proxy.group_device_identifier)},
+                    name=zha_group_proxy.group.name,
+                    via_device=(DOMAIN, coordinator_ieee),
+                )
+                zha_group_proxy.device_id = device_registry_device.id
         return zha_group_proxy
 
     def _create_entity_metadata(
@@ -926,9 +929,11 @@ class ZHAGatewayProxy(EventBase):
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
         """Remove device and entity registry entries for group when the group is removed from HA."""
-        device_registry = dr.async_get(self.hass)
-        # Remove the group device, which will also remove associated entities
-        device_registry.async_remove_device(zha_group_proxy.device_id)
+        # Only remove the device if one was created (groups with entities have devices)
+        if zha_group_proxy.device_id is not None:
+            device_registry = dr.async_get(self.hass)
+            # Remove the group device, which will also remove associated entities
+            device_registry.async_remove_device(zha_group_proxy.device_id)
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
         """Update group entities when a group event is received."""
