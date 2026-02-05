@@ -168,7 +168,7 @@ async def setup_evohome(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
             mock_post_request(install),
         ),
-        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
     ):
         evo: EvohomeClient | None = None
 
