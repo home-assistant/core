@@ -2,6 +2,7 @@
 
 from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_MODEL, ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -51,16 +52,14 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         """Class initializer."""
         super().__init__(coordinator, device)
 
-        info: DeviceInfo = self.device_info or DeviceInfo()
+        self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
 
-        info["model"] = "ECOCOMFORT 2.0"
-        info["sw_version"] = device.fw
-        info["connections"] = {
+        self._attr_device_info[ATTR_MODEL] = "ECOCOMFORT 2.0"
+        self._attr_device_info[ATTR_SW_VERSION] = device.fw
+        self._attr_device_info[ATTR_CONNECTIONS] = {
             (CONNECTION_BLUETOOTH, device.mac),
             (CONNECTION_NETWORK_MAC, device.macwifi),
         }
-
-        self._attr_device_info = info
 
     @property
     def _device_data(self) -> IntelliClimaECO:
@@ -69,6 +68,7 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not super().available:
-            return False
-        return self._device_id in self.coordinator.data.ecocomfort2_devices
+        return (
+            super().available
+            and self._device_id in self.coordinator.data.ecocomfort2_devices
+        )
