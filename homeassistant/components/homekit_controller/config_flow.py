@@ -414,6 +414,10 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         # callable. We call the callable with the pin that the user has typed
         # in.
 
+        # Protect this flow from being dismissed by concurrent
+        # zeroconf discoveries while we are in the pairing step.
+        self.context["dismiss_protected"] = True
+
         # Should never call this step without setting self.hkid
         assert self.hkid
         description_placeholders = {}

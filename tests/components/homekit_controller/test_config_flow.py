@@ -294,6 +294,53 @@ async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
     assert result["reason"] == "already_in_progress"
 
 
+async def test_zeroconf_service_removal_does_not_abort_pairing_flow(
+    hass: HomeAssistant, controller
+) -> None:
+    """Test that a zeroconf service removal does not abort a flow in the pairing step.
+
+    When a device briefly disappears from the network while async_step_pair
+    is active, the zeroconf service removal should not dismiss the
+    actively-pairing flow.
+    """
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+    service_name = discovery_info.name
+
+    # Device is discovered via zeroconf
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    flow_id = result["flow_id"]
+
+    # User clicks configure - enters async_step_pair
+    result = await hass.config_entries.flow.async_configure(flow_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+
+    # Simulate what zeroconf's _async_dismiss_discoveries does on service
+    # removal: iterate flows by init_data type and abort matching ones.
+    # The dismiss_protected context flag should prevent the abort.
+    for flow in hass.config_entries.flow.async_progress_by_init_data_type(
+        ZeroconfServiceInfo,
+        lambda service_info: bool(service_info.name == service_name),
+    ):
+        if flow.get("context", {}).get("dismiss_protected"):
+            continue
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    # Flow must still be alive - user can still enter the pairing code
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Koogeek-LS1-20833F"
+
+
 async def test_pair_already_paired_1(hass: HomeAssistant, controller) -> None:
     """Already paired."""
     device = setup_mock_accessory(controller)
@@ -699,6 +746,7 @@ async def test_pair_form_errors_on_start(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
     # User gets back the form
@@ -747,6 +795,7 @@ async def test_pair_abort_errors_on_finish(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
     # User enters pairing code
@@ -789,6 +838,7 @@ async def test_pair_form_errors_on_finish(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
     # User enters pairing code
@@ -802,6 +852,7 @@ async def test_pair_form_errors_on_finish(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
 
@@ -836,6 +887,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
     # User enters pairing code
@@ -852,6 +904,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
 
@@ -880,6 +933,7 @@ async def test_user_works(hass: HomeAssistant, controller) -> None:
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
+        "dismiss_protected": True,
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -917,6 +971,7 @@ async def test_user_pairing_with_insecure_setup_code(
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
+        "dismiss_protected": True,
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -1049,6 +1104,7 @@ async def test_mdns_update_to_paired_during_pairing(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
+        "dismiss_protected": True,
     }
 
     # User enters pairing code
