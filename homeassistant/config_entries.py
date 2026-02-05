@@ -292,6 +292,7 @@ class ConfigFlowContext(FlowContext, total=False):
     confirm_only: bool
     discovery_key: DiscoveryKey
     entry_id: str
+    dismiss_protected_sources: set[str]
     title_placeholders: Mapping[str, str]
     unique_id: str | None
 
@@ -3431,6 +3432,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.hass.config_entries.async_get_known_entry(
             self._reconfigure_entry_id
         )
+
+    def async_set_dismiss_protected(self, *sources: str) -> None:
+        """Protect this flow from being dismissed by specified discovery sources."""
+        self.context.setdefault("dismiss_protected_sources", set()).update(sources)
 
 
 class _ConfigSubFlowManager:
