@@ -70,7 +70,7 @@ class DiscordNotificationService(BaseNotificationService):
 
     def _read_file(self, filepath: str) -> bytes:
         """Read file bytes synchronously (run in executor)."""
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             return f.read()
 
     async def async_get_file_from_url(
@@ -232,16 +232,21 @@ class DiscordNotificationService(BaseNotificationService):
                         Messageable, await discord_bot.fetch_channel(channelid)
                     )
                 except nextcord.NotFound:
-                    _LOGGER.debug("Channel for ID %s not found, fetching user %s", channelid, channelid)
+                    _LOGGER.debug(
+                        "Channel for ID %s not found, fetching user %s",
+                        channelid,
+                        channelid,
+                    )
                     try:
                         channel = await discord_bot.fetch_user(channelid)
                     except nextcord.NotFound:
                         _LOGGER.error("Channel/user not found for ID: %s", channelid)
-                        _LOGGER.error("Ensure Discord IDs are quoted as strings in target: - '1234567890123' not 1234567890")
+                        _LOGGER.error(
+                            "Ensure Discord IDs are quoted as strings in target: - '1234567890123' not 1234567890"
+                        )
                         continue
                 _LOGGER.warning("Sending message: %s to %s", message, channelid)
                 await channel.send(message, files=files, embeds=embeds)
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()
-
