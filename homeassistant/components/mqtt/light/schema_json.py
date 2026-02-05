@@ -224,6 +224,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]
