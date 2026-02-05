@@ -238,22 +238,19 @@ def test_zha_group_proxy_group_device_identifier(
     group_id: int, expected_identifier: str
 ) -> None:
     """Test ZHAGroupProxy group_device_identifier property."""
-    mock_group = MagicMock()
-    mock_group.group_id = group_id
-    group_proxy = ZHAGroupProxy(mock_group, MagicMock())
-
+    group_proxy = ZHAGroupProxy(MagicMock(group_id=group_id), MagicMock())
     assert group_proxy.group_device_identifier == expected_identifier
 
 
 def test_zha_group_proxy_get_device_info() -> None:
     """Test ZHAGroupProxy get_device_info returns correct DeviceInfo."""
-    mock_group = MagicMock()
-    mock_group.group_id = 0x1001
+    mock_group = MagicMock(group_id=0x1001)
     mock_group.name = "Test Group"
     coordinator_ieee = "00:15:8d:00:02:32:4f:32"
 
-    group_proxy = ZHAGroupProxy(mock_group, MagicMock())
-    device_info = group_proxy.get_device_info(coordinator_ieee)
+    device_info = ZHAGroupProxy(mock_group, MagicMock()).get_device_info(
+        coordinator_ieee
+    )
 
     assert device_info == {
         "identifiers": {(zha_const.DOMAIN, "zha_group_0x1001")},
@@ -267,35 +264,25 @@ def test_zha_group_proxy_get_device_info() -> None:
 
 def test_zha_group_proxy_device_id_property() -> None:
     """Test ZHAGroupProxy device_id property getter and setter."""
-    group_proxy = ZHAGroupProxy(MagicMock(), MagicMock())
+    group_proxy = ZHAGroupProxy(MagicMock(group_id=0x1001), MagicMock())
 
     assert group_proxy.device_id is None
-
     group_proxy.device_id = "test_device_id"
     assert group_proxy.device_id == "test_device_id"
 
 
-async def test_zha_group_proxy_device_created_for_group_with_entities(
+async def test_zha_group_proxy_no_device_for_group_without_entities(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
 ) -> None:
-    """Test that a device is created for groups with entities."""
+    """Test that no device is created for groups without entities."""
     await setup_zha()
 
     gateway_proxy = get_zha_gateway_proxy(hass)
-    device_registry = dr.async_get(hass)
 
     group_proxy = gateway_proxy.group_proxies.get(FIXTURE_GRP_ID)
     assert group_proxy is not None
     assert group_proxy.group.name == FIXTURE_GRP_NAME
-
-    if group_proxy.group.group_entities:
-        assert group_proxy.device_id is not None
-        device = device_registry.async_get(group_proxy.device_id)
-        assert device is not None
-        assert device.name == FIXTURE_GRP_NAME
-        assert device.manufacturer == "Zigbee"
-        assert device.model == "Group"
-        assert device.entry_type == dr.DeviceEntryType.SERVICE
-    else:
-        assert group_proxy.device_id is None
+    # Fixture group has no members, so no entities, so no device
+    assert not group_proxy.group.group_entities
+    assert group_proxy.device_id is None
