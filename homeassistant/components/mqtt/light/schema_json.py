@@ -221,6 +221,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
