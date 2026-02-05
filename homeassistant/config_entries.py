@@ -3433,8 +3433,24 @@ class ConfigFlow(ConfigEntryBaseFlow):
             self._reconfigure_entry_id
         )
 
+    @callback
     def async_set_dismiss_protected(self, *sources: str) -> None:
-        """Protect this flow from being dismissed by specified discovery sources."""
+        """Mark this flow as protected from dismissal by specific discovery sources.
+
+        By default, the config flow for a device is dismissed when a new
+        discovery for the same device or unique identifier is received.
+        Integrations can call this method to mark the current flow as "dismiss
+        protected" for one or more discovery sources so that it is not automatically
+        dismissed while the user is interacting with it.
+
+        This method updates the flow context and is intended to be called from
+        within a config flow step implementation.
+
+        Args:
+            *sources: One or more discovery source identifiers (for example,
+                ``SOURCE_SSDP`` or ``SOURCE_ZEROCONF``) for which this flow
+                should be protected from automatic dismissal.
+        """
         self.context.setdefault("dismiss_protected_sources", set()).update(sources)
 
 
