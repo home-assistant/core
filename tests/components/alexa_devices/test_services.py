@@ -188,3 +188,69 @@ async def test_config_entry_not_loaded(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "entry_not_loaded"
     assert exc_info.value.translation_placeholders == {"entry": mock_config_entry.title}
+
+
+async def test_invalid_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalid config entry."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    )
+    assert device_entry
+
+    device_entry.config_entries.add("non_existing_entry_id")
+    await hass.async_block_till_done()
+
+    # Call Service
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SOUND_NOTIFICATION,
+        {
+            ATTR_SOUND: "bell_02",
+            ATTR_DEVICE_ID: device_entry.id,
+        },
+        blocking=True,
+    )
+    # No exception should be raised
+    assert mock_amazon_devices_client.call_alexa_sound.call_count == 1
+
+
+async def test_missing_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test missing config entry."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    )
+    assert device_entry
+
+    device_entry.config_entries.clear()
+
+    # Call Service
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SOUND_NOTIFICATION,
+            {
+                ATTR_SOUND: "bell_02",
+                ATTR_DEVICE_ID: device_entry.id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "config_entry_not_found"
+    assert exc_info.value.translation_placeholders == {"device_id": device_entry.id}

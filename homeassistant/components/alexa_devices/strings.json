@@ -90,6 +90,9 @@
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
     },
+    "config_entry_not_found": {
+      "message": "Config entry not found: {device_id}"
+    },
     "device_serial_number_missing": {
       "message": "Device serial number missing: {device_id}"
     },
