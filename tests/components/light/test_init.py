@@ -1,6 +1,5 @@
 """The tests for the Light component."""
 
-from types import ModuleType
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -29,9 +28,6 @@ from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
 
@@ -2609,46 +2605,3 @@ def test_missing_kelvin_property_warnings(
 
     assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
     assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]
-
-
-@pytest.mark.parametrize(
-    "module",
-    [light],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "constant_value", "constant_replacement"),
-    [
-        ("SUPPORT_BRIGHTNESS", 1, "supported_color_modes"),
-        ("SUPPORT_COLOR_TEMP", 2, "supported_color_modes"),
-        ("SUPPORT_COLOR", 16, "supported_color_modes"),
-    ],
-)
-def test_deprecated_light_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    constant_value: int | str,
-    constant_replacement: str,
-) -> None:
-    """Test deprecated light constants."""
-    import_and_test_deprecated_constant(
-        caplog, light, constant_name, constant_replacement, constant_value, "2026.1"
-    )
-
-
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(light.LightEntityFeature),
-)
-def test_deprecated_support_light_constants_enums(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: light.LightEntityFeature,
-) -> None:
-    """Test deprecated support light constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, light, entity_feature, "SUPPORT_", "2026.1"
-    )

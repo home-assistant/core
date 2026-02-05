@@ -5,10 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 import csv
 import dataclasses
-from functools import partial
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Self, cast, final
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -23,13 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior, report_usage
@@ -55,27 +47,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the LightEntityFeature enum instead.
-_DEPRECATED_SUPPORT_BRIGHTNESS: Final = DeprecatedConstant(
-    1, "supported_color_modes", "2026.1"
-)  # Deprecated, replaced by color modes
-_DEPRECATED_SUPPORT_COLOR_TEMP: Final = DeprecatedConstant(
-    2, "supported_color_modes", "2026.1"
-)  # Deprecated, replaced by color modes
-_DEPRECATED_SUPPORT_EFFECT: Final = DeprecatedConstantEnum(
-    LightEntityFeature.EFFECT, "2026.1"
-)
-_DEPRECATED_SUPPORT_FLASH: Final = DeprecatedConstantEnum(
-    LightEntityFeature.FLASH, "2026.1"
-)
-_DEPRECATED_SUPPORT_COLOR: Final = DeprecatedConstant(
-    16, "supported_color_modes", "2026.1"
-)  # Deprecated, replaced by color modes
-_DEPRECATED_SUPPORT_TRANSITION: Final = DeprecatedConstantEnum(
-    LightEntityFeature.TRANSITION, "2026.1"
-)
 
 # Color mode of the light
 ATTR_COLOR_MODE = "color_mode"
@@ -1192,11 +1163,3 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return True
         # philips_js has known issues, we don't need users to open issues
         return self.platform.platform_name not in {"philips_js"}
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
