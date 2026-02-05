@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-import contextvars
+from contextvars import ContextVar
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
 
-from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import CONF_TENANT_ID, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
-_tenant_id_context: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "onedrive_for_business_tenant_id"
-)
+_tenant_id_context: ContextVar[str] = ContextVar(f"{DOMAIN}_{CONF_TENANT_ID}")
 
 
 @contextmanager
