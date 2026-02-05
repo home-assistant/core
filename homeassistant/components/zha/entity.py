@@ -74,6 +74,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
+        # Group entities use device name since they have their own device
+        if (
+            self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+        ):
+            return None
+
         meta = self.entity_data.entity.info_object
         if meta.primary:
             self._attr_name = None
