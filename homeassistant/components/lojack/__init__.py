@@ -19,6 +19,7 @@ from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]
