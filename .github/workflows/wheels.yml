@@ -17,7 +17,7 @@ on:
       - "script/gen_requirements_all.py"
 
 env:
-  DEFAULT_PYTHON: "3.14.2"
+  DEFAULT_PYTHON: "3.14.3"
 
 permissions: {}
 
