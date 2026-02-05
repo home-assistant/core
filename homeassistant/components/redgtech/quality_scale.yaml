@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: Integration does not register custom actions.
+    comment: No custom actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -11,11 +11,13 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: Integration does not register custom actions.
+    comment: No custom actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: No explicit signature for events
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -24,30 +26,26 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Integration has no configurable parameters after initial setup.
+    comment: No options flow
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: Cloud API does not require updating entry data from network discovery.
-  discovery: done
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -55,20 +53,20 @@ rules:
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Only essential entities
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow:
-    status: exempt
-    comment: The only configuration option is the API key, which is handled by the reauthentication flow.
+  icon-translations: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: No repair issues to implement at this time.
+    comment: No repair issues
   stale-devices: todo
 
   # Platinum
   async-dependency: done
-  inject-websession: done
-  strict-typing: todo
+  inject-websession: todo
+  strict-typing: done
