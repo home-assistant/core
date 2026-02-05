@@ -53,13 +53,9 @@ rules:
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: exempt
-    comment: Cloud service integration, not device-based.
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: exempt
-    comment: No common troubleshooting scenarios beyond authentication.
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt

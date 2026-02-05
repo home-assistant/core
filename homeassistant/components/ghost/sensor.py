@@ -12,8 +12,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -208,17 +208,39 @@ async def async_setup_entry(
             for description in REVENUE_SENSORS
         )
 
-    # Add dynamic newsletter sensors (active only).
-    for newsletter_id, newsletter in coordinator.data.newsletters.items():
-        newsletter_name = newsletter.get("name", "Newsletter")
-        if newsletter.get("status") == "active":
-            entities.append(
-                GhostNewsletterSensorEntity(
-                    coordinator, entry, newsletter_id, newsletter_name
-                )
-            )
-
     async_add_entities(entities)
+
+    newsletter_added: set[str] = set()
+
+    @callback
+    def _async_add_newsletter_entities() -> None:
+        """Add newsletter entities when new newsletters appear."""
+        nonlocal newsletter_added
+
+        new_newsletters = {
+            newsletter_id
+            for newsletter_id, newsletter in coordinator.data.newsletters.items()
+            if newsletter.get("status") == "active"
+        } - newsletter_added
+
+        if not new_newsletters:
+            return
+
+        async_add_entities(
+            GhostNewsletterSensorEntity(
+                coordinator,
+                entry,
+                newsletter_id,
+                coordinator.data.newsletters[newsletter_id].get("name", "Newsletter"),
+            )
+            for newsletter_id in new_newsletters
+        )
+        newsletter_added |= new_newsletters
+
+    _async_add_newsletter_entities()
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_newsletter_entities)
+    )
 
 
 class GhostSensorEntity(CoordinatorEntity[GhostDataUpdateCoordinator], SensorEntity):
@@ -236,10 +258,10 @@ class GhostSensorEntity(CoordinatorEntity[GhostDataUpdateCoordinator], SensorEnt
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer=MANUFACTURER,
             model=MODEL,
             configuration_url=coordinator.api.api_url,
@@ -271,11 +293,11 @@ class GhostNewsletterSensorEntity(
         super().__init__(coordinator)
         self._newsletter_id = newsletter_id
         self._newsletter_name = newsletter_name
-        self._attr_unique_id = f"{entry.entry_id}_newsletter_{newsletter_id}"
+        self._attr_unique_id = f"{entry.unique_id}_newsletter_{newsletter_id}"
         self._attr_translation_placeholders = {"newsletter_name": newsletter_name}
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer=MANUFACTURER,
             model=MODEL,
             configuration_url=coordinator.api.api_url,
@@ -284,6 +306,13 @@ class GhostNewsletterSensorEntity(
     def _get_newsletter_by_id(self) -> dict[str, Any] | None:
         """Get newsletter data by ID."""
         return self.coordinator.data.newsletters.get(self._newsletter_id)
+
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
+        if not super().available or self.coordinator.data is None:
+            return False
+        return self._newsletter_id in self.coordinator.data.newsletters
 
     @property
     def native_value(self) -> int | None:
