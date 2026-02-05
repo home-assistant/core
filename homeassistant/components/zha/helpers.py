@@ -938,12 +938,20 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove device and entity registry entries for group when the group is removed from HA."""
-        # Only remove the device if one was created (groups with entities have devices)
+        """Remove device and entity registry entries for group when the group is removed."""
         if zha_group_proxy.device_id is not None:
             device_registry = dr.async_get(self.hass)
-            # Remove the group device, which will also remove associated entities
-            device_registry.async_remove_device(zha_group_proxy.device_id)
+            entity_registry = er.async_get(self.hass)
+            device_id = zha_group_proxy.device_id
+            # Fully clean up entity and device registries because group IDs can be
+            # reused, and we don't want old cached data to persist
+            for entry in er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ):
+                entity_registry.async_remove(entry.entity_id)
+            device_registry.async_remove_device(device_id)
+            if device_id in device_registry.deleted_devices:
+                del device_registry.deleted_devices[device_id]
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
         """Update group entities when a group event is received."""
