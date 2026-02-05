@@ -65,7 +65,7 @@
           "name": "Format"
         },
         "media_player": {
-          "description": "Media players to stream to.",
+          "description": "Media player to stream to.",
           "name": "Media player"
         }
       },
