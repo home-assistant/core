@@ -98,6 +98,7 @@ class TasmotaLight(
         """Initialize Tasmota light."""
         self._color_temp: int | None = None
         self._white_value: int | None = None
+        self._hs: tuple[float, float] | None = None
 
         super().__init__(
             **kwds,
@@ -159,7 +160,7 @@ class TasmotaLight(
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX
                 self._attr_brightness = round(percent_bright * 255)
             if "color_hs" in attributes:
-                self._attr_hs_color = attributes["color_hs"]
+                self._hs = attributes["color_hs"]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
             if "effect" in attributes:
@@ -210,6 +211,14 @@ class TasmotaLight(
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._tasmota_entity.effect_list
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hs color value."""
+        if self._hs is None:
+            return None
+        hs_color = self._hs
+        return (hs_color[0], hs_color[1])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
