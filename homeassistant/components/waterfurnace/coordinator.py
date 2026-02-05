@@ -25,7 +25,10 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
     """
 
     def __init__(
-        self, hass: HomeAssistant, client: WaterFurnace, config_entry
+        self,
+        hass: HomeAssistant,
+        client: WaterFurnace,
+        config_entry: WaterFurnaceConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
