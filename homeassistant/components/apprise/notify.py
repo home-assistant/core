@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
