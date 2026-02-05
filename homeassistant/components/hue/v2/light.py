@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     EFFECT_OFF,
     FLASH_SHORT,
+    LIGHT_TURN_ON_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -27,12 +28,14 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform as ep
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge, HueConfigEntry
-from ..const import DOMAIN
+from ..const import ATTR_POWER, DOMAIN, SERVICE_HUE_LIGHT_SET_STATE
 from .entity import HueBaseEntity
 from .helpers import (
     normalize_hue_brightness,
@@ -46,6 +49,11 @@ FALLBACK_KELVIN = 5800  # halfway
 
 # HA 2025.4 replaced the deprecated effect "None" with HA default "off"
 DEPRECATED_EFFECT_NONE = "None"
+
+HUE_LIGHT_SET_STATE_SCHEMA: VolDictType = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_POWER: cv.boolean,
+}
 
 
 async def async_setup_entry(
@@ -69,6 +77,10 @@ async def async_setup_entry(
     # register listener for new lights
     config_entry.async_on_unload(
         controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
+    )
+    platform = ep.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_HUE_LIGHT_SET_STATE, HUE_LIGHT_SET_STATE_SCHEMA, "set_state"
     )
 
 
@@ -327,4 +339,26 @@ class HueLight(HueBaseEntity, LightEntity):
             self.controller.set_flash,
             id=self.resource.id,
             short=flash == FLASH_SHORT,
+        )
+
+    async def set_state(self, **kwargs: Any) -> None:
+        """Update the color of a light while optionally turning it on or off."""
+        power = kwargs.get(ATTR_POWER)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        xy_color = kwargs.get(ATTR_XY_COLOR)
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            color_util.color_temperature_kelvin_to_mired(self.max_color_temp_kelvin),
+            color_util.color_temperature_kelvin_to_mired(self.min_color_temp_kelvin),
+        )
+
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=power,
+            brightness=brightness,
+            color_xy=xy_color,
+            color_temp=color_temp,
+            transition_time=transition,
         )

@@ -11,14 +11,20 @@ DOMAIN = "hue"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 
 CONF_SUBTYPE = "subtype"
+CONF_ALL = "all"
+
+SERVICE_HUE_GROUP_SET_STATE = "set_group_state"
+SERVICE_HUE_LIGHT_SET_STATE = "set_light_state"
 
 ATTR_HUE_EVENT = "hue_event"
+
 SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
 ATTR_SCENE_NAME = "scene_name"
 ATTR_TRANSITION = "transition"
 ATTR_DYNAMIC = "dynamic"
 
+ATTR_POWER = "power"
 
 # V1 API SPECIFIC CONSTANTS ##################
 

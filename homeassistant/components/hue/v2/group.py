@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import reduce
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -18,25 +19,36 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     FLASH_SHORT,
+    LIGHT_TURN_ON_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityDescription,
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform as ep,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge, HueConfigEntry
-from ..const import DOMAIN
+from ..const import ATTR_POWER, DOMAIN, SERVICE_HUE_GROUP_SET_STATE
 from .entity import HueBaseEntity
 from .helpers import (
     normalize_hue_brightness,
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+
+HUE_GROUP_SET_STATE_SCHEMA: VolDictType = {
+    **LIGHT_TURN_ON_SCHEMA,
+    ATTR_POWER: cv.boolean,
+}
 
 
 async def async_setup_entry(
@@ -47,6 +59,10 @@ async def async_setup_entry(
     """Set up Hue groups on light platform."""
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
+    platform = ep.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_HUE_GROUP_SET_STATE, HUE_GROUP_SET_STATE_SCHEMA, "set_state"
+    )
 
     async def async_add_light(event_type: EventType, resource: GroupedLight) -> None:
         """Add Grouped Light for Hue Room/Zone."""
@@ -134,8 +150,14 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self.resource.on.on
+        """Return if `all` config property is enabled, returns true if all lights within hue group are on. Otherwise, returns the underlying Hue group state where any turned on light within a room will accordingly indicate the group as turned on."""
+        # how should a best hue group opt into this behavior via configuration? config flow at integration level?
+        return reduce(
+            lambda x, y: x and y,
+            [x.on.on for x in self.controller.get_lights(self.resource.id)],
+            True,
+        )
+        # return self.resource.on.on
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -212,6 +234,28 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self.controller.set_state,
             id=self.resource.id,
             on=False,
+            transition_time=transition,
+        )
+
+    async def set_state(self, **kwargs: Any) -> None:
+        """Update the color of a group while optionally turning the lights within on or off."""
+        power = kwargs.get(ATTR_POWER)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        xy_color = kwargs.get(ATTR_XY_COLOR)
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            color_util.color_temperature_kelvin_to_mired(self.max_color_temp_kelvin),
+            color_util.color_temperature_kelvin_to_mired(self.min_color_temp_kelvin),
+        )
+
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=power,
+            brightness=brightness,
+            color_xy=xy_color,
+            color_temp=color_temp,
             transition_time=transition,
         )
 
