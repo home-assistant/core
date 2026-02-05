@@ -136,13 +136,10 @@ async def test_services(
     ent3.supported_color_modes = [light.ColorMode.HS]
     ent1.supported_features = light.LightEntityFeature.TRANSITION
     ent2.supported_features = (
-        light.SUPPORT_COLOR
-        | light.LightEntityFeature.EFFECT
-        | light.LightEntityFeature.TRANSITION
+        light.LightEntityFeature.EFFECT | light.LightEntityFeature.TRANSITION
     )
-    # Set color modes to none to trigger backwards compatibility in LightEntity
-    ent2.supported_color_modes = None
-    ent2.color_mode = None
+    ent2.supported_color_modes = [light.ColorMode.HS]
+    ent2.color_mode = light.ColorMode.HS
     ent3.supported_features = (
         light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
     )
