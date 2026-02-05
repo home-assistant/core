@@ -41,7 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud API does not require updating entry data from network discovery.
@@ -56,9 +56,11 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not have any entities that should disabled by default.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow:
     status: exempt
