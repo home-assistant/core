@@ -1,8 +1,11 @@
 """Support for the Swing2Sleep Smarla sensor entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from pysmarlaapi.federwiege.services.classes import Property
+from pysmarlaapi.federwiege.services.types import SpringStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,6 +27,7 @@ PARALLEL_UPDATES = 0
 class SmarlaSensorEntityDescription(SmarlaEntityDescription, SensorEntityDescription):
     """Class describing Swing2Sleep Smarla sensor entities."""
 
+    value_fn: Callable[[Any], Any] = lambda value: value
     multiple: bool = False
     value_pos: int = 0
 
@@ -75,6 +79,15 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SmarlaSensorEntityDescription(
+        key="spring_status",
+        translation_key="spring_status",
+        service="analyser",
+        property="spring_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in SpringStatus],
+        value_fn=lambda value: SpringStatus(value).name.lower() if value else None,
+    ),
 ]
 
 
@@ -105,7 +118,8 @@ class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the entity value to represent the entity state."""
-        return self._property.get()
+        value = self._property.get()
+        return self.entity_description.value_fn(value)
 
 
 class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
@@ -118,5 +132,6 @@ class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the entity value to represent the entity state."""
-        v = self._property.get()
-        return v[self.entity_description.value_pos] if v is not None else None
+        raw = self._property.get()
+        value = raw[self.entity_description.value_pos] if raw is not None else None
+        return self.entity_description.value_fn(value)

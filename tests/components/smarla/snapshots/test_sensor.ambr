@@ -165,6 +165,73 @@
     'state': '0',
   })
 # ---
+# name: test_entities[sensor.smarla_spring_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unknown',
+        'normal',
+        'constellation_too_high',
+        'constellation_too_low',
+        'constellation_critical_too_high',
+        'constellation_critical_too_low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smarla_spring_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Spring status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Spring status',
+    'platform': 'smarla',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'spring_status',
+    'unique_id': 'ABCD-spring_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.smarla_spring_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Smarla Spring status',
+      'options': list([
+        'unknown',
+        'normal',
+        'constellation_too_high',
+        'constellation_too_low',
+        'constellation_critical_too_high',
+        'constellation_critical_too_low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smarla_spring_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[sensor.smarla_swing_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
