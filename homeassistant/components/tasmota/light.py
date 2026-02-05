@@ -195,9 +195,9 @@ class TasmotaLight(
         return self._brightness
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        return self._color_mode
+        return self._color_mode  # type: ignore[return-value]
 
     @property
     def color_temp_kelvin(self) -> int | None:
