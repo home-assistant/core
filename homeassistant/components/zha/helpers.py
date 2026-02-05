@@ -238,10 +238,27 @@ class GroupEntityReference(NamedTuple):
 class ZHAGroupProxy(LogMixin):
     """Proxy class to interact with the ZHA group instances."""
 
+    _ha_device_id: str
+
     def __init__(self, group: Group, gateway_proxy: ZHAGatewayProxy) -> None:
         """Initialize the gateway proxy."""
         self.group: Group = group
         self.gateway_proxy: ZHAGatewayProxy = gateway_proxy
+
+    @property
+    def device_id(self) -> str:
+        """Return the HA device registry device id."""
+        return self._ha_device_id
+
+    @device_id.setter
+    def device_id(self, device_id: str) -> None:
+        """Set the HA device registry device id."""
+        self._ha_device_id = device_id
+
+    @property
+    def group_device_identifier(self) -> str:
+        """Return unique identifier for the group device."""
+        return f"zha_group_0x{self.group.group_id:04x}"
 
     @property
     def group_info(self) -> dict[str, Any]:
@@ -867,6 +884,16 @@ class ZHAGatewayProxy(EventBase):
                 self.gateway.groups[group_info.group_id], self
             )
             self.group_proxies[group_info.group_id] = zha_group_proxy
+
+            device_registry = dr.async_get(self.hass)
+            coordinator_ieee = str(self.gateway.state.node_info.ieee)
+            device_registry_device = device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, zha_group_proxy.group_device_identifier)},
+                name=zha_group_proxy.group.name,
+                via_device=(DOMAIN, coordinator_ieee),
+            )
+            zha_group_proxy.device_id = device_registry_device.id
         return zha_group_proxy
 
     def _create_entity_metadata(
@@ -898,39 +925,10 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove entity registry entries for group entities when the groups are removed from HA."""
-        # first we collect the potential unique ids for entities that could be created from this group
-        possible_entity_unique_ids = [
-            f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
-            for domain in GROUP_ENTITY_DOMAINS
-        ]
-
-        # then we get all group entity entries tied to the coordinator
-        entity_registry = er.async_get(self.hass)
-        assert self.gateway.coordinator_zha_device
-        coordinator_proxy = self.device_proxies[
-            self.gateway.coordinator_zha_device.ieee
-        ]
-        all_group_entity_entries = er.async_entries_for_device(
-            entity_registry,
-            coordinator_proxy.device_id,
-            include_disabled_entities=True,
-        )
-
-        # then we get the entity entries for this specific group
-        # by getting the entries that match
-        entries_to_remove = [
-            entry
-            for entry in all_group_entity_entries
-            if entry.unique_id in possible_entity_unique_ids
-        ]
-
-        # then we remove the entries from the entity registry
-        for entry in entries_to_remove:
-            _LOGGER.debug(
-                "cleaning up entity registry entry for entity: %s", entry.entity_id
-            )
-            entity_registry.async_remove(entry.entity_id)
+        """Remove device and entity registry entries for group when the group is removed from HA."""
+        device_registry = dr.async_get(self.hass)
+        # Remove the group device, which will also remove associated entities
+        device_registry.async_remove_device(zha_group_proxy.device_id)
 
     def _update_group_entities(self, group_event: GroupEvent) -> None:
         """Update group entities when a group event is received."""

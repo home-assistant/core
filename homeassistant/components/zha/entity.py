@@ -107,9 +107,23 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
+        zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
+        coordinator_ieee = str(zha_gateway.state.node_info.ieee)
+
+        # Group entities have their own device linked via the coordinator
+        if (
+            self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+        ):
+            group_proxy = self.entity_data.group_proxy
+            return DeviceInfo(
+                identifiers={(DOMAIN, group_proxy.group_device_identifier)},
+                name=group_proxy.group.name,
+                via_device=(DOMAIN, coordinator_ieee),
+            )
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
-        zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
         device_info = DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
@@ -118,11 +132,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
         )
-        if ieee != str(zha_gateway.state.node_info.ieee):
-            device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                str(zha_gateway.state.node_info.ieee),
-            )
+        if ieee != coordinator_ieee:
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, coordinator_ieee)
         return device_info
 
     @callback
