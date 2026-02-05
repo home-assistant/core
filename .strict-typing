@@ -376,6 +376,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.nrgkick.*
 homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
@@ -388,6 +389,7 @@ homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
+homeassistant.components.openevse.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
