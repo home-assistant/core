@@ -291,8 +291,8 @@ class ConfigFlowContext(FlowContext, total=False):
     configuration_url: str
     confirm_only: bool
     discovery_key: DiscoveryKey
-    entry_id: str
     dismiss_protected_sources: set[str]
+    entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
 
