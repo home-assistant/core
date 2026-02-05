@@ -123,6 +123,47 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                await validate_input(user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Update unique ID if username changed
+                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+                self._abort_if_unique_id_mismatch(reason="account_mismatch")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=reconfigure_entry.data.get(CONF_USERNAME),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""

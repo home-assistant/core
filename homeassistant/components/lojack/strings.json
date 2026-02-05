@@ -15,6 +15,14 @@
         "data": {
           "password": "Password"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure LoJack",
+        "description": "Update your LoJack/Spireon account credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -24,7 +32,9 @@
     },
     "abort": {
       "already_configured": "This account is already configured",
-      "reauth_successful": "Re-authentication was successful"
+      "reauth_successful": "Re-authentication was successful",
+      "account_mismatch": "The username does not match the existing configuration",
+      "reconfigure_successful": "Reconfiguration was successful"
     }
   },
   "entity": {
