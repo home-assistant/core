@@ -97,7 +97,6 @@ class TasmotaLight(
         """Initialize Tasmota light."""
         self._color_temp: int | None = None
         self._white_value: int | None = None
-        self._flash_times = None
 
         super().__init__(
             **kwds,
