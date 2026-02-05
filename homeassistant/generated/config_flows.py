@@ -571,6 +571,7 @@ FLOWS = {
         "rapt_ble",
         "rdw",
         "recollect_waste",
+        "redgtech",
         "refoss",
         "rehlko",
         "remote_calendar",

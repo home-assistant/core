@@ -814,7 +814,9 @@ async def test_put_light_state(
 
     # mock light.turn_on call
     attributes = hass.states.get("light.ceiling_lights").attributes
-    supported_features = attributes[ATTR_SUPPORTED_FEATURES] | light.SUPPORT_TRANSITION
+    supported_features = (
+        attributes[ATTR_SUPPORTED_FEATURES] | light.LightEntityFeature.TRANSITION
+    )
     attributes = {**attributes, ATTR_SUPPORTED_FEATURES: supported_features}
     hass.states.async_set("light.ceiling_lights", STATE_ON, attributes)
     call_turn_on = async_mock_service(hass, "light", "turn_on")
