@@ -6,7 +6,18 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -48,7 +59,7 @@ async def test_all_fan_entities(
     fan_entries = [
         entry
         for entry in entity_registry.entities.values()
-        if entry.platform == "intelliclima" and entry.domain == "fan"
+        if entry.platform == "intelliclima" and entry.domain == FAN_DOMAIN
     ]
     assert len(fan_entries) == 1
     entity_entry = fan_entries[0]
@@ -59,31 +70,15 @@ async def test_all_fan_entities(
     assert device_entry == snapshot
 
 
-async def test_fan_initial_state(
-    hass: HomeAssistant,
-    mock_cloud_interface: AsyncMock,
-) -> None:
-    """Verify initial fan state, percentage and preset."""
-    state = hass.states.get(FAN_ENTITY_ID)
-    assert state is not None
-
-    # Name and basic state come from IntelliClimaVMCFan and single_eco_device.
-    assert state.name == "Test VMC"
-    assert state.state == "on"
-    # single_eco_device has speed_set="3" (medium) and mode_set="1" (in / forward).
-    assert state.attributes["percentage"] == 75
-    assert state.attributes["preset_mode"] == "forward"
-
-
 async def test_fan_turn_off_service_calls_api(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
 ) -> None:
     """fan.turn_off should call ecocomfort.turn_off and refresh."""
     await hass.services.async_call(
-        "fan",
-        "turn_off",
-        {"entity_id": FAN_ENTITY_ID},
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -98,9 +93,13 @@ async def test_fan_turn_on_service_calls_api(
 ) -> None:
     """fan.turn_on should call ecocomfort.turn_on and refresh."""
     await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {"entity_id": FAN_ENTITY_ID, "percentage": 30, "preset_mode": "alternate"},
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: FAN_ENTITY_ID,
+            ATTR_PERCENTAGE: 30,
+            ATTR_PRESET_MODE: "alternate",
+        },
         blocking=True,
     )
 
@@ -117,9 +116,9 @@ async def test_fan_set_percentage_maps_to_speed(
     """fan.set_percentage maps to closest IntelliClima speed via set_mode_speed."""
     # 15% is closest to 25% (sleep).
     await hass.services.async_call(
-        "fan",
-        "set_percentage",
-        {"entity_id": FAN_ENTITY_ID, "percentage": 15},
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 15},
         blocking=True,
     )
     # Initial mode_set="1" (forward) from single_eco_device.
@@ -135,9 +134,9 @@ async def test_fan_set_percentage_zero_turns_off(
 ) -> None:
     """Setting percentage to 0 should call turn_off, not set_mode_speed."""
     await hass.services.async_call(
-        "fan",
-        "set_percentage",
-        {"entity_id": FAN_ENTITY_ID, "percentage": 0},
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -146,33 +145,28 @@ async def test_fan_set_percentage_zero_turns_off(
 
 
 @pytest.mark.parametrize(
-    ("percentage", "preset_mode", "expected_mode", "expected_speed"),
+    ("service_data", "expected_mode", "expected_speed"),
     [
         # percentage=None, preset_mode=None -> defaults to previous speed > 75% (sleep),
         # previous mode > "alternate"
-        (None, None, "1", "3"),
+        ({}, "1", "3"),
         # percentage=0, preset_mode=None -> also default 25% (sleep), alternate mode
-        (0, None, "1", "1"),
+        ({ATTR_PERCENTAGE: 0}, "1", "1"),
     ],
 )
 async def test_fan_turn_on_defaulting_behavior(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
-    percentage: int | None,
-    preset_mode: str | None,
+    service_data: dict,
     expected_mode: str,
     expected_speed: str,
 ) -> None:
     """turn_on defaults percentage/preset as expected."""
-    data: dict = {"entity_id": FAN_ENTITY_ID}
-    if percentage is not None:
-        data["percentage"] = percentage
-    if preset_mode is not None:
-        data["preset_mode"] = preset_mode
+    data = {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data
 
     await hass.services.async_call(
-        "fan",
-        "turn_on",
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
         data,
         blocking=True,
     )
