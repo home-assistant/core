@@ -50,7 +50,9 @@ class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEn
 
         try:
             self._client.infrared_rf_transmit_raw_timings(
-                self._static_info.key, carrier_frequency=38000, timings=timings
+                self._static_info.key,
+                carrier_frequency=command.modulation,
+                timings=timings,
             )
         except Exception as err:
             raise HomeAssistantError(
@@ -74,7 +76,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     def filtered_static_info_update(infos: list[EntityInfo]) -> None:
-        transmiter_infos: list[EntityInfo] = [
+        transmitter_infos: list[EntityInfo] = [
             info
             for info in infos
             if isinstance(info, InfraredInfo)
@@ -88,7 +90,7 @@ async def async_setup_entry(
             InfraredInfo,
             EsphomeInfraredEntity,
             EntityState,
-            transmiter_infos,
+            transmitter_infos,
         )
 
     entry_data.cleanup_callbacks.append(

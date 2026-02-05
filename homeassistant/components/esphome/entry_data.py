@@ -191,7 +191,6 @@ class RuntimeEntryData:
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
     )
-    infrared_proxy_receive_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
 
     @property
     def name(self) -> str:
