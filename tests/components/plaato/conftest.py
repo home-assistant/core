@@ -25,6 +25,12 @@ AIRLOCK_DATA = {}
 KEG_DATA = {}
 
 
+@pytest.fixture(autouse=True)
+def mock_ffmpeg(hass: HomeAssistant) -> None:
+    """Mock ffmpeg is loaded."""
+    hass.config.components.add("ffmpeg")
+
+
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
