@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiogithubapi import GitHubAPI, GitHubException
 import voluptuous as vol
@@ -92,35 +92,33 @@ class GitHubConfigFlow(
 
     VERSION = 1  # Not sure if we need to upgrade this?
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.auth_implementation: dict[str, Any] | None = None
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
-    login_task: asyncio.Task | None = None
-
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        await self.async_set_unique_id(
-            jwt.decode(
-                data["token"]["access_token"], options={"verify_signature": False}
-            )["sub"]
-        )
-        self._abort_if_unique_id_configured()
-        return await super().async_oauth_create_entry(data)
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+        self.auth_implementation = data
+        return await self.async_step_repositories()
 
     async def async_step_repositories(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle repositories step."""
-
-        if TYPE_CHECKING:
-            # mypy is not aware that we can't get here without having this set already
-            assert self._login is not None
-
+        assert self.auth_implementation
         if not user_input:
-            repositories = await get_repositories(self.hass, self._login.access_token)
+            repositories = await get_repositories(
+                self.hass, self.auth_implementation["token"]["access_token"]
+            )
             return self.async_show_form(
                 step_id="repositories",
                 data_schema=vol.Schema(
@@ -134,7 +132,10 @@ class GitHubConfigFlow(
 
         return self.async_create_entry(
             title="",
-            data={CONF_ACCESS_TOKEN: self._login.access_token},
+            data={
+                **self.auth_implementation,
+                CONF_ACCESS_TOKEN: self.auth_implementation["token"]["access_token"],
+            },
             options={CONF_REPOSITORIES: user_input[CONF_REPOSITORIES]},
         )
 
