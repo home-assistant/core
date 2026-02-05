@@ -1,7 +1,9 @@
 """Test Hikvision integration setup and unload."""
 
 from unittest.mock import MagicMock
+from xml.etree.ElementTree import ParseError
 
+import pytest
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
@@ -102,3 +104,69 @@ async def test_setup_entry_nvr_fetches_events(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
     mock_hik_nvr.return_value.inject_events.assert_called_once()
+
+
+async def test_setup_entry_nvr_event_fetch_request_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup continues when NVR event fetch fails with request error."""
+    mock_hik_nvr.return_value.get_event_triggers.side_effect = (
+        requests.exceptions.RequestException("Connection error")
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
+    mock_hik_nvr.return_value.inject_events.assert_not_called()
+    assert f"Unable to fetch event triggers from {TEST_HOST}" in caplog.text
+
+
+async def test_setup_entry_nvr_event_fetch_parse_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup continues when NVR event fetch fails with parse error."""
+    mock_hik_nvr.return_value.get_event_triggers.side_effect = ParseError("Invalid XML")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
+    mock_hik_nvr.return_value.inject_events.assert_not_called()
+    assert f"Unable to fetch event triggers from {TEST_HOST}" in caplog.text
+
+
+async def test_setup_entry_nvr_no_events_returned(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+) -> None:
+    """Test setup continues when NVR returns no events."""
+    mock_hik_nvr.return_value.get_event_triggers.return_value = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
+    mock_hik_nvr.return_value.inject_events.assert_not_called()
+
+
+async def test_setup_entry_nvr_empty_events_returned(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+) -> None:
+    """Test setup continues when NVR returns empty events."""
+    mock_hik_nvr.return_value.get_event_triggers.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
+    mock_hik_nvr.return_value.inject_events.assert_not_called()
