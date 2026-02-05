@@ -2301,6 +2301,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "garmin_connect": {
+      "name": "Garmin Connect",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "gaviota": {
       "name": "Gaviota",
       "integration_type": "virtual",

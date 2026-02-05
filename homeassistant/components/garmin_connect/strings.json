@@ -1,0 +1,311 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured"
+    },
+    "error": {
+      "invalid_auth": "Invalid credentials",
+      "invalid_mfa": "Invalid verification code",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "mfa": {
+        "data": {
+          "mfa_code": "Verification code"
+        },
+        "data_description": {
+          "mfa_code": "The verification code sent to your device or email"
+        },
+        "description": "Enter the verification code from Garmin.",
+        "title": "Two-Factor Authentication"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "Your Garmin Connect password",
+          "username": "Your Garmin Connect email address"
+        },
+        "description": "Enter your Garmin Connect credentials."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "abnormal_hr_alerts": {
+        "name": "Abnormal heart rate alerts",
+        "unit_of_measurement": "alerts"
+      },
+      "active_calories": {
+        "name": "Active calories",
+        "unit_of_measurement": "kcal"
+      },
+      "active_time": {
+        "name": "Active time"
+      },
+      "activity_stress_duration": {
+        "name": "Activity stress duration"
+      },
+      "activity_stress_percentage": {
+        "name": "Activity stress percentage"
+      },
+      "avg_altitude": {
+        "name": "Average altitude"
+      },
+      "avg_spo2": {
+        "name": "Average SpO2"
+      },
+      "avg_stress_level": {
+        "name": "Average stress level",
+        "unit_of_measurement": "level"
+      },
+      "awake_duration": {
+        "name": "Awake duration"
+      },
+      "awake_sleep": {
+        "name": "Awake time"
+      },
+      "bmr_calories": {
+        "name": "BMR calories",
+        "unit_of_measurement": "kcal"
+      },
+      "body_battery_charged": {
+        "name": "Body battery charged"
+      },
+      "body_battery_drained": {
+        "name": "Body battery drained"
+      },
+      "body_battery_highest": {
+        "name": "Body battery highest"
+      },
+      "body_battery_lowest": {
+        "name": "Body battery lowest"
+      },
+      "body_battery_most_recent": {
+        "name": "Body battery"
+      },
+      "burned_calories": {
+        "name": "Burned calories",
+        "unit_of_measurement": "kcal"
+      },
+      "consumed_calories": {
+        "name": "Consumed calories",
+        "unit_of_measurement": "kcal"
+      },
+      "daily_step_goal": {
+        "name": "Daily step goal",
+        "unit_of_measurement": "steps"
+      },
+      "deep_sleep": {
+        "name": "Deep sleep"
+      },
+      "floors_ascended": {
+        "name": "Floors ascended",
+        "unit_of_measurement": "floors"
+      },
+      "floors_ascended_goal": {
+        "name": "Floors ascended goal",
+        "unit_of_measurement": "floors"
+      },
+      "floors_ascended_distance": {
+        "name": "Floors ascended distance"
+      },
+      "floors_descended": {
+        "name": "Floors descended",
+        "unit_of_measurement": "floors"
+      },
+      "floors_descended_distance": {
+        "name": "Floors descended distance"
+      },
+      "high_stress_duration": {
+        "name": "High stress duration"
+      },
+      "high_stress_percentage": {
+        "name": "High stress percentage"
+      },
+      "highest_respiration": {
+        "name": "Highest respiration",
+        "unit_of_measurement": "brpm"
+      },
+      "highly_active_time": {
+        "name": "Highly active time"
+      },
+      "intensity_goal": {
+        "name": "Intensity minutes goal"
+      },
+      "last_7_days_avg_resting_heart_rate": {
+        "name": "7-day average resting heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "latest_respiration": {
+        "name": "Latest respiration",
+        "unit_of_measurement": "brpm"
+      },
+      "latest_respiration_time": {
+        "name": "Latest respiration time"
+      },
+      "latest_spo2": {
+        "name": "Latest SpO2"
+      },
+      "latest_spo2_time": {
+        "name": "Latest SpO2 time"
+      },
+      "light_sleep": {
+        "name": "Light sleep"
+      },
+      "low_stress_duration": {
+        "name": "Low stress duration"
+      },
+      "low_stress_percentage": {
+        "name": "Low stress percentage"
+      },
+      "lowest_respiration": {
+        "name": "Lowest respiration",
+        "unit_of_measurement": "brpm"
+      },
+      "lowest_spo2": {
+        "name": "Lowest SpO2"
+      },
+      "max_avg_heart_rate": {
+        "name": "Max average heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "max_heart_rate": {
+        "name": "Max heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "max_stress_level": {
+        "name": "Max stress level",
+        "unit_of_measurement": "level"
+      },
+      "medium_stress_duration": {
+        "name": "Medium stress duration"
+      },
+      "medium_stress_percentage": {
+        "name": "Medium stress percentage"
+      },
+      "min_avg_heart_rate": {
+        "name": "Min average heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "min_heart_rate": {
+        "name": "Min heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "moderate_intensity": {
+        "name": "Moderate intensity minutes"
+      },
+      "rem_sleep": {
+        "name": "REM sleep"
+      },
+      "remaining_calories": {
+        "name": "Remaining calories",
+        "unit_of_measurement": "kcal"
+      },
+      "rest_stress_duration": {
+        "name": "Rest stress duration"
+      },
+      "rest_stress_percentage": {
+        "name": "Rest stress percentage"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate",
+        "unit_of_measurement": "bpm"
+      },
+      "sedentary_time": {
+        "name": "Sedentary time"
+      },
+      "sleep_duration": {
+        "name": "Sleep duration"
+      },
+      "sleep_score": {
+        "name": "Sleep score"
+      },
+      "sleeping_time": {
+        "name": "Sleeping time"
+      },
+      "stress_percentage": {
+        "name": "Stress percentage"
+      },
+      "stress_qualifier": {
+        "name": "Stress qualifier"
+      },
+      "total_calories": {
+        "name": "Calories",
+        "unit_of_measurement": "kcal"
+      },
+      "total_distance": {
+        "name": "Distance"
+      },
+      "total_intensity_minutes": {
+        "name": "Intensity minutes"
+      },
+      "total_sleep_duration": {
+        "name": "Sleep duration"
+      },
+      "total_steps": {
+        "name": "Steps",
+        "unit_of_measurement": "steps"
+      },
+      "total_stress_duration": {
+        "name": "Stress duration"
+      },
+      "uncategorized_stress_duration": {
+        "name": "Uncategorized stress duration"
+      },
+      "uncategorized_stress_percentage": {
+        "name": "Uncategorized stress percentage"
+      },
+      "vigorous_intensity": {
+        "name": "Vigorous intensity minutes"
+      },
+      "weekly_distance_avg": {
+        "name": "Weekly distance average"
+      },
+      "weekly_step_avg": {
+        "name": "Weekly step average",
+        "unit_of_measurement": "steps"
+      },
+      "wellness_active_calories": {
+        "name": "Wellness active calories",
+        "unit_of_measurement": "kcal"
+      },
+      "wellness_calories": {
+        "name": "Wellness calories",
+        "unit_of_measurement": "kcal"
+      },
+      "wellness_distance": {
+        "name": "Wellness distance"
+      },
+      "wellness_end_time": {
+        "name": "Wellness end time"
+      },
+      "wellness_start_time": {
+        "name": "Wellness start time"
+      },
+      "yesterday_distance": {
+        "name": "Yesterday distance"
+      },
+      "yesterday_steps": {
+        "name": "Yesterday steps",
+        "unit_of_measurement": "steps"
+      },
+      "nap_time": {
+        "name": "Nap time"
+      },
+      "unmeasurable_sleep": {
+        "name": "Unmeasurable sleep"
+      },
+      "last_synced": {
+        "name": "Last synced"
+      }
+    }
+  },
+  "exceptions": {
+    "login_failed": {
+      "message": "Failed to log in to Garmin Connect."
+    }
+  }
+}

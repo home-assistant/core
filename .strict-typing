@@ -217,6 +217,7 @@ homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.fyta.*
+homeassistant.components.garmin_connect.*
 homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
