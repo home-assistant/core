@@ -181,13 +181,7 @@ async def test_select_dhw_ovrd_change_value(
 ) -> None:
     """Test DHW override mode selector."""
 
-    target_func_name = "set_hot_water_ovrd"
-
-    setattr(
-        mock_pyotgw.return_value,
-        target_func_name,
-        AsyncMock(return_value=target_param),
-    )
+    mock_pyotgw.return_value.set_hot_water_ovrd = AsyncMock(return_value=target_param)
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -210,8 +204,7 @@ async def test_select_dhw_ovrd_change_value(
     )
     assert hass.states.get(select_entity_id).state == resulting_state
 
-    target = getattr(mock_pyotgw.return_value, target_func_name)
-    target.assert_awaited_once_with(target_param)
+    mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(target_param)
 
 
 @pytest.mark.parametrize(

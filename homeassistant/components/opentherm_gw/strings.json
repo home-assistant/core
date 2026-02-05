@@ -165,7 +165,7 @@
     },
     "select": {
       "dhw_ovrd_mode": {
-        "name": "Hot Water override",
+        "name": "Hot water override",
         "state": {
           "force_off": "Force off",
           "force_on": "Force on",
