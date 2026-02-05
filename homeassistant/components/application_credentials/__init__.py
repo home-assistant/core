@@ -278,13 +278,11 @@ async def _async_provide_implementation(
         ]
 
     if hasattr(platform, "async_get_device_flow_authorization_server"):
-        authorization_server = (
-            await platform.async_get_device_flow_authorization_server(hass)
+        device_flow_server = await platform.async_get_device_flow_authorization_server(
+            hass
         )
         return [
-            DeviceFlowImplementation(
-                hass, auth_domain, credential, authorization_server
-            )
+            DeviceFlowImplementation(hass, auth_domain, credential, device_flow_server)
             for auth_domain, credential in credentials.items()
         ]
 

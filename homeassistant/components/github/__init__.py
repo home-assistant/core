@@ -5,7 +5,7 @@ from __future__ import annotations
 from aiogithubapi import GitHubAPI
 import aiohttp
 
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
