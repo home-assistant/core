@@ -3605,6 +3605,12 @@
         }
       }
     },
+    "lg_infrared": {
+      "name": "LG Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "device",

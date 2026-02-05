@@ -374,6 +374,7 @@ FLOWS = {
         "led_ble",
         "lektrico",
         "letpot",
+        "lg_infrared",
         "lg_netcast",
         "lg_soundbar",
         "lg_thinq",

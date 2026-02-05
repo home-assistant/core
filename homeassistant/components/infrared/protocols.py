@@ -36,7 +36,12 @@ class NECInfraredCommand(InfraredCommand):
     command: int
 
     def __init__(
-        self, *, address: int, command: int, modulation: int, repeat_count: int = 0
+        self,
+        *,
+        address: int,
+        command: int,
+        modulation: int = 38000,
+        repeat_count: int = 0,
     ) -> None:
         """Initialize the NEC IR command."""
         super().__init__(modulation=modulation, repeat_count=repeat_count)
