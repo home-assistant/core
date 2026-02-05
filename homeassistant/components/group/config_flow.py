@@ -106,13 +106,6 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     }
 )
 
-SENSOR_CONFIG_EXTENDS = {
-    vol.Required(CONF_TYPE): selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
-        ),
-    ),
-}
 SENSOR_OPTIONS = {
     vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
@@ -134,7 +127,7 @@ async def sensor_options_schema(
 
 SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
     ["sensor", "number", "input_number"]
-).extend(SENSOR_CONFIG_EXTENDS)
+).extend(SENSOR_OPTIONS)
 
 
 async def light_switch_options_schema(
