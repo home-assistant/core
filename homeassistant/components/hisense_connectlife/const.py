@@ -8,9 +8,9 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACMode,
 )
-
-from .climate import ClimateEntityFeature, HVACMode
 
 DOMAIN = "hisense_connectlife"
 DOMAINW = "hisense_we_plugin"

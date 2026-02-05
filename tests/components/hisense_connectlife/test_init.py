@@ -31,11 +31,11 @@ async def test_async_setup_entry(
         patch("aiohttp.ClientSession") as mock_client_session,
     ):
         mock_coordinator = AsyncMock()
-        mock_coordinator.async_setup = AsyncMock(return_value=True)
+        mock_coordinator.async_config_entry_first_refresh = AsyncMock()  # 关键改这里
         mock_coord_class.return_value = mock_coordinator
+
         mock_get_impl.return_value = MagicMock()
 
-        # Mock HA's OAuth2Session
         mock_ha_oauth2_session = MagicMock()
         mock_ha_oauth2_session.async_ensure_token_valid = AsyncMock(
             return_value={
@@ -46,7 +46,6 @@ async def test_async_setup_entry(
         )
         mock_oauth2_session_class.return_value = mock_ha_oauth2_session
 
-        # Mock aiohttp.ClientSession to prevent unclosed session warning
         mock_session = AsyncMock()
         mock_session.close = AsyncMock()
         mock_client_session.return_value = mock_session
@@ -54,7 +53,7 @@ async def test_async_setup_entry(
         result = await async_setup_entry(hass, mock_config_entry)
 
         assert result is True
-        mock_coordinator.async_setup.assert_called_once()
+        mock_coordinator.async_config_entry_first_refresh.assert_called_once()  # 改成这个断言
 
 
 @pytest.mark.asyncio
