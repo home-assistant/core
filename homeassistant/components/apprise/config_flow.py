@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -35,18 +35,15 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input.get(CONF_FILE_URL):
                 if user_input.get(CONF_URL):
                     input_options = {
-                        CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                         CONF_FILE_URL: user_input[CONF_FILE_URL],
                         CONF_URL: user_input[CONF_URL],
                     }
                 else:
                     input_options = {
-                        CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                         CONF_FILE_URL: user_input[CONF_FILE_URL],
                     }
             elif user_input.get(CONF_URL):
                 input_options = {
-                    CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                     CONF_URL: user_input[CONF_URL],
                 }
             else:
@@ -54,7 +51,6 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=vol.Schema(
                         {
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                             vol.Optional(CONF_FILE_URL): str,
                             vol.Optional(CONF_URL): str,
                         }
@@ -62,7 +58,7 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                title=DEFAULT_NAME,
                 data={},
                 options=input_options,
             )
@@ -71,7 +67,6 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Optional(CONF_FILE_URL): str,
                     vol.Optional(CONF_URL): str,
                 }
@@ -85,6 +80,32 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await deprecate_yaml_issue(self.hass, True)
         return result
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input:
+            new_data = {
+                CONF_FILE_URL: user_input.get(CONF_FILE_URL, ""),
+                CONF_URL: user_input.get(CONF_URL, ""),
+            }
+            return self.async_update_reload_and_abort(entry, data_updates=new_data)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_FILE_URL, default=entry.options.get(CONF_FILE_URL, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_URL, default=entry.options.get(CONF_URL, "")
+                    ): str,
+                }
+            ),
+        )
 
     @staticmethod
     @callback
@@ -104,9 +125,6 @@ class AppriseOptionsFlowHandler(OptionsFlow):
 
         if user_input:
             new_options = {
-                CONF_NAME: user_input.get(
-                    CONF_NAME, options.get(CONF_NAME, DEFAULT_NAME)
-                ),
                 CONF_FILE_URL: user_input.get(CONF_FILE_URL, ""),
                 CONF_URL: user_input.get(CONF_URL, ""),
             }
@@ -116,10 +134,6 @@ class AppriseOptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME,
-                        default=options.get(CONF_NAME, DEFAULT_NAME),
-                    ): str,
                     vol.Optional(
                         CONF_FILE_URL, default=options.get(CONF_FILE_URL, "")
                     ): str,

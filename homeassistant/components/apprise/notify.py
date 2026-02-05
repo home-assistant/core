@@ -42,15 +42,16 @@ def get_service(
     # Create our Apprise Instance (reference our asset)
     _LOGGER.debug("Apprise discovery_info: %s", discovery_info)
 
-    if not discovery_info:
+    data = discovery_info or config
+    if not data:
         return None
 
     a_obj = apprise.Apprise()
 
-    if CONF_FILE_URL in discovery_info:
+    if CONF_FILE_URL in data:
         # Sourced from a Configuration File
         a_config = apprise.AppriseConfig()
-        conf_urls = discovery_info[CONF_FILE_URL]
+        conf_urls = data[CONF_FILE_URL]
         if isinstance(conf_urls, str):
             conf_urls = [conf_urls]
         for url in conf_urls:
@@ -59,8 +60,8 @@ def get_service(
         a_obj.add(a_config)
 
     # Ordered list of URLs
-    if CONF_URL in discovery_info:
-        urls = discovery_info[CONF_URL]
+    if CONF_URL in data:
+        urls = data[CONF_URL]
         if isinstance(urls, str):
             urls = [urls]
         for url in urls:
