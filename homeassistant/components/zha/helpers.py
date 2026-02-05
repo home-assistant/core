@@ -261,6 +261,17 @@ class ZHAGroupProxy(LogMixin):
         """Return unique identifier for the group device."""
         return f"zha_group_0x{self.group.group_id:04x}"
 
+    def get_device_info(self, coordinator_ieee: str) -> dr.DeviceInfo:
+        """Return device info for this group."""
+        return dr.DeviceInfo(
+            identifiers={(DOMAIN, self.group_device_identifier)},
+            name=self.group.name,
+            manufacturer="Zigbee",
+            model="Group",
+            entry_type=dr.DeviceEntryType.SERVICE,
+            via_device=(DOMAIN, coordinator_ieee),
+        )
+
     @property
     def group_info(self) -> dict[str, Any]:
         """Return a group description for group."""
@@ -890,14 +901,10 @@ class ZHAGatewayProxy(EventBase):
             if zha_group_proxy.group.group_entities:
                 device_registry = dr.async_get(self.hass)
                 coordinator_ieee = str(self.gateway.state.node_info.ieee)
+                device_info = zha_group_proxy.get_device_info(coordinator_ieee)
                 device_registry_device = device_registry.async_get_or_create(
                     config_entry_id=self.config_entry.entry_id,
-                    identifiers={(DOMAIN, zha_group_proxy.group_device_identifier)},
-                    name=zha_group_proxy.group.name,
-                    manufacturer="Zigbee",
-                    model="Group",
-                    entry_type=dr.DeviceEntryType.SERVICE,
-                    via_device=(DOMAIN, coordinator_ieee),
+                    **device_info,
                 )
                 zha_group_proxy.device_id = device_registry_device.id
         return zha_group_proxy
