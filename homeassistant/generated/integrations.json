@@ -2701,6 +2701,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "heatit": {
+      "name": "Heatit",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "heatmiser": {
       "name": "Heatmiser",
       "integration_type": "hub",
@@ -2711,6 +2717,13 @@
       "name": "Heicko",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "heiman": {
+      "name": "Heiman",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "heiwa": {
       "name": "Heiwa",
@@ -5568,6 +5581,12 @@
       "name": "Reddit",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "redgtech": {
+      "name": "Redgtech",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "refoss": {

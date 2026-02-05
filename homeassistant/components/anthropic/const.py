@@ -22,8 +22,10 @@ CONF_WEB_SEARCH_REGION = "region"
 CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 
+DATA_REPAIR_DEFER_RELOAD = "repair_defer_reload"
+
 DEFAULT = {
-    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+    CONF_CHAT_MODEL: "claude-haiku-4-5",
     CONF_MAX_TOKENS: 3000,
     CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: 0,
@@ -45,4 +47,11 @@ WEB_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3-opus",
     "claude-3-5-sonnet-20240620",
     "claude-3-5-sonnet-20241022",
+]
+
+DEPRECATED_MODELS = [
+    "claude-3-5-haiku",
+    "claude-3-7-sonnet",
+    "claude-3-5-sonnet",
+    "claude-3-opus",
 ]
