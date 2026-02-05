@@ -529,10 +529,6 @@ def _find_timer(
         elif find_filter == FindTimerFilter.ONLY_INACTIVE:
             matching_timers = [t for t in matching_timers if not t.is_active]
 
-        if len(matching_timers) == 1:
-            # Only 1 match
-            return matching_timers[0]
-
     # Search by id first
     timer_id: str | None = None
     if "id" in slots:
@@ -544,6 +540,13 @@ def _find_timer(
         if len(matching_timers) == 1:
             # Only 1 match
             return matching_timers[0]
+        # No matches
+        raise TimerNotFoundError
+
+    if find_filter and len(matching_timers) == 1:
+        # Only 1 match remaining with filter
+        # Happens after filtering by ID to prevent false positives
+        return matching_timers[0]
 
     # Search by name
     name: str | None = None
@@ -675,7 +678,7 @@ def _find_timers(
         matching_timers = [t for t in matching_timers if t.id == timer_id]
         if not matching_timers:
             # No matches
-            return matching_timers
+            raise TimerNotFoundError
 
     # Filter by name
     name: str | None = None
