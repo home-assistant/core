@@ -26,6 +26,7 @@ from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
 _PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.SCENE,
