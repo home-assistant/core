@@ -101,7 +101,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         try:
             self.approot = await self.client.get_approot()
-            await self.client.get_drive()
+            drive = await self.client.get_drive()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -109,7 +109,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(self.approot.parent_reference.drive_id)
+        await self.async_set_unique_id(drive.id)
         self._abort_if_unique_id_configured()
 
         self._data.update(data)
