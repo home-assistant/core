@@ -76,9 +76,10 @@ class AppriseNotificationService(BaseNotificationService):
         to the notification causing filtering (if set up that way).
         """
         targets = kwargs.get(ATTR_TARGET)
-        # default to the empty string, not ATTR_TITLE_DEFAULT, because apprise allows empty titles
-        # if we default to ATTR_TITLE_DEFAULT instead, there is no way to set an empty title
-        # see https://github.com/home-assistant/core/pull/161985 for why the ability to set an empty title was not put
-        # elsewhere where it would affect all legacy notifiers
+        # Default to the empty string, not ATTR_TITLE_DEFAULT, because
+        # apprise allows empty titles. If we default to ATTR_TITLE_DEFAULT
+        # instead, there is no way to set an empty title. See PR #161985 for
+        # why the ability to set an empty title was not put elsewhere where it
+        # would affect all legacy notifiers.
         title = kwargs.get(ATTR_TITLE, "")
         self.apprise.notify(body=message, title=title, tag=targets)
