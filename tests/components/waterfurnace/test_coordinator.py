@@ -3,155 +3,81 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from waterfurnace.waterfurnace import WFException, WFReading
+from waterfurnace.waterfurnace import WFException
 
 from homeassistant.components.waterfurnace.const import UPDATE_INTERVAL
-from homeassistant.components.waterfurnace.coordinator import WaterFurnaceCoordinator
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import async_load_json_object_fixture
+from tests.common import async_fire_time_changed
 
 
-@pytest.fixture
-async def coordinator(
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_success(
     hass: HomeAssistant,
-    mock_waterfurnace_client: MagicMock,
-    mock_config_entry: MagicMock,
-) -> WaterFurnaceCoordinator:
-    """Create a WaterFurnace coordinator."""
-    return WaterFurnaceCoordinator(hass, mock_waterfurnace_client, mock_config_entry)
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test successful coordinator data update."""
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    assert state
+    assert state.state == "1500"
 
 
-class TestWaterFurnaceCoordinator:
-    """Test WaterFurnace coordinator."""
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_failure(
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator handles update failure."""
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    async def test_coordinator_initialization(
-        self,
-        hass: HomeAssistant,
-        mock_waterfurnace_client: MagicMock,
-        mock_config_entry: MagicMock,
-    ) -> None:
-        """Test coordinator initialization."""
-        coordinator = WaterFurnaceCoordinator(
-            hass, mock_waterfurnace_client, mock_config_entry
-        )
+    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    assert state
+    assert state.state == "1500"
 
-        assert coordinator.client is mock_waterfurnace_client
-        assert coordinator.unit == "TEST_GWID_12345"
-        assert coordinator.update_interval == UPDATE_INTERVAL
-        assert coordinator.name == "WaterFurnace"
+    mock_waterfurnace_client.read_with_retry.side_effect = WFException(
+        "Connection failed"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    async def test_coordinator_initialization_with_config_entry(
-        self, hass: HomeAssistant, mock_waterfurnace_client: MagicMock
-    ) -> None:
-        """Test coordinator initialization with config entry."""
-        mock_config_entry = MagicMock()
-        coordinator = WaterFurnaceCoordinator(
-            hass, mock_waterfurnace_client, config_entry=mock_config_entry
-        )
+    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-        assert coordinator.config_entry is mock_config_entry
-        assert coordinator.client is mock_waterfurnace_client
 
-    async def test_coordinator_async_update_data_success(
-        self, hass: HomeAssistant, coordinator: WaterFurnaceCoordinator
-    ) -> None:
-        """Test successful data update."""
-        data = await coordinator._async_update_data()
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_timeout(
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator handles timeout."""
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        # Verify the data returned is correct
-        assert data is not None
-        assert isinstance(data, WFReading)
-        assert data.totalunitpower == 1500
-        assert data.compressorpower == 800
+    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    assert state
+    assert state.state == "1500"
 
-    async def test_coordinator_async_update_data_with_retry(
-        self,
-        hass: HomeAssistant,
-        mock_waterfurnace_client: MagicMock,
-        mock_config_entry: MagicMock,
-    ) -> None:
-        """Test data update uses read_with_retry."""
-        coordinator = WaterFurnaceCoordinator(
-            hass, mock_waterfurnace_client, mock_config_entry
-        )
+    mock_waterfurnace_client.read_with_retry.side_effect = asyncio.TimeoutError
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        await coordinator._async_update_data()
-
-        # Verify read_with_retry was called (not just read)
-        mock_waterfurnace_client.read_with_retry.assert_called_once()
-
-    async def test_coordinator_async_update_data_exception(
-        self, hass: HomeAssistant, mock_config_entry: MagicMock
-    ) -> None:
-        """Test data update handles WFException."""
-        client = MagicMock()
-        client.gwid = "TEST_GWID_12345"
-        client.read_with_retry = MagicMock(side_effect=WFException("Connection failed"))
-
-        coordinator = WaterFurnaceCoordinator(hass, client, mock_config_entry)
-
-        with pytest.raises(UpdateFailed, match="Connection failed"):
-            await coordinator._async_update_data()
-
-    async def test_coordinator_async_update_data_timeout(
-        self, hass: HomeAssistant, mock_config_entry: MagicMock
-    ) -> None:
-        """Test data update handles timeout."""
-        client = MagicMock()
-        client.gwid = "TEST_GWID_12345"
-        client.read_with_retry = MagicMock(side_effect=TimeoutError("Request timeout"))
-
-        coordinator = WaterFurnaceCoordinator(hass, client, mock_config_entry)
-
-        with pytest.raises(asyncio.TimeoutError):
-            await coordinator._async_update_data()
-
-    async def test_coordinator_reads_sensor_values(
-        self, hass: HomeAssistant, coordinator: WaterFurnaceCoordinator
-    ) -> None:
-        """Test coordinator data contains expected sensor values."""
-        data = await coordinator._async_update_data()
-
-        assert data.leavingairtemp == 110.5
-        assert data.tstatroomtemp == 70.2
-        assert data.enteringwatertemp == 42.8
-        assert data.tstatactivesetpoint == 72
-        assert data.tstatrelativehumidity == 43
-        assert data.tstathumidsetpoint == 45
-        assert data.airflowcurrentspeed == 850
-        assert data.actualcompressorspeed == 1200
-        assert data.fanpower == 150
-        assert data.auxpower == 0
-        assert data.looppumppower == 50
-
-    async def test_coordinator_multiple_updates(
-        self,
-        hass: HomeAssistant,
-        mock_waterfurnace_client: MagicMock,
-        mock_config_entry: MagicMock,
-    ) -> None:
-        """Test coordinator can perform multiple updates."""
-        coordinator = WaterFurnaceCoordinator(
-            hass, mock_waterfurnace_client, mock_config_entry
-        )
-
-        # First update
-        first_data = await coordinator._async_update_data()
-
-        # Modify mock return value for second update
-        reading_data = await async_load_json_object_fixture(
-            hass, "device_data.json", "waterfurnace"
-        )
-        reading_data["compressorpower"] = 1000
-        mock_waterfurnace_client.read_with_retry.return_value = WFReading(reading_data)
-
-        # Second update
-        second_data = await coordinator._async_update_data()
-
-        assert first_data.compressorpower == 800
-        assert second_data.compressorpower == 1000
+    state = hass.states.get("sensor.wf_test_gwid_12345_totalunitpower")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
