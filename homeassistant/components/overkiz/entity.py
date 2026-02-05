@@ -60,11 +60,12 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
     def _get_sibling_devices(self) -> list[Device]:
         """Return sibling devices sharing the same base device URL."""
+        prefix = f"{self.base_device_url}#"
         return [
             device
             for device in self.coordinator.data.values()
             if device.device_url != self.device_url
-            and device.device_url.startswith(f"{self.base_device_url}#")
+            and device.device_url.startswith(prefix)
         ]
 
     def _has_siblings_with_different_place_oid(self) -> bool:
@@ -73,13 +74,19 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         Returns True if siblings have different place_oid values, indicating
         devices should be grouped by placeOID rather than by base URL.
         """
-        if not self.device.place_oid:
+        my_place_oid = self.device.place_oid
+        if not my_place_oid:
             return False
 
         return any(
-            sibling.place_oid and sibling.place_oid != self.device.place_oid
+            sibling.place_oid and sibling.place_oid != my_place_oid
             for sibling in self._get_sibling_devices()
         )
+
+    def _get_device_index(self, device_url: str) -> int | None:
+        """Extract numeric index from device URL (e.g., 'io://gw/123#4' -> 4)."""
+        suffix = device_url.split("#")[-1]
+        return int(suffix) if suffix.isdigit() else None
 
     def _is_main_device_for_place_oid(self) -> bool:
         """Check if this device is the main device for its placeOID group.
@@ -87,15 +94,19 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         The device with the lowest URL index among siblings sharing the same
         placeOID is considered the main device and provides full device info.
         """
-        if not self.device.place_oid:
+        my_place_oid = self.device.place_oid
+        if not my_place_oid:
             return True
 
-        my_index = int(self.device_url.split("#")[-1])
+        my_index = self._get_device_index(self.device_url)
+        if my_index is None:
+            return True
 
         return not any(
-            int(sibling.device_url.split("#")[-1]) < my_index
+            (sibling_index := self._get_device_index(sibling.device_url)) is not None
+            and sibling_index < my_index
             for sibling in self._get_sibling_devices()
-            if sibling.place_oid == self.device.place_oid
+            if sibling.place_oid == my_place_oid
         )
 
     def _get_via_device_id(self, use_place_oid_grouping: bool) -> str:

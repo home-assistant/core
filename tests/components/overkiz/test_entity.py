@@ -7,8 +7,10 @@ import pytest
 from homeassistant.components.overkiz.entity import OverkizEntity
 
 
-def _create_mock_device(device_url: str, place_oid: str, label: str) -> Mock:
-    """Create a mock device."""
+def _create_mock_device(
+    device_url: str, place_oid: str | None, label: str = "Device"
+) -> Mock:
+    """Create a mock device with the given properties."""
     device = Mock()
     device.device_url = device_url
     device.place_oid = place_oid
@@ -28,12 +30,16 @@ def _create_mock_entity(device: Mock, all_devices: list[Mock]) -> Mock:
     entity.base_device_url = device.device_url.split("#")[0]
     entity.coordinator = Mock()
     entity.coordinator.data = {d.device_url: d for d in all_devices}
+
+    prefix = f"{entity.base_device_url}#"
     entity._get_sibling_devices = lambda: [
         d
         for d in all_devices
-        if d.device_url != device.device_url
-        and d.device_url.startswith(f"{entity.base_device_url}#")
+        if d.device_url != device.device_url and d.device_url.startswith(prefix)
     ]
+    entity._get_device_index = lambda url: (
+        int(url.split("#")[-1]) if url.split("#")[-1].isdigit() else None
+    )
     return entity
 
 
@@ -108,3 +114,64 @@ def test_get_via_device_id_main_device_links_to_gateway() -> None:
     result = OverkizEntity._get_via_device_id(entity, use_place_oid_grouping=True)
 
     assert result == "gateway-id"
+
+
+def test_has_siblings_with_no_place_oid() -> None:
+    """Test device with no placeOID returns False."""
+    devices = [
+        _create_mock_device("io://gateway/123#1", None, "Device 1"),
+        _create_mock_device("io://gateway/123#2", "place-b", "Device 2"),
+    ]
+    entity = _create_mock_entity(devices[0], devices)
+
+    result = OverkizEntity._has_siblings_with_different_place_oid(entity)
+
+    assert result is False
+
+
+def test_is_main_device_with_no_place_oid() -> None:
+    """Test device with no placeOID is always considered main."""
+    devices = [
+        _create_mock_device("io://gateway/123#2", None, "Device 2"),
+        _create_mock_device("io://gateway/123#1", "place-a", "Device 1"),
+    ]
+    entity = _create_mock_entity(devices[0], devices)
+
+    result = OverkizEntity._is_main_device_for_place_oid(entity)
+
+    assert result is True
+
+
+def test_get_via_device_id_main_device_without_place_oid() -> None:
+    """Test fallback to gateway when #1 device has no placeOID."""
+    devices = [
+        _create_mock_device("io://gateway/123#1", None, "Actuator"),
+        _create_mock_device("io://gateway/123#2", "place-b", "Zone"),
+    ]
+    entity = _create_mock_entity(devices[1], devices)
+    entity.executor = Mock()
+    entity.executor.get_gateway_id = Mock(return_value="gateway-id")
+
+    result = OverkizEntity._get_via_device_id(entity, use_place_oid_grouping=True)
+
+    assert result == "gateway-id"
+
+
+@pytest.mark.parametrize(
+    ("device_url", "expected"),
+    [
+        ("io://gateway/123#4", 4),
+        ("io://gateway/123#10", 10),
+        ("io://gateway/123#abc", None),
+        ("io://gateway/123#", None),
+    ],
+    ids=["single_digit", "multi_digit", "non_numeric", "empty_suffix"],
+)
+def test_get_device_index(device_url: str, expected: int | None) -> None:
+    """Test extracting numeric index from device URL."""
+    device = _create_mock_device(device_url, "place-a")
+    entity = _create_mock_entity(device, [device])
+
+    result = OverkizEntity._get_device_index(entity, device_url)
+
+    assert result == expected
