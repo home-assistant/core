@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SWING_SUPPORT, DOMAIN
+from .const import CONF_SEND_WAKEUP_PROMPT, CONF_SWING_SUPPORT, DOMAIN
 from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
@@ -17,10 +17,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -
     """Set up Coolmaster from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+    send_wakeup_prompt = entry.data.get(CONF_SEND_WAKEUP_PROMPT, False)
     if not entry.data.get(CONF_SWING_SUPPORT):
         coolmaster = CoolMasterNet(
             host,
             port,
+            send_initial_line_feed=send_wakeup_prompt,
         )
     else:
         # Swing support adds an additional request per unit. The requests are
@@ -29,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) -
         coolmaster = CoolMasterNet(
             host,
             port,
+            send_initial_line_feed=send_wakeup_prompt,
             read_timeout=5,
             swing_support=True,
         )

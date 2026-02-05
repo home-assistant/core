@@ -18,11 +18,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
 
@@ -132,3 +134,15 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery to update existing entries."""
+        mac_address = format_mac(discovery_info.macaddress)
+        serial_number = mac_address.replace(":", "").upper()
+
+        await self.async_set_unique_id(serial_number)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        return self.async_abort(reason="no_dhcp_flow")

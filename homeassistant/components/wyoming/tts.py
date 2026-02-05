@@ -47,6 +47,9 @@ async def async_setup_entry(
 class WyomingTtsProvider(tts.TextToSpeechEntity):
     """Wyoming text-to-speech provider."""
 
+    _attr_default_options = {}
+    _attr_supported_options = [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE, ATTR_SPEAKER]
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -78,37 +81,12 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                 self._voices[language], key=lambda v: v.name
             )
 
-        self._supported_languages: list[str] = list(voice_languages)
+        self._attr_supported_languages = list(voice_languages)
+        if self._attr_supported_languages:
+            self._attr_default_language = self._attr_supported_languages[0]
 
         self._attr_name = self._tts_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
-
-    @property
-    def default_language(self):
-        """Return default language."""
-        if not self._supported_languages:
-            return None
-
-        return self._supported_languages[0]
-
-    @property
-    def supported_languages(self):
-        """Return list of supported languages."""
-        return self._supported_languages
-
-    @property
-    def supported_options(self):
-        """Return list of supported options like voice, emotion."""
-        return [
-            tts.ATTR_AUDIO_OUTPUT,
-            tts.ATTR_VOICE,
-            ATTR_SPEAKER,
-        ]
-
-    @property
-    def default_options(self):
-        """Return a dict include default options."""
-        return {}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:

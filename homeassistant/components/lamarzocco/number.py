@@ -5,9 +5,14 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from pylamarzocco import LaMarzoccoMachine
-from pylamarzocco.const import ModelName, PreExtractionMode, WidgetType
+from pylamarzocco.const import DoseMode, ModelName, PreExtractionMode, WidgetType
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import CoffeeBoiler, PreBrewing, SteamBoilerTemperature
+from pylamarzocco.models import (
+    BrewByWeightDoses,
+    CoffeeBoiler,
+    PreBrewing,
+    SteamBoilerTemperature,
+)
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -18,6 +23,7 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     EntityCategory,
+    UnitOfMass,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -217,6 +223,76 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 ModelName.LINEA_MINI,
                 ModelName.LINEA_MINI_R,
             )
+        ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="bbw_dose_1",
+        translation_key="bbw_dose",
+        translation_placeholders={"dose": "1"},
+        device_class=NumberDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        native_step=PRECISION_TENTHS,
+        native_min_value=5,
+        native_max_value=100,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=(
+            lambda machine, value: machine.set_brew_by_weight_dose(
+                dose=DoseMode.DOSE_1,
+                value=value,
+            )
+        ),
+        native_value_fn=(
+            lambda machine: cast(
+                BrewByWeightDoses,
+                machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).doses.dose_1.dose
+        ),
+        available_fn=lambda coordinator: (
+            cast(
+                BrewByWeightDoses,
+                coordinator.device.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).scale_connected
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
+        ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="bbw_dose_2",
+        translation_key="bbw_dose",
+        translation_placeholders={"dose": "2"},
+        device_class=NumberDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        native_step=PRECISION_TENTHS,
+        native_min_value=5,
+        native_max_value=100,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=(
+            lambda machine, value: machine.set_brew_by_weight_dose(
+                dose=DoseMode.DOSE_2,
+                value=value,
+            )
+        ),
+        native_value_fn=(
+            lambda machine: cast(
+                BrewByWeightDoses,
+                machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).doses.dose_2.dose
+        ),
+        available_fn=lambda coordinator: (
+            cast(
+                BrewByWeightDoses,
+                coordinator.device.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).scale_connected
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
         ),
     ),
 )

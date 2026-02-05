@@ -29,11 +29,11 @@ from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.target import (
-    TargetSelectorData,
+    TargetSelection,
     async_extract_referenced_entity_ids,
 )
 
-from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DOMAIN
+from .const import ATTR_THEME, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
 
@@ -135,8 +135,6 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        # _ATTR_COLOR_TEMP deprecated - to be removed in 2026.1
-        vol.Exclusive(_ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -272,7 +270,7 @@ class LIFXManager:
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
             referenced = async_extract_referenced_entity_ids(
-                self.hass, TargetSelectorData(service.data)
+                self.hass, TargetSelection(service.data)
             )
             all_referenced = referenced.referenced | referenced.indirectly_referenced
             if all_referenced:

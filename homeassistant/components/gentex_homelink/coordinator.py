@@ -1,10 +1,9 @@
-"""Makes requests to the state server and stores the resulting data so that the buttons can access it."""
+"""Establish MQTT connection and listen for event data."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
-import logging
 from typing import TypedDict
 
 from homelink.model.device import Device
@@ -13,8 +12,6 @@ from homelink.mqtt_provider import MQTTProvider
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.ssl import get_default_context
-
-_LOGGER = logging.getLogger(__name__)
 
 type HomeLinkConfigEntry = ConfigEntry[HomeLinkCoordinator]
 type EventCallback = Callable[[HomeLinkEventData], None]
