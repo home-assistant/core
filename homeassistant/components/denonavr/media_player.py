@@ -70,6 +70,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.STOP
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -405,6 +406,11 @@ class DenonDevice(MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
+
+    @async_log_errors
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._receiver.async_stop()
 
     @async_log_errors
     async def async_media_previous_track(self) -> None:
