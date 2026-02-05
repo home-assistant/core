@@ -301,8 +301,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if not self._has_state:
-            return ColorMode.UNKNOWN
         if not self._supports_color_mode:
             supported_color_modes = self.supported_color_modes
             if TYPE_CHECKING:
