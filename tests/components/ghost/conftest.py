@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry
 
 API_URL = "https://test.ghost.io"
 API_KEY = "650b7a9f8e8c1234567890ab:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+SITE_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
 
 @pytest.fixture
@@ -29,7 +30,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_API_URL: API_URL,
             CONF_ADMIN_API_KEY: API_KEY,
         },
-        unique_id=API_URL,
+        unique_id=SITE_UUID,
     )
 
 
@@ -37,7 +38,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 def mock_ghost_data() -> dict:
     """Return mock Ghost API data."""
     return {
-        "site": {"title": "Test Ghost", "url": API_URL},
+        "site": {"title": "Test Ghost", "url": API_URL, "uuid": SITE_UUID},
         "posts": {"published": 42, "drafts": 5, "scheduled": 2},
         "members": {"total": 1000, "paid": 100, "free": 850, "comped": 50},
         "latest_post": {
@@ -59,7 +60,8 @@ def mock_ghost_data() -> dict:
             "submitted_at": "2026-01-15T10:00:00Z",
         },
         "activitypub": {"followers": 150, "following": 25},
-        "mrr": {"usd": 500000},  # $5,000 in cents
+        "mrr": {"usd": 5000},
+        "arr": {"usd": 60000},
         "comments": 156,
         "newsletters": [
             {
@@ -91,10 +93,9 @@ def mock_ghost_api(mock_ghost_data: dict) -> Generator[AsyncMock]:
         mock_api.get_latest_email.return_value = mock_ghost_data["latest_email"]
         mock_api.get_activitypub_stats.return_value = mock_ghost_data["activitypub"]
         mock_api.get_mrr.return_value = mock_ghost_data["mrr"]
+        mock_api.get_arr.return_value = mock_ghost_data["arr"]
         mock_api.get_comments_count.return_value = mock_ghost_data["comments"]
         mock_api.get_newsletters.return_value = mock_ghost_data["newsletters"]
-        mock_api.create_webhook.return_value = {"id": "wh123"}
-        mock_api.delete_webhook.return_value = None
         mock_api.close.return_value = None
         mock_api_class.return_value = mock_api
         yield mock_api

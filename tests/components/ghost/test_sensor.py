@@ -5,8 +5,6 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import API_URL
-
 
 async def test_sensors_created(
     hass: HomeAssistant,
@@ -94,11 +92,9 @@ async def test_revenue_sensors_values(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # MRR: 500000 cents = $5000
     mrr = hass.states.get("sensor.test_ghost_mrr")
     assert mrr.state == "5000"
 
-    # ARR: $5000 * 12 = $60000
     arr = hass.states.get("sensor.test_ghost_arr")
     assert arr.state == "60000"
 
@@ -140,7 +136,7 @@ async def test_latest_post_sensor(
     mock_config_entry,
     mock_ghost_data: dict,
 ) -> None:
-    """Test latest post sensor and attributes."""
+    """Test latest post sensor value."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -157,8 +153,6 @@ async def test_latest_post_sensor(
 
     latest = hass.states.get("sensor.test_ghost_latest_post")
     assert latest.state == "Latest Post"
-    assert latest.attributes["url"] == f"{API_URL}/latest-post/"
-    assert latest.attributes["slug"] == "latest-post"
 
 
 async def test_email_sensors_values(
@@ -283,14 +277,15 @@ async def test_device_info(
     assert device.model == "Ghost"
 
 
-async def test_mrr_sensor_no_data(
+async def test_revenue_sensors_not_created_without_stripe(
     hass: HomeAssistant, mock_ghost_api: AsyncMock, mock_config_entry
 ) -> None:
-    """Test MRR sensor when no MRR data available."""
+    """Test MRR/ARR sensors are not created when Stripe is not linked."""
     mock_config_entry.add_to_hass(hass)
 
-    # Return empty MRR data
+    # Return empty MRR/ARR data (no Stripe linked)
     mock_ghost_api.get_mrr.return_value = {}
+    mock_ghost_api.get_arr.return_value = {}
 
     with (
         patch(
@@ -304,9 +299,8 @@ async def test_mrr_sensor_no_data(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test_ghost_mrr")
-    assert state is not None
-    assert state.state == "unknown"
+    assert hass.states.get("sensor.test_ghost_mrr") is None
+    assert hass.states.get("sensor.test_ghost_arr") is None
 
 
 async def test_newsletter_sensor_not_found(

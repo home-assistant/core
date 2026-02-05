@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioghost"],
-  "quality_scale": "platinum",
-  "requirements": ["aioghost==0.3.0"]
+  "quality_scale": "bronze",
+  "requirements": ["aioghost==0.4.0"]
 }

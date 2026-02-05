@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -22,7 +23,23 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class GhostDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+@dataclass
+class GhostData:
+    """Data returned by the Ghost coordinator."""
+
+    site: dict[str, Any]
+    posts: dict[str, Any]
+    members: dict[str, Any]
+    latest_post: dict[str, Any] | None
+    latest_email: dict[str, Any] | None
+    activitypub: dict[str, Any]
+    mrr: dict[str, Any]
+    arr: dict[str, Any]
+    comments: int
+    newsletters: dict[str, dict[str, Any]]
+
+
+class GhostDataUpdateCoordinator(DataUpdateCoordinator[GhostData]):
     """Class to manage fetching Ghost data."""
 
     config_entry: GhostConfigEntry
@@ -31,40 +48,33 @@ class GhostDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         api: GhostAdminAPI,
-        site_title: str,
+        config_entry: GhostConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.api = api
-        self.site_title = site_title
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"Ghost ({site_title})",
+            name=f"Ghost ({config_entry.title})",
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            config_entry=config_entry,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> GhostData:
         """Fetch data from Ghost API."""
         try:
-            (
-                site,
-                posts,
-                members,
-                latest_post,
-                latest_email,
-                activitypub,
-                mrr,
-                comments,
-                newsletters,
-            ) = await asyncio.gather(
+            (site, posts, members, latest_post, latest_email) = await asyncio.gather(
                 self.api.get_site(),
                 self.api.get_posts_count(),
                 self.api.get_members_count(),
                 self.api.get_latest_post(),
                 self.api.get_latest_email(),
+            )
+            (activitypub, mrr, arr, comments, newsletters) = await asyncio.gather(
                 self.api.get_activitypub_stats(),
                 self.api.get_mrr(),
+                self.api.get_arr(),
                 self.api.get_comments_count(),
                 self.api.get_newsletters(),
             )
@@ -80,14 +90,15 @@ class GhostDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        return {
-            "site": site,
-            "posts": posts,
-            "members": members,
-            "latest_post": latest_post,
-            "latest_email": latest_email,
-            "activitypub": activitypub,
-            "mrr": mrr,
-            "comments": comments,
-            "newsletters": newsletters,
-        }
+        return GhostData(
+            site=site,
+            posts=posts,
+            members=members,
+            latest_post=latest_post,
+            latest_email=latest_email,
+            activitypub=activitypub,
+            mrr=mrr,
+            arr=arr,
+            comments=comments,
+            newsletters={n["id"]: n for n in newsletters if "id" in n},
+        )
