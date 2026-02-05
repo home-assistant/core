@@ -895,7 +895,8 @@ class ZHAGatewayProxy(EventBase):
                     identifiers={(DOMAIN, zha_group_proxy.group_device_identifier)},
                     name=zha_group_proxy.group.name,
                     manufacturer="Zigbee",
-                    model="Zigbee group",
+                    model="Group",
+                    entry_type=dr.DeviceEntryType.SERVICE,
                     via_device=(DOMAIN, coordinator_ieee),
                 )
                 zha_group_proxy.device_id = device_registry_device.id

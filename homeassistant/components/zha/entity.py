@@ -19,7 +19,11 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import State, callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -120,7 +124,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 identifiers={(DOMAIN, group_proxy.group_device_identifier)},
                 name=group_proxy.group.name,
                 manufacturer="Zigbee",
-                model="Zigbee group",
+                model="Group",
+                entry_type=DeviceEntryType.SERVICE,
                 via_device=(DOMAIN, coordinator_ieee),
             )
 
