@@ -293,7 +293,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         # Stored values for template attributes
         self._attr_is_on = initial_state
         self._supports_transition = False
-        self._attr_color_mode: ColorMode | None = None
 
     def _setup_light_features(self, config: ConfigType, name: str) -> None:
         """Setup light scripts, supported color modes, and supported features."""
