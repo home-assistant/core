@@ -93,12 +93,6 @@
     "door_open": {
       "message": "Cannot start sauna session when sauna door is open"
     },
-    "integration_not_found": {
-      "message": "Integration not found: {target}"
-    },
-    "not_loaded": {
-      "message": "Integration not loaded: {target}"
-    },
     "preset_session_active": {
       "message": "Cannot change preset mode while sauna session is active"
     },
@@ -160,20 +154,16 @@
     "start_session": {
       "description": "Starts a sauna session with custom duration, target temperature, and fan duration.",
       "fields": {
-        "config_entry_id": {
-          "description": "The config entry of the Saunum device.",
-          "name": "Saunum entry"
-        },
         "duration": {
-          "description": "Session duration in minutes (1-720).",
+          "description": "Session duration in minutes.",
           "name": "Duration"
         },
         "fan_duration": {
-          "description": "Fan duration in minutes (1-30).",
+          "description": "Fan duration in minutes.",
           "name": "Fan duration"
         },
         "target_temperature": {
-          "description": "Target temperature in Celsius (40-100).",
+          "description": "Target temperature in Celsius.",
           "name": "Target temperature"
         }
       },

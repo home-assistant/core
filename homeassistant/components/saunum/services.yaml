@@ -1,19 +1,13 @@
 start_session:
+  target:
+    entity:
+      domain: climate
+      integration: saunum
   fields:
-    config_entry_id:
-      required: true
-      selector:
-        config_entry:
-          integration: saunum
     duration:
       required: false
-      example: 120
-      default: 120
       selector:
-        number:
-          min: 1
-          max: 720
-          unit_of_measurement: min
+        duration:
     target_temperature:
       required: false
       example: 80
@@ -25,10 +19,5 @@ start_session:
           unit_of_measurement: "°C"
     fan_duration:
       required: false
-      example: 10
-      default: 10
       selector:
-        number:
-          min: 1
-          max: 30
-          unit_of_measurement: min
+        duration:
