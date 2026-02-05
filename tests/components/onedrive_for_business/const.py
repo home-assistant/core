@@ -4,6 +4,7 @@ from onedrive_personal_sdk.models.items import IdentitySet, User
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+TENANT_ID = "test_tenant_id"
 
 
 BACKUP_METADATA = {

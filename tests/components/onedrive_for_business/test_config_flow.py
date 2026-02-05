@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_PATH,
+    CONF_TENANT_ID,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -21,7 +22,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
-from .const import CLIENT_ID
+from .const import CLIENT_ID, TENANT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -43,9 +44,11 @@ async def _do_get_token(
     )
 
     scope = "Files.ReadWrite.All+offline_access+openid"
+    authorize_url = OAUTH2_AUTHORIZE.format(tenant_id=TENANT_ID)
+    token_url = OAUTH2_TOKEN.format(tenant_id=TENANT_ID)
 
     assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope={scope}"
     )
@@ -56,7 +59,7 @@ async def _do_get_token(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
-        OAUTH2_TOKEN,
+        token_url,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -78,6 +81,12 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -118,6 +127,12 @@ async def test_full_flow_with_owner_not_found(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
+    )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -153,6 +168,12 @@ async def test_error_during_folder_creation(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -203,6 +224,12 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
+    )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -223,6 +250,12 @@ async def test_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_tenant"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TENANT_ID: TENANT_ID}
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
