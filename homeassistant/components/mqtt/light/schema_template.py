@@ -274,6 +274,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         if color_temp_value != "None"
                         else None
                     )
+                    self._update_color_mode()
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid color temperature value '%s' received from %s",
