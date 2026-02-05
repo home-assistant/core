@@ -779,7 +779,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
-    _attr_color_mode: ColorMode | None = None
+    _attr_color_mode: ColorMode = ColorMode.UNKNOWN
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
