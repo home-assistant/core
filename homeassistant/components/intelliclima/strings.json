@@ -17,7 +17,7 @@
         },
         "data_description": {
           "password": "Your IntelliClima app password",
-          "username": "Your IntelliClima app username or email"
+          "username": "Your IntelliClima app username"
         },
         "description": "Authenticate against IntelliClima cloud"
       }
