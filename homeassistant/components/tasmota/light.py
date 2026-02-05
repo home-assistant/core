@@ -91,6 +91,7 @@ class TasmotaLight(
 ):
     """Representation of a Tasmota light."""
 
+    _attr_supported_color_modes: set[ColorMode]
     _tasmota_entity: tasmota_light.TasmotaLight
 
     def __init__(self, **kwds: Any) -> None:
@@ -212,7 +213,7 @@ class TasmotaLight(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        supported_color_modes = self._attr_supported_color_modes or set()
+        supported_color_modes = self._attr_supported_color_modes
 
         attributes: dict[str, Any] = {}
 
