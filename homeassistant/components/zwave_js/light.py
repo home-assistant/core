@@ -130,7 +130,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.COLD_WHITE,
         )
-        self._supported_color_modes: set[ColorMode] = set()
 
         self._target_brightness: Value | None = None
 
@@ -176,17 +175,18 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
 
         self._calculate_color_support()
+        self._attr_supported_color_modes = set()
         if self._supports_rgbw:
-            self._supported_color_modes.add(ColorMode.RGBW)
+            self._attr_supported_color_modes.add(ColorMode.RGBW)
         elif self._supports_color:
-            self._supported_color_modes.add(ColorMode.HS)
+            self._attr_supported_color_modes.add(ColorMode.HS)
         if self._supports_color_temp:
-            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if not self._supported_color_modes:
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+        if not self._attr_supported_color_modes:
             if self.info.primary_value.command_class == CommandClass.SWITCH_BINARY:
-                self._supported_color_modes.add(ColorMode.ONOFF)
+                self._attr_supported_color_modes.add(ColorMode.ONOFF)
             else:
-                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+                self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._calculate_color_values()
 
         # Entity class attributes
@@ -229,11 +229,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             return True
         brightness = self.brightness
         return brightness > 0 if brightness is not None else None
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | None:
-        """Flag supported features."""
-        return self._supported_color_modes
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
