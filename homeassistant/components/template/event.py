@@ -124,9 +124,6 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._event_type_template = config[CONF_EVENT_TYPE]
-        self._event_types_template = config[CONF_EVENT_TYPES]
-
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         self._event_type = None
