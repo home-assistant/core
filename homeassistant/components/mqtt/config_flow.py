@@ -1299,9 +1299,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=ALARM_CONTROL_PANEL_CODE_MODE,
             required=True,
             exclude_from_config=True,
-            default=lambda config: config[CONF_CODE].lower()
-            if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
-            else "local_code",
+            default=lambda config: (
+                config[CONF_CODE].lower()
+                if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
+                else "local_code"
+            ),
         ),
     },
     Platform.BINARY_SENSOR: {
@@ -1327,10 +1329,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "climate_feature_action": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1431,9 +1435,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=True,
             exclude_from_config=True,
             default=(
-                lambda config: "image_url"
-                if config.get(CONF_IMAGE_TOPIC) is None
-                else "image_data"
+                lambda config: (
+                    "image_url"
+                    if config.get(CONF_IMAGE_TOPIC) is None
+                    else "image_data"
+                )
             ),
         )
     },
@@ -1517,10 +1523,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "water_heater_feature_current_temperature": PlatformField(
             selector=BOOLEAN_SELECTOR,
