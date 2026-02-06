@@ -347,7 +347,7 @@ async def test_occupancy_sensing_pir_thresholds(
         "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold"
     )
     assert state
-    assert state.state == "2"
+    assert state.state == "1"
 
     set_node_attribute(matter_node, 1, 1030, 0x12, 5)
     await trigger_subscription_callback(hass, matter_client)
