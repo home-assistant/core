@@ -1,0 +1,27 @@
+name: Build HA
+on:
+  workflow_dispatch:  # 手动触发
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install build twine
+        
+    - name: Build package
+      run: |
+        python -m build
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ha-package
+        path: dist/
