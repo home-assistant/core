@@ -235,12 +235,6 @@
       "on_transition_time": {
         "name": "On transition time"
       },
-      "unoccupied_to_occupied_delay": {
-        "name": "Unoccupied to occupied delay"
-      },
-      "unoccupied_to_occupied_threshold": {
-        "name": "Unoccupied to occupied threshold"
-      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -257,7 +251,7 @@
         "name": "Unoccupied to occupied delay"
       },
       "unoccupied_to_occupied_threshold": {
-        "name": "unoccupied to occupied threshold"
+        "name": "Unoccupied to occupied threshold"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
