@@ -111,7 +111,7 @@ def mock_config_entry_with_adaptive_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
+            CONF_CHAT_MODEL: "claude-opus-4-6",
             CONF_THINKING_EFFORT: "medium",
         },
     )
