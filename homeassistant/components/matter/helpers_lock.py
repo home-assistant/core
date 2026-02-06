@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 from chip.clusters import Objects as clusters
 
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     ATTR_CREDENTIAL_RULE,
@@ -364,32 +364,54 @@ class LockEndpointNotFoundError(HomeAssistantError):
     """Lock endpoint not found on node."""
 
 
-class UsrFeatureNotSupportedError(HomeAssistantError):
+class UsrFeatureNotSupportedError(ServiceValidationError):
     """Lock does not support USR (user management) feature."""
 
 
-class UserSlotEmptyError(HomeAssistantError):
+class UserSlotEmptyError(ServiceValidationError):
     """User slot is empty."""
 
 
-class NoAvailableUserSlotsError(HomeAssistantError):
+class NoAvailableUserSlotsError(ServiceValidationError):
     """No available user slots on the lock."""
 
 
-class InvalidPinCodeError(HomeAssistantError):
+class InvalidPinCodeError(ServiceValidationError):
     """PIN code is invalid."""
 
 
-class PinCredentialNotSupportedError(HomeAssistantError):
+class PinCredentialNotSupportedError(ServiceValidationError):
     """Lock does not support PIN credentials."""
 
 
-class CredentialSlotError(HomeAssistantError):
+class CredentialSlotError(ServiceValidationError):
     """No available credential slots."""
 
 
 class CredentialSetError(HomeAssistantError):
     """SetCredential command failed."""
+
+
+def _get_lock_endpoint_or_raise(node: MatterNode) -> MatterEndpoint:
+    """Get the DoorLock endpoint from a node or raise an error.
+
+    This is a helper to reduce boilerplate in functions that need a lock endpoint.
+    """
+    lock_endpoint = get_lock_endpoint_from_node(node)
+    if lock_endpoint is None:
+        raise LockEndpointNotFoundError("No lock endpoint found on this device")
+    return lock_endpoint
+
+
+def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports USR (user management) feature.
+
+    Raises UsrFeatureNotSupportedError if the lock doesn't support user management.
+    """
+    if not lock_supports_usr_feature(lock_endpoint):
+        raise UsrFeatureNotSupportedError(
+            "Lock does not support user/credential management"
+        )
 
 
 async def _handle_pin_credential(
@@ -474,10 +496,7 @@ async def get_lock_info(
     Returns a dict with lock capability information.
     Raises HomeAssistantError if lock endpoint not found.
     """
-    lock_endpoint = get_lock_endpoint_from_node(node)
-    if lock_endpoint is None:
-        raise LockEndpointNotFoundError("No lock endpoint found on this device")
-
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
     supports_usr = lock_supports_usr_feature(lock_endpoint)
 
     # Get feature map for credential type detection
@@ -572,14 +591,8 @@ async def set_lock_user(
     Returns dict with user_index on success.
     Raises HomeAssistantError on failure.
     """
-    lock_endpoint = get_lock_endpoint_from_node(node)
-    if lock_endpoint is None:
-        raise LockEndpointNotFoundError("No lock endpoint found on this device")
-
-    if not lock_supports_usr_feature(lock_endpoint):
-        raise UsrFeatureNotSupportedError(
-            "Lock does not support user/credential management"
-        )
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
 
     feature_map = (
         lock_endpoint.get_attribute_value(None, clusters.DoorLock.Attributes.FeatureMap)
@@ -752,14 +765,8 @@ async def get_lock_users(
     Returns dict with users list and metadata.
     Raises HomeAssistantError on failure.
     """
-    lock_endpoint = get_lock_endpoint_from_node(node)
-    if lock_endpoint is None:
-        raise LockEndpointNotFoundError("No lock endpoint found on this device")
-
-    if not lock_supports_usr_feature(lock_endpoint):
-        raise UsrFeatureNotSupportedError(
-            "Lock does not support user/credential management"
-        )
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
 
     max_users = (
         lock_endpoint.get_attribute_value(
@@ -808,14 +815,8 @@ async def clear_lock_user(
     Use index 0xFFFE (CLEAR_ALL_INDEX) to clear all users.
     Raises HomeAssistantError on failure.
     """
-    lock_endpoint = get_lock_endpoint_from_node(node)
-    if lock_endpoint is None:
-        raise LockEndpointNotFoundError("No lock endpoint found on this device")
-
-    if not lock_supports_usr_feature(lock_endpoint):
-        raise UsrFeatureNotSupportedError(
-            "Lock does not support user/credential management"
-        )
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
 
     if user_index == CLEAR_ALL_INDEX:
         # Clear all: clear all credentials first, then all users

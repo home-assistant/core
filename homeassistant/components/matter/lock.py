@@ -298,9 +298,7 @@ class MatterLock(MatterEntity, LockEntity):
             raise ServiceValidationError(f"PIN code must be {min_pin}-{max_pin} digits")
 
         # Check if user exists at code_slot
-        get_user_response = await self.matter_client.send_device_command(
-            node_id=node.node_id,
-            endpoint_id=endpoint.endpoint_id,
+        get_user_response = await self.send_device_command(
             command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
         )
 
@@ -323,9 +321,7 @@ class MatterLock(MatterEntity, LockEntity):
         pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
 
         # Check if user already has a PIN credential
-        check_response = await self.matter_client.send_device_command(
-            node_id=node.node_id,
-            endpoint_id=endpoint.endpoint_id,
+        check_response = await self.send_device_command(
             command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
         )
         existing_cred_index = None
@@ -392,9 +388,7 @@ class MatterLock(MatterEntity, LockEntity):
             )
 
         # Check if user exists
-        get_user_response = await self.matter_client.send_device_command(
-            node_id=node.node_id,
-            endpoint_id=endpoint.endpoint_id,
+        get_user_response = await self.send_device_command(
             command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
         )
 
