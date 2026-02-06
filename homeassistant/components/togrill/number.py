@@ -138,8 +138,8 @@ ENTITY_DESCRIPTIONS = (
         native_max_value=15,
         native_step=5,
         mode=NumberMode.BOX,
-        set_packet=lambda coordinator, x: (
-            PacketA6Write(temperature_unit=None, alarm_interval=round(x))
+        set_packet=lambda coordinator, x: PacketA6Write(
+            temperature_unit=None, alarm_interval=round(x)
         ),
         get_value=lambda x: (
             packet.alarm_interval if (packet := x.get_packet(PacketA0Notify)) else None

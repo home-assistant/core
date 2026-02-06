@@ -60,8 +60,10 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     await controller.async_register_device_entities(
-        lambda device: device.type == "gateway"
-        and device.status_category == DeviceStatusCategory.CONNECTED,
+        lambda device: (
+            device.type == "gateway"
+            and device.status_category == DeviceStatusCategory.CONNECTED
+        ),
         _create_gateway_port_entities,
     )
 

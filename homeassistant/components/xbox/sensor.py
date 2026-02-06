@@ -175,9 +175,11 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.LAST_ONLINE,
         translation_key=XboxSensor.LAST_ONLINE,
         value_fn=(
-            lambda x, _: x.last_seen_date_time_utc.replace(tzinfo=UTC)
-            if x.last_seen_date_time_utc
-            else None
+            lambda x, _: (
+                x.last_seen_date_time_utc.replace(tzinfo=UTC)
+                if x.last_seen_date_time_utc
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -207,9 +209,9 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.IN_PARTY,
         translation_key=XboxSensor.IN_PARTY,
         value_fn=(
-            lambda x, _: x.multiplayer_summary.in_party
-            if x.multiplayer_summary
-            else None
+            lambda x, _: (
+                x.multiplayer_summary.in_party if x.multiplayer_summary else None
+            )
         ),
     ),
     XboxSensorEntityDescription(
