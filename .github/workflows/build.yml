@@ -1,4 +1,4 @@
-name: Build and Publish Custom HA Package
+name: Build IOT
 on:
   workflow_dispatch:
 jobs:
