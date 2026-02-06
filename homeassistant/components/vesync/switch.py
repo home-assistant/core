@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,8 +62,10 @@ def _toggle_auto_stop(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
             raise HomeAssistantError("Device does not support toggling automatic stop.")
 
 
-def _toggle_drying_mode(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
-    """Toggle drying mode on purifier devices."""
+def _toggle_drying_mode_on_power_off(
+    device: VeSyncBaseDevice, *args
+) -> Awaitable[bool]:
+    """Toggle auto drying mode on purifier devices."""
     match device:
         case VeSyncHumidifier() as sw if hasattr(sw, "toggle_drying_mode"):
             return sw.toggle_drying_mode(*args)
@@ -119,15 +122,15 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         off_fn=lambda device: _toggle_auto_stop(device, False),
     ),
     VeSyncSwitchEntityDescription(
-        key="dry_mode",
-        is_on=lambda device: device.state.drying_mode_state == DeviceStatus.ON,
+        key="drying_mode_power_off",
+        is_on=lambda device: device.state.drying_mode_auto_switch == DeviceStatus.ON,
         exists_fn=(
-            lambda device: is_humidifier(device)
-            and rgetattr(device, "state.dry_mode") is not None
+            lambda device: is_humidifier(device) and "drying_mode" in device.features
         ),
-        translation_key="dry_mode",
-        on_fn=lambda device: _toggle_drying_mode(device, True),
-        off_fn=lambda device: _toggle_drying_mode(device, False),
+        translation_key="drying_mode_power_off",
+        on_fn=lambda device: _toggle_drying_mode_on_power_off(device, True),
+        off_fn=lambda device: _toggle_drying_mode_on_power_off(device, False),
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

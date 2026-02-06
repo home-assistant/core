@@ -149,8 +149,8 @@
       "display": {
         "name": "Display"
       },
-      "dry_mode": {
-        "name": "Dry mode"
+      "drying_mode_power_off": {
+        "name": "Drying mode power off"
       }
     }
   },
