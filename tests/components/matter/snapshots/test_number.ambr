@@ -2608,12 +2608,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'unoccupied to occupied threshold',
+    'object_id_base': 'Unoccupied to occupied threshold',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'unoccupied to occupied threshold',
+    'original_name': 'Unoccupied to occupied threshold',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2626,7 +2626,7 @@
 # name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock PIR Occupancy Sensor unoccupied to occupied threshold',
+      'friendly_name': 'Mock PIR Occupancy Sensor Unoccupied to occupied threshold',
       'max': 254,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
