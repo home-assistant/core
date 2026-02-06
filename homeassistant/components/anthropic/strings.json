@@ -53,6 +53,7 @@
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
           },
           "data_description": {
+            "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
             "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search%]",
