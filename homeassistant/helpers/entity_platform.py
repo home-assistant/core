@@ -829,7 +829,7 @@ class EntityPlatform:
                         "In most cases, entities should not set entity_id,"
                         " but if they do, it should be a valid entity ID.",
                         integration_domain=self.platform_name,
-                        breaks_in_ha_version="2026.8.0",
+                        breaks_in_ha_version="2027.2.0",
                     )
                 else:
                     entity.add_to_platform_abort()
