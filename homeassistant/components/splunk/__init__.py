@@ -153,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_TOKEN]
     use_ssl = entry.data.get(CONF_SSL, DEFAULT_SSL)
     verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+    name = entry.data.get(CONF_NAME) or hass.config.location_name
 
     # Get the entity filter from hass.data (set by async_setup or empty if no YAML)
     entity_filter: EntityFilter = hass.data.get(DATA_FILTER, FILTER_SCHEMA({}))

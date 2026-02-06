@@ -42,7 +42,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._async_validate_input(user_input)
 
             if not errors:
-                host = user_input.get(CONF_HOST, DEFAULT_HOST)
+                host = user_input[CONF_HOST]
                 port = user_input.get(CONF_PORT, DEFAULT_PORT)
                 return self.async_create_entry(
                     title=f"{host}:{port}",
@@ -54,13 +54,11 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TOKEN): str,
-                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_SSL, default=False): bool,
                     vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
+                    vol.Optional(CONF_NAME): str,
                 }
             ),
             errors=errors,
