@@ -61,8 +61,10 @@ async def async_setup_entry(
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady(f"Error while refreshing from {host}") from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if entry.entry_id not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][entry.entry_id] = {}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

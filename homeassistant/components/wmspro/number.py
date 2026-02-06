@@ -72,7 +72,11 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
         # Register entity in hass data for access by cover entity
         if self._config_entry_id and self._attr_unique_id:
-            self.hass.data[DOMAIN][self._config_entry_id][self._attr_unique_id] = self
+            domain_data = self.hass.data.get(DOMAIN)
+            if isinstance(domain_data, dict):
+                config_entry_data = domain_data.get(self._config_entry_id)
+                if isinstance(config_entry_data, dict):
+                    config_entry_data[self._attr_unique_id] = self
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity which will be removed."""
@@ -80,7 +84,11 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
         # Remove entity from hass data
         if self._config_entry_id and self._attr_unique_id:
-            del self.hass.data[DOMAIN][self._config_entry_id][self._attr_unique_id]
+            domain_data = self.hass.data.get(DOMAIN)
+            if isinstance(domain_data, dict):
+                config_entry_data = domain_data.get(self._config_entry_id)
+                if isinstance(config_entry_data, dict):
+                    config_entry_data.pop(self._attr_unique_id, None)
 
     async def async_update(self) -> None:
         """Update the entity and learn current rotation."""
