@@ -500,7 +500,9 @@ async def test_mcp_tool_call_unicode(
 
     # We need to ensure when the server calls llm.async_get_api, it gets our mock
     # async_get_api is awaited, so we need an AsyncMock
-    with patch("homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock) as mock_get_api:
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
         mock_get_api.return_value = mock_api
         async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
             result = await session.call_tool(
