@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from nessclient import ArmingMode, ArmingState, Client
+from nessclient import ArmingMode, ArmingState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -12,12 +12,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
+from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
+from .const import DOMAIN, SUBENTRY_TYPE_HOME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,17 +37,41 @@ ARMING_MODE_TO_STATE = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NessAlarmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Ness Alarm alarm control panel from config entry."""
+    client = entry.runtime_data
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+
+    # Get home subentries
+    home_subentries = filter(
+        lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_HOME,
+        entry.subentries.values(),
+    )
+
+    # Create alarm panel entities from home subentries
+    for subentry in home_subentries:
+        async_add_entities(
+            [NessAlarmPanel(client, host, port)],
+            config_subentry_id=subentry.subentry_id,
+        )
+
+
+async def async_setup_platform(  # pragma: no cover
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Ness Alarm alarm control panel devices."""
+    """Set up the Ness Alarm alarm control panel devices (deprecated YAML)."""
     if discovery_info is None:
         return
 
-    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel")
+    device = NessAlarmPanel(hass.data[DATA_NESS])
     async_add_entities([device])
 
 
@@ -56,10 +86,26 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    def __init__(self, client: Client, name: str) -> None:
+    def __init__(
+        self, client, host: str | None = None, port: int | None = None
+    ) -> None:
         """Initialize the alarm panel."""
         self._client = client
-        self._attr_name = name
+
+        # Config entry setup (has unique_id)
+        if host is not None and port is not None:
+            self._attr_has_entity_name = True
+            self._attr_name = None
+            self._attr_unique_id = f"{host}_{port}"
+
+            # Create device info for the alarm panel (makes it a separate device)
+            self._attr_device_info = DeviceInfo(
+                name="Alarm Panel",
+                identifiers={(DOMAIN, self._attr_unique_id)},
+            )
+        else:  # pragma: no cover
+            # YAML setup (no unique_id, for backward compatibility)
+            self._attr_name = "Alarm Panel"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

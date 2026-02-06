@@ -1,4 +1,62 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "infer_arming_state": "Infer arming state",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Ness alarm panel.",
+          "infer_arming_state": "Attempt to infer the arming state from zone activity.",
+          "port": "The port on which the Ness alarm panel is accessible."
+        },
+        "description": "Configure connection to your Ness D8X/D16X alarm panel.",
+        "title": "Set up Ness Alarm"
+      }
+    }
+  },
+  "config_subentries": {
+    "zone": {
+      "entry_type": "Zone",
+      "error": {
+        "already_configured": "Zone with this number is already configured"
+      },
+      "initiate_flow": {
+        "user": "Add zone"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "type": "Zone type"
+          },
+          "data_description": {
+            "type": "Choose the device class you would like the sensor to show as"
+          },
+          "title": "Reconfigure zone {zone_number}"
+        },
+        "user": {
+          "data": {
+            "type": "Zone type",
+            "zone_number": "Zone number"
+          },
+          "data_description": {
+            "type": "Choose the device class you would like the sensor to show as",
+            "zone_number": "Enter zone number to configure (1-32)"
+          },
+          "title": "Configure zone"
+        }
+      }
+    }
+  },
   "services": {
     "aux": {
       "description": "Changes the state of an aux output.",
