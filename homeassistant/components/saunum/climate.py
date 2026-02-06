@@ -238,3 +238,33 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             ) from err
 
         await self.coordinator.async_request_refresh()
+
+    async def async_start_session(
+        self,
+        duration: int = 120,
+        target_temperature: int = 80,
+        fan_duration: int = 10,
+    ) -> None:
+        """Start a sauna session with custom parameters."""
+        if self.coordinator.data.door_open:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="door_open",
+            )
+
+        try:
+            # Set all parameters before starting the session
+            await self.coordinator.client.async_set_sauna_duration(duration)
+            await self.coordinator.client.async_set_target_temperature(
+                target_temperature
+            )
+            await self.coordinator.client.async_set_fan_duration(fan_duration)
+            await self.coordinator.client.async_start_session()
+        except SaunumException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="start_session_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        await self.coordinator.async_request_refresh()

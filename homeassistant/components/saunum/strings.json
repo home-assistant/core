@@ -128,6 +128,9 @@
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
+    },
+    "start_session_failed": {
+      "message": "Failed to start sauna session: {error}"
     }
   },
   "options": {
@@ -145,6 +148,26 @@
         },
         "description": "Customize the names of the three sauna type preset modes"
       }
+    }
+  },
+  "services": {
+    "start_session": {
+      "description": "Starts a sauna session with custom duration, target temperature, and fan duration.",
+      "fields": {
+        "duration": {
+          "description": "Session duration in minutes.",
+          "name": "Duration"
+        },
+        "fan_duration": {
+          "description": "Fan duration in minutes.",
+          "name": "Fan duration"
+        },
+        "target_temperature": {
+          "description": "Target temperature in Celsius.",
+          "name": "Target temperature"
+        }
+      },
+      "name": "Start session"
     }
   }
 }
