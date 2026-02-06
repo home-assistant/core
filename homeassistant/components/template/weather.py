@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from functools import partial
+import logging
 from typing import TYPE_CHECKING, Any, Literal, Self
 
 import voluptuous as vol
@@ -70,6 +71,8 @@ from .schemas import (
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 CHECK_FORECAST_KEYS = (
     set()
@@ -159,8 +162,9 @@ LEGACY_FIELDS = {
     CONF_WIND_SPEED_TEMPLATE: CONF_WIND_SPEED,
 }
 
-
-WEATHER_COMMON_SCHEMA = vol.Schema(
+# These options that are templates all have _template. These fields will
+# enter deprecation after legacy templates are removed.
+WEATHER_COMMON_LEGACY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
@@ -186,32 +190,7 @@ WEATHER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-
-WEATHER_YAML_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
-        }
-    )
-    .extend(WEATHER_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
-    )
-)
-
-PLATFORM_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(WEATHER_COMMON_SCHEMA.schema)
-    .extend(WEATHER_PLATFORM_SCHEMA.schema)
-)
-
-
-WEATHER_CONFIG_ENTRY_SCHEMA = vol.Schema(
+WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
         vol.Optional(CONF_ATTRIBUTION): cv.template,
@@ -236,7 +215,40 @@ WEATHER_CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_WIND_SPEED): cv.template,
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
     }
-).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
+)
+
+
+WEATHER_YAML_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
+        }
+    )
+    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
+    .extend(
+        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+    )
+)
+
+WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
+    make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+)
+
+PLATFORM_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
+    .extend(WEATHER_PLATFORM_SCHEMA.schema)
+)
+
+
+WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -658,23 +670,41 @@ class WeatherExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored event state from a dict."""
-        try:
-            return cls(
-                last_apparent_temperature=restored["last_apparent_temperature"],
-                last_cloud_coverage=restored["last_cloud_coverage"],
-                last_dew_point=restored["last_dew_point"],
-                last_humidity=restored["last_humidity"],
-                last_ozone=restored["last_ozone"],
-                last_pressure=restored["last_pressure"],
-                last_temperature=restored["last_temperature"],
-                last_uv_index=restored["last_uv_index"],
-                last_visibility=restored["last_visibility"],
-                last_wind_bearing=restored["last_wind_bearing"],
-                last_wind_gust_speed=restored["last_wind_gust_speed"],
-                last_wind_speed=restored["last_wind_speed"],
-            )
-        except KeyError:
-            return None
+        for key, vtypes in (
+            ("last_apparent_temperature", (float, int)),
+            ("last_cloud_coverage", (float, int)),
+            ("last_dew_point", (float, int)),
+            ("last_humidity", (float, int)),
+            ("last_ozone", (float, int)),
+            ("last_pressure", (float, int)),
+            ("last_temperature", (float, int)),
+            ("last_uv_index", (float, int)),
+            ("last_visibility", (float, int)),
+            ("last_wind_bearing", (float, int, str)),
+            ("last_wind_gust_speed", (float, int)),
+            ("last_wind_speed", (float, int)),
+        ):
+            # This is needed to safeguard against previous restore data that has strings
+            # instead of floats or ints.
+            if key not in restored or (
+                (value := restored[key]) is not None and not isinstance(value, vtypes)
+            ):
+                return None
+
+        return cls(
+            last_apparent_temperature=restored["last_apparent_temperature"],
+            last_cloud_coverage=restored["last_cloud_coverage"],
+            last_dew_point=restored["last_dew_point"],
+            last_humidity=restored["last_humidity"],
+            last_ozone=restored["last_ozone"],
+            last_pressure=restored["last_pressure"],
+            last_temperature=restored["last_temperature"],
+            last_uv_index=restored["last_uv_index"],
+            last_visibility=restored["last_visibility"],
+            last_wind_bearing=restored["last_wind_bearing"],
+            last_wind_gust_speed=restored["last_wind_gust_speed"],
+            last_wind_speed=restored["last_wind_speed"],
+        )
 
 
 class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity):
@@ -699,6 +729,7 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
 
         for key in (
             CONF_APPARENT_TEMPERATURE,
+            CONF_ATTRIBUTION,
             CONF_CLOUD_COVERAGE,
             CONF_DEW_POINT,
             CONF_FORECAST_DAILY,
@@ -747,12 +778,12 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
         self._process_data()
 
         if not self.available:
-            self.async_write_ha_state()
             return
 
         write_ha_state = False
         for key, updater in (
             (CONF_APPARENT_TEMPERATURE, self._update_apparent_temperature),
+            (CONF_ATTRIBUTION, self._update_attribution),
             (CONF_CLOUD_COVERAGE, self._update_coverage),
             (CONF_CONDITION, self._update_condition),
             (CONF_DEW_POINT, self._update_dew_point),
@@ -773,45 +804,56 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
         if write_ha_state:
             self.async_write_ha_state()
 
+    def _check_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        key: str,
+    ) -> list[Forecast]:
+        result = self._rendered.get(key)
+        try:
+            return self._validate_forecast(forecast_type, result) or []
+        except vol.Invalid as err:
+            _LOGGER.error(
+                (
+                    "Error validating template result '%s' "
+                    "for attribute '%s' in entity %s "
+                    "validation message '%s'"
+                ),
+                result,
+                key,
+                self.entity_id,
+                err.msg,
+            )
+        return []
+
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast("daily", self._rendered.get(CONF_FORECAST_DAILY))
-            or []
-        )
+        return self._check_forecast("daily", CONF_FORECAST_DAILY)
 
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast("hourly", self._rendered.get(CONF_FORECAST_HOURLY))
-            or []
-        )
+        return self._check_forecast("hourly", CONF_FORECAST_HOURLY)
 
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast(
-                "twice_daily", self._rendered.get(CONF_FORECAST_TWICE_DAILY)
-            )
-            or []
-        )
+        return self._check_forecast("twice_daily", CONF_FORECAST_TWICE_DAILY)
 
     @property
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(
-            last_apparent_temperature=self._rendered.get(CONF_APPARENT_TEMPERATURE),
-            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE),
-            last_dew_point=self._rendered.get(CONF_DEW_POINT),
-            last_humidity=self._rendered.get(CONF_HUMIDITY),
-            last_ozone=self._rendered.get(CONF_OZONE),
-            last_pressure=self._rendered.get(CONF_PRESSURE),
-            last_temperature=self._rendered.get(CONF_TEMPERATURE),
-            last_uv_index=self._rendered.get(CONF_UV_INDEX),
-            last_visibility=self._rendered.get(CONF_VISIBILITY),
-            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING),
-            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED),
-            last_wind_speed=self._rendered.get(CONF_WIND_SPEED),
+            last_apparent_temperature=self.native_apparent_temperature,
+            last_cloud_coverage=self._attr_cloud_coverage,
+            last_dew_point=self.native_dew_point,
+            last_humidity=self.humidity,
+            last_ozone=self.ozone,
+            last_pressure=self.native_pressure,
+            last_temperature=self.native_temperature,
+            last_uv_index=self.uv_index,
+            last_visibility=self.native_visibility,
+            last_wind_bearing=self.wind_bearing,
+            last_wind_gust_speed=self.native_wind_gust_speed,
+            last_wind_speed=self.native_wind_speed,
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:

@@ -151,7 +151,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
         self._device_entries = device_entries
 
         configure_devices = {
-            entry.id: entry.name_by_user if entry.name_by_user else entry.name
+            entry.id: entry.name_by_user or entry.name
             for entry in device_entries
             if self._get_device_event_code(entry.id) is not None
         }
@@ -295,7 +295,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
                 }
             )
         replace_devices = {
-            entry.id: entry.name_by_user if entry.name_by_user else entry.name
+            entry.id: entry.name_by_user or entry.name
             for entry in self._device_entries
             if self._can_replace_device(entry.id)
         }
