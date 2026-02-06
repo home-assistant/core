@@ -343,7 +343,6 @@ DISCOVERY_SCHEMAS = [
             clusters.OccupancySensing.Attributes.PIROccupiedToUnoccupiedDelay,
         ),
         absent_attributes=(clusters.OccupancySensing.Attributes.HoldTime,),
-        featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
