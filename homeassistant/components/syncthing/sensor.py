@@ -541,4 +541,4 @@ class DeviceSensor(SensorEntity):
             if key in self.STATE_ATTRIBUTES:
                 state[key] = value
 
-        return filtered_state
+        return state
