@@ -77,10 +77,6 @@ def mock_ghost_api() -> Generator[AsyncMock]:
     with (
         patch("homeassistant.components.ghost.GhostAdminAPI") as mock_api_class,
         patch(
-            "homeassistant.components.ghost.coordinator.GhostAdminAPI",
-            new=mock_api_class,
-        ),
-        patch(
             "homeassistant.components.ghost.config_flow.GhostAdminAPI",
             new=mock_api_class,
         ),
