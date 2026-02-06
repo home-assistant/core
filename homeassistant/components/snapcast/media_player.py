@@ -286,7 +286,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 return metadata
         except (
             KeyError
-        ):  # the stream function raises KeyError if the stream does not exists
+        ):  # the stream function raises KeyError if the stream does not exist
             pass
 
         # Fallback to an empty dict
@@ -351,6 +351,6 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                     return int(value)
         except (
             KeyError
-        ):  # the stream function raises KeyError if the stream does not exists
+        ):  # the stream function raises KeyError if the stream does not exist
             pass
         return None
