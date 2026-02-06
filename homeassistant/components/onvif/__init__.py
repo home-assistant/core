@@ -122,7 +122,7 @@ async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     if device.capabilities.events and device.events.started:
         try:
             await device.events.async_stop()
-        except (TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError):
+        except TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError:
             LOGGER.warning("Error while stopping events: %s", device.name)
     await device.device.close()
 

@@ -111,7 +111,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_URL: url})
             try:
                 await validate_input(self.hass, user_input)
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -154,7 +154,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, {**reauth_entry.data, **user_input})
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -190,7 +190,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except (CannotConnect, ParserError):
+            except CannotConnect, ParserError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -249,7 +249,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, data)
-        except (CannotConnect, ParserError):
+        except CannotConnect, ParserError:
             _LOGGER.debug("Cannot connect", exc_info=True)
             errors["base"] = "cannot_connect"
         except InvalidAuth:

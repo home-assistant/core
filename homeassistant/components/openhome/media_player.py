@@ -74,7 +74,7 @@ def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callab
             """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except (TimeoutError, aiohttp.ClientError, UpnpError):
+            except TimeoutError, aiohttp.ClientError, UpnpError:
                 _LOGGER.error("Error during call %s", func.__name__)
             return None
 
@@ -169,7 +169,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except (TimeoutError, aiohttp.ClientError, UpnpError):
+        except TimeoutError, aiohttp.ClientError, UpnpError:
             self._attr_available = False
 
     @catch_request_errors()

@@ -400,7 +400,7 @@ async def handle_webhook(
 
     try:
         data = await request.json()
-    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+    except json.decoder.JSONDecodeError, UnicodeDecodeError:
         return Response(
             text="Could not decode request",
             status=HTTPStatus.BAD_REQUEST,
