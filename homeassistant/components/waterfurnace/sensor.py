@@ -145,7 +145,6 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         )
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
 
-        """Return device information."""
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unit)},
             manufacturer="WaterFurnace",
