@@ -14,6 +14,7 @@ from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
+    CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -650,7 +651,12 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_result(msg["id"], hass.config.as_dict())
+    config = hass.config.as_dict()
+
+    if connection.user.local_only:
+        config.pop(CONF_EXTERNAL_URL)
+
+    connection.send_result(msg["id"], config)
 
 
 @decorators.websocket_command(
