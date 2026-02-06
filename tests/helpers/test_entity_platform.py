@@ -1995,7 +1995,7 @@ async def test_invalid_entity_id_report_usage(
         "sets an invalid entity ID: 'test_domain.INVALID-ENTITY-ID'"
     ) in caplog.text
 
-    # Ensure the valid entity was still added
+    # Ensure the entity was still added
     assert entity.hass is not None
     assert entity.platform is not None
 
