@@ -675,7 +675,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.14.13"
+required-version = ">=0.15.0"
 
 [tool.ruff.lint]
 select = [
@@ -784,6 +784,7 @@ select = [
 ignore = [
   "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
   "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
+  "ASYNC240", # Use an async function for entering the file system
   "D202",     # No blank lines allowed after function docstring
   "D203",     # 1 blank line required before class docstring
   "D213",     # Multi-line docstring summary should start at the second line
@@ -798,6 +799,7 @@ ignore = [
   "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
   "PLR0915", # Too many statements ({statements} > {max_statements})
   "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
+  "PLW0108", # Unnecessary lambda wrapping a function call; can often be replaced by the function itself
   "PLW1641", # __eq__ without __hash__
   "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
