@@ -264,7 +264,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     @callback
     def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Save the updated options."""
-        new_data = {k: v for k, v in data.items() if k not in [CONF_APPS]}
+        new_data = {k: v for k, v in data.items() if k != CONF_APPS}
         if self._apps:
             new_data[CONF_APPS] = self._apps
 

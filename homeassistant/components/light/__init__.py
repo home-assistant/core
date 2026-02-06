@@ -1162,4 +1162,4 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self.platform:
             return True
         # philips_js has known issues, we don't need users to open issues
-        return self.platform.platform_name not in {"philips_js"}
+        return self.platform.platform_name != "philips_js"
