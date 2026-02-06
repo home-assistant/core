@@ -30,6 +30,7 @@ from .entity import SnapcastCoordinatorEntity
 STREAM_STATUS = {
     "idle": MediaPlayerState.IDLE,
     "playing": MediaPlayerState.PLAYING,
+    "disabled": MediaPlayerState.OFF,
     "unknown": None,
 }
 
@@ -160,7 +161,10 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         if self._device.connected:
             if self.is_volume_muted or self._current_group.muted:
                 return MediaPlayerState.IDLE
-            return STREAM_STATUS.get(self._current_group.stream_status)
+            try:
+                return STREAM_STATUS.get(self._current_group.stream_status)
+            except KeyError:
+                pass
         return MediaPlayerState.OFF
 
     @property
@@ -275,10 +279,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
-        if metadata := self.coordinator.server.stream(
-            self._current_group.stream
-        ).metadata:
-            return metadata
+        try:
+            if metadata := self.coordinator.server.stream(
+                self._current_group.stream
+            ).metadata:
+                return metadata
+        except (
+            KeyError
+        ):  # the stream function raises KeyError if the stream does not exists
+            pass
 
         # Fallback to an empty dict
         return {}
@@ -333,11 +342,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        # Position is part of properties object, not metadata object
-        if properties := self.coordinator.server.stream(
-            self._current_group.stream
-        ).properties:
-            if (value := properties.get("position")) is not None:
-                return int(value)
-
+        try:
+            # Position is part of properties object, not metadata object
+            if properties := self.coordinator.server.stream(
+                self._current_group.stream
+            ).properties:
+                if (value := properties.get("position")) is not None:
+                    return int(value)
+        except (
+            KeyError
+        ):  # the stream function raises KeyError if the stream does not exists
+            pass
         return None
