@@ -86,11 +86,7 @@ class DevialetMediaPlayerEntity(
         self._attr_media_position_updated_at = (
             self.coordinator.client.position_updated_at
         )
-        self._attr_media_title = (
-            self.coordinator.client.media_title
-            if self.coordinator.client.media_title
-            else self.source
-        )
+        self._attr_media_title = self.coordinator.client.media_title or self.source
         self.async_write_ha_state()
 
     @property

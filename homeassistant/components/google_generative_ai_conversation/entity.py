@@ -238,7 +238,7 @@ def _convert_content(
     if content.role != "assistant":
         return Content(
             role=content.role,
-            parts=[Part.from_text(text=content.content if content.content else "")],
+            parts=[Part.from_text(text=content.content or "")],
         )
 
     # Handle the Assistant content with tool calls.
@@ -410,7 +410,7 @@ async def _transform_stream(
 
                 if part.function_call:
                     tool_call = part.function_call
-                    tool_name = tool_call.name if tool_call.name else ""
+                    tool_name = tool_call.name or ""
                     tool_args = _escape_decode(tool_call.args)
                     chunk["tool_calls"] = [
                         llm.ToolInput(tool_name=tool_name, tool_args=tool_args)

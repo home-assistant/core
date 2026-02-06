@@ -582,7 +582,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         self._is_available = True
 
         std = wifi_info["NewStandard"]
-        self._attributes["standard"] = std if std else None
+        self._attributes["standard"] = std or None
         self._attributes["bssid"] = wifi_info["NewBSSID"]
         self._attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"

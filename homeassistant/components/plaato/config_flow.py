@@ -127,7 +127,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         device_name = self._init_info[CONF_DEVICE_NAME]
         device_type = self._init_info[CONF_DEVICE_TYPE]
 
-        unique_id = auth_token if auth_token else webhook_id
+        unique_id = auth_token or webhook_id
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

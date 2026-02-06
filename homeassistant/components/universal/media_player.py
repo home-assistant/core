@@ -308,7 +308,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
             )
-            return master_state if master_state else MediaPlayerState.OFF
+            return master_state or MediaPlayerState.OFF
 
         return None
 
@@ -332,7 +332,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if active_child := self._child_state:
             return active_child.state
 
-        return master_state if master_state else MediaPlayerState.OFF
+        return master_state or MediaPlayerState.OFF
 
     @property
     def volume_level(self):

@@ -206,7 +206,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                     reload_even_if_entry_is_unchanged=False,
                 )
-        suggested_values = user_input if user_input else reconfig_entry.data
+        suggested_values = user_input or reconfig_entry.data
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(

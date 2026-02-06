@@ -64,9 +64,7 @@ def mock_upload_file(
         patch("pathlib.Path.stat") as mock_stat,
     ):
         mock_stat.return_value = Mock()
-        mock_stat.return_value.st_size = (
-            upload_file.size if upload_file.size else len(upload_file.content)
-        )
+        mock_stat.return_value.st_size = upload_file.size or len(upload_file.content)
         yield
 
 

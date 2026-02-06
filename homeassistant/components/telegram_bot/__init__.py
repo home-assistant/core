@@ -495,11 +495,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
                 assert isinstance(service_responses, list)
                 service_responses.extend(formatted_responses)
         except HomeAssistantError as ex:
-            target = (
-                target_notify_entity_id
-                if target_notify_entity_id
-                else str(target_chat_id)
-            )
+            target = target_notify_entity_id or str(target_chat_id)
             errors.append((ex, target))
 
     if len(errors) == 1:
