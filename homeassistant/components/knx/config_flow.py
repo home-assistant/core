@@ -231,9 +231,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     if gateway.supports_tunnelling
                 ]
                 self._found_tunnels.sort(
-                    key=lambda tunnel: tunnel.individual_address.raw
-                    if tunnel.individual_address
-                    else 0
+                    key=lambda tunnel: (
+                        tunnel.individual_address.raw
+                        if tunnel.individual_address
+                        else 0
+                    )
                 )
                 return await self.async_step_tunnel()
 

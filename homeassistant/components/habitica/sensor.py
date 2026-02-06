@@ -220,9 +220,11 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.LAST_CHECKIN,
         translation_key=HabiticaSensorEntity.LAST_CHECKIN,
         value_fn=(
-            lambda user, _: dt_util.as_local(last)
-            if (last := user.auth.timestamps.loggedin)
-            else None
+            lambda user, _: (
+                dt_util.as_local(last)
+                if (last := user.auth.timestamps.loggedin)
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -321,9 +323,11 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         value_fn=lambda p, c: c.quests[p.quest.key].text if p.quest.key else None,
         attributes_fn=quest_attributes,
         entity_picture=(
-            lambda party: f"inventory_quest_scroll_{party.quest.key}.png"
-            if party.quest.key
-            else None
+            lambda party: (
+                f"inventory_quest_scroll_{party.quest.key}.png"
+                if party.quest.key
+                else None
+            )
         ),
     ),
     HabiticaPartySensorEntityDescription(
@@ -349,16 +353,20 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.COLLECTED_ITEMS,
         translation_key=HabiticaSensorEntity.COLLECTED_ITEMS,
         value_fn=(
-            lambda p, _: sum(n for n in p.quest.progress.collect.values())
-            if p.quest.progress.collect
-            else None
+            lambda p, _: (
+                sum(n for n in p.quest.progress.collect.values())
+                if p.quest.progress.collect
+                else None
+            )
         ),
         attributes_fn=collected_quest_items,
         entity_picture=(
-            lambda p: f"quest_{p.quest.key}_{k}.png"
-            if p.quest.progress.collect
-            and (k := next(iter(p.quest.progress.collect), None))
-            else None
+            lambda p: (
+                f"quest_{p.quest.key}_{k}.png"
+                if p.quest.progress.collect
+                and (k := next(iter(p.quest.progress.collect), None))
+                else None
+            )
         ),
     ),
     HabiticaPartySensorEntityDescription(
@@ -372,9 +380,9 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
         translation_key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
         value_fn=(
-            lambda p, c: boss.rage.value
-            if (boss := quest_boss(p, c)) and boss.rage
-            else None
+            lambda p, c: (
+                boss.rage.value if (boss := quest_boss(p, c)) and boss.rage else None
+            )
         ),
         entity_picture=ha.RAGE,
         suggested_display_precision=0,

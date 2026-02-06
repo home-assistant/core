@@ -48,9 +48,11 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
-                lambda robot: bri.name.lower()
-                if (bri := robot.night_light_level) is not None
-                else None
+                lambda robot: (
+                    bri.name.lower()
+                    if (bri := robot.night_light_level) is not None
+                    else None
+                )
             ),
             options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
             select_fn=(
@@ -63,9 +65,11 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             key="globe_light",
             translation_key="globe_light",
             current_fn=(
-                lambda robot: mode.name.lower()
-                if (mode := robot.night_light_mode) is not None
-                else None
+                lambda robot: (
+                    mode.name.lower()
+                    if (mode := robot.night_light_mode) is not None
+                    else None
+                )
             ),
             options_fn=lambda _: [mode.name.lower() for mode in NightLightMode],
             select_fn=(
@@ -78,9 +82,11 @@ ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = 
             key="panel_brightness",
             translation_key="brightness_level",
             current_fn=(
-                lambda robot: bri.name.lower()
-                if (bri := robot.panel_brightness) is not None
-                else None
+                lambda robot: (
+                    bri.name.lower()
+                    if (bri := robot.panel_brightness) is not None
+                    else None
+                )
             ),
             options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
             select_fn=(

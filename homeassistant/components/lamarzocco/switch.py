@@ -44,14 +44,18 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
         is_on_fn=(
-            lambda machine: cast(
-                SteamBoilerLevel,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
-            ).enabled
+            lambda machine: (
+                cast(
+                    SteamBoilerLevel,
+                    machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+                ).enabled
+            )
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -60,14 +64,18 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
         is_on_fn=(
-            lambda machine: cast(
-                SteamBoilerTemperature,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
-            ).enabled
+            lambda machine: (
+                cast(
+                    SteamBoilerTemperature,
+                    machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
+                ).enabled
+            )
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            not in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                not in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -80,7 +88,9 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             mode=machine.schedule.smart_wake_up_sleep.smart_stand_by_after,
             minutes=machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
         ),
-        is_on_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
+        is_on_fn=lambda machine: (
+            machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled
+        ),
         bt_offline_mode=True,
     ),
 )
@@ -91,10 +101,12 @@ MAIN_SWITCH_ENTITY = LaMarzoccoSwitchEntityDescription(
     name=None,
     control_fn=lambda machine, state: machine.set_power(state),
     is_on_fn=(
-        lambda machine: cast(
-            MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
-        ).mode
-        is MachineMode.BREWING_MODE
+        lambda machine: (
+            cast(
+                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+            ).mode
+            is MachineMode.BREWING_MODE
+        )
     ),
     bt_offline_mode=True,
 )

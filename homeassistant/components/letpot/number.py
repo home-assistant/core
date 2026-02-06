@@ -38,12 +38,14 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
         key="light_brightness_levels",
         translation_key="light_brightness",
         value_fn=(
-            lambda coordinator: coordinator.device_client.get_light_brightness_levels(
-                coordinator.device.serial_number
-            ).index(coordinator.data.light_brightness)
-            + 1
-            if coordinator.data.light_brightness is not None
-            else None
+            lambda coordinator: (
+                coordinator.device_client.get_light_brightness_levels(
+                    coordinator.device.serial_number
+                ).index(coordinator.data.light_brightness)
+                + 1
+                if coordinator.data.light_brightness is not None
+                else None
+            )
         ),
         set_value_fn=(
             lambda device_client, serial, value: device_client.set_light_brightness(
@@ -52,10 +54,12 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
             )
         ),
         supported_fn=(
-            lambda coordinator: DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
         native_min_value=float(1),
         max_value_fn=lambda coordinator: float(

@@ -220,8 +220,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
             else max_sub_interval
         )
-        self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = (
-            lambda *args: None
+        self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: (
+            None
         )
 
     def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
