@@ -2080,7 +2080,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "wsdot",
     "wyoming",
     "x10",
-    "xbox",
     "xeoma",
     "xiaomi",
     "xiaomi_aqara",
