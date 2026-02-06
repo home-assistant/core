@@ -145,8 +145,6 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         )
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
         """Return device information."""
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unit)},
@@ -162,7 +160,7 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
                 # Eg. Series 7, 5 Ton
                 device_info["name"] = self.coordinator.device_metadata.awlabctypedesc
 
-        return device_info
+        self._attr_device_info = device_info
 
     @property
     def native_value(self):
