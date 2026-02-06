@@ -1,5 +1,6 @@
 """Test the Ness Alarm config flow."""
 
+from types import MappingProxyType
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -7,11 +8,13 @@ from homeassistant.components.ness_alarm.const import (
     CONF_INFER_ARMING_STATE,
     CONF_ZONE_ID,
     CONF_ZONE_NAME,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
     DOMAIN,
+    SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -174,3 +177,134 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zone_subentry_flow(hass: HomeAssistant) -> None:
+    """Test adding a zone through subentry flow."""
+    # Create main config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    # Start zone subentry flow
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_ZONE),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Configure zone
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_NUMBER: 1,
+            CONF_TYPE: BinarySensorDeviceClass.DOOR,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Zone 1"
+    assert result2["data"][CONF_ZONE_NUMBER] == 1
+    assert result2["data"][CONF_TYPE] == BinarySensorDeviceClass.DOOR
+
+
+async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
+    """Test adding a zone that already exists."""
+    # Create main config entry with existing zone
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    # Add existing zone subentry
+    entry.subentries = {
+        "zone_1_id": ConfigSubentry(
+            subentry_type=SUBENTRY_TYPE_ZONE,
+            subentry_id="zone_1_id",
+            unique_id="zone_1",
+            title="Zone 1",
+            data=MappingProxyType(
+                {
+                    CONF_ZONE_NUMBER: 1,
+                    CONF_TYPE: BinarySensorDeviceClass.MOTION,
+                }
+            ),
+        )
+    }
+
+    # Try to add the same zone again
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_ZONE),
+        context={"source": SOURCE_USER},
+    )
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_NUMBER: 1,
+            CONF_TYPE: BinarySensorDeviceClass.DOOR,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
+
+
+async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring an existing zone."""
+    # Create main config entry with a zone
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    # Add zone subentry
+    zone_subentry = ConfigSubentry(
+        subentry_type=SUBENTRY_TYPE_ZONE,
+        subentry_id="zone_1_id",
+        unique_id="zone_1",
+        title="Zone 1",
+        data=MappingProxyType(
+            {
+                CONF_ZONE_NUMBER: 1,
+                CONF_TYPE: BinarySensorDeviceClass.MOTION,
+            }
+        ),
+    )
+    entry.subentries = {"zone_1_id": zone_subentry}
+
+    # Start reconfigure flow
+    result = await entry.start_subentry_reconfigure_flow(hass, "zone_1_id")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["description_placeholders"][CONF_ZONE_NUMBER] == "1"
+
+    # Reconfigure zone type
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_TYPE: BinarySensorDeviceClass.DOOR,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"

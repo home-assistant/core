@@ -1,5 +1,6 @@
 """Tests for the ness_alarm component."""
 
+from types import MappingProxyType
 from unittest.mock import MagicMock, patch
 
 from nessclient import ArmingMode, ArmingState
@@ -8,6 +9,7 @@ import pytest
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.ness_alarm import async_setup
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_ZONE_NUMBER,
@@ -484,6 +486,66 @@ async def test_homeassistant_stop_event(hass: HomeAssistant, mock_nessclient) ->
 
     # Client should be closed
     mock_nessclient.close.assert_called()
+
+
+async def test_entry_reload_on_update(hass: HomeAssistant, mock_nessclient) -> None:
+    """Test config entry reload when update listener is triggered."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Add a zone subentry which should trigger the update listener and reload
+    zone_subentry = ConfigSubentry(
+        subentry_type=SUBENTRY_TYPE_ZONE,
+        subentry_id="zone_1_id",
+        unique_id="zone_1",
+        title="Zone 1",
+        data=MappingProxyType(
+            {
+                CONF_ZONE_NUMBER: 1,
+                CONF_TYPE: BinarySensorDeviceClass.MOTION,
+            }
+        ),
+    )
+    hass.config_entries.async_add_subentry(entry, zone_subentry)
+    await hass.async_block_till_done()
+
+    # Entry should have the new subentry
+    assert len(entry.subentries) == 2  # Home subentry + new zone
+
+
+async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
+    """Test that YAML configuration triggers import flow."""
+    with patch(
+        "homeassistant.components.ness_alarm.async_setup_entry",
+        return_value=True,
+    ):
+        # Call async_setup with YAML config
+        config = {
+            DOMAIN: {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+            }
+        }
+
+        result = await async_setup(hass, config)
+        assert result is True
+
+        # Wait for import flow to complete
+        await hass.async_block_till_done()
+
+        # Check that a config entry was created from the import
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].data[CONF_HOST] == "192.168.1.100"
+        assert entries[0].data[CONF_PORT] == 1992
 
 
 class MockClient:
