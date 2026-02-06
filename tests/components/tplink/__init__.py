@@ -215,15 +215,14 @@ def _mocked_device(
     for mod in device.modules.values():
         # Some tests remove the feature from device_features to test missing
         # features, so check the key is still present there.
-        mod.get_feature.side_effect = (
-            lambda mod_id: mod_feat
+        mod.get_feature.side_effect = lambda mod_id: (
+            mod_feat
             if (mod_feat := module_features.get(mod_id))
             and mod_feat.id in device_features
             else None
         )
-        mod.has_feature.side_effect = (
-            lambda mod_id: (mod_feat := module_features.get(mod_id))
-            and mod_feat.id in device_features
+        mod.has_feature.side_effect = lambda mod_id: (
+            (mod_feat := module_features.get(mod_id)) and mod_feat.id in device_features
         )
 
     device.parent = None
