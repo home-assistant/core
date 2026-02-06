@@ -1,10 +1,13 @@
 """Tests for the LoJack device tracker platform."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import SourceType
+from homeassistant.components.lojack.const import ATTR_LAST_POLLED
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -125,3 +128,32 @@ async def test_device_tracker_unique_id(
     entity_entry = entity_registry.async_get("device_tracker.2021_honda_accord")
     assert entity_entry is not None
     assert entity_entry.unique_id == TEST_DEVICE_ID
+
+
+@freeze_time("2024-01-15T12:00:00+00:00")
+async def test_device_tracker_last_polled_attribute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lojack_client: AsyncMock,
+) -> None:
+    """Test that device tracker includes last_polled attribute.
+
+    The last_polled attribute tracks when Home Assistant last fetched data
+    from the LoJack API, which can differ from the device's timestamp
+    (when the device last reported its location to LoJack servers).
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("device_tracker.2021_honda_accord")
+    assert state is not None
+
+    # Check that last_polled attribute is present and is a datetime
+    attrs = state.attributes
+    assert ATTR_LAST_POLLED in attrs
+    last_polled = attrs[ATTR_LAST_POLLED]
+    assert isinstance(last_polled, datetime)
+
+    # The last_polled should be around the frozen time
+    assert last_polled.year == 2024
+    assert last_polled.month == 1
+    assert last_polled.day == 15

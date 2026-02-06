@@ -19,3 +19,4 @@ MOVEMENT_SPEED_THRESHOLD: Final = 0.5  # mph - minimum speed to consider vehicle
 ATTR_ADDRESS: Final = "address"
 ATTR_GPS_ACCURACY: Final = "gps_accuracy"
 ATTR_HEADING: Final = "heading"
+ATTR_LAST_POLLED: Final = "last_polled"

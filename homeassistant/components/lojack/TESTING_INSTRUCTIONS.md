@@ -119,6 +119,7 @@ Access Home Assistant at http://localhost:8123
 - [ ] `longitude` - Float value (e.g., -122.4194)
 - [ ] `gps_accuracy` - Integer value in meters
 - [ ] `source_type` - Should be "gps"
+- [ ] `last_polled` - Timestamp when Home Assistant last fetched data from API
 - [ ] `vin` - Your vehicle's VIN
 - [ ] `make` - Vehicle manufacturer
 - [ ] `model` - Vehicle model
@@ -130,7 +131,10 @@ Access Home Assistant at http://localhost:8123
 - [ ] `heading` - Direction of travel (if available)
 - [ ] `battery_voltage` - Vehicle battery voltage (if available)
 - [ ] `address` - Human-readable location (if available)
-- [ ] `timestamp` - Last update time
+- [ ] `timestamp` - Device timestamp when location was reported to LoJack
+
+**Note on Timestamps**:
+The `timestamp` attribute shows when the LoJack device reported its location to the LoJack servers, while the `last_polled` attribute shows when Home Assistant fetched the data. These can differ by 30+ minutes depending on the polling interval. The `location_last_reported` sensor also tracks the device timestamp.
 
 ---
 
@@ -245,7 +249,7 @@ Access Home Assistant at http://localhost:8123
 - [ ] `sensor.{vehicle}_odometer` - Shows mileage in miles
 - [ ] `sensor.{vehicle}_speed` - Shows current speed in mph
 - [ ] `sensor.{vehicle}_battery_voltage` - Shows vehicle battery voltage in V
-- [ ] `sensor.{vehicle}_location_last_reported` - Shows last update timestamp
+- [ ] `sensor.{vehicle}_location_last_reported` - Shows when the device last reported its location to LoJack servers (device timestamp, not HA poll time)
 
 **Diagnostic Sensors** (disabled by default):
 - [ ] `sensor.{vehicle}_make` - Vehicle manufacturer
