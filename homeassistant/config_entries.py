@@ -3437,11 +3437,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def async_set_dismiss_protected(self, *sources: str) -> None:
         """Mark this flow as protected from dismissal by specific discovery sources.
 
-        By default, the config flow for a device is dismissed when a new
-        discovery for the same device or unique identifier is received.
-        Integrations can call this method to mark the current flow as "dismiss
-        protected" for one or more discovery sources so that it is not automatically
-        dismissed while the user is interacting with it.
+        When a device disappears from the network (e.g., a zeroconf service
+        removal or an SSDP byebye advertisement), the config flow for that
+        device is normally dismissed. Integrations can call this method to
+        protect the current flow from being dismissed by one or more discovery
+        sources so that it is not automatically aborted while the user is
+        interacting with it.
 
         This method updates the flow context and is intended to be called from
         within a config flow step implementation.
