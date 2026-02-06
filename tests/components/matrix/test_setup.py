@@ -64,7 +64,8 @@ async def test_async_setup_with_yaml_creates_import_flow(hass: HomeAssistant) ->
             },
         )
         mock_matrix_bot.assert_not_called()
-        mock_setup_services.assert_not_called()
+        # Services are now registered in async_setup, so they should be called once
+        mock_setup_services.assert_called_once()
 
 
 async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> None:

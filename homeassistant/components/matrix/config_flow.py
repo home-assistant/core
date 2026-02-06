@@ -28,6 +28,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+class InvalidAuth(Exception):
+    """Error to indicate invalid authentication."""
+
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     client = AsyncClient(
@@ -38,7 +46,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         login_response = await client.login(data[CONF_PASSWORD])
         if isinstance(login_response, LoginError):
-            raise ConnectionError
+            # Distinguish between auth failures and connection issues
+            # Check both status_code and errcode attributes
+            error_code = getattr(login_response, "status_code", None) or getattr(
+                login_response, "errcode", None
+            )
+            if error_code in ("M_FORBIDDEN", "M_UNKNOWN"):
+                raise InvalidAuth
+            raise CannotConnect
 
         # Get user info to validate connection
         whoami_response = await client.whoami()
@@ -71,7 +86,9 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except ConnectionError:
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -95,7 +112,10 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import from YAML configuration."""
         try:
             info = await validate_input(self.hass, import_data)
-        except ConnectionError:
+        except InvalidAuth:
+            _LOGGER.debug("Invalid auth while validating imported YAML config")
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
             _LOGGER.debug("Cannot connect while validating imported YAML config")
             return self.async_abort(reason="cannot_connect")
         except Exception:
@@ -138,7 +158,9 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, reauth_data)
-            except ConnectionError:
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception during reauth")
@@ -153,20 +175,13 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        # Show form with existing homeserver and username pre-filled
+        # Show form with only credentials (homeserver should not change during reauth)
         reauth_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HOMESERVER, default=self.reauth_entry.data[CONF_HOMESERVER]
-                ): cv.string,
                 vol.Required(
                     CONF_USERNAME, default=self.reauth_entry.data[CONF_USERNAME]
                 ): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_VERIFY_SSL,
-                    default=self.reauth_entry.data.get(CONF_VERIFY_SSL, True),
-                ): cv.boolean,
             }
         )
 

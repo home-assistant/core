@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+from functools import partial
 import logging
 import mimetypes
 import os
@@ -48,11 +49,11 @@ from homeassistant.util.json import JsonObjectType, load_json_object
 from .const import (
     ATTR_FORMAT,
     ATTR_IMAGES,
-    CONF_HOMESERVER,
     ATTR_MESSAGE_ID,
     ATTR_REACTION,
     ATTR_ROOM,
     ATTR_THREAD_ID,
+    CONF_HOMESERVER,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
@@ -128,8 +129,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+type MatrixConfigEntry = ConfigEntry[MatrixBot]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
+    # Register services once at integration setup
+    async_setup_services(hass)
+
     if DOMAIN not in config:
         return True
 
@@ -191,9 +198,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         _LOGGER.warning("Invalid rooms in config entry %s: %s", entry.entry_id, err)
         rooms = []
 
+    # Store session files in .storage/matrix directory for better organization
+    matrix_storage_dir = os.path.join(hass.config.path(), ".storage", "matrix")
+    await hass.async_add_executor_job(
+        partial(os.makedirs, matrix_storage_dir, exist_ok=True)
+    )
+    session_file = os.path.join(matrix_storage_dir, f"{entry.entry_id}.conf")
+
     matrix_bot = MatrixBot(
         hass,
-        os.path.join(hass.config.path(), f".matrix_{entry.entry_id}.conf"),
+        session_file,
         entry.data[CONF_HOMESERVER],
         entry.data.get(CONF_VERIFY_SSL, True),
         entry.data[CONF_USERNAME],
@@ -202,36 +216,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         commands,
     )
 
-    # Store in runtime_data for quality scale compliance
+    # Store in runtime_data (preferred modern approach)
     entry.runtime_data = matrix_bot
-    if isinstance(hass.data.get(DOMAIN), dict):
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = matrix_bot
-    else:
-        hass.data[DOMAIN] = {entry.entry_id: matrix_bot}
 
-    async_setup_services(hass)
+    # Also store in hass.data for service access and backward compatibility
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = matrix_bot
 
     if hass.is_running:
         hass.async_create_background_task(
             matrix_bot.async_start(),
-            name=f"{matrix_bot.__class__.__name__}: start for '{matrix_bot._mx_id}'",
+            name=f"{matrix_bot.__class__.__name__}: start for '{entry.unique_id}'",
         )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Unload a config entry."""
-    if matrix_data := hass.data.get(DOMAIN):
-        if isinstance(matrix_data, dict):
-            matrix_data.pop(entry.entry_id, None)
-            if not matrix_data:
-                hass.data.pop(DOMAIN, None)
-        else:
+    # Remove from hass.data
+    if DOMAIN in hass.data:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN, None)
 
     # Close the MatrixBot stored in runtime_data
-    if entry.runtime_data:
-        await entry.runtime_data.async_close()
+    if matrix_bot := getattr(entry, "runtime_data", None):
+        try:
+            await matrix_bot.async_close()
+        except Exception:
+            _LOGGER.exception(
+                "Error closing Matrix client for entry %s", entry.entry_id
+            )
 
     return True
 
@@ -729,6 +743,3 @@ class MatrixBot:
             service.data[ATTR_ROOM],
             service.data[ATTR_MESSAGE_ID],
         )
-
-
-type MatrixConfigEntry = ConfigEntry[MatrixBot]

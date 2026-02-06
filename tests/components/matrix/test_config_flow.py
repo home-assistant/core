@@ -106,7 +106,7 @@ async def test_form_login_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
@@ -201,7 +201,7 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_duplicate_entry(hass: HomeAssistant) -> None:
@@ -327,10 +327,8 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "homeserver": "https://matrix.example.com",
                 "username": "@user:example.com",
                 "password": new_password,
-                "verify_ssl": True,
             },
         )
 
@@ -342,8 +340,8 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert updated_entry.data["password"] == new_password
 
 
-async def test_reauth_flow_connection_error(hass: HomeAssistant) -> None:
-    """Test reauthentication flow with connection error."""
+async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauthentication flow with invalid authentication."""
     # Set up existing config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -365,30 +363,30 @@ async def test_reauth_flow_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # Try to complete reauth with connection error
+    # Try to complete reauth with invalid credentials
     with (
         patch("homeassistant.components.matrix.config_flow.AsyncClient") as mock_client,
     ):
         client_instance = AsyncMock()
         mock_client.return_value = client_instance
 
-        # Mock connection error
-        login_error = LoginError.from_dict({"errcode": "M_FORBIDDEN"})
+        # Mock authentication error
+        login_error = LoginError.from_dict(
+            {"errcode": "M_FORBIDDEN", "error": "Invalid username or password"}
+        )
         client_instance.login.return_value = login_error
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "homeserver": "https://matrix.example.com",
                 "username": "@user:example.com",
                 "password": "wrong_password",
-                "verify_ssl": True,
             },
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
@@ -440,10 +438,8 @@ async def test_reauth_flow_wrong_account(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "homeserver": "https://matrix.example.com",
                 "username": "@different_user:example.com",
                 "password": "password",
-                "verify_ssl": True,
             },
         )
 
@@ -483,10 +479,8 @@ async def test_reauth_flow_unexpected_error(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "homeserver": "https://matrix.example.com",
                 "username": "@user:example.com",
                 "password": "password",
-                "verify_ssl": True,
             },
         )
 
