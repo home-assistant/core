@@ -102,6 +102,7 @@
       'options': list([
         'appliance_rinse',
         'appliance_settings',
+        'automatic_maintenance',
         'barista_assistant',
         'black_tea',
         'brewing_unit_degrease',
@@ -121,6 +122,7 @@
         'herbal_tea',
         'hot_milk',
         'hot_water',
+        'intermediate_rinsing',
         'japanese_tea',
         'latte_macchiato',
         'long_coffee',
@@ -171,6 +173,7 @@
       'options': list([
         'appliance_rinse',
         'appliance_settings',
+        'automatic_maintenance',
         'barista_assistant',
         'black_tea',
         'brewing_unit_degrease',
@@ -190,6 +193,7 @@
         'herbal_tea',
         'hot_milk',
         'hot_water',
+        'intermediate_rinsing',
         'japanese_tea',
         'latte_macchiato',
         'long_coffee',

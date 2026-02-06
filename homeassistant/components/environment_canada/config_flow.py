@@ -71,7 +71,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(user_input)
-            except (ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId):
+            except ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"

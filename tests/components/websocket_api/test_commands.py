@@ -34,7 +34,7 @@ from homeassistant.components.websocket_api.commands import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.const import CONF_EXTERNAL_URL, SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -1139,10 +1139,18 @@ async def test_subscribe_triggers(
     assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
+@pytest.mark.parametrize(
+    ("local_only_user", "forbidden_keys"), [(False, []), (True, [CONF_EXTERNAL_URL])]
+)
 async def test_get_config(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    local_only_user: bool,
+    forbidden_keys: list[str],
 ) -> None:
     """Test get_config command."""
+    hass_admin_user.local_only = local_only_user
     await websocket_client.send_json_auto_id({"type": "get_config"})
 
     msg = await websocket_client.receive_json()
@@ -1162,6 +1170,10 @@ async def test_get_config(
         if key in result:
             result[key] = set(result[key])
             config[key] = set(config[key])
+
+    for key in forbidden_keys:
+        assert key in config
+        config.pop(key)
 
     assert result == config
 
