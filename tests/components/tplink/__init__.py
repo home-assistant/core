@@ -233,7 +233,7 @@ def _mocked_device(
             child.mac = mac
             child.parent = device
         device.children = children
-    device.device_type = device_type if device_type else DeviceType.Unknown
+    device.device_type = device_type or DeviceType.Unknown
     if (
         not device_type
         and device.children
@@ -557,7 +557,7 @@ def _patch_discovery(device=None, no_device=False, ip_address=IP_ADDRESS):
     async def _discovery(*args, **kwargs):
         if no_device:
             return {}
-        return {ip_address: device if device else _mocked_device()}
+        return {ip_address: device or _mocked_device()}
 
     return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
 
@@ -566,7 +566,7 @@ def _patch_single_discovery(device=None, no_device=False):
     async def _discover_single(*args, **kwargs):
         if no_device:
             raise KasaException
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
@@ -577,7 +577,7 @@ def _patch_connect(device=None, no_device=False):
     async def _connect(*args, **kwargs):
         if no_device:
             raise KasaException
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch("homeassistant.components.tplink.Device.connect", new=_connect)
 

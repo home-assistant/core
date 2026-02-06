@@ -488,9 +488,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
         hvac_modes = sorted(set(filter(None, ha_controller_modes)))
         return (
-            hvac_modes
-            if hvac_modes
-            else [self.hvac_mode]  # mode read-only -> fall back to only current mode
+            hvac_modes or [self.hvac_mode]  # mode read-only -> fall back to only current mode
         )
 
     @property

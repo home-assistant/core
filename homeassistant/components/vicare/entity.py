@@ -37,7 +37,7 @@ class ViCareEntity(Entity):
         )
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
-            component if component else device
+            component or device
         )
         self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
         if component:

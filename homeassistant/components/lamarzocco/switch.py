@@ -174,7 +174,7 @@ class LaMarzoccoMainSwitchEntity(LaMarzoccoSwitchEntity):
         """Return the entity picture."""
 
         image_url = self.coordinator.device.dashboard.image_url
-        return image_url if image_url else None  # image URL can be empty string
+        return image_url or None  # image URL can be empty string
 
 
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
