@@ -90,7 +90,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -137,7 +136,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
       'target_temp_step': 1.0,
@@ -460,7 +458,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -509,7 +506,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
       'target_temp_step': 1.0,
@@ -538,7 +534,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'target_temp_step': 1.0,
     }),
@@ -587,7 +582,6 @@
       'preset_modes': list([
         'auto',
         'manual',
-        'off',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1.0,
