@@ -28,6 +28,9 @@
       }
     },
     "sensor": {
+      "water_level": {
+        "default": "mdi:water"
+      },
       "valve_position": {
         "default": "mdi:pipe-valve"
       }

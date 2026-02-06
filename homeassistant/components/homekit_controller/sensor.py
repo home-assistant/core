@@ -358,9 +358,8 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
     ),
     CharacteristicsTypes.WATER_LEVEL: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.WATER_LEVEL,
-        name="Water Level",
+        name="Water level",
         translation_key="water_level",
-        icon="mdi:water",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
