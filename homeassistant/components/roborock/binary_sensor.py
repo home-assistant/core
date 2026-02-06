@@ -103,8 +103,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
         key=ATTR_BATTERY_CHARGING,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.status.state
-        in (RoborockStateCode.charging, RoborockStateCode.charging_complete),
+        value_fn=lambda data: (
+            data.status.state
+            in (RoborockStateCode.charging, RoborockStateCode.charging_complete)
+        ),
     ),
 ]
 
