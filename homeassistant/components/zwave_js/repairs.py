@@ -66,12 +66,12 @@ class MigrateUniqueIDFlow(RepairsFlow):
 
         try:
             new_unique_id_hex = format_home_id_for_display(int(data["new_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             new_unique_id_hex = data["new_unique_id"]
 
         try:
             old_unique_id_hex = format_home_id_for_display(int(data["old_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             old_unique_id_hex = data["old_unique_id"]
 
         self.description_placeholders: dict[str, str] = {
