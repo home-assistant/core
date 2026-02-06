@@ -15,6 +15,8 @@ from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

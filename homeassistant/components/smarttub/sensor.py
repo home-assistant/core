@@ -33,6 +33,8 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
     ),
 )
 
+PARALLEL_UPDATES = 0
+
 SET_SECONDARY_FILTRATION_SCHEMA: VolDictType = {
     vol.Required(ATTR_MODE): vol.In(
         {
