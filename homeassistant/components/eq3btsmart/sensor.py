@@ -39,7 +39,7 @@ SENSOR_ENTITY_DESCRIPTIONS = [
     Eq3SensorEntityDescription(
         key=ENTITY_KEY_AWAY_UNTIL,
         translation_key=ENTITY_KEY_AWAY_UNTIL,
-        value_func=lambda status: (status.away_until if status.away_until else None),
+        value_func=lambda status: (status.away_until or None),
         device_class=SensorDeviceClass.DATE,
     ),
 ]

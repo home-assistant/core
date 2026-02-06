@@ -113,7 +113,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id=CONF_USER, data_schema=schema, errors=errors if errors else {}
+            step_id=CONF_USER, data_schema=schema, errors=errors or {}
         )
 
     async def async_step_station(
