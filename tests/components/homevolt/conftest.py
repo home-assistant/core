@@ -1,6 +1,7 @@
 """Common fixtures for the Homevolt tests."""
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homevolt import DeviceMetadata, Sensor
@@ -10,7 +11,7 @@ from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -54,30 +55,32 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.update_info = AsyncMock()
         client.close_connection = AsyncMock()
 
-        client.unique_id = "40580137858664"
+        # Load realistic device data from fixture file
+        fixture_data = json.loads(load_fixture("device_data.json", DOMAIN))
+
+        client.unique_id = fixture_data["unique_id"]
+
+        # Convert sensor data from JSON to Sensor objects
         client.sensors = {
-            "l1_voltage": Sensor(
-                value=234.5,
-                type="l1_voltage",
-                device_identifier="ems_40580137858664",
-            ),
-            "battery_state_of_charge": Sensor(
-                value=80.6,
-                type="battery_state_of_charge",
-                device_identifier="ems_40580137858664",
-            ),
-            "power": Sensor(
-                value=-12,
-                type="power",
-                device_identifier="ems_40580137858664",
-            ),
+            key: Sensor(
+                value=sensor_data["value"],
+                type=sensor_data["type"],
+                device_identifier=sensor_data["device_identifier"],
+            )
+            for key, sensor_data in fixture_data["sensors"].items()
         }
+
+        # Convert device metadata from JSON to DeviceMetadata objects
         client.device_metadata = {
-            "ems_40580137858664": DeviceMetadata(
-                name="Homevolt EMS",
-                model="EMS-1000",
-            ),
+            key: DeviceMetadata(
+                name=metadata["name"],
+                model=metadata["model"],
+            )
+            for key, metadata in fixture_data["device_metadata"].items()
         }
+
+        # Set schedule data directly from fixture
+        client.current_schedule = fixture_data["current_schedule"]
 
         yield client
 

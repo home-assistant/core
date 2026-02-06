@@ -1,13 +1,14 @@
 """Tests for the Homevolt sensor platform."""
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homevolt.const import DOMAIN
+from homeassistant.components.homevolt.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "init_integration"
@@ -40,6 +41,7 @@ async def test_sensor_exposes_values_from_coordinator(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_homevolt_client,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure sensor entities are created and expose values from the coordinator."""
     unique_id = "40580137858664_l1_voltage"
@@ -48,11 +50,12 @@ async def test_sensor_exposes_values_from_coordinator(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == 234.5
+    assert float(state.state) == 234.0
 
     mock_homevolt_client.sensors["l1_voltage"].value = 240.1
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
