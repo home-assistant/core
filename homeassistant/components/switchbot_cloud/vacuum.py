@@ -167,8 +167,7 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
             parameters={
                 "action": VacuumCleanMode.SWEEP.value,
                 "param": {
-                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET)
-                    + 1,
+                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET) + 1,
                     "times": 1,
                 },
             },

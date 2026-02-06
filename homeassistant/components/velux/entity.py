@@ -54,9 +54,7 @@ class VeluxEntity(Entity):
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-        unique_id = (
-            node.serial_number or f"{config_entry_id}_{node.node_id}"
-        )
+        unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
         self._attr_unique_id = unique_id
         self.unsubscribe = None
 
