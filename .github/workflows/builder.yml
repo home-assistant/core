@@ -100,7 +100,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@0bd50d53a6d7fb5cb921e607957e9cc12b4ce392 # v12
+        uses: dawidd6/action-download-artifact@5c98f0b039f36ef966fdb7dfa9779262785ecb05 # v14
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -111,7 +111,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@0bd50d53a6d7fb5cb921e607957e9cc12b4ce392 # v12
+        uses: dawidd6/action-download-artifact@5c98f0b039f36ef966fdb7dfa9779262785ecb05 # v14
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: OHF-Voice/intents-package
@@ -235,6 +235,7 @@ jobs:
           build-args: |
             BUILD_FROM=${{ steps.vars.outputs.base_image }}
           tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          outputs: type=image,push=true,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
           labels: |
             io.hass.arch=${{ matrix.arch }}
             io.hass.version=${{ needs.init.outputs.version }}

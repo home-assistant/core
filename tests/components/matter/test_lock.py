@@ -51,7 +51,7 @@ async def test_locks(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.LOCK)
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -154,7 +154,7 @@ async def test_lock(
     assert state.attributes[ATTR_CHANGED_BY] == "Keypad"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_requires_pin(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -217,7 +217,7 @@ async def test_lock_requires_pin(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock_with_unbolt"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock_with_unbolt"])
 async def test_lock_with_unbolt(
     hass: HomeAssistant,
     matter_client: MagicMock,

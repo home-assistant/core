@@ -4,6 +4,7 @@
 
 # Home Assistant Core
 aiodns==4.0.0
+aiogithubapi==24.6.0
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -24,7 +25,7 @@ cronsim==2.7
 cryptography==46.0.2
 fnv-hash-fast==1.6.0
 ha-ffmpeg==3.2.2
-hass-nabucasa==1.12.0
+hass-nabucasa==1.13.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
 home-assistant-intents==2026.1.28
