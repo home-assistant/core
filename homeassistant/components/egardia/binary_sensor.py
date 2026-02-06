@@ -39,7 +39,9 @@ async def async_setup_platform(
                 sensor_id=disc_info[sensor]["id"],
                 name=disc_info[sensor]["name"],
                 egardia_system=hass.data[EGARDIA_DEVICE],
-                device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(disc_info[sensor]["type"]),
+                device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(
+                    disc_info[sensor]["type"]
+                ),
             )
             for sensor in disc_info
         ),
