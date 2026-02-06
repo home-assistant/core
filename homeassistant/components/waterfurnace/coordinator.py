@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from waterfurnace.waterfurnace import WaterFurnace, WFException, WFReading
+from waterfurnace.waterfurnace import WaterFurnace, WFException, WFGateway, WFReading
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -24,6 +24,10 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
     so frequent polling is necessary.
     """
 
+    unit: str
+    client: WaterFurnace
+    device_metadata: WFGateway | None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -39,7 +43,12 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
             config_entry=config_entry,
         )
         self.client = client
-        self.unit = client.gwid
+        self.unit = str(client.gwid)
+        self.device_metadata = None
+        if client.devices is not None:
+            self.device_metadata = next(
+                (device for device in client.devices if device.gwid == self.unit), None
+            )
 
     async def _async_update_data(self):
         """Fetch data from WaterFurnace API with built-in retry logic."""

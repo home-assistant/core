@@ -11,11 +11,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import WaterFurnaceConfigEntry
+from . import DOMAIN, WaterFurnaceConfigEntry
 from .coordinator import WaterFurnaceCoordinator
 
 SENSORS = [
@@ -136,11 +137,32 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
+        self.coordinator = coordinator
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
             f"wf_{slugify(coordinator.unit)}_{slugify(description.key)}"
         )
+        self._attr_unique_id = f"{coordinator.unit}_{description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.unit)},
+            manufacturer="WaterFurnace",
+            name="WaterFurnace System",
+        )
+
+        if self.coordinator.device_metadata:
+            if self.coordinator.device_metadata.description:
+                # Eg. Series 7
+                device_info["model"] = self.coordinator.device_metadata.description
+            if self.coordinator.device_metadata.awlabctypedesc:
+                # Eg. Series 7, 5 Ton
+                device_info["name"] = self.coordinator.device_metadata.awlabctypedesc
+
+        return device_info
 
     @property
     def native_value(self):
