@@ -276,6 +276,8 @@ def process_turn_off_params(
     hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
     """Process light turn off params."""
+    params = dict(params)
+    
     if ATTR_TRANSITION not in params:
         hass.data[DATA_PROFILES].apply_default(light.entity_id, True, params)
 
@@ -320,6 +322,8 @@ def process_turn_on_params(  # noqa: C901
     hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
     """Process light turn on params."""
+    params = dict(params)
+    
     # Only process params once we processed brightness step
     if params and (
         ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
@@ -533,7 +537,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = process_turn_on_params(hass, light, dict(call.data["params"]))
+        params = process_turn_on_params(hass, light, call.data["params"])
 
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
@@ -544,7 +548,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning off a light."""
-        params = process_turn_off_params(hass, light, dict(call.data["params"]))
+        params = process_turn_off_params(hass, light, call.data["params"])
 
         await light.async_turn_off(**filter_turn_off_params(light, params))
 
@@ -552,8 +556,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle toggling a light."""
-        params = dict(call.data["params"])
-        await light.async_toggle(**params)
+        await light.async_toggle(**call.data["params"])
 
     # Listen for light on and light off service calls.
 
@@ -1173,10 +1176,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_toggle(self, **kwargs: Any) -> None:
         params = kwargs
         if not self.is_on:
-            params = process_turn_on_params(self.hass, self, params)
+            params = process_turn_on_params(self.hass, self, kwargs)
             if params.get(ATTR_BRIGHTNESS) != 0 and params.get(ATTR_WHITE) != 0:
                 await self.async_turn_on(**filter_turn_on_params(self, params))
                 return
 
-        params = process_turn_off_params(self.hass, self, params)
+        params = process_turn_off_params(self.hass, self, kwargs)
         await self.async_turn_off(**filter_turn_off_params(self, params))
