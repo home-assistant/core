@@ -77,9 +77,11 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             # Filter out indoor stations
             self._stations = dict(
                 filter(
-                    lambda item: not item[1]
-                    .get(API_STATION_INFO, {})
-                    .get(API_STATION_INDOOR, False),
+                    lambda item: (
+                        not item[1]
+                        .get(API_STATION_INFO, {})
+                        .get(API_STATION_INDOOR, False)
+                    ),
                     self._stations.items(),
                 )
             )
