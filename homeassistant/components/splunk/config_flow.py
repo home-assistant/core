@@ -43,7 +43,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 host = user_input[CONF_HOST]
-                port = user_input.get(CONF_PORT, DEFAULT_PORT)
+                port = user_input[CONF_PORT]
                 return self.async_create_entry(
                     title=f"{host}:{port}",
                     data=user_input,
