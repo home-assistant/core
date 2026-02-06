@@ -69,33 +69,32 @@ class LoJackRefreshLocationButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press to request fresh location."""
-        client = self._entry.runtime_data.client
-        coordinator = self._entry.runtime_data.coordinator
+        runtime_data = self._entry.runtime_data
+        coordinator = runtime_data.coordinator
 
-        # Find the device in the client's device list
-        try:
-            devices = await client.list_devices()
-            for device in devices:
-                if str(getattr(device, "id", None)) == self._device_id:
-                    result = await device.request_fresh_location()
-                    if result:
-                        LOGGER.debug(
-                            "Fresh location requested for device %s, expected at %s",
-                            self._device_id,
-                            result,
-                        )
-                    else:
-                        LOGGER.debug(
-                            "Fresh location request sent for device %s",
-                            self._device_id,
-                        )
-                    # Trigger a coordinator refresh to get the updated data
-                    await coordinator.async_request_refresh()
-                    return
-
+        # Get the device object directly from the stored devices dict
+        device = runtime_data.devices.get(self._device_id)
+        if device is None:
             LOGGER.warning(
                 "Device %s not found when requesting fresh location", self._device_id
             )
+            return
+
+        try:
+            result = await device.request_fresh_location()
+            if result:
+                LOGGER.debug(
+                    "Fresh location requested for device %s, expected at %s",
+                    self._device_id,
+                    result,
+                )
+            else:
+                LOGGER.debug(
+                    "Fresh location request sent for device %s",
+                    self._device_id,
+                )
+            # Trigger a coordinator refresh to get the updated data
+            await coordinator.async_request_refresh()
         except Exception:  # noqa: BLE001 - Button press should not crash
             LOGGER.exception(
                 "Error requesting fresh location for device %s", self._device_id

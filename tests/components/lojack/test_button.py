@@ -56,13 +56,13 @@ async def test_button_press_device_not_found(
     mock_config_entry: MockConfigEntry,
     mock_lojack_client: AsyncMock,
 ) -> None:
-    """Test pressing button when device is not found."""
+    """Test pressing button when device is not found in stored devices."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Clear the devices list for subsequent calls
-    mock_lojack_client.list_devices.return_value = []
+    # Clear the stored devices dict to simulate device not found
+    mock_config_entry.runtime_data.devices.clear()
 
     # Press the button - should not raise an error
     await hass.services.async_call(

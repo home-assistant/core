@@ -57,6 +57,7 @@ class LoJackData:
 
     client: LoJackClient
     coordinator: LoJackCoordinator
+    devices: dict[str, Any]  # Device ID -> LoJack API device object
 
 
 type LoJackConfigEntry = ConfigEntry[LoJackData]
@@ -87,10 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
         LOGGER.error("Failed to authenticate with LoJack: %s", err)
         raise ConfigEntryNotReady(f"Connection failed: {err}") from err
 
-    coordinator = LoJackCoordinator(hass, client, entry)
+    devices: dict[str, Any] = {}
+    coordinator = LoJackCoordinator(hass, client, entry, devices)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = LoJackData(client=client, coordinator=coordinator)
+    entry.runtime_data = LoJackData(client=client, coordinator=coordinator, devices=devices)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -120,6 +122,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         hass: HomeAssistant,
         client: LoJackClient,
         entry: LoJackConfigEntry,
+        devices_dict: dict[str, Any],
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
@@ -127,6 +130,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         self._password = entry.data[CONF_PASSWORD]
         self._default_update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         self._last_rate_limit: datetime | None = None
+        self._devices = devices_dict  # Shared dict to store API device objects
 
         super().__init__(
             hass,
@@ -221,10 +225,16 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
 
         vehicles_data: dict[str, LoJackVehicleData] = {}
 
+        # Clear and rebuild the devices dict
+        self._devices.clear()
+
         for device in devices:
             device_id = getattr(device, "id", None)
             if not device_id:
                 continue
+
+            # Store the device object for direct access (e.g., by button entity)
+            self._devices[str(device_id)] = device
 
             # Get latest location
             try:
