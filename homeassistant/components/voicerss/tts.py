@@ -220,7 +220,7 @@ class VoiceRSSProvider(Provider):
                     _LOGGER.error("Error receive %s from VoiceRSS", str(data, "utf-8"))
                     return (None, None)
 
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 

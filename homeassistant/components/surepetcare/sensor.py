@@ -72,7 +72,7 @@ class SureBattery(SurePetcareEntity, SensorEntity):
             self._attr_native_value = min(
                 int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100
             )
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             self._attr_native_value = None
 
         if state:

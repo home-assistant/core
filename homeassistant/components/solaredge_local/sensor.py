@@ -223,7 +223,7 @@ def setup_platform(
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
         return
-    except (ConnectTimeout, HTTPError):
+    except ConnectTimeout, HTTPError:
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 

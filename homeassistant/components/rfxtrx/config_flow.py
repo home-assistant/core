@@ -647,7 +647,7 @@ def _test_transport(host: str | None, port: int | None, device: str | None) -> b
 
     try:
         conn.connect()
-    except (rfxtrxmod.RFXtrxTransportError, TimeoutError):
+    except rfxtrxmod.RFXtrxTransportError, TimeoutError:
         return False
 
     return True

@@ -479,7 +479,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except (ValueError, KeyError):
+        except ValueError, KeyError:
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False

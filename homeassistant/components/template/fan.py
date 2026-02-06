@@ -259,7 +259,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         # Validate percentage
         try:
             percentage = int(float(percentage))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Received invalid percentage: %s for entity %s",
                 percentage,
