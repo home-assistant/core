@@ -239,7 +239,7 @@
         "name": "Unoccupied to occupied delay"
       },
       "unoccupied_to_occupied_threshold": {
-        "name": "unoccupied to occupied threshold"
+        "name": "Unoccupied to occupied threshold"
       },
       "pump_setpoint": {
         "name": "Setpoint"
