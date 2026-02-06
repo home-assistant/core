@@ -18,8 +18,7 @@
           "host": "The IP address or hostname of your Homevolt battery on your local network.",
           "password": "The local password configured for your Homevolt battery, if required."
         },
-        "description": "Connect Home Assistant to your Homevolt battery over the local network.",
-        "title": "Homevolt Local"
+        "description": "Connect Home Assistant to your Homevolt battery over the local network."
       }
     }
   },
@@ -116,7 +115,19 @@
         "name": "Schedule power setpoint"
       },
       "schedule_type": {
-        "name": "Schedule type"
+        "name": "Schedule type",
+        "state": {
+          "frequency_reserve": "Frequency reserve",
+          "full_solar_export": "Full solar export",
+          "grid_charge": "Grid charge",
+          "grid_charge_discharge": "Grid charge/discharge",
+          "grid_discharge": "Grid discharge",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge",
+          "solar_charge_discharge": "Solar charge/discharge"
+        }
       },
       "state_of_charge": {
         "name": "State of charge"

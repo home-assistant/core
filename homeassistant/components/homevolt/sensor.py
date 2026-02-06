@@ -227,6 +227,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="schedule_id",
@@ -260,6 +261,19 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="schedule_type",
         translation_key="schedule_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "inverter_charge",
+            "inverter_discharge",
+            "grid_charge",
+            "grid_discharge",
+            "grid_charge_discharge",
+            "frequency_reserve",
+            "solar_charge",
+            "solar_charge_discharge",
+            "full_solar_export",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(

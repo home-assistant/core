@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+DEVICE_IDENTIFIER = "ems_40580137858664"
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -55,32 +57,31 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.update_info = AsyncMock()
         client.close_connection = AsyncMock()
 
-        # Load realistic device data from fixture file
-        fixture_data = json.loads(load_fixture("device_data.json", DOMAIN))
+        client.unique_id = "40580137858664"
 
-        client.unique_id = fixture_data["unique_id"]
-
-        # Convert sensor data from JSON to Sensor objects
+        # Load sensor data from fixture and convert to Sensor objects
+        sensors_data = json.loads(load_fixture("sensors.json", DOMAIN))
         client.sensors = {
             key: Sensor(
-                value=sensor_data["value"],
-                type=sensor_data["type"],
-                device_identifier=sensor_data["device_identifier"],
+                value=value,
+                type=key,
+                device_identifier=DEVICE_IDENTIFIER,
             )
-            for key, sensor_data in fixture_data["sensors"].items()
+            for key, value in sensors_data.items()
         }
 
-        # Convert device metadata from JSON to DeviceMetadata objects
+        # Load device metadata from fixture and convert to DeviceMetadata objects
+        metadata_data = json.loads(load_fixture("device_metadata.json", DOMAIN))
         client.device_metadata = {
             key: DeviceMetadata(
                 name=metadata["name"],
                 model=metadata["model"],
             )
-            for key, metadata in fixture_data["device_metadata"].items()
+            for key, metadata in metadata_data.items()
         }
 
-        # Set schedule data directly from fixture
-        client.current_schedule = fixture_data["current_schedule"]
+        # Load schedule data from fixture
+        client.current_schedule = json.loads(load_fixture("schedule.json", DOMAIN))
 
         yield client
 
