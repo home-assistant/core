@@ -6,7 +6,14 @@ import pytest
 
 from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -44,7 +51,7 @@ async def test_user_flow_success(
         CONF_HOST: "splunk.example.com",
         CONF_PORT: 8088,
         CONF_SSL: True,
-        "verify_ssl": True,
+        CONF_VERIFY_SSL: True,
         CONF_NAME: "Test Splunk",
     }
 
