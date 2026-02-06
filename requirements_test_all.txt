@@ -253,6 +253,9 @@ aiofiles==24.1.0
 # homeassistant.components.flo
 aioflo==2021.11.0
 
+# homeassistant.components.ghost
+aioghost==0.4.0
+
 # homeassistant.components.github
 aiogithubapi==24.6.0
 
@@ -1910,7 +1913,7 @@ pynina==1.0.2
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.2
+pynintendoparental==2.3.2.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2190,7 +2193,7 @@ python-rabbitair==0.0.8
 python-roborock==4.12.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.46
+python-smarttub==0.0.47
 
 # homeassistant.components.snoo
 python-snoo==0.8.3

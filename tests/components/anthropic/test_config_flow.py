@@ -13,6 +13,7 @@ from anthropic import (
 )
 from httpx import URL, Request, Response
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
@@ -26,6 +27,7 @@ from homeassistant.components.anthropic.const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -338,7 +340,10 @@ async def test_subentry_web_search_user_location(
 
 
 async def test_model_list(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching and processing the list of models."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -356,48 +361,7 @@ async def test_model_list(
     )
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == [
-        {
-            "label": "Claude Opus 4.5",
-            "value": "claude-opus-4-5",
-        },
-        {
-            "label": "Claude Haiku 4.5",
-            "value": "claude-haiku-4-5",
-        },
-        {
-            "label": "Claude Sonnet 4.5",
-            "value": "claude-sonnet-4-5",
-        },
-        {
-            "label": "Claude Opus 4.1",
-            "value": "claude-opus-4-1",
-        },
-        {
-            "label": "Claude Opus 4",
-            "value": "claude-opus-4-0",
-        },
-        {
-            "label": "Claude Sonnet 4",
-            "value": "claude-sonnet-4-0",
-        },
-        {
-            "label": "Claude Sonnet 3.7",
-            "value": "claude-3-7-sonnet-latest",
-        },
-        {
-            "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku-20241022",
-        },
-        {
-            "label": "Claude Haiku 3",
-            "value": "claude-3-haiku-20240307",
-        },
-        {
-            "label": "Claude Opus 3",
-            "value": "claude-3-opus-20240229",
-        },
-    ]
+    assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
 async def test_model_list_error(
@@ -554,6 +518,45 @@ async def test_model_list_error(
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        (  # Model with thinking effort options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_PROMPT: "bla",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_THINKING_EFFORT: "max",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-opus-4-6",
+                    CONF_TEMPERATURE: 1.0,
+                },
+                {
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_MAX_USES: 10,
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_THINKING_EFFORT: "medium",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_EFFORT: "medium",
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
