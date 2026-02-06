@@ -49,7 +49,7 @@ PARALLEL_UPDATES = 0
 def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
     """Sort key: (has_lpr, confidence, clock_best_wall)."""
     has_lpr = bool((t.group and t.group.matched_name) or (t.name and len(t.name) > 0))
-    confidence = t.confidence if t.confidence else 0.0
+    confidence = t.confidence or 0.0
     clock = t.clock_best_wall.timestamp() if t.clock_best_wall else 0.0
     return (has_lpr, confidence, clock)
 

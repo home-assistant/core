@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     )
     status = coordinator.data
 
-    _LOGGER.debug("NUT Sensors Available: %s", status if status else None)
+    _LOGGER.debug("NUT Sensors Available: %s", status or None)
 
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     _LOGGER.debug(
         "NUT Commands Available: %s",
-        user_available_commands if user_available_commands else None,
+        user_available_commands or None,
     )
 
     entry.runtime_data = NutRuntimeData(
