@@ -277,7 +277,7 @@ def process_turn_off_params(
 ) -> dict[str, Any]:
     """Process light turn off params."""
     params = dict(params)
-    
+
     if ATTR_TRANSITION not in params:
         hass.data[DATA_PROFILES].apply_default(light.entity_id, True, params)
 
@@ -323,7 +323,7 @@ def process_turn_on_params(  # noqa: C901
 ) -> dict[str, Any]:
     """Process light turn on params."""
     params = dict(params)
-    
+
     # Only process params once we processed brightness step
     if params and (
         ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
