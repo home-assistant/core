@@ -1174,7 +1174,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @override
     async def async_toggle(self, **kwargs: Any) -> None:
-        params = kwargs
         if not self.is_on:
             params = process_turn_on_params(self.hass, self, kwargs)
             if params.get(ATTR_BRIGHTNESS) != 0 and params.get(ATTR_WHITE) != 0:
