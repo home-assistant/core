@@ -30,7 +30,6 @@ async def test_full_flow_success(
 
     user_input = {
         CONF_HOST: "192.168.1.100",
-        CONF_PASSWORD: "test-password",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -39,7 +38,55 @@ async def test_full_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Homevolt"
-    assert result["data"] == user_input
+    assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PASSWORD: None}
+    assert result["result"].unique_id == "40580137858664"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_auth_error_then_password_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
+) -> None:
+    """Test flow when authentication is required."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    # First attempt with host only - should get auth error and move to credentials step
+    user_input = {
+        CONF_HOST: "192.168.1.100",
+    }
+
+    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert result["errors"] == {}
+
+    # Now provide password - should succeed
+    mock_homevolt_client.update_info.side_effect = None
+
+    password_input = {
+        CONF_PASSWORD: "test-password",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], password_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Homevolt"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PASSWORD: "test-password",
+    }
     assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -47,7 +94,6 @@ async def test_full_flow_success(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (HomevoltAuthenticationError, "invalid_auth"),
         (HomevoltConnectionError, "cannot_connect"),
         (Exception, "unknown"),
     ],
@@ -70,7 +116,6 @@ async def test_step_user_errors(
 
     user_input = {
         CONF_HOST: "192.168.1.100",
-        CONF_PASSWORD: "test-password",
     }
 
     mock_homevolt_client.update_info.side_effect = exception
@@ -92,7 +137,7 @@ async def test_step_user_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Homevolt"
-    assert result["data"] == user_input
+    assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PASSWORD: None}
     assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -116,7 +161,6 @@ async def test_duplicate_entry(
 
     user_input = {
         CONF_HOST: "192.168.1.200",
-        CONF_PASSWORD: "test-password",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -126,3 +170,59 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_credentials_step_invalid_password(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
+) -> None:
+    """Test invalid password in credentials step shows error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    # First step with host only - trigger auth error
+    user_input = {
+        CONF_HOST: "192.168.1.100",
+    }
+
+    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+
+    # Provide wrong password - should show error
+    password_input = {
+        CONF_PASSWORD: "wrong-password",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], password_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # Now provide correct password
+    mock_homevolt_client.update_info.side_effect = None
+
+    password_input = {
+        CONF_PASSWORD: "correct-password",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], password_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Homevolt"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PASSWORD: "correct-password",
+    }
+    assert result["result"].unique_id == "40580137858664"
+    assert len(mock_setup_entry.mock_calls) == 1
