@@ -143,10 +143,6 @@ class WaterFurnaceSensor(SensorEntity):
             f"wf_{slugify(self.client.unit)}_{slugify(description.key)}"
         )
         self._attr_unique_id = f"{self.client.unit}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.client.unit)},
             manufacturer="WaterFurnace",
@@ -161,7 +157,7 @@ class WaterFurnaceSensor(SensorEntity):
                 # Eg. Series 7, 5 Ton
                 device_info["name"] = self.client.device_metadata.awlabctypedesc
 
-        return device_info
+        self._attr_device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
