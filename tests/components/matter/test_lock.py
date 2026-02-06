@@ -635,3 +635,73 @@ async def test_service_on_lock_without_user_management(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_usercode_no_available_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_usercode when no credential slots are available."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser: empty slot
+            None,  # SetUser: success
+            {"userStatus": 1, "credentials": None},  # GetUser: check creds (no PIN)
+            {"credentialExists": True},  # GetCredentialStatus: slot 1 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 2 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 3 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 4 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 5 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 6 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 7 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 8 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 9 taken
+            {"credentialExists": True},  # GetCredentialStatus: slot 10 taken
+        ]
+    )
+
+    with pytest.raises(HomeAssistantError, match="No available credential slots"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USERCODE,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_CODE_SLOT: 1,
+                ATTR_USERCODE: "12345678",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_usercode_credential_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_usercode when SetCredential fails."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser: empty slot
+            None,  # SetUser: success
+            {"userStatus": 1, "credentials": None},  # GetUser: check creds
+            {"credentialExists": False},  # GetCredentialStatus: available
+            {"status": "failure", "nextCredentialIndex": None},  # SetCredential: fail
+        ]
+    )
+
+    with pytest.raises(HomeAssistantError, match="Failed to set credential"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USERCODE,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_CODE_SLOT: 1,
+                ATTR_USERCODE: "12345678",
+            },
+            blocking=True,
+        )
