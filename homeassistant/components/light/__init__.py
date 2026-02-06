@@ -1177,4 +1177,4 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return
 
         params = process_turn_off_params(self.hass, self, params)
-        await self.async_turn_off(**params)
+        await self.async_turn_off(**filter_turn_off_params(self, params))
