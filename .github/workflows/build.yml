@@ -5,7 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # 更新到 v4
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -21,7 +21,7 @@ jobs:
         python -m build
         
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # 更新到 v4
       with:
         name: ha-package
         path: dist/
