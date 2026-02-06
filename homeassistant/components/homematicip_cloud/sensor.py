@@ -76,7 +76,7 @@ from .helpers import get_channels_from_device
 class HmipSmokeDetectorSensorDescription(SensorEntityDescription):
     """Describes HmIP smoke detector sensor entity."""
 
-    value_fn: Callable[[SmokeDetector], StateType]
+    value_fn: Callable[[SmokeDetector], StateType | datetime]
     attr_name: str  # Device attribute name for hasattr check
 
 
@@ -88,7 +88,9 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         attr_name="dirtLevel",
-        value_fn=lambda d: round(d.dirtLevel * 100, 1) if d.dirtLevel is not None else None,
+        value_fn=lambda d: round(d.dirtLevel * 100, 1)
+        if d.dirtLevel is not None
+        else None,
     ),
     HmipSmokeDetectorSensorDescription(
         key="smoke_alarm_counter",
@@ -1032,7 +1034,7 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
         return self._sensor_unique_id
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._device)
 

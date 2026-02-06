@@ -2,7 +2,7 @@
 
 from homematicip.base.enums import ValveState
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -877,7 +877,7 @@ async def test_hmip_smoke_detector_dirt_level(
     entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        HMIPC_DOMAIN,
+        DOMAIN,
         "3014F7110000000000000018_dirt_level",
         suggested_object_id="rauchwarnmelder_dirt_level",
         disabled_by=None,
@@ -915,7 +915,7 @@ async def test_hmip_smoke_detector_alarm_counter(
     entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        HMIPC_DOMAIN,
+        DOMAIN,
         "3014F7110000000000000018_smoke_alarm_counter",
         suggested_object_id="rauchwarnmelder_smoke_alarm_counter",
         disabled_by=None,
@@ -951,7 +951,7 @@ async def test_hmip_smoke_detector_test_counter(
     entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
-        HMIPC_DOMAIN,
+        DOMAIN,
         "3014F7110000000000000018_smoke_test_counter",
         suggested_object_id="rauchwarnmelder_smoke_test_counter",
         disabled_by=None,
