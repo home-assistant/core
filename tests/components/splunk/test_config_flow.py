@@ -153,40 +153,28 @@ async def test_import_flow_success(
     }
 
 
-async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        ([False, True], "cannot_connect"),
+        ([True, False], "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_import_flow_error_and_recovery(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    side_effect: list[bool] | Exception,
+    reason: str,
 ) -> None:
-    """Test import flow with connection error returns specific error reason."""
-    mock_hass_splunk.check.side_effect = [False, True]
+    """Test import flow errors and recovery."""
+    mock_hass_splunk.check.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "test-token-123",
-            CONF_HOST: "invalid-host",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    # Import now returns specific error reason for deprecation issue creation
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_flow_invalid_auth(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test import flow with invalid auth returns specific error reason."""
-    # Connectivity passes, but token check fails
-    mock_hass_splunk.check.side_effect = [True, False]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "bad-token",
             CONF_HOST: "splunk.example.com",
             CONF_PORT: 8088,
             CONF_SSL: False,
@@ -194,28 +182,24 @@ async def test_import_flow_invalid_auth(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_auth"
+    assert result["reason"] == reason
 
-
-async def test_import_flow_unknown_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test import flow with unknown error returns specific error reason."""
-    mock_hass_splunk.check.side_effect = Exception("Unexpected error")
+    # Test recovery by resetting mock and importing again
+    mock_hass_splunk.check.side_effect = None
+    mock_hass_splunk.check.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_TOKEN: "test-token",
+            CONF_TOKEN: "test-token-123",
             CONF_HOST: "splunk.example.com",
             CONF_PORT: 8088,
             CONF_SSL: False,
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow_already_configured(
