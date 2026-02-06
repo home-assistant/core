@@ -55,7 +55,6 @@ async def test_flow_auth_error_then_password_success(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    # First attempt with host only - should get auth error and move to credentials step
     user_input = {
         CONF_HOST: "192.168.1.100",
     }
@@ -180,7 +179,6 @@ async def test_credentials_step_invalid_password(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # First step with host only - trigger auth error
     user_input = {
         CONF_HOST: "192.168.1.100",
     }
@@ -207,7 +205,6 @@ async def test_credentials_step_invalid_password(
     assert result["step_id"] == "credentials"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Now provide correct password
     mock_homevolt_client.update_info.side_effect = None
 
     password_input = {
