@@ -1,0 +1,105 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Ghost site is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Ghost. Please check your URL.",
+      "invalid_api_key": "Invalid API key. Please check your credentials.",
+      "invalid_auth": "[%key:component::ghost::config::error::invalid_api_key%]",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "admin_api_key": "Admin API key",
+          "api_url": "API URL"
+        },
+        "data_description": {
+          "admin_api_key": "The Admin API key for your Ghost integration",
+          "api_url": "The API URL for your Ghost integration"
+        },
+        "description": "[Create a custom integration]({docs_url}) to get your API URL and Admin API key.",
+        "title": "Connect to Ghost"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "arr": {
+        "name": "ARR"
+      },
+      "comped_members": {
+        "name": "Comped members"
+      },
+      "draft_posts": {
+        "name": "Draft posts"
+      },
+      "free_members": {
+        "name": "Free members"
+      },
+      "latest_email": {
+        "name": "Latest email"
+      },
+      "latest_email_click_rate": {
+        "name": "Latest email click rate"
+      },
+      "latest_email_clicked": {
+        "name": "Latest email clicked"
+      },
+      "latest_email_open_rate": {
+        "name": "Latest email open rate"
+      },
+      "latest_email_opened": {
+        "name": "Latest email opened"
+      },
+      "latest_email_sent": {
+        "name": "Latest email sent"
+      },
+      "latest_post": {
+        "name": "Latest post"
+      },
+      "mrr": {
+        "name": "MRR"
+      },
+      "newsletter_subscribers": {
+        "name": "{newsletter_name} subscribers"
+      },
+      "paid_members": {
+        "name": "Paid members"
+      },
+      "published_posts": {
+        "name": "Published posts"
+      },
+      "scheduled_posts": {
+        "name": "Scheduled posts"
+      },
+      "socialweb_followers": {
+        "name": "SocialWeb followers",
+        "unit_of_measurement": "followers"
+      },
+      "socialweb_following": {
+        "name": "SocialWeb following",
+        "unit_of_measurement": "accounts"
+      },
+      "total_comments": {
+        "name": "Total comments",
+        "unit_of_measurement": "comments"
+      },
+      "total_members": {
+        "name": "Total members"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with Ghost API: {error}"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to Ghost: {error}"
+    },
+    "invalid_api_key": {
+      "message": "Invalid API key"
+    }
+  }
+}

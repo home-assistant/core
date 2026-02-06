@@ -250,6 +250,7 @@ FLOWS = {
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",
+        "ghost",
         "gios",
         "github",
         "glances",

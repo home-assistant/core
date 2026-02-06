@@ -253,6 +253,9 @@ aiofiles==24.1.0
 # homeassistant.components.flo
 aioflo==2021.11.0
 
+# homeassistant.components.ghost
+aioghost==0.4.0
+
 # homeassistant.components.github
 aiogithubapi==24.6.0
 
