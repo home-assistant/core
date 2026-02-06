@@ -15,7 +15,7 @@
     "flow_title": "{name}",
     "step": {
       "link": {
-        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then select **Submit** within 30 seconds.",
+        "description": "**For Panels/Shapes:** Press and hold the power button for 5 seconds until the LEDs start flashing.\n\n**For Essentials devices:** Open the Nanoleaf app, go to device settings, and tap \"Connect to API\".\n\nThen select **Submit** within 30 seconds.",
         "title": "Link Nanoleaf"
       },
       "user": {
