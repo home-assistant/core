@@ -2,7 +2,7 @@
 
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
-from enum import Enum
+from enum import StrEnum
 import json
 import logging
 import re
@@ -59,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 _MAX_TOOL_ITERATIONS = 10
 
 
-class ResponseItemType(str, Enum):
+class ResponseItemType(StrEnum):
     """Response item types."""
 
     FUNCTION_CALL = "function_call"
