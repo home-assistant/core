@@ -28,7 +28,7 @@
   "available_charging_energy": 998,
   "available_discharge_energy": 11216,
   "schedule_id": "schedule_1",
-  "schedule_type": "Idle",
+  "schedule_type": "idle",
   "schedule_power_setpoint": 0,
   "schedule_max_power": 6028,
   "schedule_max_discharge": 6028,

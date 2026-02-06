@@ -50,7 +50,6 @@
         "name": "Battery state of charge"
       },
       "charge_cycles": {
-        "name": "Charge cycles",
         "unit_of_measurement": "cycles"
       },
       "energy_exported": {
@@ -125,16 +124,16 @@
       "schedule_type": {
         "name": "Schedule type",
         "state": {
-          "Frequency Reserve": "Frequency reserve",
-          "Full Solar Export": "Full solar export",
-          "Grid Charge": "Grid charge",
-          "Grid Charge/Discharge": "Grid charge/discharge",
-          "Grid Discharge": "Grid discharge",
-          "Idle": "Idle",
-          "Inverter Charge": "Inverter charge",
-          "Inverter Discharge": "Inverter discharge",
-          "Solar Charge": "Solar charge",
-          "Solar Charge/Discharge": "Solar charge/discharge"
+          "frequency_reserve": "Frequency reserve",
+          "full_solar_export": "Full solar export",
+          "grid_charge": "Grid charge",
+          "grid_charge_discharge": "Grid charge/discharge",
+          "grid_discharge": "Grid discharge",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge",
+          "solar_charge_discharge": "Solar charge/discharge"
         }
       },
       "state_of_charge": {

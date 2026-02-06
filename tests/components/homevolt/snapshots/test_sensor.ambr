@@ -281,59 +281,6 @@
     'state': '-84.13',
   })
 # ---
-# name: test_entities[sensor.homevolt_ems_charge_cycles-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.homevolt_ems_charge_cycles',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Charge cycles',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Charge cycles',
-    'platform': 'homevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_cycles',
-    'unique_id': '40580137858664_charge_cycles',
-    'unit_of_measurement': 'cycles',
-  })
-# ---
-# name: test_entities[sensor.homevolt_ems_charge_cycles-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Homevolt EMS Charge cycles',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cycles',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.homevolt_ems_charge_cycles',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21',
-  })
-# ---
 # name: test_entities[sensor.homevolt_ems_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1755,16 +1702,16 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Idle',
-        'Inverter Charge',
-        'Inverter Discharge',
-        'Grid Charge',
-        'Grid Discharge',
-        'Grid Charge/Discharge',
-        'Frequency Reserve',
-        'Solar Charge',
-        'Solar Charge/Discharge',
-        'Full Solar Export',
+        'idle',
+        'inverter_charge',
+        'inverter_discharge',
+        'grid_charge',
+        'grid_discharge',
+        'grid_charge_discharge',
+        'frequency_reserve',
+        'solar_charge',
+        'solar_charge_discharge',
+        'full_solar_export',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1803,16 +1750,16 @@
       'device_class': 'enum',
       'friendly_name': 'Homevolt EMS Schedule type',
       'options': list([
-        'Idle',
-        'Inverter Charge',
-        'Inverter Discharge',
-        'Grid Charge',
-        'Grid Discharge',
-        'Grid Charge/Discharge',
-        'Frequency Reserve',
-        'Solar Charge',
-        'Solar Charge/Discharge',
-        'Full Solar Export',
+        'idle',
+        'inverter_charge',
+        'inverter_discharge',
+        'grid_charge',
+        'grid_discharge',
+        'grid_charge_discharge',
+        'frequency_reserve',
+        'solar_charge',
+        'solar_charge_discharge',
+        'full_solar_export',
       ]),
     }),
     'context': <ANY>,
@@ -1820,7 +1767,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Idle',
+    'state': 'idle',
   })
 # ---
 # name: test_entities[sensor.homevolt_ems_state_of_charge-entry]
