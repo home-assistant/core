@@ -1,7 +1,7 @@
 """Test the Splunk integration init."""
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
@@ -152,18 +152,12 @@ async def test_yaml_with_filter(
     assert not entity_filter("light.test")
 
 
-async def test_setup_without_yaml(hass: HomeAssistant) -> None:
+async def test_setup_without_yaml(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
     """Test setup without YAML stores empty filter."""
-    with patch(
-        "homeassistant.components.splunk.hass_splunk", autospec=True
-    ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-        mock_client_class.return_value = mock_client
-
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     # Verify empty filter is stored in hass.data
     assert DATA_FILTER in hass.data
@@ -283,29 +277,23 @@ async def test_event_listener_error_handling(
     await hass.async_block_till_done()
 
 
-async def test_yaml_filter_only_no_deprecation_issue(hass: HomeAssistant) -> None:
+async def test_yaml_filter_only_no_deprecation_issue(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
     """Test YAML with only filter does not create deprecation issue."""
-    with patch(
-        "homeassistant.components.splunk.hass_splunk", autospec=True
-    ) as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-        mock_client_class.return_value = mock_client
-
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    # Only filter, no connection settings (no token)
-                    CONF_FILTER: {
-                        "include_domains": ["sensor"],
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                # Only filter, no connection settings (no token)
+                CONF_FILTER: {
+                    "include_domains": ["sensor"],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify no config entry was created (no import)
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -357,39 +345,26 @@ async def test_yaml_with_connection_creates_deprecation_issue(
     assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
 
 
-async def test_yaml_import_error_creates_specific_issue(hass: HomeAssistant) -> None:
+async def test_yaml_import_error_creates_specific_issue(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
     """Test YAML import with connection error creates specific issue."""
-    with (
-        patch(
-            "homeassistant.components.splunk.hass_splunk", autospec=True
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-        ) as mock_config_flow_client_class,
-    ):
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-        mock_client_class.return_value = mock_client
+    # Config flow client fails connectivity check
+    mock_hass_splunk.check.return_value = False
 
-        # Config flow client fails connectivity check
-        mock_flow_client = MagicMock()
-        mock_flow_client.check = AsyncMock(return_value=False)
-        mock_config_flow_client_class.return_value = mock_flow_client
-
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_TOKEN: "test-token",
-                    CONF_HOST: "invalid-host",
-                    CONF_PORT: 8088,
-                    CONF_SSL: False,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "invalid-host",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify no config entry was created (import failed)
     entries = hass.config_entries.async_entries(DOMAIN)
