@@ -44,7 +44,8 @@ def mock_hass_splunk() -> Generator[MagicMock]:
             "homeassistant.components.splunk.hass_splunk", autospec=True
         ) as mock_client_class,
         patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", new=mock_client_class
+            "homeassistant.components.splunk.config_flow.hass_splunk",
+            new=mock_client_class,
         ),
     ):
         mock_client = mock_client_class.return_value
