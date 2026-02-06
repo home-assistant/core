@@ -147,10 +147,13 @@ class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
         return action.maxValue
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the current value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
-        return action["rotation"]
+        rotation = action["rotation"]
+        if rotation is None:
+            return None
+        return rotation
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
