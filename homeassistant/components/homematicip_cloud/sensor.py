@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
@@ -68,6 +68,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .entity import HomematicipGenericEntity
+from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import get_channels_from_device
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,7 +113,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         attr_name="lastSmokeAlarmTimestamp",
         value_fn=lambda d: (
-            datetime.fromtimestamp(d.lastSmokeAlarmTimestamp / 1000, tz=timezone.utc)
+            datetime.fromtimestamp(d.lastSmokeAlarmTimestamp / 1000, tz=UTC)
             if d.lastSmokeAlarmTimestamp
             else None
         ),
@@ -123,14 +125,12 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         attr_name="lastSmokeTestTimestamp",
         value_fn=lambda d: (
-            datetime.fromtimestamp(d.lastSmokeTestTimestamp / 1000, tz=timezone.utc)
+            datetime.fromtimestamp(d.lastSmokeTestTimestamp / 1000, tz=UTC)
             if d.lastSmokeTestTimestamp
             else None
         ),
     ),
 )
-from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channels_from_device
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
