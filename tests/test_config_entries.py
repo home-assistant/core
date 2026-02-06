@@ -71,6 +71,17 @@ from .common import (
 )
 
 
+def _get_flow_context(
+    manager: config_entries.ConfigEntries, flow_id: str
+) -> config_entries.ConfigFlowContext:
+    """Get the flow context from async_progress."""
+    return next(
+        flow["context"]
+        for flow in manager.flow.async_progress()
+        if flow["flow_id"] == flow_id
+    )
+
+
 @pytest.fixture(autouse=True)
 def mock_handlers() -> Generator[None]:
     """Mock config flows."""
@@ -9785,14 +9796,6 @@ async def test_discovery_flow_dismiss_protected_on_configure(
                 return self.async_show_form(step_id="confirm")
             return self.async_create_entry(title="test", data={})
 
-    def _get_flow_context(flow_id: str) -> config_entries.ConfigFlowContext:
-        """Get the flow context from async_progress."""
-        return next(
-            flow["context"]
-            for flow in manager.flow.async_progress()
-            if flow["flow_id"] == flow_id
-        )
-
     with mock_config_flow("comp", TestFlow):
         result = await manager.flow.async_init(
             "comp",
@@ -9811,7 +9814,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
         assert result["step_id"] == "confirm"
 
         # Before user interaction, dismiss_protected should not be set
-        context = _get_flow_context(result["flow_id"])
+        context = _get_flow_context(manager, result["flow_id"])
         assert "dismiss_protected" not in context
 
         # User configures the flow
@@ -9819,7 +9822,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         # After user interaction, dismiss_protected should be set
-        context = _get_flow_context(result["flow_id"])
+        context = _get_flow_context(manager, result["flow_id"])
         assert context["dismiss_protected"] is True
 
         # Finish the flow
@@ -9857,14 +9860,6 @@ async def test_user_flow_not_dismiss_protected_on_configure(
                 return self.async_show_form(step_id="confirm")
             return self.async_create_entry(title="test", data={})
 
-    def _get_flow_context(flow_id: str) -> config_entries.ConfigFlowContext:
-        """Get the flow context from async_progress."""
-        return next(
-            flow["context"]
-            for flow in manager.flow.async_progress()
-            if flow["flow_id"] == flow_id
-        )
-
     with mock_config_flow("comp", TestFlow):
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -9878,5 +9873,5 @@ async def test_user_flow_not_dismiss_protected_on_configure(
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         # User flows should not be marked as dismiss protected
-        context = _get_flow_context(result["flow_id"])
+        context = _get_flow_context(manager, result["flow_id"])
         assert "dismiss_protected" not in context
