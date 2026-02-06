@@ -106,7 +106,7 @@ class FolderSensor(SensorEntity):
         self._state: dict[str, Any] | None = None
         self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id = server_id.split("-")[0]
+        self._short_server_id = server_id.split("-", maxsplit=1)[0]
         self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
         self._attr_unique_id = f"{self._short_server_id}-{folder_id}"
         self._attr_device_info = DeviceInfo(
