@@ -93,6 +93,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="charge_cycles",
         translation_key="charge_cycles",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="cycles",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -223,7 +224,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,

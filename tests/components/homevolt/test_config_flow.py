@@ -76,8 +76,7 @@ async def test_step_user_errors(
     mock_homevolt_client.update_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input
+        result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -102,14 +101,10 @@ async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a duplicate device_id aborts the flow."""
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: "test-password"},
-        unique_id="40580137858664",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

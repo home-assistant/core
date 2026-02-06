@@ -43,7 +43,8 @@
         "name": "Battery state of charge"
       },
       "charge_cycles": {
-        "name": "Charge cycles"
+        "name": "Charge cycles",
+        "unit_of_measurement": "cycles"
       },
       "energy_exported": {
         "name": "Energy exported"
