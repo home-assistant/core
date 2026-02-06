@@ -275,7 +275,7 @@ def filter_turn_off_params(
 def process_turn_off_params(
     hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
-    """Translate light.turn_off service call parameters to light-supported attributes."""
+    """Process light turn off params."""
     if ATTR_TRANSITION not in params:
         hass.data[DATA_PROFILES].apply_default(light.entity_id, True, params)
 
@@ -319,7 +319,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
 def process_turn_on_params(  # noqa: C901
     hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
-    """Translate light.turn_on service call parameters to light-supported attributes."""
+    """Process light turn on params."""
     # Only process params once we processed brightness step
     if params and (
         ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
