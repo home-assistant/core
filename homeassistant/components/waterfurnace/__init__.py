@@ -33,7 +33,20 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-type WaterFurnaceConfigEntry = ConfigEntry[WaterFurnaceCoordinator]
+type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceCoordinator]]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version == 1 and entry.minor_version == 1:
+        # Migrate from gwid-based unique_id to username-based unique_id
+        username = entry.data[CONF_USERNAME]
+        hass.config_entries.async_update_entry(entry, unique_id=username)
+        _LOGGER.info("Migrated config entry unique_id to username")
+
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -104,14 +117,20 @@ async def async_setup_entry(
             "Authentication failed. Please update your credentials."
         ) from err
 
-    if not client.gwid:
+    if not client.devices:
         raise ConfigEntryNotReady(
-            "Failed to connect to WaterFurnace service: No GWID found for device"
+            "Failed to connect to WaterFurnace service: No devices found"
         )
 
-    coordinator = WaterFurnaceCoordinator(hass, client, entry)
-    entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    coordinators: dict[str, WaterFurnaceCoordinator] = {}
+    for index, device in enumerate(client.devices):
+        device_client = WaterFurnace(username, password, device=index)
+        await hass.async_add_executor_job(device_client.login)
+        coordinator = WaterFurnaceCoordinator(hass, device_client, entry)
+        coordinators[device.gwid] = coordinator
+        await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

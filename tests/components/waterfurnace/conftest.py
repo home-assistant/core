@@ -53,6 +53,41 @@ def mock_waterfurnace_client() -> Generator[Mock]:
 
 
 @pytest.fixture
+def mock_waterfurnace_client_multi_device() -> Generator[Mock]:
+    """Mock WaterFurnace client with multiple devices."""
+    mock_client = Mock()
+    mock_client.gwid = "TEST_GWID_12345"
+
+    gateway_data_1 = {
+        "gwid": "TEST_GWID_12345",
+        "description": "Test WaterFurnace Device 1",
+        "awlabctypedesc": "Test ABC Type 1",
+    }
+    gateway_data_2 = {
+        "gwid": "TEST_GWID_67890",
+        "description": "Test WaterFurnace Device 2",
+        "awlabctypedesc": "Test ABC Type 2",
+    }
+    mock_client.devices = [WFGateway(gateway_data_1), WFGateway(gateway_data_2)]
+
+    device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
+    mock_client.read.return_value = device_data
+    mock_client.read_with_retry.return_value = device_data
+
+    with (
+        patch(
+            "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.waterfurnace.WaterFurnace",
+            return_value=mock_client,
+        ),
+    ):
+        yield mock_client
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
@@ -62,7 +97,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
         },
-        unique_id="TEST_GWID_12345",
+        unique_id="test_user",
     )
 
 

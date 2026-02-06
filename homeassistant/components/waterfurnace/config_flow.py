@@ -27,7 +27,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WaterFurnace."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -52,13 +52,11 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error connecting to WaterFurnace")
                 errors["base"] = "unknown"
 
-            gwid = client.gwid
-            if not gwid:
+            if not client.devices:
                 errors["base"] = "cannot_connect"
 
             if not errors:
-                # Set unique ID based on GWID
-                await self.async_set_unique_id(gwid)
+                await self.async_set_unique_id(username)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -90,13 +88,10 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error importing WaterFurnace configuration")
             return self.async_abort(reason="unknown")
 
-        gwid = client.gwid
-        if not gwid:
-            # This likely indicates a server-side change, or an implementation bug
+        if not client.devices:
             return self.async_abort(reason="cannot_connect")
 
-        # Set unique ID based on GWID
-        await self.async_set_unique_id(gwid)
+        await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
