@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration does not register custom actions.
+  action-setup: done
   appropriate-polling:
     status: done
   brands: done
@@ -10,9 +8,7 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: The integration does not register custom actions.
+  docs-actions: todo
   docs-high-level-description:
     status: done
   docs-installation-instructions:
@@ -28,16 +24,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: The integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: The integration has no options in Milestone 0.
-  docs-installation-parameters:
-    status: exempt
-    comment: The integration has no parameters in Milestone 0.
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
