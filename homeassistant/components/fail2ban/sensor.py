@@ -129,5 +129,5 @@ class BanLogParser:
             with open(self.log_file, encoding="utf-8") as file_data:
                 self.data = self.ip_regex[jail].findall(file_data.read())
 
-        except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
+        except IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError:
             _LOGGER.warning("File not present: %s", os.path.basename(self.log_file))

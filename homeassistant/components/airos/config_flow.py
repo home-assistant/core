@@ -114,7 +114,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             AirOSDeviceConnectionError,
         ):
             self.errors["base"] = "cannot_connect"
-        except (AirOSConnectionAuthenticationError, AirOSDataMissingError):
+        except AirOSConnectionAuthenticationError, AirOSDataMissingError:
             self.errors["base"] = "invalid_auth"
         except AirOSKeyDataMissingError:
             self.errors["base"] = "key_data_missing"

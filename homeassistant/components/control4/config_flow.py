@@ -74,7 +74,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             director_bearer_token = (
                 await account.getDirectorBearerToken(controller_unique_id)
             )["token"]
-        except (BadCredentials, Unauthorized):
+        except BadCredentials, Unauthorized:
             errors["base"] = "invalid_auth"
             return errors, data, description_placeholders
         except NotFound:
@@ -97,7 +97,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Unauthorized:
             errors["base"] = "director_auth_failed"
             return errors, data, description_placeholders
-        except (ClientError, TimeoutError):
+        except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
             description_placeholders["host"] = host
             return errors, data, description_placeholders

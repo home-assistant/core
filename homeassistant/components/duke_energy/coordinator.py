@@ -214,7 +214,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 # Make sure we don't go back too far
                 if end_step < start:
                     break
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 # ClientError is raised when there is no more data for the range
                 break
 

@@ -104,7 +104,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 def _is_decimal_state(state: str) -> bool:
     try:
         Decimal(state)
-    except (InvalidOperation, TypeError):
+    except InvalidOperation, TypeError:
         return False
     else:
         return True
@@ -306,7 +306,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     Decimal(restored_data.native_value),  # type: ignore[arg-type]
                     self._round_digits,
                 )
-            except (InvalidOperation, TypeError):
+            except InvalidOperation, TypeError:
                 self._attr_native_value = None
 
     async def async_added_to_hass(self) -> None:

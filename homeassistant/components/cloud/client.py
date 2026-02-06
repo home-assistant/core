@@ -187,7 +187,7 @@ class CloudClient(Interface):
                         err,
                     )
                 async_call_later(self._hass, 30, enable_alexa_job)
-            except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+            except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
                 pass
 
         enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)

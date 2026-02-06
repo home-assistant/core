@@ -60,14 +60,14 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
                     # raising errors.
                     data={**user_input, CONF_NAME: gios.station_name},
                 )
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except InvalidSensorsDataError:
                 errors[CONF_STATION_ID] = "invalid_sensors_data"
 
         try:
             gios = await Gios.create(websession)
-        except (ApiError, ClientConnectorError, NoStationError):
+        except ApiError, ClientConnectorError, NoStationError:
             return self.async_abort(reason="cannot_connect")
 
         options: list[SelectOptionDict] = [

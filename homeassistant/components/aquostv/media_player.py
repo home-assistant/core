@@ -94,7 +94,7 @@ def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
             try:
                 func(obj, *args, **kwargs)
                 break
-            except (OSError, TypeError, ValueError):
+            except OSError, TypeError, ValueError:
                 update_retries -= 1
                 if update_retries == 0:
                     obj.set_state(MediaPlayerState.OFF)

@@ -212,7 +212,7 @@ def _process_forecast(json):
         if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
             forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = int(json["windSpeed"])
 
-    except (ValueError, IndexError, KeyError):
+    except ValueError, IndexError, KeyError:
         return None
 
     if forecast:
