@@ -105,8 +105,9 @@ DISCOVERY_SCHEMAS = [
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: x
-            != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
+            device_to_ha=lambda x: (
+                x != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
@@ -493,8 +494,8 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # unset Operational bit from ConfigStatus bitmap means problem
-            device_to_ha=lambda x: not bool(
-                x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            device_to_ha=lambda x: (
+                not bool(x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational)
             ),
         ),
         entity_class=MatterBinarySensor,

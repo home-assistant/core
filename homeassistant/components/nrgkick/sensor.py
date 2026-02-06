@@ -88,7 +88,7 @@ def _seconds_to_stable_timestamp(value: StateType) -> datetime | None:
 
     try:
         return _seconds_to_stable_datetime(cast(int, value))
-    except (TypeError, OverflowError):
+    except TypeError, OverflowError:
         return None
 
 
