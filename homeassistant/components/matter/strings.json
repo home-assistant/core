@@ -214,12 +214,6 @@
       "hold_time": {
         "name": "Hold time"
       },
-      "pir_unoccupied_to_occupied_threshold": {
-        "name": "PIR unoccupied to occupied threshold"
-      },
-      "pir_unoccupied_to_occupied_delay": {
-        "name": "PIR unoccupied to occupied delay"
-      },
       "led_indicator_intensity_off": {
         "name": "LED off intensity"
       },
@@ -240,6 +234,12 @@
       },
       "on_transition_time": {
         "name": "On transition time"
+      },
+      "unoccupied_to_occupied_delay": {
+        "name": "Unoccupied to occupied delay"
+      },
+      "unoccupied_to_occupied_threshold": {
+        "name": "unoccupied to occupied threshold"
       },
       "pump_setpoint": {
         "name": "Setpoint"

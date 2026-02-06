@@ -362,9 +362,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="PIRUnoccupiedToOccupiedThreshold",
+            key="OccupancySensingUnoccupiedToOccupiedThreshold",
             entity_category=EntityCategory.CONFIG,
-            translation_key="pir_unoccupied_to_occupied_threshold",
+            translation_key="unoccupied_to_occupied_threshold",
             native_max_value=254,
             native_min_value=1,
             mode=NumberMode.BOX,
@@ -378,9 +378,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="PIRUnoccupiedToOccupiedDelay",
+            key="OccupancySensingUnoccupiedToOccupiedDelay",
             entity_category=EntityCategory.CONFIG,
-            translation_key="pir_unoccupied_to_occupied_delay",
+            translation_key="unoccupied_to_occupied_delay",
             native_max_value=65534,
             native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,

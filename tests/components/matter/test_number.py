@@ -333,3 +333,81 @@ async def test_matter_exception_on_door_lock_write_attribute(
         )
 
     assert str(exc_info.value) == "Boom!"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor_pir"])
+async def test_occupancy_sensing_pir_thresholds(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test PIR threshold entities for OccupancySensing cluster."""
+    # PIRUnoccupiedToOccupiedThreshold - check actual entity created
+    state = hass.states.get("number.mock_occupancy_sensor_pir")
+    assert state
+    assert state.state == "2"
+
+    set_node_attribute(matter_node, 1, 1030, 0x12, 5)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_occupancy_sensor_pir")
+    assert state
+    assert state.state == "5"
+
+    # Test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_occupancy_sensor_pir",
+            "value": 3,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedThreshold,
+        ),
+        value=3,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor_pir"])
+async def test_occupancy_sensing_pir_delays(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test PIR delay entities for OccupancySensing cluster."""
+    # PIRUnoccupiedToOccupiedDelay - check actual entity created
+    state = hass.states.get("number.mock_occupancy_sensor_pir_2")
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(matter_node, 1, 1030, 0x11, 20)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_occupancy_sensor_pir_2")
+    assert state
+    assert state.state == "20"
+
+    # Test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_occupancy_sensor_pir_2",
+            "value": 15,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
+        ),
+        value=15,
+    )
