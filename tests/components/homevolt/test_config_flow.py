@@ -77,7 +77,7 @@ async def test_step_user_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input,
+        user_input
     )
 
     assert result["type"] is FlowResultType.FORM
