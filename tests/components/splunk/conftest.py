@@ -32,7 +32,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
         },
-        unique_id="test-token-123",
     )
 
 
