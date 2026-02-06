@@ -15,7 +15,6 @@ from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartTubConfigEntry,
