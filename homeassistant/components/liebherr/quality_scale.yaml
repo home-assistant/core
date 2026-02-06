@@ -58,7 +58,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default:
     status: exempt
-    comment: This integration does not have any entities that should disabled by default.
+    comment: This integration does not have any entities that should be disabled by default.
   entity-translations: done
   exception-translations: done
   icon-translations: todo
