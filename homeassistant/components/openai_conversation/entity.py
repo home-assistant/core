@@ -587,7 +587,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model == "gpt-image-1":
+            if image_model != "gpt-image-1-mini":
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")

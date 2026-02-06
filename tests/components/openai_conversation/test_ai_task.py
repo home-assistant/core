@@ -212,7 +212,9 @@ async def test_generate_data_with_attachments(
 
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
-@pytest.mark.parametrize("image_model", ["gpt-image-1", "gpt-image-1-mini"])
+@pytest.mark.parametrize(
+    "image_model", ["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"]
+)
 async def test_generate_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
