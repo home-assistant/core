@@ -4,15 +4,11 @@ from unittest.mock import AsyncMock
 
 from aioghost.exceptions import GhostAuthError, GhostConnectionError
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -49,17 +45,3 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_entities(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    mock_ghost_api: AsyncMock,
-    mock_config_entry,
-) -> None:
-    """Snapshot all Ghost sensor entities."""
-    await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

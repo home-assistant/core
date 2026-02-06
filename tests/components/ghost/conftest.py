@@ -75,7 +75,9 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_ghost_api() -> Generator[AsyncMock]:
     """Mock the GhostAdminAPI."""
     with (
-        patch("homeassistant.components.ghost.GhostAdminAPI") as mock_api_class,
+        patch(
+            "homeassistant.components.ghost.GhostAdminAPI", autospec=True
+        ) as mock_api_class,
         patch(
             "homeassistant.components.ghost.config_flow.GhostAdminAPI",
             new=mock_api_class,

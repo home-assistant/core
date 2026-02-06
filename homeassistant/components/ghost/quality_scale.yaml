@@ -58,8 +58,8 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
-    comment: Single device per config entry, no dynamic device addition.
+    status: done
+    comment: New newsletters entities are automatically created
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -73,8 +73,8 @@ rules:
     status: exempt
     comment: No repair scenarios identified for this integration.
   stale-devices:
-    status: exempt
-    comment: Single device per config entry, removal handled by unload.
+    status: todo
+    comment: Remove newsletter entities when newsletter is removed
 
   # Platinum
   async-dependency: done
