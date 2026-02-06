@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import Enum
+from enum import StrEnum
 from functools import partial
 from typing import Final
 
@@ -47,7 +47,7 @@ SERVICE_SCHEMA: Final = vol.Schema(
 )
 
 
-class PriceType(str, Enum):
+class PriceType(StrEnum):
     """Type of price."""
 
     ENERGY_USAGE = "energy_usage"
