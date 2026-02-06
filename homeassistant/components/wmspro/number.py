@@ -26,7 +26,7 @@ async def async_setup_entry(
     config_entry: WebControlProConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the WMS based covers from a config entry."""
+    """Set up the WMS based slat rotation number entities from a config entry."""
     hub = config_entry.runtime_data
 
     entities: list[WebControlProGenericEntity] = []
