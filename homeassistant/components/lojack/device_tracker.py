@@ -13,7 +13,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry, LoJackCoordinator, LoJackVehicleData
-from .const import ATTR_ADDRESS, ATTR_GPS_ACCURACY, ATTR_HEADING, DOMAIN
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_GPS_ACCURACY,
+    ATTR_HEADING,
+    ATTR_LAST_POLLED,
+    DOMAIN,
+)
 
 
 def _slugify(text: str) -> str:
@@ -183,6 +189,11 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         attrs: dict[str, Any] = {}
+
+        # Last polled timestamp (when HA last fetched data from the API)
+        if self.coordinator.last_update_success_time is not None:
+            attrs[ATTR_LAST_POLLED] = self.coordinator.last_update_success_time
+
         vehicle = self._vehicle
         if not vehicle:
             return attrs

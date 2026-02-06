@@ -70,6 +70,7 @@ def mock_device() -> MagicMock:
     device.license_plate = TEST_LICENSE_PLATE
     device.odometer = TEST_ODOMETER
     device.location = {}
+    device.request_fresh_location = AsyncMock(return_value=TEST_TIMESTAMP)
     return device
 
 

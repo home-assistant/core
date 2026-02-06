@@ -46,6 +46,11 @@
         "name": "Moving"
       }
     },
+    "button": {
+      "refresh_location": {
+        "name": "Refresh location"
+      }
+    },
     "sensor": {
       "odometer": {
         "name": "Odometer"

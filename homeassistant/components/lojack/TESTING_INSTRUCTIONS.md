@@ -22,7 +22,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -e ".[dev]"
-pip install lojack-api==0.6.3
+pip install lojack-api==0.7.0
 
 # Or use uv for faster installation
 uv pip install -r requirements_all.txt -r requirements.txt -r requirements_test.txt
@@ -119,6 +119,7 @@ Access Home Assistant at http://localhost:8123
 - [ ] `longitude` - Float value (e.g., -122.4194)
 - [ ] `gps_accuracy` - Integer value in meters
 - [ ] `source_type` - Should be "gps"
+- [ ] `last_polled` - Timestamp when Home Assistant last fetched data from API
 - [ ] `vin` - Your vehicle's VIN
 - [ ] `make` - Vehicle manufacturer
 - [ ] `model` - Vehicle model
@@ -130,7 +131,10 @@ Access Home Assistant at http://localhost:8123
 - [ ] `heading` - Direction of travel (if available)
 - [ ] `battery_voltage` - Vehicle battery voltage (if available)
 - [ ] `address` - Human-readable location (if available)
-- [ ] `timestamp` - Last update time
+- [ ] `timestamp` - Device timestamp when location was reported to LoJack
+
+**Note on Timestamps**:
+The `timestamp` attribute shows when the LoJack device reported its location to the LoJack servers, while the `last_polled` attribute shows when Home Assistant fetched the data. These can differ by 30+ minutes depending on the polling interval. The `location_last_reported` sensor also tracks the device timestamp.
 
 ---
 
@@ -232,7 +236,91 @@ Access Home Assistant at http://localhost:8123
 
 ---
 
-### Test 10: Error Logging
+### Test 10: Sensor Entities Verification
+
+**Objective**: Verify sensor entities have correct values and attributes
+
+**Steps**:
+1. Navigate to Developer Tools → States
+2. Search for your vehicle's sensor entities (e.g., `sensor.2021_honda_accord_*`)
+3. Examine each sensor
+
+**Expected Sensors**:
+- [ ] `sensor.{vehicle}_odometer` - Shows mileage in miles
+- [ ] `sensor.{vehicle}_speed` - Shows current speed in mph
+- [ ] `sensor.{vehicle}_battery_voltage` - Shows vehicle battery voltage in V
+- [ ] `sensor.{vehicle}_location_last_reported` - Shows when the device last reported its location to LoJack servers (device timestamp, not HA poll time)
+
+**Diagnostic Sensors** (disabled by default):
+- [ ] `sensor.{vehicle}_make` - Vehicle manufacturer
+- [ ] `sensor.{vehicle}_model` - Vehicle model
+- [ ] `sensor.{vehicle}_year` - Vehicle year
+- [ ] `sensor.{vehicle}_vin` - Vehicle Identification Number
+- [ ] `sensor.{vehicle}_license_plate` - License plate number
+
+---
+
+### Test 11: Binary Sensor Entities Verification
+
+**Objective**: Verify binary sensor entities work correctly
+
+**Steps**:
+1. Navigate to Developer Tools → States
+2. Search for your vehicle's binary sensor entities
+
+**Expected Binary Sensors**:
+- [ ] `binary_sensor.{vehicle}_active` - Connectivity status (on if receiving data)
+- [ ] `binary_sensor.{vehicle}_moving` - Moving status (on if speed > 0.5 mph)
+
+**Test Moving Status**:
+1. When vehicle is parked, `moving` should be OFF
+2. When vehicle is driving, `moving` should be ON
+
+---
+
+### Test 12: Refresh Location Button
+
+**Objective**: Verify the refresh location button works
+
+**Steps**:
+1. Navigate to Settings → Devices & Services → LoJack → [Your Vehicle]
+2. Find the "Refresh location" button entity
+3. Click/press the button
+4. Check logs for confirmation
+
+**Expected Results**:
+- [ ] Button entity exists for each vehicle
+- [ ] Pressing button triggers API request for fresh location
+- [ ] Log shows "Fresh location requested" debug message
+- [ ] Location updates after refresh (may take a few minutes)
+
+---
+
+### Test 13: Reconfigure Flow
+
+**Objective**: Verify credentials can be updated via settings gear
+
+**Steps**:
+1. Navigate to Settings → Devices & Services → LoJack
+2. Click the settings gear icon (⚙️)
+3. Verify the reconfigure form appears
+4. Update password if needed
+5. Submit
+
+**Expected Results**:
+- [ ] Settings gear opens reconfigure form
+- [ ] Shows current username (editable)
+- [ ] Password field available
+- [ ] Successful update shows confirmation
+- [ ] Integration continues working with new credentials
+
+**Error Handling**:
+- [ ] Wrong password shows "Invalid authentication" error
+- [ ] Changing username to different account shows "account mismatch" error
+
+---
+
+### Test 14: Error Logging
 
 **Objective**: Verify appropriate logging behavior
 
@@ -254,7 +342,7 @@ Access Home Assistant at http://localhost:8123
 
 ---
 
-### Test 11: Multiple Vehicles
+### Test 15: Multiple Vehicles
 
 **Objective**: Verify multiple vehicles are handled correctly (if applicable)
 
@@ -273,7 +361,7 @@ Access Home Assistant at http://localhost:8123
 
 ---
 
-### Test 12: Map Integration
+### Test 16: Map Integration
 
 **Objective**: Verify vehicles appear correctly on Home Assistant map
 
@@ -360,15 +448,19 @@ Before submitting to core, ensure all tests pass:
 | Test 1: Initial Configuration | ☐ | |
 | Test 2: Invalid Credentials | ☐ | |
 | Test 3: Duplicate Prevention | ☐ | |
-| Test 4: Entity Attributes | ☐ | |
+| Test 4: Device Tracker Attributes | ☐ | |
 | Test 5: Location Updates | ☐ | |
 | Test 6: Device Registry | ☐ | |
 | Test 7: Integration Reload | ☐ | |
 | Test 8: Integration Removal | ☐ | |
 | Test 9: Reauthentication | ☐ | |
-| Test 10: Error Logging | ☐ | |
-| Test 11: Multiple Vehicles | ☐ | (if applicable) |
-| Test 12: Map Integration | ☐ | |
+| Test 10: Sensor Entities | ☐ | |
+| Test 11: Binary Sensor Entities | ☐ | |
+| Test 12: Refresh Location Button | ☐ | |
+| Test 13: Reconfigure Flow | ☐ | |
+| Test 14: Error Logging | ☐ | |
+| Test 15: Multiple Vehicles | ☐ | (if applicable) |
+| Test 16: Map Integration | ☐ | |
 | Automated Tests Pass | ☐ | |
 
 ---
@@ -385,4 +477,4 @@ If you encounter any issues during testing:
 
 ---
 
-*Last Updated: 2026-01-31*
+*Last Updated: 2026-02-05*
