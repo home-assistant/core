@@ -339,7 +339,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Volume level of entity specified in attributes or active child."""
         try:
             return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @property
