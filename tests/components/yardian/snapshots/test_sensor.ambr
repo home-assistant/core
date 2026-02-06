@@ -34,7 +34,7 @@
     'supported_features': 0,
     'translation_key': 'active_zone_count',
     'unique_id': 'yid123_active_zone_count',
-    'unit_of_measurement': 'Zones',
+    'unit_of_measurement': 'zones',
   })
 # ---
 # name: test_sensor_entities[sensor.yardian_smart_sprinkler_active_zones-state]
@@ -42,7 +42,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Yardian Smart Sprinkler Active zones',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Zones',
+      'unit_of_measurement': 'zones',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yardian_smart_sprinkler_active_zones',
