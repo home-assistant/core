@@ -338,7 +338,7 @@ def process_turn_on_params(  # noqa: C901
         preprocess_turn_on_alternatives(hass, params)
 
     if (not params or not light.is_on) or (params and ATTR_TRANSITION not in params):
-        profiles.apply_default(light.entity_id, light.is_on, params)
+        hass.data[DATA_PROFILES].apply_default(light.entity_id, light.is_on, params)
 
     legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
     supported_color_modes = light.supported_color_modes
