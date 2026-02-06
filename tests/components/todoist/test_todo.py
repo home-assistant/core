@@ -1,7 +1,9 @@
 """Unit tests for the Todoist todo platform."""
 
+from datetime import date, datetime
 from typing import Any
 from unittest.mock import AsyncMock
+from zoneinfo import ZoneInfo
 
 import pytest
 from todoist_api_python.models import Task
@@ -113,7 +115,7 @@ async def test_todo_item_state(
                     ),
                 )
             ],
-            {"description": "", "due_date": "2023-11-18"},
+            {"description": "", "due_date": date(2023, 11, 18)},
             {
                 "uid": "task-id-1",
                 "summary": "Soda",
@@ -138,7 +140,9 @@ async def test_todo_item_state(
             ],
             {
                 "description": "",
-                "due_datetime": "2023-11-18T06:30:00-06:00",
+                "due_datetime": datetime(
+                    2023, 11, 18, 6, 30, tzinfo=ZoneInfo("US/Central")
+                ),
             },
             {
                 "uid": "task-id-1",
@@ -333,7 +337,7 @@ async def test_update_todo_item_status(
             {
                 "task_id": "task-id-1",
                 "content": "Soda",
-                "due_date": "2023-11-18",
+                "due_date": date(2023, 11, 18),
                 "description": "",
             },
             {
@@ -361,7 +365,9 @@ async def test_update_todo_item_status(
             {
                 "task_id": "task-id-1",
                 "content": "Soda",
-                "due_datetime": "2023-11-18T06:30:00-06:00",
+                "due_datetime": datetime(
+                    2023, 11, 18, 6, 30, tzinfo=ZoneInfo("US/Central")
+                ),
                 "description": "",
             },
             {
@@ -455,7 +461,7 @@ async def test_update_todo_item_status(
                 "task_id": "task-id-1",
                 "content": "Soda",
                 "description": "6-pack",
-                "due_date": "2024-02-01",
+                "due_date": date(2024, 2, 1),
                 "due_string": "every day",
             },
             {
