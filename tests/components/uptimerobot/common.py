@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from unittest.mock import patch
 
@@ -77,7 +77,7 @@ UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
 UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor"
 
 
-class MockApiResponseKey(str, Enum):
+class MockApiResponseKey(StrEnum):
     """Mock API response key."""
 
     ACCOUNT = "account"
