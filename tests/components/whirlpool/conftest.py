@@ -177,8 +177,8 @@ def mock_oven_single_cavity_api():
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
-    mock_oven.get_oven_cavity_exists.side_effect = (
-        lambda cavity: cavity == oven.Cavity.Upper
+    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: (
+        cavity == oven.Cavity.Upper
     )
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
@@ -196,9 +196,12 @@ def mock_oven_dual_cavity_api():
     mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
     mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
-    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: cavity in (
-        oven.Cavity.Upper,
-        oven.Cavity.Lower,
+    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: (
+        cavity
+        in (
+            oven.Cavity.Upper,
+            oven.Cavity.Lower,
+        )
     )
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
