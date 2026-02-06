@@ -81,7 +81,7 @@ def mock_ghost_api() -> Generator[AsyncMock]:
             new=mock_api_class,
         ),
     ):
-        mock_api = AsyncMock()
+        mock_api = mock_api_class.return_value
         mock_api.api_url = API_URL
         mock_api.get_site.return_value = SITE_DATA
         mock_api.get_posts_count.return_value = POSTS_DATA
