@@ -343,13 +343,17 @@ async def test_occupancy_sensing_pir_thresholds(
 ) -> None:
     """Test PIR threshold entities for OccupancySensing cluster."""
     # PIRUnoccupiedToOccupiedThreshold - check actual entity created
-    state = hass.states.get("number.mock_occupancy_sensor_pir")
+    state = hass.states.get(
+        "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold"
+    )
     assert state
     assert state.state == "2"
 
     set_node_attribute(matter_node, 1, 1030, 0x12, 5)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("number.mock_occupancy_sensor_pir")
+    state = hass.states.get(
+        "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold"
+    )
     assert state
     assert state.state == "5"
 
@@ -358,7 +362,7 @@ async def test_occupancy_sensing_pir_thresholds(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_occupancy_sensor_pir",
+            "entity_id": "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold",
             "value": 3,
         },
         blocking=True,
@@ -382,13 +386,17 @@ async def test_occupancy_sensing_pir_delays(
 ) -> None:
     """Test PIR delay entities for OccupancySensing cluster."""
     # PIRUnoccupiedToOccupiedDelay - check actual entity created
-    state = hass.states.get("number.mock_occupancy_sensor_pir_2")
+    state = hass.states.get(
+        "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay"
+    )
     assert state
     assert state.state == "10"
 
     set_node_attribute(matter_node, 1, 1030, 0x11, 20)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("number.mock_occupancy_sensor_pir_2")
+    state = hass.states.get(
+        "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay"
+    )
     assert state
     assert state.state == "20"
 
@@ -397,7 +405,7 @@ async def test_occupancy_sensing_pir_delays(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_occupancy_sensor_pir_2",
+            "entity_id": "number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay",
             "value": 15,
         },
         blocking=True,
