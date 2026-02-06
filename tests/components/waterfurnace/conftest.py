@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from waterfurnace.waterfurnace import WFReading
+from waterfurnace.waterfurnace import WFGateway, WFReading
 
 from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -27,6 +27,13 @@ def mock_waterfurnace_client() -> Generator[Mock]:
     """Mock WaterFurnace client."""
     mock_client = Mock()
     mock_client.gwid = "TEST_GWID_12345"
+
+    gateway_data = {
+        "gwid": "TEST_GWID_12345",
+        "description": "Test WaterFurnace Device",
+        "awlabctypedesc": "Test ABC Type",
+    }
+    mock_client.devices = [WFGateway(gateway_data)]
 
     device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
     mock_client.read.return_value = device_data
