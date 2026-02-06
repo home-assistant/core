@@ -94,7 +94,6 @@ def mock_ghost_api() -> Generator[AsyncMock]:
         mock_api.get_comments_count.return_value = COMMENTS_COUNT
         mock_api.get_newsletters.return_value = NEWSLETTERS_DATA
         mock_api.close.return_value = None
-        mock_api_class.return_value = mock_api
         yield mock_api
 
 
