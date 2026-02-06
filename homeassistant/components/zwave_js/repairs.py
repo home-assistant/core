@@ -117,10 +117,10 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    if issue_id.split(".")[0] == "device_config_file_changed":
+    if issue_id.split(".", maxsplit=1)[0] == "device_config_file_changed":
         assert data
         return DeviceConfigFileChangedFlow(data)
-    if issue_id.split(".")[0] == "migrate_unique_id":
+    if issue_id.split(".", maxsplit=1)[0] == "migrate_unique_id":
         assert data
         return MigrateUniqueIDFlow(data)
     return ConfirmRepairFlow()
