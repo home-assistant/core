@@ -14,6 +14,7 @@ CONF_CHAT_MODEL = "chat_model"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_TEMPERATURE = "temperature"
 CONF_THINKING_BUDGET = "thinking_budget"
+CONF_THINKING_EFFORT = "thinking_effort"
 CONF_WEB_SEARCH = "web_search"
 CONF_WEB_SEARCH_USER_LOCATION = "user_location"
 CONF_WEB_SEARCH_MAX_USES = "web_search_max_uses"
@@ -29,6 +30,7 @@ DEFAULT = {
     CONF_MAX_TOKENS: 3000,
     CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: 0,
+    CONF_THINKING_EFFORT: "low",
     CONF_WEB_SEARCH: False,
     CONF_WEB_SEARCH_USER_LOCATION: False,
     CONF_WEB_SEARCH_MAX_USES: 5,
@@ -40,6 +42,18 @@ NON_THINKING_MODELS = [
     "claude-3-5",  # Both sonnet and haiku
     "claude-3-opus",
     "claude-3-haiku",
+]
+
+NON_ADAPTIVE_THINKING_MODELS = [
+    "claude-opus-4-5",
+    "claude-sonnet-4-5",
+    "claude-haiku-4-5",
+    "claude-opus-4-1",
+    "claude-opus-4-0",
+    "claude-opus-4-20250514",
+    "claude-sonnet-4-0",
+    "claude-sonnet-4-20250514",
+    "claude-3",
 ]
 
 WEB_SEARCH_UNSUPPORTED_MODELS = [
