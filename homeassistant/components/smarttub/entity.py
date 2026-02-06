@@ -17,6 +17,8 @@ from .helpers import get_spa_name
 class SmartTubEntity(CoordinatorEntity):
     """Base class for SmartTub entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, Any]],
@@ -36,9 +38,9 @@ class SmartTubEntity(CoordinatorEntity):
             identifiers={(DOMAIN, spa.id)},
             manufacturer=spa.brand,
             model=spa.model,
+            name=get_spa_name(spa),
         )
-        spa_name = get_spa_name(self.spa)
-        self._attr_name = f"{spa_name} {entity_name}"
+        self._attr_name = entity_name
 
     @property
     def spa_status(self) -> SpaState:
@@ -77,12 +79,13 @@ class SmartTubExternalSensorBase(SmartTubEntity):
         sensor: SpaSensor,
     ) -> None:
         """Initialize the external sensor entity."""
+        super().__init__(coordinator, spa, self._human_readable_name(sensor))
         self.sensor_address = sensor.address
         self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
-        super().__init__(coordinator, spa, self._human_readable_name(sensor))
 
     @staticmethod
     def _human_readable_name(sensor: SpaSensor) -> str:
+        """Return a human-readable name for the sensor."""
         return " ".join(
             word.capitalize() for word in sensor.name.strip("{}").split("-")
         )

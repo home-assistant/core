@@ -13,7 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import API_TIMEOUT, ATTR_PUMPS
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
-from .helpers import get_spa_name
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -54,12 +55,11 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return a name for this pump entity."""
-        spa_name = get_spa_name(self.spa)
         if self.pump_type == SpaPump.PumpType.CIRCULATION:
-            return f"{spa_name} Circulation Pump"
+            return "Circulation Pump"
         if self.pump_type == SpaPump.PumpType.JET:
-            return f"{spa_name} Jet {self.pump_id}"
-        return f"{spa_name} pump {self.pump_id}"
+            return f"Jet {self.pump_id}"
+        return f"Pump {self.pump_id}"
 
     @property
     def is_on(self) -> bool:
