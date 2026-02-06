@@ -48,6 +48,7 @@ TUYA_HVAC_TO_HA = {
     "heat": HVACMode.HEAT,
     "hot": HVACMode.HEAT,
     "manual": HVACMode.HEAT_COOL,
+    "off": HVACMode.OFF,
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
@@ -442,7 +443,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             for mode in hvac_mode_wrapper.options:
-                self._attr_hvac_modes.append(HVACMode(mode))
+                if mode != HVACMode.OFF:
+                    # OFF is always added first
+                    self._attr_hvac_modes.append(HVACMode(mode))
 
         elif switch_wrapper:
             self._attr_hvac_modes = [

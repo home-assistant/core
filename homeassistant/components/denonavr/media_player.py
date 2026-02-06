@@ -17,6 +17,7 @@ from denonavr.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STOPPED,
 )
 from denonavr.exceptions import (
     AvrCommandError,
@@ -103,6 +104,7 @@ DENON_STATE_MAPPING = {
     STATE_OFF: MediaPlayerState.OFF,
     STATE_PLAYING: MediaPlayerState.PLAYING,
     STATE_PAUSED: MediaPlayerState.PAUSED,
+    STATE_STOPPED: MediaPlayerState.IDLE,
 }
 
 
