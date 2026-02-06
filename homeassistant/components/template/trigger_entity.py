@@ -69,6 +69,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        **kwargs,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
@@ -84,7 +85,15 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            Flag to render the template value as a complex result.
         """
+        if kwargs.get("render_complex", False):
+            if self.add_template(option, attribute, validator, on_update):
+                self._to_render_complex.append(option)
+                self._parse_result.add(option)
+            return
+
         self.setup_state_template(option, attribute, validator, on_update)
 
     @property
