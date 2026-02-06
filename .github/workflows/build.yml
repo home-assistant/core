@@ -28,4 +28,4 @@ jobs:
         python -m twine upload --repository github dist/*
       env:
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        TWINE_PASSWORD: ${{ secrets.GHUB_TOKEN }}
