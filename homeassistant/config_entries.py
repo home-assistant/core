@@ -290,8 +290,8 @@ class ConfigFlowContext(FlowContext, total=False):
     alternative_domain: str
     configuration_url: str
     confirm_only: bool
+    dismiss_protected: bool
     discovery_key: DiscoveryKey
-    dismiss_protected_sources: set[str]
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
@@ -1511,6 +1511,21 @@ class ConfigEntriesFlowManager(
                 subscription("added", flow.flow_id)
 
         return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Continue a configuration flow.
+
+        Mark the flow as dismiss protected since the user has interacted
+        with it. This prevents discovery sources from aborting the flow
+        while the user is actively configuring it.
+        """
+        if (flow := self._progress.get(flow_id)) and flow.context.get(
+            "source"
+        ) in DISCOVERY_SOURCES:
+            flow.context["dismiss_protected"] = True
+        return await super()._async_configure(flow_id, user_input)
 
     async def _async_init(
         self,
@@ -3432,27 +3447,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.hass.config_entries.async_get_known_entry(
             self._reconfigure_entry_id
         )
-
-    @callback
-    def async_set_dismiss_protected(self, *sources: str) -> None:
-        """Mark this flow as protected from dismissal by specific discovery sources.
-
-        When a device disappears from the network (e.g., a zeroconf service
-        removal or an SSDP byebye advertisement), the config flow for that
-        device is normally dismissed. Integrations can call this method to
-        protect the current flow from being dismissed by one or more discovery
-        sources so that it is not automatically aborted while the user is
-        interacting with it.
-
-        This method updates the flow context and is intended to be called from
-        within a config flow step implementation.
-
-        Args:
-            *sources: One or more discovery source identifiers (for example,
-                ``SOURCE_SSDP`` or ``SOURCE_ZEROCONF``) for which this flow
-                should be protected from automatic dismissal.
-        """
-        self.context.setdefault("dismiss_protected_sources", set()).update(sources)
 
 
 class _ConfigSubFlowManager:

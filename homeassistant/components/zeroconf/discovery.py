@@ -15,7 +15,6 @@ from zeroconf import BadTypeInNameException, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -269,9 +268,7 @@ class ZeroconfDiscovery:
             _ZeroconfServiceInfo,
             lambda service_info: bool(service_info.name == name),
         ):
-            if (context := flow.get("context")) and SOURCE_ZEROCONF in context.get(
-                "dismiss_protected_sources", ()
-            ):
+            if flow.get("context", {}).get("dismiss_protected"):
                 continue
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 

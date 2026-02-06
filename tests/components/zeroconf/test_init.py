@@ -1463,12 +1463,10 @@ async def test_zeroconf_removed_dismiss_protected(hass: HomeAssistant) -> None:
                 {
                     "flow_id": "protected_flow_id",
                     "context": {
-                        "dismiss_protected_sources": {
-                            config_entries.SOURCE_ZEROCONF,
-                        },
+                        "dismiss_protected": True,
                     },
                 },
-                {"flow_id": "unprotected_flow_id"},
+                {"flow_id": "unprotected_flow_id", "context": {}},
             ],
         ),
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
