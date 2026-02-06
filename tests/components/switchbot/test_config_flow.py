@@ -1610,11 +1610,11 @@ async def test_options_flow_meter_pro_co2(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DATETIME_SYNC] is False
+    assert result["data"][CONF_DATETIME_SYNC] is True
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-    # Test enabling datetime_sync.
+    # Test disabling datetime_sync.
 
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -1625,14 +1625,14 @@ async def test_options_flow_meter_pro_co2(
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_DATETIME_SYNC: True,
+                CONF_DATETIME_SYNC: False,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DATETIME_SYNC] is True
+    assert result["data"][CONF_DATETIME_SYNC] is False
 
     assert len(mock_setup_entry.mock_calls) == 0
 
-    assert entry.options[CONF_DATETIME_SYNC] is True
+    assert entry.options[CONF_DATETIME_SYNC] is False
