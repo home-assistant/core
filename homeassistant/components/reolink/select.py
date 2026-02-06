@@ -105,10 +105,8 @@ SELECT_ENTITIES = (
         get_options=[mode.name for mode in SpotlightEventModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodlight_event"),
         value=lambda api, ch: SpotlightEventModeEnum(api.whiteled_event_mode(ch)).name,
-        method=lambda api, ch, name: (
-            api.baichuan.set_floodlight(
-                ch, event_mode=SpotlightEventModeEnum[name].value
-            )
+        method=lambda api, ch, name: api.baichuan.set_floodlight(
+            ch, event_mode=SpotlightEventModeEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -134,8 +132,8 @@ SELECT_ENTITIES = (
         translation_key="play_quick_reply_message",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
-        method=lambda api, ch, mess: (
-            api.play_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.play_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -146,8 +144,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
-        method=lambda api, ch, mess: (
-            api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.set_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -158,8 +156,8 @@ SELECT_ENTITIES = (
         get_options=[mode.name for mode in HubToneEnum],
         supported=lambda api, ch: api.supported(ch, "hub_audio"),
         value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, alarm_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -172,8 +170,8 @@ SELECT_ENTITIES = (
             api.supported(ch, "hub_audio") and api.is_doorbell(ch)
         ),
         value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, visitor_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -194,8 +192,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: api.doorbell_led_list(ch),
         supported=lambda api, ch: api.supported(ch, "doorbell_led"),
         value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_status_led(ch, StatusLedEnum[name].value, doorbell=True)
+        method=lambda api, ch, name: api.set_status_led(
+            ch, StatusLedEnum[name].value, doorbell=True
         ),
     ),
     ReolinkSelectEntityDescription(

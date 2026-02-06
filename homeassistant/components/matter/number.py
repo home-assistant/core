@@ -315,9 +315,9 @@ DISCOVERY_SCHEMAS = [
             native_min_value=0.5,
             native_step=0.5,
             device_to_ha=(
-                lambda x: None
-                if x is None
-                else min(x, 200) / 2  # Matter range (1-200, capped at 200)
+                lambda x: (
+                    None if x is None else min(x, 200) / 2
+                )  # Matter range (1-200, capped at 200)
             ),
             ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
@@ -381,8 +381,10 @@ DISCOVERY_SCHEMAS = [
             key="MicrowaveOvenControlCookTime",
             translation_key="cook_time",
             device_class=NumberDeviceClass.DURATION,
-            command=lambda value: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                cookTime=int(value)
+            command=lambda value: (
+                clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                    cookTime=int(value)
+                )
             ),
             native_min_value=1,  # 1 second minimum cook time
             native_step=1,  # 1 second

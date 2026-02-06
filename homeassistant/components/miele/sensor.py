@@ -330,9 +330,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             key="energy_forecast",
             translation_key="energy_forecast",
             value_fn=(
-                lambda value: value.energy_forecast * 100
-                if value.energy_forecast is not None
-                else None
+                lambda value: (
+                    value.energy_forecast * 100
+                    if value.energy_forecast is not None
+                    else None
+                )
             ),
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -365,9 +367,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             key="water_forecast",
             translation_key="water_forecast",
             value_fn=(
-                lambda value: value.water_forecast * 100
-                if value.water_forecast is not None
-                else None
+                lambda value: (
+                    value.water_forecast * 100
+                    if value.water_forecast is not None
+                    else None
+                )
             ),
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -661,8 +665,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
                 device_class=SensorDeviceClass.ENUM,
                 options=sorted(PlatePowerStep.keys()),
                 value_fn=lambda value: None,
-                unique_id_fn=lambda device_id,
-                description: f"{device_id}-{description.key}-{description.zone}",
+                unique_id_fn=lambda device_id, description: (
+                    f"{device_id}-{description.key}-{description.zone}"
+                ),
             ),
         )
         for i in range(1, 7)
@@ -676,9 +681,9 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
         description=MieleSensorDescription(
             key="state_drying_step",
             translation_key="drying_step",
-            value_fn=lambda value: StateDryingStep(
-                cast(int, value.state_drying_step)
-            ).name,
+            value_fn=lambda value: (
+                StateDryingStep(cast(int, value.state_drying_step)).name
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=SensorDeviceClass.ENUM,
             options=sorted(StateDryingStep.keys()),

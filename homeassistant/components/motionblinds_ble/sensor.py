@@ -76,8 +76,9 @@ SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
         options=["calibrated", "uncalibrated", "calibrating"],
         register_callback_func=lambda device: device.register_calibration_callback,
         value_func=lambda value: value.value if value else None,
-        is_supported=lambda device: device.blind_type
-        in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL},
+        is_supported=lambda device: (
+            device.blind_type in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}
+        ),
     ),
     MotionblindsBLESensorEntityDescription[int](
         key=ATTR_SIGNAL_STRENGTH,

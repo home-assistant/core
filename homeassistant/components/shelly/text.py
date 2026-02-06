@@ -43,8 +43,8 @@ RPC_TEXT_ENTITIES: Final = {
     "text_generic": RpcTextDescription(
         key="text",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
-            config, key, TEXT_PLATFORM
+        removal_condition=lambda config, _status, key: (
+            not is_view_for_platform(config, key, TEXT_PLATFORM)
         ),
         role=ROLE_GENERIC,
     ),

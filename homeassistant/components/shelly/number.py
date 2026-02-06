@@ -209,8 +209,8 @@ RPC_NUMBERS: Final = {
     "number_generic": RpcNumberDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, NUMBER_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, NUMBER_PLATFORM)
         ),
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -290,8 +290,9 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
         method="blu_trv_set_valve_position",
-        removal_condition=lambda config, _, key: config[key].get("enable", True)
-        is True,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", True) is True
+        ),
         entity_class=RpcBluTrvNumber,
     ),
     "left_slot_intensity": RpcNumberDescription(
@@ -306,8 +307,10 @@ RPC_NUMBERS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         method="cury_set",
         slot="left",
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
         entity_class=RpcCuryIntensityNumber,
     ),
     "right_slot_intensity": RpcNumberDescription(
@@ -322,8 +325,10 @@ RPC_NUMBERS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         method="cury_set",
         slot="right",
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
         entity_class=RpcCuryIntensityNumber,
     ),
 }

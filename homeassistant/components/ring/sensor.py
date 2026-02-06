@@ -167,28 +167,36 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         key="last_activity",
         translation_key="last_activity",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, None))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (last_event_attrs := _get_last_event_attrs(device.last_history, None))
-        else None,
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (last_event := _get_last_event(device.last_history, None))
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (last_event_attrs := _get_last_event_attrs(device.last_history, None))
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="last_ding",
         translation_key="last_ding",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (
-            last_event_attrs := _get_last_event_attrs(
-                device.last_history, RingEventKind.DING
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (
+                last_event_attrs := _get_last_event_attrs(
+                    device.last_history, RingEventKind.DING
+                )
             )
-        )
-        else None,
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
@@ -198,16 +206,22 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         key="last_motion",
         translation_key="last_motion",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, RingEventKind.MOTION))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (
-            last_event_attrs := _get_last_event_attrs(
-                device.last_history, RingEventKind.MOTION
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (
+                last_event := _get_last_event(device.last_history, RingEventKind.MOTION)
             )
-        )
-        else None,
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (
+                last_event_attrs := _get_last_event_attrs(
+                    device.last_history, RingEventKind.MOTION
+                )
+            )
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
