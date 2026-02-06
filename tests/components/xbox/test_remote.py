@@ -1,8 +1,10 @@
 """Test the Xbox remote platform."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
+from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.smartglass.models import InputKeyType
 from syrupy.assertion import SnapshotAssertion
@@ -21,9 +23,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import Mock, MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -209,3 +212,125 @@ async def test_turn_off(
     )
 
     xbox_live_client.smartglass.turn_off.assert_called_once_with("HIJKLMN")
+
+
+@pytest.mark.parametrize(
+    ("command", "call_method"),
+    [
+        ("Play", "play"),
+        ("Nexus", "press_button"),
+        ("Hello world", "insert_text"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (TimeoutException(""), "timeout_exception"),
+        (RequestError("", request=Mock()), "request_exception"),
+        (HTTPStatusError("", request=Mock(), response=Mock()), "request_exception"),
+    ],
+)
+async def test_send_command_exceptions(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    command: str,
+    call_method: str,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test remote send command exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    getattr(xbox_live_client.smartglass, call_method).side_effect = exception
+    with pytest.raises(
+        HomeAssistantError, check=lambda e: e.translation_key == translation_key
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_SEND_COMMAND,
+            {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
+            target={ATTR_ENTITY_ID: "remote.xone"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (TimeoutException(""), "timeout_exception"),
+        (RequestError("", request=Mock()), "request_exception"),
+        (HTTPStatusError("", request=Mock(), response=Mock()), "request_exception"),
+        (
+            HTTPStatusError(
+                "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
+            ),
+            "turn_on_failed",
+        ),
+    ],
+)
+async def test_turn_on_exceptions(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test remote turn on exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.smartglass.wake_up.side_effect = exception
+    with pytest.raises(
+        HomeAssistantError, check=lambda e: e.translation_key == translation_key
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_TURN_ON,
+            target={ATTR_ENTITY_ID: "remote.xone"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (TimeoutException(""), "timeout_exception"),
+        (RequestError("", request=Mock()), "request_exception"),
+        (HTTPStatusError("", request=Mock(), response=Mock()), "request_exception"),
+    ],
+)
+async def test_turn_off_exceptions(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test remote turn off exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.smartglass.turn_off.side_effect = exception
+    with pytest.raises(
+        HomeAssistantError, check=lambda e: e.translation_key == translation_key
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            SERVICE_TURN_OFF,
+            target={ATTR_ENTITY_ID: "remote.xone"},
+            blocking=True,
+        )
