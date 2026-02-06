@@ -12,6 +12,7 @@ from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, Lo
 from homeassistant.components.matter.const import (
     ATTR_CODE_SLOT,
     ATTR_MAX_USERS,
+    ATTR_PIN_CODE,
     ATTR_SUPPORTS_USER_MGMT,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
@@ -811,3 +812,756 @@ async def test_no_credential_slot_raises_service_validation(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_on_matter_node_event_filters_non_matching_events(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that node events for different endpoints/clusters are filtered."""
+    state = hass.states.get("lock.mock_door_lock")
+    assert state is not None
+    original_changed_by = state.attributes.get(ATTR_CHANGED_BY)
+
+    # Fire event for different endpoint - should be ignored
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=99,  # Different endpoint
+            cluster_id=257,
+            event_id=2,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 7},  # Remote source
+        ),
+    )
+
+    # changed_by should not have changed
+    state = hass.states.get("lock.mock_door_lock")
+    assert state.attributes.get(ATTR_CHANGED_BY) == original_changed_by
+
+    # Fire event for different cluster - should also be ignored
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=999,  # Different cluster
+            event_id=2,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 7},
+        ),
+    )
+
+    state = hass.states.get("lock.mock_door_lock")
+    assert state.attributes.get(ATTR_CHANGED_BY) == original_changed_by
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_usercode_with_non_digit_pin(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_usercode rejects non-digit PIN."""
+    with pytest.raises(ServiceValidationError, match="PIN code must be"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USERCODE,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_CODE_SLOT: 1,
+                ATTR_USERCODE: "12AB34",  # Contains non-digits
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_with_pin_and_new_user(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user service with PIN for new user."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser: find empty slot (index 1)
+            None,  # SetUser: create user
+            {"credentials": None},  # _get_existing_pin_credential_index
+            {"credentialExists": False},  # find_available_credential_slot
+            {"status": 0, "nextCredentialIndex": 2},  # SetCredential
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_NAME: "Test User",
+            ATTR_PIN_CODE: "12345678",
+        },
+        blocking=True,
+    )
+
+    # Should have called SetUser and SetCredential
+    assert matter_client.send_device_command.call_count >= 4
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_update_existing(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user service updates existing user."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # GetUser: existing user
+                "userStatus": 1,
+                "userName": "Old Name",
+                "userUniqueID": 123,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+            },
+            None,  # SetUser: modify
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "New Name",
+        },
+        blocking=True,
+    )
+
+    # Should have called GetUser then SetUser
+    assert matter_client.send_device_command.call_count == 2
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_no_available_slots(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user when no user slots are available."""
+    # All user slots are occupied
+    matter_client.send_device_command = AsyncMock(
+        return_value={"userStatus": 1}  # All slots occupied
+    )
+
+    with pytest.raises(ServiceValidationError, match="No available user slots"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_NAME: "Test User",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_empty_slot_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user errors when updating non-existent user."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={"userStatus": None}  # User doesn't exist
+    )
+
+    with pytest.raises(ServiceValidationError, match="is empty"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_INDEX: 5,
+                ATTR_USER_NAME: "Test User",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR}])
+async def test_set_lock_user_pin_not_supported(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user with PIN on lock without PIN support."""
+    with pytest.raises(ServiceValidationError, match="does not support PIN"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_NAME: "Test User",
+                ATTR_PIN_CODE: "12345678",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_invalid_pin(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user with invalid PIN code."""
+    with pytest.raises(ServiceValidationError, match="PIN code must be"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_NAME: "Test User",
+                ATTR_PIN_CODE: "12",  # Too short
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_clear_lock_user_clears_credentials_first(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_lock_user clears credentials before clearing user."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # clear_user_credentials: GetUser returns user with credentials
+            {
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": 1, "credentialIndex": 1},
+                    {"credentialType": 1, "credentialIndex": 2},
+                ],
+            },
+            None,  # ClearCredential for first
+            None,  # ClearCredential for second
+            None,  # ClearUser
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAR_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+        },
+        blocking=True,
+    )
+
+    # GetUser + 2 ClearCredential + ClearUser
+    assert matter_client.send_device_command.call_count == 4
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_iterates_with_next_index(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users uses nextUserIndex for efficient iteration."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # First user at index 1
+                "userIndex": 1,
+                "userStatus": 1,
+                "userName": "User 1",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": 5,  # Next user at index 5
+            },
+            {  # Second user at index 5
+                "userIndex": 5,
+                "userStatus": 1,
+                "userName": "User 5",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": None,  # No more users
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LOCK_USERS,
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # Should have 2 users
+    assert result["lock.mock_door_lock"]["total_users"] == 2
+    # Should only need 2 calls (using nextUserIndex)
+    assert matter_client.send_device_command.call_count == 2
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/257/65532": _FEATURE_USR_PIN,
+            "1/257/51": True,  # RequirePINforRemoteOperation (attribute 51)
+            "1/257/24": 4,  # MinPINCodeLength
+            "1/257/23": 8,  # MaxPINCodeLength
+        }
+    ],
+)
+async def test_code_format_property_with_pin_required(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test code_format property returns regex when PIN is required."""
+    state = hass.states.get("lock.mock_door_lock")
+    assert state is not None
+    # code_format should be set when RequirePINforRemoteOperation is True
+    # The format should be a regex like ^\d{4,8}$
+    code_format = state.attributes.get("code_format")
+    assert code_format is not None
+    assert "\\d" in code_format
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_clear_user_credentials_no_credentials(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_lock_usercode when user has no credentials."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": 1},  # GetUser: user exists
+            {"userStatus": 1, "credentials": None},  # clear_user_credentials: no creds
+            None,  # ClearUser
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAR_LOCK_USERCODE,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_CODE_SLOT: 1,
+        },
+        blocking=True,
+    )
+
+    # GetUser + GetUser (clear_user_credentials) + ClearUser = 3 calls
+    assert matter_client.send_device_command.call_count == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_clear_pin(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user clearing PIN by passing null pin_code."""
+    # User exists with a PIN, we pass pin_code=None to clear it
+    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # GetUser: existing user
+                "userStatus": 1,
+                "userName": "Test User",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify)
+            {  # GetUser for _clear_pin_credentials_for_user
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": pin_cred_type, "credentialIndex": 1},
+                ],
+            },
+            None,  # ClearCredential
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "Test User",
+            ATTR_PIN_CODE: None,  # Clear PIN
+        },
+        blocking=True,
+    )
+
+    # Verify ClearCredential was called
+    calls = matter_client.send_device_command.call_args_list
+    assert len(calls) == 4
+    # Last call before ClearUser should be ClearCredential
+    clear_call = calls[3]
+    assert "ClearCredential" in str(clear_call)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_clear_pin_no_existing_credentials(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user clearing PIN when user has no credentials."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # GetUser: existing user
+                "userStatus": 1,
+                "userName": "Test User",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify)
+            {  # GetUser for _clear_pin_credentials_for_user
+                "userStatus": 1,
+                "credentials": None,  # No credentials
+            },
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "Test User",
+            ATTR_PIN_CODE: None,  # Clear PIN
+        },
+        blocking=True,
+    )
+
+    # Only 3 calls - no ClearCredential since there are no credentials
+    assert matter_client.send_device_command.call_count == 3
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_update_pin(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user updating PIN for existing user with PIN."""
+    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # GetUser: existing user
+                "userStatus": 1,
+                "userName": "Test User",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify)
+            {  # GetUser for _get_existing_pin_credential_index
+                "credentials": [
+                    {"credentialType": pin_cred_type, "credentialIndex": 2},
+                ],
+            },
+            {"status": 0, "nextCredentialIndex": 3},  # SetCredential (modify)
+        ]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "Test User",
+            ATTR_PIN_CODE: "12345678",  # New PIN
+        },
+        blocking=True,
+    )
+
+    # Should use kModify for existing credential
+    calls = matter_client.send_device_command.call_args_list
+    assert len(calls) == 4
+    # SetCredential call should be with kModify operation
+    set_cred_call = calls[3]
+    assert "SetCredential" in str(set_cred_call)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_rollback_on_credential_set_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user rolls back new user on SetCredential failure."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser: find empty slot (index 1)
+            None,  # SetUser: create user
+            {"credentials": None},  # _get_existing_pin_credential_index
+            {"credentialExists": False},  # find_available_credential_slot
+            {"status": 2, "nextCredentialIndex": None},  # SetCredential: FAILURE
+            None,  # ClearUser (rollback)
+        ]
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_NAME: "New User",
+                ATTR_PIN_CODE: "12345678",
+            },
+            blocking=True,
+        )
+
+    # Verify ClearUser was called for rollback
+    calls = matter_client.send_device_command.call_args_list
+    assert len(calls) == 6
+    last_call = calls[5]
+    assert "ClearUser" in str(last_call)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_set_lock_user_rollback_on_no_credential_slot(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user rolls back new user when no credential slots available."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser: find empty slot (index 1)
+            None,  # SetUser: create user
+            {"credentials": None},  # _get_existing_pin_credential_index
+            # All credential slots taken (max_pin_slots=10 from fixture)
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            {"credentialExists": True},
+            None,  # ClearUser (rollback)
+        ]
+    )
+
+    with pytest.raises(ServiceValidationError, match="No available credential slots"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USER,
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_USER_NAME: "New User",
+                ATTR_PIN_CODE: "12345678",
+            },
+            blocking=True,
+        )
+
+    # Verify ClearUser was called for rollback
+    calls = matter_client.send_device_command.call_args_list
+    # Last call should be ClearUser
+    last_call = calls[-1]
+    assert "ClearUser" in str(last_call)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR}])
+async def test_set_lock_user_clear_pin_no_pin_feature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_lock_user clearing PIN when lock has no PIN feature - no-op."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # GetUser: existing user
+                "userStatus": 1,
+                "userName": "Test User",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify)
+        ]
+    )
+
+    # This should not raise even though pin_code=None passed
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_LOCK_USER,
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "Test User",
+            ATTR_PIN_CODE: None,  # Clear PIN - but no PIN feature, so no-op
+        },
+        blocking=True,
+    )
+
+    # Only 2 calls - GetUser + SetUser, no credential operations
+    assert matter_client.send_device_command.call_count == 2
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_info_with_schedule_features(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_info returns schedule support info."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LOCK_INFO,
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result is not None
+    # Result is keyed by entity_id
+    lock_info = result["lock.mock_door_lock"]
+    # Check schedule support fields are present
+    assert "supports_week_day_schedules" in lock_info
+    assert "supports_year_day_schedules" in lock_info
+    assert "supports_holiday_schedules" in lock_info
+    assert "max_week_day_schedules_per_user" in lock_info
+    assert "max_year_day_schedules_per_user" in lock_info
+    assert "max_holiday_schedules" in lock_info
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_next_user_index_loop_prevention(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users handles nextUserIndex <= current to prevent loops."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # User at index 1
+                "userIndex": 1,
+                "userStatus": 1,
+                "userName": "User 1",
+                "userUniqueID": None,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": None,
+                "nextUserIndex": 1,  # Same as current - should break loop
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LOCK_USERS,
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result is not None
+    # Result is keyed by entity_id
+    lock_users = result["lock.mock_door_lock"]
+    assert lock_users["total_users"] == 1
+    # Should have stopped after first user due to nextUserIndex <= current
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_get_lock_users_with_credentials(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_users returns credential info for users."""
+    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {  # User with credentials
+                "userIndex": 1,
+                "userStatus": 1,
+                "userName": "User With PIN",
+                "userUniqueID": 123,
+                "userType": 0,
+                "credentialRule": 0,
+                "credentials": [
+                    {"credentialType": pin_cred_type, "credentialIndex": 1},
+                    {"credentialType": pin_cred_type, "credentialIndex": 2},
+                ],
+                "nextUserIndex": None,
+            },
+        ]
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LOCK_USERS,
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result is not None
+    # Result is keyed by entity_id
+    lock_users = result["lock.mock_door_lock"]
+    assert lock_users["total_users"] == 1
+    user = lock_users["users"][0]
+    assert len(user["credentials"]) == 2
+    assert user["credentials"][0]["type"] == "pin"
+    assert user["credentials"][0]["index"] == 1
