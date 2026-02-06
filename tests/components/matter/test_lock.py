@@ -283,7 +283,7 @@ async def test_lock_with_unbolt(
     assert state.state == LockState.OPEN
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_operation_updates_changed_by(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -315,7 +315,7 @@ async def test_lock_operation_updates_changed_by(
 # --- Entity service tests ---
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_set_lock_usercode(
     hass: HomeAssistant,
@@ -350,7 +350,7 @@ async def test_set_lock_usercode(
     assert matter_client.send_device_command.call_count == 5
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_set_lock_usercode_invalid_pin(
     hass: HomeAssistant,
@@ -371,7 +371,7 @@ async def test_set_lock_usercode_invalid_pin(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_set_lock_usercode_not_supported(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -392,7 +392,7 @@ async def test_set_lock_usercode_not_supported(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_set_lock_usercode_existing_user(
     hass: HomeAssistant,
@@ -430,7 +430,7 @@ async def test_set_lock_usercode_existing_user(
     assert matter_client.send_device_command.call_count == 3
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_clear_lock_usercode(
     hass: HomeAssistant,
@@ -467,7 +467,7 @@ async def test_clear_lock_usercode(
     assert matter_client.send_device_command.call_count == 4
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_clear_lock_usercode_not_found(
     hass: HomeAssistant,
@@ -489,7 +489,7 @@ async def test_clear_lock_usercode_not_found(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_set_lock_user_service(
     hass: HomeAssistant,
@@ -517,7 +517,7 @@ async def test_set_lock_user_service(
     assert matter_client.send_device_command.call_count == 2
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_clear_lock_user_service(
     hass: HomeAssistant,
@@ -546,7 +546,7 @@ async def test_clear_lock_user_service(
     assert matter_client.send_device_command.call_count == 2
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_get_lock_info_service(
     hass: HomeAssistant,
@@ -569,7 +569,7 @@ async def test_get_lock_info_service(
     assert entity_result[ATTR_MAX_USERS] == 10
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
 async def test_get_lock_users_service(
     hass: HomeAssistant,
@@ -606,7 +606,7 @@ async def test_get_lock_users_service(
     assert entity_result["users"][0][ATTR_USER_NAME] == "Alice"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_service_on_lock_without_user_management(
     hass: HomeAssistant,
     matter_client: MagicMock,
