@@ -7,7 +7,6 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
 import pytest
 
-from homeassistant.components.splunk import DATA_FILTER
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
@@ -110,15 +109,11 @@ async def test_yaml_import_without_filter(
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
 
-    # Verify entity filter is stored in hass.data (empty filter for no YAML filter)
-    assert DATA_FILTER in hass.data
-    assert hass.data[DATA_FILTER].empty_filter
-
 
 async def test_yaml_with_filter(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test YAML configuration with filter stores filter and triggers import."""
+    """Test YAML configuration with filter triggers import."""
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -136,32 +131,18 @@ async def test_yaml_with_filter(
     )
     await hass.async_block_till_done()
 
-    # Verify import flow was triggered (now imports even with filter)
+    # Verify import flow was triggered
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
-
-    # Verify entity filter is stored in hass.data
-    assert DATA_FILTER in hass.data
-    entity_filter = hass.data[DATA_FILTER]
-    # Filter should not be empty
-    assert not entity_filter.empty_filter
-    # Filter should include sensor entities
-    assert entity_filter("sensor.test")
-    # Filter should exclude non-sensor entities
-    assert not entity_filter("light.test")
 
 
 async def test_setup_without_yaml(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
-    """Test setup without YAML stores empty filter."""
+    """Test setup without YAML succeeds."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-
-    # Verify empty filter is stored in hass.data
-    assert DATA_FILTER in hass.data
-    assert hass.data[DATA_FILTER].empty_filter
 
 
 async def test_event_listener_with_filter(
@@ -298,12 +279,6 @@ async def test_yaml_filter_only_no_deprecation_issue(
     # Verify no config entry was created (no import)
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 0
-
-    # Verify entity filter is stored in hass.data
-    assert DATA_FILTER in hass.data
-    entity_filter = hass.data[DATA_FILTER]
-    assert not entity_filter.empty_filter
-    assert entity_filter("sensor.test")
 
     # Verify no deprecation issue was created
     issue_registry = ir.async_get(hass)
