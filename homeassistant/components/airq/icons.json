@@ -13,6 +13,15 @@
       "performance_index": {
         "default": "mdi:head-check"
       },
+      "r32": {
+        "default": "mdi:hvac"
+      },
+      "r454b": {
+        "default": "mdi:hvac"
+      },
+      "r454c": {
+        "default": "mdi:hvac"
+      },
       "radon": {
         "default": "mdi:radioactive"
       },

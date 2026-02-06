@@ -106,6 +106,7 @@ class FolderSensor(SensorEntity):
         "needTotalItems": "need_total_items",
         "pullErrors": "pull_errors",
         "state": "state",
+        "stateChanged": "state_changed",
     }
 
     def __init__(
@@ -262,7 +263,6 @@ class FolderSensor(SensorEntity):
 
     def _filter_state(self, state: dict[str, Any]) -> dict[str, Any]:
         """Filter and map state attributes."""
-        # Select only needed state attributes and map their names
         filtered_state: dict[str, Any] = {
             self.STATE_ATTRIBUTES[key]: value
             for key, value in state.items()
@@ -541,4 +541,4 @@ class DeviceSensor(SensorEntity):
             if key in self.STATE_ATTRIBUTES:
                 state[key] = value
 
-        return state
+        return filtered_state
