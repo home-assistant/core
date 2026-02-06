@@ -278,7 +278,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 y = float(values["color"]["y"])
                 self._attr_color_mode = ColorMode.XY
                 self._attr_xy_color = (x, y)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             _LOGGER.warning(
                 "Invalid or incomplete color value '%s' received for entity %s",
                 values,
@@ -316,7 +316,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             except KeyError:
                 pass
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning(
                     "Invalid brightness value '%s' received for entity %s",
                     values["brightness"],

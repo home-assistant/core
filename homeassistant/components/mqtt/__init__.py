@@ -560,7 +560,7 @@ async def websocket_subscribe(
             payload = cast(bytes, mqttmsg.payload).decode(
                 DEFAULT_ENCODING
             )  # not str because encoding is set to None
-        except (AttributeError, UnicodeDecodeError):
+        except AttributeError, UnicodeDecodeError:
             # Convert non UTF-8 payload to a string presentation
             payload = str(mqttmsg.payload)
 
