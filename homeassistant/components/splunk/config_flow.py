@@ -54,7 +54,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+                    vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_SSL, default=False): bool,
                     vol.Optional(CONF_VERIFY_SSL, default=True): bool,
