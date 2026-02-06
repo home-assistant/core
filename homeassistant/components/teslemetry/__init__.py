@@ -190,9 +190,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     manual=True,
                 )
 
-            remove_listener = stream.async_add_listener(
-                create_handle_vehicle_stream(vin, coordinator),
-                {"vin": vin},
+            entry.async_on_unload(
+                stream.async_add_listener(
+                    create_handle_vehicle_stream(vin, coordinator),
+                    {"vin": vin},
+                )
             )
             stream_vehicle = stream.get_vehicle(vin)
             poll = vehicle_metadata[vin].get("polling", False)
@@ -208,7 +210,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware,
                     device=device,
-                    remove_listener=remove_listener,
                 )
             )
 
@@ -317,6 +318,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if stream:
+        entry.async_on_unload(stream.close)
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
@@ -324,14 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for vehicle in entry.runtime_data.vehicles:
-            vehicle.remove_listener()
-
-        if entry.runtime_data.stream:
-            entry.runtime_data.stream.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
