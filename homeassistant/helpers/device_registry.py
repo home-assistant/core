@@ -396,7 +396,7 @@ class DeviceEntry:
         try:
             dict_repr = self.dict_repr
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.id,

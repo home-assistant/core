@@ -385,7 +385,7 @@ def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
     """
     try:
         return reduce(operator.getitem, items, data)  # type: ignore[arg-type]
-    except (KeyError, IndexError, TypeError):
+    except KeyError, IndexError, TypeError:
         return None
 
 
@@ -604,7 +604,7 @@ def _identify_config_schema(module: ComponentProtocol) -> str | None:
 
     try:
         key = next(k for k in schema if k == module.DOMAIN)
-    except (TypeError, AttributeError, StopIteration):
+    except TypeError, AttributeError, StopIteration:
         return None
     except Exception:
         _LOGGER.exception("Unexpected error identifying config schema")
