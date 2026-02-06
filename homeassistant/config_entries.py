@@ -291,6 +291,7 @@ class ConfigFlowContext(FlowContext, total=False):
     configuration_url: str
     confirm_only: bool
     discovery_key: DiscoveryKey
+    dismiss_protected: bool
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
@@ -1510,6 +1511,21 @@ class ConfigEntriesFlowManager(
                 subscription("added", flow.flow_id)
 
         return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Continue a configuration flow.
+
+        Mark the flow as dismiss protected since the user has interacted
+        with it. This prevents discovery sources from aborting the flow
+        while the user is actively configuring it.
+        """
+        if (flow := self._progress.get(flow_id)) and flow.context.get(
+            "source"
+        ) in DISCOVERY_SOURCES:
+            flow.context["dismiss_protected"] = True
+        return await super()._async_configure(flow_id, user_input)
 
     async def _async_init(
         self,
