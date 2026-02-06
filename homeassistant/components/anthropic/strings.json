@@ -47,12 +47,14 @@
         "model": {
           "data": {
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
+            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
           },
           "data_description": {
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
+            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search%]",
             "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search_max_uses%]"
@@ -95,12 +97,14 @@
         "model": {
           "data": {
             "thinking_budget": "Thinking budget",
+            "thinking_effort": "Thinking effort",
             "user_location": "Include home location",
             "web_search": "Enable web search",
             "web_search_max_uses": "Maximum web searches"
           },
           "data_description": {
             "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
+            "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
             "user_location": "Localize search results based on home location",
             "web_search": "The web search tool gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff",
             "web_search_max_uses": "Limit the number of searches performed per response"
@@ -124,6 +128,17 @@
         }
       },
       "title": "Model deprecated"
+    }
+  },
+  "selector": {
+    "thinking_effort": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "max": "Max",
+        "medium": "[%key:common::state::medium%]",
+        "none": "None"
+      }
     }
   }
 }
