@@ -2637,7 +2637,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '1',
   })
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-entry]
