@@ -31,11 +31,6 @@ from .test_config_flow import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
-    """Mock supervisor client in tests."""
-
-
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
@@ -69,6 +64,11 @@ async def test_config_flow_thread_not_hassio(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "not_hassio_thread"
+        assert result["description_placeholders"] == {
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "spinel",
+            "firmware_name": "Thread",
+        }
 
 
 @pytest.mark.parametrize(
@@ -108,8 +108,14 @@ async def test_config_flow_thread_addon_info_fails(
         )
 
         # Cannot get addon info
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "addon_info_failed"
+        assert result["description_placeholders"] == {
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "spinel",
+            "firmware_name": "Thread",
+            "addon_name": "OpenThread Border Router",
+        }
 
 
 @pytest.mark.usefixtures("addon_not_installed")
@@ -153,8 +159,14 @@ async def test_config_flow_thread_addon_install_fails(
         )
 
         # Cannot install addon
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "addon_install_failed"
+        assert result["description_placeholders"] == {
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "ezsp",
+            "firmware_name": "Thread",
+            "addon_name": "OpenThread Border Router",
+        }
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -194,8 +206,14 @@ async def test_config_flow_thread_addon_set_config_fails(
             ),
         )
 
-        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "addon_set_config_failed"
+        assert pick_thread_progress_result["description_placeholders"] == {
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "ezsp",
+            "firmware_name": "Thread",
+            "addon_name": "OpenThread Border Router",
+        }
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -234,8 +252,14 @@ async def test_config_flow_thread_flasher_run_fails(
             ),
         )
 
-        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "addon_start_failed"
+        assert pick_thread_progress_result["description_placeholders"] == {
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "ezsp",
+            "firmware_name": "Thread",
+            "addon_name": "OpenThread Border Router",
+        }
 
 
 @pytest.mark.usefixtures("addon_running")
@@ -273,11 +297,17 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
 
         assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "fw_install_failed"
+        assert pick_thread_progress_result["description_placeholders"] == {
+            "firmware_name": "Thread",
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "ezsp",
+        }
 
 
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains", ["test_firmware_domain"]
 )
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_index_download_fails_and_required(
     hass: HomeAssistant,
 ) -> None:
@@ -310,11 +340,17 @@ async def test_config_flow_firmware_index_download_fails_and_required(
 
         assert pick_result["type"] is FlowResultType.ABORT
         assert pick_result["reason"] == "fw_download_failed"
+        assert pick_result["description_placeholders"] == {
+            "firmware_name": "Zigbee",
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "spinel",
+        }
 
 
 @pytest.mark.parametrize(
     "ignore_translations_for_mock_domains", ["test_firmware_domain"]
 )
+@pytest.mark.usefixtures("addon_store_info", "addon_info")
 async def test_config_flow_firmware_download_fails_and_required(
     hass: HomeAssistant,
 ) -> None:
@@ -347,6 +383,11 @@ async def test_config_flow_firmware_download_fails_and_required(
 
         assert pick_result["type"] is FlowResultType.ABORT
         assert pick_result["reason"] == "fw_download_failed"
+        assert pick_result["description_placeholders"] == {
+            "firmware_name": "Zigbee",
+            "model": TEST_HARDWARE_NAME,
+            "firmware_type": "spinel",
+        }
 
 
 @pytest.mark.parametrize(
@@ -393,8 +434,13 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "zha_still_using_stick"
+    assert result["description_placeholders"] == {
+        "model": TEST_HARDWARE_NAME,
+        "firmware_type": "ezsp",
+        "firmware_name": "unknown",
+    }
 
 
 @pytest.mark.parametrize(
@@ -440,5 +486,10 @@ async def test_options_flow_thread_to_zigbee_otbr_configured(
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "otbr_still_using_stick"
+    assert result["description_placeholders"] == {
+        "model": TEST_HARDWARE_NAME,
+        "firmware_type": "spinel",
+        "firmware_name": "unknown",
+    }

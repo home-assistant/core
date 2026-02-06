@@ -26,6 +26,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bot": { "name": "Bot" },
+      "discoverable": { "name": "Discoverable" },
+      "indexable": { "name": "Indexable" },
+      "limited": { "name": "Limited" },
+      "locked": { "name": "Locked" },
+      "memorial": { "name": "Memorial" },
+      "moved": { "name": "Moved" },
+      "suspended": { "name": "Suspended" }
+    },
     "sensor": {
       "followers": {
         "name": "Followers",
@@ -35,13 +45,33 @@
         "name": "Following",
         "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
       },
+      "last_post": {
+        "name": "Last post"
+      },
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      },
+      "username": {
+        "name": "Username",
+        "state_attributes": {
+          "bio": {
+            "name": "Bio"
+          },
+          "created": {
+            "name": "Created"
+          },
+          "display_name": {
+            "name": "Display name"
+          }
+        }
       }
     }
   },
   "exceptions": {
+    "idempotency_key_too_short": {
+      "message": "Idempotency key must be at least 4 characters long."
+    },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
@@ -79,6 +109,10 @@
         "content_warning": {
           "description": "A content warning will be shown before the status text is shown (default: no content warning).",
           "name": "Content warning"
+        },
+        "idempotency_key": {
+          "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance. Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
+          "name": "Idempotency key"
         },
         "language": {
           "description": "The language of the post (default: Mastodon account preference).",

@@ -41,9 +41,11 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
     DATA_STORE,
     DOMAIN,
+    SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -75,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DEVICES: {},
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
+        DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
     hass.http.register_view(RegistrationsView())
@@ -128,12 +131,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
+    def clean_cloudhook() -> None:
+        """Clean up cloudhook from config entry."""
+        if CONF_CLOUDHOOK_URL in entry.data:
+            data = dict(entry.data)
+            data.pop(CONF_CLOUDHOOK_URL)
+            hass.config_entries.async_update_entry(entry, data=data)
+
+    def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook changes."""
+        if cloudhook:
+            if entry.data.get(CONF_CLOUDHOOK_URL) == cloudhook[CONF_CLOUDHOOK_URL]:
+                return
+
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, CONF_CLOUDHOOK_URL: cloudhook[CONF_CLOUDHOOK_URL]},
+            )
+        else:
+            clean_cloudhook()
+
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if (
             state is cloud.CloudConnectionState.CLOUD_CONNECTED
             and CONF_CLOUDHOOK_URL not in entry.data
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
+        elif (
+            state is cloud.CloudConnectionState.CLOUD_DISCONNECTED
+            and not cloud.async_is_logged_in(hass)
+        ):
+            clean_cloudhook()
+
+    entry.async_on_unload(
+        cloud.async_listen_cloudhook_change(hass, webhook_id, on_cloudhook_change)
+    )
 
     if cloud.async_is_logged_in(hass):
         if (
@@ -144,9 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
         # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
-        data = dict(entry.data)
-        data.pop(CONF_CLOUDHOOK_URL)
-        hass.config_entries.async_update_entry(entry, data=data)
+        clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 

@@ -1,0 +1,86 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "Please verify your credentials.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "Unexpected error, please try again."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to WaterFurnace service",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your WaterFurnace Symphony account password",
+          "username": "Your WaterFurnace Symphony account username"
+        },
+        "description": "Enter your WaterFurnace Symphony account credentials.",
+        "title": "Connect to WaterFurnace"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "actual_compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "airflow_current_speed": {
+        "name": "Fan speed"
+      },
+      "aux_power": {
+        "name": "Aux power"
+      },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
+      "entering_water_temp": {
+        "name": "Loop temperature"
+      },
+      "fan_power": {
+        "name": "Fan power"
+      },
+      "leaving_air_temp": {
+        "name": "Leaving air temperature"
+      },
+      "loop_pump_power": {
+        "name": "Loop pump power"
+      },
+      "mode": {
+        "name": "Furnace mode"
+      },
+      "room_temp": {
+        "name": "Room temperature"
+      },
+      "total_unit_power": {
+        "name": "Total power"
+      },
+      "tstat_active_setpoint": {
+        "name": "Active setpoint"
+      },
+      "tstat_humid_setpoint": {
+        "name": "Humidity setpoint"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, we could not connect to {integration_title}. Please check your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration an unknown exception has been encountered. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "WaterFurnace YAML configuration import failed"
+    }
+  }
+}

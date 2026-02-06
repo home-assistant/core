@@ -695,7 +695,7 @@ async def test_ssl_issue_urls_configured(
             [
                 "0.0.0.0",
             ],
-            {("http", "server_host_may_break_hassio")},
+            {("http", "server_host_deprecated_hassio")},
         ),
     ],
 )
@@ -706,6 +706,7 @@ async def test_server_host(
     http_config: dict,
     expected_serverhost: list,
     expected_issues: set[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test server_host behavior."""
     mock_server = Mock()

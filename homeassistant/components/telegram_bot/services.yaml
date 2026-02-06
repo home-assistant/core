@@ -2,24 +2,23 @@
 
 send_message:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    title:
+      example: "Your Garage Door Friend"
+      selector:
+        text:
     message:
       required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
-    title:
-      example: "Your Garage Door Friend"
-      selector:
-        text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -35,12 +34,6 @@ send_message:
     disable_web_page_preview:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -65,13 +58,29 @@ send_message:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_chat_action:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     chat_action:
       selector:
         select:
@@ -88,22 +97,33 @@ send_chat_action:
             - "record_video_note"
             - "upload_video_note"
           translation_key: "chat_action"
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     message_thread_id:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_photo:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/image.png"
       selector:
@@ -140,11 +160,6 @@ send_photo:
       example: "My image"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -157,12 +172,6 @@ send_photo:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -186,13 +195,29 @@ send_photo:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_sticker:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
@@ -229,20 +254,9 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -266,13 +280,29 @@ send_sticker:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_animation:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
@@ -309,11 +339,6 @@ send_animation:
       example: "My animation"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -326,12 +351,6 @@ send_animation:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -355,13 +374,29 @@ send_animation:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_video:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
@@ -398,11 +433,6 @@ send_video:
       example: "My video"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -415,12 +445,6 @@ send_video:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -444,13 +468,29 @@ send_video:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_voice:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
@@ -487,20 +527,9 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -524,13 +553,29 @@ send_voice:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_document:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/document.odf"
       selector:
@@ -567,11 +612,6 @@ send_document:
       example: Document Title xy
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -584,12 +624,6 @@ send_document:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -613,13 +647,29 @@ send_document:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_location:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     latitude:
       required: true
       selector:
@@ -636,20 +686,9 @@ send_location:
           max: 180
           step: 0.001
           unit_of_measurement: "°"
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -673,18 +712,29 @@ send_location:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 send_poll:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
           multiple: true
+          reorder: true
     question:
       required: true
       selector:
@@ -711,12 +761,6 @@ send_poll:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     reply_to_message_id:
       selector:
         number:
@@ -725,21 +769,31 @@ send_poll:
       selector:
         number:
           mode: box
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 edit_message:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     message:
@@ -768,29 +822,33 @@ edit_message:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 edit_message_media:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
       selector:
         text:
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     media_type:
       selector:
         select:
@@ -843,21 +901,31 @@ edit_message_media:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 edit_caption:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     caption:
@@ -871,21 +939,31 @@ edit_caption:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 edit_replymarkup:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     inline_keyboard:
@@ -895,6 +973,18 @@ edit_replymarkup:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 answer_callback_query:
   fields:
@@ -916,56 +1006,68 @@ answer_callback_query:
       required: true
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
 
 delete_message:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
       selector:
         text:
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
 
 leave_chat:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
 
 set_message_reaction:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: 54321
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     reaction:
@@ -977,3 +1079,37 @@ set_message_reaction:
       required: false
       selector:
         boolean:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
+
+download_file:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    file_id:
+      required: true
+      example: "ABCD1234Efgh5678Ijkl90mnopQRStuvwx"
+      selector:
+        text:
+    directory_path:
+      required: false
+      default: "/config/telegram_bot"
+      selector:
+        text:
+    file_name:
+      required: false
+      example: "my_downloaded_file"
+      selector:
+        text:

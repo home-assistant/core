@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
+from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
@@ -20,30 +22,25 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_ID,
-    CONF_INFER_ARMING_STATE,
-    CONF_NAME,
-    CONF_SUPPORT_HOME_ARM,
-    CONF_TYPE,
-    CONF_ZONES,
-    DEFAULT_INFER_ARMING_STATE,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SUPPORT_HOME_ARM,
-    DOMAIN,
-    SERVICE_AUX,
-    SERVICE_CODE,
-    SERVICE_PANIC,
-)
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "ness_alarm"
+DATA_NESS: HassKey[Client] = HassKey(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_ZONE_CHANGED = f"{DOMAIN}_zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = f"{DOMAIN}_arming_state_changed"
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+
+class ZoneChangedData(NamedTuple):
+    """Data for a zone state change."""
+
+    zone_id: int
+    state: bool
+
 
 ZONE_SCHEMA = vol.Schema(
     {

@@ -395,8 +395,8 @@
           "abort": "mdi:stop-circle",
           "enabled": "mdi:check-circle",
           "fault": "mdi:alert-circle",
-          "standby": "mdi:power-sleep",
-          "unavailable": "mdi:car-off"
+          "not_available": "mdi:car-off",
+          "standby": "mdi:power-sleep"
         }
       },
       "di_state_r": {
@@ -405,8 +405,8 @@
           "abort": "mdi:stop-circle",
           "enabled": "mdi:check-circle",
           "fault": "mdi:alert-circle",
-          "standby": "mdi:power-sleep",
-          "unavailable": "mdi:car-off"
+          "not_available": "mdi:car-off",
+          "standby": "mdi:power-sleep"
         }
       },
       "di_state_rel": {
@@ -415,8 +415,8 @@
           "abort": "mdi:stop-circle",
           "enabled": "mdi:check-circle",
           "fault": "mdi:alert-circle",
-          "standby": "mdi:power-sleep",
-          "unavailable": "mdi:car-off"
+          "not_available": "mdi:car-off",
+          "standby": "mdi:power-sleep"
         }
       },
       "di_state_rer": {
@@ -425,8 +425,8 @@
           "abort": "mdi:stop-circle",
           "enabled": "mdi:check-circle",
           "fault": "mdi:alert-circle",
-          "standby": "mdi:power-sleep",
-          "unavailable": "mdi:car-off"
+          "not_available": "mdi:car-off",
+          "standby": "mdi:power-sleep"
         }
       },
       "di_stator_temp_f": {

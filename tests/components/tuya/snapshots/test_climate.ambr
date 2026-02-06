@@ -32,6 +32,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,7 +51,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.0,
-      'fan_mode': 1,
+      'fan_mode': None,
       'fan_modes': list([
         '1',
         '2',
@@ -82,13 +83,13 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
       'preset_modes': list([
+        'auto',
+        'manual',
         'off',
       ]),
       'target_temp_step': 1.0,
@@ -108,6 +109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -128,13 +130,13 @@
       'friendly_name': 'Anbau',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
       'preset_modes': list([
+        'auto',
+        'manual',
         'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
@@ -157,13 +159,13 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 70.0,
       'min_temp': 1.0,
       'preset_modes': list([
         'holiday',
+        'auto',
+        'manual',
         'eco',
       ]),
       'target_temp_step': 0.5,
@@ -183,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -205,14 +208,14 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 70.0,
       'min_temp': 1.0,
       'preset_mode': None,
       'preset_modes': list([
         'holiday',
+        'auto',
+        'manual',
         'eco',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
@@ -256,6 +259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -328,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -402,6 +407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -419,7 +425,7 @@
 # name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 4.5,
+      'current_temperature': 45.0,
       'friendly_name': 'El termostato de la cocina',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -447,13 +453,13 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
       'preset_modes': list([
+        'auto',
+        'manual',
         'off',
       ]),
       'target_temp_step': 1.0,
@@ -473,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -494,14 +501,14 @@
       'friendly_name': 'Empore',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
       'preset_mode': None,
       'preset_modes': list([
+        'auto',
+        'manual',
         'off',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
@@ -510,6 +517,84 @@
     }),
     'context': <ANY>,
     'entity_id': 'climate.empore',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.floor_thermostat_kitchen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'auto',
+        'manual',
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.floor_thermostat_kitchen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'tuya.oq9ksabjz6tip49tkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.floor_thermostat_kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Floor Thermostat Kitchen',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'auto',
+        'manual',
+        'off',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 1.0,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.floor_thermostat_kitchen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -543,6 +628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -574,7 +660,70 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.itc_308_wifi_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+      ]),
+      'max_temp': 212.0,
+      'min_temp': -40.0,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.itc_308_wifi_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'tuya.9Ry4oUpdAYq8Pe0Bkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.itc_308_wifi_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 34.0,
+      'friendly_name': 'ITC-308-WIFI Thermostat',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 212.0,
+      'min_temp': -40.0,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 0.5,
+      'temperature': 35.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.itc_308_wifi_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.kabinet-entry]
@@ -610,6 +759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -685,6 +835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -727,6 +878,90 @@
     'state': 'cool',
   })
 # ---
+# name: test_platform_setup_and_discovery[climate.mini_split-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 90.0,
+      'min_temp': 16.0,
+      'swing_modes': list([
+        'off',
+        'horizontal',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.mini_split',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 417>,
+    'translation_key': None,
+    'unique_id': 'tuya.zzz87dkfce6pdqxwtk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.mini_split-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 69.0,
+      'friendly_name': 'Mini-Split',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 90.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 417>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'off',
+        'horizontal',
+      ]),
+      'target_temp_step': 1.0,
+      'temperature': 66.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.mini_split',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[climate.mr_pure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -754,6 +989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -785,7 +1021,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.polotentsosushitel-entry]
@@ -820,6 +1056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -845,7 +1082,7 @@
       ]),
       'max_temp': 40.0,
       'min_temp': 5.0,
-      'preset_mode': 'hold',
+      'preset_mode': None,
       'preset_modes': list([
         'holiday',
       ]),
@@ -870,12 +1107,12 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 5.9,
       'min_temp': 0.1,
       'preset_modes': list([
+        'auto',
+        'manual',
         'holiday',
       ]),
       'target_temp_step': 0.5,
@@ -895,6 +1132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -917,13 +1155,13 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 5.9,
       'min_temp': 0.1,
       'preset_mode': None,
       'preset_modes': list([
+        'auto',
+        'manual',
         'holiday',
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
@@ -947,10 +1185,13 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 90.0,
       'min_temp': 5.0,
+      'preset_modes': list([
+        'auto',
+        'manual',
+      ]),
       'target_temp_step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -968,6 +1209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -976,7 +1218,7 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 385>,
+    'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': 'tuya.sb3zdertrw50bgogkw',
     'unit_of_measurement': None,
@@ -990,11 +1232,15 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 90.0,
       'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
+      'preset_mode': None,
+      'preset_modes': list([
+        'auto',
+        'manual',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 1.0,
       'temperature': 12.0,
     }),
@@ -1039,6 +1285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1057,7 +1304,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 24.0,
-      'fan_mode': 2,
+      'fan_mode': None,
       'fan_modes': list([
         '1',
         '2',
@@ -1110,6 +1357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1176,6 +1424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1211,5 +1460,180 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
+  })
+# ---
+# name: test_us_customary_system[climate.air_conditioner]
+  ReadOnlyDict({
+    'current_temperature': 22,
+    'max_temp': 86,
+    'min_temp': 16,
+    'target_temp_step': 1.0,
+    'temperature': 23,
+  })
+# ---
+# name: test_us_customary_system[climate.anbau]
+  ReadOnlyDict({
+    'max_temp': 95,
+    'min_temp': 41,
+    'target_temp_step': 1.0,
+  })
+# ---
+# name: test_us_customary_system[climate.bathroom_radiator]
+  ReadOnlyDict({
+    'current_temperature': 67,
+    'max_temp': 158,
+    'min_temp': 34,
+    'target_temp_step': 0.5,
+    'temperature': 54,
+  })
+# ---
+# name: test_us_customary_system[climate.boiler_temperature_controller]
+  ReadOnlyDict({
+    'current_temperature': 136,
+    'max_temp': 95,
+    'min_temp': 45,
+    'target_temp_step': 1.0,
+  })
+# ---
+# name: test_us_customary_system[climate.clima_cucina]
+  ReadOnlyDict({
+    'current_temperature': 81,
+    'max_temp': 95,
+    'min_temp': 41,
+    'target_temp_step': 1.0,
+    'temperature': 77,
+  })
+# ---
+# name: test_us_customary_system[climate.el_termostato_de_la_cocina]
+  ReadOnlyDict({
+    'current_temperature': 113,
+    'max_temp': 45,
+    'min_temp': 34,
+    'target_temp_step': 0.5,
+    'temperature': 40,
+  })
+# ---
+# name: test_us_customary_system[climate.empore]
+  ReadOnlyDict({
+    'current_temperature': 66,
+    'max_temp': 95,
+    'min_temp': 41,
+    'target_temp_step': 1.0,
+    'temperature': 95,
+  })
+# ---
+# name: test_us_customary_system[climate.floor_thermostat_kitchen]
+  ReadOnlyDict({
+    'current_temperature': -4,
+    'max_temp': 66,
+    'min_temp': 12,
+    'target_temp_step': 1.0,
+    'temperature': None,
+  })
+# ---
+# name: test_us_customary_system[climate.geti_solar_pv_water_heater]
+  ReadOnlyDict({
+    'current_temperature': 140,
+    'max_temp': 95,
+    'min_temp': 45,
+    'target_temp_step': 1.0,
+  })
+# ---
+# name: test_us_customary_system[climate.itc_308_wifi_thermostat]
+  ReadOnlyDict({
+    'current_temperature': 93,
+    'max_temp': 414,
+    'min_temp': -40,
+    'target_temp_step': 0.5,
+    'temperature': 95,
+  })
+# ---
+# name: test_us_customary_system[climate.kabinet]
+  ReadOnlyDict({
+    'current_temperature': 67,
+    'max_temp': 203,
+    'min_temp': 41,
+    'target_temp_step': 0.5,
+    'temperature': 71,
+  })
+# ---
+# name: test_us_customary_system[climate.master_bedroom_ac]
+  ReadOnlyDict({
+    'current_temperature': 79,
+    'max_temp': 190,
+    'min_temp': 61,
+    'target_temp_step': 0.5,
+    'temperature': 167,
+  })
+# ---
+# name: test_us_customary_system[climate.mini_split]
+  ReadOnlyDict({
+    'current_temperature': 69,
+    'max_temp': 90,
+    'min_temp': 16,
+    'target_temp_step': 1.0,
+    'temperature': 66,
+  })
+# ---
+# name: test_us_customary_system[climate.mr_pure]
+  ReadOnlyDict({
+    'current_temperature': None,
+    'max_temp': 95,
+    'min_temp': 45,
+    'target_temp_step': 1.0,
+  })
+# ---
+# name: test_us_customary_system[climate.polotentsosushitel]
+  ReadOnlyDict({
+    'current_temperature': 32,
+    'max_temp': 104,
+    'min_temp': 41,
+    'target_temp_step': 1.0,
+    'temperature': 41,
+  })
+# ---
+# name: test_us_customary_system[climate.salon]
+  ReadOnlyDict({
+    'current_temperature': 69,
+    'max_temp': 43,
+    'min_temp': 32,
+    'target_temp_step': 0.5,
+    'temperature': 43,
+  })
+# ---
+# name: test_us_customary_system[climate.smart_thermostats]
+  ReadOnlyDict({
+    'current_temperature': 71,
+    'max_temp': 194,
+    'min_temp': 41,
+    'target_temp_step': 1.0,
+    'temperature': 54,
+  })
+# ---
+# name: test_us_customary_system[climate.sove]
+  ReadOnlyDict({
+    'current_temperature': 75,
+    'max_temp': 187,
+    'min_temp': 61,
+    'target_temp_step': 1.0,
+    'temperature': 61,
+  })
+# ---
+# name: test_us_customary_system[climate.term_prizemi]
+  ReadOnlyDict({
+    'current_temperature': 73,
+    'max_temp': 158,
+    'min_temp': 33,
+    'target_temp_step': 0.1,
+    'temperature': 73,
+  })
+# ---
+# name: test_us_customary_system[climate.wifi_smart_gas_boiler_thermostat]
+  ReadOnlyDict({
+    'current_temperature': 77,
+    'max_temp': 95,
+    'min_temp': 41,
+    'target_temp_step': 0.5,
+    'temperature': 72,
   })
 # ---

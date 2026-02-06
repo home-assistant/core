@@ -82,7 +82,18 @@ else:
 class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
+    ZIGBEE_BAUDRATE = 115200
     BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
+        (ApplicationType.SPINEL, 460800),
+        # CPC baudrates can be removed once multiprotocol is removed
+        (ApplicationType.CPC, 115200),
+        (ApplicationType.CPC, 230400),
+        (ApplicationType.CPC, 460800),
+        (ApplicationType.ROUTER, 115200),
+    ]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -146,7 +157,11 @@ class HomeAssistantYellowConfigFlow(
         assert self._device is not None
 
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
+        )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (
@@ -348,7 +363,7 @@ class HomeAssistantYellowOptionsFlowHandler(
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_type=ApplicationType(self._config_entry.data["firmware"]),
             firmware_version=None,
             source="guess",
             owners=[],
