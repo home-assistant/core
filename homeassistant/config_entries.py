@@ -290,8 +290,8 @@ class ConfigFlowContext(FlowContext, total=False):
     alternative_domain: str
     configuration_url: str
     confirm_only: bool
-    dismiss_protected: bool
     discovery_key: DiscoveryKey
+    dismiss_protected: bool
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
