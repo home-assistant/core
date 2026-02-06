@@ -25,7 +25,8 @@ jobs:
         
     - name: Publish to GitHub Packages
       run: |
-        python -m twine upload --repository github dist/*
+        python -m twine upload --repository github dist/* --verbose
       env:
-        TWINE_USERNAME: __token__
+        TWINE_USERNAME: ${{ github.actor }}
         TWINE_PASSWORD: ${{ secrets.GHUB_TOKEN }}
+        TWINE_REPOSITORY_URL: https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/packages
