@@ -37,7 +37,21 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._pending_host: str | None = None
+        self._host: str | None = None
+
+    async def check_status(self, client: Homevolt) -> dict[str, str]:
+        """Check connection status and return errors if any."""
+        errors: dict[str, str] = {}
+        try:
+            await client.update_info()
+        except HomevoltAuthenticationError:
+            errors["base"] = "invalid_auth"
+        except HomevoltConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Error occurred while connecting to the Homevolt battery")
+            errors["base"] = "unknown"
+        return errors
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,18 +63,10 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             password = None
             websession = async_get_clientsession(self.hass)
             client = Homevolt(host, password, websession=websession)
-            try:
-                await client.update_info()
-            except HomevoltAuthenticationError:
-                self._pending_host = host
+            errors = await self.check_status(client)
+            if errors.get("base") == "invalid_auth":
+                self._host = host
                 return await self.async_step_credentials()
-            except HomevoltConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception(
-                    "Error occurred while connecting to the Homevolt battery"
-                )
-                errors["base"] = "unknown"
 
             if not errors:
                 device_id = client.unique_id
@@ -84,23 +90,13 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the credentials step."""
         errors: dict[str, str] = {}
+        assert self._host is not None
+
         if user_input is not None:
-            assert self._pending_host is not None
-            host = self._pending_host
             password = user_input[CONF_PASSWORD]
             websession = async_get_clientsession(self.hass)
-            client = Homevolt(host, password, websession=websession)
-            try:
-                await client.update_info()
-            except HomevoltAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except HomevoltConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception(
-                    "Error occurred while connecting to the Homevolt battery"
-                )
-                errors["base"] = "unknown"
+            client = Homevolt(self._host, password, websession=websession)
+            errors = await self.check_status(client)
 
             if not errors:
                 device_id = client.unique_id
@@ -110,15 +106,14 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="Homevolt",
                     data={
-                        CONF_HOST: host,
+                        CONF_HOST: self._host,
                         CONF_PASSWORD: password,
                     },
                 )
 
-        assert self._pending_host is not None
         return self.async_show_form(
             step_id="credentials",
             data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={"host": self._pending_host},
+            description_placeholders={"host": self._host},
         )
