@@ -1,6 +1,7 @@
 """Test the Splunk integration init."""
 
 from http import HTTPStatus
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -222,15 +223,27 @@ async def test_event_listener_unauthorized(
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "expected_log_level", "expected_message"),
     [
-        ClientConnectionError("Connection failed"),
-        TimeoutError(),
-        ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=500,
-            message="Internal Server Error",
+        (
+            ClientConnectionError("Connection failed"),
+            logging.DEBUG,
+            "Connection error sending to Splunk",
+        ),
+        (
+            TimeoutError(),
+            logging.DEBUG,
+            "Timeout sending to Splunk",
+        ),
+        (
+            ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=500,
+                message="Internal Server Error",
+            ),
+            logging.WARNING,
+            "Splunk response error: Internal Server Error",
         ),
     ],
 )
@@ -238,7 +251,10 @@ async def test_event_listener_error_handling(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     error: Exception,
+    expected_log_level: int,
+    expected_message: str,
 ) -> None:
     """Test event listener handles various errors gracefully."""
     mock_config_entry.add_to_hass(hass)
@@ -254,8 +270,14 @@ async def test_event_listener_error_handling(
     mock_hass_splunk.queue.side_effect = error
 
     # Change the state to trigger an event - should not raise
-    hass.states.async_set("sensor.test", "456")
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG):
+        hass.states.async_set("sensor.test", "456")
+        await hass.async_block_till_done()
+
+    assert any(
+        record.levelno == expected_log_level and expected_message in record.message
+        for record in caplog.records
+    )
 
 
 async def test_yaml_filter_only_no_deprecation_issue(
