@@ -2906,7 +2906,7 @@ slixmpp==1.12.0
 smart-meter-texas==0.5.5
 
 # homeassistant.components.snapcast
-snapcast==2.3.6
+snapcast==2.3.7
 
 # homeassistant.components.sonos
 soco==0.30.14
