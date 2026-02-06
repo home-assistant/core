@@ -121,7 +121,7 @@ def mock_climate_variables() -> dict:
     """Mock climate variable data for default thermostat state."""
     return {
         123: {
-            "HVAC_STATE": "idle",
+            "HVAC_STATE": "Off",
             "HVAC_MODE": "Heat",
             "TEMPERATURE_F": 72.5,
             "HUMIDITY": 45,
