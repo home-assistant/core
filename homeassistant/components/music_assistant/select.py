@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from music_assistant_client import MusicAssistantClient
-from music_assistant_models.player import PlayerOption, PlayerOptionType
+from music_assistant_models.player import PlayerOption
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import Platform
@@ -29,10 +29,7 @@ async def async_setup_entry(
             return
         entities: list[MusicAssistantPlayerConfigSelect] = []
         for player_option in player.options:
-            if (
-                not player_option.read_only
-                and player_option.type == PlayerOptionType.OPTIONS
-            ):
+            if not player_option.read_only and player_option.options:
                 entities.extend(
                     [
                         MusicAssistantPlayerConfigSelect(

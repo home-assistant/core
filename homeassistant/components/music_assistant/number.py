@@ -80,11 +80,9 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
             translation_key=player_option.translation_key or player_option.name,
         )
 
-        # The PlayerOption class makes these mandatory.
-        # The asserts are for type checking
-        assert player_option.min_value is not None
-        assert player_option.max_value is not None
-        assert player_option.step is not None
-        self._attr_native_min_value = player_option.min_value
-        self._attr_native_max_value = player_option.max_value
-        self._attr_native_step = player_option.step
+        if min_value := player_option.min_value:
+            self._attr_native_min_value = min_value
+        if max_value := player_option.max_value:
+            self._attr_native_max_value = max_value
+        if step := player_option.step:
+            self._attr_native_step = step
