@@ -1482,9 +1482,6 @@ async def test_start_timer_with_sentence_trigger_validation(
     test_command = "turn on the lights"
     agent_id = None  # Default agent
 
-    mock_handle_timer = MagicMock()
-    async_register_timer_handler(hass, device_id, mock_handle_timer)
-
     with patch(
         "homeassistant.components.conversation.async_get_agent"
     ) as mock_get_agent:
@@ -1526,9 +1523,6 @@ async def test_start_timer_with_invalid_conversation_command(
     timer_name = "test timer"
     invalid_command = "invalid command that does not exist"
     agent_id = None  # Default agent
-
-    mock_handle_timer = MagicMock()
-    async_register_timer_handler(hass, device_id, mock_handle_timer)
 
     with pytest.raises(NoTimerCommandError):
         await intent.async_handle(
