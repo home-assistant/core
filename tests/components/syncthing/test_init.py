@@ -2,10 +2,9 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from aiosyncthing.exceptions import SyncthingError
-import pytest
 
 from homeassistant.components.syncthing.const import (
     DEVICE_CONNECTED_RECEIVED,
@@ -16,7 +15,6 @@ from homeassistant.components.syncthing.const import (
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher
 
@@ -34,31 +32,9 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_syncthing() -> MagicMock:
-    """Create a mock Syncthing client."""
-    return create_mock_syncthing_client()
-
-
-@pytest.fixture
-def entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create a mock ConfigEntry for Syncthing component."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_URL: "http://127.0.0.1:8384",
-            CONF_TOKEN: "test-token",
-            CONF_VERIFY_SSL: True,
-        },
-    )
-    entry.add_to_hass(hass)
-    return entry
-
-
 async def test_syncthing_client_event_listener(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    mock_syncthing: MagicMock,
 ) -> None:
     """Test SyncthingClient event listener handles device and folder events."""
     events = [
@@ -108,6 +84,7 @@ async def test_syncthing_client_event_listener(
             await asyncio.sleep(0)
             yield None
 
+    mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.listen = mock_listen
     mock_syncthing.events.last_seen_id = 10
 
@@ -134,7 +111,6 @@ async def test_syncthing_client_event_listener(
 async def test_syncthing_client_stores_initial_events(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    mock_syncthing: MagicMock,
 ) -> None:
     """Test SyncthingClient stores initial device events (last_seen_id = 0)."""
     initial_events = [
@@ -142,6 +118,7 @@ async def test_syncthing_client_stores_initial_events(
         MOCK_DEVICE_DISCONNECTED_EVENT,
     ]
 
+    mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.last_seen_id = 0
 
     async def mock_listen():
@@ -190,7 +167,6 @@ async def test_syncthing_client_stores_initial_events(
 async def test_syncthing_client_reconnect_on_error(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    mock_syncthing: MagicMock,
 ) -> None:
     """Test SyncthingClient reconnects when server becomes unavailable."""
     call_count = 0
@@ -201,8 +177,9 @@ async def test_syncthing_client_reconnect_on_error(
         call_count += 1
         if call_count == 1:
             raise SyncthingError("Connection lost")
-        yield MOCK_DEVICE_CONNECTED_EVENT
+        yield MOCK_STATE_CHANGED_EVENT
 
+    mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.last_seen_id = 10
     mock_syncthing.events.listen = mock_listen
 
