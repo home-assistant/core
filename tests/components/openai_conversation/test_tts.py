@@ -1,4 +1,4 @@
-"""Test AI Task platform of OpenAI Conversation integration."""
+"""Test TTS platform of OpenAI Conversation integration."""
 
 from http import HTTPStatus
 from pathlib import Path

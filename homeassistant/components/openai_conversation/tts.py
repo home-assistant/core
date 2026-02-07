@@ -154,7 +154,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
 
-        options = self.subentry.data | options
+        options = {**self.subentry.data, **options}
         client = self.entry.runtime_data
 
         response_format = options[ATTR_PREFERRED_FORMAT]
@@ -176,11 +176,11 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 speed=options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
                 response_format=response_format,
             ) as response:
-                response_data = b""
+                response_data = bytearray()
                 async for chunk in response.iter_bytes():
-                    response_data += chunk
+                    response_data.extend(chunk)
         except OpenAIError as exc:
             _LOGGER.exception("Error during TTS")
             raise HomeAssistantError(exc) from exc
 
-        return response_format, response_data
+        return response_format, bytes(response_data)
