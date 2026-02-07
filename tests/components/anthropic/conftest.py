@@ -22,6 +22,8 @@ import pytest
 
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -93,6 +95,24 @@ def mock_config_entry_with_extended_thinking(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
+            CONF_THINKING_BUDGET: 1500,
+        },
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_adaptive_thinking(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with adaptive thinking."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_THINKING_EFFORT: "medium",
         },
     )
     return mock_config_entry
@@ -128,6 +148,12 @@ async def mock_init_component(
     """Initialize integration."""
     model_list = AsyncPage(
         data=[
+            ModelInfo(
+                id="claude-opus-4-6",
+                created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
+                display_name="Claude Opus 4.6",
+                type="model",
+            ),
             ModelInfo(
                 id="claude-opus-4-5-20251101",
                 created_at=datetime.datetime(2025, 11, 1, 0, 0, tzinfo=datetime.UTC),

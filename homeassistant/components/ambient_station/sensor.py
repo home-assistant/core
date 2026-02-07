@@ -26,10 +26,9 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AmbientStation, AmbientStationConfigEntry
+from . import AmbientStationConfigEntry
 from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 from .entity import AmbientWeatherEntity
 
@@ -682,22 +681,6 @@ async def async_setup_entry(
 
 class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     """Define an Ambient sensor."""
-
-    def __init__(
-        self,
-        ambient: AmbientStation,
-        mac_address: str,
-        station_name: str,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(ambient, mac_address, station_name, description)
-
-        if description.key == TYPE_SOLARRADIATION_LX:
-            # Since TYPE_SOLARRADIATION and TYPE_SOLARRADIATION_LX will have the same
-            # name in the UI, we influence the entity ID of TYPE_SOLARRADIATION_LX here
-            # to differentiate them:
-            self.entity_id = f"sensor.{station_name}_solar_rad_lx"
 
     @callback
     def update_from_latest_data(self) -> None:

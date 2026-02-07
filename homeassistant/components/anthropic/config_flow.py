@@ -36,6 +36,7 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
 from homeassistant.helpers.typing import VolDictType
@@ -47,6 +48,7 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -58,6 +60,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
@@ -111,6 +114,7 @@ async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionD
                 "claude-3-5-haiku-20241022",
                 "claude-3-opus-20240229",
             )
+            and model_info.id[-2:-1] != "-"
             else model_info.id
         )
         if short_form.search(model_alias):
@@ -354,7 +358,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)):
+        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
+            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
@@ -370,6 +376,22 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
+
+        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_THINKING_EFFORT,
+                    default=DEFAULT[CONF_THINKING_EFFORT],
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=["none", "low", "medium", "high", "max"],
+                    translation_key=CONF_THINKING_EFFORT,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            self.options.pop(CONF_THINKING_EFFORT, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
