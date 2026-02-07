@@ -31,7 +31,6 @@ class HausbusEntity(Entity):
         alternativeType: str | None = None,
     ) -> None:
         """Set up channel."""
-        super().__init__()
 
         self._channel = channel
         self._objectId = ObjectId(channel.getObjectId())
