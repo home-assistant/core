@@ -321,8 +321,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 continue
 
             if wall_connector:
-                for connector in product["components"]["wall_connectors"]:
-                    current_devices.add((DOMAIN, connector["din"]))
+                current_devices |= {
+                    (DOMAIN, c["din"])
+                    for c in product["components]["wall_connectors"]
+                }
 
             energy_site = teslemetry.energySites.create(site_id)
             device = DeviceInfo(
