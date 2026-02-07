@@ -2523,7 +2523,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay-entry]
+# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_detection_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2541,7 +2541,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay',
+    'entity_id': 'number.mock_pir_occupancy_sensor_detection_delay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2549,25 +2549,25 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Unoccupied to occupied delay',
+    'object_id_base': 'Detection delay',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Unoccupied to occupied delay',
+    'original_name': 'Detection delay',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'unoccupied_to_occupied_delay',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensingUnoccupiedToOccupiedDelay-1030-17',
+    'translation_key': 'detection_delay',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensingPIRUnoccupiedToOccupiedDelay-1030-17',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay-state]
+# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_detection_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock PIR Occupancy Sensor Unoccupied to occupied delay',
+      'friendly_name': 'Mock PIR Occupancy Sensor Detection delay',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -2575,14 +2575,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_pir_occupancy_sensor_unoccupied_to_occupied_delay',
+    'entity_id': 'number.mock_pir_occupancy_sensor_detection_delay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold-entry]
+# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_detection_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2600,7 +2600,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold',
+    'entity_id': 'number.mock_pir_occupancy_sensor_detection_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2608,32 +2608,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Unoccupied to occupied threshold',
+    'object_id_base': 'Detection threshold',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Unoccupied to occupied threshold',
+    'original_name': 'Detection threshold',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'unoccupied_to_occupied_threshold',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensingUnoccupiedToOccupiedThreshold-1030-18',
+    'translation_key': 'detection_threshold',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensingPIRUnoccupiedToOccupiedThreshold-1030-18',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold-state]
+# name: test_numbers[mock_occupancy_sensor_pir][number.mock_pir_occupancy_sensor_detection_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock PIR Occupancy Sensor Unoccupied to occupied threshold',
+      'friendly_name': 'Mock PIR Occupancy Sensor Detection threshold',
       'max': 254,
       'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_pir_occupancy_sensor_unoccupied_to_occupied_threshold',
+    'entity_id': 'number.mock_pir_occupancy_sensor_detection_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
