@@ -6,11 +6,13 @@ from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
+import re
 from typing import Any
 from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
+import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
@@ -1179,4 +1181,44 @@ async def test_get_history_service(
             return_response=True,
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "missing_key"),
+    [
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+            },
+            "start_time",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+            },
+            "history_ids",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_missing_mandatory_keys(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    missing_key: str,
+) -> None:
+    """Test the get_statistics service with missing mandatory keys."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
         )

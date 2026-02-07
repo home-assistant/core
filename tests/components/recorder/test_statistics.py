@@ -4005,46 +4005,6 @@ async def test_get_statistics_service_missing_mandatory_keys(
         )
 
 
-@pytest.mark.parametrize(
-    ("service_args", "missing_key"),
-    [
-        (
-            {
-                "history_ids": ["sensor.sensor"],
-            },
-            "start_time",
-        ),
-        (
-            {
-                "start_time": "2023-05-08 07:00:00Z",
-            },
-            "history_ids",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("recorder_mock")
-async def test_get_history_service_missing_mandatory_keys(
-    hass: HomeAssistant,
-    service_args: dict[str, Any],
-    missing_key: str,
-) -> None:
-    """Test the get_statistics service with missing mandatory keys."""
-
-    await async_recorder_block_till_done(hass)
-
-    with pytest.raises(
-        vol.error.MultipleInvalid,
-        match=re.escape(f"required key not provided @ data['{missing_key}']"),
-    ):
-        await hass.services.async_call(
-            "recorder",
-            "get_history",
-            service_args,
-            return_response=True,
-            blocking=True,
-        )
-
-
 # The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
 # consistent and avoid `different tests were collected between gw0 and gw1`
 @pytest.mark.parametrize(
