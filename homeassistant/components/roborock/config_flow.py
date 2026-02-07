@@ -269,13 +269,13 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
         data_schema[
             vol.Required(
                 CONF_SHOW_WALLS,
-                default=self.config_entry.options.get(CONF_SHOW_WALLS, False),
+                default=self.config_entry.options.get(CONF_SHOW_WALLS, True),
             )
         ] = bool
         data_schema[
             vol.Required(
                 CONF_SHOW_ROOMS,
-                default=self.config_entry.options.get(CONF_SHOW_ROOMS, False),
+                default=self.config_entry.options.get(CONF_SHOW_ROOMS, True),
             )
         ] = bool
         return self.async_show_form(
