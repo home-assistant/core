@@ -288,7 +288,7 @@ class TelegramNotificationService:
     def __init__(
         self,
         hass: HomeAssistant,
-        app: BaseTelegramBot,
+        app: BaseTelegramBot | None,
         bot: Bot,
         config: TelegramBotConfigEntry,
         parser: str,

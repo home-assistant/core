@@ -104,7 +104,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 def _is_decimal_state(state: str) -> bool:
     try:
         Decimal(state)
-    except (InvalidOperation, TypeError):
+    except InvalidOperation, TypeError:
         return False
     else:
         return True
@@ -220,8 +220,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
             else max_sub_interval
         )
-        self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = (
-            lambda *args: None
+        self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: (
+            None
         )
 
     def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
@@ -306,7 +306,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     Decimal(restored_data.native_value),  # type: ignore[arg-type]
                     self._round_digits,
                 )
-            except (InvalidOperation, TypeError):
+            except InvalidOperation, TypeError:
                 self._attr_native_value = None
 
     async def async_added_to_hass(self) -> None:

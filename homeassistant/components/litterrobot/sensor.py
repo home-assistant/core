@@ -169,8 +169,8 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.TOTAL,
             last_reset_fn=dt_util.start_of_local_day,
             value_fn=(
-                lambda robot: (
-                    robot.get_food_dispensed_since(dt_util.start_of_local_day())
+                lambda robot: robot.get_food_dispensed_since(
+                    dt_util.start_of_local_day()
                 )
             ),
         ),
