@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -359,7 +360,7 @@ async def test_set_lock_usercode_invalid_pin(
     matter_node: MatterNode,
 ) -> None:
     """Test set_lock_usercode rejects invalid PIN."""
-    with pytest.raises(HomeAssistantError, match="PIN code must be"):
+    with pytest.raises(ServiceValidationError, match="PIN code must be"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
@@ -380,7 +381,7 @@ async def test_set_lock_usercode_not_supported(
 ) -> None:
     """Test set_lock_usercode on lock without USR feature."""
     # Default door_lock fixture has featuremap=0, no USR support
-    with pytest.raises(HomeAssistantError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
@@ -478,7 +479,7 @@ async def test_clear_lock_usercode_not_found(
     """Test clear_lock_usercode on empty slot raises error."""
     matter_client.send_device_command = AsyncMock(return_value={"userStatus": None})
 
-    with pytest.raises(HomeAssistantError, match="is empty"):
+    with pytest.raises(ServiceValidationError, match="is empty"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAR_LOCK_USERCODE,
@@ -615,7 +616,7 @@ async def test_service_on_lock_without_user_management(
 ) -> None:
     """Test entity services on lock without USR feature raise error."""
     # Default door_lock fixture has featuremap=0, no USR support
-    with pytest.raises(HomeAssistantError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LOCK_USER,
@@ -626,7 +627,7 @@ async def test_service_on_lock_without_user_management(
             blocking=True,
         )
 
-    with pytest.raises(HomeAssistantError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAR_LOCK_USER,
@@ -664,7 +665,7 @@ async def test_set_lock_usercode_no_available_slot(
         ]
     )
 
-    with pytest.raises(HomeAssistantError, match="No available credential slots"):
+    with pytest.raises(ServiceValidationError, match="No available credential slots"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
@@ -1565,3 +1566,26 @@ async def test_get_lock_users_with_credentials(
     assert len(user["credentials"]) == 2
     assert user["credentials"][0]["type"] == "pin"
     assert user["credentials"][0]["index"] == 1
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN}])
+async def test_matter_error_converted_to_home_assistant_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that MatterError from helpers is converted to HomeAssistantError."""
+    # Simulate a MatterError from the device command
+    matter_client.send_device_command = AsyncMock(
+        side_effect=MatterError("Device communication failed")
+    )
+
+    with pytest.raises(HomeAssistantError, match="Device communication failed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_LOCK_USERS,
+            {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+            blocking=True,
+            return_response=True,
+        )

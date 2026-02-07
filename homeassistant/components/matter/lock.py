@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.lock import (
@@ -411,38 +412,58 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_set_lock_user(self, **kwargs: Any) -> None:
         """Set a lock user (full CRUD)."""
-        await set_lock_user(
-            self.matter_client,
-            self._endpoint.node,
-            user_index=kwargs.get(ATTR_USER_INDEX),
-            user_name=kwargs.get(ATTR_USER_NAME),
-            user_type=kwargs.get(ATTR_USER_TYPE, "unrestricted_user"),
-            credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE, "single"),
-            pin_code=kwargs.get(ATTR_PIN_CODE),
-            pin_code_present=ATTR_PIN_CODE in kwargs,
-        )
+        try:
+            await set_lock_user(
+                self.matter_client,
+                self._endpoint.node,
+                user_index=kwargs.get(ATTR_USER_INDEX),
+                user_name=kwargs.get(ATTR_USER_NAME),
+                user_type=kwargs.get(ATTR_USER_TYPE, "unrestricted_user"),
+                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE, "single"),
+                pin_code=kwargs.get(ATTR_PIN_CODE),
+                pin_code_present=ATTR_PIN_CODE in kwargs,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set lock user on {self.entity_id}: {err}"
+            ) from err
 
     async def async_clear_lock_user(self, **kwargs: Any) -> None:
         """Clear a lock user."""
-        await clear_lock_user(
-            self.matter_client,
-            self._endpoint.node,
-            kwargs[ATTR_USER_INDEX],
-        )
+        try:
+            await clear_lock_user(
+                self.matter_client,
+                self._endpoint.node,
+                kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear lock user on {self.entity_id}: {err}"
+            ) from err
 
     async def async_get_lock_info(self) -> dict[str, Any]:
         """Get lock capabilities and configuration info."""
-        return await get_lock_info(
-            self.matter_client,
-            self._endpoint.node,
-        )
+        try:
+            return await get_lock_info(
+                self.matter_client,
+                self._endpoint.node,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get lock info for {self.entity_id}: {err}"
+            ) from err
 
     async def async_get_lock_users(self) -> dict[str, Any]:
         """Get all users from the lock."""
-        return await get_lock_users(
-            self.matter_client,
-            self._endpoint.node,
-        )
+        try:
+            return await get_lock_users(
+                self.matter_client,
+                self._endpoint.node,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get lock users for {self.entity_id}: {err}"
+            ) from err
 
 
 DISCOVERY_SCHEMAS = [
