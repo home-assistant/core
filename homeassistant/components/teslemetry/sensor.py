@@ -1529,7 +1529,6 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="vpp_backup_reserve_percent",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
