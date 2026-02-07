@@ -29,7 +29,7 @@ async def test_switch_entities(
     await hass.async_block_till_done()
 
     # Check that the relay switch is created
-    state = hass.states.get("switch.test_device_relay")
+    state = hass.states.get("switch.test_device_relay_1")
     assert state is not None
     # Entity is unknown until coordinator receives state data
     assert state.state == "unknown"
@@ -58,7 +58,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_device_relay"},
+        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -67,7 +67,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_device_relay"},
+        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
         blocking=True,
     )
     device.turn_off.assert_called_once()
@@ -76,7 +76,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.test_device_relay"},
+        {ATTR_ENTITY_ID: "switch.test_device_relay_1"},
         blocking=True,
     )
     device.toggle.assert_called_once()
@@ -101,14 +101,14 @@ async def test_switch_is_on_property(
     await coordinator._async_handle_update(StateChange(state=1.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay")
+    state = hass.states.get("switch.test_device_relay_1")
     assert state.state == "on"
 
     # Test with state = 0.0 (off)
     await coordinator._async_handle_update(StateChange(state=0.0))
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_device_relay")
+    state = hass.states.get("switch.test_device_relay_1")
     assert state.state == "off"
 
 
@@ -147,7 +147,7 @@ async def test_configuration_switches(
     await hass.async_block_till_done()
 
     # Check 433mhz switch state (should be on)
-    state = hass.states.get("switch.test_device_433mhz")
+    state = hass.states.get("switch.test_device_433_mhz")
     assert state is not None
     assert state.state == "on"
 
@@ -160,7 +160,7 @@ async def test_configuration_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_device_433mhz"},
+        {ATTR_ENTITY_ID: "switch.test_device_433_mhz"},
         blocking=True,
     )
     mock_setting_433mhz.disable.assert_called_once_with(device)

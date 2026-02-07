@@ -33,13 +33,13 @@
   "entity": {
     "switch": {
       "433mhz": {
-        "name": "433Mhz"
+        "name": "433 MHz"
       },
       "cloud_access": {
         "name": "Cloud access"
       },
       "led": {
-        "name": "Led"
+        "name": "LED"
       },
       "physical_button": {
         "name": "Physical button"

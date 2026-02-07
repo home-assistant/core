@@ -16,12 +16,9 @@ class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
         self,
         coordinator: SystemNexa2DataUpdateCoordinator,
         key: str,
-        name: str | None = None,
     ) -> None:
         """Initialize the SystemNexa2 entity."""
         super().__init__(coordinator)
-        if name:
-            self._attr_name = name
         self._attr_unique_id = f"{coordinator.data.unique_id}-{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.unique_id)},

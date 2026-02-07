@@ -111,7 +111,7 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
 class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
     """Representation of a Switch."""
 
-    _attr_translation_key = "relay1"
+    _attr_translation_key = "relay_1"
 
     def __init__(
         self,
@@ -120,8 +120,7 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(
             coordinator=coordinator,
-            key="relay1",
-            name="Relay",
+            key="relay_1",
         )
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
@@ -139,6 +138,6 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        if not hasattr(self.coordinator.data, "state"):
+        if self.coordinator.data.state is None:
             return None
         return bool(self.coordinator.data.state)

@@ -46,6 +46,11 @@ class SystemNexa2Data:
     on_off_settings: dict[str, OnOffSetting]
     state: float | None
 
+    def __init__(self) -> None:
+        """Initialize the data container."""
+        self.state = None
+        self.on_off_settings = {}
+
     def update_settings(self, settings: list[Setting]) -> None:
         """Update the on/off settings from a list of settings."""
         self.on_off_settings = {
@@ -67,7 +72,7 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         hass: HomeAssistant,
         config_entry: SystemNexa2ConfigEntry,
     ) -> None:
-        """Initialize my coordinator."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -91,7 +96,7 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
 
         except DeviceInitializationError as e:
             _LOGGER.error(
-                "Failed to initialize device with IP/Hostname '%s', please verify that the device is powered on and reachable on port 3000",
+                "Failed to initialize device with IP/Hostname %s, please verify that the device is powered on and reachable on port 3000",
                 self.config_entry.data[CONF_HOST],
             )
             raise ConfigEntryNotReady(
@@ -119,13 +124,9 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
 
         if not _is_connected:
             self.async_set_update_error(ConnectionError("No connection to device"))
-        elif not (
+        elif (
             data.on_off_settings is not None
             and self._state_received_once
             and data.state is not None
         ):
-            self.async_set_update_error(
-                InsufficientDeviceInformation("Not enough data received device")
-            )
-        else:
             self.async_set_updated_data(data)

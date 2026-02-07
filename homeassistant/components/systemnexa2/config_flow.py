@@ -46,7 +46,7 @@ def _is_valid_host(ip_or_hostname: str) -> bool:
     return True
 
 
-@dataclass
+@dataclass(kw_only=True)
 class _DiscoveryInfo:
     name: str
     host: str
@@ -85,7 +85,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await temp_dev.get_info()
-            except (TimeoutError, aiohttp.ClientError):
+            except TimeoutError, aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
