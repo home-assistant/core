@@ -469,7 +469,7 @@ async def test_history_conversion(
     mock_init_component,
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
-    """Test that the pre-existed chat_log history is handled properly."""
+    """Test that the pre-existing chat_log history is handled properly."""
 
     agent_id = "conversation.ollama_conversation"
 
