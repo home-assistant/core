@@ -46,7 +46,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoLight(
-                available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
                 translation_key="bed_light",
@@ -55,21 +54,18 @@ async def async_setup_entry(
                 unique_id="light_1",
             ),
             DemoLight(
-                available=True,
                 ct=LIGHT_TEMPS[1],
                 device_name="Ceiling Lights",
                 state=True,
                 unique_id="light_2",
             ),
             DemoLight(
-                available=True,
                 hs_color=LIGHT_COLORS[1],
                 device_name="Kitchen Lights",
                 state=True,
                 unique_id="light_3",
             ),
             DemoLight(
-                available=True,
                 ct=LIGHT_TEMPS[1],
                 device_name="Office RGBW Lights",
                 rgbw_color=(255, 0, 0, 255),
@@ -78,7 +74,6 @@ async def async_setup_entry(
                 unique_id="light_4",
             ),
             DemoLight(
-                available=True,
                 device_name="Living Room RGBWW Lights",
                 rgbww_color=(255, 0, 0, 255, 0),
                 state=True,
@@ -86,7 +81,6 @@ async def async_setup_entry(
                 unique_id="light_5",
             ),
             DemoLight(
-                available=True,
                 device_name="Entrance Color + White Lights",
                 hs_color=LIGHT_COLORS[1],
                 state=True,
@@ -112,7 +106,6 @@ class DemoLight(LightEntity):
         unique_id: str,
         device_name: str,
         state: bool,
-        available: bool = False,
         brightness: int = 180,
         ct: int | None = None,
         effect_list: list[str] | None = None,
@@ -125,128 +118,72 @@ class DemoLight(LightEntity):
     ) -> None:
         """Initialize the light."""
         self._attr_translation_key = translation_key
-        self._available = True
-        self._brightness = brightness
-        self._ct = ct or random.choice(LIGHT_TEMPS)
-        self._effect = effect
-        self._effect_list = effect_list
-        self._hs_color = hs_color
-        self._rgbw_color = rgbw_color
-        self._rgbww_color = rgbww_color
-        self._state = state
-        self._unique_id = unique_id
+        self._attr_brightness = brightness
+        self._attr_color_temp_kelvin = ct or random.choice(LIGHT_TEMPS)
+        self._attr_effect = effect
+        self._attr_effect_list = effect_list
+        self._attr_hs_color = hs_color
+        self._attr_rgbw_color = rgbw_color
+        self._attr_rgbww_color = rgbww_color
+        self._attr_is_on = state
+        self._attr_unique_id = unique_id
         if hs_color:
-            self._color_mode = ColorMode.HS
+            self._attr_color_mode = ColorMode.HS
         elif rgbw_color:
-            self._color_mode = ColorMode.RGBW
+            self._attr_color_mode = ColorMode.RGBW
         elif rgbww_color:
-            self._color_mode = ColorMode.RGBWW
+            self._attr_color_mode = ColorMode.RGBWW
         else:
-            self._color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         if not supported_color_modes:
             supported_color_modes = SUPPORT_DEMO
-        self._color_modes = supported_color_modes
-        if self._effect_list is not None:
+        self._attr_supported_color_modes = supported_color_modes
+        if self._attr_effect_list is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, unique_id)
             },
             name=device_name,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for light."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
         """Return availability."""
         # This demo light is always available, but well-behaving components
         # should implement this to inform Home Assistant accordingly.
-        return self._available
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def color_mode(self) -> ColorMode | None:
-        """Return the color mode of the light."""
-        return self._color_mode
-
-    @property
-    def hs_color(self) -> tuple[int, int] | None:
-        """Return the hs color value."""
-        return self._hs_color
-
-    @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
-        """Return the rgbw color value."""
-        return self._rgbw_color
-
-    @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
-        """Return the rgbww color value."""
-        return self._rgbww_color
-
-    @property
-    def color_temp_kelvin(self) -> int | None:
-        """Return the color temperature value in Kelvin."""
-        return self._ct
-
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return the list of supported effects."""
-        return self._effect_list
-
-    @property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        return self._effect
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
-        return self._color_modes
+        return True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        self._state = True
+        self._attr_is_on = True
 
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            self._color_mode = ColorMode.COLOR_TEMP
-            self._ct = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
         if ATTR_EFFECT in kwargs:
-            self._effect = kwargs[ATTR_EFFECT]
+            self._attr_effect = kwargs[ATTR_EFFECT]
 
         if ATTR_HS_COLOR in kwargs:
-            self._color_mode = ColorMode.HS
-            self._hs_color = kwargs[ATTR_HS_COLOR]
+            self._attr_color_mode = ColorMode.HS
+            self._attr_hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
-            self._color_mode = ColorMode.RGBW
-            self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self._attr_color_mode = ColorMode.RGBW
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
         if ATTR_RGBWW_COLOR in kwargs:
-            self._color_mode = ColorMode.RGBWW
-            self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
+            self._attr_color_mode = ColorMode.RGBWW
+            self._attr_rgbww_color = kwargs[ATTR_RGBWW_COLOR]
 
         if ATTR_WHITE in kwargs:
-            self._color_mode = ColorMode.WHITE
-            self._brightness = kwargs[ATTR_WHITE]
+            self._attr_color_mode = ColorMode.WHITE
+            self._attr_brightness = kwargs[ATTR_WHITE]
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
@@ -254,7 +191,7 @@ class DemoLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self._state = False
+        self._attr_is_on = False
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.

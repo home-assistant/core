@@ -149,6 +149,9 @@ class WaterFurnaceData(threading.Thread):
         self.data = None
         self._shutdown = False
         self._fails = 0
+        self.device_metadata = next(
+            (device for device in client.devices if device.gwid == self.unit), None
+        )
 
     def _reconnect(self):
         """Reconnect on a failure."""

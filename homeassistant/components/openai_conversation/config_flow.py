@@ -457,7 +457,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["gpt-image-1", "gpt-image-1-mini"],
+                    options=["gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"],
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             )
