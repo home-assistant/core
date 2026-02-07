@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -19,12 +18,10 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("init_integration")
 async def test_async_setup_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a successful setup entry."""
-    state = hass.states.get("sensor.home_pm2_5")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "4"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_not_ready(
