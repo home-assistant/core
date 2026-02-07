@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LoJack account",
+        "description": "Enter your LoJack/Spireon account credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate LoJack",
+        "description": "Please enter your password to re-authenticate.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure LoJack",
+        "description": "Update your LoJack/Spireon account credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to LoJack servers",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "An unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "account_mismatch": "The username does not match the existing configuration",
+      "reconfigure_successful": "Reconfiguration was successful"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      },
+      "moving": {
+        "name": "Moving"
+      }
+    },
+    "button": {
+      "refresh_location": {
+        "name": "Refresh location"
+      }
+    },
+    "sensor": {
+      "odometer": {
+        "name": "Odometer"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "location_last_reported": {
+        "name": "Location last reported"
+      },
+      "make": {
+        "name": "Make"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "year": {
+        "name": "Year"
+      },
+      "vin": {
+        "name": "VIN"
+      },
+      "license_plate": {
+        "name": "License plate"
+      }
+    }
+  }
+}
