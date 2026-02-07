@@ -32,6 +32,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -79,6 +80,30 @@ async def test_entities(
 ) -> None:
     """Test entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_availability(hass: HomeAssistant, read_queue: asyncio.Queue) -> None:
+    """Test entity availability on disconnect and reconnect."""
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate a disconnect
+    read_queue.put_nowait(None)
+    await asyncio.sleep(0)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Simulate first status update after reconnect
+    read_queue.put_nowait(
+        status.Power(
+            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
+        )
+    )
+    await asyncio.sleep(0)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

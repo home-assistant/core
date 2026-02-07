@@ -61,6 +61,7 @@ from .const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    SceneConf,
 )
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
@@ -822,7 +823,7 @@ class SceneSchema(KNXPlatformSchema):
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Required(CONF_SCENE_NUMBER): vol.All(
+            vol.Required(SceneConf.SCENE_NUMBER): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=64)
             ),
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,

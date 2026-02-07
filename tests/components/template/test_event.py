@@ -57,7 +57,7 @@ async def async_setup_modern_format(
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of event integration via new format."""
-    extra = extra_config if extra_config else {}
+    extra = extra_config or {}
     config = {**event_config, **extra}
 
     with assert_setup_component(count, template.DOMAIN):
@@ -79,7 +79,7 @@ async def async_setup_trigger_format(
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of event integration via trigger format."""
-    extra = extra_config if extra_config else {}
+    extra = extra_config or {}
     config = {
         "template": {
             **TEST_STATE_TRIGGER,
