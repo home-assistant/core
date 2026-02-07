@@ -150,7 +150,7 @@
         "name": "Display"
       },
       "drying_mode_power_off": {
-        "name": "Drying mode power off"
+        "name": "Enable drying mode while power is off"
       }
     }
   },
