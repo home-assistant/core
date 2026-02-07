@@ -31,8 +31,8 @@ async def test_switch_entities(
     # Check that the relay switch is created
     state = hass.states.get("switch.test_device_relay")
     assert state is not None
-    # Entity is unavailable until coordinator receives data
-    assert state.state == "unavailable"
+    # Entity is unknown until coordinator receives state data
+    assert state.state == "unknown"
 
 
 async def test_switch_turn_on_off_toggle(

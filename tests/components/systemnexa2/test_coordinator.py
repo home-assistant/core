@@ -41,7 +41,6 @@ async def test_coordinator_setup_failure(
 async def test_coordinator_connection_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator handles connection status updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
@@ -50,18 +49,16 @@ async def test_coordinator_connection_status(
     # Set up initial data so device can become available
     coordinator.data.on_off_settings = {}
     await coordinator._async_handle_update(StateChange(state=1.0))
+    assert coordinator.last_update_success
 
     # Simulate disconnection
     await coordinator._async_handle_update(ConnectionStatus(connected=False))
-    assert not coordinator.data.available
-    assert "Device 192.168.1.100 is unavailable" in caplog.text
+    assert not coordinator.last_update_success
 
     # Simulate reconnection - need to resend state to make device available again
-    caplog.clear()
     await coordinator._async_handle_update(ConnectionStatus(connected=True))
     await coordinator._async_handle_update(StateChange(state=1.0))
-    assert coordinator.data.available
-    assert "Device 192.168.1.100 is back online" in caplog.text
+    assert coordinator.last_update_success
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")

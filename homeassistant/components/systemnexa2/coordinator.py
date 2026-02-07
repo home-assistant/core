@@ -27,11 +27,14 @@ _LOGGER = logging.getLogger(__name__)
 type SystemNexa2ConfigEntry = ConfigEntry[SystemNexa2DataUpdateCoordinator]
 
 
+class InsufficientDeviceInformation(Exception):
+    """Exception raised when device does not provide sufficient information."""
+
+
 class SystemNexa2Data:
     """Data container for System Nexa 2 device information."""
 
     __slots__ = (
-        "available",
         "info_data",
         "on_off_settings",
         "state",
@@ -42,7 +45,6 @@ class SystemNexa2Data:
     unique_id: str
     on_off_settings: dict[str, OnOffSetting]
     state: float | None
-    available: bool
 
     def update_settings(self, settings: list[Setting]) -> None:
         """Update the on/off settings from a list of settings."""
@@ -76,7 +78,6 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             always_update=False,
         )
         self._state_received_once = False
-        self._unavailable_logged = False
         self.data = SystemNexa2Data()
 
     async def async_setup(self) -> None:
@@ -99,7 +100,6 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 translation_placeholders={CONF_HOST: self.config_entry.data[CONF_HOST]},
             ) from e
 
-        self.data.available = False
         self.data.unique_id = self.device.info_data.unique_id
         self.data.info_data = self.device.info_data
         self.data.update_settings(self.device.settings)
@@ -116,24 +116,16 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 self._state_received_once = True
             case SettingsUpdate(settings):
                 data.update_settings(settings)
-        data.available = (
-            _is_connected
-            and data.on_off_settings is not None
+
+        if not _is_connected:
+            self.async_set_update_error(ConnectionError("No connection to device"))
+        elif not (
+            data.on_off_settings is not None
             and self._state_received_once
             and data.state is not None
-        )
-
-        if not data.available and not self._unavailable_logged:
-            _LOGGER.info(
-                "Device %s is unavailable",
-                self.config_entry.data[CONF_HOST],
+        ):
+            self.async_set_update_error(
+                InsufficientDeviceInformation("Not enough data received device")
             )
-            self._unavailable_logged = True
-        elif data.available and self._unavailable_logged:
-            _LOGGER.info(
-                "Device %s is back online",
-                self.config_entry.data[CONF_HOST],
-            )
-            self._unavailable_logged = False
-
-        self.async_set_updated_data(data)
+        else:
+            self.async_set_updated_data(data)

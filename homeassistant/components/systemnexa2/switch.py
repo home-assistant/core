@@ -137,6 +137,8 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
         await self.coordinator.device.toggle()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
+        if not hasattr(self.coordinator.data, "state"):
+            return None
         return bool(self.coordinator.data.state)

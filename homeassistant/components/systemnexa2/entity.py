@@ -31,8 +31,3 @@ class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
             sw_version=coordinator.data.info_data.sw_version,
             hw_version=str(coordinator.data.info_data.hw_version),
         )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.coordinator.data.available
