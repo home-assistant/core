@@ -36,12 +36,20 @@ PARALLEL_UPDATES = 0
 class IndevoltSensorEntityDescription(SensorEntityDescription):
     """Custom entity description class for Indevolt sensors."""
 
-    state_mapping: dict[int, str] = field(default_factory=dict)
+    state_mapping: dict[str | int, str] = field(default_factory=dict)
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
 SENSORS: Final = (
     # System Operating Information
+    IndevoltSensorEntityDescription(
+        key="606",
+        translation_key="mode",
+        state_mapping={"1000": "master", "1001": "slave", "1002": "standalone"},
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     IndevoltSensorEntityDescription(
         key="7101",
         translation_key="working_mode",

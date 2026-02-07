@@ -222,6 +222,14 @@
       "meter_power": {
         "name": "Meter power"
       },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "master": "Cluster (main)",
+          "slave": "Cluster (sub)",
+          "standalone": "Standalone"
+        }
+      },
       "off_grid_output_energy": {
         "name": "Off-grid output energy"
       },
