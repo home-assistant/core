@@ -197,6 +197,7 @@ class IDriveE2BackupAgent(BackupAgent):
             parts: list[dict[str, Any]] = []
             part_number = 1
             buffer = bytearray()  # bytes buffer to store the data
+            offset = 0  # start index of unread data inside buffer
 
             stream = await open_stream()
             async for chunk in stream:
@@ -204,9 +205,11 @@ class IDriveE2BackupAgent(BackupAgent):
 
                 # Upload parts of exactly MULTIPART_MIN_PART_SIZE_BYTES to ensure
                 # all non-trailing parts have the same size (defensive implementation)
-                while len(buffer) >= MULTIPART_MIN_PART_SIZE_BYTES:
-                    part_data = bytes(buffer[:MULTIPART_MIN_PART_SIZE_BYTES])
-                    del buffer[:MULTIPART_MIN_PART_SIZE_BYTES]
+                while len(buffer) - offset >= MULTIPART_MIN_PART_SIZE_BYTES:
+                    start = offset
+                    end = offset + MULTIPART_MIN_PART_SIZE_BYTES
+                    part_data = bytes(buffer[start:end])
+                    offset = end
 
                     _LOGGER.debug(
                         "Uploading part number %d, size %d",
@@ -223,17 +226,28 @@ class IDriveE2BackupAgent(BackupAgent):
                     parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
                     part_number += 1
 
+                # Compact the buffer if the consumed offset has grown large enough. This
+                # avoids unnecessary memory copies when compacting after every part upload.
+                if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
+                    del buffer[:offset]
+                    offset = 0
+
             # Upload the final buffer as the last part (no minimum size requirement)
-            if buffer:
+            # Offset should be 0 after the last compaction, but we use it as the start
+            # index to be defensive in case the buffer was not compacted.
+            remaining_data = bytes(buffer[offset:])
+            if remaining_data:
                 _LOGGER.debug(
-                    "Uploading final part number %d, size %d", part_number, len(buffer)
+                    "Uploading final part number %d, size %d",
+                    part_number,
+                    len(remaining_data),
                 )
                 part = await cast(Any, self._client).upload_part(
                     Bucket=self._bucket,
                     Key=tar_filename,
                     PartNumber=part_number,
                     UploadId=upload_id,
-                    Body=bytes(buffer),
+                    Body=bytes(remaining_data),
                 )
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
 
