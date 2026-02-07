@@ -112,7 +112,7 @@ class NessZoneBinarySensor(BinarySensorEntity):
 
             # Create device info for this zone (makes it a separate device)
             # Use zone_name if provided (from YAML import), otherwise default to "Zone {zone_id}"
-            device_name = zone_name if zone_name else f"Zone {zone_id}"
+            device_name = zone_name or f"Zone {zone_id}"
             self._attr_device_info = DeviceInfo(
                 name=device_name,
                 identifiers={(DOMAIN, self._attr_unique_id)},
