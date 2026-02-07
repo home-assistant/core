@@ -137,7 +137,6 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.coordinator = coordinator
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
