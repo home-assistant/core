@@ -48,9 +48,6 @@
       "c6h6": {
         "name": "Benzene"
       },
-      "co": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
-      },
       "no2_index": {
         "name": "Nitrogen dioxide index",
         "state": {
