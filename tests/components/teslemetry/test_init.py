@@ -1,6 +1,7 @@
 """Test the Teslemetry init."""
 
 from copy import deepcopy
+from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -816,32 +817,55 @@ async def test_live_status_auth_failed_forbidden(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_coordinator_update_failed_generic_error(
+COORDINATOR_REFRESH_ERRORS = [
+    ("mock_live_status", ENERGY_LIVE_INTERVAL, TeslaFleetError, LIVE_STATUS),
+    ("mock_energy_history", ENERGY_HISTORY_INTERVAL, InvalidToken, None),
+    ("mock_energy_history", ENERGY_HISTORY_INTERVAL, TeslaFleetError, None),
+]
+
+
+@pytest.mark.parametrize(
+    ("mock_name", "interval", "side_effect", "initial_return"),
+    COORDINATOR_REFRESH_ERRORS,
+)
+async def test_coordinator_refresh_errors(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
+    mock_energy_history: AsyncMock,
+    mock_name: str,
+    interval: timedelta,
+    side_effect: type[TeslaFleetError],
+    initial_return: dict | None,
 ) -> None:
-    """Test TeslaFleetError during coordinator refresh raises UpdateFailed."""
-    call_count = 0
+    """Test coordinator handles errors during refresh."""
+    mock = mock_live_status if mock_name == "mock_live_status" else mock_energy_history
 
-    def live_status_side_effect():
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return deepcopy(LIVE_STATUS)
-        raise TeslaFleetError
+    if initial_return is not None:
+        # For coordinators that do first_refresh during setup, succeed first then fail
+        call_count = 0
 
-    mock_live_status.side_effect = live_status_side_effect
+        def mock_side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return deepcopy(initial_return)
+            raise side_effect
+
+        mock.side_effect = mock_side_effect
+    else:
+        # For energy_history which doesn't do first_refresh during setup
+        mock.side_effect = side_effect
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     # Trigger coordinator refresh
-    freezer.tick(ENERGY_LIVE_INTERVAL)
+    freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Entry stays loaded - UpdateFailed doesn't break the entry
+    # Entry stays loaded - errors during refresh don't break the entry
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -872,34 +896,4 @@ async def test_energy_history_invalid_data(
     await hass.async_block_till_done()
 
     # Entry stays loaded - UpdateFailed doesn't break the entry
-    assert entry.state is ConfigEntryState.LOADED
-
-
-ENERGY_HISTORY_ERRORS = [
-    InvalidToken,
-    TeslaFleetError,
-]
-
-
-@pytest.mark.parametrize("side_effect", ENERGY_HISTORY_ERRORS)
-async def test_energy_history_coordinator_errors(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    side_effect: type[TeslaFleetError],
-) -> None:
-    """Test energy history coordinator handles errors during refresh."""
-    # Energy history coordinator doesn't do first_refresh during setup,
-    # so first call is on the first scheduled refresh
-    mock_energy_history.side_effect = side_effect
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    # Trigger coordinator refresh - this will be the first energy_history call
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Entry stays loaded - errors during refresh don't break the entry
     assert entry.state is ConfigEntryState.LOADED
