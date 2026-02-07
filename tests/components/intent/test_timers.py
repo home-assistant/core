@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent.timers import (
+    TIMER_DATA,
     MultipleTimersMatchedError,
     NoTimerCommandError,
-    TIMER_DATA,
     TimerEventType,
     TimerInfo,
     TimerManager,
