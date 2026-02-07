@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -129,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining hours until service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -185,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -238,6 +242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining hours until service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

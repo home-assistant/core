@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,7 +51,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,12 +87,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 1',
+      'friendly_name': 'Front Camera channel 1',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -101,7 +103,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -122,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -136,12 +139,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 2',
+      'friendly_name': 'Front Camera channel 2',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,

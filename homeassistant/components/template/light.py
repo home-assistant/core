@@ -16,6 +16,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -265,6 +267,8 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -289,7 +293,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         # Stored values for template attributes
         self._attr_is_on = initial_state
         self._supports_transition = False
-        self._attr_color_mode: ColorMode | None = None
 
     def _setup_light_features(self, config: ConfigType, name: str) -> None:
         """Setup light scripts, supported color modes, and supported features."""
@@ -856,7 +859,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
         try:
             if render in (None, "None", ""):
-                self._attr_min_color_temp_kelvin = None
+                self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
                 return
 
             self._attr_min_color_temp_kelvin = (
@@ -867,14 +870,14 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
-            self._attr_min_color_temp_kelvin = None
+            self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     @callback
     def _update_min_mireds(self, render):
         """Update the min mireds from the template."""
         try:
             if render in (None, "None", ""):
-                self._attr_max_color_temp_kelvin = None
+                self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
                 return
 
             self._attr_max_color_temp_kelvin = (
@@ -885,7 +888,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
-            self._attr_max_color_temp_kelvin = None
+            self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     @callback
     def _update_supports_transition(self, render):
@@ -1123,7 +1126,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         self._process_data()
 
         if not self.available:
-            self.async_write_ha_state()
             return
 
         write_ha_state = False
