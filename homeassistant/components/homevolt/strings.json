@@ -136,9 +136,6 @@
           "solar_charge_discharge": "Solar charge/discharge"
         }
       },
-      "state_of_charge": {
-        "name": "State of charge"
-      },
       "system_temperature": {
         "name": "System temperature"
       },
