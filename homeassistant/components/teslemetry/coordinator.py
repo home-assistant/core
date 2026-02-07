@@ -88,9 +88,18 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+                retry_after=_get_retry_after(e),
+            ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+            ) from e
 
         return data
 
