@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-def _toggle_switch(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+def _toggle_switch(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
     """Toggle power on."""
     if args and args[0] is True and hasattr(device, "turn_on"):
         return device.turn_on()
@@ -37,21 +37,21 @@ def _toggle_switch(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
     raise HomeAssistantError("Device does not support toggling power.")
 
 
-def _toggle_display(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+def _toggle_display(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
     """Toggle display on."""
     if hasattr(device, "toggle_display"):
         return device.toggle_display(*args)
     raise HomeAssistantError("Device does not support toggling display.")
 
 
-def _toggle_child_lock(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+def _toggle_child_lock(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
     """Toggle child lock on."""
     if hasattr(device, "toggle_child_lock"):
         return device.toggle_child_lock(*args)
     raise HomeAssistantError("Device does not support toggling child lock.")
 
 
-def _toggle_auto_stop(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+def _toggle_auto_stop(device: VeSyncBaseDevice, *args: Any) -> Awaitable[bool]:
     """Toggle automatic stop on."""
     match device:
         case VeSyncHumidifier() as sw if hasattr(sw, "toggle_automatic_stop"):
