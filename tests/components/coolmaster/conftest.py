@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.coolmaster.climate import CoolmasterClimate
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -267,3 +268,14 @@ async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry
     await hass.async_block_till_done()
 
     return config_entry
+
+
+@pytest.fixture(autouse=True)
+def reset_warned_fan_speeds():
+    """Reset the warned unknown fan speeds set before each test."""
+    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this fixture.
+    # This is necessary because `warned_unknown_fan_speeds` is a class variable and would persist
+    # across tests otherwise.
+    CoolmasterClimate.warned_unknown_fan_speeds.clear()
+    yield
+    CoolmasterClimate.warned_unknown_fan_speeds.clear()

@@ -141,12 +141,15 @@ async def test_climate_fan_mode(
 
 
 async def test_climate_unknown_fan_mode_warning(
+    hass: HomeAssistant,
     load_int: ConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the Coolmaster climate unknown fan mode warning."""
     # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this test.
     setup_logs = caplog.get_records(when="setup")
+
+    # Assert that both unknown fan speeds logged a warning.
     assert any(
         "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: ultra. "
         "Support for unknown fan speeds will be removed in 2026.7.0"
@@ -154,6 +157,31 @@ async def test_climate_unknown_fan_mode_warning(
         and rec.levelname == "WARNING"
         for rec in setup_logs
     )
+    assert any(
+        "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: vlow. "
+        "Support for unknown fan speeds will be removed in 2026.7.0"
+        in rec.getMessage()
+        and rec.levelname == "WARNING"
+        for rec in setup_logs
+    )
+
+    start_record_count = len(caplog.records)
+    # Get the entity from the climate component
+    climate_component = hass.data[CLIMATE_DOMAIN]
+    entity = climate_component.get_entity("climate.l1_104")
+
+    # Access the fan_mode property again to ensure no duplicate warnings are logged
+    assert entity.fan_mode == "ultra"
+    end_record_count = len(caplog.records)
+
+    for record in caplog.records[start_record_count:end_record_count]:
+        if (
+            "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: ultra. "
+            "Support for unknown fan speeds will be removed in 2026.7.0"
+            in record.getMessage()
+            and record.levelname == "WARNING"
+        ):
+            pytest.fail("Duplicate warning logged for unknown fan speed 'ultra'")
 
 
 async def test_climate_fan_modes(
