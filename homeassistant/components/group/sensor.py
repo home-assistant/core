@@ -433,7 +433,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                             self.entity_id,
                         )
                     continue
-                except (KeyError, HomeAssistantError):
+                except KeyError, HomeAssistantError:
                     # This exception handling can be simplified
                     # once sensor entity doesn't allow incorrect unit of measurement
                     # with a device class, implementation see PR #107639
