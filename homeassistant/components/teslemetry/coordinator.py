@@ -94,14 +94,12 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -145,14 +143,12 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -194,14 +190,12 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -238,14 +232,12 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
-            LOGGER.debug("Update failed: %s", e.message)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

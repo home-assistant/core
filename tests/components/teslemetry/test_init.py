@@ -875,15 +875,23 @@ async def test_energy_history_invalid_data(
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_energy_history_auth_error(
+ENERGY_HISTORY_ERRORS = [
+    InvalidToken,
+    TeslaFleetError,
+]
+
+
+@pytest.mark.parametrize("side_effect", ENERGY_HISTORY_ERRORS)
+async def test_energy_history_coordinator_errors(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_energy_history: AsyncMock,
+    side_effect: type[TeslaFleetError],
 ) -> None:
-    """Test InvalidToken during energy history refresh triggers reauth."""
+    """Test energy history coordinator handles errors during refresh."""
     # Energy history coordinator doesn't do first_refresh during setup,
     # so first call is on the first scheduled refresh
-    mock_energy_history.side_effect = InvalidToken
+    mock_energy_history.side_effect = side_effect
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -893,27 +901,5 @@ async def test_energy_history_auth_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Entry stays loaded but reauth flow should be triggered
-    assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_energy_history_generic_error(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-) -> None:
-    """Test TeslaFleetError during energy history refresh raises UpdateFailed."""
-    # Energy history coordinator doesn't do first_refresh during setup,
-    # so first call is on the first scheduled refresh
-    mock_energy_history.side_effect = TeslaFleetError
-
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    # Trigger coordinator refresh - this will be the first energy_history call
-    freezer.tick(ENERGY_HISTORY_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Entry stays loaded - UpdateFailed doesn't break the entry
+    # Entry stays loaded - errors during refresh don't break the entry
     assert entry.state is ConfigEntryState.LOADED

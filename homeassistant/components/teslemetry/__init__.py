@@ -150,7 +150,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_key="auth_failed_subscription_required",
         ) from e
     except TeslaFleetError as e:
-        LOGGER.debug("Setup failed: %s", e.message)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="not_ready_api_error",
@@ -277,7 +276,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_key="auth_failed_invalid_token",
                 ) from e
             except TeslaFleetError as e:
-                LOGGER.debug("Setup failed: %s", e.message)
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="not_ready_api_error",
