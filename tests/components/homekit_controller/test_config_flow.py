@@ -53,7 +53,8 @@ PAIRING_FINISH_FORM_ERRORS = [
 ]
 
 PAIRING_FINISH_ABORT_ERRORS = [
-    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
+    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
 ]
 
 
