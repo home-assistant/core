@@ -7,7 +7,7 @@ import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
-from datetime import time
+import datetime
 import mimetypes
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -184,7 +184,7 @@ def _escape_decode(value: Any) -> Any:
 
 def _validate_tool_results(value: Any) -> Any:
     """Recursively convert non-json-serializable types."""
-    if isinstance(value, time):
+    if isinstance(value, (datetime.time, datetime.date)):
         return value.isoformat()
     if isinstance(value, list):
         return [_validate_tool_results(item) for item in value]
