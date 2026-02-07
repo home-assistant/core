@@ -1,4 +1,29 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to ADS Device",
+        "description": "Set up your ADS (Automation Device Specification) connection.",
+        "data": {
+          "device": "AMS Net ID",
+          "ip_address": "IP address (optional)",
+          "port": "AMS port"
+        },
+        "data_description": {
+          "device": "The AMS Net ID of your ADS device (e.g., 192.168.1.100.1.1)",
+          "ip_address": "The IP address of your ADS device. Leave empty to use the Net ID for routing.",
+          "port": "The AMS port number of your device (default: 48898)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the ADS device: {error}",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
   "services": {
     "write_data_by_name": {
       "description": "Write a value to the connected ADS device.",
