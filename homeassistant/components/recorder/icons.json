@@ -6,11 +6,11 @@
     "enable": {
       "service": "mdi:database"
     },
-    "get_statistics": {
-      "service": "mdi:chart-bar"
-    },
     "get_history": {
       "service": "mdi:chart-box-multiple"
+    },
+    "get_statistics": {
+      "service": "mdi:chart-bar"
     },
     "purge": {
       "service": "mdi:database-sync"

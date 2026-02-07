@@ -212,7 +212,7 @@ async def _async_handle_get_history_service(
                 history_id,
                 True,
                 False,
-                None,
+                1000,
                 True,
             )
         )
