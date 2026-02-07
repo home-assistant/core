@@ -484,7 +484,7 @@ async def test_subentry_flow(
     assert subentry.data == {CONF_CHAT_ID: 987654321}
 
 
-async def test_subentry_flow_confg_not_ready(
+async def test_subentry_flow_config_not_ready(
     hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
 ) -> None:
     """Test subentry flow where config entry is not loaded."""
