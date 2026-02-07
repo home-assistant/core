@@ -129,6 +129,7 @@ def ws_get_prefs(
         vol.Required("type"): "energy/save_prefs",
         vol.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
         vol.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
+        vol.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 @websocket_api.async_response

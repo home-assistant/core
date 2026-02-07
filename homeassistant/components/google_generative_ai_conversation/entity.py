@@ -238,7 +238,7 @@ def _convert_content(
     if content.role != "assistant":
         return Content(
             role=content.role,
-            parts=[Part.from_text(text=content.content if content.content else "")],
+            parts=[Part.from_text(text=content.content or "")],
         )
 
     # Handle the Assistant content with tool calls.
@@ -410,7 +410,7 @@ async def _transform_stream(
 
                 if part.function_call:
                     tool_call = part.function_call
-                    tool_name = tool_call.name if tool_call.name else ""
+                    tool_name = tool_call.name or ""
                     tool_args = _escape_decode(tool_call.args)
                     chunk["tool_calls"] = [
                         llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
@@ -472,6 +472,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
+        default_max_tokens: int | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -618,7 +619,9 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             if not chat_log.unresponded_tool_results:
                 break
 
-    def create_generate_content_config(self) -> GenerateContentConfig:
+    def create_generate_content_config(
+        self, default_max_tokens: int | None = None
+    ) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
         model = options.get(CONF_CHAT_MODEL, self.default_model)
@@ -632,7 +635,12 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_output_tokens=options.get(
+                CONF_MAX_TOKENS,
+                default_max_tokens
+                if default_max_tokens is not None
+                else RECOMMENDED_MAX_TOKENS,
+            ),
             safety_settings=[
                 SafetySetting(
                     category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,

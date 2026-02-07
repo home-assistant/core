@@ -763,8 +763,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
         if task_type is TaskType.DAILY:
             reminders = list(
                 filter(
-                    lambda r: r.time.time().replace(second=0, microsecond=0)
-                    not in remove_reminder,
+                    lambda r: (
+                        r.time.time().replace(second=0, microsecond=0)
+                        not in remove_reminder
+                    ),
                     reminders,
                 )
             )

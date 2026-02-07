@@ -208,12 +208,12 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_execute_move(self, move: ShadePosition) -> None:
         """Execute a move that can affect multiple positions."""
         _LOGGER.debug("Move request %s: %s", self.name, move)
+        # Store the requested positions so subsequent move
+        # requests contain the secondary shade positions
+        self.data.update_shade_position(self._shade.id, move)
         async with self.coordinator.radio_operation_lock:
             response = await self._shade.move(move)
         _LOGGER.debug("Move response %s: %s", self.name, response)
-
-        # Process the response from the hub (including new positions)
-        self.data.update_shade_position(self._shade.id, response)
 
     async def _async_set_cover_position(self, target_hass_position: int) -> None:
         """Move the shade to a position."""

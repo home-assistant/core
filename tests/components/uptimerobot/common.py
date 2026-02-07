@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from unittest.mock import patch
 
@@ -47,7 +47,13 @@ MOCK_UPTIMEROBOT_MONITOR_PAUSED = {
     "type": 1,
     "url": "http://example.com",
 }
-
+MOCK_UPTIMEROBOT_MONITOR_2 = {
+    "id": 5678,
+    "friendly_name": "Test monitor 2",
+    "status": 2,
+    "type": 1,
+    "url": "http://example2.com",
+}
 
 MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,
@@ -71,7 +77,7 @@ UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
 UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor"
 
 
-class MockApiResponseKey(str, Enum):
+class MockApiResponseKey(StrEnum):
     """Mock API response key."""
 
     ACCOUNT = "account"

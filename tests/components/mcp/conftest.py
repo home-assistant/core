@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import datetime
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,6 +14,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.mcp.const import (
     CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -41,10 +43,34 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_mcp_client() -> Generator[AsyncMock]:
+def mock_sse_client() -> Generator[AsyncMock]:
+    """Fixture to mock the MCP client."""
+    with patch(
+        "homeassistant.components.mcp.coordinator.sse_client"
+    ) as mock_sse_client:
+        yield mock_sse_client
+
+
+@pytest.fixture
+def mock_http_streamable_client() -> Generator[AsyncMock]:
+    """Fixture to mock the MCP client."""
+    with patch(
+        "homeassistant.components.mcp.coordinator.streamable_http_client"
+    ) as mock_streamable_client:
+        mock_streamable_client.return_value.__aenter__.return_value = (
+            AsyncMock(),
+            AsyncMock(),
+            AsyncMock(),
+        )
+        yield mock_streamable_client
+
+
+@pytest.fixture
+def mock_mcp_client(
+    mock_sse_client: Any, mock_http_streamable_client: Any
+) -> Generator[AsyncMock]:
     """Fixture to mock the MCP client."""
     with (
-        patch("homeassistant.components.mcp.coordinator.sse_client"),
         patch("homeassistant.components.mcp.coordinator.ClientSession") as mock_session,
         patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1),
     ):
@@ -100,6 +126,7 @@ def mock_config_entry_with_auth(
                 "refresh_token": "test-refresh-token",
                 "expires_at": config_entry_token_expiration.timestamp(),
             },
+            CONF_SCOPE: ["read", "write"],
         },
         title=TEST_API_NAME,
     )

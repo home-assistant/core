@@ -8,6 +8,10 @@ from typing import Any
 from pycoolmasternet_async import SWING_MODES
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -31,7 +35,16 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-FAN_MODES = ["low", "med", "high", "auto"]
+CM_TO_HA_FAN = {
+    "low": FAN_LOW,
+    "med": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "auto": FAN_AUTO,
+}
+
+HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
+
+FAN_MODES = list(CM_TO_HA_FAN.values())
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +124,9 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._unit.fan_speed
+
+        # Normalize to lowercase for lookup, and pass unknown values through.
+        return CM_TO_HA_FAN.get(self._unit.fan_speed.lower(), self._unit.fan_speed)
 
     @property
     def fan_modes(self):
@@ -138,7 +153,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._unit = await self._unit.set_fan_speed(fan_mode)
+        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:

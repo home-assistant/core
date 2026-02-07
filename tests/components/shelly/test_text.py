@@ -62,7 +62,7 @@ async def test_rpc_device_virtual_text(
     assert state.state == "lorem ipsum"
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-text:203-text"
+    assert entry.unique_id == "123456789ABC-text:203-text_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
@@ -107,7 +107,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
         hass,
         TEXT_PLATFORM,
         "test_name_text_200",
-        "text:200-text",
+        "text:200-text_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -131,7 +131,7 @@ async def test_rpc_remove_virtual_text_when_orphaned(
         hass,
         TEXT_PLATFORM,
         "test_name_text_200",
-        "text:200-text",
+        "text:200-text_generic",
         config_entry,
         device_id=device_entry.id,
     )

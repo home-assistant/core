@@ -93,7 +93,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
                 _LOGGER.debug("Device %s is connected", mac)
                 self.last_results[mac] = name
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             _LOGGER.exception("Router returned unexpected response")
             return False
         return True

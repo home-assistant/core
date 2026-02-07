@@ -48,6 +48,7 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_STOP_MOVING = "HassStopMoving"
 INTENT_START_TIMER = "HassStartTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
 INTENT_CANCEL_ALL_TIMERS = "HassCancelAllTimers"
@@ -1342,7 +1343,7 @@ class IntentResponseType(
     """Response is an error"""
 
 
-class IntentResponseErrorCode(str, Enum):
+class IntentResponseErrorCode(StrEnum):
     """Reason for an intent response error."""
 
     NO_INTENT_MATCH = "no_intent_match"
@@ -1358,7 +1359,7 @@ class IntentResponseErrorCode(str, Enum):
     """Error outside the scope of intent processing"""
 
 
-class IntentResponseTargetType(str, Enum):
+class IntentResponseTargetType(StrEnum):
     """Type of target for an intent response."""
 
     AREA = "area"

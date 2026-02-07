@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_has_entity_registry_updated_listeners
 
 from .core import Recorder
+from .statistics import async_update_statistics_metadata
 from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ def async_setup(hass: HomeAssistant) -> None:
             assert event.data["action"] == "update" and "old_entity_id" in event.data
         old_entity_id = event.data["old_entity_id"]
         new_entity_id = event.data["entity_id"]
-        instance.async_update_statistics_metadata(
-            old_entity_id, new_statistic_id=new_entity_id
+        async_update_statistics_metadata(
+            hass, old_entity_id, new_statistic_id=new_entity_id
         )
         instance.async_update_states_metadata(
             old_entity_id, new_entity_id=new_entity_id

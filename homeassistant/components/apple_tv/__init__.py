@@ -51,7 +51,7 @@ DEFAULT_NAME_HP = "HomePod"
 BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 AUTH_EXCEPTIONS = (
     exceptions.AuthenticationError,
@@ -72,6 +72,7 @@ DEVICE_EXCEPTIONS = (
     exceptions.BackOffError,
     exceptions.DeviceIdMissingError,
 )
+
 
 type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
 

@@ -144,14 +144,15 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             )
         except BleakError as exc:
             self.logger.debug("Connection failed", exc_info=True)
-            raise DeviceNotFound("Unable to connect to device") from exc
+            raise DeviceFailed("Unable to connect to device") from exc
 
         try:
             async with asyncio.timeout(10):
                 packet_a0 = await client.read(PacketA0Notify)
         except (BleakError, DecodeError, TimeoutError) as exc:
+            self.logger.debug("Configuration read failed", exc_info=True)
             await client.disconnect()
-            raise DeviceFailed(f"Device failed {exc}") from exc
+            raise DeviceFailed("Failed to read device configuration") from exc
 
         config_entry = self.config_entry
 
@@ -199,10 +200,14 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         if self.client and not self.client.is_connected:
             await self.client.disconnect()
             self.client = None
-            self._async_request_refresh_soon()
+            self._debounced_refresh.async_schedule_call()
             raise DeviceFailed("Device was disconnected")
 
-        client = await self._get_connected_client()
+        try:
+            client = await self._get_connected_client()
+        except DeviceNotFound:
+            return {}
+
         try:
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
@@ -213,25 +218,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         return self.data
 
     @callback
-    def _async_request_refresh_soon(self) -> None:
-        """Request a refresh in the near future.
-
-        This way have been called during an update and
-        would be ignored by debounce logic, so we delay
-        it by a slight amount to hopefully let the current
-        update finish first.
-        """
-
-        async def _delayed_refresh() -> None:
-            await asyncio.sleep(0.5)
-            await self.async_request_refresh()
-
-        self.config_entry.async_create_task(self.hass, _delayed_refresh())
-
-    @callback
     def _disconnected_callback(self) -> None:
         """Handle Bluetooth device being disconnected."""
-        self._async_request_refresh_soon()
+        self._debounced_refresh.async_schedule_call()
 
     @callback
     def _async_handle_bluetooth_event(
@@ -240,5 +229,5 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        if isinstance(self.last_exception, DeviceNotFound):
-            self._async_request_refresh_soon()
+        if self.client is None:
+            self._debounced_refresh.async_schedule_call()

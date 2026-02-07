@@ -11,14 +11,14 @@
     "reload": {
       "service": "mdi:reload"
     },
-    "turn_on": {
-      "service": "mdi:script-text-play"
+    "toggle": {
+      "service": "mdi:script-text"
     },
     "turn_off": {
       "service": "mdi:script-text"
     },
-    "toggle": {
-      "service": "mdi:script-text"
+    "turn_on": {
+      "service": "mdi:script-text-play"
     }
   }
 }

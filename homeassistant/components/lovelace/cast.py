@@ -8,7 +8,7 @@ from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
-from homeassistant.components.cast.home_assistant_cast import (
+from homeassistant.components.cast.home_assistant_cast import (  # pylint: disable=hass-component-root-import
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,
@@ -158,7 +158,15 @@ async def _get_dashboard_info(
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
-    dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
+
+    # When url_path is None, prefer "lovelace" dashboard if it exists (for YAML mode)
+    # Otherwise fall back to dashboards[None] (storage mode default)
+    if url_path is None:
+        dashboard = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[
+            LOVELACE_DATA
+        ].dashboards.get(None)
+    else:
+        dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")

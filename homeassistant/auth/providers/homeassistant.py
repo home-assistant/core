@@ -179,12 +179,18 @@ class Data:
         user_hash = base64.b64decode(found["password"])
 
         # bcrypt.checkpw is timing-safe
-        if not bcrypt.checkpw(password.encode(), user_hash):
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        if not bcrypt.checkpw(password.encode()[:72], user_hash):
             raise InvalidAuth
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        hashed: bytes = bcrypt.hashpw(password.encode()[:72], bcrypt.gensalt(rounds=12))
 
         if for_storage:
             hashed = base64.b64encode(hashed)

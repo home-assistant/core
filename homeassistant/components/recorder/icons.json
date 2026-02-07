@@ -1,11 +1,5 @@
 {
   "services": {
-    "purge": {
-      "service": "mdi:database-sync"
-    },
-    "purge_entities": {
-      "service": "mdi:database-sync"
-    },
     "disable": {
       "service": "mdi:database-off"
     },
@@ -17,6 +11,12 @@
     },
     "get_history": {
       "service": "mdi:chart-box-multiple"
+    },
+    "purge": {
+      "service": "mdi:database-sync"
+    },
+    "purge_entities": {
+      "service": "mdi:database-sync"
     }
   }
 }

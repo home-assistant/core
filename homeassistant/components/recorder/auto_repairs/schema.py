@@ -12,7 +12,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from ..const import SupportedDialect
-from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE
+from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE, MYSQL_COLLATE
 from ..util import session_scope
 
 if TYPE_CHECKING:
@@ -105,12 +105,13 @@ def _validate_table_schema_has_correct_collation(
             or dialect_kwargs.get("mariadb_collate")
             or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]  # noqa: SLF001
         )
-        if collate and collate != "utf8mb4_unicode_ci":
+        if collate and collate != MYSQL_COLLATE:
             _LOGGER.debug(
-                "Database %s collation is not utf8mb4_unicode_ci",
+                "Database %s collation is not %s",
                 table,
+                MYSQL_COLLATE,
             )
-            schema_errors.add(f"{table}.utf8mb4_unicode_ci")
+            schema_errors.add(f"{table}.{MYSQL_COLLATE}")
     return schema_errors
 
 
@@ -240,7 +241,7 @@ def correct_db_schema_utf8(
     table_name = table_object.__tablename__
     if (
         f"{table_name}.4-byte UTF-8" in schema_errors
-        or f"{table_name}.utf8mb4_unicode_ci" in schema_errors
+        or f"{table_name}.{MYSQL_COLLATE}" in schema_errors
     ):
         from ..migration import (  # noqa: PLC0415
             _correct_table_character_set_and_collation,

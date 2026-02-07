@@ -1,0 +1,15 @@
+{
+  "experiences": [
+    {
+      "room_id": 1,
+      "type": "watch",
+      "sources": {
+        "source": [
+          {
+            "id": 100
+          }
+        ]
+      }
+    }
+  ]
+}

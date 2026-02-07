@@ -64,7 +64,7 @@ DATASET_1_LARGER_TIMESTAMP = (
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
-    with pytest.raises(TLVError, match="unknown type 222"):
+    with pytest.raises(TLVError, match="expected 173 bytes for tag 222, got 2"):
         await dataset_store.async_add_dataset(hass, "source", "DEADBEEF")
 
     store = await dataset_store.async_get_store(hass)

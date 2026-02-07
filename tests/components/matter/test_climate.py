@@ -30,7 +30,7 @@ async def test_climates(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.CLIMATE)
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_base(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -162,7 +162,7 @@ async def test_thermostat_base(
     assert state.attributes["temperature"] == 20
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_humidity(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -215,7 +215,7 @@ async def test_thermostat_humidity(
     assert "current_humidity" not in state.attributes
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_service_calls(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -368,7 +368,7 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
 
-@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_room_airconditioner(
     hass: HomeAssistant,
     matter_client: MagicMock,

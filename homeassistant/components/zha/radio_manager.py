@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 import contextlib
 from contextlib import suppress
 import copy
@@ -78,6 +78,7 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
         vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
         vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
+        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
     }
 )
 
@@ -171,7 +172,7 @@ class ZhaRadioManager:
     @contextlib.asynccontextmanager
     async def create_zigpy_app(
         self, *, connect: bool = True
-    ) -> AsyncIterator[ControllerApplication]:
+    ) -> AsyncGenerator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 

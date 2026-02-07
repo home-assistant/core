@@ -1,55 +1,55 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "another_device": "The IP address/hostname of another Nettigo Air Monitor was used.",
+      "device_unsupported": "The device is unsupported.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "{host}",
     "step": {
-      "user": {
-        "description": "Set up Nettigo Air Monitor integration.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the Nettigo Air Monitor to control."
-        }
-      },
-      "credentials": {
-        "description": "Please enter the username and password.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "description": "Please enter the correct username and password for host: {host}",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
       "confirm_discovery": {
         "description": "Do you want to set up Nettigo Air Monitor at {host}?"
       },
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Please enter the username and password."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Please enter the correct username and password for host: {host}"
+      },
       "reconfigure": {
-        "description": "Update configuration for {device_name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "[%key:component::nam::config::step::user::data_description::host%]"
-        }
+        },
+        "description": "Update configuration for {device_name}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Nettigo Air Monitor to control."
+        },
+        "description": "Set up Nettigo Air Monitor integration."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "device_unsupported": "The device is unsupported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "The IP address/hostname of another Nettigo Air Monitor was used."
     }
   },
   "entity": {
@@ -78,6 +78,12 @@
       "bmp280_temperature": {
         "name": "BMP280 temperature"
       },
+      "dht22_humidity": {
+        "name": "DHT22 humidity"
+      },
+      "dht22_temperature": {
+        "name": "DHT22 temperature"
+      },
       "ds18b20_temperature": {
         "name": "DS18B20 temperature"
       },
@@ -86,6 +92,9 @@
       },
       "heca_temperature": {
         "name": "HECA temperature"
+      },
+      "last_restart": {
+        "name": "Last restart"
       },
       "mhz14a_carbon_dioxide": {
         "name": "MH-Z14A carbon dioxide"
@@ -96,20 +105,20 @@
       "pmsx003_caqi_level": {
         "name": "PMSx003 common air quality index level",
         "state": {
-          "very_low": "[%key:common::state::very_low%]",
+          "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]",
-          "very_high": "[%key:common::state::very_high%]"
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:common::state::very_low%]",
+              "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "very_low": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -129,20 +138,20 @@
       "sds011_caqi_level": {
         "name": "SDS011 common air quality index level",
         "state": {
-          "very_low": "[%key:common::state::very_low%]",
+          "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]",
-          "very_high": "[%key:common::state::very_high%]"
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:common::state::very_low%]",
+              "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "very_low": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -165,20 +174,20 @@
       "sps30_caqi_level": {
         "name": "SPS30 common air quality index level",
         "state": {
-          "very_low": "[%key:common::state::very_low%]",
+          "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]",
-          "very_high": "[%key:common::state::very_high%]"
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:common::state::very_low%]",
+              "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "very_high": "[%key:common::state::very_high%]"
+              "very_high": "[%key:common::state::very_high%]",
+              "very_low": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -194,15 +203,6 @@
       },
       "sps30_pm4": {
         "name": "SPS30 PM4"
-      },
-      "dht22_humidity": {
-        "name": "DHT22 humidity"
-      },
-      "dht22_temperature": {
-        "name": "DHT22 temperature"
-      },
-      "last_restart": {
-        "name": "Last restart"
       }
     }
   },
@@ -210,11 +210,11 @@
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
     },
-    "device_communication_error": {
-      "message": "An error occurred while communicating with {device}"
-    },
     "device_communication_action_error": {
       "message": "An error occurred while calling action for {entity} for {device}"
+    },
+    "device_communication_error": {
+      "message": "An error occurred while communicating with {device}"
     },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"

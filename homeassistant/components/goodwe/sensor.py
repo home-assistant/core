@@ -79,11 +79,11 @@ _ICONS: dict[SensorKind, str] = {
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[[GoodweUpdateCoordinator, str], Any] = (
-        lambda coordinator, sensor: coordinator.sensor_value(sensor)
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = lambda coordinator, sensor: (
+        coordinator.sensor_value(sensor)
     )
-    available: Callable[[GoodweUpdateCoordinator], bool] = (
-        lambda coordinator: coordinator.last_update_success
+    available: Callable[[GoodweUpdateCoordinator], bool] = lambda coordinator: (
+        coordinator.last_update_success
     )
 
 
@@ -186,6 +186,7 @@ async def async_setup_entry(
 class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     """Entity representing individual inverter sensor."""
 
+    _attr_has_entity_name = True
     entity_description: GoodweSensorEntityDescription
 
     def __init__(

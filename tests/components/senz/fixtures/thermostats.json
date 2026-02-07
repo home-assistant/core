@@ -1,0 +1,24 @@
+[
+  {
+    "serialNumber": "1001",
+    "name": "Test room 1",
+    "currentTemperature": 1845,
+    "online": true,
+    "isHeating": true,
+    "setPointTemperature": 1900,
+    "holdUntil": null,
+    "mode": 5,
+    "errorState": null
+  },
+  {
+    "serialNumber": "1002",
+    "name": "Test room 2",
+    "currentTemperature": 930,
+    "online": true,
+    "isHeating": false,
+    "setPointTemperature": 600,
+    "holdUntil": null,
+    "mode": 1,
+    "errorState": null
+  }
+]

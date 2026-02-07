@@ -40,7 +40,7 @@ from homeassistant.components.squeezebox.const import (
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
 )
-from homeassistant.components.squeezebox.media_player import (
+from homeassistant.components.squeezebox.services import (
     ATTR_PARAMETERS,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
@@ -83,6 +83,13 @@ def squeezebox_media_player_platform():
     with patch(
         "homeassistant.components.squeezebox.PLATFORMS", [Platform.MEDIA_PLAYER]
     ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_discovery():
+    """Mock discovery of squeezebox players."""
+    with patch("homeassistant.components.squeezebox.media_player.async_discover"):
         yield
 
 
