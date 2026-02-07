@@ -7,14 +7,14 @@
       'type': 'message',
     }),
     dict({
-      'arguments': '{"code": "import math\\nmath.sqrt(55555)", "container": "cntr_A"}',
+      'arguments': '{"code":"import math\\nmath.sqrt(55555)","container":"cntr_A"}',
       'call_id': 'ci_A',
       'name': 'code_interpreter',
       'type': 'function_call',
     }),
     dict({
       'call_id': 'ci_A',
-      'output': '{"output": [{"logs": "235.70108188126758\\n", "type": "logs"}]}',
+      'output': '{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]}',
       'type': 'function_call_output',
     }),
     dict({
@@ -146,7 +146,7 @@
       'type': 'reasoning',
     }),
     dict({
-      'arguments': '{"param1": "call1"}',
+      'arguments': '{"param1":"call1"}',
       'call_id': 'call_call_1',
       'name': 'test_tool',
       'type': 'function_call',
@@ -157,7 +157,7 @@
       'type': 'function_call_output',
     }),
     dict({
-      'arguments': '{"param1": "call2"}',
+      'arguments': '{"param1":"call2"}',
       'call_id': 'call_call_2',
       'name': 'test_tool',
       'type': 'function_call',
