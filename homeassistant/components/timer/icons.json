@@ -18,5 +18,10 @@
     "start": {
       "service": "mdi:play"
     }
+  },
+  "triggers": {
+    "events": {
+      "trigger": "mdi:timer"
+    }
   }
 }
