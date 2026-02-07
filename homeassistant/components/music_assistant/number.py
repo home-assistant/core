@@ -33,9 +33,14 @@ async def async_setup_entry(
             return
         entities: list[MusicAssistantPlayerConfigNumber] = []
         for player_option in player.options:
-            if not player_option.read_only and player_option.type in (
-                PlayerOptionType.INTEGER,
-                PlayerOptionType.FLOAT,
+            if (
+                not player_option.read_only
+                and player_option.type
+                in (
+                    PlayerOptionType.INTEGER,
+                    PlayerOptionType.FLOAT,
+                )
+                and not player_option.options  # these we map to select
             ):
                 entities.extend(
                     [
