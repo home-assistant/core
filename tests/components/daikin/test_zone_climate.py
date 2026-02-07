@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.daikin.const import DOMAIN as DAIKIN_DOMAIN, KEY_MAC
+from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -158,7 +158,7 @@ async def _async_setup_daikin(
 ) -> MockConfigEntry:
     """Set up a Daikin config entry with a mocked library device."""
     config_entry = MockConfigEntry(
-        domain=DAIKIN_DOMAIN,
+        domain=DOMAIN,
         unique_id=device.mac,
         data={CONF_HOST: HOST, KEY_MAC: device.mac},
     )
@@ -180,7 +180,7 @@ def _zone_entity_id(
     """Return the entity id for a zone climate unique id."""
     return entity_registry.async_get_entity_id(
         CLIMATE_DOMAIN,
-        DAIKIN_DOMAIN,
+        DOMAIN,
         f"{device.mac}-zone{zone_id}-temperature",
     )
 

@@ -141,7 +141,9 @@ def _system_target_temperature(device: Appliance) -> float | None:
         return None
     try:
         return float(target)
-    except (TypeError, ValueError):
+    except TypeError:
+        return None
+    except ValueError:
         return None
 
 
@@ -151,7 +153,9 @@ def _zone_temperature_from_list(values: list[str], zone_id: int) -> float | None
         return None
     try:
         return float(values[zone_id])
-    except (TypeError, ValueError):
+    except TypeError:
+        return None
+    except ValueError:
         return None
 
 
