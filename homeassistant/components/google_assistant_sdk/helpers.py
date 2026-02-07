@@ -142,7 +142,7 @@ def best_matching_language_code(
     # Use the assist language if supported
     if assist_language in SUPPORTED_LANGUAGE_CODES:
         return assist_language
-    language = assist_language.split("-")[0]
+    language = assist_language.split("-", maxsplit=1)[0]
 
     # Use the agent language if assist and agent start with the same language part
     if agent_language is not None and agent_language.startswith(language):
