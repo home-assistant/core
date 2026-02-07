@@ -164,6 +164,4 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
     @property
     def native_value(self):
         """Return the native value of the sensor."""
-        if self.coordinator.data is None:
-            return None
         return getattr(self.coordinator.data, self.entity_description.key, None)
