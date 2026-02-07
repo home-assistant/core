@@ -508,44 +508,6 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         else:
             raise HomeAssistantError("Invalid prompt content")
 
-        messages: list[Content | ContentDict] = []
-
-        # Google groups tool results, we do not. Group them before sending.
-        tool_results: list[conversation.ToolResultContent] = []
-
-        for chat_content in chat_log.content[1:-1]:
-            if chat_content.role == "tool_result":
-                tool_results.append(chat_content)
-                continue
-
-            if (
-                not isinstance(chat_content, conversation.ToolResultContent)
-                and chat_content.content == ""
-            ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
-                chat_content = replace(chat_content, content=" ")
-
-            if tool_results:
-                messages.append(_create_google_tool_response_content(tool_results))
-                tool_results.clear()
-
-            messages.append(_convert_content(chat_content))
-
-        # The SDK requires the first message to be a user message
-        # This is not the case if user used `start_conversation`
-        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
-        if messages and (
-            (isinstance(messages[0], Content) and messages[0].role != "user")
-            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
-        ):
-            messages.insert(
-                0,
-                Content(role="user", parts=[Part.from_text(text=" ")]),
-            )
-
-        if tool_results:
-            messages.append(_create_google_tool_response_content(tool_results))
         generateContentConfig = self.create_generate_content_config()
         generateContentConfig.tools = tools or None
         generateContentConfig.system_instruction = (
@@ -567,32 +529,19 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 )
             )
 
-        if not supports_system_instruction:
-            messages = [
-                Content(role="user", parts=[Part.from_text(text=prompt)]),
-                Content(role="model", parts=[Part.from_text(text="Ok")]),
-                *messages,
-            ]
-        chat = self._genai_client.aio.chats.create(
-            model=model_name, history=messages, config=generateContentConfig
-        )
-        user_message = chat_log.content[-1]
-        assert isinstance(user_message, conversation.UserContent)
-        chat_request: list[PartUnionDict] = [user_message.content]
-        if user_message.attachments:
-            chat_request.extend(
-                await async_prepare_files_for_prompt(
-                    self.hass,
-                    self._genai_client,
-                    [(a.path, a.mime_type) for a in user_message.attachments],
-                )
-            )
-
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            messages = await self._convert_history_to_gemini_messages(
+                chat_log.content, prompt if not supports_system_instruction else None
+            )
+
             try:
-                chat_response_generator = await chat.send_message_stream(
-                    message=chat_request
+                chat_response_generator = (
+                    await self._genai_client.aio.models.generate_content_stream(
+                        model=model_name,
+                        contents=messages,
+                        config=generateContentConfig,
+                    )
                 )
             except (
                 APIError,
@@ -603,7 +552,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
 
-            chat_request = list(
+            # We need to create the list here because we need to iterate over the generator
+            # to get the tool results, otherwise `chat_log.unresponded_tool_results` will be empty
+            # and the loop will break.
+            list(
                 _create_google_tool_response_parts(
                     [
                         content
@@ -618,6 +570,89 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
             if not chat_log.unresponded_tool_results:
                 break
+
+    async def _convert_history_to_gemini_messages(
+        self,
+        chat_history: list[conversation.Content],
+        system_instruction_prompt: str | None,
+    ) -> list[Content | ContentDict]:
+        """Convert the chat history to Gemini messages."""
+        messages: list[Content | ContentDict] = []
+        if system_instruction_prompt:
+            messages.append(
+                Content(
+                    role="user", parts=[Part.from_text(text=system_instruction_prompt)]
+                )
+            )
+            messages.append(Content(role="model", parts=[Part.from_text(text="Ok")]))
+
+        # Google groups tool results, we do not. Group them before sending.
+        tool_results: list[conversation.ToolResultContent] = []
+        last_role = messages[-1].role if messages else None
+
+        for chat_content in chat_history[1:]:
+            if chat_content.role == "tool_result":
+                tool_results.append(chat_content)
+                continue
+
+            if tool_results:
+                if last_role != "model":
+                    raise HomeAssistantError(
+                        "Tool results (FunctionResponse) must follow a model message (FunctionCall)."
+                    )
+                messages.append(_create_google_tool_response_content(tool_results))
+                tool_results.clear()
+                last_role = "user"  # Tool results are user role
+
+            messages.append(_convert_content(chat_content))
+            last_role = "model" if chat_content.role == "assistant" else "user"
+
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and (
+            (isinstance(messages[0], Content) and messages[0].role != "user")
+            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
+        ):
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
+            )
+
+        if tool_results:
+            if last_role != "model":
+                raise HomeAssistantError(
+                    "Tool results (FunctionResponse) must follow a model message (FunctionCall)."
+                )
+            messages.append(_create_google_tool_response_content(tool_results))
+
+        if messages:
+            # Handle attachments for the last user message
+            user_message = chat_history[-1]
+            if (
+                isinstance(user_message, conversation.UserContent)
+                and user_message.attachments
+            ):
+                # We need to append attachments to the last message if it is a user message
+                last_message = messages[-1]
+                if isinstance(last_message, Content) and last_message.role == "user":
+                    # This logic assumes the last message in `messages` corresponds to `user_message`
+                    # which should be true in a normal flow.
+                    if not last_message.parts:
+                        last_message.parts = []
+
+                    additional_parts = await async_prepare_files_for_prompt(
+                        self.hass,
+                        self._genai_client,
+                        [(a.path, a.mime_type) for a in user_message.attachments],
+                    )
+
+                    for file in additional_parts:
+                        last_message.parts.append(
+                            Part.from_uri(file.uri, mime_type=file.mime_type)
+                        )
+
+        return messages
 
     def create_generate_content_config(
         self, default_max_tokens: int | None = None
