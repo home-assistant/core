@@ -1,6 +1,7 @@
 """Common entity for VeSync Component."""
 
 import logging
+
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.core import callback
