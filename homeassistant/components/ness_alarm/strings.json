@@ -36,10 +36,10 @@
       "step": {
         "reconfigure": {
           "data": {
-            "type": "Zone type"
+            "type": "[%key:component::ness_alarm::config_subentries::zone::step::user::data::type%]"
           },
           "data_description": {
-            "type": "Choose the device class you would like the sensor to show as"
+            "type": "[%key:component::ness_alarm::config_subentries::zone::step::user::data_description::type%]"
           },
           "title": "Reconfigure zone {zone_number}"
         },
