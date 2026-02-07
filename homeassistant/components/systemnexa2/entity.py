@@ -15,16 +15,15 @@ class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: SystemNexa2DataUpdateCoordinator,
-        unique_entity_id: str,
+        key: str,
         name: str | None = None,
     ) -> None:
         """Initialize the SystemNexa2 entity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         if name:
             self._attr_name = name
-        self._attr_unique_id = f"{coordinator.data.unique_id}-{unique_entity_id}"
-        dev_info = DeviceInfo(
+        self._attr_unique_id = f"{coordinator.data.unique_id}-{key}"
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.unique_id)},
             manufacturer=MANUFACTURER,
             name=coordinator.data.info_data.name,
@@ -32,7 +31,6 @@ class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
             sw_version=coordinator.data.info_data.sw_version,
             hw_version=str(coordinator.data.info_data.hw_version),
         )
-        self._attr_device_info = dev_info
 
     @property
     def available(self) -> bool:

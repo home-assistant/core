@@ -11,22 +11,14 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}-({model})",
     "step": {
       "discovery_confirm": {
         "description": "Do you want to add the device `{name}` to Home Assistant?",
         "title": "Discovered Nexa System 2 device"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "IP/Hostname"
-        },
-        "data_description": {
-          "host": "Hostname or IP Address of the device"
-        },
-        "description": "Update the IP address or hostname if your device has moved to a different address on the network"
       },
       "user": {
         "data": {
@@ -44,13 +36,13 @@
         "name": "433Mhz"
       },
       "cloud_access": {
-        "name": "Cloud Access"
+        "name": "Cloud access"
       },
       "led": {
         "name": "Led"
       },
       "physical_button": {
-        "name": "Physical Button"
+        "name": "Physical button"
       },
       "relay_1": {
         "name": "Relay 1"

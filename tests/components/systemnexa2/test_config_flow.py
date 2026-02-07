@@ -87,9 +87,8 @@ async def test_connection_timeout(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_connection"
-    assert result["description_placeholders"] == {"host": "10.0.0.131"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device_unknown_error")
@@ -106,9 +105,8 @@ async def test_connection_unknown_error(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_connection_error"
-    assert result["description_placeholders"] == {"host": "10.0.0.131"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_empty_host(
@@ -126,8 +124,8 @@ async def test_empty_host(
         result["flow_id"],
         {CONF_HOST: ""},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_host"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_invalid_hostname(
@@ -151,8 +149,8 @@ async def test_invalid_hostname(
             result["flow_id"],
             {CONF_HOST: "invalid-hostname.local"},
         )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_host"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")

@@ -64,10 +64,11 @@ async def async_setup_entry(
     ]
 
     if coordinator.data.info_data.dimmable is False:
-        main_entry = SystemNexa2SwitchPlug(
-            coordinator=coordinator,
+        entities.append(
+            SystemNexa2SwitchPlug(
+                coordinator=coordinator,
+            )
         )
-        entities.append(main_entry)
     async_add_entities(entities)
 
 
@@ -86,11 +87,10 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
         """Initialize the configuration switch."""
         super().__init__(
             coordinator=coordinator,
-            unique_entity_id=description.key,
+            key=description.key,
         )
         self.entity_description = description
         self._setting = setting
-        self._attr_entity_category = EntityCategory.CONFIG
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
@@ -120,7 +120,7 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(
             coordinator=coordinator,
-            unique_entity_id="relay1",
+            key="relay1",
             name="Relay",
         )
 
