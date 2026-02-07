@@ -26,6 +26,7 @@ from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1207,7 +1208,7 @@ async def test_get_history_service_missing_mandatory_keys(
     service_args: dict[str, Any],
     missing_key: str,
 ) -> None:
-    """Test the get_statistics service with missing mandatory keys."""
+    """Test the get_history service with missing mandatory keys."""
 
     await async_recorder_block_till_done(hass)
 
@@ -1222,3 +1223,45 @@ async def test_get_history_service_missing_mandatory_keys(
             return_response=True,
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "error_key"),
+    [
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+                "start_time": "2026-05-08 07:00:00Z",
+            },
+            "start_time_before_now",
+        ),
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+                "start_time": "2026-02-01 07:00:00Z",
+                "end_time": "2026-01-01 07:00:00Z",
+            },
+            "end_time_before_start_time",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2026-02-07 08:00:00-00:00")
+async def test_get_history_service_invalid_times(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    error_key: str,
+) -> None:
+    """Test the get_history service with invalid timestamps."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == error_key

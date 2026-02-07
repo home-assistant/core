@@ -16,6 +16,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.recorder import DATA_INSTANCE
@@ -198,6 +199,18 @@ async def _async_handle_get_history_service(
     end_time = (
         dt_util.as_utc(service.data["end_time"]) if "end_time" in service.data else None
     )
+
+    if start_time > dt_util.utcnow():
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="start_time_before_now",
+        )
+
+    if end_time and end_time < start_time:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="end_time_before_start_time",
+        )
 
     history_ids = service.data["history_ids"]
     # Note that the state_changes_during_period specifically returns the LazyState subclass
