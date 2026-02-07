@@ -147,7 +147,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         if attribute_adjustment_only:
             return
         # send turn_on command to pyvesync api
-        if not self.device.turn_on():
+        if not await self.device.turn_on():
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Unknown error turning on device, no response.")
@@ -155,7 +155,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if not self.device.turn_off():
+        if not await self.device.turn_off():
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Unknown error turning off device, no response.")
