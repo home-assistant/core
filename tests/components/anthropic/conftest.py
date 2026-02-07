@@ -145,7 +145,7 @@ def mock_config_entry_with_web_search(
 def mock_config_entry_with_no_structured_output(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
-    """Mock a config entry with adaptive thinking."""
+    """Mock a config entry with a model without structured outputs support."""
     for subentry in mock_config_entry.subentries.values():
         hass.config_entries.async_update_subentry(
             mock_config_entry,

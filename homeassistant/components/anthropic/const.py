@@ -56,7 +56,7 @@ NON_ADAPTIVE_THINKING_MODELS = [
     "claude-3",
 ]
 
-NO_STRUCTURE_OUTPUT_MODELS = [
+UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
     "claude-opus-4-1",
     "claude-opus-4-0",
     "claude-opus-4-20250514",

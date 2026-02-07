@@ -93,9 +93,9 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
-    NO_STRUCTURE_OUTPUT_MODELS,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
+    UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -699,7 +699,7 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if structure and structure_name:
-            if not model.startswith(tuple(NO_STRUCTURE_OUTPUT_MODELS)):
+            if not model.startswith(tuple(UNSUPPORTED_STRUCTURED_OUTPUT_MODELS)):
                 # Native structured output for those models who support it.
                 structure_name = None
                 model_args.setdefault("output_config", OutputConfigParam())[
