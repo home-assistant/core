@@ -46,7 +46,7 @@ def convert_to_waypoint(hass: HomeAssistant, location: str) -> Waypoint | None:
     try:
         formatted_coordinates = coordinates.split(",")
         vol.Schema(cv.gps(formatted_coordinates))
-    except (AttributeError, vol.Invalid):
+    except AttributeError, vol.Invalid:
         return Waypoint(address=location)
     return Waypoint(
         location=Location(

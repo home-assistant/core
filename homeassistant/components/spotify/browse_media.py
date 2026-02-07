@@ -427,7 +427,7 @@ async def build_item_response(  # noqa: C901
             browse_media.children.append(
                 item_payload(item, can_play_artist=can_play_artist)
             )
-        except (MissingMediaInformation, UnknownMediaType):
+        except MissingMediaInformation, UnknownMediaType:
             continue
 
     return browse_media
