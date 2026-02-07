@@ -11,11 +11,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import UPDATE_TOPIC, WaterFurnaceConfigEntry, WaterFurnaceData
+from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceConfigEntry, WaterFurnaceData
 
 SENSORS = [
     SensorEntityDescription(
@@ -141,6 +142,22 @@ class WaterFurnaceSensor(SensorEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(
             f"wf_{slugify(self.client.unit)}_{slugify(description.key)}"
         )
+        self._attr_unique_id = f"{self.client.unit}_{description.key}"
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.client.unit)},
+            manufacturer="WaterFurnace",
+            name="WaterFurnace System",
+        )
+
+        if self.client.device_metadata:
+            if self.client.device_metadata.description:
+                # Eg. Series 7
+                device_info["model"] = self.client.device_metadata.description
+            if self.client.device_metadata.awlabctypedesc:
+                # Eg. Series 7, 5 Ton
+                device_info["name"] = self.client.device_metadata.awlabctypedesc
+
+        self._attr_device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
