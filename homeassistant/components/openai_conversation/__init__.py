@@ -77,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
         LOGGER.warning(
-            "Action '%s.%s' is deprecated and will be removed in the 2026.4.0 release. "
+            "Action '%s.%s' is deprecated and will be removed in the 2026.9.0 release. "
             "Please use the 'ai_task.generate_image' action instead",
             DOMAIN,
             SERVICE_GENERATE_IMAGE,
@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "deprecated_generate_image",
-            breaks_in_ha_version="2026.4.0",
+            breaks_in_ha_version="2026.9.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_generate_image",
@@ -128,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
         """Send a prompt to ChatGPT and return the response."""
         LOGGER.warning(
-            "Action '%s.%s' is deprecated and will be removed in the 2026.4.0 release. "
+            "Action '%s.%s' is deprecated and will be removed in the 2026.9.0 release. "
             "Please use the 'ai_task.generate_data' action instead",
             DOMAIN,
             SERVICE_GENERATE_CONTENT,
@@ -137,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "deprecated_generate_content",
-            breaks_in_ha_version="2026.4.0",
+            breaks_in_ha_version="2026.9.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_generate_content",

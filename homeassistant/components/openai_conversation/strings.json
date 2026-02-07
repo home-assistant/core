@@ -150,11 +150,11 @@
   },
   "issues": {
     "deprecated_generate_content": {
-      "description": "Action 'openai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead",
+      "description": "Action 'openai_conversation.generate_content' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_data' action instead",
       "title": "Deprecated 'generate_content' action"
     },
     "deprecated_generate_image": {
-      "description": "Action 'openai_conversation.generate_image' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_image' action instead",
+      "description": "Action 'openai_conversation.generate_image' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_image' action instead",
       "title": "Deprecated 'generate_image' action"
     },
     "organization_verification_required": {
