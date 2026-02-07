@@ -363,30 +363,35 @@ SENSORS: Final = (
         generation=[2],
         translation_key="battery_pack_1_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9051",
         generation=[2],
         translation_key="battery_pack_2_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9070",
         generation=[2],
         translation_key="battery_pack_3_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9165",
         generation=[2],
         translation_key="battery_pack_4_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9218",
         generation=[2],
         translation_key="battery_pack_5_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Battery Pack SOC
     IndevoltSensorEntityDescription(
@@ -397,6 +402,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9016",
@@ -406,6 +412,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9035",
@@ -415,6 +422,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9054",
@@ -424,6 +432,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9149",
@@ -433,6 +442,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9202",
@@ -442,6 +452,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Battery Pack Temperature
     IndevoltSensorEntityDescription(
