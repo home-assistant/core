@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_water_heater_entities_snapshot[water_heater.r_900_r_900-entry]
+# name: test_water_heater_entities_snapshot[water_heater.r_900-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -21,7 +21,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.r_900_r_900',
+    'entity_id': 'water_heater.r_900',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,12 +29,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'R 900',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'R 900',
+    'original_name': None,
     'platform': 'compit',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -44,11 +44,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_water_heater_entities_snapshot[water_heater.r_900_r_900-state]
+# name: test_water_heater_entities_snapshot[water_heater.r_900-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 50.0,
-      'friendly_name': 'R 900 R 900',
+      'friendly_name': 'R 900',
       'max_temp': 70.0,
       'min_temp': 0.0,
       'operation_list': list([
@@ -64,7 +64,7 @@
       'temperature': 55.0,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.r_900_r_900',
+    'entity_id': 'water_heater.r_900',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from compit_inext_api.consts import CompitParameter
+from propcache.api import cached_property
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -196,6 +197,8 @@ class CompitWaterHeater(
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
+    _attr_name = None
+    entity_description: CompitWaterHeaterEntityDescription
 
     def __init__(
         self,
@@ -208,12 +211,6 @@ class CompitWaterHeater(
         super().__init__(coordinator)
         self.device_id = device_id
         self.entity_description = entity_description
-        self.supports_current_temperature = (
-            entity_description.supports_current_temperature
-        )
-        self._attr_min_temp = entity_description.min_temp
-        self._attr_max_temp = entity_description.max_temp
-        self._attr_supported_features = entity_description.supported_features
         self._attr_unique_id = f"{device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
@@ -221,9 +218,6 @@ class CompitWaterHeater(
             manufacturer=MANUFACTURER_NAME,
             model=device_name,
         )
-
-        if self._attr_supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
-            self._attr_operation_list = [STATE_OFF, STATE_PERFORMANCE, STATE_ECO]
 
     @property
     def available(self) -> bool:
@@ -233,6 +227,31 @@ class CompitWaterHeater(
             and self.coordinator.connector.get_device(self.device_id) is not None
         )
 
+    @cached_property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return self.entity_description.min_temp
+
+    @cached_property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return self.entity_description.max_temp
+
+    @cached_property
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the supported features."""
+        return self.entity_description.supported_features
+
+    @cached_property
+    def operation_list(self) -> list[str] | None:
+        """Return the list of available operation modes."""
+        if (
+            self.entity_description.supported_features
+            & WaterHeaterEntityFeature.OPERATION_MODE
+        ):
+            return [STATE_OFF, STATE_PERFORMANCE, STATE_ECO]
+        return None
+
     @property
     def target_temperature(self) -> float | None:
         """Return the set target temperature."""
@@ -240,23 +259,25 @@ class CompitWaterHeater(
             self.device_id, CompitParameter.DHW_TARGET_TEMPERATURE
         )
 
-        if value is None or isinstance(value, str):
-            return None
-        return value
+        if isinstance(value, float):
+            return value
+
+        return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.supports_current_temperature is False:
+        if self.entity_description.supports_current_temperature is False:
             return None
 
         value = self.coordinator.connector.get_current_value(
             self.device_id, CompitParameter.DHW_CURRENT_TEMPERATURE
         )
 
-        if value is None or isinstance(value, str):
-            return None
-        return value
+        if isinstance(value, float):
+            return value
+
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
