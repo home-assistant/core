@@ -328,8 +328,8 @@ class DeviceSensor(SensorEntity):
         self._state: dict[str, Any] | None = None
         self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id = server_id.split("-")[0]
-        self._short_device_id = device_id.split("-")[0]
+        self._short_server_id = server_id.split("-", maxsplit=1)[0]
+        self._short_device_id = device_id.split("-", maxsplit=1)[0]
         self._attr_name = (
             f"{self._short_server_id} {self._short_device_id} {device_label}"
         )
@@ -372,7 +372,7 @@ class DeviceSensor(SensorEntity):
                 else "unknown"
             )
 
-            self._state = self._update_state(state)
+            self._state = self._filter_state(state)
 
         self.async_write_ha_state()
 
@@ -402,7 +402,7 @@ class DeviceSensor(SensorEntity):
         def handle_device_connected(event: dict[str, Any]) -> None:
             """Handle device connected event."""
             if self._state:
-                self._state = self._update_state(event["data"])
+                self._state = self._filter_state(event["data"])
                 self._state["state"] = "connected"
                 self.async_write_ha_state()
 
@@ -528,17 +528,15 @@ class DeviceSensor(SensorEntity):
             elif event["type"] == "DeviceResumed":
                 state = "disconnected"
 
-        # Get additional attributes from last event with more info
         last_event["data"]["state"] = state
-        return self._update_state(last_event["data"])
+        return self._filter_state(last_event["data"])
 
-    def _update_state(self, updates: dict[str, Any]) -> dict[str, Any]:
-        """Update device state with new data."""
-        # Select only needed state attributes and map their names
-        state = self._state if self._state else {}
+    def _filter_state(self, updates: dict[str, Any]) -> dict[str, Any]:
+        """Filter and map state attributes."""
+        filtered_state = self._state or {}
 
         for key, value in updates.items():
             if key in self.STATE_ATTRIBUTES:
-                state[key] = value
+                filtered_state[key] = value
 
-        return state
+        return filtered_state
