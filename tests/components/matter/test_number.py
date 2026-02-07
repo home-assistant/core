@@ -350,7 +350,7 @@ async def test_occupancy_sensing_pir_attributes(
     assert state.attributes["max"] == 65534
     assert state.attributes["unit_of_measurement"] == "s"
 
-    set_node_attribute(matter_node, 1, 1030, 0x11, 20)
+    set_node_attribute(matter_node, 1, 1030, 17, 20)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("number.mock_pir_occupancy_sensor_detection_delay")
     assert state
@@ -363,7 +363,7 @@ async def test_occupancy_sensing_pir_attributes(
     assert state.attributes["min"] == 1
     assert state.attributes["max"] == 254
 
-    set_node_attribute(matter_node, 1, 1030, 0x12, 5)
+    set_node_attribute(matter_node, 1, 1030, 18, 5)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("number.mock_pir_occupancy_sensor_detection_threshold")
     assert state
