@@ -489,7 +489,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         elif mode == HVACMode.COOL:
             zone_key = DAIKIN_ZONE_TEMP_COOL
         else:
-            raise _zone_error("zone_parameters_unavailable")
+            raise _zone_error("zone_hvac_mode_unsupported")
 
         zone_value = str(round(temperature_value))
         try:

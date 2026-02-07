@@ -2,28 +2,39 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import urllib.parse
 
 import pytest
 
-from homeassistant.components.climate import HVACAction, HVACMode
-from homeassistant.components.daikin import climate
-from homeassistant.components.daikin.climate import (
-    DaikinZoneClimate,
-    _supports_zone_temperature_control,
-    _system_target_temperature,
-    _zone_temperature_from_list,
-    _zone_temperature_lists,
+from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_TEMPERATURE,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.components.daikin.coordinator import DaikinCoordinator
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.components.daikin.const import DOMAIN as DAIKIN_DOMAIN, KEY_MAC
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
+
+HOST = "127.0.0.1"
 
 
 class FakeZoneDevice:
@@ -33,32 +44,58 @@ class FakeZoneDevice:
         self,
         *,
         zones: list[list[str | int]],
-        target_temperature: float = 22,
+        target_temperature: float | None = 22,
         mode: str = "hot",
+        heating_values: str | None = None,
+        cooling_values: str | None = None,
     ) -> None:
         """Initialize the fake zone-capable device."""
-        self.mac = "00:11:22:33:44:55"
+        self.mac = "001122334455"
         self.target_temperature = target_temperature
         self.zones = zones
-        self.fan_rate: list[str] = []
-        self.swing_modes: list[str] = []
+        self.fan_rate = []
+        self.swing_modes = []
         self.support_away_mode = False
         self.support_advanced_modes = False
         self.support_fan_rate = False
         self.support_swing_mode = False
+        self.support_outside_temperature = False
+        self.support_energy_consumption = False
+        self.support_humidity = False
         self.support_compressor_frequency = False
         self.compressor_frequency = 0
-        self.inside_temperature = 21
+        self.inside_temperature = 21.0
+        self.outside_temperature = 13.0
+        self.humidity = 40
+        self.current_total_power_consumption = 0.0
+        self.last_hour_cool_energy_consumption = 0.0
+        self.last_hour_heat_energy_consumption = 0.0
+        self.today_energy_consumption = 0.0
+        self.today_total_energy_consumption = 0.0
         self._mode = mode
+
+        encoded_zone_temperatures = ";".join(str(zone[2]) for zone in zones)
         self.values: dict[str, Any] = {
             "name": "Daikin Test",
             "model": "TESTMODEL",
             "ver": "1_0_0",
             "zone_name": ";".join(str(zone[0]) for zone in zones),
             "zone_onoff": ";".join(str(zone[1]) for zone in zones),
-            "lztemp_h": ";".join(str(zone[2]) for zone in zones),
-            "lztemp_c": ";".join(str(zone[2]) for zone in zones),
+            "lztemp_h": (
+                encoded_zone_temperatures if heating_values is None else heating_values
+            ),
+            "lztemp_c": (
+                encoded_zone_temperatures if cooling_values is None else cooling_values
+            ),
         }
+
+    async def update_status(self) -> None:
+        """Simulate a status refresh."""
+
+    async def set(self, values: dict[str, Any]) -> None:
+        """Simulate setting main unit values."""
+        if mode := values.get("mode"):
+            self._mode = mode
 
     async def set_zone(self, zone_id: int, key: str, value: str) -> None:
         """Simulate setting a zone value."""
@@ -66,15 +103,25 @@ class FakeZoneDevice:
             raise KeyError(key)
 
         if key == "zone_onoff":
-            current = self.values.get("zone_onoff", "")
-            zones = current.split(";") if current else []
-            zones[zone_id] = str(value)
-            self.values["zone_onoff"] = ";".join(zones)
+            zone_states = self.values["zone_onoff"].split(";")
+            zone_states[zone_id] = value
+            self.values["zone_onoff"] = ";".join(zone_states)
+            self.zones[zone_id][1] = value
             return
 
-        current = self.represent(key)[1]
-        current[zone_id] = str(value)
-        self.values[key] = ";".join(current)
+        zone_temperatures = self.values[key].split(";")
+        zone_temperatures[zone_id] = value
+        self.values[key] = ";".join(zone_temperatures)
+        self.zones[zone_id][2] = int(value)
+
+    async def set_holiday(self, _state: str) -> None:
+        """Simulate setting holiday mode."""
+
+    async def set_advanced_mode(self, _mode: str, _state: str) -> None:
+        """Simulate setting an advanced mode."""
+
+    async def set_streamer(self, _state: str) -> None:
+        """Simulate setting streamer mode."""
 
     def represent(self, key: str) -> tuple[None, list[str] | str]:
         """Return decoded data for the requested key."""
@@ -86,354 +133,354 @@ class FakeZoneDevice:
             return (None, decoded.split(";") if decoded else [])
         if key == "mode":
             return (None, self._mode)
-        if key in ("f_rate", "f_dir", "en_hol", "adv", "htemp", "otemp", "stemp"):
+        if key == "f_rate":
+            return (None, "auto")
+        if key == "f_dir":
+            return (None, "3d")
+        if key == "en_hol":
+            return (None, "off")
+        if key == "adv":
             return (None, "")
+        if key == "htemp":
+            return (None, str(self.inside_temperature))
+        if key == "otemp":
+            return (None, str(self.outside_temperature))
+        if key == "stemp":
+            return (
+                None,
+                "" if self.target_temperature is None else str(self.target_temperature),
+            )
         return (None, "")
 
-    async def update_status(self) -> None:
-        """Simulate a status refresh."""
 
-
-def test_zone_temperature_helpers() -> None:
-    """Helpers return expected defaults and fallbacks."""
-
-    class NoRepresent:
-        """Device without represent method."""
-
-    assert _zone_temperature_lists(NoRepresent()) == ([], [])
-    assert _zone_temperature_from_list(["1"], 5) is None
-    assert _zone_temperature_from_list(["bad"], 0) is None
-    assert _zone_temperature_from_list(["21.5"], 0) == 21.5
-
-    class BadTemperature:
-        """Device with invalid target temperature."""
-
-        target_temperature = "bad"
-
-    assert _system_target_temperature(BadTemperature()) is None
-
-
-def test_supports_zone_temperature_control() -> None:
-    """Zone temperature control requires zones and matching lists."""
-
-    class DeviceNoZones:
-        """Device without zones."""
-
-        zones = None
-
-    assert not _supports_zone_temperature_control(DeviceNoZones())
-
-    device_ok = SimpleNamespace(
-        zones=[["Zone 1", "1", 22]],
-        represent=lambda key: (None, ["21"] if key == "lztemp_h" else ["22"]),
+async def _async_setup_daikin(
+    hass: HomeAssistant, device: FakeZoneDevice
+) -> MockConfigEntry:
+    """Set up a Daikin config entry with a mocked library device."""
+    config_entry = MockConfigEntry(
+        domain=DAIKIN_DOMAIN,
+        unique_id=device.mac,
+        data={CONF_HOST: HOST, KEY_MAC: device.mac},
     )
-    assert _supports_zone_temperature_control(device_ok)
+    config_entry.add_to_hass(hass)
 
-    device_short = SimpleNamespace(
-        zones=[["Zone 1", "1", 22], ["Zone 2", "1", 20]],
-        represent=lambda key: (None, ["21"] if key == "lztemp_h" else ["22"]),
+    with patch(
+        "homeassistant.components.daikin.DaikinFactory",
+        new=AsyncMock(return_value=device),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry
+
+
+def _zone_entity_id(
+    entity_registry: er.EntityRegistry, device: FakeZoneDevice, zone_id: int
+) -> str | None:
+    """Return the entity id for a zone climate unique id."""
+    return entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DAIKIN_DOMAIN,
+        f"{device.mac}-zone{zone_id}-temperature",
     )
-    assert not _supports_zone_temperature_control(device_short)
+
+
+async def _async_set_zone_temperature(
+    hass: HomeAssistant, entity_id: str, temperature: float
+) -> None:
+    """Call `climate.set_temperature` for a zone climate."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TEMPERATURE: temperature,
+        },
+        blocking=True,
+    )
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_adds_zone_climates(hass: HomeAssistant) -> None:
-    """Zone climates are added when the controller exposes temperatures."""
-    entry = MockConfigEntry(domain="daikin", data={})
+async def test_setup_entry_adds_zone_climates(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Configured zones create zone climate entities."""
     device = FakeZoneDevice(
         zones=[["-", "0", 0], ["Living", "1", 22], ["Office", "1", 21]]
     )
-    entry.runtime_data = SimpleNamespace(device=device)
-    added_entities: list = []
 
-    def _async_add_entities(entities) -> None:
-        """Collect entities added during setup."""
-        added_entities.extend(entities)
+    await _async_setup_daikin(hass, device)
 
-    with (
-        patch(
-            "homeassistant.components.daikin.climate.DaikinClimate", autospec=True
-        ) as main_climate,
-        patch(
-            "homeassistant.components.daikin.climate.DaikinZoneClimate", autospec=True
-        ) as zone_climate,
-    ):
-        await climate.async_setup_entry(hass, entry, _async_add_entities)
-
-    assert len(added_entities) == 3
-    assert main_climate.call_count == 1
-    # Only two configured zones should create climates
-    assert zone_climate.call_count == 2
-    zone_ids = [call.args[1] for call in zone_climate.call_args_list]
-    assert zone_ids == [1, 2]
+    assert _zone_entity_id(entity_registry, device, 0) is None
+    assert _zone_entity_id(entity_registry, device, 1) is not None
+    assert _zone_entity_id(entity_registry, device, 2) is not None
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_skips_zone_climates_without_support(
-    hass: HomeAssistant,
+async def test_setup_entry_skips_zone_climates_without_support(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """No zone climates are created when zone temperatures are missing."""
-    entry = MockConfigEntry(domain="daikin", data={})
+    """Missing zone temperature lists skip zone climate entities."""
     device = FakeZoneDevice(zones=[["Living", "1", 22]])
     device.values["lztemp_h"] = ""
     device.values["lztemp_c"] = ""
-    entry.runtime_data = SimpleNamespace(device=device)
 
-    def _async_add_entities(_entities) -> None:
-        """No-op entity adder used for validation."""
+    await _async_setup_daikin(hass, device)
 
-    with (
-        patch("homeassistant.components.daikin.climate.DaikinClimate", autospec=True),
-        patch(
-            "homeassistant.components.daikin.climate.DaikinZoneClimate", autospec=True
-        ) as zone_climate,
-    ):
-        await climate.async_setup_entry(hass, entry, _async_add_entities)
-
-    zone_climate.assert_not_called()
+    assert _zone_entity_id(entity_registry, device, 0) is None
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_sets_temperature(hass: HomeAssistant) -> None:
-    """Setting the temperature updates the active mode value."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22], ["Office", "1", 21]]),
-    )
-    # Avoid scheduling real refresh work in the test environment
-    coordinator.async_request_refresh = AsyncMock()
-    zone = DaikinZoneClimate(coordinator, 0)
+async def test_zone_climate_sets_temperature_heating(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Setting temperature updates the heating zone value."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22], ["Office", "1", 21]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
-    await zone.async_set_temperature(**{ATTR_TEMPERATURE: 23})
+    await _async_set_zone_temperature(hass, entity_id, 23)
 
-    heating = coordinator.device.represent("lztemp_h")[1]
-    cooling = coordinator.device.represent("lztemp_c")[1]
-    assert heating[0] == "23"
-    assert cooling[0] == "22"
+    assert device.represent("lztemp_h")[1][0] == "23"
+    assert device.represent("lztemp_c")[1][0] == "22"
 
 
 @pytest.mark.asyncio
 async def test_zone_climate_sets_temperature_cooling(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Setting the temperature updates the cooling list when in cool mode."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(
-            zones=[["Living", "1", 22], ["Office", "1", 21]],
-            mode="cool",
-        ),
+    """Setting temperature in cool mode updates the cooling list."""
+    device = FakeZoneDevice(
+        zones=[["Living", "1", 22], ["Office", "1", 21]],
+        mode="cool",
     )
-    # Avoid scheduling real refresh work in the test environment
-    coordinator.async_request_refresh = AsyncMock()
-    zone = DaikinZoneClimate(coordinator, 0)
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
-    await zone.async_set_temperature(**{ATTR_TEMPERATURE: 23})
+    await _async_set_zone_temperature(hass, entity_id, 23)
 
-    heating = coordinator.device.represent("lztemp_h")[1]
-    cooling = coordinator.device.represent("lztemp_c")[1]
-    assert heating[0] == "22"
-    assert cooling[0] == "23"
+    assert device.represent("lztemp_h")[1][0] == "22"
+    assert device.represent("lztemp_c")[1][0] == "23"
 
 
 @pytest.mark.asyncio
 async def test_zone_climate_rejects_out_of_range_temperature(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Values outside the ±2°C window raise HomeAssistantError."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22]], target_temperature=22),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
+    """Service validation rejects values outside the allowed range."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22]], target_temperature=22)
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
-    with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 30})
+    with pytest.raises(ServiceValidationError) as err:
+        await _async_set_zone_temperature(hass, entity_id, 30)
 
-    assert err.value.translation_key == "temperature_out_of_range"
+    assert err.value.translation_key == "temp_out_of_range"
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_keeps_zone_disabled(hass: HomeAssistant) -> None:
-    """Updating temperature on a disabled zone should not turn it on."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "0", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
+async def test_zone_climate_keeps_zone_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Setting temperature does not toggle a disabled zone."""
+    device = FakeZoneDevice(zones=[["Living", "0", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
-    await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
+    await _async_set_zone_temperature(hass, entity_id, 21)
 
-    assert coordinator.device.values["zone_onoff"] == "0"
-    assert zone.target_temperature == 21.0
+    assert device.values["zone_onoff"] == "0"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_available_when_zone_disabled(hass: HomeAssistant) -> None:
-    """Ensure zone climate stays available even if the physical zone is off."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "0", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
-    assert zone.available
-
-
-def test_zone_climate_unavailable_without_target_temperature(
-    hass: HomeAssistant,
+async def test_zone_climate_available_when_zone_disabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Ensure zone climate is unavailable if target temperature is missing."""
-    entry = MockConfigEntry(domain="daikin", data={})
+    """Disabled zones stay available when supported parameters exist."""
+    device = FakeZoneDevice(zones=[["Living", "0", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_unavailable_without_target_temperature(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Zones are unavailable if system target temperature is missing."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22]], target_temperature=None)
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_zone_inactive_after_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Inactive zones raise a translated error during service calls."""
     device = FakeZoneDevice(zones=[["Living", "1", 22]])
-    device.target_temperature = None
-    coordinator = DaikinCoordinator(hass, entry, device)
-    zone = DaikinZoneClimate(coordinator, 0)
-
-    assert not zone.available
-
-
-@pytest.mark.asyncio
-async def test_zone_climate_zone_inactive(hass: HomeAssistant) -> None:
-    """Ensure inactive/configuration placeholder zones raise an error."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["-", "0", 0]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
+    device.zones[0][0] = "-"
 
     with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
+        await _async_set_zone_temperature(hass, entity_id, 21)
 
     assert err.value.translation_key == "zone_inactive"
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_zone_missing(hass: HomeAssistant) -> None:
-    """Ensure missing zones raise the expected translation error."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22], ["Office", "1", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 1)
-    coordinator.device.zones = [["Living", "1", 22]]
+async def test_zone_climate_zone_missing_after_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Missing zones raise a translated error during service calls."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22], ["Office", "1", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 1)
+    assert entity_id is not None
+    device.zones = [["Living", "1", 22]]
 
     with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
+        await _async_set_zone_temperature(hass, entity_id, 21)
 
     assert err.value.translation_key == "zone_missing"
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_parameters_unavailable(hass: HomeAssistant) -> None:
-    """Missing zone parameter lists should raise a descriptive error."""
-    entry = MockConfigEntry(domain="daikin", data={})
+async def test_zone_climate_parameters_unavailable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Missing zone parameter lists make the zone entity unavailable."""
     device = FakeZoneDevice(zones=[["Living", "1", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
     device.values["lztemp_h"] = ""
     device.values["lztemp_c"] = ""
-    coordinator = DaikinCoordinator(hass, entry, device)
-    zone = DaikinZoneClimate(coordinator, 0)
 
-    with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
-
-    assert err.value.translation_key == "zone_parameters_unavailable"
+    await async_update_entity(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_requires_temperature(hass: HomeAssistant) -> None:
-    """Missing temperature payloads raise a translated validation error."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await zone.async_set_temperature()
-
-    assert err.value.translation_key == "zone_temperature_missing"
-
-
-@pytest.mark.asyncio
-async def test_zone_climate_hvac_modes_read_only(hass: HomeAssistant) -> None:
-    """Zone climate exposes current HVAC mode but does not allow changing it."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 0)
-
-    assert zone.hvac_modes == [zone.hvac_mode]
+async def test_zone_climate_hvac_modes_read_only(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Changing HVAC mode through a zone climate is blocked."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
     with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_hvac_mode(HVACMode.COOL)
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
 
     assert err.value.translation_key == "zone_hvac_read_only"
 
 
-def test_zone_climate_properties(hass: HomeAssistant) -> None:
-    """Expose zone climate properties for current mode and limits."""
-    entry = MockConfigEntry(domain="daikin", data={})
+@pytest.mark.asyncio
+async def test_zone_climate_set_temperature_requires_heat_or_cool(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Setting temperature in unsupported modes raises a translated error."""
+    device = FakeZoneDevice(zones=[["Living", "1", 22]], mode="auto")
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
+
+    with pytest.raises(HomeAssistantError) as err:
+        await _async_set_zone_temperature(hass, entity_id, 21)
+
+    assert err.value.translation_key == "zone_hvac_mode_unsupported"
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_properties(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Zone climate exposes expected state attributes."""
     device = FakeZoneDevice(
         zones=[["Living", "1", 22]],
         target_temperature=24,
         mode="cool",
+        heating_values="20",
+        cooling_values="18",
     )
-    device.values["lztemp_h"] = "20"
-    device.values["lztemp_c"] = "18"
-    coordinator = DaikinCoordinator(hass, entry, device)
-    zone = DaikinZoneClimate(coordinator, 0)
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
 
-    assert zone.hvac_action == HVACAction.COOLING
-    assert zone.target_temperature == 18.0
-    assert zone.min_temp == 22.0
-    assert zone.max_temp == 26.0
-    assert zone.extra_state_attributes == {"zone_id": 0}
-
-
-def test_zone_climate_target_temperature_inactive_mode(hass: HomeAssistant) -> None:
-    """Return no target temperature when not heating or cooling."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    device = FakeZoneDevice(
-        zones=[["Living", "1", 22]],
-        mode="auto",
-    )
-    device.values["lztemp_h"] = "bad"
-    device.values["lztemp_c"] = "19"
-    coordinator = DaikinCoordinator(hass, entry, device)
-    zone = DaikinZoneClimate(coordinator, 0)
-
-    assert zone.target_temperature is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+    assert state.attributes[ATTR_TEMPERATURE] == 18.0
+    assert state.attributes[ATTR_MIN_TEMP] == 22.0
+    assert state.attributes[ATTR_MAX_TEMP] == 26.0
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.COOL]
+    assert state.attributes["zone_id"] == 0
 
 
 @pytest.mark.asyncio
-async def test_zone_climate_set_zone_failed(hass: HomeAssistant) -> None:
-    """Surface errors when zone temperature updates fail."""
-    entry = MockConfigEntry(domain="daikin", data={})
+async def test_zone_climate_target_temperature_inactive_mode(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """In non-heating/cooling modes, zone target temperature is None."""
+    device = FakeZoneDevice(
+        zones=[["Living", "1", 22]],
+        mode="auto",
+        heating_values="bad",
+        cooling_values="19",
+    )
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes[ATTR_TEMPERATURE] is None
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_set_zone_failed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Service call surfaces backend zone update errors."""
     device = FakeZoneDevice(zones=[["Living", "1", 22]])
+    await _async_setup_daikin(hass, device)
+    entity_id = _zone_entity_id(entity_registry, device, 0)
+    assert entity_id is not None
     device.set_zone = AsyncMock(side_effect=NotImplementedError)
-    coordinator = DaikinCoordinator(hass, entry, device)
-    zone = DaikinZoneClimate(coordinator, 0)
 
     with pytest.raises(HomeAssistantError) as err:
-        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
+        await _async_set_zone_temperature(hass, entity_id, 21)
 
     assert err.value.translation_key == "zone_set_failed"
