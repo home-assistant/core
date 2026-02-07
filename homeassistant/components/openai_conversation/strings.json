@@ -157,7 +157,6 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "[%key:common::config_flow::data::prompt%]",
             "tts_speed": "Speed of the generated speech"
           },
           "data_description": {
