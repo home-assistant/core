@@ -36,13 +36,15 @@ def closest(latitude: float, longitude: float, states: Iterable[State]) -> State
 
     return min(
         with_location,
-        key=lambda state: location_util.distance(
-            state.attributes.get(ATTR_LATITUDE),
-            state.attributes.get(ATTR_LONGITUDE),
-            latitude,
-            longitude,
-        )
-        or 0,
+        key=lambda state: (
+            location_util.distance(
+                state.attributes.get(ATTR_LATITUDE),
+                state.attributes.get(ATTR_LONGITUDE),
+                latitude,
+                longitude,
+            )
+            or 0
+        ),
     )
 
 

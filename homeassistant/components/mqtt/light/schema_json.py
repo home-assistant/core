@@ -221,8 +221,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]
@@ -276,7 +278,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 y = float(values["color"]["y"])
                 self._attr_color_mode = ColorMode.XY
                 self._attr_xy_color = (x, y)
-        except (KeyError, TypeError, ValueError):
+        except KeyError, TypeError, ValueError:
             _LOGGER.warning(
                 "Invalid or incomplete color value '%s' received for entity %s",
                 values,
@@ -314,7 +316,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             except KeyError:
                 pass
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning(
                     "Invalid brightness value '%s' received for entity %s",
                     values["brightness"],
