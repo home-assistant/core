@@ -211,6 +211,12 @@
       "cook_time": {
         "name": "Cooking time"
       },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "detection_threshold": {
+        "name": "Detection threshold"
+      },
       "hold_time": {
         "name": "Hold time"
       },
@@ -246,12 +252,6 @@
       },
       "temperature_setpoint": {
         "name": "Temperature setpoint"
-      },
-      "unoccupied_to_occupied_delay": {
-        "name": "Unoccupied to occupied delay"
-      },
-      "unoccupied_to_occupied_threshold": {
-        "name": "Unoccupied to occupied threshold"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
