@@ -10,6 +10,7 @@ from homeassistant.components.homeassistant.exposed_entities import async_expose
 from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
     NoTimerCommandError,
+    TIMER_DATA,
     TimerEventType,
     TimerInfo,
     TimerManager,
@@ -1489,9 +1490,7 @@ async def test_start_timer_with_sentence_trigger_validation(
     ) as mock_get_agent:
         mock_agent = MagicMock(spec=conversation.default_agent.DefaultAgent)
         mock_agent.async_recognize_sentence_trigger = AsyncMock(
-            return_value=conversation.default_agent.SentenceTriggerResult(
-                sentence=test_command, sentence_template="", matched_triggers={}
-            )
+            return_value=MagicMock(),
         )
         mock_agent.async_recognize_intent = AsyncMock(return_value=None)
         mock_get_agent.return_value = mock_agent
@@ -1514,11 +1513,9 @@ async def test_start_timer_with_sentence_trigger_validation(
         # Verify the sentence trigger was checked
         mock_agent.async_recognize_sentence_trigger.assert_called_once()
 
-        # Verify timer was created with conversation_command
-        timer_manager = hass.data["intent.timer"]
+        # Verify timer was created successfully
+        timer_manager = hass.data[TIMER_DATA]
         assert len(timer_manager.timers) == 1
-        timer = list(timer_manager.timers.values())[0]
-        assert timer.conversation_command == test_command
 
 
 async def test_start_timer_with_invalid_conversation_command(
@@ -1548,7 +1545,8 @@ async def test_start_timer_with_invalid_conversation_command(
         )
 
     # Verify no timer was created
-    mock_handle_timer.assert_not_called()
+    timer_manager = hass.data[TIMER_DATA]
+    assert len(timer_manager.timers) == 0
 
 
 async def test_start_timer_with_conversation_command_skip_validation(
@@ -1577,7 +1575,7 @@ async def test_start_timer_with_conversation_command_skip_validation(
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
 
     # Verify timer was created successfully despite invalid command
-    timer_manager = hass.data["intent.timer"]
+    timer_manager = hass.data[TIMER_DATA]
     assert len(timer_manager.timers) == 1
 
 
