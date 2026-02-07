@@ -117,12 +117,7 @@ def _setup_dynamic_discovery(
     known_vins: set[str],
     known_site_ids: set[str],
 ) -> None:
-    """Set up dynamic device discovery via reload when subscriptions change.
-
-    Monitors the metadata coordinator for:
-    - New vehicles/energy sites added with subscriptions (access: True)
-    - Vehicles/energy sites that have had subscriptions removed
-    """
+    """Set up dynamic device discovery via reload when subscriptions change."""
 
     @callback
     def _handle_metadata_update() -> None:
@@ -131,15 +126,13 @@ def _setup_dynamic_discovery(
         if not data:
             return
 
-        # Get VINs with active subscriptions (access: True in metadata)
         current_vins = {
-            vin for vin, info in data.get("vehicles", {}).items() if info.get("access")
+            vin for vin, info in data["vehicles"].items() if info.get("access")
         }
 
-        # Get energy site IDs with active subscriptions
         current_site_ids = {
             site_id
-            for site_id, info in data.get("energy_sites", {}).items()
+            for site_id, info in data["energy_sites"].items()
             if info.get("access")
         }
 
@@ -215,8 +208,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     scopes = calls[0]["scopes"]
     region = calls[0]["region"]
-    vehicle_metadata = calls[0].get("vehicles", {})
-    energy_site_metadata = calls[0].get("energy_sites", {})
+    vehicle_metadata = calls[0]["vehicles"]
+    energy_site_metadata = calls[0]["energy_sites"]
     products = calls[1]["response"]
 
     device_registry = dr.async_get(hass)
@@ -322,8 +315,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             if wall_connector:
                 current_devices |= {
-                    (DOMAIN, c["din"])
-                    for c in product["components]["wall_connectors"]
+                    (DOMAIN, c["din"]) for c in product["components"]["wall_connectors"]
                 }
 
             energy_site = teslemetry.energySites.create(site_id)
@@ -424,10 +416,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 remove_config_entry_id=entry.entry_id,
             )
 
-    # Create metadata coordinator for dynamic device discovery
     metadata_coordinator = TeslemetryMetadataCoordinator(hass, entry, teslemetry)
 
-    # Setup Platforms
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
         energysites=energysites,
@@ -437,7 +427,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Set up dynamic device discovery
     _setup_dynamic_discovery(
         hass,
         entry,
