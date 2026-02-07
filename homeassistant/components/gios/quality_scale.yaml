@@ -1,7 +1,4 @@
 rules:
-  # Other comments:
-  # - we could consider removing the air quality entity removal
-
   # Bronze
   action-setup:
     status: exempt
