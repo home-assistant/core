@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
         await cast(Any, client).head_bucket(Bucket=entry.data[CONF_BUCKET])
     except ClientError as err:
         await _async_safe_client_close(client)
-        if "Not Found" in str(err):
+        if str(err.response["Error"]["Code"]) == "404":
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="bucket_not_found",
