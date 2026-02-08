@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[water_heater.model0-entry]
+# name: test_all_entities[water_heater.model0_domestic_hot_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.model0',
+    'entity_id': 'water_heater.model0_domestic_hot_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,12 +23,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Domestic hot water',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Domestic hot water',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -38,11 +38,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[water_heater.model0-state]
+# name: test_all_entities[water_heater.model0_domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'model0 None',
+      'friendly_name': 'model0 Domestic hot water',
       'max_temp': 60,
       'min_temp': 10,
       'supported_features': <WaterHeaterEntityFeature: 1>,
@@ -51,14 +51,14 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.model0',
+    'entity_id': 'water_heater.model0_domestic_hot_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[water_heater.model0_2-entry]
+# name: test_all_entities[water_heater.model0_domestic_hot_water_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -74,7 +74,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.model0_2',
+    'entity_id': 'water_heater.model0_domestic_hot_water_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -82,12 +82,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Domestic hot water',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Domestic hot water',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -97,11 +97,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[water_heater.model0_2-state]
+# name: test_all_entities[water_heater.model0_domestic_hot_water_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'model0 None',
+      'friendly_name': 'model0 Domestic hot water',
       'max_temp': 60,
       'min_temp': 10,
       'supported_features': <WaterHeaterEntityFeature: 1>,
@@ -110,7 +110,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.model0_2',
+    'entity_id': 'water_heater.model0_domestic_hot_water_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

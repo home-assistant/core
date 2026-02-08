@@ -15,7 +15,7 @@ from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_WATER_HEATER = "water_heater.model0"
+ENTITY_WATER_HEATER = "water_heater.model0_domestic_hot_water"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
