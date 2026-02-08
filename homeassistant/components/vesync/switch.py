@@ -63,12 +63,12 @@ def _toggle_auto_stop(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
 
 
 def _toggle_drying_mode_on_power_off(
-    device: VeSyncBaseDevice, *args
+    device: VeSyncBaseDevice, target: bool
 ) -> Awaitable[bool]:
     """Toggle auto drying mode on purifier devices."""
     match device:
         case VeSyncHumidifier() as sw if hasattr(sw, "toggle_drying_mode"):
-            return sw.toggle_drying_mode(*args)
+            return sw.toggle_drying_mode(target)
         case _:
             raise HomeAssistantError("Device does not support toggling drying mode.")
 
