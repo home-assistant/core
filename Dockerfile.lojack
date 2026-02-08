@@ -5,7 +5,7 @@ LABEL maintainer="@devinslick"
 LABEL description="Home Assistant with LoJack custom component"
 
 # Install the lojack-api dependency
-RUN pip3 install --no-cache-dir lojack-api==0.6.3
+RUN pip3 install --no-cache-dir lojack-api==0.7.1
 
 # Copy the lojack custom component
 COPY homeassistant/components/lojack /usr/src/homeassistant/homeassistant/components/lojack

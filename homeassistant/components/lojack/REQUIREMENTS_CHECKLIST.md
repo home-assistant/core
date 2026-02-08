@@ -54,7 +54,7 @@ Use this checklist to track progress and identify blockers before submitting a P
 - [x] `documentation`: URL to home-assistant.io (placeholder until docs PR)
 - [x] `integration_type`: "hub"
 - [x] `iot_class`: "cloud_polling"
-- [x] `requirements`: ["lojack-api==0.6.3"] (pinned version)
+- [x] `requirements`: ["lojack-api==0.7.1"] (pinned version)
 - [x] `quality_scale`: "bronze"
 
 ### Python Code Standards

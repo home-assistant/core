@@ -22,7 +22,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -e ".[dev]"
-pip install lojack-api==0.7.0
+pip install lojack-api==0.7.1
 
 # Or use uv for faster installation
 uv pip install -r requirements_all.txt -r requirements.txt -r requirements_test.txt
