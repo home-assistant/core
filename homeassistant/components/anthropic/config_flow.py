@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 import json
 import logging
 import re
@@ -30,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -89,8 +89,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     await client.models.list(timeout=10.0)
 
@@ -457,11 +457,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        client = await self.hass.async_add_executor_job(
-            partial(
-                anthropic.AsyncAnthropic,
-                api_key=self._get_entry().data[CONF_API_KEY],
-            )
+        client = anthropic.AsyncAnthropic(
+            api_key=self._get_entry().data[CONF_API_KEY],
+            http_client=get_async_client(self.hass),
         )
         return await get_model_list(client)
 
@@ -470,11 +468,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+            client = anthropic.AsyncAnthropic(
+                api_key=self._get_entry().data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(
                 {
