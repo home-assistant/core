@@ -1,0 +1,216 @@
+"""Tests for TP-Link Omada update entities."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
+
+from homeassistant.components.tplink_omada.coordinator import POLL_UPGRADE
+from homeassistant.components.update import (
+    ATTR_IN_PROGRESS,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.typing import WebSocketGenerator
+
+POLL_INTERVAL = timedelta(seconds=POLL_UPGRADE)
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> MockConfigEntry:
+    """Set up the TP-Link Omada integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", ["update"]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the creation of the TP-Link Omada update entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+async def test_no_update_available(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test update entity when no firmware update is available."""
+    # Gateway device (no update available)
+    entity_id = "update.test_router_firmware"
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == STATE_OFF
+    assert (
+        entity.attributes.get("installed_version") == "1.1.1 Build 20230901 Rel.55651"
+    )
+    assert entity.attributes.get("latest_version") == "1.1.1 Build 20230901 Rel.55651"
+    assert entity.attributes.get(ATTR_IN_PROGRESS) is False
+
+
+async def test_update_available(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test update entity when firmware update is available."""
+    # Switch device (update available from fixtures)
+    entity_id = "update.test_poe_switch_firmware"
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == STATE_ON
+    assert (
+        entity.attributes.get("installed_version") == "1.0.12 Build 20230203 Rel.36545"
+    )
+    assert entity.attributes.get("latest_version") == "1.0.15 Build 20231101 Rel.40123"
+    assert entity.attributes.get(ATTR_IN_PROGRESS) is False
+
+
+async def test_firmware_download_in_progress(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update entity when firmware download is in progress."""
+    entity_id = "update.test_poe_switch_firmware"
+
+    # Get current devices and update switch to show download in progress
+    devices = await mock_omada_site_client.get_devices()
+    for device in devices:
+        if device.mac == "54-AF-97-00-00-01":
+            device._data["fwDownload"] = True
+
+    # Trigger coordinator update
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify update entity shows in progress
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.attributes.get(ATTR_IN_PROGRESS) is True
+
+
+async def test_install_firmware_success(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test successful firmware installation."""
+    entity_id = "update.test_poe_switch_firmware"
+
+    # Verify update is available
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == STATE_ON
+
+    # Call install service
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify start_firmware_upgrade was called with the correct device
+    mock_omada_site_client.start_firmware_upgrade.assert_called_once()
+    call_args = mock_omada_site_client.start_firmware_upgrade.call_args[0]
+    assert call_args[0].mac == "54-AF-97-00-00-01"
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "error_message"),
+    [
+        (
+            RequestFailed(500, "Update rejected"),
+            "Firmware update request rejected",
+        ),
+        (
+            OmadaClientException("Connection error"),
+            "Unable to send Firmware update request. Check the controller is online.",
+        ),
+    ],
+)
+async def test_install_firmware_exceptions(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    exception_type: Exception,
+    error_message: str,
+) -> None:
+    """Test firmware installation exception handling."""
+    entity_id = "update.test_poe_switch_firmware"
+
+    # Mock exception
+    mock_omada_site_client.start_firmware_upgrade = AsyncMock(
+        side_effect=exception_type
+    )
+
+    # Call install service and expect error
+    with pytest.raises(
+        HomeAssistantError,
+        match=error_message,
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("entity_name", "expected_notes"),
+    [
+        ("test_router", None),
+        ("test_poe_switch", "Bug fixes and performance improvements"),
+    ],
+)
+async def test_release_notes(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    entity_name: str,
+    expected_notes: str | None,
+) -> None:
+    """Test that release notes are available via websocket."""
+    entity_id = f"update.{entity_name}_firmware"
+
+    # Get release notes via websocket
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await client.receive_json()
+
+    if expected_notes is None:
+        assert result["result"] is None
+    else:
+        assert expected_notes in result["result"]

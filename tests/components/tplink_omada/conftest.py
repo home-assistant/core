@@ -14,6 +14,7 @@ from tplink_omada_client.clients import (
     OmadaWirelessClient,
 )
 from tplink_omada_client.devices import (
+    OmadaFirmwareUpdate,
     OmadaGateway,
     OmadaListDevice,
     OmadaSwitch,
@@ -81,6 +82,23 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
     )
     switch1_ports = [OmadaSwitchPortDetails(p) for p in switch1_ports_data]
     site_client.get_switch_ports = AsyncMock(return_value=switch1_ports)
+
+    # Mock firmware update API
+    async def get_firmware_details(
+        device: OmadaListDevice,
+    ) -> OmadaFirmwareUpdate | None:
+        """Mock getting firmware details for a device."""
+        if device.need_upgrade:
+            firmware_data = json.loads(
+                await async_load_fixture(
+                    hass, f"firmware-update-{device.mac}.json", DOMAIN
+                )
+            )
+            return OmadaFirmwareUpdate(firmware_data)
+        return None
+
+    site_client.get_firmware_details = AsyncMock(side_effect=get_firmware_details)
+    site_client.start_firmware_upgrade = AsyncMock()
 
     async def async_empty() -> AsyncGenerator:
         for c in ():
