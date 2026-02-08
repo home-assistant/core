@@ -193,10 +193,10 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         if coordinator.device_metadata:
             if coordinator.device_metadata.description:
                 # Eg. Series 7
-                device_info["model"] = self.coordinator.device_metadata.description
-            if self.coordinator.device_metadata.awlabctypedesc:
+                device_info["model"] = coordinator.device_metadata.description
+            if coordinator.device_metadata.awlabctypedesc:
                 # Eg. Series 7, 5 Ton
-                device_info["name"] = self.coordinator.device_metadata.awlabctypedesc
+                device_info["name"] = coordinator.device_metadata.awlabctypedesc
 
         self._attr_device_info = device_info
 
