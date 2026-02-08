@@ -574,6 +574,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
+        assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
 
         # test: import 2nd entry failed due to duplicate
