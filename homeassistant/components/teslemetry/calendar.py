@@ -15,6 +15,8 @@ from homeassistant.util import dt as dt_util
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
