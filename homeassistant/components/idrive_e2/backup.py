@@ -181,7 +181,7 @@ class IDriveE2BackupAgent(BackupAgent):
         self,
         tar_filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-    ):
+    ) -> None:
         """Upload a large file using multipart upload.
 
         :param tar_filename: The target filename for the backup.
@@ -205,38 +205,42 @@ class IDriveE2BackupAgent(BackupAgent):
 
                 # Upload parts of exactly MULTIPART_MIN_PART_SIZE_BYTES to ensure
                 # all non-trailing parts have the same size (defensive implementation)
-                while len(buffer) - offset >= MULTIPART_MIN_PART_SIZE_BYTES:
-                    start = offset
-                    end = offset + MULTIPART_MIN_PART_SIZE_BYTES
-                    part_data = bytes(buffer[start:end])
-                    offset = end
+                view = memoryview(buffer)
+                try:
+                    while len(buffer) - offset >= MULTIPART_MIN_PART_SIZE_BYTES:
+                        start = offset
+                        end = offset + MULTIPART_MIN_PART_SIZE_BYTES
+                        part_data = view[start:end]
+                        offset = end
 
-                    _LOGGER.debug(
-                        "Uploading part number %d, size %d",
-                        part_number,
-                        len(part_data),
-                    )
-                    part = await cast(Any, self._client).upload_part(
-                        Bucket=self._bucket,
-                        Key=tar_filename,
-                        PartNumber=part_number,
-                        UploadId=upload_id,
-                        Body=part_data,
-                    )
-                    parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
-                    part_number += 1
+                        _LOGGER.debug(
+                            "Uploading part number %d, size %d",
+                            part_number,
+                            len(part_data),
+                        )
+                        part = await cast(Any, self._client).upload_part(
+                            Bucket=self._bucket,
+                            Key=tar_filename,
+                            PartNumber=part_number,
+                            UploadId=upload_id,
+                            Body=part_data.tobytes(),
+                        )
+                        parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+                        part_number += 1
+                finally:
+                    view.release()
 
                 # Compact the buffer if the consumed offset has grown large enough. This
                 # avoids unnecessary memory copies when compacting after every part upload.
                 if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
-                    del buffer[:offset]
+                    buffer = bytearray(buffer[offset:])
                     offset = 0
 
             # Upload the final buffer as the last part (no minimum size requirement)
             # Offset should be 0 after the last compaction, but we use it as the start
             # index to be defensive in case the buffer was not compacted.
-            remaining_data = bytes(buffer[offset:])
-            if remaining_data:
+            if offset < len(buffer):
+                remaining_data = memoryview(buffer)[offset:]
                 _LOGGER.debug(
                     "Uploading final part number %d, size %d",
                     part_number,
@@ -247,7 +251,7 @@ class IDriveE2BackupAgent(BackupAgent):
                     Key=tar_filename,
                     PartNumber=part_number,
                     UploadId=upload_id,
-                    Body=bytes(remaining_data),
+                    Body=remaining_data.tobytes(),
                 )
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
 
