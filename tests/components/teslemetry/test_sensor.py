@@ -50,8 +50,6 @@ async def test_sensors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
@@ -90,19 +88,15 @@ async def test_sensors_streaming(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "sensor.test_charging",
-        "sensor.test_battery_level",
-        "sensor.test_charge_energy_added",
-        "sensor.test_charger_power",
-        "sensor.test_charge_cable",
-        "sensor.test_time_to_full_charge",
-        "sensor.test_time_to_arrival",
-        "sensor.teslemetry_credits",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("sensor.test_charging").state == "charging"
+    assert hass.states.get("sensor.test_battery_level").state == "90"
+    assert hass.states.get("sensor.test_charge_energy_added").state == "10"
+    assert hass.states.get("sensor.test_charger_power").state == "2"
+    assert hass.states.get("sensor.test_charge_cable").state == "unknown"
+    assert hass.states.get("sensor.test_time_to_full_charge").state == "unknown"
+    assert hass.states.get("sensor.test_time_to_arrival").state == "unknown"
+    assert hass.states.get("sensor.teslemetry_credits").state == "1980"
 
 
 async def test_energy_history_no_time_series(

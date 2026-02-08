@@ -202,7 +202,7 @@ async def remove_privacy_zone(call: ServiceCall) -> None:
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
-    return unique_id.split("_")[0]
+    return unique_id.split("_", maxsplit=1)[0]
 
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:

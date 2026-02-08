@@ -33,7 +33,7 @@ CONF_WEB_SEARCH_TIMEZONE = "timezone"
 CONF_WEB_SEARCH_INLINE_CITATIONS = "inline_citations"
 RECOMMENDED_CODE_INTERPRETER = False
 RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
-RECOMMENDED_IMAGE_MODEL = "gpt-image-1"
+RECOMMENDED_IMAGE_MODEL = "gpt-image-1.5"
 RECOMMENDED_MAX_TOKENS = 3000
 RECOMMENDED_REASONING_EFFORT = "low"
 RECOMMENDED_TEMPERATURE = 1.0
@@ -89,6 +89,8 @@ UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS: list[str] = [
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4o",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
     "gpt-5-mini",
     "gpt-5-nano",
 ]

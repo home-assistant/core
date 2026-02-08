@@ -228,7 +228,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Return current hvac mode."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
@@ -282,8 +282,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_program is None:
+            return None
         return HeatingProgram.to_ha_preset(self._current_program)
 
     def set_preset_mode(self, preset_mode: str) -> None:
