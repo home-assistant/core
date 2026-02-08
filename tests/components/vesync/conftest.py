@@ -353,3 +353,12 @@ async def switch_old_id_config_entry(
     mock_multiple_device_responses(aioclient_mock, [wall_switch, humidifer])
 
     return entry
+
+
+@pytest.fixture
+def mock_coordinator(hass: HomeAssistant):
+    """Create a mock coordinator."""
+    coordinator = MagicMock()
+    coordinator.hass = hass
+    coordinator.last_update_success = True
+    return coordinator
