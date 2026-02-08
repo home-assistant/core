@@ -75,6 +75,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
 
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
+        self._attr_unique_id = f"zone_{zone_number}_sensor"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
