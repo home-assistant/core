@@ -249,7 +249,7 @@ async def async_setup_entry(
         )
         return
 
-    # Log warnings for unknown sensor types
+    # Log warnings for unknown sensor types and skip them
     for sensor_type in sensors:
         if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
             _LOGGER.warning(
@@ -261,17 +261,12 @@ async def async_setup_entry(
     async_add_entities(
         HikvisionBinarySensor(
             entry=entry,
-            description=BINARY_SENSOR_DESCRIPTIONS.get(
-                sensor_type,
-                BinarySensorEntityDescription(
-                    key=sensor_type.lower().replace(" ", "_"),
-                    name=sensor_type,
-                ),
-            ),
+            description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
             sensor_type=sensor_type,
             channel=channel_info[1],
         )
         for sensor_type, channel_list in sensors.items()
+        if sensor_type in BINARY_SENSOR_DESCRIPTIONS
         for channel_info in channel_list
     )
 

@@ -191,7 +191,7 @@ async def test_binary_sensor_device_class_unknown(
     mock_hikcamera: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test binary sensor with unknown device class."""
+    """Test unknown sensor types are logged and skipped."""
     mock_hikcamera.return_value.current_event_states = {
         "Unknown Event": [(False, 1)],
     }
@@ -199,9 +199,9 @@ async def test_binary_sensor_device_class_unknown(
     with caplog.at_level(logging.WARNING):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.front_camera_unknown_event")
-    assert state is not None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    # No entity should be created for unknown sensor types
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 0
 
     # Verify warning was logged for unknown sensor type
     assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
