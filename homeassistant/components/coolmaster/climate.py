@@ -129,14 +129,14 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
 
-        # Normalize to lowercase for lookup, and pass unknown values through.
+        # Normalize to lowercase for lookup, and pass unknown lowercase values through.
         fan_speed_lower = self._unit.fan_speed.lower()
         if fan_speed_lower not in CM_TO_HA_FAN:
             # TODO(2026.7.0): Stop supporting unknown fan speeds.
             if fan_speed_lower not in CoolmasterClimate.warned_unknown_fan_speeds:
                 CoolmasterClimate.warned_unknown_fan_speeds.add(fan_speed_lower)
                 _LOGGER.warning(
-                    "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: %s. "
+                    "Detected unknown fan speed value from HVAC unit: %s. "
                     "Support for unknown fan speeds will be removed in 2026.7.0",
                     fan_speed_lower,
                 )

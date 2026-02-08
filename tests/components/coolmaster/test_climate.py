@@ -151,14 +151,14 @@ async def test_climate_unknown_fan_mode_warning(
 
     # Assert that both unknown fan speeds logged a warning.
     assert any(
-        "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: ultra. "
+        "Detected unknown fan speed value from HVAC unit: ultra. "
         "Support for unknown fan speeds will be removed in 2026.7.0"
         in rec.getMessage()
         and rec.levelname == "WARNING"
         for rec in setup_logs
     )
     assert any(
-        "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: vlow. "
+        "Detected unknown fan speed value from HVAC unit: vlow. "
         "Support for unknown fan speeds will be removed in 2026.7.0"
         in rec.getMessage()
         and rec.levelname == "WARNING"
@@ -176,7 +176,7 @@ async def test_climate_unknown_fan_mode_warning(
 
     for record in caplog.records[start_record_count:end_record_count]:
         if (
-            "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: ultra. "
+            "Detected unknown fan speed value from HVAC unit: ultra. "
             "Support for unknown fan speeds will be removed in 2026.7.0"
             in record.getMessage()
             and record.levelname == "WARNING"

@@ -199,7 +199,9 @@ class CoolMasterNetEmptyStatusMock:
 
 
 @pytest.fixture
-async def load_int(hass: HomeAssistant) -> MockConfigEntry:
+async def load_int(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> MockConfigEntry:
     """Set up the Coolmaster integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
