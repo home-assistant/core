@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.vesync.entity import VeSyncBaseEntity
 from homeassistant.core import HomeAssistant
 
 
@@ -34,7 +35,6 @@ async def test_entity_logs_when_device_becomes_unavailable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_device, mock_coordinator
 ) -> None:
     """Test that entity logs when device becomes unavailable."""
-    from homeassistant.components.vesync.entity import VeSyncBaseEntity
 
     entity = VeSyncBaseEntity(mock_device, mock_coordinator)
     entity.hass = hass
@@ -57,7 +57,6 @@ async def test_entity_logs_when_device_comes_back_online(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_device, mock_coordinator
 ) -> None:
     """Test that entity logs when device comes back online."""
-    from homeassistant.components.vesync.entity import VeSyncBaseEntity
 
     entity = VeSyncBaseEntity(mock_device, mock_coordinator)
     entity.hass = hass
@@ -86,7 +85,6 @@ async def test_entity_doesnt_log_duplicate_unavailable_messages(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_device, mock_coordinator
 ) -> None:
     """Test that entity doesn't log duplicate unavailable messages."""
-    from homeassistant.components.vesync.entity import VeSyncBaseEntity
 
     entity = VeSyncBaseEntity(mock_device, mock_coordinator)
     entity.hass = hass
