@@ -131,19 +131,18 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         # Handle any templates.
         write_state = False
         for option, entity_template in self._templates.items():
-            value = _SENTINEL
-            if (rendered := self._rendered.get(option)) is not None:
-                value = rendered
-
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
-            if value is _SENTINEL:
+            if (rendered := self._rendered.get(option, _SENTINEL)) is _SENTINEL:
                 write_state = True
                 continue
 
-            if entity_template.validator:
-                value = entity_template.validator(rendered)
+            value = (
+                entity_template.validator(rendered)
+                if entity_template.validator
+                else rendered
+            )
 
             if entity_template.on_update:
                 entity_template.on_update(value)
