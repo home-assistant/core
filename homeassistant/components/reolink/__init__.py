@@ -144,7 +144,7 @@ async def async_setup_entry(
     update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
     # Track firmware versions to detect external updates (e.g., via Reolink app)
-    last_known_firmware: dict[int | None, str] = {}
+    last_known_firmware: dict[int | None, str | None] = {}
 
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
@@ -172,7 +172,11 @@ async def async_setup_entry(
         for ch in (*host.api.channels, None):
             new_version = host.api.camera_sw_version(ch)
             old_version = last_known_firmware.get(ch)
-            if old_version is not None and new_version != old_version:
+            if (
+                old_version is not None
+                and new_version is not None
+                and new_version != old_version
+            ):
                 firmware_changed = True
             last_known_firmware[ch] = new_version
 
