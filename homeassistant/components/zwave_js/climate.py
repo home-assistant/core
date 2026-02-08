@@ -232,7 +232,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Optionally return the temperature value of a setpoint."""
         try:
             temp = self._setpoint_value_or_raise(setpoint_type)
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             return None
         return get_value_of_zwave_value(temp)
 
@@ -425,7 +425,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 min_temp = temp.metadata.min
                 base_unit = self.temperature_unit
         # In case of any error, we fallback to the default
-        except (IndexError, ValueError, TypeError):
+        except IndexError, ValueError, TypeError:
             pass
 
         return TemperatureConverter.convert(min_temp, base_unit, self.temperature_unit)
@@ -441,7 +441,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 max_temp = temp.metadata.max
                 base_unit = self.temperature_unit
         # In case of any error, we fallback to the default
-        except (IndexError, ValueError, TypeError):
+        except IndexError, ValueError, TypeError:
             pass
 
         return TemperatureConverter.convert(max_temp, base_unit, self.temperature_unit)

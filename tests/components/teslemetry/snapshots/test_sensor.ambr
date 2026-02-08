@@ -2386,7 +2386,7 @@
     'object_id_base': 'VPP backup reserve',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'VPP backup reserve',
     'platform': 'teslemetry',
@@ -2401,7 +2401,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -2416,7 +2415,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -5228,28 +5226,4 @@
     'last_updated': <ANY>,
     'state': 'disconnected',
   })
-# ---
-# name: test_sensors_streaming[sensor.teslemetry_credits-state]
-  '1980'
-# ---
-# name: test_sensors_streaming[sensor.test_battery_level-state]
-  '90'
-# ---
-# name: test_sensors_streaming[sensor.test_charge_cable-state]
-  'unknown'
-# ---
-# name: test_sensors_streaming[sensor.test_charge_energy_added-state]
-  '10'
-# ---
-# name: test_sensors_streaming[sensor.test_charger_power-state]
-  '2'
-# ---
-# name: test_sensors_streaming[sensor.test_charging-state]
-  'charging'
-# ---
-# name: test_sensors_streaming[sensor.test_time_to_arrival-state]
-  'unknown'
-# ---
-# name: test_sensors_streaming[sensor.test_time_to_full_charge-state]
-  'unknown'
 # ---
