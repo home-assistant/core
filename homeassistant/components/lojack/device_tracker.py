@@ -190,13 +190,13 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         """Return extra state attributes."""
         attrs: dict[str, Any] = {}
 
-        # Last polled timestamp (when HA last fetched data from the API)
-        if self.coordinator.last_update_success_time is not None:
-            attrs[ATTR_LAST_POLLED] = self.coordinator.last_update_success_time
-
         vehicle = self._vehicle
         if not vehicle:
             return attrs
+
+        # Last polled timestamp (from vehicle's location timestamp)
+        if vehicle.timestamp is not None:
+            attrs[ATTR_LAST_POLLED] = vehicle.timestamp
 
         # GPS accuracy
         if vehicle.accuracy is not None:
