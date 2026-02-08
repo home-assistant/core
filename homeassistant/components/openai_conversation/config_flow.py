@@ -50,6 +50,7 @@ from .const import (
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -71,6 +72,7 @@ from .const import (
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -327,6 +329,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 CONF_TEMPERATURE,
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+            vol.Optional(
+                CONF_STORE_RESPONSES,
+                default=RECOMMENDED_STORE_RESPONSES,
+            ): bool,
         }
 
         if user_input is not None:
@@ -554,7 +560,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "strict": False,
                     }
                 },
-                store=False,
+                store=self.options.get(
+                    CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES
+                ),
             )
             location_data = location_schema(json.loads(response.output_text) or {})
 

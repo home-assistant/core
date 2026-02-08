@@ -19,6 +19,7 @@ from syrupy.filters import props
 
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
+    CONF_STORE_RESPONSES,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
@@ -305,6 +306,14 @@ async def test_init_auth_error(
 
 
 @pytest.mark.parametrize(
+    ("mock_conversation_subentry_data", "expected_store"),
+    [
+        ({}, False),
+        ({CONF_STORE_RESPONSES: True}, True),
+    ],
+    indirect=["mock_conversation_subentry_data"],
+)
+@pytest.mark.parametrize(
     ("service_data", "expected_args", "number_of_files"),
     [
         (
@@ -400,6 +409,7 @@ async def test_generate_content_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    expected_store: bool,
     service_data,
     expected_args,
     number_of_files,
@@ -411,7 +421,7 @@ async def test_generate_content_service(
     expected_args["top_p"] = 1.0
     expected_args["temperature"] = 1.0
     expected_args["user"] = None
-    expected_args["store"] = False
+    expected_args["store"] = expected_store
     expected_args["input"][0]["type"] = "message"
     expected_args["input"][0]["role"] = "user"
 
