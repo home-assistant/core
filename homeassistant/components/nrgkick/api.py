@@ -59,9 +59,10 @@ class NRGkickApiClientInvalidResponseError(NRGkickApiClientError):
 async def async_api_call(awaitable: Awaitable[_T]) -> _T:
     """Call the NRGkick API and map common library errors.
 
-    This helper is intended for command-style calls (switch/number/etc.), where
-    errors should surface as user-facing `HomeAssistantError` exceptions.
-    Polling/setup error mapping is handled by the coordinator.
+    This helper is intended for one-off API calls outside the coordinator,
+    such as command-style calls (switch/number/etc.) and config flow
+    validation, where errors should surface as user-facing `HomeAssistantError`
+    exceptions. Regular polling is handled by the coordinator.
     """
     try:
         return await awaitable
