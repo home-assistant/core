@@ -175,13 +175,12 @@ async def test_climate_unknown_fan_mode_warning(
     end_record_count = len(caplog.records)
 
     for record in caplog.records[start_record_count:end_record_count]:
-        if (
+        assert not (
             "Detected unknown fan speed value from HVAC unit: ultra. "
             "Support for unknown fan speeds will be removed in 2026.7.0"
             in record.getMessage()
             and record.levelname == "WARNING"
-        ):
-            pytest.fail("Duplicate warning logged for unknown fan speed 'ultra'")
+        )
 
 
 async def test_climate_fan_modes(
