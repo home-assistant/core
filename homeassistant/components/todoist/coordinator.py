@@ -53,26 +53,26 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
         try:
-            tasks_async = await self.api.get_tasks()
+            tasks_async = await self.api.get_tasks(limit=200)
+            return await flatten_async_pages(tasks_async)
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return await flatten_async_pages(tasks_async)
 
     async def async_get_projects(self) -> list[Project]:
         """Return todoist projects fetched at most once."""
         if self._projects is None:
-            projects_async = await self.api.get_projects()
+            projects_async = await self.api.get_projects(limit=200)
             self._projects = await flatten_async_pages(projects_async)
         return self._projects
 
     async def async_get_sections(self, project_id: str) -> list[Section]:
         """Return todoist sections for a given project ID."""
-        sections_async = await self.api.get_sections(project_id=project_id)
+        sections_async = await self.api.get_sections(project_id=project_id, limit=200)
         return await flatten_async_pages(sections_async)
 
     async def async_get_labels(self) -> list[Label]:
         """Return todoist labels fetched at most once."""
         if self._labels is None:
-            labels_async = await self.api.get_labels()
+            labels_async = await self.api.get_labels(limit=200)
             self._labels = await flatten_async_pages(labels_async)
         return self._labels
