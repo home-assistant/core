@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -497,6 +498,7 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     """Base class for Tesla Fleet vehicle metric sensors."""
 
     entity_description: TeslaFleetSensorEntityDescription
+    _restored_data: SensorExtraStoredData | None = None
 
     def __init__(
         self,
@@ -513,12 +515,19 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
             if (sensor_data := await self.async_get_last_sensor_data()) is not None:
                 self._attr_native_value = sensor_data.native_value
+                self._restored_data = sensor_data
+
+    @property
+    def available(self) -> bool:
+        """Return if sensor is available."""
+        return super().available or self._restored_data is not None
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.has:
             self._attr_native_value = self.entity_description.value_fn(self._value)
-        else:
+            self._restored_data = None
+        elif self._restored_data is None:
             self._attr_native_value = None
 
 
