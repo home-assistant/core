@@ -117,8 +117,8 @@ async def test_migrate_config_entry(
     with patch("os.path.isdir", return_value=True), patch("shutil.rmtree"):
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
-        assert entry.version == 2
-        assert entry.minor_version == 2
+        assert entry.version == 3
+        assert entry.minor_version == 1
 
 
 @pytest.mark.parametrize(
@@ -141,8 +141,8 @@ async def test_migrate_config_entry_unique_id(
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.unique_id == expected
-    assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.version == 3
+    assert entry.minor_version == 1
 
 
 async def test_api_call(
