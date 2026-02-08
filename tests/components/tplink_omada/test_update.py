@@ -1,14 +1,16 @@
 """Tests for TP-Link Omada update entities."""
 
 from datetime import timedelta
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
-from homeassistant.components.tplink_omada.coordinator import POLL_UPGRADE
+from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
@@ -19,10 +21,29 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 from tests.typing import WebSocketGenerator
 
-POLL_INTERVAL = timedelta(seconds=POLL_UPGRADE)
+POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
+
+
+async def _rebuild_device_list_with_update(
+    hass: HomeAssistant, mac: str, **overrides
+) -> list[OmadaListDevice]:
+    """Rebuild device list from fixture with specified overrides for a device."""
+    devices_data = json.loads(
+        await async_load_fixture(hass, "devices.json", "tplink_omada")
+    )
+    for device_data in devices_data:
+        if device_data["mac"] == mac:
+            device_data.update(overrides)
+
+    return [OmadaListDevice(d) for d in devices_data]
 
 
 @pytest.fixture
@@ -94,11 +115,11 @@ async def test_firmware_download_in_progress(
     """Test update entity when firmware download is in progress."""
     entity_id = "update.test_poe_switch_firmware"
 
-    # Get current devices and update switch to show download in progress
-    devices = await mock_omada_site_client.get_devices()
-    for device in devices:
-        if device.mac == "54-AF-97-00-00-01":
-            device._data["fwDownload"] = True
+    # Rebuild device list with fwDownload set to True for the switch
+    updated_devices = await _rebuild_device_list_with_update(
+        hass, "54-AF-97-00-00-01", fwDownload=True
+    )
+    mock_omada_site_client.get_devices.return_value = updated_devices
 
     # Trigger coordinator update
     freezer.tick(POLL_INTERVAL)
@@ -134,9 +155,9 @@ async def test_install_firmware_success(
     await hass.async_block_till_done()
 
     # Verify start_firmware_upgrade was called with the correct device
-    mock_omada_site_client.start_firmware_upgrade.assert_called_once()
-    call_args = mock_omada_site_client.start_firmware_upgrade.call_args[0]
-    assert call_args[0].mac == "54-AF-97-00-00-01"
+    mock_omada_site_client.start_firmware_upgrade.assert_awaited_once()
+    await_args = mock_omada_site_client.start_firmware_upgrade.await_args[0]
+    assert await_args[0].mac == "54-AF-97-00-00-01"
 
 
 @pytest.mark.parametrize(
