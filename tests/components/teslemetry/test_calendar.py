@@ -102,7 +102,7 @@ async def test_calendar(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
-    """Tests that the calendar entity is correct."""
+    """Test that the calendar entity is correct."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
@@ -133,7 +133,7 @@ async def test_calendar_events(
     entity_id: str,
     time_tuple: tuple,
 ) -> None:
-    """Tests that the energy tariff calendar entity events are correct."""
+    """Test that the energy tariff calendar entity events are correct."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(*time_tuple, tzinfo=tz))
 
@@ -399,3 +399,37 @@ async def test_calendar_invalid_price(
     assert state
     assert state.state == "on"
     assert "Unknown Price" in state.attributes["message"]
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "calendar.test_charging_schedule",
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_events(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    entity_id: str,
+) -> None:
+    """Test that the charge schedule calendar events are correct."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert result == snapshot()
