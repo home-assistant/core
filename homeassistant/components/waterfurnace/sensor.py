@@ -144,6 +144,7 @@ SENSORS = [
         key="waterflowrate",
         translation_key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
