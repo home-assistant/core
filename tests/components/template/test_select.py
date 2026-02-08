@@ -91,7 +91,6 @@ async def test_setup_config_entry(
             "template_type": "select",
             "state": "{{ 'on' }}",
             "options": "{{ ['off', 'on', 'auto'] }}",
-            "select_option": [],
         },
         title="My template",
     )
@@ -111,7 +110,6 @@ async def test_setup_config_entry(
     [
         {
             "state": "{{ 'a' }}",
-            "select_option": {"service": "script.select_option"},
             "options": "{{ ['a', 'b'] }}",
         },
     ],
@@ -165,10 +163,6 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
         {
             "state": "{{ 'a' }}",
             "select_option": {"service": "script.select_option"},
-        },
-        {
-            "state": "{{ 'a' }}",
-            "options": "{{ ['a', 'b'] }}",
         },
     ],
 )
