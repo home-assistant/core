@@ -4,6 +4,7 @@
     'energysites': list([
       dict({
         'history': dict({
+          '_period_start': '2024-09-18T00:00:00+10:00',
           'battery_energy_exported': 36,
           'battery_energy_imported_from_generator': 0,
           'battery_energy_imported_from_grid': 0,
