@@ -206,23 +206,13 @@ async def async_unload_entry(
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: OverkizDataConfigEntry
 ) -> bool:
-    """Migrate old entry to new version.
-
-    Called by Home Assistant BEFORE async_setup_entry when config entry version
-    is lower than VERSION. Migrates the config entry itself (unique_id, version).
-
-    Note: Different from _async_migrate_entries which migrates entity registry
-    unique_ids and runs DURING setup.
-    """
-    if config_entry.version == 1:
-        # Migrate unique_id to include API type suffix
-        # This allows both local and cloud entries for the same gateway
+    """Migrate config entry unique_id to include API type suffix for hybrid mode support."""
+    if config_entry.version == 1 and config_entry.minor_version < 2:
         api_type = config_entry.data.get(CONF_API_TYPE, APIType.CLOUD)
-        # api_type can be APIType enum or string, f-string handles both
         new_unique_id = f"{config_entry.unique_id}-{api_type}"
 
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=new_unique_id, version=2
+            config_entry, unique_id=new_unique_id, minor_version=2
         )
         LOGGER.info(
             "Migrated Overkiz entry unique_id from %s to %s",

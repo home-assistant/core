@@ -450,7 +450,8 @@ async def test_cloud_abort_on_duplicate_entry(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -505,7 +506,8 @@ async def test_local_abort_on_duplicate_entry(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -618,7 +620,8 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -660,7 +663,8 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -699,7 +703,8 @@ async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "username": TEST_EMAIL,
@@ -749,7 +754,8 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": "old_token",
@@ -800,7 +806,8 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID2}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": "old_token",
@@ -897,7 +904,8 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -1033,7 +1041,8 @@ async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,

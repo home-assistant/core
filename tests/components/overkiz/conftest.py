@@ -23,7 +23,8 @@ def mock_config_entry() -> MockConfigEntry:
         title="Somfy TaHoma Switch",
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,

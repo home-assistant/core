@@ -54,7 +54,8 @@ async def test_cloud_waits_for_local_to_load(
     local_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -69,7 +70,8 @@ async def test_cloud_waits_for_local_to_load(
     cloud_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -112,7 +114,8 @@ async def test_local_first_then_cloud_filters_devices(
     local_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -155,7 +158,8 @@ async def test_local_first_then_cloud_filters_devices(
     cloud_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,

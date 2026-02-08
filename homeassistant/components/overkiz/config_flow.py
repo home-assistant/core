@@ -42,7 +42,8 @@ from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD
@@ -83,7 +84,6 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if gateways := await client.get_gateways():
             for gateway in gateways:
                 if is_overkiz_gateway(gateway.id):
-                    # _api_type can be APIType enum or string, f-string handles both
                     unique_id = f"{gateway.id}-{self._api_type}"
                     await self.async_set_unique_id(unique_id, raise_on_progress=False)
                     break
@@ -336,7 +336,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle discovery of a gateway."""
         # Abort if gateway is already configured (either local or cloud)
         for entry in self._async_current_entries():
-            if entry.unique_id in (f"{gateway_id}-local", f"{gateway_id}-cloud"):
+            if entry.unique_id in (f"{gateway_id}-{APIType.LOCAL}", f"{gateway_id}-{APIType.CLOUD}"):
                 return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {"gateway_id": gateway_id}

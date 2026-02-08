@@ -39,7 +39,8 @@ async def test_can_add_cloud_when_local_exists(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -88,7 +89,8 @@ async def test_can_add_local_when_cloud_exists(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -137,7 +139,8 @@ async def test_discovery_aborts_when_local_exists(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -166,7 +169,8 @@ async def test_discovery_aborts_when_cloud_exists(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -208,7 +212,8 @@ async def test_migration_v1_to_v2_cloud(hass: HomeAssistant) -> None:
     result = await async_migrate_entry(hass, mock_entry)
 
     assert result is True
-    assert mock_entry.version == 2
+    assert mock_entry.version == 1
+    assert mock_entry.minor_version == 2
     assert mock_entry.unique_id == f"{TEST_GATEWAY_ID}-cloud"
 
 
@@ -232,7 +237,8 @@ async def test_migration_v1_to_v2_local(hass: HomeAssistant) -> None:
     result = await async_migrate_entry(hass, mock_entry)
 
     assert result is True
-    assert mock_entry.version == 2
+    assert mock_entry.version == 1
+    assert mock_entry.minor_version == 2
     assert mock_entry.unique_id == f"{TEST_GATEWAY_ID}-local"
 
 
@@ -255,7 +261,8 @@ async def test_migration_v1_to_v2_defaults_to_cloud(hass: HomeAssistant) -> None
     result = await async_migrate_entry(hass, mock_entry)
 
     assert result is True
-    assert mock_entry.version == 2
+    assert mock_entry.version == 1
+    assert mock_entry.minor_version == 2
     assert mock_entry.unique_id == f"{TEST_GATEWAY_ID}-cloud"
 
 
@@ -347,7 +354,8 @@ async def test_find_hybrid_local_entry_skips_cloud_entries(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -360,7 +368,8 @@ async def test_find_hybrid_local_entry_skips_cloud_entries(
     current_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud2",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -383,7 +392,8 @@ async def test_find_hybrid_local_entry_skips_different_gateway(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="different-gateway-id-local",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "host": TEST_HOST,
             "token": TEST_TOKEN,
@@ -397,7 +407,8 @@ async def test_find_hybrid_local_entry_skips_different_gateway(
     current_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_GATEWAY_ID}-cloud",
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
@@ -417,7 +428,8 @@ async def test_reauth_flow_with_invalid_unique_id(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=None,  # Invalid - no unique_id
-        version=2,
+        version=1,
+        minor_version=2,
         data={
             "username": TEST_EMAIL,
             "password": TEST_PASSWORD,
