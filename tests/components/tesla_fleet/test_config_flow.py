@@ -307,12 +307,9 @@ async def test_domain_registration_errors(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
         # Enter domain - this should fail and stay on domain_registration
-        with patch(
-            "homeassistant.helpers.translation.async_get_translations", return_value={}
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_DOMAIN: "example.com"}
-            )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
+        )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
         assert result["errors"] == {"base": expected_error}
