@@ -415,6 +415,19 @@ async def test_generate_content_service(
     number_of_files,
 ) -> None:
     """Test generate content service."""
+    if expected_store:
+        conversation_subentry = next(
+            sub
+            for sub in mock_config_entry.subentries.values()
+            if sub.subentry_type == "conversation"
+        )
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            conversation_subentry,
+            data={**conversation_subentry.data, CONF_STORE_RESPONSES: expected_store},
+        )
+        await hass.async_block_till_done()
+
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-4o-mini"
     expected_args["max_output_tokens"] = 3000
