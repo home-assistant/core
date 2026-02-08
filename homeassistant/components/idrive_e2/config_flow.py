@@ -17,6 +17,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -33,7 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_ACCESS_KEY): cv.string,
+        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
