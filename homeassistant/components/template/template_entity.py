@@ -295,6 +295,10 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._attr_available = False
                 return
 
+            # Recover from template errors if they happened before.
+            if not self._availability_template and not self._attr_available:
+                self._attr_available = True
+
             state = validator(result) if validator else result
             if on_update:
                 on_update(state)
