@@ -38,7 +38,11 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="highest_price_today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        value_fn=lambda api, data: api.get_highest_price_today(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_highest_price_today(data)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_day",
@@ -46,7 +50,11 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
         translation_placeholders={"time_range": "(06:00-18:00)"},
-        value_fn=lambda api, data: api.get_lowest_price_day(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_lowest_price_day(data)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
@@ -54,14 +62,22 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
         translation_placeholders={"time_range": "(18:00-06:00)"},
-        value_fn=lambda api, data: api.get_lowest_price_night(data),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_lowest_price_night(data)) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_current_price",
         translation_key="current_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        value_fn=lambda api, data: api.get_current_price(data, dt_util.now().hour),
+        value_fn=lambda api, data: (
+            price / 100
+            if (price := api.get_current_price(data, dt_util.now().hour)) is not None
+            else None
+        ),
     ),
 ]
 
