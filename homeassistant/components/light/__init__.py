@@ -1052,6 +1052,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
+        if _is_on and not color_mode:
+            raise NotImplementedError(f"Missing color mode for entity {self.entity_id}")
 
         effect: str | None
         if LightEntityFeature.EFFECT in supported_features:
