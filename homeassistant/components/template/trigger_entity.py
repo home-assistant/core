@@ -69,6 +69,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        **kwargs,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
