@@ -70,6 +70,10 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     _attr_name = None
 
+    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this variable.
+    # Holds unknown fan speeds we have already warned about.
+    warned_unknown_fan_speeds: set[str] = set()
+
     def __init__(
         self,
         coordinator: CoolmasterDataUpdateCoordinator,
@@ -125,8 +129,20 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
 
-        # Normalize to lowercase for lookup, and pass unknown values through.
-        return CM_TO_HA_FAN.get(self._unit.fan_speed.lower(), self._unit.fan_speed)
+        # Normalize to lowercase for lookup, and pass unknown lowercase values through.
+        fan_speed_lower = self._unit.fan_speed.lower()
+        if fan_speed_lower not in CM_TO_HA_FAN:
+            # TODO(2026.7.0): Stop supporting unknown fan speeds.
+            if fan_speed_lower not in CoolmasterClimate.warned_unknown_fan_speeds:
+                CoolmasterClimate.warned_unknown_fan_speeds.add(fan_speed_lower)
+                _LOGGER.warning(
+                    "Detected unknown fan speed value from HVAC unit: %s. "
+                    "Support for unknown fan speeds will be removed in 2026.7.0",
+                    fan_speed_lower,
+                )
+            return fan_speed_lower
+
+        return CM_TO_HA_FAN[fan_speed_lower]
 
     @property
     def fan_modes(self):
