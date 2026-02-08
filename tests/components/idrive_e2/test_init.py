@@ -1,6 +1,5 @@
 """Test the IDrive e2 storage integration."""
 
-import logging
 from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import (
@@ -10,32 +9,37 @@ from botocore.exceptions import (
 )
 import pytest
 
-from homeassistant.components.idrive_e2 import _async_safe_client_close
+from homeassistant.components.idrive_e2 import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_safe_client_close_no_client() -> None:
-    """Test safe close returns early when client is None."""
-    await _async_safe_client_close(None)
-
-
-async def test_async_safe_client_close_close_raises(
-    caplog: pytest.LogCaptureFixture,
+async def test_async_setup_entry_does_not_mask_when_close_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
 ) -> None:
-    """Test safe close swallows close exceptions and logs debug."""
-    caplog.set_level(logging.DEBUG)
+    """Test close failures do not mask the original setup exception."""
+    mock_config_entry.add_to_hass(hass)
 
-    client = AsyncMock()
-    client.close.side_effect = RuntimeError("boom")
+    # Force setup to fail after the client has been created
+    mock_client.head_bucket.side_effect = ClientError(
+        {"Error": {"Code": "403", "Message": "Forbidden"}}, "HeadBucket"
+    )
 
-    await _async_safe_client_close(client)
+    # Also force close() to fail
+    mock_client.close.side_effect = RuntimeError("boom")
 
-    assert "Failed to close aiobotocore client" in caplog.text
+    # If close() masks the original error, this would raise RuntimeError instead
+    with pytest.raises(ConfigEntryError):
+        await async_setup_entry(hass, mock_config_entry)
+
+    mock_client.close.assert_awaited_once()
 
 
 async def test_load_unload_config_entry(
