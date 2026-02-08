@@ -107,14 +107,14 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         exists_fn=lambda device, component: (
             # Only create mute switch if volume level has 2 options (muted and unmuted)
             # For other cases, we rely on the volume level number entity to set volume
-            get_range_options_count(
+            Capability.ROBOT_CLEANER_MOVEMENT not in device.status[component]
+            and get_range_options_count(
                 device,
                 component,
                 Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
                 Attribute.VOLUME_LEVEL_RANGE,
             )
             == 2
-            and Capability.ROBOT_CLEANER_MOVEMENT not in device.status[component]
         ),
     ),
 }
@@ -303,6 +303,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             translation_key := translation_keys.get(component)
         ) is not None:
             self._attr_translation_key = translation_key
+        self._attr_suggested_object_id = entity_description.translation_key
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

@@ -90,16 +90,38 @@ def get_automations_and_scripts_using_entity(
 def get_range_options_count(
     device: FullDevice, component: str, capability: Capability, attribute: Attribute
 ) -> int:
-    """Get the number of options in a range attribute."""
-    value = device.status[component][capability][attribute].value
-    assert isinstance(value, dict)
-    minimum = value.get("minimum", None)
-    maximum = value.get("maximum", None)
-    step = value.get("step", None)
-    if minimum is None or maximum is None or step is None:
-        raise ValueError("Missing range options")
-    assert isinstance(minimum, int)
-    assert isinstance(maximum, int)
-    assert isinstance(step, int)
+    """Get the number of options in a range attribute.
 
-    return len(range(minimum, maximum + 1, step))
+    This helper is intentionally non-throwing. If the underlying status payload
+    is missing or malformed, it will return 0 so callers can skip creating the
+    related entity instead of failing platform setup.
+    """
+    try:
+        status = device.status
+        value = status[component][capability][attribute].value
+    except KeyError, TypeError, AttributeError:
+        # Missing component/capability/attribute or unexpected structure
+        return 0
+
+    if not isinstance(value, dict):
+        return 0
+
+    minimum = value.get("minimum")
+    maximum = value.get("maximum")
+    step = value.get("step")
+
+    if (
+        not isinstance(minimum, int)
+        or not isinstance(maximum, int)
+        or not isinstance(step, int)
+    ):
+        return 0
+
+    if step <= 0 or maximum < minimum:
+        return 0
+
+    try:
+        return len(range(minimum, maximum + 1, step))
+    except ValueError:
+        # range() can still raise ValueError for invalid arguments
+        return 0

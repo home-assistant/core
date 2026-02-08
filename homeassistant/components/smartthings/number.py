@@ -60,14 +60,14 @@ CAPABILITY_TO_NUMBER_RANGE_DESCRIPTIONS: dict[
         range_attribute=Attribute.VOLUME_LEVEL_RANGE,
         command=Command.SET_VOLUME_LEVEL,
         exists_fn=lambda device, component: (
-            get_range_options_count(
+            Capability.ROBOT_CLEANER_MOVEMENT not in device.status[component]
+            and get_range_options_count(
                 device,
                 component,
                 Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
                 Attribute.VOLUME_LEVEL_RANGE,
             )
             >= 2
-            and Capability.ROBOT_CLEANER_MOVEMENT not in device.status[component]
         ),
     ),
 }
@@ -251,6 +251,7 @@ class SmartThingsRangeNumberEntity(SmartThingsEntity, NumberEntity):
             )
         else:
             self._attr_translation_key = description.key
+        self._attr_suggested_object_id = self._attr_translation_key
 
     @property
     def range(self) -> dict[str, int]:
