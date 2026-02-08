@@ -48,16 +48,25 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> BACnetOptionsFlow:
         """Get the options flow for this handler."""
-        return BACnetOptionsFlow(config_entry)
+        return BACnetOptionsFlow()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
         super().__init__(*args, **kwargs)
-        self._discovered_devices = []
-        self._discovered_objects = []
-        self._selected_address = None
-        self._selected_device = None
-        self._hub_entry_id = None
+        self._discovered_devices: list[BACnetDeviceInfo] = []
+        self._discovered_objects: list = []
+        self._selected_address: str | None = None
+        self._selected_device: BACnetDeviceInfo | None = None
+        self._hub_entry_id: str | None = None
+        # State machine attributes for show_progress flows
+        self._discover_task_complete: bool = False
+        self._discover_results_pending: bool = False
+        self._cached_discover_errors: dict[str, str] = {}
+        self._device_discovery_errors: dict[str, str] = {}
+        self._objects_task_complete: bool = False
+        self._objects_results_pending: bool = False
+        self._cached_objects_errors: dict[str, str] = {}
+        self._objects_discovery_errors: dict[str, str] = {}
 
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
@@ -199,7 +208,7 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Find the best default address (prefer specific address over 0.0.0.0 and manual)
         default_address = "0.0.0.0"
-        for ip, desc in interfaces.items():
+        for ip in interfaces:
             if ip not in ("0.0.0.0", "manual"):
                 default_address = ip
                 break  # Use the first real address
@@ -303,8 +312,6 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # Store the selected device and proceed to object discovery
                 self._selected_device = selected_device
-                # End current progress before starting new one
-                self.async_show_progress_done(next_step_id="discover_objects")
                 return await self.async_step_discover_objects()
 
         # If we got here with user_input but no device_id, user clicked retry after error
@@ -323,53 +330,21 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         client = hub_entry.runtime_data.client
 
-        # Check if this is the first call (start discovery) or second call (handle results)
-        if not self._discovered_devices and not hasattr(
-            self, "_device_discovery_errors"
-        ):
-            # First call - start discovery with progress
-            self._device_discovery_errors: dict[str, str] = {}
+        # Phase 3: After show_progress_done, show form with results
+        if self._discover_results_pending:
+            self._discover_results_pending = False
+            errors = self._cached_discover_errors
+            self._cached_discover_errors = {}
 
-            async def _discover_task():
-                try:
-                    async with timeout(DISCOVERY_TIMEOUT + 5):
-                        self._discovered_devices = await client.discover_devices(
-                            timeout=DISCOVERY_TIMEOUT
-                        )
-                except TimeoutError:
-                    _LOGGER.error("Discovery timeout")
-                    self._device_discovery_errors["base"] = "discovery_timeout"
-                    self._discovered_devices = []
-                except Exception:
-                    _LOGGER.exception("Error during BACnet discovery")
-                    self._device_discovery_errors["base"] = "cannot_connect"
-                    self._discovered_devices = []
+            if errors:
+                return self.async_show_form(
+                    step_id="discover",
+                    data_schema=vol.Schema({}),
+                    errors=errors,
+                )
 
-            # Return progress immediately so UI renders
-            return self.async_show_progress(
-                step_id="discover",
-                progress_action="discovering_devices",
-                progress_task=self.hass.async_create_task(_discover_task()),
-            )
-
-        # Second call - discovery completed, handle results
-        errors = self._device_discovery_errors
-        delattr(self, "_device_discovery_errors")  # Clean up
-
-        if not self._discovered_devices and not errors:
-            errors["base"] = "no_devices_found"
-
-        if errors:
-            self.async_show_progress_done(next_step_id="discover")
-            return self.async_show_form(
-                step_id="discover",
-                data_schema=vol.Schema({}),
-                errors=errors,
-            )
-
-        # Build the selection options
-        device_options: dict[str, str] = {}
-        try:
+            # Build the selection options
+            device_options: dict[str, str] = {}
             for device in self._discovered_devices:
                 label = device.name or f"Device {device.device_id}"
                 if device.vendor_name and device.model_name:
@@ -380,24 +355,54 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
                     label += f" ({device.model_name})"
                 label += f" [{device.address}]"
                 device_options[str(device.device_id)] = label
-        except Exception:
-            _LOGGER.exception("Error building device options")
-            self.async_show_progress_done(next_step_id="discover")
+
             return self.async_show_form(
                 step_id="discover",
-                data_schema=vol.Schema({}),
-                errors={"base": "unknown"},
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_DEVICE_ID): vol.In(device_options),
+                    }
+                ),
+                errors=errors,
             )
 
-        self.async_show_progress_done(next_step_id="discover")
-        return self.async_show_form(
+        # Phase 2: Discovery task completed, transition from progress
+        if self._discover_task_complete:
+            self._discover_task_complete = False
+            errors = self._device_discovery_errors
+            self._device_discovery_errors = {}
+
+            if not self._discovered_devices and not errors:
+                errors["base"] = "no_devices_found"
+
+            # Cache results for phase 3
+            self._discover_results_pending = True
+            self._cached_discover_errors = errors
+            return self.async_show_progress_done(next_step_id="discover")
+
+        # Phase 1: Start discovery with progress indicator
+        self._device_discovery_errors = {}
+
+        async def _discover_task() -> None:
+            try:
+                async with timeout(DISCOVERY_TIMEOUT + 5):
+                    self._discovered_devices = await client.discover_devices(
+                        timeout=DISCOVERY_TIMEOUT
+                    )
+            except TimeoutError:
+                _LOGGER.error("Discovery timeout")
+                self._device_discovery_errors["base"] = "discovery_timeout"
+                self._discovered_devices = []
+            except Exception:
+                _LOGGER.exception("Error during BACnet discovery")
+                self._device_discovery_errors["base"] = "cannot_connect"
+                self._discovered_devices = []
+            self._discover_task_complete = True
+
+        return self.async_show_progress(
             step_id="discover",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_ID): vol.In(device_options),
-                }
-            ),
-            errors=errors,
+            progress_action="discovering_devices",
+            progress_task=self.hass.async_create_task(_discover_task()),
         )
 
     async def async_step_discover_objects(
@@ -418,93 +423,185 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         client = hub_entry.runtime_data.client
 
-        # Check if this is the first call (start discovery) or second call (handle results)
-        if not self._discovered_objects and not hasattr(
-            self, "_objects_discovery_errors"
-        ):
-            # First call - start discovery with progress
-            self._objects_discovery_errors: dict[str, str] = {}
+        # Phase 3: After show_progress_done, handle results
+        if self._objects_results_pending:
+            self._objects_results_pending = False
+            errors = self._cached_objects_errors
+            self._cached_objects_errors = {}
 
-            async def _discover_objects_task():
-                try:
-                    async with timeout(30):  # Give more time for object discovery
-                        self._discovered_objects = await client.get_device_objects(
-                            self._selected_device.address,
-                            self._selected_device.device_id,
-                        )
-                except TimeoutError:
-                    _LOGGER.error("Timeout discovering objects")
-                    self._objects_discovery_errors["base"] = "discovery_timeout"
-                except Exception:
-                    _LOGGER.exception("Error discovering objects")
-                    self._objects_discovery_errors["base"] = "cannot_connect"
+            if errors:
+                device_name = (
+                    (
+                        self._selected_device.name
+                        or f"Device {self._selected_device.device_id}"
+                    )
+                    if self._selected_device
+                    else "Unknown"
+                )
+                return self.async_show_form(
+                    step_id="sensors",
+                    data_schema=vol.Schema({}),
+                    errors=errors,
+                    description_placeholders={
+                        "device_name": device_name,
+                        "object_count": "0",
+                    },
+                )
 
-            # Return progress immediately so UI renders
-            return self.async_show_progress(
-                step_id="discover_objects",
-                progress_action="discovering_objects",
-                progress_task=self.hass.async_create_task(_discover_objects_task()),
-            )
+            if not self._discovered_objects:
+                # No objects found, create entry with empty selection
+                title = (
+                    self._selected_device.name
+                    or f"BACnet device {self._selected_device.device_id}"
+                )
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        CONF_ENTRY_TYPE: ENTRY_TYPE_DEVICE,
+                        CONF_DEVICE_ID: self._selected_device.device_id,
+                        CONF_DEVICE_ADDRESS: self._selected_device.address,
+                        CONF_HUB_ID: self._hub_entry_id,
+                    },
+                    options={
+                        CONF_SELECTED_OBJECTS: [],
+                    },
+                )
 
-        # Second call - discovery completed, handle results
-        errors = self._objects_discovery_errors
-        delattr(self, "_objects_discovery_errors")  # Clean up
+            # If there are too many objects (>100), skip selection and add all
+            if len(self._discovered_objects) > 100:
+                title = (
+                    self._selected_device.name
+                    or f"BACnet device {self._selected_device.device_id}"
+                )
+                all_objects = [
+                    f"{obj.object_type},{obj.object_instance}"
+                    for obj in self._discovered_objects
+                ]
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        CONF_ENTRY_TYPE: ENTRY_TYPE_DEVICE,
+                        CONF_DEVICE_ID: self._selected_device.device_id,
+                        CONF_DEVICE_ADDRESS: self._selected_device.address,
+                        CONF_HUB_ID: self._hub_entry_id,
+                    },
+                    options={
+                        CONF_SELECTED_OBJECTS: all_objects,
+                    },
+                )
 
-        if errors:
-            self.async_show_progress_done(next_step_id="sensors")
-            return self.async_show_form(
-                step_id="sensors",
-                data_schema=vol.Schema({}),
-                errors=errors,
-            )
+            # Proceed to sensor selection
+            return await self.async_step_sensors()
 
-        self.async_show_progress_done(next_step_id="sensors")
+        # Phase 2: Object discovery task completed, transition from progress
+        if self._objects_task_complete:
+            self._objects_task_complete = False
+            errors = self._objects_discovery_errors
+            self._objects_discovery_errors = {}
 
-        if not self._discovered_objects:
-            # No objects found, create entry with empty selection
-            title = (
-                self._selected_device.name
-                or f"BACnet device {self._selected_device.device_id}"
-            )
-            return self.async_create_entry(
-                title=title,
-                data={
-                    CONF_ENTRY_TYPE: ENTRY_TYPE_DEVICE,
-                    CONF_DEVICE_ID: self._selected_device.device_id,
-                    CONF_DEVICE_ADDRESS: self._selected_device.address,
-                    CONF_HUB_ID: self._hub_entry_id,
-                },
-                options={
-                    CONF_SELECTED_OBJECTS: [],
-                },
-            )
+            # Cache results for phase 3
+            self._objects_results_pending = True
+            self._cached_objects_errors = errors
+            return self.async_show_progress_done(next_step_id="discover_objects")
 
-        # If there are too many objects (>100), skip selection and add all
-        if len(self._discovered_objects) > 100:
-            title = (
-                self._selected_device.name
-                or f"BACnet device {self._selected_device.device_id}"
-            )
-            # Select all objects by default
-            all_objects = [
-                f"{obj.object_type},{obj.object_instance}"
-                for obj in self._discovered_objects
-            ]
-            return self.async_create_entry(
-                title=title,
-                data={
-                    CONF_ENTRY_TYPE: ENTRY_TYPE_DEVICE,
-                    CONF_DEVICE_ID: self._selected_device.device_id,
-                    CONF_DEVICE_ADDRESS: self._selected_device.address,
-                    CONF_HUB_ID: self._hub_entry_id,
-                },
-                options={
-                    CONF_SELECTED_OBJECTS: all_objects,
-                },
-            )
+        # Phase 1: Start object discovery with progress indicator
+        self._objects_discovery_errors = {}
+        # Capture in local variable for closure (already verified non-None above)
+        selected_device = self._selected_device
 
-        # Proceed to sensor selection (objects already discovered and stored in self._discovered_objects)
-        return await self.async_step_sensors()
+        async def _discover_objects_task() -> None:
+            try:
+                async with timeout(30):
+                    self._discovered_objects = await client.get_device_objects(
+                        selected_device.address,
+                        selected_device.device_id,
+                    )
+            except TimeoutError:
+                _LOGGER.error("Timeout discovering objects")
+                self._objects_discovery_errors["base"] = "discovery_timeout"
+            except Exception:
+                _LOGGER.exception("Error discovering objects")
+                self._objects_discovery_errors["base"] = "cannot_connect"
+            self._objects_task_complete = True
+
+        return self.async_show_progress(
+            step_id="discover_objects",
+            progress_action="discovering_objects",
+            progress_task=self.hass.async_create_task(_discover_objects_task()),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a BACnet entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        entry_type = reconfigure_entry.data.get(CONF_ENTRY_TYPE, ENTRY_TYPE_DEVICE)
+
+        if entry_type == ENTRY_TYPE_HUB:
+            return await self._async_step_reconfigure_hub(user_input)
+        return await self._async_step_reconfigure_device(user_input)
+
+    async def _async_step_reconfigure_hub(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a BACnet hub entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            ip_addr = user_input[CONF_INTERFACE].strip()
+            try:
+                ipaddress.IPv4Address(ip_addr)
+            except ValueError:
+                errors[CONF_INTERFACE] = "invalid_ip"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_INTERFACE: ip_addr},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_INTERFACE,
+                        default=reconfigure_entry.data.get(CONF_INTERFACE, ""),
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _async_step_reconfigure_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a BACnet device entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            address = user_input[CONF_DEVICE_ADDRESS].strip()
+            if not address:
+                errors[CONF_DEVICE_ADDRESS] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_DEVICE_ADDRESS: address},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DEVICE_ADDRESS,
+                        default=reconfigure_entry.data.get(CONF_DEVICE_ADDRESS, ""),
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_sensors(
         self, user_input: dict[str, Any] | None = None
@@ -573,10 +670,6 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class BACnetOptionsFlow(OptionsFlow):
     """Handle options flow for BACnet integration."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

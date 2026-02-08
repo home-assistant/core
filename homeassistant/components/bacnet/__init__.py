@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, SOURCE_INTEGRATION_DISCOVERY
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -42,8 +44,8 @@ class BACnetHubRuntimeData:
 
     client: BACnetClient
     hub_device_id: str
-    discovery_task: asyncio.Task | None = None
-    discovery_cancel: callable | None = None
+    discovery_task: asyncio.Task[None] | None = None
+    discovery_cancel: Callable[[], None] | None = None
 
 
 @dataclass
@@ -57,7 +59,9 @@ type BACnetHubConfigEntry = ConfigEntry[BACnetHubRuntimeData]
 type BACnetDeviceConfigEntry = ConfigEntry[BACnetDeviceRuntimeData]
 
 
-async def _async_discover_devices(hass: HomeAssistant, hub_entry: BACnetHubConfigEntry) -> None:
+async def _async_discover_devices(
+    hass: HomeAssistant, hub_entry: BACnetHubConfigEntry
+) -> None:
     """Discover BACnet devices and create discovery flows."""
     if not hub_entry.runtime_data:
         return
@@ -80,7 +84,11 @@ async def _async_discover_devices(hass: HomeAssistant, hub_entry: BACnetHubConfi
             if device_unique_id not in existing_devices:
                 # Build a descriptive title for the discovery card
                 # Extract just the IP address without port for cleaner display
-                ip_address = device.address.split(":")[0] if ":" in device.address else device.address
+                ip_address = (
+                    device.address.split(":")[0]
+                    if ":" in device.address
+                    else device.address
+                )
                 base_name = device.name or f"Device {device.device_id}"
                 title = f"{base_name} ({ip_address})"
 
@@ -128,13 +136,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_type = entry.data.get(CONF_ENTRY_TYPE, ENTRY_TYPE_DEVICE)
 
     if entry_type == ENTRY_TYPE_HUB:
-        return await _async_setup_hub_entry(hass, entry)
-    return await _async_setup_device_entry(hass, entry)
+        entry.runtime_data = await _async_setup_hub_entry(hass, entry)
+    else:
+        # Set runtime_data before forwarding platforms so platform setup
+        # can access entry.runtime_data.coordinator
+        entry.runtime_data = await _async_setup_device_entry(hass, entry)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        # Start background setup after platforms are ready
+        entry.runtime_data.coordinator.start_background_setup()
+
+        # Register options update listener
+        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    return True
 
 
 async def _async_setup_hub_entry(
     hass: HomeAssistant, entry: BACnetHubConfigEntry
-) -> bool:
+) -> BACnetHubRuntimeData:
     """Set up a BACnet hub (client) config entry."""
     interface: str = entry.data[CONF_INTERFACE]
 
@@ -168,44 +188,43 @@ async def _async_setup_hub_entry(
         # Show interface name with current IP
         hub_name = f"BACnet Client ({interface}: {listen_address})"
 
-    hub_device_info = {
-        "config_entry_id": entry.entry_id,
-        "identifiers": {(DOMAIN, hub_device_id)},
-        "name": hub_name,
-        "manufacturer": "Home Assistant",
-        "model": "BACnet/IP Client",
-    }
-
-    device_registry.async_get_or_create(**hub_device_info)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub_device_id)},
+        name=hub_name,
+        manufacturer="Home Assistant",
+        model="BACnet/IP Client",
+    )
 
     # Store hub ID in hass.data for device entries to reference
     hass.data[DOMAIN][DATA_HUB_ID] = entry.entry_id
 
-    entry.runtime_data = BACnetHubRuntimeData(
+    runtime_data = BACnetHubRuntimeData(
         client=client,
         hub_device_id=hub_device_id,
     )
 
-    # Run initial device discovery
-    entry.runtime_data.discovery_task = hass.async_create_task(
+    # Run initial device discovery (need to set runtime_data first for discovery to work)
+    entry.runtime_data = runtime_data
+    runtime_data.discovery_task = hass.async_create_task(
         _async_discover_devices(hass, entry)
     )
 
     # Set up periodic discovery
-    async def _periodic_discovery(*_):
+    async def _periodic_discovery(*_: Any) -> None:
         """Periodic discovery wrapper."""
         await _async_discover_devices(hass, entry)
 
-    entry.runtime_data.discovery_cancel = async_track_time_interval(
+    runtime_data.discovery_cancel = async_track_time_interval(
         hass, _periodic_discovery, DISCOVERY_INTERVAL
     )
 
-    return True
+    return runtime_data
 
 
 async def _async_setup_device_entry(
     hass: HomeAssistant, entry: BACnetDeviceConfigEntry
-) -> bool:
+) -> BACnetDeviceRuntimeData:
     """Set up a BACnet device config entry."""
     device_id: int = entry.data[CONF_DEVICE_ID]
     device_address: str = entry.data[CONF_DEVICE_ADDRESS]
@@ -213,7 +232,11 @@ async def _async_setup_device_entry(
 
     # Get client from parent hub
     hub_entry = hass.config_entries.async_get_entry(hub_entry_id)
-    if not hub_entry or not hasattr(hub_entry, "runtime_data") or not hub_entry.runtime_data:
+    if (
+        not hub_entry
+        or not hasattr(hub_entry, "runtime_data")
+        or not hub_entry.runtime_data
+    ):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="hub_not_ready",
@@ -254,20 +277,12 @@ async def _async_setup_device_entry(
     # Do first refresh to discover objects (fast, ~2 seconds)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = BACnetDeviceRuntimeData(coordinator=coordinator)
+    runtime_data = BACnetDeviceRuntimeData(coordinator=coordinator)
 
     # Track this device
     hass.data[DOMAIN][DATA_DEVICES].add(entry.entry_id)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Start background setup
-    coordinator.start_background_setup()
-
-    # Register options update listener
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    return True
+    return runtime_data
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -284,7 +299,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await _async_unload_device_entry(hass, entry)
 
 
-async def _async_unload_hub_entry(hass: HomeAssistant, entry: BACnetHubConfigEntry) -> bool:
+async def _async_unload_hub_entry(
+    hass: HomeAssistant, entry: BACnetHubConfigEntry
+) -> bool:
     """Unload a BACnet hub entry."""
     runtime_data = entry.runtime_data
 
@@ -306,7 +323,9 @@ async def _async_unload_hub_entry(hass: HomeAssistant, entry: BACnetHubConfigEnt
     return True
 
 
-async def _async_unload_device_entry(hass: HomeAssistant, entry: BACnetDeviceConfigEntry) -> bool:
+async def _async_unload_device_entry(
+    hass: HomeAssistant, entry: BACnetDeviceConfigEntry
+) -> bool:
     """Unload a BACnet device entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -327,7 +346,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if entry_type == ENTRY_TYPE_HUB:
         # When hub is removed, remove all child devices
         device_entries = [
-            e for e in hass.config_entries.async_entries(DOMAIN)
+            e
+            for e in hass.config_entries.async_entries(DOMAIN)
             if e.data.get(CONF_HUB_ID) == entry.entry_id
         ]
         for device_entry in device_entries:

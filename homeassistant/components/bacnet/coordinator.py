@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 import logging
 from typing import Any
@@ -58,6 +59,16 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             name=f"BACnet device {device_info.name or device_info.device_id}",
             update_interval=UPDATE_INTERVAL,
         )
+
+    @property
+    def initial_setup_done(self) -> bool:
+        """Return whether initial setup has completed."""
+        return self._initial_setup_done
+
+    @property
+    def cov_subscription_count(self) -> int:
+        """Return the number of active COV subscriptions."""
+        return len(self._cov_subscription_keys)
 
     async def _async_setup(self) -> None:
         """Set up the coordinator by discovering objects and subscribing to COV."""
@@ -200,12 +211,13 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             value = await self.client.read_present_value(
                 self._device_address, object_type, object_instance
             )
-            return (obj_key, value)
         except BaseException:  # noqa: BLE001
             # Some objects don't have presentValue property
             # BACpypes3 errors may not inherit from Exception
             # Return None instead of raising
             return (obj_key, None)
+        else:
+            return (obj_key, value)
 
     def start_background_setup(self) -> None:
         """Start background COV setup and initial polling after config entry is set up."""
@@ -270,15 +282,11 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
         # Cancel background setup if still running
         if self._background_setup_task and not self._background_setup_task.done():
             self._background_setup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._background_setup_task
-            except asyncio.CancelledError:
-                pass
 
         for sub_key in self._cov_subscription_keys:
-            try:
+            with contextlib.suppress(Exception):
                 await self.client.unsubscribe_cov(sub_key)
-            except Exception:  # noqa: BLE001
-                pass
         self._cov_subscription_keys.clear()
         await super().async_shutdown()

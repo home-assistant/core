@@ -125,6 +125,7 @@ def _create_mock_objects() -> list[BACnetObjectInfo]:
             present_value=2,
             units="",
             description="Current operating mode",
+            state_text=["Off", "Heating", "Cooling", "Auto"],
         ),
     ]
 
@@ -145,19 +146,14 @@ def mock_bacnet_client() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.bacnet.BACnetClient",
         autospec=True,
-    ) as mock_client_class, patch(
-        "homeassistant.components.bacnet.config_flow.BACnetClient",
-        new=mock_client_class,
-    ):
+    ) as mock_client_class:
         client = mock_client_class.return_value
         client.connected = True
         client.connect = AsyncMock()
         client.disconnect = AsyncMock()
         client.discover_devices = AsyncMock(return_value=[device_info])
         client.get_device_objects = AsyncMock(return_value=objects)
-        client.read_present_value = AsyncMock(
-            side_effect=_mock_read_present_value
-        )
+        client.read_present_value = AsyncMock(side_effect=_mock_read_present_value)
         client.subscribe_cov = AsyncMock(
             side_effect=lambda addr, obj_type, obj_inst, cb: (
                 f"{addr}:{obj_type},{obj_inst}"
@@ -187,6 +183,7 @@ def mock_get_local_interfaces() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_resolve_interface_to_ip() -> Generator[AsyncMock]:
     """Mock resolve_interface_to_ip function."""
+
     async def _resolve(interface: str) -> str:
         """Resolve interface to IP."""
         if interface == "eth0":

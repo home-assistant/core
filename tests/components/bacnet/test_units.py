@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.bacnet.units import BACnetUnitMapping, get_unit_mapping
+from homeassistant.components.bacnet.units import get_unit_mapping
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

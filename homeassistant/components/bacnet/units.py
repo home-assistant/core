@@ -282,22 +282,27 @@ BACNET_UNIT_MAP: dict[str, BACnetUnitMapping] = {
         ha_unit=UnitOfArea.SQUARE_INCHES,
         device_class=SensorDeviceClass.AREA,
     ),
-    # Volume
+    # Volume (state_class=None because volume only supports total/total_increasing,
+    # and BACnet volume objects may be tank levels or flow totals)
     "cubicFeet": BACnetUnitMapping(
         ha_unit=UnitOfVolume.CUBIC_FEET,
         device_class=SensorDeviceClass.VOLUME,
+        state_class=None,
     ),
     "cubicMeters": BACnetUnitMapping(
         ha_unit=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.VOLUME,
+        state_class=None,
     ),
     "liters": BACnetUnitMapping(
         ha_unit=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
+        state_class=None,
     ),
     "usGallons": BACnetUnitMapping(
         ha_unit=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.VOLUME,
+        state_class=None,
     ),
     # Volume flow rate
     "cubicFeetPerMinute": BACnetUnitMapping(

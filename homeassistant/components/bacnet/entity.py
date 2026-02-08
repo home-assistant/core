@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .bacnet_client import BACnetObjectInfo
@@ -38,38 +38,31 @@ class BACnetEntity(CoordinatorEntity[BACnetDeviceCoordinator]):
         else:
             self._attr_name = f"{object_info.object_type} {object_info.object_instance}"
 
-        # Build device info with all available fields
-        device_info_dict = {
-            "identifiers": {(DOMAIN, str(device_info.device_id))},
-            "name": device_info.name or f"BACnet device {device_info.device_id}",
-            "manufacturer": device_info.vendor_name or "BACnet",
-        }
-
-        # Link to parent hub if this device has a hub entry
+        # Build device info
+        via_device: tuple[str, str] | None = None
         hub_entry_id = coordinator.config_entry.data.get(CONF_HUB_ID)
         if hub_entry_id:
             hub_entry = coordinator.hass.config_entries.async_get_entry(hub_entry_id)
             if hub_entry and hub_entry.runtime_data:
-                device_info_dict["via_device"] = (DOMAIN, hub_entry.runtime_data.hub_device_id)
+                via_device = (DOMAIN, hub_entry.runtime_data.hub_device_id)
 
-        # Add model - keep it simple
-        if device_info.model_name:
-            device_info_dict["model"] = device_info.model_name
-
-        # Add serial number using device ID for identification
-        device_info_dict["serial_number"] = f"{device_info.device_id} @ {device_info.address}"
-
-        if device_info.firmware_revision:
-            device_info_dict["sw_version"] = device_info.firmware_revision
-
-        if device_info.hardware_version:
-            device_info_dict["hw_version"] = device_info.hardware_version
-
-        # Add MAC address as connection if available
+        connections: set[tuple[str, str]] | None = None
         if device_info.mac_address:
-            device_info_dict["connections"] = {("mac", device_info.mac_address)}
+            connections = {(CONNECTION_NETWORK_MAC, device_info.mac_address)}
 
-        self._attr_device_info = DeviceInfo(**device_info_dict)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device_info.device_id))},
+            name=device_info.name or f"BACnet device {device_info.device_id}",
+            manufacturer=device_info.vendor_name or "BACnet",
+            model=device_info.model_name,
+            serial_number=f"{device_info.device_id} @ {device_info.address}",
+            sw_version=device_info.firmware_revision,
+            hw_version=device_info.hardware_version,
+        )
+        if via_device is not None:
+            self._attr_device_info["via_device"] = via_device
+        if connections is not None:
+            self._attr_device_info["connections"] = connections
 
     @property
     def _current_value(self) -> object:

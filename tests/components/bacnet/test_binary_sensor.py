@@ -17,16 +17,12 @@ async def test_binary_sensors_created(
     await init_integration(hass)
 
     # Occupancy Sensor (binary-input,0) - value 1 = on
-    state = hass.states.get(
-        "binary_sensor.test_hvac_controller_occupancy_sensor"
-    )
+    state = hass.states.get("binary_sensor.test_hvac_controller_occupancy_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
     # Filter Status (binary-input,1) - value 0 = off
-    state = hass.states.get(
-        "binary_sensor.test_hvac_controller_filter_status"
-    )
+    state = hass.states.get("binary_sensor.test_hvac_controller_filter_status")
     assert state is not None
     assert state.state == STATE_OFF
 

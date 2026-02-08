@@ -5,12 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SELECTED_OBJECTS
+from .const import ANALOG_OBJECT_TYPES, CONF_SELECTED_OBJECTS, MULTISTATE_OBJECT_TYPES
 from .coordinator import BACnetDeviceCoordinator
 from .entity import BACnetEntity
 from .units import get_unit_mapping
@@ -18,25 +18,6 @@ from .units import get_unit_mapping
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-# BACnet object types that produce numeric/analog sensor values
-ANALOG_OBJECT_TYPES = {
-    "analog-input",
-    "analog-output",
-    "analog-value",
-    "large-analog-value",
-    "integer-value",
-    "positive-integer-value",
-    "accumulator",
-    "pulse-converter",
-}
-
-# BACnet object types that produce multi-state (enum) sensor values
-MULTISTATE_OBJECT_TYPES = {
-    "multi-state-input",
-    "multi-state-output",
-    "multi-state-value",
-}
 
 
 async def async_setup_entry(
@@ -113,8 +94,9 @@ class BACnetSensor(BACnetEntity, SensorEntity):
 
 
 class BACnetMultiStateSensor(BACnetEntity, SensorEntity):
-    """Represent a BACnet multi-state sensor."""
+    """Represent a BACnet multi-state sensor with text enumeration."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_state_class: None = None
 
     def __init__(
@@ -125,12 +107,24 @@ class BACnetMultiStateSensor(BACnetEntity, SensorEntity):
         """Initialize the BACnet multi-state sensor."""
         super().__init__(coordinator, object_info)
 
+        # BACnet stateText provides human-readable labels for each state
+        # States are 1-indexed: state 1 -> state_text[0], state 2 -> state_text[1]
+        self._state_text = object_info.state_text
+        if self._state_text:
+            self._attr_options = list(self._state_text)
+
     @property
-    def native_value(self) -> str | int | None:
-        """Return the sensor value."""
+    def native_value(self) -> str | None:
+        """Return the sensor value as text."""
         value = self._current_value
         if value is None:
             return None
-        if isinstance(value, int):
-            return value
+
+        # Map integer state to text (BACnet multi-state values are 1-indexed)
+        if isinstance(value, int) and self._state_text:
+            index = value - 1
+            if 0 <= index < len(self._state_text):
+                return self._state_text[index]
+
+        # Fall back to string representation if no mapping available
         return str(value)

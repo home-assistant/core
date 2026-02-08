@@ -56,8 +56,10 @@ def create_mock_config_entry() -> MockConfigEntry:
     return create_mock_device_config_entry()
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the BACnet integration in Home Assistant with hub model."""
+async def _setup_hub_and_device(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up hub and device entries with a coordinator refresh to poll values."""
     # Create and set up hub first
     hub_entry = create_mock_hub_config_entry()
     hub_entry.add_to_hass(hass)
@@ -70,21 +72,24 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.config_entries.async_setup(device_entry.entry_id)
     await hass.async_block_till_done()
 
-    return device_entry
-
-
-async def init_integration_with_hub(hass: HomeAssistant) -> tuple[MockConfigEntry, MockConfigEntry]:
-    """Set up the BACnet integration with hub model."""
-    # Create and set up hub
-    hub_entry = create_mock_hub_config_entry()
-    hub_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(hub_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Create and set up device
-    device_entry = create_mock_device_config_entry(hub_entry.entry_id)
-    device_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(device_entry.entry_id)
+    # The first coordinator refresh uses quick mode (no values polled).
+    # Trigger a second refresh so presentValue gets polled for all objects.
+    coordinator = device_entry.runtime_data.coordinator
+    coordinator._initial_setup_done = True
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     return hub_entry, device_entry
+
+
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the BACnet integration in Home Assistant with hub model."""
+    _, device_entry = await _setup_hub_and_device(hass)
+    return device_entry
+
+
+async def init_integration_with_hub(
+    hass: HomeAssistant,
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up the BACnet integration with hub model."""
+    return await _setup_hub_and_device(hass)

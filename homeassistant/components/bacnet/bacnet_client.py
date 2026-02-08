@@ -10,7 +10,7 @@ import socket
 from typing import TYPE_CHECKING, Any
 
 try:
-    import netifaces  # type: ignore[import-not-found]
+    import netifaces
 
     HAS_NETIFACES = True
 except ImportError:
@@ -19,6 +19,7 @@ except ImportError:
 from .const import (
     COV_LIFETIME,
     DISCOVERY_TIMEOUT,
+    MULTISTATE_OBJECT_TYPES,
     TIMEOUT_COV_GET_VALUE,
     TIMEOUT_OBJECT_LIST_READ,
     TIMEOUT_PROPERTY_READ,
@@ -44,11 +45,11 @@ def _get_local_interfaces_sync() -> dict[str, str]:
 
     # Use netifaces for comprehensive interface enumeration if available
     if HAS_NETIFACES:
-        for iface in netifaces.interfaces():
-            addrs = netifaces.ifaddresses(iface)
-            if netifaces.AF_INET in addrs:
-                for addr_info in addrs[netifaces.AF_INET]:
-                    ip = addr_info.get("addr")
+        for iface in netifaces.interfaces():  # pylint: disable=c-extension-no-member
+            addrs = netifaces.ifaddresses(iface)  # pylint: disable=c-extension-no-member
+            if netifaces.AF_INET in addrs:  # pylint: disable=c-extension-no-member
+                for addr_info in addrs[netifaces.AF_INET]:  # pylint: disable=c-extension-no-member
+                    ip = str(addr_info.get("addr", ""))
                     if ip and not ip.startswith("127."):
                         # Store interface name as key, IP and name as value
                         temp_interfaces[iface] = f"{ip} ({iface})"
@@ -60,7 +61,7 @@ def _get_local_interfaces_sync() -> dict[str, str]:
             addrs = socket.getaddrinfo(hostname, None, socket.AF_INET)
 
             for addr in addrs:
-                ip = addr[4][0]
+                ip = str(addr[4][0])
                 # Skip loopback
                 if not ip.startswith("127."):
                     # Without netifaces, use IP as the "interface name"
@@ -124,21 +125,22 @@ def _resolve_interface_to_ip_sync(interface: str) -> str:
     # If it's already an IP address, return as-is
     try:
         socket.inet_aton(interface)
-        return interface
     except OSError:
         # Not an IP address, try to resolve interface name to IP
         if HAS_NETIFACES:
             try:
-                addrs = netifaces.ifaddresses(interface)
-                if netifaces.AF_INET in addrs:
-                    return addrs[netifaces.AF_INET][0]["addr"]
+                addrs = netifaces.ifaddresses(interface)  # pylint: disable=c-extension-no-member
+                if netifaces.AF_INET in addrs:  # pylint: disable=c-extension-no-member
+                    return addrs[netifaces.AF_INET][0]["addr"]  # pylint: disable=c-extension-no-member
             except (ValueError, KeyError, IndexError) as err:
                 _LOGGER.warning(
                     "Could not resolve interface %s to IP: %s", interface, err
                 )
-
-        # Fallback: assume it's already an IP
+    else:
         return interface
+
+    # Fallback: assume it's already an IP
+    return interface
 
 
 async def resolve_interface_to_ip(interface: str) -> str:
@@ -180,6 +182,7 @@ class BACnetObjectInfo:
     units: str = ""
     description: str = ""
     status_flags: list[bool] = field(default_factory=list)
+    state_text: list[str] = field(default_factory=list)
 
 
 class BACnetClient:
@@ -225,7 +228,7 @@ class BACnetClient:
 
         try:
             # Import at runtime to avoid import-time issues
-            from bacpypes3.app import Application
+            from bacpypes3.app import Application  # noqa: PLC0415
 
             self._app = Application.from_args(args)
         except Exception:
@@ -359,9 +362,9 @@ class BACnetClient:
             device_id: BACnet device ID
             quick: If True, only read object names (fast). If False, read all properties (slow).
         """
-        from bacpypes3.apdu import ErrorRejectAbortNack
-        from bacpypes3.basetypes import EngineeringUnits
-        from bacpypes3.primitivedata import ObjectIdentifier, Unsigned
+        from bacpypes3.apdu import ErrorRejectAbortNack  # noqa: PLC0415
+        from bacpypes3.basetypes import EngineeringUnits  # noqa: PLC0415
+        from bacpypes3.primitivedata import ObjectIdentifier, Unsigned  # noqa: PLC0415
 
         if self._app is None:
             raise RuntimeError("BACnet client is not connected")
@@ -417,10 +420,18 @@ class BACnetClient:
                         try:
                             # Convert numeric to enum and get attribute name
                             obj_info.units = EngineeringUnits(int(units_val)).attr
-                        except (ValueError, KeyError):
+                        except ValueError, KeyError:
                             obj_info.units = str(units_val)
                     else:
                         obj_info.units = str(units_val)
+
+                # Read stateText for multi-state objects (enumeration labels)
+                if obj_type in MULTISTATE_OBJECT_TYPES:
+                    state_text_val = await self._read_property_safe(
+                        address, obj_ref, "stateText", default=None
+                    )
+                    if state_text_val is not None:
+                        obj_info.state_text = _parse_state_text(state_text_val)
 
                 # Skip presentValue and description in quick mode (for fast UI response)
                 if not quick:
@@ -492,8 +503,8 @@ class BACnetClient:
         sub_key: str,
     ) -> None:
         """Maintain a COV subscription and forward notifications."""
-        from bacpypes3.pdu import Address
-        from bacpypes3.primitivedata import ObjectIdentifier
+        from bacpypes3.pdu import Address  # noqa: PLC0415
+        from bacpypes3.primitivedata import ObjectIdentifier  # noqa: PLC0415
 
         if self._app is None:
             return
@@ -541,7 +552,7 @@ class BACnetClient:
             # Add timeout to prevent hanging
             async with asyncio.timeout(TIMEOUT_PROPERTY_READ):
                 return await self._app.read_property(address, obj_ref, prop)
-        except (KeyboardInterrupt, SystemExit):
+        except KeyboardInterrupt, SystemExit:
             # Re-raise system exceptions
             raise
         except BaseException:  # noqa: BLE001
@@ -555,7 +566,7 @@ class BACnetClient:
         device_id: int,
     ) -> list[ObjectIdentifier]:
         """Read the object list one element at a time as a fallback."""
-        from bacpypes3.primitivedata import ObjectIdentifier
+        from bacpypes3.primitivedata import ObjectIdentifier  # noqa: PLC0415
 
         if self._app is None:
             return []
@@ -591,10 +602,28 @@ class BACnetClient:
         return objects
 
 
+def _parse_state_text(raw_value: Any) -> list[str]:
+    """Parse a BACnet stateText array into a list of strings.
+
+    BACnet stateText is a 1-indexed array of CharacterString values
+    that provide human-readable labels for each multi-state value.
+    """
+    if raw_value is None:
+        return []
+
+    if isinstance(raw_value, (list, tuple)) or hasattr(raw_value, "__iter__"):
+        texts = [str(item).strip() for item in raw_value]
+    else:
+        texts = [str(raw_value).strip()]
+
+    # Filter out empty strings
+    return [t for t in texts if t]
+
+
 def _convert_bacnet_value(raw_value: Any) -> Any:
     """Convert a BACnet value to a Python native type."""
-    from bacpypes3.constructeddata import AnyAtomic
-    from bacpypes3.primitivedata import (
+    from bacpypes3.constructeddata import AnyAtomic  # noqa: PLC0415
+    from bacpypes3.primitivedata import (  # noqa: PLC0415
         BitString,
         CharacterString,
         Date,

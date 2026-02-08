@@ -30,16 +30,10 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: Integration does not provide an options flow.
-  docs-installation-parameters:
-    status: todo
-    comment: Documentation to be created.
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
-  integration-owner:
-    status: todo
-    comment: No code owner assigned yet.
+  integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
@@ -49,15 +43,13 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Diagnostics support to be implemented.
+  diagnostics: done
   discovery:
-    status: todo
-    comment: BACnet uses its own WhoIs protocol for discovery, not standard HA discovery methods.
+    status: exempt
+    comment: BACnet uses its own WhoIs discovery protocol, not standard HA discovery methods like zeroconf or SSDP.
   discovery-update-info:
     status: exempt
-    comment: Discovery data does not require runtime updates.
+    comment: BACnet discovery does not provide runtime network updates.
   docs-data-update:
     status: todo
     comment: Documentation to be created.
@@ -81,7 +73,7 @@ rules:
     comment: Documentation to be created.
   dynamic-devices:
     status: exempt
-    comment: Devices are discovered per config entry.
+    comment: Devices are added via discovery flows per config entry.
   entity-category:
     status: exempt
     comment: Primary sensor entities should not have entity category.
@@ -91,20 +83,18 @@ rules:
     comment: Primary functionality should not be disabled by default.
   entity-translations:
     status: exempt
-    comment: Entity names come from BACnet object names.
+    comment: Entity names come from BACnet object names on the device.
   exception-translations: done
   icon-translations:
     status: exempt
     comment: Default sensor icons are appropriate.
-  reconfiguration-flow:
-    status: todo
-    comment: Reconfiguration flow to be implemented.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairable issues to handle.
   stale-devices:
     status: exempt
-    comment: Devices are discovered per config entry.
+    comment: Devices are managed per config entry.
 
   # Platinum
   async-dependency: done
