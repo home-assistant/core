@@ -83,9 +83,9 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ACCESS_KEY_ID],
                     user_input[CONF_SECRET_ACCESS_KEY],
                 )
-            except (InvalidAuth, ClientError):
+            except InvalidAuth, ClientError:
                 errors["base"] = "invalid_credentials"
-            except (CannotConnect, ConnectionError):
+            except CannotConnect, ConnectionError:
                 errors["base"] = "cannot_connect"
             except ValueError:
                 errors["base"] = "invalid_endpoint_url"

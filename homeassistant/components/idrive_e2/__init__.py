@@ -36,7 +36,7 @@ async def _async_safe_client_close(client: S3Client | None) -> None:
     try:
         # Best effort to close the client which doesn't mask the setup exception
         await client.close()
-    except (AiohttpClientError, OSError, RuntimeError):
+    except AiohttpClientError, OSError, RuntimeError:
         _LOGGER.debug("Failed to close aiobotocore client", exc_info=True)
 
 
