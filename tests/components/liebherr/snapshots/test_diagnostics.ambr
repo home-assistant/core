@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': dict({
+      'test_device_id': dict({
+        'coordinator': dict({
+          'last_exception': None,
+          'last_update_success': True,
+          'update_interval': '0:01:00',
+        }),
+        'data': dict({
+          'controls': list([
+            dict({
+              'max': 8,
+              'min': 2,
+              'name': 'Fridge',
+              'target': 4,
+              'type': 'fridge',
+              'unit': '°C',
+              'value': 5,
+              'zone_id': 1,
+              'zone_position': 'top',
+            }),
+            dict({
+              'max': -16,
+              'min': -24,
+              'name': 'Freezer',
+              'target': -18,
+              'type': 'freezer',
+              'unit': '°C',
+              'value': -18,
+              'zone_id': 2,
+              'zone_position': 'bottom',
+            }),
+          ]),
+          'device': dict({
+            'device_id': 'test_device_id',
+            'device_name': 'CBNes1234',
+            'device_type': 'COMBI',
+            'image_url': None,
+            'nickname': 'Test Fridge',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
