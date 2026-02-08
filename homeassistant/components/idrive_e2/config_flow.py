@@ -57,9 +57,7 @@ async def _list_buckets(
 class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IDrive e2."""
 
-    _access_key: str
-    _secret_key: str
-    _endpoint_url: str
+    _data: dict[str, str]
     _buckets: list[str]
 
     async def async_step_user(
@@ -95,9 +93,11 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 # Store validated data for the next step
-                self._access_key = user_input[CONF_ACCESS_KEY_ID]
-                self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
-                self._endpoint_url = endpoint
+                self._data = {
+                    CONF_ACCESS_KEY_ID: user_input[CONF_ACCESS_KEY_ID],
+                    CONF_SECRET_ACCESS_KEY: user_input[CONF_SECRET_ACCESS_KEY],
+                    CONF_ENDPOINT_URL: endpoint,
+                }
                 self._buckets = buckets
                 return await self.async_step_bucket()
 
@@ -118,18 +118,13 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {
                     CONF_BUCKET: user_input[CONF_BUCKET],
-                    CONF_ENDPOINT_URL: self._endpoint_url,
+                    CONF_ENDPOINT_URL: self._data[CONF_ENDPOINT_URL],
                 }
             )
 
             return self.async_create_entry(
                 title=user_input[CONF_BUCKET],
-                data={
-                    CONF_ACCESS_KEY_ID: self._access_key,
-                    CONF_SECRET_ACCESS_KEY: self._secret_key,
-                    CONF_ENDPOINT_URL: self._endpoint_url,
-                    CONF_BUCKET: user_input[CONF_BUCKET],
-                },
+                data={**self._data, CONF_BUCKET: user_input[CONF_BUCKET]},
             )
 
         # Show the bucket selection form with a dropdown selector
