@@ -7,13 +7,13 @@ from homeassistant.util import slugify
 
 from . import init_integration
 from .consts import (
-    DUMMY_PLUG_DEVICE,
     DUMMY_HEATER_DEVICE,
+    DUMMY_PLUG_DEVICE,
     DUMMY_SWITCHER_SENSORS_DEVICES,
     DUMMY_THERMOSTAT_DEVICE,
-    DUMMY_WATER_HEATER_DEVICE,
-    DUMMY_USERNAME as USERNAME,
     DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
+    DUMMY_WATER_HEATER_DEVICE,
 )
 
 DEVICE_SENSORS_TUPLE = (

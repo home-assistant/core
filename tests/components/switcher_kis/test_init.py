@@ -18,8 +18,8 @@ from .consts import (
     DUMMY_DEVICE_ID1,
     DUMMY_DEVICE_ID4,
     DUMMY_SWITCHER_DEVICES,
-    DUMMY_USERNAME as USERNAME,
     DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
 )
 
 from tests.common import async_fire_time_changed
