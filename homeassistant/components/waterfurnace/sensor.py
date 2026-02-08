@@ -185,13 +185,13 @@ class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntit
         self._attr_unique_id = f"{coordinator.unit}_{description.key}"
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.unit)},
+            identifiers={(DOMAIN, coordinator.unit)},
             manufacturer="WaterFurnace",
             name="WaterFurnace System",
         )
 
-        if self.coordinator.device_metadata:
-            if self.coordinator.device_metadata.description:
+        if coordinator.device_metadata:
+            if coordinator.device_metadata.description:
                 # Eg. Series 7
                 device_info["model"] = self.coordinator.device_metadata.description
             if self.coordinator.device_metadata.awlabctypedesc:
