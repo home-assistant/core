@@ -39,7 +39,7 @@ async def _async_set_charging_enabled(
     The NRGkick API uses a pause flag (pause=True means charging is paused).
     """
     await async_api_call(coordinator.api.set_charge_pause(not is_on))
-    coordinator.async_update_control_cache({"charge_pause": 0 if is_on else 1})
+    await coordinator.async_refresh()
 
 
 SWITCHES: tuple[NRGkickSwitchEntityDescription, ...] = (

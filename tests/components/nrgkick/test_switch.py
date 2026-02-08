@@ -60,29 +60,32 @@ async def test_charge_switch_service_calls_update_state(
     assert state.state == "on"
 
     # Pause charging
-    # The device (mock) still says "not paused" (0) immediately, but our optimistic
-    # update should make the entity report "off".
-    mock_nrgkick_api.get_control.return_value["charge_pause"] = 0
+    # Simulate the device reporting the new paused state after the command.
+    control_data = dict(mock_nrgkick_api.get_control.return_value)
+    control_data["charge_pause"] = 1
+    mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         "switch",
         "turn_off",
         {"entity_id": entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert (state := hass.states.get(entity_id))
     assert state.state == "off"
 
-    # Now we simulate the device eventually catching up for the next poll
-    mock_nrgkick_api.get_control.return_value["charge_pause"] = 1
-
     # Resume charging
-    # Device implies it is paused (1), but optimistic update should make it "on".
+    # Simulate the device reporting the resumed state after the command.
+    control_data = dict(mock_nrgkick_api.get_control.return_value)
+    control_data["charge_pause"] = 0
+    mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         "switch",
         "turn_on",
         {"entity_id": entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert (state := hass.states.get(entity_id))
     assert state.state == "on"
 
