@@ -44,7 +44,7 @@
       "message": "Cannot connect to endpoint"
     },
     "invalid_credentials": {
-      "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."
+      "message": "The provided access key ID and secret access key are invalid or do not have the required permissions."
     },
     "invalid_endpoint_url": {
       "message": "Invalid endpoint URL. Please make sure it's a valid IDrive e2 endpoint URL."
