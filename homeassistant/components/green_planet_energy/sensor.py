@@ -100,6 +100,44 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         suggested_display_precision=4,
         value_fn=lambda api, data: api.get_current_price(data, dt_util.now().hour),
     ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_cheapest_2_5h_day_price",
+        translation_key="cheapest_2_5h_day_price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=4,
+        translation_placeholders={"duration": "2.5", "time_range": "(06:00-18:00)"},
+        value_fn=lambda api, data: api.get_cheapest_duration_day(data, 2.5)[0],
+    ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_cheapest_2_5h_day_time",
+        translation_key="cheapest_2_5h_day_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_placeholders={"duration": "2.5", "time_range": "(06:00-18:00)"},
+        value_fn=lambda api, data: (
+            dt_util.start_of_local_day().replace(hour=hour)
+            if (hour := api.get_cheapest_duration_day(data, 2.5)[1]) is not None
+            else None
+        ),
+    ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_cheapest_2_5h_night_price",
+        translation_key="cheapest_2_5h_night_price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=4,
+        translation_placeholders={"duration": "2.5", "time_range": "(18:00-06:00)"},
+        value_fn=lambda api, data: api.get_cheapest_duration_night(data, 2.5)[0],
+    ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_cheapest_2_5h_night_time",
+        translation_key="cheapest_2_5h_night_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_placeholders={"duration": "2.5", "time_range": "(18:00-06:00)"},
+        value_fn=lambda api, data: (
+            dt_util.start_of_local_day().replace(hour=hour)
+            if (hour := api.get_cheapest_duration_night(data, 2.5)[1]) is not None
+            else None
+        ),
+    ),
 ]
 
 

@@ -16,6 +16,18 @@
   },
   "entity": {
     "sensor": {
+      "cheapest_2_5h_day_price": {
+        "name": "Cheapest {duration}h day price {time_range}"
+      },
+      "cheapest_2_5h_day_time": {
+        "name": "Cheapest {duration}h day time {time_range}"
+      },
+      "cheapest_2_5h_night_price": {
+        "name": "Cheapest {duration}h night price {time_range}"
+      },
+      "cheapest_2_5h_night_time": {
+        "name": "Cheapest {duration}h night time {time_range}"
+      },
       "current_price": {
         "name": "Current price"
       },
