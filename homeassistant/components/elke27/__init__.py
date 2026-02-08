@@ -8,9 +8,9 @@ import logging
 from pathlib import Path
 import sys
 
-_VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "elkm1"
-if _VENDOR_PATH.exists() and str(_VENDOR_PATH) not in sys.path:
-    sys.path.insert(0, str(_VENDOR_PATH))
+#_VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "elkm1"
+#if _VENDOR_PATH.exists() and str(_VENDOR_PATH) not in sys.path:
+#    sys.path.insert(0, str(_VENDOR_PATH))
 
 from elke27_lib.errors import (
     Elke27ConnectionError,
