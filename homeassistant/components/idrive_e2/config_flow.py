@@ -67,7 +67,6 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """First step: prompt for access_key and secret_access_key, then fetch region endpoint and buckets."""
         errors: dict[str, str] = {}
-        schema = STEP_USER_DATA_SCHEMA
 
         if user_input is not None:
             session = async_get_clientsession(self.hass)
@@ -102,14 +101,11 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._buckets = buckets
                 return await self.async_step_bucket()
 
-            # Keep the entered values in the form
-            schema = self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            )
-
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
         )
 
