@@ -7,6 +7,7 @@ import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
+import datetime
 import mimetypes
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -181,13 +182,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _validate_tool_results(value: Any) -> Any:
+    """Recursively convert non-json-serializable types."""
+    if isinstance(value, (datetime.time, datetime.date)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_validate_tool_results(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _validate_tool_results(v) for k, v in value.items()}
+    return value
+
+
 def _create_google_tool_response_parts(
     parts: list[conversation.ToolResultContent],
 ) -> list[Part]:
     """Create Google tool response parts."""
     return [
         Part.from_function_response(
-            name=tool_result.tool_name, response=tool_result.tool_result
+            name=tool_result.tool_name,
+            response=_validate_tool_results(tool_result.tool_result),
         )
         for tool_result in parts
     ]
