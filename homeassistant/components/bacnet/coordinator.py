@@ -149,8 +149,10 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
                 # Set up COV subscriptions for discovered objects
                 await self._setup_cov_subscriptions(objects)
-            except Exception as err:
-                _LOGGER.exception("Failed to discover objects for device %d: %s", self._device_id, err)
+            except Exception:
+                _LOGGER.exception(
+                    "Failed to discover objects for device %d", self._device_id
+                )
                 # Don't raise - allow retry on next update
                 return self.data
 
@@ -174,7 +176,9 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             # Process one at a time to be robust and not overwhelm event loop
             for i, (obj_key, obj_type, obj_inst) in enumerate(objects_to_poll, 1):
                 try:
-                    obj_key, value = await self._poll_object(obj_key, obj_type, obj_inst)
+                    obj_key, value = await self._poll_object(
+                        obj_key, obj_type, obj_inst
+                    )
                     self.data.values[obj_key] = value
                 except Exception:  # noqa: BLE001
                     pass
@@ -197,9 +201,6 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                 self._device_address, object_type, object_instance
             )
             return (obj_key, value)
-        except (KeyboardInterrupt, SystemExit):
-            # Re-raise system exceptions
-            raise
         except BaseException:  # noqa: BLE001
             # Some objects don't have presentValue property
             # BACpypes3 errors may not inherit from Exception
@@ -236,12 +237,16 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             for obj in self.data.objects:
                 obj_key = f"{obj.object_type},{obj.object_instance}"
                 if obj_key not in cov_keys:
-                    objects_to_poll.append((obj_key, obj.object_type, obj.object_instance))
+                    objects_to_poll.append(
+                        (obj_key, obj.object_type, obj.object_instance)
+                    )
 
             if objects_to_poll:
                 for i, (obj_key, obj_type, obj_inst) in enumerate(objects_to_poll, 1):
                     try:
-                        obj_key, value = await self._poll_object(obj_key, obj_type, obj_inst)
+                        obj_key, value = await self._poll_object(
+                            obj_key, obj_type, obj_inst
+                        )
                         self.data.values[obj_key] = value
                     except Exception:  # noqa: BLE001
                         pass
@@ -255,8 +260,10 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
             self._initial_setup_done = True
 
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Error during background setup for device %d", self._device_id)
+        except Exception:
+            _LOGGER.exception(
+                "Error during background setup for device %d", self._device_id
+            )
 
     async def async_shutdown(self) -> None:
         """Clean up COV subscriptions on shutdown."""

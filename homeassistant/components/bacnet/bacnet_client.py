@@ -228,8 +228,8 @@ class BACnetClient:
             from bacpypes3.app import Application
 
             self._app = Application.from_args(args)
-        except Exception as err:
-            _LOGGER.exception("Failed to create BACnet Application: %s", err)
+        except Exception:
+            _LOGGER.exception("Failed to create BACnet Application")
             raise
 
     async def disconnect(self) -> None:

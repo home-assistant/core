@@ -15,10 +15,9 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .bacnet_client import BACnetClient, BACnetDeviceInfo, get_local_interfaces
+from .bacnet_client import BACnetDeviceInfo, get_local_interfaces
 from .const import (
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_ID,
@@ -108,8 +107,14 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             # Build device description for the confirmation dialog
             if self._selected_device:
-                name = self._selected_device.name or f"Device {self._selected_device.device_id}"
-                if self._selected_device.vendor_name and self._selected_device.model_name:
+                name = (
+                    self._selected_device.name
+                    or f"Device {self._selected_device.device_id}"
+                )
+                if (
+                    self._selected_device.vendor_name
+                    and self._selected_device.model_name
+                ):
                     description = f"{name} ({self._selected_device.vendor_name} - {self._selected_device.model_name})"
                 elif self._selected_device.vendor_name:
                     description = f"{name} ({self._selected_device.vendor_name})"
@@ -131,7 +136,10 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._selected_device or not self._hub_entry_id:
             return self.async_abort(reason="device_not_selected")
 
-        title = self._selected_device.name or f"BACnet device {self._selected_device.device_id}"
+        title = (
+            self._selected_device.name
+            or f"BACnet device {self._selected_device.device_id}"
+        )
 
         return self.async_create_entry(
             title=title,
@@ -154,7 +162,8 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Check if hub already exists
         existing_hubs = [
-            entry for entry in self._async_current_entries()
+            entry
+            for entry in self._async_current_entries()
             if entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_HUB
         ]
         if existing_hubs:
@@ -176,7 +185,7 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
             interfaces = await get_local_interfaces()
             if not interfaces:
                 errors["base"] = "no_interfaces"
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Failed to get network interfaces")
             errors["base"] = "unknown"
             interfaces = {}
@@ -199,7 +208,9 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_INTERFACE, default=default_address): vol.In(interfaces),
+                    vol.Required(CONF_INTERFACE, default=default_address): vol.In(
+                        interfaces
+                    ),
                 }
             ),
             errors=errors,
@@ -257,7 +268,8 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
         """Select which hub to add device to (in case there are multiple hubs in future)."""
         # For now, just get the first (and only) hub
         hub_entries = [
-            entry for entry in self._async_current_entries()
+            entry
+            for entry in self._async_current_entries()
             if entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_HUB
         ]
 
@@ -302,13 +314,19 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_hub")
 
         hub_entry = self.hass.config_entries.async_get_entry(self._hub_entry_id)
-        if not hub_entry or not hasattr(hub_entry, "runtime_data") or not hub_entry.runtime_data:
+        if (
+            not hub_entry
+            or not hasattr(hub_entry, "runtime_data")
+            or not hub_entry.runtime_data
+        ):
             return self.async_abort(reason="hub_not_ready")
 
         client = hub_entry.runtime_data.client
 
         # Check if this is the first call (start discovery) or second call (handle results)
-        if not self._discovered_devices and not hasattr(self, "_device_discovery_errors"):
+        if not self._discovered_devices and not hasattr(
+            self, "_device_discovery_errors"
+        ):
             # First call - start discovery with progress
             self._device_discovery_errors: dict[str, str] = {}
 
@@ -322,8 +340,8 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.error("Discovery timeout")
                     self._device_discovery_errors["base"] = "discovery_timeout"
                     self._discovered_devices = []
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.exception("Error during BACnet discovery: %s", err)
+                except Exception:
+                    _LOGGER.exception("Error during BACnet discovery")
                     self._device_discovery_errors["base"] = "cannot_connect"
                     self._discovered_devices = []
 
@@ -362,8 +380,8 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
                     label += f" ({device.model_name})"
                 label += f" [{device.address}]"
                 device_options[str(device.device_id)] = label
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.exception("Error building device options: %s", err)
+        except Exception:
+            _LOGGER.exception("Error building device options")
             self.async_show_progress_done(next_step_id="discover")
             return self.async_show_form(
                 step_id="discover",
@@ -391,13 +409,19 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Get client from hub
         hub_entry = self.hass.config_entries.async_get_entry(self._hub_entry_id)
-        if not hub_entry or not hasattr(hub_entry, "runtime_data") or not hub_entry.runtime_data:
+        if (
+            not hub_entry
+            or not hasattr(hub_entry, "runtime_data")
+            or not hub_entry.runtime_data
+        ):
             return self.async_abort(reason="hub_not_ready")
 
         client = hub_entry.runtime_data.client
 
         # Check if this is the first call (start discovery) or second call (handle results)
-        if not self._discovered_objects and not hasattr(self, "_objects_discovery_errors"):
+        if not self._discovered_objects and not hasattr(
+            self, "_objects_discovery_errors"
+        ):
             # First call - start discovery with progress
             self._objects_discovery_errors: dict[str, str] = {}
 
@@ -411,8 +435,8 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 except TimeoutError:
                     _LOGGER.error("Timeout discovering objects")
                     self._objects_discovery_errors["base"] = "discovery_timeout"
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.exception("Error discovering objects: %s", err)
+                except Exception:
+                    _LOGGER.exception("Error discovering objects")
                     self._objects_discovery_errors["base"] = "cannot_connect"
 
             # Return progress immediately so UI renders
@@ -534,14 +558,14 @@ class BACnetConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_SELECTED_OBJECTS,
-                        default=default_selection
+                        CONF_SELECTED_OBJECTS, default=default_selection
                     ): cv.multi_select(object_options),
                 }
             ),
             errors=errors,
             description_placeholders={
-                "device_name": self._selected_device.name or f"Device {self._selected_device.device_id}",
+                "device_name": self._selected_device.name
+                or f"Device {self._selected_device.device_id}",
                 "object_count": str(len(self._discovered_objects)),
             },
         )
@@ -570,7 +594,10 @@ class BACnetOptionsFlow(OptionsFlow):
             )
 
         # Get coordinator data to show available objects
-        if not hasattr(self.config_entry, "runtime_data") or not self.config_entry.runtime_data:
+        if (
+            not hasattr(self.config_entry, "runtime_data")
+            or not self.config_entry.runtime_data
+        ):
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema({}),
@@ -609,14 +636,14 @@ class BACnetOptionsFlow(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_SELECTED_OBJECTS,
-                        default=current_selection
+                        CONF_SELECTED_OBJECTS, default=current_selection
                     ): cv.multi_select(object_options),
                 }
             ),
             errors=errors,
             description_placeholders={
-                "device_name": coordinator.device_info.name or f"Device {coordinator.device_info.device_id}",
+                "device_name": coordinator.device_info.name
+                or f"Device {coordinator.device_info.device_id}",
                 "object_count": str(len(coordinator.data.objects)),
             },
         )
