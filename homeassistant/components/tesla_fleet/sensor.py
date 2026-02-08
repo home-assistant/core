@@ -9,7 +9,6 @@ from itertools import chain
 from typing import cast
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -35,7 +34,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslaFleetConfigEntry
-from .const import ENERGY_HISTORY_FIELDS, TeslaFleetState
+from .const import ENERGY_HISTORY_FIELDS
 from .entity import (
     TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
@@ -493,7 +492,7 @@ async def async_setup_entry(
     )
 
 
-class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
+class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
     """Base class for Tesla Fleet vehicle metric sensors."""
 
     entity_description: TeslaFleetSensorEntityDescription
@@ -506,13 +505,6 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(data, description.key)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
@@ -544,8 +536,10 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = isinstance(self._value, int | float) and self._value > 0
-        if self._attr_available:
+        if self._attr_available and self.coordinator.updated_once:
             self._attr_native_value = self._get_timestamp(self._value)
+        else:
+            self._attr_native_value = None
 
 
 class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity):

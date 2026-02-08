@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -49,7 +49,7 @@ async def test_sensors(
     [
         ("sensor.test_battery_level", "77", "77"),
         ("sensor.test_outside_temperature", "30", "30"),
-        ("sensor.test_time_to_arrival", "2024-01-01T00:00:06+00:00", STATE_UNAVAILABLE),
+        ("sensor.test_time_to_arrival", "2024-01-01T00:00:06+00:00", STATE_UNKNOWN),
     ],
 )
 async def test_sensors_restore(
@@ -72,6 +72,11 @@ async def test_sensors_restore(
     assert hass.states.get(entity_id).state == initial
 
     mock_vehicle_data.side_effect = VehicleOffline
+
+    # Flush the delayed store write so coordinator data is persisted
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
