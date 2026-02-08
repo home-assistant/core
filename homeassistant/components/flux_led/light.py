@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -235,7 +236,7 @@ class FluxLight(
         return self._device.rgbcw
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         return _flux_color_mode_to_hass(
             self._device.color_mode, self._device.color_modes

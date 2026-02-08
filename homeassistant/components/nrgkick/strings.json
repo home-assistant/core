@@ -1,0 +1,323 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "json_api_disabled": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants.",
+      "no_serial_number": "Device does not provide a serial number"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_response": "The device returned an invalid response. Verify the host or IP address and make sure JSON API is enabled in the NRGkick mobile app.",
+      "json_api_disabled": "JSON API is disabled on the device.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional \u0026 recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form again.",
+      "no_serial_number": "Device does not provide a serial number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the NRGkick device."
+        },
+        "description": "Set up your NRGkick device. Ensure the device is powered on and reachable on the network."
+      },
+      "user_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for your NRGkick device.",
+          "username": "Username for your NRGkick device."
+        },
+        "description": "Authentication is required for {device_ip}.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password\n\nIf you changed the credentials in the app, use the updated values here."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the NRGkick device ({name}) at {device_ip} to Home Assistant?"
+      },
+      "zeroconf_enable_json_api": {
+        "description": "The NRGkick device ({name}) at {device_ip} was discovered, but JSON API is disabled.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional \u0026 recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form to continue."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cellular_mode": {
+        "name": "Cellular mode",
+        "state": {
+          "gsm": "GSM",
+          "lte_cat_m1": "LTE Cat-M1",
+          "lte_nb_iot": "LTE NB-IoT",
+          "no_service": "No service"
+        }
+      },
+      "cellular_operator": {
+        "name": "Cellular operator"
+      },
+      "cellular_rssi": {
+        "name": "Cellular signal strength"
+      },
+      "charge_count": {
+        "name": "Charge count",
+        "unit_of_measurement": "cycles"
+      },
+      "charged_energy": {
+        "name": "Charged energy"
+      },
+      "charging_current": {
+        "name": "Charging current"
+      },
+      "charging_rate": {
+        "name": "Charging rate"
+      },
+      "charging_voltage": {
+        "name": "Charging voltage"
+      },
+      "connector_l1_temperature": {
+        "name": "Connector L1 temperature"
+      },
+      "connector_l2_temperature": {
+        "name": "Connector L2 temperature"
+      },
+      "connector_l3_temperature": {
+        "name": "Connector L3 temperature"
+      },
+      "connector_max_current": {
+        "name": "Connector max current"
+      },
+      "connector_phase_count": {
+        "name": "Connector phase count"
+      },
+      "connector_serial": {
+        "name": "Connector serial"
+      },
+      "connector_type": {
+        "name": "Connector type",
+        "state": {
+          "aus": "Australian (32A 5-pin)",
+          "cee": "CEE",
+          "domestic": "Domestic plug",
+          "type2": "Type 2",
+          "wall": "Wall socket"
+        }
+      },
+      "domestic_plug_1_temperature": {
+        "name": "Domestic plug 1 temperature"
+      },
+      "domestic_plug_2_temperature": {
+        "name": "Domestic plug 2 temperature"
+      },
+      "error_code": {
+        "name": "Error",
+        "state": {
+          "32a_attachment_on_16a_unit": "32A attachment on 16A unit",
+          "attachment_overtemperature": "Attachment overtemperature",
+          "cp_signal_impermissible": "CP signal impermissible",
+          "cp_signal_voltage_error": "CP signal voltage error",
+          "domestic_plug_overtemperature": "Domestic plug overtemperature",
+          "ev_diode_fault": "EV diode fault",
+          "general_error": "General error",
+          "general_overtemperature": "General overtemperature",
+          "housing_overtemperature": "Housing overtemperature",
+          "no_error": "No error",
+          "overfrequency_detected": "Overfrequency detected",
+          "overvoltage_detected": "Overvoltage detected",
+          "overvoltage_without_pe_detected": "Overvoltage without PE detected",
+          "pe_and_rcd_and_relay_self_test_failed": "PE, RCD, and relay self-test failed",
+          "pe_and_rcd_self_test_failed": "PE and RCD self-test failed",
+          "pe_and_relay_self_test_failed": "PE and relay self-test failed",
+          "pe_self_test_failed": "PE self-test failed",
+          "phase_shift_error": "Phase shift error",
+          "rcd_and_relay_self_test_failed": "RCD and relay self-test failed",
+          "rcd_self_test_failed": "RCD self-test failed",
+          "relay_self_test_failed": "Relay self-test failed",
+          "residual_current_detected": "Residual current detected",
+          "supply_voltage_error": "Supply voltage error",
+          "type2_not_authorized": "Type 2 not authorized",
+          "underfrequency_detected": "Underfrequency detected",
+          "undervoltage_detected": "Undervoltage detected",
+          "undervoltage_without_pe_detected": "Undervoltage without PE detected",
+          "unknown_frequency_type": "Unknown frequency type",
+          "unknown_grid_type": "Unknown grid type",
+          "unplug_detection_triggered": "Unplug detection triggered",
+          "voltage_drop_detected": "Voltage drop detected"
+        }
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "housing_temperature": {
+        "name": "Housing temperature"
+      },
+      "l1_active_power": {
+        "name": "L1 active power"
+      },
+      "l1_apparent_power": {
+        "name": "L1 apparent power"
+      },
+      "l1_current": {
+        "name": "L1 current"
+      },
+      "l1_power_factor": {
+        "name": "L1 power factor"
+      },
+      "l1_reactive_power": {
+        "name": "L1 reactive power"
+      },
+      "l1_voltage": {
+        "name": "L1 voltage"
+      },
+      "l2_active_power": {
+        "name": "L2 active power"
+      },
+      "l2_apparent_power": {
+        "name": "L2 apparent power"
+      },
+      "l2_current": {
+        "name": "L2 current"
+      },
+      "l2_power_factor": {
+        "name": "L2 power factor"
+      },
+      "l2_reactive_power": {
+        "name": "L2 reactive power"
+      },
+      "l2_voltage": {
+        "name": "L2 voltage"
+      },
+      "l3_active_power": {
+        "name": "L3 active power"
+      },
+      "l3_apparent_power": {
+        "name": "L3 apparent power"
+      },
+      "l3_current": {
+        "name": "L3 current"
+      },
+      "l3_power_factor": {
+        "name": "L3 power factor"
+      },
+      "l3_reactive_power": {
+        "name": "L3 reactive power"
+      },
+      "l3_voltage": {
+        "name": "L3 voltage"
+      },
+      "n_current": {
+        "name": "Neutral current"
+      },
+      "network_rssi": {
+        "name": "Signal strength"
+      },
+      "network_ssid": {
+        "name": "SSID"
+      },
+      "peak_power": {
+        "name": "Peak power"
+      },
+      "powerflow_grid_frequency": {
+        "name": "Powerflow grid frequency"
+      },
+      "rated_current": {
+        "name": "Rated current"
+      },
+      "rcd_trigger": {
+        "name": "RCD trigger",
+        "state": {
+          "ac_150ma_fault": "AC 150mA fault",
+          "ac_30ma_fault": "AC 30mA fault",
+          "ac_60ma_fault": "AC 60mA fault",
+          "dc_negative_6ma_fault": "DC -6mA fault",
+          "dc_positive_6ma_fault": "DC +6mA fault",
+          "no_fault": "No fault"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "connected": "[%key:common::state::connected%]",
+          "error": "[%key:common::state::error%]",
+          "standby": "[%key:common::state::standby%]",
+          "wakeup": "Wakeup"
+        }
+      },
+      "total_active_power": {
+        "name": "Total active power"
+      },
+      "total_apparent_power": {
+        "name": "Total apparent power"
+      },
+      "total_charged_energy": {
+        "name": "Total charged energy"
+      },
+      "total_power_factor": {
+        "name": "Total power factor"
+      },
+      "total_reactive_power": {
+        "name": "Total reactive power"
+      },
+      "vehicle_charging_time": {
+        "name": "Vehicle charging time"
+      },
+      "vehicle_connected_since": {
+        "name": "Vehicle connected since"
+      },
+      "warning_code": {
+        "name": "Warning",
+        "state": {
+          "blackout_protection": "Blackout protection",
+          "energy_limit_reached": "Energy limit reached",
+          "ev_does_not_comply_standard": "EV does not comply with standard",
+          "increased_attachment_temperature": "Increased attachment temperature",
+          "increased_domestic_plug_temperature": "Increased domestic plug temperature",
+          "increased_housing_temperature": "Increased housing temperature",
+          "increased_temperature": "Increased temperature",
+          "no_attachment_detected": "No attachment detected",
+          "no_comm_with_type2_attachment": "No communication with Type 2 attachment",
+          "no_pe": "No protective earth",
+          "no_warning": "No warning",
+          "unsupported_charging_mode": "Unsupported charging mode"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failure": {
+      "message": "Authentication failed (HTTP {status_code}). Verify BasicAuth settings. Target: {url}"
+    },
+    "authentication_error": {
+      "message": "Authentication failed. Please check your credentials."
+    },
+    "communication_error": {
+      "message": "Communication error with NRGkick device: {error}"
+    },
+    "connection_failed": {
+      "message": "Network connection failed: {error_details}. Target: {url}"
+    },
+    "connection_timeout": {
+      "message": "Connection timeout after {attempts} attempts. Check power and network. Target: {url}"
+    },
+    "generic_error": {
+      "message": "Connection failed: {error_details}. Target: {url}"
+    },
+    "http_error": {
+      "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
+    },
+    "invalid_response": {
+      "message": "The device returned an invalid response."
+    },
+    "json_api_disabled": {
+      "message": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred."
+    }
+  }
+}
