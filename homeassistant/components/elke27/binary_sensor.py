@@ -22,6 +22,8 @@ from .models import Elke27RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 _ZONE_ICON_BY_DEFINITION = {
     "UNDEFINED": "mdi:help-circle-outline",
     "BURG EE DELAY": "mdi:door-closed-lock",

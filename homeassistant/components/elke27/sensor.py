@@ -22,6 +22,8 @@ from .entity import build_unique_id, device_info_for_entry, get_panel_field, uni
 from .hub import Elke27Hub
 from .models import Elke27RuntimeData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Elke27SensorDescription(SensorEntityDescription):
