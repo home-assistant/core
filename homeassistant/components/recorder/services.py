@@ -98,6 +98,8 @@ SERVICE_GET_HISTORY_SCHEMA = vol.Schema(
     }
 )
 
+MAX_GET_HISTORY_RECORDS = 1000
+
 
 async def _async_handle_purge_service(service: ServiceCall) -> None:
     """Handle calls to the purge service."""
@@ -215,6 +217,9 @@ async def _async_handle_get_history_service(
     history_ids = service.data["history_ids"]
     # Note that the state_changes_during_period specifically returns the LazyState subclass
     result: dict[str, list[State]] = {}
+
+    incomplete_results: set[str] = set()
+
     for history_id in history_ids:
         result.update(
             await hass.data[DATA_INSTANCE].async_add_executor_job(
@@ -225,10 +230,16 @@ async def _async_handle_get_history_service(
                 history_id,
                 True,
                 False,
-                1000,
+                MAX_GET_HISTORY_RECORDS,
                 True,
             )
         )
+
+        if (
+            history_id in result
+            and len(result[history_id]) == MAX_GET_HISTORY_RECORDS + 1
+        ):
+            incomplete_results.add(history_id)
 
     formatted_result: JsonObjectType = {}
     for history_id, history_states_with_dups in result.items():
@@ -246,6 +257,8 @@ async def _async_handle_get_history_service(
 
         for index, state in enumerate(history_states):
             if index == len(history_states) - 1:
+                if history_id in incomplete_results:
+                    continue
                 end = end_time or dt_util.utcnow()
             else:
                 end = dt_util.utc_from_timestamp(
