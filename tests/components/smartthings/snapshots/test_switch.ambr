@@ -1028,7 +1028,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher-entry]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_mute-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1041,7 +1041,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher',
+    'entity_id': 'switch.dishwasher_mute',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1049,12 +1049,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Mute',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Mute',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1064,13 +1064,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher-state]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher',
+      'friendly_name': 'Dishwasher Mute',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher',
+    'entity_id': 'switch.dishwasher_mute',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1420,55 +1420,6 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.machine_a_laver',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'mute',
-    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.audioVolumeLevel_volumeLevel_volumeLevel',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.machine_a_laver',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1516,6 +1467,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.machine_a_laver_mute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mute',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mute',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mute',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.audioVolumeLevel_volumeLevel_volumeLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.machine_a_laver_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
