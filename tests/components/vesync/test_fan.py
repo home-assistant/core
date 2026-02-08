@@ -65,16 +65,15 @@ async def test_fan_state(
         (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_turn_on_off_success(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
 ) -> None:
     """Test turn_on and turn_off method."""
-
-    mock_devices_response(aioclient_mock, "SmartTowerFan")
 
     with (
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
@@ -107,9 +106,10 @@ async def test_turn_on_off_success(
         ),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_turn_on_off_raises_error(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     action: str,
     command: str,
 ) -> None:
@@ -150,9 +150,10 @@ async def test_turn_on_off_raises_error(
         ("auto", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode"),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_set_preset_mode(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     api_response: bool,
     expectation,
     preset_mode: str,
@@ -194,9 +195,10 @@ async def test_set_preset_mode(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_oscillation_success(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
