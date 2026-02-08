@@ -25,31 +25,31 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_waterfurnace_client() -> Generator[Mock]:
     """Mock WaterFurnace client."""
-    mock_client = Mock()
-    mock_client.gwid = "TEST_GWID_12345"
-
-    gateway_data = {
-        "gwid": "TEST_GWID_12345",
-        "description": "Test WaterFurnace Device",
-        "awlabctypedesc": "Test ABC Type",
-    }
-    mock_client.devices = [WFGateway(gateway_data)]
-
-    device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
-    mock_client.read.return_value = device_data
-    mock_client.read_with_retry.return_value = device_data
-
     with (
         patch(
             "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
-            return_value=mock_client,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.waterfurnace.WaterFurnace",
-            return_value=mock_client,
+            new=mock_client,
         ),
     ):
-        yield mock_client
+        client = mock_client.return_value
+        client.gwid = "TEST_GWID_12345"
+
+        gateway_data = {
+            "gwid": "TEST_GWID_12345",
+            "description": "Test WaterFurnace Device",
+            "awlabctypedesc": "Test ABC Type",
+        }
+        client.devices = [WFGateway(gateway_data)]
+
+        device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
+        client.read.return_value = device_data
+        client.read_with_retry.return_value = device_data
+
+        yield client
 
 
 @pytest.fixture
