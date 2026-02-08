@@ -20,7 +20,7 @@ from . import OmadaConfigEntry
 from .coordinator import OmadaFirmwareUpdateCoordinator
 from .entity import OmadaDeviceEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

@@ -44,7 +44,7 @@ TPort = TypeVar("TPort")
 TDevice = TypeVar("TDevice", bound="OmadaDevice")
 TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
