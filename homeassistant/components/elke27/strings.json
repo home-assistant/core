@@ -24,7 +24,7 @@
           "panel": "Select the panel to add.",
           "passphrase": "The passphrase used during linking."
         },
-        "description": "Select a discovered panel and enter the linking credentials.",
+        "description": "Select a discovered panel and enter the linking credentials. Use rescan if the panel is not listed. If only one panel is found, enter the credentials to continue.",
         "title": "Discover panels"
       },
       "link": {
@@ -66,7 +66,7 @@
         "title": "Relink panel"
       },
       "user": {
-        "description": "Choose how you want to add the panel.",
+        "description": "Choose how you want to add the panel. Discover panels searches your network for Elk E27 devices. Manual setup lets you enter a host name or IP address.",
         "menu_options": {
           "discover": "Discover panels",
           "manual": "Manual setup"
