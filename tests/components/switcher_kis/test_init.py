@@ -14,7 +14,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import init_integration
-from .consts import DUMMY_DEVICE_ID1, DUMMY_DEVICE_ID4, DUMMY_SWITCHER_DEVICES
+from .consts import (
+    DUMMY_DEVICE_ID1,
+    DUMMY_DEVICE_ID4,
+    DUMMY_SWITCHER_DEVICES,
+    DUMMY_USERNAME as USERNAME,
+    DUMMY_TOKEN as TOKEN,
+)
 
 from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -27,14 +33,14 @@ async def test_update_fail(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities state unavailable when updates fail.."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
 
     assert mock_bridge.is_running is True
-    assert len(entry.runtime_data) == 2
+    assert len(entry.runtime_data) == 3
 
     freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
     async_fire_time_changed(hass)

@@ -83,6 +83,7 @@ TEMPERATURE_SENSORS: list[SwitcherSensorEntityDescription] = [
 POWER_PLUG_SENSORS = POWER_SENSORS
 WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
 THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
+HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
 
 
 async def async_setup_entry(
@@ -109,6 +110,11 @@ async def async_setup_entry(
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in THERMOSTAT_SENSORS
+            )
+        elif coordinator.data.device_type.category == DeviceCategory.HEATER:
+            async_add_entities(
+                SwitcherSensorEntity(coordinator, description)
+                for description in HEATER_SENSORS
             )
 
     config_entry.async_on_unload(

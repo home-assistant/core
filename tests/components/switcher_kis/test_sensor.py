@@ -8,9 +8,12 @@ from homeassistant.util import slugify
 from . import init_integration
 from .consts import (
     DUMMY_PLUG_DEVICE,
+    DUMMY_HEATER_DEVICE,
     DUMMY_SWITCHER_SENSORS_DEVICES,
     DUMMY_THERMOSTAT_DEVICE,
     DUMMY_WATER_HEATER_DEVICE,
+    DUMMY_USERNAME as USERNAME,
+    DUMMY_TOKEN as TOKEN,
 )
 
 DEVICE_SENSORS_TUPLE = (
@@ -30,6 +33,14 @@ DEVICE_SENSORS_TUPLE = (
         ],
     ),
     (
+        DUMMY_HEATER_DEVICE,
+        [
+            ("power", "power_consumption"),
+            ("current", "electric_current"),
+            ("remaining_time", "remaining_time"),
+        ],
+    ),
+    (
         DUMMY_THERMOSTAT_DEVICE,
         [
             ("temperature", "temperature"),
@@ -41,11 +52,11 @@ DEVICE_SENSORS_TUPLE = (
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_SENSORS_DEVICES], indirect=True)
 async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
-    entry = await init_integration(hass)
+    entry = await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     assert mock_bridge.is_running is True
-    assert len(entry.runtime_data) == 3
+    assert len(entry.runtime_data) == 4
 
     for device, sensors in DEVICE_SENSORS_TUPLE:
         for sensor, field in sensors:

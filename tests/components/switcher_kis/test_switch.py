@@ -28,6 +28,7 @@ from .consts import (
     DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE as DEVICE2,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
+    DUMMY_HEATER_DEVICE,
     DUMMY_WATER_HEATER_DEVICE,
 )
 
@@ -37,12 +38,14 @@ ENTITY_ID3 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_1"
 ENTITY_ID3_2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_2"
 
 
-@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
+@pytest.mark.parametrize(
+    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
+)
 async def test_switch(
     hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the switch."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     device = DUMMY_WATER_HEATER_DEVICE
