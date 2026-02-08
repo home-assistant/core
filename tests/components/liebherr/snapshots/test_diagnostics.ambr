@@ -4,8 +4,9 @@
     'devices': dict({
       'test_device_id': dict({
         'coordinator': dict({
+          'last_exception': None,
           'last_update_success': True,
-          'update_interval': 60.0,
+          'update_interval': '0:01:00',
         }),
         'data': dict({
           'controls': list([
@@ -41,9 +42,6 @@
           }),
         }),
       }),
-    }),
-    'entry_data': dict({
-      'api_key': '**REDACTED**',
     }),
   })
 # ---
