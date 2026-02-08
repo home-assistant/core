@@ -24,8 +24,6 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
     so frequent polling is necessary.
     """
 
-    unit: str
-    client: WaterFurnace
     device_metadata: WFGateway | None
 
     def __init__(
