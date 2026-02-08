@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -38,7 +39,6 @@ type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceCoordinator]]
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1 and entry.minor_version == 1:
         # Migrate from gwid-based unique_id to username-based unique_id
@@ -101,6 +101,27 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     )
 
 
+async def _async_setup_coordinator(
+    hass: HomeAssistant,
+    username: str,
+    password: str,
+    device_index: int,
+    entry: WaterFurnaceConfigEntry,
+) -> tuple[str, WaterFurnaceCoordinator]:
+    """Set up a coordinator for a device."""
+
+    device_client = WaterFurnace(username, password, device=device_index)
+    await hass.async_add_executor_job(device_client.login)
+    coordinator = WaterFurnaceCoordinator(hass, device_client, entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    if not isinstance(device_client.gwid, str):
+        raise ConfigEntryNotReady(
+            f"Invalid GWID for device at index {device_index}: {device_client.gwid}"
+        )
+    return device_client.gwid, coordinator
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: WaterFurnaceConfigEntry
 ) -> bool:
@@ -122,15 +143,13 @@ async def async_setup_entry(
             "Failed to connect to WaterFurnace service: No devices found"
         )
 
-    coordinators: dict[str, WaterFurnaceCoordinator] = {}
-    for index, device in enumerate(client.devices):
-        device_client = WaterFurnace(username, password, device=index)
-        await hass.async_add_executor_job(device_client.login)
-        coordinator = WaterFurnaceCoordinator(hass, device_client, entry)
-        coordinators[device.gwid] = coordinator
-        await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinators
+    results = await asyncio.gather(
+        *[
+            _async_setup_coordinator(hass, username, password, index, entry)
+            for index in range(len(client.devices))
+        ]
+    )
+    entry.runtime_data = dict(results)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

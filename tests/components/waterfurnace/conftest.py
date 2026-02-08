@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from waterfurnace.waterfurnace import WFGateway, WFReading
+from waterfurnace.waterfurnace import WaterFurnace, WFGateway, WFReading
 
 from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -55,9 +55,6 @@ def mock_waterfurnace_client() -> Generator[Mock]:
 @pytest.fixture
 def mock_waterfurnace_client_multi_device() -> Generator[Mock]:
     """Mock WaterFurnace client with multiple devices."""
-    mock_client = Mock()
-    mock_client.gwid = "TEST_GWID_12345"
-
     gateway_data_1 = {
         "gwid": "TEST_GWID_12345",
         "description": "Test WaterFurnace Device 1",
@@ -68,23 +65,30 @@ def mock_waterfurnace_client_multi_device() -> Generator[Mock]:
         "description": "Test WaterFurnace Device 2",
         "awlabctypedesc": "Test ABC Type 2",
     }
-    mock_client.devices = [WFGateway(gateway_data_1), WFGateway(gateway_data_2)]
 
     device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
-    mock_client.read.return_value = device_data
-    mock_client.read_with_retry.return_value = device_data
 
     with (
         patch(
             "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
-            return_value=mock_client,
-        ),
+            autospec=True,
+        ) as mock_client,
         patch(
             "homeassistant.components.waterfurnace.WaterFurnace",
-            return_value=mock_client,
+            new=mock_client,
         ),
     ):
-        yield mock_client
+        instances: list[Mock] = []
+        for gwid_data in (gateway_data_1, gateway_data_2):
+            client = Mock(spec=WaterFurnace)
+            client.gwid = gwid_data["gwid"]
+            client.devices = [WFGateway(gateway_data_1), WFGateway(gateway_data_2)]
+            client.read.return_value = device_data
+            client.read_with_retry.return_value = device_data
+            instances.append(client)
+
+        mock_client.side_effect = lambda username, password, device=0: instances[device]
+        yield instances[0]
 
 
 @pytest.fixture
