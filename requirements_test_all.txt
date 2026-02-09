@@ -1152,7 +1152,7 @@ inkbird-ble==1.1.1
 insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
-intellifire4py==4.2.1
+intellifire4py==4.3.1
 
 # homeassistant.components.iometer
 iometer==0.4.0
