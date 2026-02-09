@@ -44,6 +44,7 @@ CONF_REPORT_STATE = "report_state"
 CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_SERVICE_ACCOUNT = "service_account"
+CONF_REQUIRE_ACK = "require_acknowledgment"
 
 DATA_CONFIG = "config"
 
