@@ -10,14 +10,26 @@ from . import HOUSEHOLD_ID, MOCK_FELAQUA, MOCK_PET
 
 from tests.common import MockConfigEntry
 
-EXPECTED_ENTITY_IDS = {
-    "sensor.pet_flap_battery_level": f"{HOUSEHOLD_ID}-13576-battery",
-    "sensor.cat_flap_battery_level": f"{HOUSEHOLD_ID}-13579-battery",
-    "sensor.feeder_battery_level": f"{HOUSEHOLD_ID}-12345-battery",
-    "sensor.felaqua_battery_level": f"{HOUSEHOLD_ID}-{MOCK_FELAQUA['id']}-battery",
-    "sensor.pet_last_seen_flap_device_id": f"{HOUSEHOLD_ID}-24680-last-seen-flap-device",
-    "sensor.pet_last_seen_user_id": f"{HOUSEHOLD_ID}-24680-last-seen-user",
-}
+EXPECTED_ENTITIES = (
+    ("sensor.pet_flap_battery_level", f"{HOUSEHOLD_ID}-13576-battery", "100"),
+    ("sensor.cat_flap_battery_level", f"{HOUSEHOLD_ID}-13579-battery", "100"),
+    ("sensor.feeder_battery_level", f"{HOUSEHOLD_ID}-12345-battery", "100"),
+    (
+        "sensor.felaqua_battery_level",
+        f"{HOUSEHOLD_ID}-{MOCK_FELAQUA['id']}-battery",
+        "100",
+    ),
+    (
+        "sensor.pet_last_seen_flap_device_id",
+        f"{HOUSEHOLD_ID}-24680-last_seen_flap_device",
+        str(MOCK_PET["position"]["device_id"]),
+    ),
+    (
+        "sensor.pet_last_seen_user_id",
+        f"{HOUSEHOLD_ID}-24680-last_seen_user",
+        str(MOCK_PET["position"]["user_id"]),
+    ),
+)
 
 DEFAULT_DISABLED_ENTITIES = [
     "sensor.pet_last_seen_flap_device_id",
@@ -35,16 +47,11 @@ async def test_sensors(
     """Test the generation of unique ids and sensor states."""
     state_entity_ids = hass.states.async_entity_ids()
 
-    for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
+    for entity_id, unique_id, expected_state in EXPECTED_ENTITIES:
         assert entity_id in state_entity_ids
         state = hass.states.get(entity_id)
         assert state
-        if entity_id == "sensor.pet_last_seen_flap_device_id":
-            assert state.state == str(MOCK_PET["position"]["device_id"])
-        elif entity_id == "sensor.pet_last_seen_user_id":
-            assert state.state == str(MOCK_PET["position"]["user_id"])
-        elif entity_id.endswith("_battery_level"):
-            assert state.state == "100"
+        assert state.state == expected_state
         entity = entity_registry.async_get(entity_id)
         assert entity.unique_id == unique_id
 

@@ -44,7 +44,7 @@ async def async_setup_entry(
             entities.append(Felaqua(surepy_entity.id, coordinator))
         if surepy_entity.type == EntityType.PET:
             entities.append(PetLastSeenFlapDevice(surepy_entity.id, coordinator))
-            entities.append(PetLastSeenUserId(surepy_entity.id, coordinator))
+            entities.append(PetLastSeenUser(surepy_entity.id, coordinator))
 
     async_add_entities(entities)
 
@@ -115,7 +115,7 @@ class Felaqua(SurePetcareEntity, SensorEntity):
 
 
 class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
-    """Sensor for the last seen flap device id for a pet."""
+    """Sensor for the last flap device id used by the pet (only if the last status is from a flap update)."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
@@ -127,7 +127,7 @@ class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
         super().__init__(surepetcare_id, coordinator)
 
         self._attr_name = f"{self._device_name} Last seen flap device id"
-        self._attr_unique_id = f"{self._device_id}-last-seen-flap-device"
+        self._attr_unique_id = f"{self._device_id}-last_seen_flap_device"
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
@@ -137,8 +137,8 @@ class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
         self._attr_native_value = str(device_id) if device_id is not None else None
 
 
-class PetLastSeenUserId(SurePetcareEntity, SensorEntity):
-    """Sensor for the last seen user id for a pet."""
+class PetLastSeenUser(SurePetcareEntity, SensorEntity):
+    """Sensor for the last user id that manually changed the pet location (only if the last status is from a manual update)."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
@@ -150,7 +150,7 @@ class PetLastSeenUserId(SurePetcareEntity, SensorEntity):
         super().__init__(surepetcare_id, coordinator)
 
         self._attr_name = f"{self._device_name} Last seen user id"
-        self._attr_unique_id = f"{self._device_id}-last-seen-user"
+        self._attr_unique_id = f"{self._device_id}-last_seen_user"
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
