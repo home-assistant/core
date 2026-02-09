@@ -113,19 +113,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_2_4ghz',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
+    'object_id_base': 'Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
+    'original_name': 'Wi-Fi WiFi (2.4Ghz)',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,8 +138,11 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_wifi_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:12',
       'friendly_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_2_4ghz',
@@ -163,19 +166,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_5ghz',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi (5Ghz)',
+    'object_id_base': 'Wi-Fi WiFi (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi (5Ghz)',
+    'original_name': 'Wi-Fi WiFi (5Ghz)',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -188,8 +191,11 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_wifi_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:13',
       'friendly_name': 'Mock Title Wi-Fi WiFi (5Ghz)',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_5ghz',
@@ -362,19 +368,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi',
+    'object_id_base': 'Wi-Fi WiFi',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi',
+    'original_name': 'Wi-Fi WiFi',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -387,8 +393,11 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_wifi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:12',
       'friendly_name': 'Mock Title Wi-Fi WiFi',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi',
@@ -412,19 +421,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi2',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi2',
+    'object_id_base': 'Wi-Fi WiFi2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi2',
+    'original_name': 'Wi-Fi WiFi2',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -437,8 +446,11 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_wifi2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:13',
       'friendly_name': 'Mock Title Wi-Fi WiFi2',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi2',
@@ -611,19 +623,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_2_4ghz',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
+    'object_id_base': 'Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
+    'original_name': 'Wi-Fi WiFi (2.4Ghz)',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -636,8 +648,11 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_wifi_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:12',
       'friendly_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_2_4ghz',
@@ -661,19 +676,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_5ghz',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
+    'object_id_base': 'Wi-Fi WiFi+ (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
+    'original_name': 'Wi-Fi WiFi+ (5Ghz)',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -686,8 +701,11 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_wifi_5ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:13',
       'friendly_name': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
       'icon': 'mdi:wifi',
+      'mac_address_control': False,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_wifi_5ghz',
@@ -916,19 +934,19 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_wi_fi_mywifi',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Mock Title Wi-Fi MyWifi',
+    'object_id_base': 'Wi-Fi MyWifi',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
-    'original_name': 'Mock Title Wi-Fi MyWifi',
+    'original_name': 'Wi-Fi MyWifi',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -941,8 +959,11 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_wi_fi_mywifi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'bssid': '1C:ED:6F:12:34:13',
       'friendly_name': 'Mock Title Wi-Fi MyWifi',
       'icon': 'mdi:wifi',
+      'mac_address_control': True,
+      'standard': 'ax',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_mywifi',
