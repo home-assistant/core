@@ -779,7 +779,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
-    _attr_color_mode: ColorMode | None = None
+    _attr_color_mode: ColorMode = ColorMode.UNKNOWN
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
@@ -801,42 +801,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_brightness
 
     @cached_property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         return self._attr_color_mode
-
-    @property
-    def _light_internal_color_mode(self) -> str:
-        """Return the color mode of the light with backwards compatibility."""
-        if (color_mode := self.color_mode) is None:
-            # Backwards compatibility for color_mode added in 2021.4
-            # Warning added in 2024.3, break in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) does not report a color mode, this will stop working "
-                        "in Home Assistant Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    report_issue,
-                )
-
-            supported = self._light_internal_supported_color_modes
-
-            if ColorMode.HS in supported and self.hs_color is not None:
-                return ColorMode.HS
-            if ColorMode.COLOR_TEMP in supported and self.color_temp_kelvin is not None:
-                return ColorMode.COLOR_TEMP
-            if ColorMode.BRIGHTNESS in supported and self.brightness is not None:
-                return ColorMode.BRIGHTNESS
-            if ColorMode.ONOFF in supported:
-                return ColorMode.ONOFF
-            return ColorMode.UNKNOWN
-
-        return color_mode
 
     @cached_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -1084,7 +1051,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
         _is_on = self.is_on
-        color_mode = self._light_internal_color_mode if _is_on else None
+        color_mode = self.color_mode if _is_on else None
 
         effect: str | None
         if LightEntityFeature.EFFECT in supported_features:

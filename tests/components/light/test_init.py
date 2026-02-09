@@ -2382,36 +2382,6 @@ def test_filter_supported_color_modes() -> None:
 @pytest.mark.parametrize(
     ("color_mode", "supported_color_modes", "warning_expected"),
     [
-        (None, {light.ColorMode.ONOFF}, True),
-        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
-    ],
-)
-async def test_report_no_color_mode(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    color_mode: str,
-    supported_color_modes: set[str],
-    warning_expected: bool,
-) -> None:
-    """Test a light setting no color mode."""
-
-    class MockLightEntityEntity(light.LightEntity):
-        _attr_color_mode = color_mode
-        _attr_is_on = True
-        _attr_supported_features = light.LightEntityFeature.EFFECT
-        _attr_supported_color_modes = supported_color_modes
-
-    entity = MockLightEntityEntity()
-    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
-    await platform.async_add_entities([entity])
-    entity._async_calculate_state()
-    expected_warning = "does not report a color mode"
-    assert (expected_warning in caplog.text) is warning_expected
-
-
-@pytest.mark.parametrize(
-    ("color_mode", "supported_color_modes", "warning_expected"),
-    [
         (light.ColorMode.ONOFF, None, True),
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
