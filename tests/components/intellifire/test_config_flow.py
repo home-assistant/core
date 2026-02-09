@@ -272,12 +272,12 @@ async def test_options_flow(
     }
 
 
-async def test_options_flow_local_unavailable(
+async def test_options_flow_local_read_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when local connectivity unavailable."""
+    """Test options flow shows error when local connectivity unavailable for read mode."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
@@ -293,7 +293,7 @@ async def test_options_flow_local_unavailable(
         mock_config_entry_current.entry_id
     )
 
-    # Try to select local mode - should fail
+    # Try to select local read mode - should fail
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
@@ -301,21 +301,54 @@ async def test_options_flow_local_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_READ_MODE: "local_disabled"}
+    # Verify connectivity was checked
+    mock_fp.async_validate_connectivity.assert_called_once()
 
 
-async def test_options_flow_cloud_unavailable(
+async def test_options_flow_local_control_unavailable(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test options flow shows error when cloud connectivity unavailable."""
+    """Test options flow shows error when local connectivity unavailable for control mode."""
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
     mock_config_entry_current.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
     await hass.async_block_till_done()
 
-    # Disable cloud connectivity (this is the default in mock, but be explicit)
+    # Disable local connectivity
+    mock_fp.local_connectivity = False
+    mock_fp.cloud_connectivity = True
+
+    # Start options flow
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry_current.entry_id
+    )
+
+    # Try to select local control mode - should fail
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_CONTROL_MODE: "local_disabled"}
+
+
+async def test_options_flow_cloud_read_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test options flow shows error when cloud connectivity unavailable for read mode."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Disable cloud connectivity
     mock_fp.local_connectivity = True
     mock_fp.cloud_connectivity = False
 
@@ -324,7 +357,7 @@ async def test_options_flow_cloud_unavailable(
         mock_config_entry_current.entry_id
     )
 
-    # Try to select cloud mode - should fail
+    # Try to select cloud read mode - should fail
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {CONF_READ_MODE: API_MODE_CLOUD, CONF_CONTROL_MODE: API_MODE_LOCAL},
@@ -332,3 +365,36 @@ async def test_options_flow_cloud_unavailable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_READ_MODE: "cloud_disabled"}
+    # Verify connectivity was checked
+    mock_fp.async_validate_connectivity.assert_called_once()
+
+
+async def test_options_flow_cloud_control_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test options flow shows error when cloud connectivity unavailable for control mode."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Disable cloud connectivity
+    mock_fp.local_connectivity = True
+    mock_fp.cloud_connectivity = False
+
+    # Start options flow
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry_current.entry_id
+    )
+
+    # Try to select cloud control mode - should fail
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_CONTROL_MODE: "cloud_disabled"}
