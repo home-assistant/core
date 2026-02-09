@@ -61,3 +61,11 @@ class OneWireEntity(Entity):
                 self._last_update_success = True
                 _LOGGER.debug("Fetching %s data recovered", self.name)
             self._state = state.decode("ascii").strip()
+
+    @property
+    def force_unit(self) -> str | None:
+        """Return the unit of measurement to use for display."""
+        # Fix for issue #160804: Ensure temperature uses CELSIUS
+        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
+            return "°C"
+        return None
