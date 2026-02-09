@@ -28,7 +28,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: IndevoltConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
         """Initialize the indevolt coordinator."""
         super().__init__(
             hass,
@@ -45,7 +45,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
-        self.device_info_data: dict[str, Any] = {}
+        self.serial_number: str
+        self.device_model: str | None
+        self.firmware_version: str | None
+        self.generation: int
         self._initial_sensor_keys: list[str] = []
 
     def set_initial_sensor_keys(self, keys: list[str]) -> None:
@@ -69,18 +72,14 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryNotReady(
                 f"Device config retrieval timed out: {err}"
             ) from err
-        except Exception as err:
-            raise ConfigEntryNotReady(f"Device config retrieval failed: {err}") from err
-
-        device_data = config_data.get("device", {})
 
         # Cache device information
-        self.device_info_data = {
-            "sn": device_data.get("sn"),
-            "device_model": device_data.get("type"),
-            "fw_version": device_data.get("fw"),
-            "generation": device_data.get("generation", 1),
-        }
+        device_data = config_data.get("device", {})
+
+        self.serial_number = device_data.get("sn")
+        self.device_model = device_data.get("type")
+        self.firmware_version = device_data.get("fw")
+        self.generation = device_data.get("generation", 1)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""

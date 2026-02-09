@@ -650,7 +650,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform for Indevolt."""
     coordinator = entry.runtime_data
-    device_gen = coordinator.device_info_data.get("generation", 1)
+    device_gen = coordinator.generation
 
     # Initialize sensor values (first fetch), required to check available battery packs
     initial_keys = [

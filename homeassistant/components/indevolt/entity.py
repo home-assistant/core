@@ -13,20 +13,19 @@ class IndevoltEntity(CoordinatorEntity[IndevoltCoordinator]):
     _attr_has_entity_name = True
 
     @property
-    def serial_number(self) -> str | None:
+    def serial_number(self) -> str:
         """Return the device serial number."""
-        return self.coordinator.device_info_data.get("sn")
+        return self.coordinator.serial_number
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information for registry."""
-        data = self.coordinator.device_info_data
+        coordinator = self.coordinator
         return DeviceInfo(
-            identifiers={(DOMAIN, data["sn"])},
+            identifiers={(DOMAIN, coordinator.serial_number)},
             manufacturer="INDEVOLT",
-            name=f"INDEVOLT {data['device_model']}",
-            serial_number=data["sn"],
-            model=data["device_model"],
-            sw_version=data["fw_version"],
-            hw_version=str(data["generation"]),
+            serial_number=coordinator.serial_number,
+            model=coordinator.device_model,
+            sw_version=coordinator.firmware_version,
+            hw_version=str(coordinator.generation),
         )
