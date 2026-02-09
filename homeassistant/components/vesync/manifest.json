@@ -14,5 +14,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
+  "quality_scale": "bronze",
   "requirements": ["pyvesync==3.4.1"]
 }

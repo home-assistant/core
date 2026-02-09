@@ -590,7 +590,7 @@ async def test_redacted_thinking(
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry_with_extended_thinking: MockConfigEntry,
+    mock_config_entry_with_adaptive_thinking: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,

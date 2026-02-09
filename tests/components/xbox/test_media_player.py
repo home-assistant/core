@@ -1,9 +1,11 @@
 """Test the Xbox media_player platform."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
@@ -35,10 +37,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
     AsyncMock,
+    Mock,
     MockConfigEntry,
     async_load_json_object_fixture,
     snapshot_platform,
@@ -202,3 +206,103 @@ async def test_media_player_actions(
     getattr(xbox_live_client.smartglass, call_method).assert_called_once_with(
         "HIJKLMN", *call_args
     )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_args", "call_method"),
+    [
+        (SERVICE_TURN_ON, {}, "wake_up"),
+        (SERVICE_TURN_OFF, {}, "turn_off"),
+        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}, "unmute"),
+        (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}, "mute"),
+        (SERVICE_VOLUME_UP, {}, "volume"),
+        (SERVICE_VOLUME_DOWN, {}, "volume"),
+        (SERVICE_MEDIA_PLAY, {}, "play"),
+        (SERVICE_MEDIA_PAUSE, {}, "pause"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, "previous"),
+        (SERVICE_MEDIA_NEXT_TRACK, {}, "next"),
+        (
+            SERVICE_PLAY_MEDIA,
+            {ATTR_MEDIA_CONTENT_TYPE: MediaType.APP, ATTR_MEDIA_CONTENT_ID: "Home"},
+            "go_home",
+        ),
+        (
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
+                ATTR_MEDIA_CONTENT_ID: "327370029",
+            },
+            "launch_app",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutException(""),
+        RequestError("", request=Mock()),
+        HTTPStatusError("", request=Mock(), response=Mock()),
+    ],
+)
+async def test_media_player_action_exceptions(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+    service: str,
+    service_args: dict[str, Any],
+    call_method: str,
+    exception: Exception,
+) -> None:
+    """Test media player action exceptions."""
+
+    xbox_live_client.smartglass.get_console_status.return_value = (
+        SmartglassConsoleStatus(
+            **await async_load_json_object_fixture(
+                hass, "smartglass_console_status_playing.json", DOMAIN
+            )  # pyright: ignore[reportArgumentType]
+        )
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    getattr(xbox_live_client.smartglass, call_method).side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
+            blocking=True,
+        )
+
+
+async def test_media_player_turn_on_failed(
+    hass: HomeAssistant,
+    xbox_live_client: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test media player turn on failed."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.smartglass.wake_up.side_effect = (
+        HTTPStatusError(
+            "", request=Mock(), response=Mock(status_code=HTTPStatus.NOT_FOUND)
+        ),
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_TURN_ON,
+            target={ATTR_ENTITY_ID: "media_player.xone"},
+            blocking=True,
+        )
