@@ -222,6 +222,7 @@ homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
+homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*
 homeassistant.components.glances.*
@@ -436,6 +437,7 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.redgtech.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
 homeassistant.components.remote_calendar.*

@@ -5,7 +5,6 @@ import logging
 from homeassistant.const import Platform
 
 DOMAIN = "enocean"
-DATA_ENOCEAN = "enocean"
 
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 
