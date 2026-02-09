@@ -431,9 +431,7 @@ class ViCareNumber(ViCareEntity, NumberEntity):
     def update(self) -> None:
         """Update state of number."""
         with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
-            self._attr_native_value = self.entity_description.value_getter(
-                self._api
-            )
+            self._attr_native_value = self.entity_description.value_getter(self._api)
 
             if min_value := _get_value(
                 self.entity_description.min_value_getter, self._api

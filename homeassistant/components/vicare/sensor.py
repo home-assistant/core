@@ -1550,9 +1550,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         """Update state of sensor."""
         vicare_unit = None
         with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
-            self._attr_native_value = self.entity_description.value_getter(
-                self._api
-            )
+            self._attr_native_value = self.entity_description.value_getter(self._api)
 
             if self.entity_description.unit_getter:
                 vicare_unit = self.entity_description.unit_getter(self._api)
