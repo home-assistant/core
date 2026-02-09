@@ -985,7 +985,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         raise HomeAssistantError(
             f"{self.entity_id} ({type(self)}) set to unsupported color mode "
             f"{color_mode} when rendering an effect, expected one "
-            f"of {supported_color_modes}"
+            f"of {effect_color_modes}"
         )
 
     def __validate_supported_color_modes(
