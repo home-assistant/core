@@ -76,16 +76,22 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.manager.update_all_devices()
 
-            # Log state changes for debugging
+            # Log state changes for debugging (reduced frequency)
             changed_devices = 0
+            offline_devices = 0
             for device in self.manager.devices.all_devices:
                 if self._has_state_changed(device):
                     changed_devices += 1
+                # Check if device is offline
+                if hasattr(device, 'is_online') and not device.is_online:
+                    offline_devices += 1
 
             if changed_devices > 0:
                 _LOGGER.debug("State changed for %d devices", changed_devices)
-            else:
-                _LOGGER.debug("No device state changes detected")
+
+            # Reduce logging when devices are offline (avoid log spam)
+            if offline_devices > 0 and changed_devices == 0:
+                _LOGGER.debug("%d devices offline, no state changes", offline_devices)
 
             if self.should_update_energy():
                 self.update_time = datetime.now()
