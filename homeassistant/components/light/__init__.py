@@ -1021,9 +1021,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         data: dict[str, Any] = {}
         supported_features = self.supported_features
         supported_color_modes = self.supported_color_modes
-        legacy_supported_color_modes = (
-            supported_color_modes or self._light_internal_supported_color_modes
-        )
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
@@ -1034,7 +1031,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 effect = self.effect
             data[ATTR_EFFECT] = effect
 
-        self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
+        self.__validate_color_mode(color_mode, supported_color_modes, effect)
 
         data[ATTR_COLOR_MODE] = color_mode
 
@@ -1050,15 +1047,15 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
 
-        if color_supported(legacy_supported_color_modes) or color_temp_supported(
-            legacy_supported_color_modes
+        if color_supported(supported_color_modes) or color_temp_supported(
+            supported_color_modes
         ):
             data[ATTR_HS_COLOR] = None
             data[ATTR_RGB_COLOR] = None
             data[ATTR_XY_COLOR] = None
-            if ColorMode.RGBW in legacy_supported_color_modes:
+            if ColorMode.RGBW in supported_color_modes:
                 data[ATTR_RGBW_COLOR] = None
-            if ColorMode.RGBWW in legacy_supported_color_modes:
+            if ColorMode.RGBWW in supported_color_modes:
                 data[ATTR_RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
