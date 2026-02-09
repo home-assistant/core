@@ -1079,7 +1079,7 @@ async def test_creating_tts_subentry(
     assert result.get("step_id") == "init"
     assert not result.get("errors")
 
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             "name": "Custom TTS",
@@ -1088,9 +1088,9 @@ async def test_creating_tts_subentry(
         },
     )
 
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Custom TTS"
-    assert result2.get("data") == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Custom TTS"
+    assert result.get("data") == {
         CONF_PROMPT: "Speak like a drunk pirate",
         CONF_TTS_SPEED: 0.85,
         CONF_CHAT_MODEL: "gpt-4o-mini-tts",

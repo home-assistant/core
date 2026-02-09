@@ -157,10 +157,11 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "[%key:common::config_flow::data::prompt%]",
-            "tts_speed": "Speed of the generated speech"
+            "tts_speed": "Speed"
           },
           "data_description": {
-            "prompt": "Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, whispering, and more"
+            "prompt": "Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, whispering, and more",
+            "tts_speed": "Speed of the generated speech"
           }
         }
       }

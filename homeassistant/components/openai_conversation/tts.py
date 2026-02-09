@@ -16,6 +16,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -135,6 +136,13 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
     ]
 
     _supported_formats = ["mp3", "opus", "aac", "flac", "wav", "pcm"]
+
+    _attr_has_entity_name = False
+
+    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the entity."""
+        super().__init__(entry, subentry)
+        self._attr_name = subentry.title
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice]:
