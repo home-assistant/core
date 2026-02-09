@@ -207,7 +207,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             template_validators.boolean(self, CONF_STATE),
         )
 
-        # For legacy functionality.
+        # Ensure legacy template entity functionality by setting percentage to None instead
+        # of the FanEntity default of 0.
         self._attr_percentage = None
         self.setup_template(
             CONF_PERCENTAGE,
@@ -224,11 +225,15 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self, CONF_PRESET_MODE, self._attr_preset_modes
             ),
         )
+
+        # Oscillating boolean
         self.setup_template(
             CONF_OSCILLATING,
             "_attr_oscillating",
             template_validators.boolean(self, CONF_OSCILLATING),
         )
+
+        # Forward/Reverse Directions
         self.setup_template(
             CONF_DIRECTION,
             "_attr_current_direction",
