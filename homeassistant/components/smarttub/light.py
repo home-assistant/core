@@ -53,7 +53,9 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         super().__init__(coordinator, light.spa, "light")
         self.light_zone = light.zone
         self._attr_unique_id = f"{super().unique_id}-{light.zone}"
-        self._attr_name = f"Light {light.zone}"
+        del self._attr_name
+        self._attr_translation_key = "light_zone"
+        self._attr_translation_placeholders = {"zone": str(light.zone)}
 
     @property
     def light(self) -> SpaLight:

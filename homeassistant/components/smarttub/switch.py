@@ -44,20 +44,20 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         self.pump_id = pump.id
         self.pump_type = pump.type
         self._attr_unique_id = f"{super().unique_id}-{pump.id}"
+        del self._attr_name
+        if pump.type == SpaPump.PumpType.CIRCULATION:
+            self._attr_translation_key = "circulation_pump"
+        elif pump.type == SpaPump.PumpType.JET:
+            self._attr_translation_key = "jet"
+            self._attr_translation_placeholders = {"pump_id": str(pump.id)}
+        else:
+            self._attr_translation_key = "pump"
+            self._attr_translation_placeholders = {"pump_id": str(pump.id)}
 
     @property
     def pump(self) -> SpaPump:
         """Return the underlying SpaPump object for this entity."""
         return self.coordinator.data[self.spa.id][ATTR_PUMPS][self.pump_id]
-
-    @property
-    def name(self) -> str:
-        """Return a name for this pump entity."""
-        if self.pump_type == SpaPump.PumpType.CIRCULATION:
-            return "Circulation Pump"
-        if self.pump_type == SpaPump.PumpType.JET:
-            return f"Jet {self.pump_id}"
-        return f"Pump {self.pump_id}"
 
     @property
     def is_on(self) -> bool:
