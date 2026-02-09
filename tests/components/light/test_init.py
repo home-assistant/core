@@ -2487,9 +2487,9 @@ def test_report_invalid_color_modes(
     raised_error = ""
     try:
         entity._async_calculate_state()
-    except vol.Error as err:
+    except HomeAssistantError as err:
         raised_error = str(err)
-    expected_error = "Invalid supported_color_modes"
+    expected_error = "sets invalid supported color modes"
     assert (expected_error in raised_error) is error_expected
 
 

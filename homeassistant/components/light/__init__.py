@@ -988,6 +988,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             f"of {effect_color_modes}"
         )
 
+    def __validate_supported_color_modes(
+        self,
+        supported_color_modes: set[ColorMode],
+    ) -> None:
+        """Validate the supported color modes."""
+        try:
+            valid_supported_color_modes(supported_color_modes)
+        except vol.Error as err:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) sets invalid supported color modes "
+                f"{supported_color_modes}"
+            ) from err
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -1043,7 +1056,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _light_internal_supported_color_modes(self) -> set[ColorMode]:
         """Calculate supported color modes with backwards compatibility."""
         if (_supported_color_modes := self.supported_color_modes) is not None:
-            valid_supported_color_modes(_supported_color_modes)
+            self.__validate_supported_color_modes(_supported_color_modes)
             return _supported_color_modes
 
         # Backwards compatibility for supported_color_modes added in 2021.4
