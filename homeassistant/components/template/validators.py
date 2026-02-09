@@ -263,7 +263,7 @@ def list_of_strings(
 def item_in_list[T](
     entity: Entity,
     attribute: str,
-    items: list[Any] | None,
+    items: list[Any] | str | None,
     items_attribute: str | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
@@ -280,7 +280,12 @@ def item_in_list[T](
         # items may be mutable based on another template field. Always
         # perform this check when the items come from an configured
         # attribute.
-        if items is None or (len(items) == 0):
+        if isinstance(items, str):
+            _items = getattr(entity, items)
+        else:
+            _items = items
+
+        if _items is None or (len(_items) == 0):
             if items_attribute:
                 log_validation_result_error(
                     entity,
@@ -291,12 +296,12 @@ def item_in_list[T](
 
             return None
 
-        if result not in items:
+        if result not in _items:
             log_validation_result_error(
                 entity,
                 attribute,
                 result,
-                tuple(str(v) for v in items),
+                tuple(str(v) for v in _items),
             )
             return None
 
