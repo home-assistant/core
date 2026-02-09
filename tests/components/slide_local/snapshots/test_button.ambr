@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate',
     'options': dict({
     }),
     'original_device_class': None,
