@@ -81,7 +81,7 @@ async def test_coordinator_update_when_unreachable(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().update_devices.side_effect = [ConnectionError(), ""]
+    fritz().update_devices.side_effect = [ConnectionError()]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
