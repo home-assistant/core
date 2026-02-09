@@ -1138,7 +1138,7 @@
           "name": "Device"
         }
       },
-      "name": "Get Feeder meal plan data"
+      "name": "Get feeder meal plan data"
     },
 
     "set_feeder_meal_plan": {
