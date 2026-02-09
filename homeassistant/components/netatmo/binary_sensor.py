@@ -67,7 +67,7 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str | None, BinarySensorDeviceClass
 }
 
 
-def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
+def get_opening_category(netatmo_device: NetatmoDevice) -> str:
     """Helper function to get opening category from Netatmo API raw data."""
 
     # Iterate through each home in the raw data.
@@ -80,19 +80,24 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
                     # We found the matching device. Get its category.
                     if module.get("category") is not None:
                         return cast(str, module["category"])
+                    raise ValueError(
+                        f"Device {netatmo_device.device.entity_id} found, "
+                        "but 'category' is missing in raw data."
+                    )
 
-    return None
+    raise ValueError(
+        f"Device {netatmo_device.device.entity_id} not found in Netatmo raw data."
+    )
 
 
 def process_opening_category(
     netatmo_device: NetatmoDevice,
 ) -> BinarySensorDeviceClass | None:
     """Helper function to map Netatmo device opening category to Home Assistant device class exceptions."""
-    category = get_opening_category(netatmo_device)
 
     # Use a specific device class if we have a match, otherwise default to OPENING
     return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
-        category, BinarySensorDeviceClass.OPENING
+        get_opening_category(netatmo_device), BinarySensorDeviceClass.OPENING
     )
 
 
@@ -109,14 +114,9 @@ OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
 def process_opening_key(netatmo_device: NetatmoDevice) -> str | None:
     """Helper function to map Netatmo device opening category to Component key exceptions."""
 
-    category = get_opening_category(netatmo_device)
-    key: str | None = DEFAULT_OPENING_SENSOR_KEY
-
-    # Use a specific key if we have a match, where None to force class, otherwise default
-    if category is not None:
-        key = OPENING_CATEGORY_TO_KEY.get(category, DEFAULT_OPENING_SENSOR_KEY)
-
-    return key
+    return OPENING_CATEGORY_TO_KEY.get(
+        get_opening_category(netatmo_device), DEFAULT_OPENING_SENSOR_KEY
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
