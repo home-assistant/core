@@ -77,7 +77,6 @@ class EnOceanEntity(Entity):
                     "identifiers": {
                         (DOMAIN, self.enocean_entity_id.device_address.to_string())
                     },
-                    "name": device_properties.device_name,
                     "manufacturer": device_properties.device_type.manufacturer,
                     "model": device_properties.device_type.model,
                     "serial_number": self.enocean_entity_id.device_address.to_string(),
@@ -91,7 +90,6 @@ class EnOceanEntity(Entity):
                 "identifiers": {
                     (DOMAIN, self.enocean_entity_id.device_address.to_string())
                 },
-                "name": device_properties.device_name,
                 "manufacturer": device_properties.device_type.manufacturer,
                 "model": device_properties.device_type.model,
                 "serial_number": self.enocean_entity_id.device_address.to_string(),
