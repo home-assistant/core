@@ -1,6 +1,7 @@
 """Test the Z-Wave JS climate platform."""
 
 import copy
+from unittest.mock import MagicMock
 
 import pytest
 from zwave_js_server.const import CommandClass
@@ -55,6 +56,8 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -1001,3 +1004,193 @@ async def test_thermostat_unknown_values(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert ATTR_HVAC_ACTION not in state.attributes
+
+
+async def test_set_preset_mode_manufacturer_specific(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to manufacturer specific.
+
+    This tests the Eurotronic Comet Z thermostat which has a
+    "Manufacturer specific" thermostat mode (value 31) that is
+    exposed as a preset mode.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # Test setting preset mode to "Manufacturer specific"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: "Manufacturer specific",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 31
+
+    client.async_send_command.reset_mock()
+
+    # Simulate the device updating to manufacturer specific mode
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 31,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_PRESET_MODE] == "Manufacturer specific"
+
+    # Test restoring hvac mode by setting preset to none.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+
+async def test_set_preset_mode_none_while_in_hvac_mode(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to none while already in an HVAC mode is a no-op."""
+    entity_id = "climate.radiator_thermostat"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    # Setting preset to none while already in an HVAC mode should be a no-op.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 0
+
+
+async def test_set_preset_mode_none_without_previous_hvac_mode(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_eurotronic_comet_z: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to none defaults to heat without previous HVAC mode.
+
+    When the device is externally changed to a preset mode (e.g. via physical
+    button), there is no stored previous HVAC mode. Setting preset to none
+    should default to heat.
+    """
+    node = climate_eurotronic_comet_z
+    entity_id = "climate.radiator_thermostat"
+
+    # Simulate the device being externally changed to "Manufacturer specific"
+    # mode without HA having set a preset first.
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 2,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 31,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_PRESET_MODE] == "Manufacturer specific"
+
+    client.async_send_command.reset_mock()
+
+    # Setting preset to none should default to heat since there is no
+    # stored previous HVAC mode.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: PRESET_NONE,
+        },
+        blocking=True,
+    )
+
+    assert client.async_send_command.call_count == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+    }
+    assert args["value"] == 1
