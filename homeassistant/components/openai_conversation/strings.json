@@ -67,6 +67,7 @@
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
+            "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data::web_search%]"
@@ -76,6 +77,7 @@
             "image_model": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
             "inline_citations": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::inline_citations%]",
             "reasoning_effort": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
+            "reasoning_summary": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::reasoning_summary%]",
             "search_context_size": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
             "user_location": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_search": "[%key:component::openai_conversation::config_subentries::conversation::step::model::data_description::web_search%]"
@@ -125,6 +127,7 @@
             "image_model": "Image generation model",
             "inline_citations": "Include links in web search results",
             "reasoning_effort": "Reasoning effort",
+            "reasoning_summary": "Reasoning summary",
             "search_context_size": "Search context size",
             "user_location": "Include home location",
             "web_search": "Enable web search"
@@ -134,6 +137,7 @@
             "image_model": "The model to use when generating images",
             "inline_citations": "If disabled, additional prompt is added to ask the model to not include source citations",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "reasoning_summary": "Controls the length and detail of reasoning summaries provided by the model",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
             "user_location": "Refine search results based on geography",
             "web_search": "Allow the model to search the web for the latest information before generating a response"
@@ -163,6 +167,14 @@
         "minimal": "Minimal",
         "none": "None",
         "xhigh": "X-High"
+      }
+    },
+    "reasoning_summary": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "detailed": "Detailed",
+        "off": "[%key:common::state::off%]",
+        "short": "Short"
       }
     },
     "search_context_size": {

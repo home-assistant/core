@@ -73,6 +73,7 @@ from .const import (
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -90,6 +91,7 @@ from .const import (
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -501,7 +503,9 @@ class OpenAIBaseLLMEntity(Entity):
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": "auto",
+                "summary": options.get(
+                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+                ),
             }
             model_args["include"] = ["reasoning.encrypted_content"]
 
