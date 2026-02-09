@@ -299,7 +299,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return round(self._state.brightness * 255)
 
     @property
-    @esphome_state_property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if not self._supports_color_mode:

@@ -81,9 +81,9 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         key=NtfySensor.MESSAGES_EXPIRY_DURATION,
         translation_key=NtfySensor.MESSAGES_EXPIRY_DURATION,
         value_fn=(
-            lambda account: account.limits.messages_expiry_duration
-            if account.limits
-            else None
+            lambda account: (
+                account.limits.messages_expiry_duration if account.limits else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
@@ -147,9 +147,9 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         key=NtfySensor.ATTACHMENT_EXPIRY_DURATION,
         translation_key=NtfySensor.ATTACHMENT_EXPIRY_DURATION,
         value_fn=(
-            lambda account: account.limits.attachment_expiry_duration
-            if account.limits
-            else None
+            lambda account: (
+                account.limits.attachment_expiry_duration if account.limits else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
@@ -179,9 +179,9 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         key=NtfySensor.ATTACHMENT_TOTAL_SIZE_LIMIT,
         translation_key=NtfySensor.ATTACHMENT_TOTAL_SIZE_LIMIT,
         value_fn=(
-            lambda account: account.limits.attachment_total_size
-            if account.limits
-            else None
+            lambda account: (
+                account.limits.attachment_total_size if account.limits else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -193,9 +193,9 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         key=NtfySensor.ATTACHMENT_FILE_SIZE,
         translation_key=NtfySensor.ATTACHMENT_FILE_SIZE,
         value_fn=(
-            lambda account: account.limits.attachment_file_size
-            if account.limits
-            else None
+            lambda account: (
+                account.limits.attachment_file_size if account.limits else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -207,9 +207,9 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         key=NtfySensor.ATTACHMENT_BANDWIDTH,
         translation_key=NtfySensor.ATTACHMENT_BANDWIDTH,
         value_fn=(
-            lambda account: account.limits.attachment_bandwidth
-            if account.limits
-            else None
+            lambda account: (
+                account.limits.attachment_bandwidth if account.limits else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DATA_SIZE,

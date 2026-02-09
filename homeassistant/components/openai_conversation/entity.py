@@ -64,6 +64,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from .const import (
@@ -183,7 +184,7 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json.dumps(content.tool_result),
+                        output=json_dumps(content.tool_result),
                     )
                 )
             continue
@@ -217,7 +218,7 @@ def _convert_content_to_param(
                             ResponseFunctionToolCallParam(
                                 type="function_call",
                                 name=tool_call.tool_name,
-                                arguments=json.dumps(tool_call.tool_args),
+                                arguments=json_dumps(tool_call.tool_args),
                                 call_id=tool_call.id,
                             )
                         )
@@ -587,7 +588,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model == "gpt-image-1":
+            if image_model != "gpt-image-1-mini":
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
