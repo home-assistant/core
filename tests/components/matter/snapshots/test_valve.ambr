@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_valves[valve][valve.valve-entry]
+# name: test_valves[mock_valve][valve.mock_valve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.valve',
+    'entity_id': 'valve.mock_valve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,15 +35,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valves[valve][valve.valve-state]
+# name: test_valves[mock_valve][valve.mock_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Valve',
+      'friendly_name': 'Mock Valve',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.valve',
+    'entity_id': 'valve.mock_valve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

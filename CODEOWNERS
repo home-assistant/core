@@ -288,6 +288,8 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
+/homeassistant/components/cloudflare_r2/ @corrreia
+/tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
@@ -593,6 +595,8 @@ build.json @home-assistant/supervisor
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/ghost/ @johnonolan
+/tests/components/ghost/ @johnonolan
 /homeassistant/components/gios/ @bieniu
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
@@ -919,6 +923,8 @@ build.json @home-assistant/supervisor
 /tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
+/homeassistant/components/liebherr/ @mettolen
+/tests/components/liebherr/ @mettolen
 /homeassistant/components/lifx/ @Djelibeybi
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
@@ -1263,6 +1269,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/prana/ @prana-dev-official
+/tests/components/prana/ @prana-dev-official
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/probe_plus/ @pantherale0
@@ -1349,6 +1357,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/redgtech/ @jonhsady @luan-nvg
+/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
@@ -1874,6 +1884,8 @@ build.json @home-assistant/supervisor
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
+/homeassistant/components/wsdot/ @ucodery
+/tests/components/wsdot/ @ucodery
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
 /homeassistant/components/xbox/ @hunterjm @tr4nt0r

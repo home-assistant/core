@@ -52,7 +52,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         """Fetch data from gateway."""
         try:
             self._gateway.Update()
-        except (TimeoutError, ParseException):
+        except TimeoutError, ParseException:
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
@@ -67,7 +67,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 blind.Update()
             else:
                 blind.Update_trigger()
-        except (TimeoutError, ParseException):
+        except TimeoutError, ParseException:
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
