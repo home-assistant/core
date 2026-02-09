@@ -1,7 +1,6 @@
 """Test the Teslemetry init."""
 
 from copy import deepcopy
-from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -817,46 +816,51 @@ async def test_live_status_auth_failed_forbidden(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-COORDINATOR_REFRESH_ERRORS = [
-    (
-        "mock_live_status",
-        ENERGY_LIVE_INTERVAL,
-        [deepcopy(LIVE_STATUS), TeslaFleetError],
-    ),
-    ("mock_energy_history", ENERGY_HISTORY_INTERVAL, [InvalidToken]),
-    ("mock_energy_history", ENERGY_HISTORY_INTERVAL, [TeslaFleetError]),
-    (
-        "mock_energy_history",
-        ENERGY_HISTORY_INTERVAL,
-        [ENERGY_HISTORY, {"response": {}}],
-    ),
-]
-
-
 @pytest.mark.parametrize(
-    ("mock_name", "interval", "side_effect"),
-    COORDINATOR_REFRESH_ERRORS,
+    "side_effect",
+    [[deepcopy(LIVE_STATUS), TeslaFleetError]],
 )
-async def test_coordinator_refresh_errors(
+async def test_live_status_coordinator_refresh_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_live_status: AsyncMock,
-    mock_energy_history: AsyncMock,
-    mock_name: str,
-    interval: timedelta,
     side_effect: list,
 ) -> None:
-    """Test coordinator handles errors during refresh."""
-    mock = mock_live_status if mock_name == "mock_live_status" else mock_energy_history
-    mock.side_effect = side_effect
+    """Test live status coordinator handles errors during refresh."""
+    mock_live_status.side_effect = side_effect
 
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    # Trigger coordinator refresh
-    freezer.tick(interval)
+    freezer.tick(ENERGY_LIVE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Entry stays loaded - errors during refresh don't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        [InvalidToken],
+        [TeslaFleetError],
+        [ENERGY_HISTORY, {"response": {}}],
+    ],
+)
+async def test_energy_history_coordinator_refresh_errors(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    side_effect: list,
+) -> None:
+    """Test energy history coordinator handles errors during refresh."""
+    mock_energy_history.side_effect = side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert entry.state is ConfigEntryState.LOADED
