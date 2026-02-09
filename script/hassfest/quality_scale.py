@@ -14,6 +14,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from .model import Config, Integration, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
+    action_setup,
     config_entry_unloading,
     config_flow,
     diagnostics,
@@ -41,7 +42,7 @@ class Rule:
 
 ALL_RULES = [
     # BRONZE
-    Rule("action-setup", ScaledQualityScaleTiers.BRONZE),
+    Rule("action-setup", ScaledQualityScaleTiers.BRONZE, action_setup),
     Rule("appropriate-polling", ScaledQualityScaleTiers.BRONZE),
     Rule("brands", ScaledQualityScaleTiers.BRONZE),
     Rule("common-modules", ScaledQualityScaleTiers.BRONZE),
@@ -298,7 +299,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duckdns",
     "duke_energy",
     "dunehd",
     "duotecno",
@@ -708,7 +708,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "openai_conversation",
     "openalpr_cloud",
     "openerz",
-    "openevse",
     "openexchangerates",
     "opengarage",
     "openhardwaremonitor",
@@ -952,7 +951,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "template",
     "tesla_fleet",
     "tesla_wall_connector",
-    "teslemetry",
     "tessie",
     "tfiac",
     "thermobeacon",
@@ -1290,7 +1288,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duckdns",
     "duke_energy",
     "dunehd",
     "duotecno",
@@ -1390,7 +1387,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "freebox",
     "freedns",
     "freedompro",
-    "fritz",
     "fritzbox",
     "fritzbox_callmonitor",
     "frontier_silicon",
@@ -1718,7 +1714,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "openai_conversation",
     "openalpr_cloud",
     "openerz",
-    "openevse",
     "openexchangerates",
     "opengarage",
     "openhardwaremonitor",
@@ -2045,7 +2040,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "versasense",
     "version",
     "vicare",
-    "vesync",
     "viaggiatreno",
     "vilfo",
     "vivotek",
