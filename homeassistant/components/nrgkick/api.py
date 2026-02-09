@@ -18,7 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_T = TypeVar("_T")
 
 
 class NRGkickApiClientError(HomeAssistantError):
