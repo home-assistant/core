@@ -74,7 +74,7 @@ def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorM
 
 
 def valid_supported_color_modes(
-    color_modes: Iterable[ColorMode] | None,
+    color_modes: Iterable[ColorMode],
 ) -> set[ColorMode]:
     """Validate the given color modes."""
     if color_modes is None:
