@@ -313,6 +313,8 @@ class TemplateEntity(AbstractTemplateEntity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        **kwargs,
     ):
         """Set up a template that manages any property or attribute of the entity.
 
@@ -328,8 +330,15 @@ class TemplateEntity(AbstractTemplateEntity):
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
         """
-        self.add_template(option, attribute, validator, on_update, True)
+        none_on_template_error = kwargs.get("none_on_template_error", True)
+        self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
+        )
 
     def add_template_attribute(
         self,

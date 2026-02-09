@@ -200,7 +200,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.1
+aioautomower==2.7.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -284,7 +284,7 @@ aiohue==4.8.0
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.11.1
+aioimmich==0.12.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
