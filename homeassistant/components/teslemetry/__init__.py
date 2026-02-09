@@ -89,7 +89,7 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
         if err.status == 401:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="auth_failed_401",
+                translation_key="auth_failed",
             ) from err
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

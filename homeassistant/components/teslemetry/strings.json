@@ -1090,7 +1090,7 @@
     }
   },
   "exceptions": {
-    "auth_failed_401": {
+    "auth_failed": {
       "message": "Authentication failed, please reauthenticate"
     },
     "auth_failed_invalid_token": {
