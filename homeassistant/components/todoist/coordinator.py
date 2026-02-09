@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Todoist component."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 import logging
@@ -11,6 +12,8 @@ from todoist_api_python.models import Label, Project, Section, Task
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import MAX_PAGE_SIZE
 
 T = TypeVar("T")
 
@@ -53,26 +56,30 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
     async def _async_update_data(self) -> list[Task]:
         """Fetch tasks from the Todoist API."""
         try:
-            tasks_async = await self.api.get_tasks()
+            tasks_async = await self.api.get_tasks(limit=MAX_PAGE_SIZE)
+            return await flatten_async_pages(tasks_async)
+        except asyncio.CancelledError:
+            raise
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return await flatten_async_pages(tasks_async)
 
     async def async_get_projects(self) -> list[Project]:
         """Return todoist projects fetched at most once."""
         if self._projects is None:
-            projects_async = await self.api.get_projects()
+            projects_async = await self.api.get_projects(limit=MAX_PAGE_SIZE)
             self._projects = await flatten_async_pages(projects_async)
         return self._projects
 
     async def async_get_sections(self, project_id: str) -> list[Section]:
         """Return todoist sections for a given project ID."""
-        sections_async = await self.api.get_sections(project_id=project_id)
+        sections_async = await self.api.get_sections(
+            project_id=project_id, limit=MAX_PAGE_SIZE
+        )
         return await flatten_async_pages(sections_async)
 
     async def async_get_labels(self) -> list[Label]:
         """Return todoist labels fetched at most once."""
         if self._labels is None:
-            labels_async = await self.api.get_labels()
+            labels_async = await self.api.get_labels(limit=MAX_PAGE_SIZE)
             self._labels = await flatten_async_pages(labels_async)
         return self._labels
