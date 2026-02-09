@@ -40,7 +40,6 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import http
 from .aiohttp_client import async_get_clientsession
-from .frame import ReportBehavior, report_usage
 from .network import NoURLAvailableError
 from .service_info.dhcp import DhcpServiceInfo
 from .service_info.ssdp import SsdpServiceInfo
@@ -265,15 +264,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 )
             resp.raise_for_status()
         except ClientResponseError as err:
-            report_usage(
-                "is using the `OAuth2 config entry helper` without handling `OAuth2TokenRequestError`. "
-                "Please update your integration to handle `OAuth2TokenRequestError` gracefully "
-                "(see https://developers.home-assistant.io).",
-                breaks_in_ha_version="2026.8",
-                core_behavior=ReportBehavior.LOG,
-                integration_domain=self._domain,
-            )
-
             if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
                 # Recoverable error
                 raise OAuth2TokenRequestTransientError(
@@ -302,10 +292,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 message=err.message,
                 headers=err.headers,
                 domain=self._domain,
-            ) from err
-        except ClientError as err:
-            raise HomeAssistantError(
-                f"Error requesting OAuth token for {self._domain}. Error: {err}"
             ) from err
 
         return cast(dict, await resp.json())

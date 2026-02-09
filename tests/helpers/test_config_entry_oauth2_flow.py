@@ -1045,11 +1045,6 @@ async def test_oauth_session_refresh_failure_exceptions(
         await session.async_request("post", "https://example.com")
 
     assert err.value.status == status_code
-    assert (
-        f"Detected that integration '{TEST_DOMAIN}' is using the `OAuth2 config entry "
-        f"helper` without handling `OAuth2TokenRequestError`" in caplog.text
-    )
-
     assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
 
 
