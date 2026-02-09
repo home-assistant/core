@@ -265,6 +265,8 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074
     process_finished = 3078
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
@@ -357,6 +359,8 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074, 7938
     process_finished = 3078, 7942
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
