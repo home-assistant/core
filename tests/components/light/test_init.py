@@ -129,15 +129,15 @@ async def test_services(
 
     ent1, ent2, ent3 = mock_light_entities
     ent1.supported_color_modes = [light.ColorMode.HS]
-    ent1.color_mode = next(iter(ent1.supported_color_modes))
+    ent1.color_mode = light.ColorMode.HS
     ent3.supported_color_modes = [light.ColorMode.HS]
-    ent3.color_mode = next(iter(ent3.supported_color_modes))
+    ent3.color_mode = light.ColorMode.HS
     ent1.supported_features = light.LightEntityFeature.TRANSITION
     ent2.supported_features = (
         light.LightEntityFeature.EFFECT | light.LightEntityFeature.TRANSITION
     )
     ent2.supported_color_modes = [light.ColorMode.HS]
-    ent2.color_mode = next(iter(ent2.supported_color_modes))
+    ent2.color_mode = light.ColorMode.HS
     ent3.supported_features = (
         light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
     )
@@ -541,7 +541,7 @@ async def test_light_profiles(
 
     ent1, _, _ = mock_light_entities
     ent1.supported_color_modes = [light.ColorMode.HS]
-    ent1.color_mode = next(iter(ent1.supported_color_modes))
+    ent1.color_mode = light.ColorMode.HS
     ent1.supported_features = light.LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
@@ -1143,7 +1143,7 @@ async def test_light_service_call_rgbw(hass: HomeAssistant) -> None:
     """Test rgbw functionality in service calls."""
     entity0 = MockLight("Test_rgbw", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.RGBW}
-    entity0.color_mode = next(iter(entity0.supported_color_modes))
+    entity0.color_mode = light.ColorMode.RGBW
 
     setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
@@ -1313,15 +1313,15 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.HS}
-    entity0.color_mode = next(iter(entity0.supported_color_modes))
+    entity0.color_mode = light.ColorMode.HS
 
     entity1 = entities[1]
     entity1.supported_color_modes = {light.ColorMode.RGB}
-    entity1.color_mode = next(iter(entity1.supported_color_modes))
+    entity1.color_mode = light.ColorMode.RGB
 
     entity2 = entities[2]
     entity2.supported_color_modes = {light.ColorMode.XY}
-    entity2.color_mode = next(iter(entity2.supported_color_modes))
+    entity2.color_mode = light.ColorMode.XY
 
     entity3 = entities[3]
     entity3.supported_color_modes = {
@@ -1329,19 +1329,19 @@ async def test_light_service_call_color_conversion(hass: HomeAssistant) -> None:
         light.ColorMode.RGB,
         light.ColorMode.XY,
     }
-    entity3.color_mode = next(iter(entity3.supported_color_modes))
+    entity3.color_mode = light.ColorMode.HS
 
     entity4 = entities[4]
     entity4.supported_color_modes = {light.ColorMode.RGBW}
-    entity4.color_mode = next(iter(entity4.supported_color_modes))
+    entity4.color_mode = light.ColorMode.RGBW
 
     entity5 = entities[5]
     entity5.supported_color_modes = {light.ColorMode.RGBWW}
-    entity5.color_mode = next(iter(entity5.supported_color_modes))
+    entity5.color_mode = light.ColorMode.RGBWW
 
     entity6 = entities[6]
     entity6.supported_color_modes = {light.ColorMode.COLOR_TEMP}
-    entity6.color_mode = next(iter(entity6.supported_color_modes))
+    entity6.color_mode = light.ColorMode.COLOR_TEMP
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1789,15 +1789,15 @@ async def test_light_service_call_color_temp_emulation(hass: HomeAssistant) -> N
 
     entity0 = entities[0]
     entity0.supported_color_modes = {light.ColorMode.COLOR_TEMP, light.ColorMode.HS}
-    entity0.color_mode = next(iter(entity0.supported_color_modes))
+    entity0.color_mode = light.ColorMode.COLOR_TEMP
 
     entity1 = entities[1]
     entity1.supported_color_modes = {light.ColorMode.HS}
-    entity1.color_mode = next(iter(entity1.supported_color_modes))
+    entity1.color_mode = light.ColorMode.HS
 
     entity2 = entities[2]
     entity2.supported_color_modes = {light.ColorMode.HS, light.ColorMode.WHITE}
-    entity2.color_mode = next(iter(entity2.supported_color_modes))
+    entity2.color_mode = light.ColorMode.HS
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1852,11 +1852,11 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.RGBWW,
     }
-    entity0.color_mode = next(iter(entity0.supported_color_modes))
+    entity0.color_mode = light.ColorMode.COLOR_TEMP
 
     entity1 = entities[1]
     entity1.supported_color_modes = {light.ColorMode.RGBWW}
-    entity1.color_mode = next(iter(entity1.supported_color_modes))
+    entity1.color_mode = light.ColorMode.RGBWW
     assert entity1.min_color_temp_kelvin == 2000
     assert entity1.max_color_temp_kelvin == 6535
 
@@ -1972,7 +1972,7 @@ async def test_light_service_call_white_mode(hass: HomeAssistant) -> None:
     """Test color_mode white in service calls."""
     entity0 = MockLight("Test_white", STATE_ON)
     entity0.supported_color_modes = {light.ColorMode.HS, light.ColorMode.WHITE}
-    entity0.color_mode = next(iter(entity0.supported_color_modes))
+    entity0.color_mode = light.ColorMode.HS
     setup_test_component_platform(hass, light.DOMAIN, [entity0])
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
