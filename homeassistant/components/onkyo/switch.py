@@ -48,8 +48,9 @@ class OnkyoChannelMutingSwitch(
         self._channel = channel
 
         name = coordinator.manager.info.model_name
+        channel_name = channel.replace("_", " ")
         identifier = coordinator.manager.info.identifier
-        self._attr_name = f"{name} Mute {channel}"
+        self._attr_name = f"{name} Mute {channel_name}"
         self._attr_unique_id = f"{identifier}-channel_muting-{channel}"
 
     @property

@@ -43,6 +43,7 @@ type Channel = Literal[
 CHANNELS: tuple[Channel, ...] = get_args(Channel.__value__)
 
 ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
+ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
 
 
 class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
@@ -67,7 +68,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
         self.manager = manager = config_entry.runtime_data.manager
 
         self.data = ChannelMutingData()
-        self._desired = ChannelMutingData()
+        self._desired = ChannelMutingDesired()
 
         self._async_add_entities = async_add_entities
         self._entity_constructor = entity_constructor
@@ -81,7 +82,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
 
         config_entry.async_on_unload(self._cancel_tasks)
 
-    async def _connect_callback(self, reconnect: bool) -> None:
+    async def _connect_callback(self, _reconnect: bool) -> None:
         """Receiver (re)connected."""
         await self.manager.write(query.ChannelMuting())
 
@@ -120,10 +121,8 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
     ) -> None:
         """Send muting command for a channel."""
         self._desired[channel] = param
-        message_data = cast(
-            dict[str, status.ChannelMuting.Param], self.data | self._desired
-        )
-        message = command.ChannelMuting(**message_data)
+        message_data: ChannelMutingDesired = self.data | self._desired
+        message = command.ChannelMuting(**message_data)  # type: ignore[misc]
         await self.manager.write(message)
 
     async def _update_callback(self, message: Status) -> None:

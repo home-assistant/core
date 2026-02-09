@@ -69,12 +69,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute front_left',
+    'object_id_base': 'TX-NR7100 Mute front left',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute front_left',
+    'original_name': 'TX-NR7100 Mute front left',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,7 +87,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front_left',
+      'friendly_name': 'TX-NR7100 Mute front left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_left',
@@ -118,12 +118,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute front_right',
+    'object_id_base': 'TX-NR7100 Mute front right',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute front_right',
+    'original_name': 'TX-NR7100 Mute front right',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,7 +136,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front_right',
+      'friendly_name': 'TX-NR7100 Mute front right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_right',
@@ -167,12 +167,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute height_1_left',
+    'object_id_base': 'TX-NR7100 Mute height 1 left',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute height_1_left',
+    'original_name': 'TX-NR7100 Mute height 1 left',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -185,7 +185,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height_1_left',
+      'friendly_name': 'TX-NR7100 Mute height 1 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_left',
@@ -216,12 +216,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute height_1_right',
+    'object_id_base': 'TX-NR7100 Mute height 1 right',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute height_1_right',
+    'original_name': 'TX-NR7100 Mute height 1 right',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -234,7 +234,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height_1_right',
+      'friendly_name': 'TX-NR7100 Mute height 1 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_right',
@@ -265,12 +265,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute height_2_left',
+    'object_id_base': 'TX-NR7100 Mute height 2 left',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute height_2_left',
+    'original_name': 'TX-NR7100 Mute height 2 left',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -283,7 +283,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height_2_left',
+      'friendly_name': 'TX-NR7100 Mute height 2 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_left',
@@ -314,12 +314,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute height_2_right',
+    'object_id_base': 'TX-NR7100 Mute height 2 right',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute height_2_right',
+    'original_name': 'TX-NR7100 Mute height 2 right',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -332,7 +332,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height_2_right',
+      'friendly_name': 'TX-NR7100 Mute height 2 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_right',
@@ -412,12 +412,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute subwoofer_2',
+    'object_id_base': 'TX-NR7100 Mute subwoofer 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute subwoofer_2',
+    'original_name': 'TX-NR7100 Mute subwoofer 2',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -430,7 +430,7 @@
 # name: test_entities[switch.tx_nr7100_mute_subwoofer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute subwoofer_2',
+      'friendly_name': 'TX-NR7100 Mute subwoofer 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_subwoofer_2',
@@ -461,12 +461,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute surround_back_left',
+    'object_id_base': 'TX-NR7100 Mute surround back left',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute surround_back_left',
+    'original_name': 'TX-NR7100 Mute surround back left',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -479,7 +479,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround_back_left',
+      'friendly_name': 'TX-NR7100 Mute surround back left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_left',
@@ -510,12 +510,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute surround_back_right',
+    'object_id_base': 'TX-NR7100 Mute surround back right',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute surround_back_right',
+    'original_name': 'TX-NR7100 Mute surround back right',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -528,7 +528,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround_back_right',
+      'friendly_name': 'TX-NR7100 Mute surround back right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_right',
@@ -559,12 +559,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute surround_left',
+    'object_id_base': 'TX-NR7100 Mute surround left',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute surround_left',
+    'original_name': 'TX-NR7100 Mute surround left',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -577,7 +577,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround_left',
+      'friendly_name': 'TX-NR7100 Mute surround left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_left',
@@ -608,12 +608,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX-NR7100 Mute surround_right',
+    'object_id_base': 'TX-NR7100 Mute surround right',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX-NR7100 Mute surround_right',
+    'original_name': 'TX-NR7100 Mute surround right',
     'platform': 'onkyo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -626,7 +626,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround_right',
+      'friendly_name': 'TX-NR7100 Mute surround right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_right',
