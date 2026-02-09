@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.const import EVENT_LABS_UPDATED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import ReportBehavior, report_usage
+from homeassistant.helpers.frame import report_usage
 
 from .const import LABS_DATA
 from .models import EventLabsUpdatedData
@@ -94,7 +94,6 @@ def async_listen(
     report_usage(
         "calls `async_listen` which is deprecated, "
         "use `async_subscribe_preview_feature` instead",
-        core_behavior=ReportBehavior.LOG,
         breaks_in_ha_version="2027.3.0",
     )
 
