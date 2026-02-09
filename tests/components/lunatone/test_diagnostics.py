@@ -1,4 +1,4 @@
-"""Define tests for the Lunatone config flow."""
+"""Define tests for Lunatone diagnostics."""
 
 from unittest.mock import AsyncMock
 
