@@ -133,8 +133,7 @@ def websocket_subscribe_feature(
 
     preview_feature = labs_data.preview_features[preview_feature_id]
 
-    @callback
-    def send_event(event_data: EventLabsUpdatedData) -> None:
+    async def send_event(event_data: EventLabsUpdatedData) -> None:
         """Send feature state to client."""
         connection.send_message(
             websocket_api.event_message(

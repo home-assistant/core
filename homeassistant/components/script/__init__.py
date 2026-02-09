@@ -285,12 +285,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
 
-    @callback
-    def new_triggers_conditions_listener(_event_data: EventLabsUpdatedData) -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
+        await reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
 
     async_subscribe_preview_feature(
         hass,

@@ -444,25 +444,23 @@ async def test_async_listen_helper(hass: HomeAssistant) -> None:
 
 
 async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> None:
-    """Test async_subscribe_preview_feature with sync and async listeners."""
-    # Load kitchen_sink integration
+    """Test async_subscribe_preview_feature helper."""
     hass.config.components.add("kitchen_sink")
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Test with sync listener
-    sync_calls: list[EventLabsUpdatedData] = []
+    calls: list[EventLabsUpdatedData] = []
 
-    def sync_listener(event_data: EventLabsUpdatedData) -> None:
-        """Test sync listener callback."""
-        sync_calls.append(event_data)
+    async def listener(event_data: EventLabsUpdatedData) -> None:
+        """Test listener callback."""
+        calls.append(event_data)
 
     unsub = async_subscribe_preview_feature(
         hass,
         domain="kitchen_sink",
         preview_feature="special_repair",
-        listener=sync_listener,
+        listener=listener,
     )
 
     # Fire event for the subscribed feature
@@ -476,9 +474,8 @@ async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    # Verify sync listener was called with correct event data
-    assert len(sync_calls) == 1
-    assert sync_calls[0]["enabled"] is True
+    assert len(calls) == 1
+    assert calls[0]["enabled"] is True
 
     # Fire event for a different feature - should not trigger listener
     hass.bus.async_fire(
@@ -491,8 +488,7 @@ async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    # Verify listener was not called again
-    assert len(sync_calls) == 1
+    assert len(calls) == 1
 
     # Fire event for a different domain - should not trigger listener
     hass.bus.async_fire(
@@ -505,8 +501,7 @@ async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    # Verify listener was not called again
-    assert len(sync_calls) == 1
+    assert len(calls) == 1
 
     # Fire event with enabled=False
     hass.bus.async_fire(
@@ -519,14 +514,12 @@ async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    # Verify listener was called with enabled=False
-    assert len(sync_calls) == 2
-    assert sync_calls[1]["enabled"] is False
+    assert len(calls) == 2
+    assert calls[1]["enabled"] is False
 
     # Test unsubscribe
     unsub()
 
-    # Fire event again - should not trigger listener after unsubscribe
     hass.bus.async_fire(
         EVENT_LABS_UPDATED,
         {
@@ -537,53 +530,7 @@ async def test_async_subscribe_preview_feature_helper(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    # Verify listener was not called after unsubscribe
-    assert len(sync_calls) == 2
-
-    # Test with async listener
-    async_calls: list[EventLabsUpdatedData] = []
-
-    async def async_listener(event_data: EventLabsUpdatedData) -> None:
-        """Test async listener callback."""
-        async_calls.append(event_data)
-
-    unsub = async_subscribe_preview_feature(
-        hass,
-        domain="kitchen_sink",
-        preview_feature="special_repair",
-        listener=async_listener,
-    )
-
-    # Fire event for the subscribed feature
-    hass.bus.async_fire(
-        EVENT_LABS_UPDATED,
-        {
-            "domain": "kitchen_sink",
-            "preview_feature": "special_repair",
-            "enabled": True,
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Verify async listener was called with correct event data
-    assert len(async_calls) == 1
-    assert async_calls[0]["enabled"] is True
-
-    # Test unsubscribe for async listener
-    unsub()
-
-    hass.bus.async_fire(
-        EVENT_LABS_UPDATED,
-        {
-            "domain": "kitchen_sink",
-            "preview_feature": "special_repair",
-            "enabled": False,
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Verify async listener was not called after unsubscribe
-    assert len(async_calls) == 1
+    assert len(calls) == 2
 
 
 async def test_async_update_preview_feature(

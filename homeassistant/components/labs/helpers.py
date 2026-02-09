@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 from homeassistant.const import EVENT_LABS_UPDATED
-from homeassistant.core import Event, HassJob, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import LABS_DATA
 from .models import EventLabsUpdatedData
@@ -38,7 +38,7 @@ def async_subscribe_preview_feature(
     hass: HomeAssistant,
     domain: str,
     preview_feature: str,
-    listener: Callable[[EventLabsUpdatedData], Coroutine[Any, Any, None] | None],
+    listener: Callable[[EventLabsUpdatedData], Coroutine[Any, Any, None]],
 ) -> Callable[[], None]:
     """Listen for changes to a specific preview feature.
 
@@ -46,8 +46,8 @@ def async_subscribe_preview_feature(
         hass: HomeAssistant instance
         domain: Integration domain
         preview_feature: Preview feature name
-        listener: Callback or coroutine function to invoke when the preview
-            feature is toggled. Receives the event data as argument.
+        listener: Coroutine function to invoke when the preview feature
+            is toggled. Receives the event data as argument. Runs eagerly.
 
     Returns:
         Callable to unsubscribe from the listener
@@ -61,12 +61,9 @@ def async_subscribe_preview_feature(
             and event_data["preview_feature"] == preview_feature
         )
 
-    job = HassJob(listener, f"labs preview feature {domain}.{preview_feature}")
-
-    @callback
-    def _handler(event: Event[EventLabsUpdatedData]) -> None:
+    async def _handler(event: Event[EventLabsUpdatedData]) -> None:
         """Handle labs feature update event."""
-        hass.async_run_hass_job(job, event.data)
+        await listener(event.data)
 
     return hass.bus.async_listen(
         EVENT_LABS_UPDATED, _handler, event_filter=_async_event_filter
@@ -92,8 +89,7 @@ def async_listen(
         Callable to unsubscribe from the listener
     """
 
-    @callback
-    def _listener(_event_data: EventLabsUpdatedData) -> None:
+    async def _listener(_event_data: EventLabsUpdatedData) -> None:
         listener()
 
     return async_subscribe_preview_feature(hass, domain, preview_feature, _listener)
