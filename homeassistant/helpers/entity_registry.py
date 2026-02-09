@@ -271,7 +271,7 @@ class RegistryEntry:
         try:
             dict_repr = self._as_display_dict
             json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -333,7 +333,7 @@ class RegistryEntry:
         try:
             dict_repr = self.as_partial_dict
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -1775,7 +1775,7 @@ class EntityRegistry(BaseRegistry):
                         report_non_string_unique_id=False,
                         unique_id=entity["unique_id"],
                     )
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
                 key = (
                     split_entity_id(entity["entity_id"])[0],
