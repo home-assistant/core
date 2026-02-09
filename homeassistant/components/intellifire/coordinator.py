@@ -69,6 +69,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
         await self.fireplace.set_control_mode(mode)
 
     async def _async_update_data(self) -> IntelliFirePollData:
+        await self.fireplace.perform_poll()
         return self.fireplace.data
 
     @property
