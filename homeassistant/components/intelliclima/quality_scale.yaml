@@ -21,7 +21,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
+    status: done
     comment: |
       No service requests raise any exceptions, so nothing to pass through to UI.
   config-entry-unloading: done
@@ -44,13 +44,13 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info:
-    status: exempt
+    status: todo
     comment: |
-      No devices to discover, uses external cloud api.
+      Unclear if discovery is possible.
   discovery:
-    status: exempt
+    status: todo
     comment: |
-      No devices to discover, uses external cloud api.
+      Unclear if discovery is possible.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
