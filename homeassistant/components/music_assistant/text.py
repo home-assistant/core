@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .entity import MusicAssistantPlayerOptionEntity
+from .helpers import catch_musicassistant_error
 
 
 async def async_setup_entry(
@@ -64,6 +65,7 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
         """Return the value reported by the text."""
         return str(self.mass_value)
 
+    @catch_musicassistant_error
     async def async_set_value(self, value: str) -> None:
         """Set text value."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, value)

@@ -61,9 +61,8 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        assert isinstance(
-            self.mass_value, int | float
-        )  # there is type checking in PlayerOptions itself
+        if not isinstance(self.mass_value, int | float):
+            return None
         return self.mass_value
 
     @catch_musicassistant_error
