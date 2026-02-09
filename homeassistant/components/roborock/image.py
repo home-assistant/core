@@ -1,6 +1,6 @@
 """Support for Roborock image."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from roborock.devices.traits.v1.home import HomeTrait
@@ -51,6 +51,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     image_last_updated: datetime
     _attr_name: str
 
+    # Minimum interval between state updates to prevent Activity spam (1 minute)
+    MIN_STATE_UPDATE_INTERVAL = timedelta(minutes=1)
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -73,6 +76,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self.map_flag = map_flag
         self.cached_map: bytes | None = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        # Track last state update time for debouncing (fixes #161039)
+        self._last_state_update: datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
@@ -92,14 +97,39 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Handle updated data from the coordinator.
 
         If the coordinator has updated the map, we can update the image.
+        Only trigger state changes when the actual map image changes
+        to avoid flooding Activity with frequent map updates during cleaning.
         """
         if (map_content := self._map_content) is None:
             return
-        if self.cached_map != map_content.image_content:
+
+        # Check if the map image actually changed
+        map_changed = self.cached_map != map_content.image_content
+
+        if map_changed:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
 
-        super()._handle_coordinator_update()
+            # Apply debouncing to prevent spamming Activity with frequent updates
+            now = datetime.utcnow()
+            if (
+                self._last_state_update is None
+                or (now - self._last_state_update) >= self.MIN_STATE_UPDATE_INTERVAL
+            ):
+                # Only update state if enough time has passed
+                super()._handle_coordinator_update()
+                self._last_state_update = now
+                _LOGGER.debug(
+                    "Map %s updated at %s", self._attr_name, self._last_state_update
+                )
+            else:
+                _LOGGER.debug(
+                    "Map %s image updated but skipping state change "
+                    "(debounce: %s since last update)",
+                    self._attr_name,
+                    now - self._last_state_update,
+                )
+        # Note: if no map change, we skip calling parent to avoid unnecessary state changes
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""

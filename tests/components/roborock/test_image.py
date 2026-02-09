@@ -221,3 +221,98 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
+
+
+async def test_map_update_debouncing(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that map updates are debounced to prevent Activity spam (fixes #161039)."""
+    assert len(hass.states.async_all("image")) == 4
+
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    assert hass.states.get(entity_id) is not None
+    
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    initial_body = await resp.read()
+    assert initial_body == b"\x89PNG-001"
+
+    # Simulate first map update at t=0
+    now = dt_util.utcnow()
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+    
+    # Simulate second map update at t=30s (within debounce window)
+    now_30s = now + timedelta(seconds=30)
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-002"
+    
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now_30s,
+    ):
+        async_fire_time_changed(hass, now_30s)
+        await hass.async_block_till_done()
+
+    # Verify image content updated but state change was debounced
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == b"\x89PNG-002"  # Image updated
+    
+    # Simulate third map update at t=61s (past debounce window)
+    now_61s = now + timedelta(minutes=61)
+    fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-003"
+    
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now_61s,
+    ):
+        async_fire_time_changed(hass, now_61s)
+        await hass.async_block_till_done()
+
+    # Verify state change was triggered after debounce window
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == b"\x89PNG-003"  # Image updated again
+
+
+async def test_map_no_change_no_state_update(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that map entity doesn't trigger state change when image hasn't changed (fixes #161039)."""
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    initial_body = await resp.read()
+    
+    # Get initial state
+    initial_state = hass.states.get(entity_id)
+    last_updated_1 = initial_state.attributes.get("entity_picture") if initial_state else None
+
+    # Trigger coordinator update without changing map content
+    now = dt_util.utcnow() + timedelta(minutes=2)
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Verify state was not updated (no state change event)
+    state_after = hass.states.get(entity_id)
+    assert state_after.attributes.get("entity_picture") == last_updated_1
