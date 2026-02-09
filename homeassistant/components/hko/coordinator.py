@@ -26,7 +26,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -120,7 +119,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for item in data[API_TEMPERATURE][API_DATA]
                     if item[API_PLACE] == self.location
                 ),
-                STATE_UNAVAILABLE,
+                None,
             ),
         }
 
