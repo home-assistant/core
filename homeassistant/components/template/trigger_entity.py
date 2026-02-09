@@ -69,6 +69,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
         **kwargs,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
@@ -86,15 +87,16 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
         render_complex (default=False):
-            Flag to render the template value as a complex result.
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
         """
-        if kwargs.get("render_complex", False):
-            if self.add_template(option, attribute, validator, on_update):
+        if self.add_template(option, attribute, validator, on_update):
+            if render_complex:
                 self._to_render_complex.append(option)
-                self._parse_result.add(option)
-            return
-
-        self.setup_state_template(option, attribute, validator, on_update)
+            else:
+                self._to_render_simple.append(option)
+            self._parse_result.add(option)
 
     @property
     def referenced_blueprint(self) -> str | None:
