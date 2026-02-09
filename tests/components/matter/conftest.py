@@ -81,6 +81,7 @@ async def integration_fixture(
         "aqara_sensor_w100",
         "aqara_thermostat_w500",
         "aqara_u200",
+        "heiman_co_sensor",
         "eberle_ute3000",
         "color_temperature_light",
         "ecovacs_deebot",
