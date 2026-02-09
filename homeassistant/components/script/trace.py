@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
@@ -30,7 +30,7 @@ def trace_script(
     blueprint_inputs: dict[str, Any] | None,
     context: Context,
     trace_config: dict[str, Any],
-) -> Iterator[ScriptTrace]:
+) -> Generator[ScriptTrace]:
     """Trace execution of a script."""
     trace = ScriptTrace(item_id, config, blueprint_inputs, context)
     async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
