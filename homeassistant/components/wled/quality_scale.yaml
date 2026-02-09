@@ -13,7 +13,6 @@ rules:
     status: exempt
     comment: This integration does not have custom service actions.
   docs-high-level-description: done
-  entity-unavailable: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup: done
@@ -29,6 +28,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
