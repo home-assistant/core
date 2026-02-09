@@ -30,6 +30,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize."""
         self.manager = manager
+        self._last_device_states: dict[str, dict] = {}
 
         super().__init__(
             hass,
@@ -38,6 +39,28 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
             name="VeSyncDataCoordinator",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
+
+    def _get_device_state_hash(self, device) -> str:
+        """Generate a hash of the device state for change detection."""
+        state = {
+            "status": getattr(device, "status", None),
+            "enabled": getattr(device, "enabled", None),
+        }
+        return str(state)
+
+    def _has_state_changed(self, device) -> bool:
+        """Check if device state has changed since last update."""
+        device_id = getattr(device, "cid", None)
+        if device_id is None:
+            return True
+
+        current_hash = self._get_device_state_hash(device)
+        last_hash = self._last_device_states.get(device_id)
+
+        if last_hash != current_hash:
+            self._last_device_states[device_id] = current_hash
+            return True
+        return False
 
     def should_update_energy(self) -> bool:
         """Test if specified update interval has been exceeded."""
@@ -53,9 +76,21 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.manager.update_all_devices()
 
+            # Log state changes for debugging
+            changed_devices = 0
+            for device in self.manager.devices.all_devices:
+                if self._has_state_changed(device):
+                    changed_devices += 1
+
+            if changed_devices > 0:
+                _LOGGER.debug("State changed for %d devices", changed_devices)
+            else:
+                _LOGGER.debug("No device state changes detected")
+
             if self.should_update_energy():
                 self.update_time = datetime.now()
                 for outlet in self.manager.devices.outlets:
                     await outlet.update_energy()
         except VeSyncError as err:
+            _LOGGER.warning("VeSync API error: %s", err)
             raise UpdateFailed(f"The service is unavailable: {err}") from err
