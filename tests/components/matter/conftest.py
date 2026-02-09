@@ -151,7 +151,7 @@ async def integration_fixture(
         "silabs_light_switch",
         "silabs_refrigerator",
         "silabs_water_heater",
-        "smoke_detector",
+        "heiman_smoke_detector",
         "switchbot_k11_plus",
         "tado_smart_radiator_thermostat_x",
         "yandex_smart_socket",
