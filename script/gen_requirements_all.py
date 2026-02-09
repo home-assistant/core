@@ -225,6 +225,9 @@ aiomqtt>=2.5.0
 # used by sharkiq==1.5.0
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
+
+# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
+setuptools<82.0.0
 """
 
 GENERATED_MESSAGE = (
