@@ -560,7 +560,7 @@
     'object_id_base': 'VPP backup reserve',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'VPP backup reserve',
     'platform': 'tessie',
@@ -575,7 +575,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
