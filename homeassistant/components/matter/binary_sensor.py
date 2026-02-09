@@ -253,6 +253,18 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmCoStateSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            device_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.COState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
             key="SmokeCoAlarmInterconnectSmokeAlarmSensor",
             device_class=BinarySensorDeviceClass.SMOKE,
             device_to_ha=lambda x: (
