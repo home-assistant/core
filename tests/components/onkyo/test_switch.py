@@ -12,7 +12,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.onkyo.coordinator import CHANNELS
+from homeassistant.components.onkyo.coordinator import Channel
 from homeassistant.components.onkyo.services import DATA_MP_ENTITIES
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -40,7 +40,7 @@ def _channel_muting_status(
     **overrides: status.ChannelMuting.Param,
 ) -> status.ChannelMuting:
     """Create a ChannelMuting status with all channels OFF, with overrides."""
-    params = dict.fromkeys(CHANNELS, status.ChannelMuting.Param.OFF)
+    params = dict.fromkeys(Channel, status.ChannelMuting.Param.OFF)
     params.update(overrides)
     return status.ChannelMuting(
         Code.from_kind_zone(Kind.CHANNEL_MUTING, Zone.MAIN),

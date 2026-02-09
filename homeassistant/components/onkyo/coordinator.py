@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Literal, cast, get_args
+from typing import TYPE_CHECKING, cast
 
 from aioonkyo import Kind, Status, Zone, command, query, status
 
@@ -24,23 +25,23 @@ _LOGGER = logging.getLogger(__name__)
 POWER_ON_QUERY_DELAY = 4
 
 
-type Channel = Literal[
-    "front_left",
-    "front_right",
-    "center",
-    "surround_left",
-    "surround_right",
-    "surround_back_left",
-    "surround_back_right",
-    "subwoofer",
-    "height_1_left",
-    "height_1_right",
-    "height_2_left",
-    "height_2_right",
-    "subwoofer_2",
-]
+class Channel(StrEnum):
+    """Audio channel."""
 
-CHANNELS: tuple[Channel, ...] = get_args(Channel.__value__)
+    FRONT_LEFT = "front_left"
+    FRONT_RIGHT = "front_right"
+    CENTER = "center"
+    SURROUND_LEFT = "surround_left"
+    SURROUND_RIGHT = "surround_right"
+    SURROUND_BACK_LEFT = "surround_back_left"
+    SURROUND_BACK_RIGHT = "surround_back_right"
+    SUBWOOFER = "subwoofer"
+    HEIGHT_1_LEFT = "height_1_left"
+    HEIGHT_1_RIGHT = "height_1_right"
+    HEIGHT_2_LEFT = "height_2_left"
+    HEIGHT_2_RIGHT = "height_2_right"
+    SUBWOOFER_2 = "subwoofer_2"
+
 
 ChannelMutingData = dict[Channel, status.ChannelMuting.Param]
 ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
@@ -147,7 +148,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             )
             self._entities_added = True
             self._async_add_entities(
-                self._entity_constructor(self, channel) for channel in CHANNELS
+                self._entity_constructor(self, channel) for channel in Channel
             )
 
         if not_available:
@@ -156,7 +157,7 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             self.async_set_updated_data(self.data)
         else:
             message = cast(status.ChannelMuting, message)
-            self.data = {channel: getattr(message, channel) for channel in CHANNELS}
+            self.data = {channel: getattr(message, channel) for channel in Channel}
             self._desired = {
                 channel: desired
                 for channel, desired in self._desired.items()
