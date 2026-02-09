@@ -95,6 +95,14 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                 sensor.data = data["data"]["current"]
 
         except HTTPError as error:
+            # Check if it's a rate limit error (429) with unexpected content type
+            if hasattr(error, 'status') and error.status == 429:
+                _LOGGER.warning(
+                    "LaCrosse View API rate limited (HTTP 429). "
+                    "The server may be temporarily unavailable or rate limited. "
+                    "This is often caused by Cloudflare protection or high request volume. "
+                    "Consider reducing update frequency in configuration."
+                )
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_error"
             ) from error
