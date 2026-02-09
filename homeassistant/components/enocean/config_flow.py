@@ -210,7 +210,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
                 return self.async_create_entry(
-                    title="", data={CONF_ENOCEAN_DEVICES: devices}
+                    title="EnOcean device", data={CONF_ENOCEAN_DEVICES: devices}
                 )
 
             default_device_type = device_type_id
