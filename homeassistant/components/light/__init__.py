@@ -789,7 +789,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
-    _attr_supported_color_modes: set[ColorMode] | None = None
+    _attr_supported_color_modes: set[ColorMode]
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
@@ -1068,29 +1068,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def _light_internal_supported_color_modes(self) -> set[ColorMode]:
         """Calculate supported color modes with backwards compatibility."""
-        if (_supported_color_modes := self.supported_color_modes) is not None:
-            self.__validate_supported_color_modes(_supported_color_modes)
-            return _supported_color_modes
-
-        # Backwards compatibility for supported_color_modes added in 2021.4
-        # Warning added in 2024.3, remove in 2025.3
-        if not self.__color_mode_reported and self.__should_report_light_issue():
-            self.__color_mode_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                (
-                    "%s (%s) does not set supported color modes, this will stop working"
-                    " in Home Assistant Core 2025.3, please %s"
-                ),
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
-
-        return {ColorMode.ONOFF}
+        self.__validate_supported_color_modes(color_modes := self.supported_color_modes)
+        return color_modes
 
     @cached_property
-    def supported_color_modes(self) -> set[ColorMode] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return self._attr_supported_color_modes
 
