@@ -84,6 +84,7 @@ async def test_coordinator_update_when_unreachable(
     fritz().update_devices.side_effect = [ConnectionError()]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
