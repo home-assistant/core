@@ -285,7 +285,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         ha_color_mode = COLOR_MODE_MAP[color_mode]
 
-        LOGGER.debug(
+        LOGGER.warning(
             "Got color mode (%s) for %s",
             ha_color_mode,
             self.entity_id,
@@ -414,6 +414,11 @@ class MatterLight(MatterEntity, LightEntity):
 
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
+            LOGGER.warning(
+                "Got brightness %s for %s",
+                self._attr_brightness,
+                self.entity_id,
+            )
 
         if (
             self._supports_color_temperature
@@ -435,9 +440,9 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-        elif self._attr_color_temp_kelvin is not None:
+        elif self._supports_color_temperature:
             self._attr_color_mode = ColorMode.COLOR_TEMP
-        elif self._attr_brightness is not None:
+        elif self._supports_brightness:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF
