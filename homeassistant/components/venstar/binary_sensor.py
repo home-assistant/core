@@ -20,7 +20,7 @@ async def async_setup_entry(
     """Set up Vensar device binary_sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if not isinstance(coordinator.client.alerts, list):
+    if coordinator.client.alerts is None:
         return
     async_add_entities(
         VenstarBinarySensor(coordinator, config_entry, alert["name"])
@@ -43,7 +43,7 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        if not isinstance(self._client.alerts, list):
+        if self._client.alerts is None:
             return None
         for alert in self._client.alerts:
             if alert["name"] == self.alert:
