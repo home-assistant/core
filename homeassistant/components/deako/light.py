@@ -89,8 +89,5 @@ class DeakoLightEntity(LightEntity):
         assert self._attr_unique_id is not None
         state = self.client.get_state(self._attr_unique_id) or {}
         self._attr_is_on = bool(state.get("power", False))
-        if (
-            self._attr_supported_color_modes is not None
-            and ColorMode.BRIGHTNESS in self._attr_supported_color_modes
-        ):
+        if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
             self._attr_brightness = int(round(state.get("dim", 0) * 2.55))

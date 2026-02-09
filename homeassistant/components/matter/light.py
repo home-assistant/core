@@ -332,7 +332,7 @@ class MatterLight(MatterEntity, LightEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        if self._attr_supported_color_modes is None:
+        if not hasattr(self, "_attr_supported_color_modes"):
             # work out what (color)features are supported
             supported_color_modes = {ColorMode.ONOFF}
             # brightness support
