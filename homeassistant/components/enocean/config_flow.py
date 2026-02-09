@@ -3,7 +3,10 @@
 from copy import deepcopy
 from typing import Any
 
-from homeassistant_enocean.address import EnOceanAddress, EnOceanDeviceAddress
+from enocean_async.address import (
+    EURID as EnOceanDeviceAddress,
+    Address as EnOceanAddress,
+)
 from homeassistant_enocean.device_type import EnOceanDeviceType
 from homeassistant_enocean.eep import EEP
 import voluptuous as vol
