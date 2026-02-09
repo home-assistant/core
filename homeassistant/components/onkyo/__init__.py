@@ -17,6 +17,7 @@ from .const import (
     InputSource,
     ListeningMode,
 )
+from .coordinator import ChannelMutingCoordinator
 from .receiver import ReceiverManager, async_interview
 from .services import DATA_MP_ENTITIES, async_setup_services
 
@@ -66,6 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
     entry.runtime_data = OnkyoData(manager, sources, sound_modes)
+
+    ChannelMutingCoordinator(hass, entry, manager)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

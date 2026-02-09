@@ -8,10 +8,12 @@ from typing import TYPE_CHECKING, Any
 from aioonkyo import command, status
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import Channel, ChannelMutingCoordinator
 
 if TYPE_CHECKING:
@@ -26,7 +28,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform for config entry."""
-    ChannelMutingCoordinator(hass, entry, async_add_entities, OnkyoChannelMutingSwitch)
+
+    @callback
+    def async_add_channel_muting_entities(
+        coordinator: ChannelMutingCoordinator,
+    ) -> None:
+        """Add channel muting switch entities."""
+        async_add_entities(
+            OnkyoChannelMutingSwitch(coordinator, channel) for channel in Channel
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{entry.entry_id}_channel_muting",
+            async_add_channel_muting_entities,
+        )
+    )
 
 
 class OnkyoChannelMutingSwitch(

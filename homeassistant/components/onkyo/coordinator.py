@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING, cast
 from aioonkyo import Kind, Status, Zone, command, query, status
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN
+from .receiver import ReceiverManager
 
 if TYPE_CHECKING:
     from . import OnkyoConfigEntry
@@ -50,12 +50,13 @@ ChannelMutingDesired = dict[Channel, command.ChannelMuting.Param]
 class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
     """Coordinator for channel muting state."""
 
+    config_entry: OnkyoConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: OnkyoConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
-        entity_constructor: type[CoordinatorEntity[ChannelMutingCoordinator]],
+        manager: ReceiverManager,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -66,13 +67,11 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             update_interval=None,
         )
 
-        self.manager = manager = config_entry.runtime_data.manager
+        self.manager = manager
 
         self.data = ChannelMutingData()
         self._desired = ChannelMutingDesired()
 
-        self._async_add_entities = async_add_entities
-        self._entity_constructor = entity_constructor
         self._entities_added = False
 
         self._query_state_task: asyncio.Task[None] | None = None
@@ -147,8 +146,10 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
                 self.manager.info.host,
             )
             self._entities_added = True
-            self._async_add_entities(
-                self._entity_constructor(self, channel) for channel in Channel
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_channel_muting",
+                self,
             )
 
         if not_available:
