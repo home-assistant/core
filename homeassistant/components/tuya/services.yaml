@@ -23,31 +23,21 @@ set_feeder_meal_plan:
             days:
               selector:
                 select:
-                  multiple: true
                   options:
-                    - Monday
-                    - Tuesday
-                    - Wednesday
-                    - Thursday
-                    - Friday
-                    - Saturday
-                    - Sunday
+                    - monday
+                    - tuesday
+                    - wednesday
+                    - thursday
+                    - friday
+                    - saturday
+                    - sunday
+                  multiple: true
+                  translation_key: days_of_week
 
-            hour:
+            time:
               selector:
-                number:
-                  min: 0
-                  max: 23
-                  mode: box
-                  unit_of_measurement: "h"
+                time:
 
-            minute:
-              selector:
-                number:
-                  min: 0
-                  max: 59
-                  mode: box
-                  unit_of_measurement: "m"
             portion:
               selector:
                 number:

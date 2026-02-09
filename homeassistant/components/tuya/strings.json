@@ -1116,6 +1116,19 @@
       "title": "{name} is deprecated"
     }
   },
+  "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    }
+  },
   "services": {
     "get_feeder_meal_plan": {
       "description": "Retrieves meal plan data from a Tuya feeder.",

@@ -20,7 +20,23 @@ DEFAULT_PROFILE_DEVICES = {
     "wfkzyy0evslzsmoi",
 }
 
-DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+
+def split_time(entry: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Split time string into hour and minute."""
+    for item in entry:
+        if t := item.pop("time", None):
+            item["hour"], item["minute"] = map(int, t.split(":"))
+    return entry
+
+
+def merge_time(entry: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge hour and minute into time string."""
+    for item in entry:
+        if "hour" in item and "minute" in item:
+            item["time"] = f"{item.pop('hour'):02d}:{item.pop('minute'):02d}"
+    return entry
 
 
 def days_bitmap_to_names(entry: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -138,7 +154,7 @@ class Base64Encoder(AbstractMealPlanSerializer):
 
     def encode(self, data: list[dict[str, Any]]) -> str:
         """Encode meal plan data to Base64 string."""
-        converted_data = days_names_to_bitmap(data)
+        converted_data = days_names_to_bitmap(split_time(data))
         hex_str = self.encoder.encode(converted_data)
         payload_bytes = bytes(
             int(hex_str[i : i + 2], 16) for i in range(0, len(hex_str), 2)
@@ -148,7 +164,7 @@ class Base64Encoder(AbstractMealPlanSerializer):
     def decode(self, data: str) -> list[dict[str, Any]]:
         """Decode Base64 string to meal plan data."""
         hex_str = "".join(f"{byte:02x}" for byte in base64.b64decode(data))
-        return days_bitmap_to_names(self.encoder.decode(hex_str))
+        return merge_time(days_bitmap_to_names(self.encoder.decode(hex_str)))
 
     def get_meal_plan_update_commands(
         self, device: CustomerDevice, data: list[dict[str, Any]]
