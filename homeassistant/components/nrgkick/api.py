@@ -56,7 +56,7 @@ class NRGkickApiClientInvalidResponseError(NRGkickApiClientError):
     translation_key = "invalid_response"
 
 
-async def async_api_call(awaitable: Awaitable[_T]) -> _T:
+async def async_api_call[_T](awaitable: Awaitable[_T]) -> _T:
     """Call the NRGkick API and map common library errors.
 
     This helper is intended for one-off API calls outside the coordinator,
