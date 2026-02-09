@@ -211,38 +211,38 @@ def async_discover_entities(
                 if endpoint.has_attribute(None, optional_attribute):
                     attributes_to_watch.append(optional_attribute)
 
-        # Optionally read ClusterRevision if requested in schema
-        if getattr(schema, "cluster_revision", None) is not None:
+        # Optionally filter by ClusterRevision if requested in schema
+        cluster_revision_value = None
+        if (
+            schema.cluster_revision_min is not None
+            or schema.cluster_revision_max is not None
+        ):
             CLUSTER_REVISION_ATTRIBUTE_ID = 65533  # 0xFFFD
             cluster_revision_value = endpoint.get_attribute_value(
                 primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
             )
-            # Defensive: raise if not present
-            if cluster_revision_value is None:
-                raise RuntimeError(
-                    f"ClusterRevision attribute missing for cluster {primary_attribute.cluster_id} on endpoint {endpoint.endpoint_id}"
+            # Skip if cluster revision doesn't match constraints
+            if cluster_revision_value is not None and (
+                (
+                    schema.cluster_revision_min is not None
+                    and cluster_revision_value < schema.cluster_revision_min
                 )
-            # Create a copy of the schema with cluster_revision set if needed (not required here)
-            # Or attach as needed to the entity info
-            entity_info = MatterEntityInfo(
-                endpoint=endpoint,
-                platform=schema.platform,
-                attributes_to_watch=attributes_to_watch,
-                entity_description=schema.entity_description,
-                entity_class=schema.entity_class,
-                discovery_schema=schema,
-            )
-            setattr(entity_info, "cluster_revision", cluster_revision_value)
-            yield entity_info
-        else:
-            yield MatterEntityInfo(
-                endpoint=endpoint,
-                platform=schema.platform,
-                attributes_to_watch=attributes_to_watch,
-                entity_description=schema.entity_description,
-                entity_class=schema.entity_class,
-                discovery_schema=schema,
-            )
+                or (
+                    schema.cluster_revision_max is not None
+                    and cluster_revision_value > schema.cluster_revision_max
+                )
+            ):
+                continue
+
+        yield MatterEntityInfo(
+            endpoint=endpoint,
+            platform=schema.platform,
+            attributes_to_watch=attributes_to_watch,
+            entity_description=schema.entity_description,
+            entity_class=schema.entity_class,
+            discovery_schema=schema,
+            cluster_revision=cluster_revision_value,
+        )
 
         # prevent re-discovery of the primary attribute if not allowed
         if not schema.allow_multi:
