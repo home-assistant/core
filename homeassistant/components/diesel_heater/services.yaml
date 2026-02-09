@@ -1,0 +1,31 @@
+send_command:
+  name: Send Command
+  description: "Send a raw BLE command to the heater for debugging purposes."
+  fields:
+    device_id:
+      name: Device ID
+      description: "MAC address or last 4-5 characters of heater MAC (e.g., 'B864' or 'A4:C1:37:24:B8:64'). Leave empty to send to all heaters."
+      required: false
+      example: "B864"
+      selector:
+        text:
+    command:
+      name: Command
+      description: "Command number (0-255). Known: 1=Status, 2=Mode, 3=Power, 4=Temp/Level, 14=Language, 15=TempUnit, 16=AltUnit, 17=TankVol, 18=PumpType, 20=Offset"
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    argument:
+      name: Argument
+      description: "Argument value (-128 to 127). Negative values are encoded as two's complement."
+      required: true
+      example: 0
+      selector:
+        number:
+          min: -128
+          max: 127
+          mode: box
