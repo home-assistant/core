@@ -598,7 +598,7 @@ async def test_thermostat_remote_sensing(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
 async def test_smoke_detector(
     hass: HomeAssistant,
     matter_client: MagicMock,
