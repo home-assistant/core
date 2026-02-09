@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
@@ -22,6 +23,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -32,14 +34,15 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from .const import DOMAIN
+from .const import CONF_USAGE, DOMAIN, ENERGY_MONITORING_DEVICES
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
@@ -266,15 +269,6 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         has_fn=lambda data: data.measurement.energy_export_t4_kwh is not None,
         enabled_fn=lambda data: data.measurement.energy_export_t4_kwh != 0,
         value_fn=lambda data: data.measurement.energy_export_t4_kwh or None,
-    ),
-    HomeWizardSensorEntityDescription(
-        key="active_power_w",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-        has_fn=lambda data: data.measurement.power_w is not None,
-        value_fn=lambda data: data.measurement.power_w,
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_l1_w",
@@ -695,27 +689,46 @@ EXTERNAL_SENSORS = {
 }
 
 
+@callback
+def async_cleanup_deleted_sensor(
+    hass: HomeAssistant, entry: HomeWizardConfigEntry, description_key: str
+) -> None:
+    """Cleanup sensor if it previously existed as deleted entity."""
+    with suppress(KeyError):
+        er.async_get(hass).deleted_entities.pop(
+            (Platform.SENSOR, DOMAIN, f"{entry.unique_id}_{description_key}")
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Initialize sensors."""
-
-    # Initialize default sensors
+    """Cleanup deleted entrity registry item."""
     entities: list = [
         HomeWizardSensorEntity(entry.runtime_data, description)
         for description in SENSORS
         if description.has_fn(entry.runtime_data.data)
     ]
+    active_power_sensor_description = HomeWizardSensorEntityDescription(
+        key="active_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=(
+            entry.runtime_data.data.device.product_type != Model.BATTERY
+            and entry.data.get(CONF_USAGE, "consumption") == "consumption"
+        ),
+        has_fn=lambda x: True,
+        value_fn=lambda data: data.measurement.power_w,
+    )
+
     # Add optional production power sensor for supported energy monitoring devices
     # or plug-in battery
     if entry.runtime_data.data.device.product_type in (
-        Model.ENERGY_SOCKET,
-        Model.ENERGY_METER_1_PHASE,
-        Model.ENERGY_METER_3_PHASE,
-        Model.ENERGY_METER_EASTRON_SDM230,
-        Model.ENERGY_METER_EASTRON_SDM630,
+        *ENERGY_MONITORING_DEVICES,
         Model.BATTERY,
     ):
         active_prodution_power_sensor_description = HomeWizardSensorEntityDescription(
@@ -735,16 +748,32 @@ async def async_setup_entry(
                     is not None
                     and total_export > 0
                 )
+                or entry.data.get(CONF_USAGE, "consumption") == "generation"
             ),
             has_fn=lambda x: True,
             value_fn=lambda data: (
                 power_w * -1 if (power_w := data.measurement.power_w) else power_w
             ),
         )
-        entities.append(
-            HomeWizardSensorEntity(
-                entry.runtime_data, active_prodution_power_sensor_description
+        # We cleanup any deleted instance to assure the correct power sensor is enabled
+        async_cleanup_deleted_sensor(hass, entry, active_power_sensor_description.key)
+        async_cleanup_deleted_sensor(
+            hass, entry, active_prodution_power_sensor_description.key
+        )
+        entities.extend(
+            (
+                HomeWizardSensorEntity(
+                    entry.runtime_data, active_power_sensor_description
+                ),
+                HomeWizardSensorEntity(
+                    entry.runtime_data, active_prodution_power_sensor_description
+                ),
             )
+        )
+    elif (data := entry.runtime_data.data) and data.measurement.power_w is not None:
+        async_cleanup_deleted_sensor(hass, entry, active_power_sensor_description.key)
+        entities.append(
+            HomeWizardSensorEntity(entry.runtime_data, active_power_sensor_description)
         )
 
     # Initialize external devices
