@@ -40,7 +40,7 @@ from homeassistant.components.squeezebox.const import (
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
 )
-from homeassistant.components.squeezebox.media_player import (
+from homeassistant.components.squeezebox.services import (
     ATTR_PARAMETERS,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,

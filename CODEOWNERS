@@ -288,6 +288,8 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
+/homeassistant/components/cloudflare_r2/ @corrreia
+/tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
@@ -593,6 +595,8 @@ build.json @home-assistant/supervisor
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/ghost/ @johnonolan
+/tests/components/ghost/ @johnonolan
 /homeassistant/components/gios/ @bieniu
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
@@ -641,6 +645,8 @@ build.json @home-assistant/supervisor
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/green_planet_energy/ @petschni
+/tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
@@ -917,6 +923,8 @@ build.json @home-assistant/supervisor
 /tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
+/homeassistant/components/liebherr/ @mettolen
+/tests/components/liebherr/ @mettolen
 /homeassistant/components/lifx/ @Djelibeybi
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
@@ -1017,8 +1025,8 @@ build.json @home-assistant/supervisor
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST
 /tests/components/min_max/ @gjohansson-ST
-/homeassistant/components/minecraft_server/ @elmurato
-/tests/components/minecraft_server/ @elmurato
+/homeassistant/components/minecraft_server/ @elmurato @zachdeibert
+/tests/components/minecraft_server/ @elmurato @zachdeibert
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
 /homeassistant/components/moat/ @bdraco
@@ -1124,6 +1132,8 @@ build.json @home-assistant/supervisor
 /tests/components/notify_events/ @matrozov @papajojo
 /homeassistant/components/notion/ @bachya
 /tests/components/notion/ @bachya
+/homeassistant/components/nrgkick/ @andijakl
+/tests/components/nrgkick/ @andijakl
 /homeassistant/components/nsw_fuel_station/ @nickw444
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
@@ -1259,6 +1269,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/prana/ @prana-dev-official
+/tests/components/prana/ @prana-dev-official
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/probe_plus/ @pantherale0
@@ -1273,7 +1285,8 @@ build.json @home-assistant/supervisor
 /tests/components/prosegur/ @dgomes
 /homeassistant/components/proximity/ @mib1185
 /tests/components/proximity/ @mib1185
-/homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/homeassistant/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
+/tests/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pterodactyl/ @elmurato
@@ -1344,6 +1357,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/redgtech/ @jonhsady @luan-nvg
+/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
@@ -1721,6 +1736,8 @@ build.json @home-assistant/supervisor
 /tests/components/twinkly/ @dr1rrb @Robbie1221 @Olen
 /homeassistant/components/twitch/ @joostlek
 /tests/components/twitch/ @joostlek
+/homeassistant/components/uhoo/ @getuhoo @joshsmonta
+/tests/components/uhoo/ @getuhoo @joshsmonta
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
@@ -1808,6 +1825,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
 /homeassistant/components/waterfurnace/ @sdague @masterkoppa
+/tests/components/waterfurnace/ @sdague @masterkoppa
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
@@ -1866,6 +1884,8 @@ build.json @home-assistant/supervisor
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
+/homeassistant/components/wsdot/ @ucodery
+/tests/components/wsdot/ @ucodery
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
 /homeassistant/components/xbox/ @hunterjm @tr4nt0r

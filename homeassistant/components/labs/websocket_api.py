@@ -8,11 +8,14 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
-from homeassistant.const import EVENT_LABS_UPDATED
 from homeassistant.core import HomeAssistant, callback
 
 from .const import LABS_DATA
-from .helpers import async_is_preview_feature_enabled, async_listen
+from .helpers import (
+    async_is_preview_feature_enabled,
+    async_subscribe_preview_feature,
+    async_update_preview_feature,
+)
 from .models import EventLabsUpdatedData
 
 
@@ -95,19 +98,7 @@ async def websocket_update_preview_feature(
             )
             return
 
-    if enabled:
-        labs_data.data.preview_feature_status.add((domain, preview_feature))
-    else:
-        labs_data.data.preview_feature_status.discard((domain, preview_feature))
-
-    await labs_data.store.async_save(labs_data.data.to_store_format())
-
-    event_data: EventLabsUpdatedData = {
-        "domain": domain,
-        "preview_feature": preview_feature,
-        "enabled": enabled,
-    }
-    hass.bus.async_fire(EVENT_LABS_UPDATED, event_data)
+    await async_update_preview_feature(hass, domain, preview_feature, enabled)
 
     connection.send_result(msg["id"])
 
@@ -142,20 +133,27 @@ def websocket_subscribe_feature(
 
     preview_feature = labs_data.preview_features[preview_feature_id]
 
-    @callback
-    def send_event() -> None:
+    async def send_event(event_data: EventLabsUpdatedData) -> None:
         """Send feature state to client."""
-        enabled = async_is_preview_feature_enabled(hass, domain, preview_feature_key)
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                preview_feature.to_dict(enabled=enabled),
+                preview_feature.to_dict(enabled=event_data["enabled"]),
             )
         )
 
-    connection.subscriptions[msg["id"]] = async_listen(
+    connection.subscriptions[msg["id"]] = async_subscribe_preview_feature(
         hass, domain, preview_feature_key, send_event
     )
 
     connection.send_result(msg["id"])
-    send_event()
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"],
+            preview_feature.to_dict(
+                enabled=async_is_preview_feature_enabled(
+                    hass, domain, preview_feature_key
+                )
+            ),
+        )
+    )

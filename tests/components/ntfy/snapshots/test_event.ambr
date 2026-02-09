@@ -59,6 +59,7 @@
       'id': 'h6Y2hKA5sy0U',
       'message': 'Hello',
       'priority': 3,
+      'sequence_id': 'Mc3otamDNcpJ',
       'tags': list([
         'octopus',
       ]),

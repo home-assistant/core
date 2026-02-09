@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nina.const import ATTR_HEADLINE, DOMAIN
+from homeassistant.components.nina.const import (
+    ATTR_HEADLINE,
+    CONF_AREA_FILTER,
+    CONF_FILTERS,
+    CONF_HEADLINE_FILTER,
+    CONF_MESSAGE_SLOTS,
+    CONF_REGIONS,
+    DOMAIN,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,20 +25,20 @@ from . import setup_platform
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTRY_DATA_NO_CORONA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": "/(?!)/",
-        "area_filter": ".*",
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*",
     },
 }
 
 ENTRY_DATA_SPECIFIC_AREA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": "/(?!)/",
-        "area_filter": ".*nagold.*",
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*nagold.*",
     },
 }
 
@@ -39,15 +48,20 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors."""
-
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_without_corona_filter(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
@@ -60,7 +74,7 @@ async def test_sensors_without_corona_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry)
+    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 
@@ -89,7 +103,11 @@ async def test_sensors_without_corona_filter(
 
 
 async def test_sensors_with_area_filter(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors with a restrictive area filter."""
 
@@ -102,7 +120,7 @@ async def test_sensors_with_area_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry)
+    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 

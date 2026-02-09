@@ -44,7 +44,7 @@ class DukeEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 auth = await api.authenticate()
             except ClientResponseError as e:
                 errors["base"] = "invalid_auth" if e.status == 404 else "cannot_connect"
-            except (ClientError, TimeoutError):
+            except ClientError, TimeoutError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

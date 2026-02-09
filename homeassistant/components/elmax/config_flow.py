@@ -168,7 +168,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.login()
-        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
+        except ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,
