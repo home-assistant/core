@@ -194,8 +194,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             # If Off by color, retain previous color mode to avoid changing the UI
             color_mode = self._attr_color_mode
 
-        if color_mode is None:
-            # If color mode is still None, default to RGB
+        if color_mode is None or color_mode == ColorMode.UNKNOWN:
+            # If color mode is still unknown, default to RGB
             color_mode = ColorMode.RGB
 
         if self._attr_brightness is not None and self._attr_brightness != brightness:
