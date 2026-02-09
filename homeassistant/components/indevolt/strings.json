@@ -2,25 +2,20 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Failed to connect (aborted)",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "This is a different device than the one being reconfigured"
+      "cannot_connect": "Failed to connect (aborted)"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "[%key:common::config_flow::error::timeout_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_device": "This is a different device than the one being reconfigured"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "host": "The host of the Indevolt device"
         },
         "description": "Enter the connection details for your Indevolt device.",
         "title": "Connect to Indevolt device"
@@ -212,18 +207,11 @@
       "master_voltage": {
         "name": "Master voltage"
       },
-      "meter_connection_status": {
-        "name": "Meter connection status",
-        "state": {
-          "off": "Off",
-          "on": "On"
-        }
-      },
       "meter_power": {
         "name": "Meter power"
       },
       "mode": {
-        "name": "Mode",
+        "name": "Device mode",
         "state": {
           "master": "Cluster (main)",
           "slave": "Cluster (sub)",
