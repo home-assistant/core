@@ -179,8 +179,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="LockActuatorEnabled",
+            key="LockActuatorEnabledSensor",
             translation_key="actuator_enabled",
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
