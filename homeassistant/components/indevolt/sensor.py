@@ -663,11 +663,9 @@ async def async_setup_entry(
 
     # Sensor initialization
     async_add_entities(
-        [
-            IndevoltSensorEntity(coordinator=coordinator, description=description)
-            for description in SENSORS
-            if device_gen in description.generation
-        ]
+        IndevoltSensorEntity(coordinator=coordinator, description=description)
+        for description in SENSORS
+        if device_gen in description.generation
     )
 
 
