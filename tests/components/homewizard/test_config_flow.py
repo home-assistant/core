@@ -24,6 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1"])
 async def test_manual_flow_works(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -40,6 +41,44 @@ async def test_manual_flow_works(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result == snapshot
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_homewizardenergy.close.mock_calls) == 1
+    assert len(mock_homewizardenergy.device.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-SKT-21"])
+@pytest.mark.parametrize(("usage"), ["consumption", "generation"])
+async def test_manual_flow_works_device_energy_monitoring(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    mock_setup_entry: AsyncMock,
+    snapshot: SnapshotAssertion,
+    usage: str,
+) -> None:
+    """Test config flow accepts user configuration for energy plug."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usage"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usage": usage}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
