@@ -27,6 +27,7 @@ MOCK_PRESENT_VALUES: dict[tuple[str, int], Any] = {
     ("binary-output", 0): 1,
     ("binary-value", 0): 0,
     ("multi-state-input", 0): 2,
+    ("multi-state-output", 0): 1,
 }
 
 
@@ -127,6 +128,15 @@ def _create_mock_objects() -> list[BACnetObjectInfo]:
             description="Current operating mode",
             state_text=["Off", "Heating", "Cooling", "Auto"],
         ),
+        BACnetObjectInfo(
+            object_type="multi-state-output",
+            object_instance=0,
+            object_name="Fan Speed",
+            present_value=1,
+            units="",
+            description="Fan speed selection",
+            state_text=["Low", "Medium", "High"],
+        ),
     ]
 
 
@@ -154,6 +164,7 @@ def mock_bacnet_client() -> Generator[AsyncMock]:
         client.discover_devices = AsyncMock(return_value=[device_info])
         client.get_device_objects = AsyncMock(return_value=objects)
         client.read_present_value = AsyncMock(side_effect=_mock_read_present_value)
+        client.write_present_value = AsyncMock()
         client.subscribe_cov = AsyncMock(
             side_effect=lambda addr, obj_type, obj_inst, cb: (
                 f"{addr}:{obj_type},{obj_inst}"

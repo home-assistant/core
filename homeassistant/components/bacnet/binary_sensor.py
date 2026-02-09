@@ -18,10 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-# BACnet object types that produce binary sensor values
+# BACnet object types that produce binary sensor values (read-only)
 BINARY_OBJECT_TYPES = {
     "binary-input",
-    "binary-output",
     "binary-value",
 }
 

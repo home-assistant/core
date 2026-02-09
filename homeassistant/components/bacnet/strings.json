@@ -108,6 +108,9 @@
     "hub_not_ready": {
       "message": "BACnet hub {hub_id} is not ready"
     },
+    "invalid_option": {
+      "message": "Invalid option `{option}` for BACnet object `{object}`"
+    },
     "no_data": {
       "message": "No data available from BACnet device"
     },
@@ -116,6 +119,9 @@
     },
     "read_error": {
       "message": "Could not read BACnet object `{object}`: {error}"
+    },
+    "write_error": {
+      "message": "Could not write to BACnet object `{object}`: {error}"
     }
   },
   "options": {

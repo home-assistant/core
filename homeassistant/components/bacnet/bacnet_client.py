@@ -24,6 +24,7 @@ from .const import (
     TIMEOUT_OBJECT_LIST_READ,
     TIMEOUT_PROPERTY_READ,
     TIMEOUT_PROPERTY_READ_SHORT,
+    WRITE_PRIORITY,
 )
 
 if TYPE_CHECKING:
@@ -32,6 +33,10 @@ if TYPE_CHECKING:
     from bacpypes3.primitivedata import ObjectIdentifier
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class BACnetWriteError(Exception):
+    """Raised when a BACnet write operation fails."""
 
 
 def _get_local_interfaces_sync() -> dict[str, str]:
@@ -465,6 +470,32 @@ class BACnetClient:
         async with asyncio.timeout(TIMEOUT_PROPERTY_READ):
             raw_value = await self._app.read_property(address, obj_ref, "presentValue")
         return _convert_bacnet_value(raw_value)
+
+    async def write_present_value(
+        self,
+        address: str,
+        object_type: str,
+        object_instance: int,
+        value: object,
+        priority: int = WRITE_PRIORITY,
+    ) -> None:
+        """Write a value to a BACnet object's present value."""
+        from bacpypes3.apdu import ErrorRejectAbortNack  # noqa: PLC0415
+
+        if self._app is None:
+            raise RuntimeError("BACnet client is not connected")
+
+        obj_ref = f"{object_type},{object_instance}"
+        try:
+            async with asyncio.timeout(TIMEOUT_PROPERTY_READ):
+                response = await self._app.write_property(
+                    address, obj_ref, "presentValue", value, priority=priority
+                )
+        except ErrorRejectAbortNack as err:
+            raise BACnetWriteError(str(err)) from err
+
+        if isinstance(response, ErrorRejectAbortNack):
+            raise BACnetWriteError(str(response))
 
     async def subscribe_cov(
         self,

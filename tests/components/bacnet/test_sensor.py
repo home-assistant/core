@@ -67,29 +67,15 @@ async def test_multistate_sensor_created(
     assert state.attributes.get("options") == ["Off", "Heating", "Cooling", "Auto"]
 
 
-async def test_analog_output_sensor(
-    hass: HomeAssistant, mock_bacnet_client: AsyncMock
-) -> None:
-    """Test that analog output objects create sensors."""
-    await init_integration(hass)
-
-    # Heating Valve (analog-output,0) - 75% stays as 75%
-    state = hass.states.get("sensor.test_hvac_controller_heating_valve")
-    assert state is not None
-    assert state.state == "75.0"
-    assert state.attributes.get("unit_of_measurement") == PERCENTAGE
-
-
 async def test_sensor_count(hass: HomeAssistant, mock_bacnet_client: AsyncMock) -> None:
     """Test the correct number of sensors are created."""
     await init_integration(hass)
 
     sensor_states = hass.states.async_entity_ids("sensor")
-    # We expect 6 sensors:
+    # We expect 5 sensors:
     # analog-input,0 (Zone Temp), analog-input,1 (OAT), analog-input,2 (Humidity),
-    # analog-output,0 (Heating Valve), analog-value,0 (Setpoint),
-    # multi-state-input,0 (Operating Mode)
-    assert len(sensor_states) == 6
+    # analog-value,0 (Setpoint), multi-state-input,0 (Operating Mode)
+    assert len(sensor_states) == 5
 
 
 async def test_device_info_no_suggested_area(

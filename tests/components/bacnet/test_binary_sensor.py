@@ -26,11 +26,6 @@ async def test_binary_sensors_created(
     assert state is not None
     assert state.state == STATE_OFF
 
-    # Fan Command (binary-output,0) - value 1 = on
-    state = hass.states.get("binary_sensor.test_hvac_controller_fan_command")
-    assert state is not None
-    assert state.state == STATE_ON
-
     # Alarm Active (binary-value,0) - value 0 = off
     state = hass.states.get("binary_sensor.test_hvac_controller_alarm_active")
     assert state is not None
@@ -44,7 +39,7 @@ async def test_binary_sensor_count(
     await init_integration(hass)
 
     binary_sensor_states = hass.states.async_entity_ids("binary_sensor")
-    # We expect 4 binary sensors:
+    # We expect 3 binary sensors:
     # binary-input,0 (Occupancy), binary-input,1 (Filter),
-    # binary-output,0 (Fan), binary-value,0 (Alarm)
-    assert len(binary_sensor_states) == 4
+    # binary-value,0 (Alarm)
+    assert len(binary_sensor_states) == 3

@@ -41,10 +41,9 @@ TIMEOUT_COV_GET_VALUE: Final = COV_LIFETIME + 30  # COV notification timeout
 
 MANUFACTURER: Final = "BACnet Device"
 
-# BACnet object types that produce numeric/analog sensor values
+# BACnet object types that produce numeric/analog sensor values (read-only)
 ANALOG_OBJECT_TYPES: Final = {
     "analog-input",
-    "analog-output",
     "analog-value",
     "large-analog-value",
     "integer-value",
@@ -53,9 +52,16 @@ ANALOG_OBJECT_TYPES: Final = {
     "pulse-converter",
 }
 
-# BACnet object types that produce multi-state (enum) sensor values
+# BACnet object types that produce multi-state (enum) sensor values (read-only)
 MULTISTATE_OBJECT_TYPES: Final = {
     "multi-state-input",
-    "multi-state-output",
     "multi-state-value",
 }
+
+# BACnet output object types (writable)
+ANALOG_OUTPUT_OBJECT_TYPE: Final = "analog-output"
+BINARY_OUTPUT_OBJECT_TYPE: Final = "binary-output"
+MULTISTATE_OUTPUT_OBJECT_TYPE: Final = "multi-state-output"
+
+# BACnet write priority (16 = lowest, manual-life-safety = 1)
+WRITE_PRIORITY: Final = 16
