@@ -157,9 +157,9 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
 
     # This is the config entry migration for adding the new program selection
-    # migrate from 1.x to 2.1
+    # migrate from < 2 to 2.1
     # This is the config entry migration for adding the new properties
-    # migrate from < 3 to 3.1
+    # migrate from < 3 to 3.2
     if config_entry.version < 3:
         # clean the velbusCache
         cache_path = hass.config.path(
