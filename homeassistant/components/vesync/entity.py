@@ -1,24 +1,18 @@
 """Common entity for VeSync Component."""
 
-import logging
-
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
-    _unavailable_logged: bool = False
 
     def __init__(self, device: T, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize the VeSync device."""
@@ -32,17 +26,6 @@ class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordina
             manufacturer="VeSync",
             sw_version=self.device.current_firm_version,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from coordinator."""
-        super()._handle_coordinator_update()
-        if not self.available and not self._unavailable_logged:
-            _LOGGER.info("The %s device is unavailable", self.device.device_name)
-            self._unavailable_logged = True
-        elif self.available and self._unavailable_logged:
-            _LOGGER.info("The %s device is back online", self.device.device_name)
-            self._unavailable_logged = False
 
     @property
     def base_unique_id(self) -> str:
