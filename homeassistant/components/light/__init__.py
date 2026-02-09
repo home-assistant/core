@@ -988,32 +988,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             f"of {effect_color_modes}"
         )
 
-    def __validate_supported_color_modes(
-        self,
-        supported_color_modes: set[ColorMode],
-    ) -> None:
-        """Validate the supported color modes."""
-        if self.__color_mode_reported:
-            return
-
-        try:
-            valid_supported_color_modes(supported_color_modes)
-        except vol.Error:
-            # Warning added in 2024.3, reject in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) sets invalid supported color modes %s, this will stop "
-                        "working in Home Assistant Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    supported_color_modes,
-                    report_issue,
-                )
-
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -1069,7 +1043,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _light_internal_supported_color_modes(self) -> set[ColorMode]:
         """Calculate supported color modes with backwards compatibility."""
         if (_supported_color_modes := self.supported_color_modes) is not None:
-            self.__validate_supported_color_modes(_supported_color_modes)
+            valid_supported_color_modes(_supported_color_modes)
             return _supported_color_modes
 
         # Backwards compatibility for supported_color_modes added in 2021.4
