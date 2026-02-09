@@ -35,6 +35,7 @@ from .const import (
     DOORTAG_STATUS_UNDEFINED,
     DOORTAG_STATUS_WEAK_SIGNAL,
     NETATMO_CREATE_BINARY_SENSOR,
+    NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
 from .data_handler import SIGNAL_NAME, NetatmoDevice
@@ -206,7 +207,11 @@ async def async_setup_entry(
 
     @callback
     def _create_binary_sensor_entity(
-        binarySensorClass: type[NetatmoBinarySensor | NetatmoWeatherBinarySensor],
+        binarySensorClass: type[
+            NetatmoBinarySensor
+            | NetatmoWeatherBinarySensor
+            | NetatmoOpeningBinarySensor
+        ],
         netatmo_device: NetatmoDevice,
     ) -> None:
         """Create binary sensor entities for a Netatmo device."""
@@ -218,7 +223,11 @@ async def async_setup_entry(
             netatmo_device.device.device_category, []
         )
 
-        entities: list[NetatmoBinarySensor | NetatmoWeatherBinarySensor] = []
+        entities: list[
+            NetatmoBinarySensor
+            | NetatmoWeatherBinarySensor
+            | NetatmoOpeningBinarySensor
+        ] = []
 
         # Create binary sensors for module
         for description in descriptions_to_add:
@@ -265,6 +274,17 @@ async def async_setup_entry(
         )
     )
 
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NETATMO_CREATE_OPENING_BINARY_SENSOR,
+            partial(
+                _create_binary_sensor_entity,
+                NetatmoOpeningBinarySensor,
+            ),
+        )
+    )
+
 
 class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
@@ -294,16 +314,6 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
 
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
-
-        # Apply Dynamic Device Class override if available
-        if description.device_class_fn:
-            self._attr_device_class = description.device_class_fn(netatmo_device)
-
-        # Apply Dynamic Translation Key if available and needed
-        if description.device_key_fn:
-            device_key = description.device_key_fn(netatmo_device)
-            if device_key is not None:
-                self._attr_translation_key = device_key
 
         # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
         if self.device.device_category in DEVICE_CATEGORY_BINARY_PUBLISHERS:
@@ -376,3 +386,29 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, NetatmoBinarySensor
         """Initialize a Netatmo weather binary sensor."""
 
         super().__init__(netatmo_device, description=description)
+
+
+class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
+    """Implementation of a Netatmo opening binary sensor."""
+
+    entity_description: NetatmoBinarySensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize a Netatmo binary sensor."""
+
+        super().__init__(netatmo_device, description)
+
+        # Apply Dynamic Device Class override if available
+        if description.device_class_fn:
+            self._attr_device_class = description.device_class_fn(netatmo_device)
+
+        # Apply Dynamic Translation Key if available and needed
+        if description.device_key_fn:
+            device_key = description.device_key_fn(netatmo_device)
+            if device_key is not None:
+                self._attr_translation_key = device_key

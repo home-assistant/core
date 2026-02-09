@@ -34,7 +34,6 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
-    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
@@ -42,6 +41,7 @@ from .const import (
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
+    NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
@@ -368,7 +368,7 @@ class NetatmoDataHandler:
             ],
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
-            NetatmoDeviceCategory.opening: [NETATMO_CREATE_BINARY_SENSOR],
+            NetatmoDeviceCategory.opening: [NETATMO_CREATE_OPENING_BINARY_SENSOR],
         }
         for module in home.modules.values():
             if not module.device_category:
