@@ -2,6 +2,7 @@
   "domain": "pilight",
   "name": "Pilight",
   "codeowners": [],
+  "disabled": "Pilight relies on setuptools.pkg_resources, which is no longer available in setuptools 82.0.0 and later.",
   "documentation": "https://www.home-assistant.io/integrations/pilight",
   "iot_class": "local_push",
   "loggers": ["pilight"],
