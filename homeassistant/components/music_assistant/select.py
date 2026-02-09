@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .entity import MusicAssistantPlayerOptionEntity
+from .helpers import catch_musicassistant_error
 
 
 async def async_setup_entry(
@@ -50,17 +51,17 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
     ) -> None:
         """Initialize MusicAssistantPlayerConfigSelect."""
-        self._option_name_id_mapping: dict[str, str] = {}
+        self._option_name_key_mapping: dict[str, str] = {}
         self._update_available_options(player_option)
         super().__init__(mass, player_id, player_option)
 
     def _update_available_options(self, player_option: PlayerOption) -> None:
         """Update selectable options."""
         if player_option.options is not None:
-            self._option_name_id_mapping = {
+            self._option_name_key_mapping = {
                 option.name: option.key for option in player_option.options
             }
-            self._attr_options = list(self._option_name_id_mapping.keys())
+            self._attr_options = list(self._option_name_key_mapping.keys())
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
@@ -80,15 +81,16 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         return next(
             (
                 option_name
-                for option_name, option_id in self._option_name_id_mapping.items()
-                if option_id == self.mass_value
+                for option_name, option_key in self._option_name_key_mapping.items()
+                if option_key == self.mass_value
             ),
             None,
         )
 
+    @catch_musicassistant_error
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        if _option_id := self._option_name_id_mapping.get(option):
+        if _option_key := self._option_name_key_mapping.get(option):
             await self.mass.players.set_option(
-                self.player_id, self.mass_option_key, _option_id
+                self.player_id, self.mass_option_key, _option_key
             )
