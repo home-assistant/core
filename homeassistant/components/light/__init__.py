@@ -283,9 +283,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
     if LightEntityFeature.TRANSITION not in supported_features:
         params.pop(ATTR_TRANSITION, None)
 
-    supported_color_modes = (
-        light._light_internal_supported_color_modes  # noqa: SLF001
-    )
+    supported_color_modes = valid_supported_color_modes(light.supported_color_modes)
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
     if ColorMode.COLOR_TEMP not in supported_color_modes:
@@ -363,8 +361,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
-        supported_color_modes = light.supported_color_modes
+        supported_color_modes = valid_supported_color_modes(light.supported_color_modes)
 
         # If a color temperature is specified, emulate it if not supported by the light
         if ATTR_COLOR_TEMP_KELVIN in params:
@@ -381,9 +378,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     light.min_color_temp_kelvin,
                     light.max_color_temp_kelvin,
                 )
-            elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
+            elif ColorMode.COLOR_TEMP not in supported_color_modes:
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-                if color_supported(legacy_supported_color_modes):
+                if color_supported(supported_color_modes):
                     params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
                         color_temp
                     )
@@ -793,8 +790,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
-    __color_mode_reported = False
-
     @cached_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
@@ -895,7 +890,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return capability attributes."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features
-        supported_color_modes = self._light_internal_supported_color_modes
+        supported_color_modes = valid_supported_color_modes(self.supported_color_modes)
 
         if ColorMode.COLOR_TEMP in supported_color_modes:
             min_color_temp_kelvin = self.min_color_temp_kelvin
@@ -988,39 +983,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             f"of {effect_color_modes}"
         )
 
-    def __validate_supported_color_modes(
-        self,
-        supported_color_modes: set[ColorMode],
-    ) -> None:
-        """Validate the supported color modes."""
-        if self.__color_mode_reported:
-            return
-
-        try:
-            valid_supported_color_modes(supported_color_modes)
-        except vol.Error:
-            # Warning added in 2024.3, reject in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) sets invalid supported color modes %s, this will stop "
-                        "working in Home Assistant Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    supported_color_modes,
-                    report_issue,
-                )
-
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features
-        supported_color_modes = self.supported_color_modes
+        supported_color_modes = valid_supported_color_modes(self.supported_color_modes)
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
@@ -1062,12 +1031,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return data
 
-    @property
-    def _light_internal_supported_color_modes(self) -> set[ColorMode]:
-        """Calculate supported color modes with backwards compatibility."""
-        self.__validate_supported_color_modes(color_modes := self.supported_color_modes)
-        return color_modes
-
     @cached_property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
@@ -1077,10 +1040,3 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
-
-    def __should_report_light_issue(self) -> bool:
-        """Return if light color mode issues should be reported."""
-        if not self.platform:
-            return True
-        # philips_js has known issues, we don't need users to open issues
-        return self.platform.platform_name != "philips_js"
