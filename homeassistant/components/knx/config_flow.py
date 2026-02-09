@@ -442,7 +442,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 _host = user_input[CONF_HOST]
                 _host_ip = await xknx_validate_ip(_host)
                 ip_v4_validator(_host_ip, multicast=False)
-            except (vol.Invalid, XKNXException):
+            except vol.Invalid, XKNXException:
                 errors[CONF_HOST] = "invalid_ip_address"
 
             _local_ip = None
@@ -450,7 +450,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
-                except (vol.Invalid, XKNXException):
+                except vol.Invalid, XKNXException:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
@@ -831,7 +831,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
-                except (vol.Invalid, XKNXException):
+                except vol.Invalid, XKNXException:
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:

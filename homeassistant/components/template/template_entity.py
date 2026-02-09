@@ -295,6 +295,10 @@ class TemplateEntity(AbstractTemplateEntity):
                 self._attr_available = False
                 return
 
+            # Recover from template errors if they happened before.
+            if not self._availability_template and not self._attr_available:
+                self._attr_available = True
+
             state = validator(result) if validator else result
             if on_update:
                 on_update(state)
@@ -326,7 +330,10 @@ class TemplateEntity(AbstractTemplateEntity):
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
         """
-        self.add_template(option, attribute, validator, on_update, True)
+        none_on_template_error = kwargs.get("none_on_template_error", True)
+        self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
+        )
 
     def add_template_attribute(
         self,
