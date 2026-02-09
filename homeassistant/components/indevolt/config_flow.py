@@ -21,7 +21,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
 
     VERSION = 1
-    MINOR_VERSION = 0
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -71,9 +70,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Failed to connect to discovered device at %s", host)
             return self.async_abort(reason="cannot_connect")
 
-        if not device_data["sn"] or device_data["sn"] == "unknown":
-            return self.async_abort(reason="cannot_connect")
-
         await self.async_set_unique_id(device_data["sn"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
@@ -87,12 +83,11 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery by user."""
+        assert self._discovered_host is not None
         assert self._discovered_device_data is not None
 
         # Attempt to setup from user input
         if user_input is not None:
-            assert self._discovered_host is not None
-
             return self.async_create_entry(
                 title=f"INDEVOLT {self._discovered_device_data['device_model']} ({self._discovered_host})",
                 data={
@@ -136,7 +131,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         device_data = config_data.get("device", {})
 
         return {
-            "sn": device_data.get("sn", "unknown"),
+            "sn": device_data.get("sn"),
             "generation": device_data.get("generation", 1),
             "device_model": device_data.get("type", "unknown"),
         }
