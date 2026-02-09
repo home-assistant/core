@@ -3,11 +3,12 @@
 from typing import Any, Final
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .coordinator import LunatoneConfigEntry
 
-TO_REDACT: Final[list[str]] = []
+TO_REDACT: Final[list[str]] = [CONF_URL]
 
 
 async def async_get_config_entry_diagnostics(

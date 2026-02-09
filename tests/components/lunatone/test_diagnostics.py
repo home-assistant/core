@@ -2,9 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
-from . import BASE_URL, DEVICE_DATA_LIST, INFO_DATA, setup_integration
+from . import DEVICE_DATA_LIST, INFO_DATA, setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -26,7 +27,7 @@ async def test_config_entry_diagnostics(
     )
 
     assert diagnostics == {
-        "entry_data": {"url": BASE_URL},
+        "entry_data": {"url": REDACTED},
         "data": {
             "info": INFO_DATA.model_dump(),
             "devices": [d.model_dump() for d in DEVICE_DATA_LIST],
