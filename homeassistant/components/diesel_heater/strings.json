@@ -1,0 +1,242 @@
+{
+  "exceptions": {
+    "no_heater_found": {
+      "message": "No matching heater found for device: {device_id}"
+    },
+    "command_failed": {
+      "message": "Failed to send command to heater {address}: {error}"
+    }
+  },
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "temperature_offset": "Temperature Offset (°C)",
+          "pin": "PIN Code"
+        },
+        "data_description": {
+          "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+        }
+      },
+      "user": {
+        "data": {
+          "address": "Device",
+          "temperature_offset": "Temperature Offset (°C)",
+          "pin": "PIN Code"
+        },
+        "description": "Select your Diesel Heater from the list.",
+        "data_description": {
+          "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+        }
+      },
+      "manual": {
+        "data": {
+          "address": "Bluetooth MAC Address",
+          "temperature_offset": "Temperature Offset (°C)",
+          "pin": "PIN Code"
+        },
+        "description": "Enter the Bluetooth MAC address of your heater (e.g., A4:C1:37:24:B8:64). You can find this in the Bluetooth logs or using a BLE scanner app.",
+        "data_description": {
+          "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Please use format AA:BB:CC:DD:EE:FF"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "temperature_offset": "Temperature Offset (°C)",
+          "pin": "PIN Code",
+          "preset_away_temp": "Away Preset Temperature (°C)",
+          "preset_comfort_temp": "Comfort Preset Temperature (°C)",
+          "external_temp_sensor": "External Temperature Sensor",
+          "auto_offset_max": "Max Auto Offset (°C)"
+        },
+        "data_description": {
+          "temperature_offset": "Manual temperature calibration offset. Changes take effect within 30 seconds. Range: -20 to +20°C.",
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. Changes require integration reload.",
+          "preset_away_temp": "Temperature for Away preset (anti-freeze protection). Default: 8°C.",
+          "preset_comfort_temp": "Temperature for Comfort preset (normal heating). Default: 21°C.",
+          "external_temp_sensor": "Select an external temperature sensor to automatically calibrate the heater's internal sensor. Leave empty to disable auto calibration.",
+          "auto_offset_max": "Maximum automatic offset in °C. Limits how much the temperature can be adjusted based on external sensor. Default: 5°C."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "case_temp": {
+        "name": "Case Temperature"
+      },
+      "cab_temp": {
+        "name": "Interior Temperature"
+      },
+      "cab_temp_raw": {
+        "name": "Interior Temperature (Raw)"
+      },
+      "heater_offset": {
+        "name": "Temperature Offset"
+      },
+      "supply_voltage": {
+        "name": "Supply Voltage"
+      },
+      "running_step": {
+        "name": "Running Step"
+      },
+      "running_mode": {
+        "name": "Running Mode"
+      },
+      "set_level": {
+        "name": "Set Level"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "error_code": {
+        "name": "Error"
+      },
+      "est_hourly_fuel_consumption": {
+        "name": "Estimated Hourly Fuel Consumption"
+      },
+      "est_daily_fuel_consumed": {
+        "name": "Estimated Daily Fuel Consumed"
+      },
+      "est_total_fuel_consumed": {
+        "name": "Estimated Total Fuel Consumed"
+      },
+      "est_daily_fuel_history": {
+        "name": "Estimated Daily Fuel History"
+      },
+      "daily_runtime": {
+        "name": "Daily Runtime"
+      },
+      "total_runtime": {
+        "name": "Total Runtime"
+      },
+      "daily_runtime_history": {
+        "name": "Daily Runtime History"
+      },
+      "fuel_remaining": {
+        "name": "Estimated Fuel Remaining"
+      },
+      "last_refueled": {
+        "name": "Last Refueled"
+      },
+      "est_fuel_since_refuel": {
+        "name": "Estimated Fuel Since Refuel"
+      },
+      "co_ppm": {
+        "name": "Carbon Monoxide"
+      },
+      "hardware_version": {
+        "name": "Hardware Version"
+      },
+      "software_version": {
+        "name": "Software Version"
+      },
+      "remain_run_time": {
+        "name": "Remaining Run Time"
+      },
+      "startup_temp_diff": {
+        "name": "Startup Temp Difference"
+      },
+      "shutdown_temp_diff": {
+        "name": "Shutdown Temp Difference"
+      }
+    },
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      },
+      "problem": {
+        "name": "Problem"
+      },
+      "connected": {
+        "name": "Connected"
+      },
+      "auto_start_stop_sensor": {
+        "name": "Auto Start/Stop"
+      }
+    },
+    "climate": {
+      "climate": {
+        "name": "Heater"
+      }
+    },
+    "fan": {
+      "heater_level": {
+        "name": "Heater Level"
+      }
+    },
+    "number": {
+      "level": {
+        "name": "Level"
+      },
+      "target_temp": {
+        "name": "Target Temperature"
+      },
+      "heater_offset_number": {
+        "name": "Temperature Offset"
+      },
+      "tank_capacity": {
+        "name": "Tank Capacity"
+      }
+    },
+    "select": {
+      "running_mode": {
+        "name": "Running Mode"
+      },
+      "language": {
+        "name": "Language"
+      },
+      "pump_type": {
+        "name": "Pump Type"
+      },
+      "tank_volume_select": {
+        "name": "Tank Volume"
+      },
+      "backlight_select": {
+        "name": "Backlight"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "auto_start_stop": {
+        "name": "Auto Start/Stop"
+      },
+      "auto_offset": {
+        "name": "Auto Temperature Offset"
+      },
+      "temp_unit": {
+        "name": "Fahrenheit Mode"
+      },
+      "altitude_unit": {
+        "name": "Feet Mode"
+      },
+      "high_altitude": {
+        "name": "High Altitude Mode"
+      }
+    },
+    "button": {
+      "sync_time": {
+        "name": "Sync Time"
+      },
+      "reset_est_fuel_remaining": {
+        "name": "Reset Estimated Fuel Remaining"
+      }
+    }
+  }
+}
