@@ -17,15 +17,12 @@ from . import gateway
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
-    CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
     CONF_ENOCEAN_SENDER_ID,
     DOMAIN,
-    ENOCEAN_DEFAULT_DEVICE_NAME,
     ENOCEAN_DEVICE_TYPE_ID,
     ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
-    ENOCEAN_ERROR_DEVICE_NAME_EMPTY,
     ENOCEAN_ERROR_INVALID_DEVICE_ID,
     ENOCEAN_ERROR_INVALID_SENDER_ID,
     ENOCEAN_MENU_OPTION_ADD_DEVICE,
@@ -159,12 +156,10 @@ class OptionsFlowHandler(OptionsFlow):
 
         default_device_type = ""
         default_device_id = ""
-        default_device_name = ""
         runtime_data: EnOceanConfigRuntimeData = self.config_entry.runtime_data
         default_sender_id = runtime_data.gateway.base_id.to_string()
 
         device_id: EnOceanDeviceAddress | None = None
-        device_name: str | None = None
         sender_id: EnOceanAddress | None = None
 
         if user_input is not None:
@@ -202,13 +197,6 @@ class OptionsFlowHandler(OptionsFlow):
             else:
                 sender_id = EnOceanAddress(user_input[CONF_ENOCEAN_SENDER_ID])
 
-            # if the device name was not set, use a default name
-            device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
-            if device_name == "":
-                device_name = ENOCEAN_DEFAULT_DEVICE_NAME + (
-                    " " + device_id.to_string() if device_id else ""
-                )
-
             # append to the configuration if no errors
             if not errors:
                 assert device_id is not None
@@ -217,7 +205,6 @@ class OptionsFlowHandler(OptionsFlow):
                     {
                         CONF_ENOCEAN_DEVICE_ID: device_id.to_string(),
                         CONF_ENOCEAN_DEVICE_TYPE_ID: device_type.unique_id,
-                        CONF_ENOCEAN_DEVICE_NAME: device_name,
                         CONF_ENOCEAN_SENDER_ID: sender_id.to_string(),
                     }
                 )
@@ -228,7 +215,6 @@ class OptionsFlowHandler(OptionsFlow):
 
             default_device_type = device_type_id
             default_device_id = device_id.to_string() if device_id else ""
-            default_device_name = device_name
             default_sender_id = sender_id.to_string() if sender_id else ""
 
         supported_devices = [
@@ -256,10 +242,6 @@ class OptionsFlowHandler(OptionsFlow):
                     selector.SelectSelectorConfig(options=[], custom_value=True)
                 ),
                 vol.Optional(
-                    CONF_ENOCEAN_DEVICE_NAME,
-                    default=default_device_name,
-                ): str,
-                vol.Optional(
                     CONF_ENOCEAN_SENDER_ID,
                     default=default_sender_id,
                 ): selector.SelectSelector(
@@ -285,10 +267,7 @@ class OptionsFlowHandler(OptionsFlow):
         device_list = [
             selector.SelectOptionDict(
                 value=device[CONF_ENOCEAN_DEVICE_ID],
-                label=device[CONF_ENOCEAN_DEVICE_NAME]
-                + " ["
-                + device[CONF_ENOCEAN_DEVICE_ID]
-                + "]",
+                label=device[CONF_ENOCEAN_DEVICE_ID],
             )
             for device in devices
         ]
@@ -329,14 +308,12 @@ class OptionsFlowHandler(OptionsFlow):
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
 
         device_id = "00:00:00:00"
-        device_name = "none"
         device_type = EnOceanDeviceType(EEP(0, 0, 0))
         sender_id: EnOceanAddress = EnOceanAddress(0)
         sender_id_string: str = ""
 
         if device is not None:  # user_input will be ignored in this case
             device_id = device[CONF_ENOCEAN_DEVICE_ID]
-            device_name = device[CONF_ENOCEAN_DEVICE_NAME]
             device_type = EnOceanDeviceType.get_supported_device_types()[
                 device[CONF_ENOCEAN_DEVICE_TYPE_ID]
             ]
@@ -357,16 +334,10 @@ class OptionsFlowHandler(OptionsFlow):
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
             device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
-            # device name must not be empty
-            device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
-            if device_name == "":
-                errors[CONF_ENOCEAN_DEVICE_NAME] = ENOCEAN_ERROR_DEVICE_NAME_EMPTY
-
             if not errors:
                 for dev in devices:
                     if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
                         dev[CONF_ENOCEAN_DEVICE_TYPE_ID] = device_type.unique_id
-                        dev[CONF_ENOCEAN_DEVICE_NAME] = device_name
                         dev[CONF_ENOCEAN_SENDER_ID] = sender_id.to_string()
                         break
 
@@ -392,7 +363,6 @@ class OptionsFlowHandler(OptionsFlow):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=supported_devices)
                 ),
-                vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=device_name): str,
                 vol.Optional(
                     CONF_ENOCEAN_SENDER_ID, default=sender_id_string
                 ): selector.SelectSelector(
@@ -418,10 +388,7 @@ class OptionsFlowHandler(OptionsFlow):
         device_list = [
             selector.SelectOptionDict(
                 value=device[CONF_ENOCEAN_DEVICE_ID],
-                label=device[CONF_ENOCEAN_DEVICE_NAME]
-                + " ["
-                + device[CONF_ENOCEAN_DEVICE_ID]
-                + "]",
+                label=device[CONF_ENOCEAN_DEVICE_ID],
             )
             for device in devices
         ]
