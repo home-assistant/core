@@ -1503,9 +1503,6 @@ pescea==1.0.12
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
 
-# homeassistant.components.pilight
-pilight==0.1.1
-
 # homeassistant.components.plex
 plexauth==0.0.6
 
