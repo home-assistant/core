@@ -119,8 +119,20 @@ async def test_light_turn_on_off(
     [
         ("extended_color_light", "light.mock_extended_color_light"),
         ("color_temperature_light", "light.mock_color_temperature_light"),
-        ("mock_dimmable_light", "light.mock_dimmable_light"),
-        ("mock_dimmable_plugin_unit", "light.dimmable_plugin_unit"),
+        pytest.param(
+            "mock_dimmable_light",
+            "light.mock_dimmable_light",
+            marks=pytest.mark.xfail(
+                reason="not a real device - invalid color mode reported"
+            ),
+        ),
+        pytest.param(
+            "mock_dimmable_plugin_unit",
+            "light.dimmable_plugin_unit",
+            marks=pytest.mark.xfail(
+                reason="not a real device - invalid color mode reported"
+            ),
+        ),
     ],
 )
 async def test_dimmable_light(
