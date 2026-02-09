@@ -67,6 +67,18 @@ def _uptime_to_timestamp(
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
+        key="read_mode",
+        translation_key="read_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.get_read_mode().value,
+    ),
+    IntellifireSensorEntityDescription(
+        key="control_mode",
+        translation_key="control_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.get_control_mode().value,
+    ),
+    IntellifireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",
         state_class=SensorStateClass.MEASUREMENT,
