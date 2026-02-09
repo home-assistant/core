@@ -1087,7 +1087,6 @@ async def test_creating_tts_subentry(
             CONF_TTS_SPEED: 0.85,
         },
     )
-    await hass.async_block_till_done()
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Custom TTS"
