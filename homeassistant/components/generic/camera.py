@@ -78,6 +78,8 @@ class GenericCamera(Camera):
 
     _last_image: bytes | None
     _last_update: datetime
+
+    _last_error: str | None = None
     _update_lock: asyncio.Lock
 
     def __init__(
