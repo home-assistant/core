@@ -66,8 +66,7 @@ async def test_form_auth_errors(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DATA_CONFIG,
+        result["flow_id"], DATA_CONFIG
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -81,7 +80,6 @@ async def test_form_auth_errors(
         DATA_CONFIG,
     )
 
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IntelliClima (SuperUser)"
     assert result["data"] == DATA_CONFIG
