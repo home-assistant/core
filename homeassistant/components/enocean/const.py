@@ -16,7 +16,6 @@ SIGNAL_SEND_MESSAGE = "enocean.send_message"
 # config
 CONF_ENOCEAN_DEVICES = "devices"
 CONF_ENOCEAN_DEVICE_ID = "id"
-CONF_ENOCEAN_DEVICE_NAME = "name"
 CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
 CONF_ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 CONF_ENOCEAN_SENDER_ID = "sender_id"
