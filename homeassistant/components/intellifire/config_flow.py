@@ -291,6 +291,9 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
             coordinator = self.config_entry.runtime_data
             fireplace = coordinator.fireplace
 
+            # Refresh connectivity status before validating
+            await fireplace.async_validate_connectivity()
+
             if (
                 user_input[CONF_READ_MODE] == API_MODE_LOCAL
                 and not fireplace.local_connectivity
