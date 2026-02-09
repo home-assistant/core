@@ -40,6 +40,28 @@
         }
       },
       "name": "Dismiss"
+    },
+    "notify.html5": {
+      "description": "Sends a notification message using the HTML5 service.",
+      "fields": {
+        "message": {
+          "description": "The message to be sent.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "The title of the message (optional).",
+          "name": "Title"
+        },
+        "data": {
+          "description": "Extended information of notification. Supports tag, URL, actions and other HTML5 parameters.",
+          "name": "Data"
+        },
+        "target": {
+          "description": "An array of targets.",
+          "name": "Target"
+        }
+      },
+      "name": "Send a notification with HTML5"
     }
   }
 }
