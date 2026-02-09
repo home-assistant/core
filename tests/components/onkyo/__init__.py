@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from aioonkyo import ReceiverInfo
 
+from homeassistant.components.onkyo.services import DATA_MP_ENTITIES
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -69,3 +70,4 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    hass.data[DATA_MP_ENTITIES].setdefault(config_entry.entry_id, {})

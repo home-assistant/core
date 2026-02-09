@@ -13,7 +13,6 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.onkyo.coordinator import Channel
-from homeassistant.components.onkyo.services import DATA_MP_ENTITIES
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -73,7 +72,6 @@ async def auto_setup_integration(
         patch("homeassistant.components.onkyo.PLATFORMS", [Platform.SWITCH]),
     ):
         await setup_integration(hass, mock_config_entry)
-        hass.data[DATA_MP_ENTITIES][mock_config_entry.entry_id] = {}
         writes.clear()
         yield
 
