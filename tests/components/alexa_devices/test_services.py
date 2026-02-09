@@ -60,7 +60,7 @@ async def test_info_skill_service(
         DOMAIN,
         SERVICE_INFO_SKILL,
         {
-            ATTR_INFO_SKILL: "Alexa.Joke.Play",
+            ATTR_INFO_SKILL: "alexa_joke",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
