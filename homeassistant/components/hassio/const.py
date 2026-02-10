@@ -17,6 +17,8 @@ DOMAIN = "hassio"
 
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
+ATTR_APP = "app"
+ATTR_APPS = "apps"
 ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
@@ -174,7 +176,7 @@ EXTRA_PLACEHOLDERS = {
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""
 
-    ADDON = "Home Assistant Add-on"
+    ADDON = "Home Assistant App"
     OS = "Home Assistant Operating System"
     CORE = "Home Assistant Core"
     SUPERVISOR = "Home Assistant Supervisor"

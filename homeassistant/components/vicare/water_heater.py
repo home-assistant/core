@@ -151,4 +151,4 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Return current operation ie. heat, cool, idle."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
