@@ -278,7 +278,6 @@ class TemplateEntity(AbstractTemplateEntity):
 
     def setup_state_template(
         self,
-        option: str,
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
@@ -299,13 +298,19 @@ class TemplateEntity(AbstractTemplateEntity):
             if not self._availability_template and not self._attr_available:
                 self._attr_available = True
 
-            state = validator(result) if validator else result
+            # Capture unknown and pass None
+            if result == STATE_UNKNOWN:
+                state = None
+            else:
+                state = validator(result) if validator else result
+
             if on_update:
                 on_update(state)
             else:
                 setattr(self, attribute, state)
 
-        self.add_template(option, attribute, on_update=_update_state)
+        if self._state_option is not None:
+            self.add_template(self._state_option, attribute, on_update=_update_state)
 
     def setup_template(
         self,

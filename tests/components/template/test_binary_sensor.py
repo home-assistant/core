@@ -1277,14 +1277,14 @@ async def test_template_multiple_states_delay_on(
 ) -> None:
     """Test binary sensor template with delay_on and multiple state changes."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    # State should be off
+    # State should be unknown
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     for _ in range(5):
         # Now wait for the on delay

@@ -1306,7 +1306,7 @@ async def test_config_flow_preview_template_error(
     [
         (
             "sensor",
-            "{{ states('sensor.one') }}",
+            "{{ 'abc' }}",
             {"unit_of_measurement": "°C"},
         ),
     ],
@@ -1354,7 +1354,7 @@ async def test_config_flow_preview_bad_state(
         "error": (
             "Sensor None has device class 'None', state class 'None' unit '°C' "
             "and suggested precision 'None' thus indicating it has a numeric "
-            "value; however, it has the non-numeric value: 'unknown' (<class "
+            "value; however, it has the non-numeric value: 'abc' (<class "
             "'str'>)"
         ),
     }

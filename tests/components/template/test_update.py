@@ -209,18 +209,22 @@ async def test_device_id(
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, None)])
 @pytest.mark.parametrize(
-    ("style", "expected_state"),
+    "style",
     [
-        (ConfigurationStyle.MODERN, STATE_UNKNOWN),
-        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
+        ConfigurationStyle.MODERN,
+        ConfigurationStyle.TRIGGER,
     ],
 )
 @pytest.mark.parametrize(
-    ("installed_template", "latest_template"),
+    ("installed_template", "latest_template", "expected_state"),
     [
-        ("{{states.test['big.fat...']}}", TEST_LATEST_TEMPLATE),
-        (TEST_INSTALLED_TEMPLATE, "{{states.test['big.fat...']}}"),
-        ("{{states.test['big.fat...']}}", "{{states.test['big.fat...']}}"),
+        ("{{states.test['big.fat...']}}", TEST_LATEST_TEMPLATE, STATE_UNAVAILABLE),
+        (TEST_INSTALLED_TEMPLATE, "{{states.test['big.fat...']}}", STATE_UNKNOWN),
+        (
+            "{{states.test['big.fat...']}}",
+            "{{states.test['big.fat...']}}",
+            STATE_UNAVAILABLE,
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_update")
@@ -229,6 +233,9 @@ async def test_syntax_error(
     expected_state: str,
 ) -> None:
     """Test template update with render error."""
+    hass.states.async_set(TEST_SENSOR_ID, "anything")
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == expected_state
 
@@ -342,7 +349,7 @@ async def test_installed_and_latest_template_updates_from_entity(
         ("{{ 2.0 }}", STATE_OFF, "2.0"),
         ("{{ None }}", STATE_UNKNOWN, None),
         ("{{ 'foo' }}", STATE_ON, "foo"),
-        ("{{ x + 2 }}", STATE_UNKNOWN, None),
+        ("{{ x + 2 }}", STATE_UNAVAILABLE, None),
     ],
 )
 @pytest.mark.usefixtures("setup_update")
@@ -357,7 +364,7 @@ async def test_installed_version_template(
     state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
-    assert state.attributes["installed_version"] == expected_attr
+    assert state.attributes.get("installed_version") == expected_attr
 
 
 @pytest.mark.parametrize(
