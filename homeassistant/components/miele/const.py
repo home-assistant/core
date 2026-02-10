@@ -265,6 +265,8 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074
     process_finished = 3078
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
@@ -357,6 +359,8 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074, 7938
     process_finished = 3078, 7942
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
@@ -806,6 +810,8 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
         24813,  # add profile
     )
     appliance_rinse = 24750, 24759, 24773, 24787, 24788
+    intermediate_rinsing = 24758
+    automatic_maintenance = 24778
     descaling = 24751
     brewing_unit_degrease = 24753
     milk_pipework_rinse = 24754
