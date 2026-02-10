@@ -1221,7 +1221,6 @@ async def test_update_panel(
     assert msg["result"]["light"]["icon"] == "mdi:lamps"
     assert msg["result"]["light"]["title"] == "light"
     assert msg["result"]["light"]["require_admin"] is False
-    assert msg["result"]["light"]["default_visible"] is False
 
     # Update the light panel
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
@@ -1233,7 +1232,6 @@ async def test_update_panel(
             "title": "My Lights",
             "icon": "mdi:lightbulb",
             "require_admin": True,
-            "show_in_sidebar": True,
         }
     )
     msg = await ws_client.receive_json()
@@ -1246,7 +1244,6 @@ async def test_update_panel(
     assert msg["result"]["light"]["icon"] == "mdi:lightbulb"
     assert msg["result"]["light"]["title"] == "My Lights"
     assert msg["result"]["light"]["require_admin"] is True
-    assert msg["result"]["light"]["default_visible"] is True
 
 
 async def test_update_panel_partial(
@@ -1323,7 +1320,6 @@ async def test_update_panel_persists(
             "light": {
                 "title": "Saved Lights",
                 "icon": "mdi:lamp",
-                "show_in_sidebar": True,
                 "require_admin": True,
             },
         },
@@ -1337,7 +1333,6 @@ async def test_update_panel_persists(
     assert msg["result"]["light"]["title"] == "Saved Lights"
     assert msg["result"]["light"]["icon"] == "mdi:lamp"
     assert msg["result"]["light"]["require_admin"] is True
-    assert msg["result"]["light"]["default_visible"] is True
 
     # Verify other panels still have defaults
     assert msg["result"]["climate"]["title"] == "climate"
@@ -1381,51 +1376,48 @@ async def test_update_panel_reset_param(
     assert msg["result"]["security"]["icon"] == "mdi:security"
 
 
-async def test_update_panel_reset_all(
+async def test_update_panel_hide_sidebar(
     hass: HomeAssistant, ws_client: MockHAClientWebSocket
 ) -> None:
-    """Test that reset=True restores all properties to original values."""
-    # Set multiple custom properties
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "frontend/update_panel",
-            "url_path": "light",
-            "title": "My Lights",
-            "icon": "mdi:lightbulb",
-            "require_admin": True,
-            "show_in_sidebar": True,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-
-    # Verify overrides applied
-    await ws_client.send_json({"id": 2, "type": "get_panels"})
-    msg = await ws_client.receive_json()
-    assert msg["result"]["light"]["title"] == "My Lights"
-    assert msg["result"]["light"]["icon"] == "mdi:lightbulb"
-    assert msg["result"]["light"]["require_admin"] is True
-    assert msg["result"]["light"]["default_visible"] is True
-
-    # Reset all
-    events = async_capture_events(hass, EVENT_PANELS_UPDATED)
-    await ws_client.send_json(
-        {
-            "id": 3,
-            "type": "frontend/update_panel",
-            "url_path": "light",
-            "reset": True,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert len(events) == 1
-
-    # Verify all properties restored to originals
-    await ws_client.send_json({"id": 4, "type": "get_panels"})
+    """Test that show_in_sidebar=false clears title and icon like lovelace."""
+    # Verify initial state has title and icon
+    await ws_client.send_json({"id": 1, "type": "get_panels"})
     msg = await ws_client.receive_json()
     assert msg["result"]["light"]["title"] == "light"
     assert msg["result"]["light"]["icon"] == "mdi:lamps"
-    assert msg["result"]["light"]["require_admin"] is False
-    assert msg["result"]["light"]["default_visible"] is False
+
+    # Hide from sidebar
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "show_in_sidebar": False,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Title and icon should be None
+    await ws_client.send_json({"id": 3, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["title"] is None
+    assert msg["result"]["light"]["icon"] is None
+
+    # Show in sidebar again by resetting show_in_sidebar
+    await ws_client.send_json(
+        {
+            "id": 4,
+            "type": "frontend/update_panel",
+            "url_path": "light",
+            "show_in_sidebar": None,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Title and icon should be restored
+    await ws_client.send_json({"id": 5, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"

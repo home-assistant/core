@@ -337,14 +337,16 @@ class Panel:
             "config_panel_domain": self.config_panel_domain,
         }
         if config_override:
-            if "icon" in config_override:
-                response["icon"] = config_override["icon"]
-            if "title" in config_override:
-                response["title"] = config_override["title"]
-            if "show_in_sidebar" in config_override:
-                response["default_visible"] = config_override["show_in_sidebar"]
             if "require_admin" in config_override:
                 response["require_admin"] = config_override["require_admin"]
+            if config_override.get("show_in_sidebar") is False:
+                response["title"] = None
+                response["icon"] = None
+            else:
+                if "icon" in config_override:
+                    response["icon"] = config_override["icon"]
+                if "title" in config_override:
+                    response["title"] = config_override["title"]
         return response
 
 
@@ -1030,7 +1032,6 @@ def websocket_subscribe_extra_js(
         vol.Optional("icon"): vol.Any(cv.icon, None),
         vol.Optional("require_admin"): vol.Any(cv.boolean, None),
         vol.Optional("show_in_sidebar"): vol.Any(cv.boolean, None),
-        vol.Optional("reset"): True,
     }
 )
 @websocket_api.require_admin
@@ -1046,23 +1047,19 @@ async def websocket_update_panel(
         return
 
     panels_config = hass.data[DATA_PANELS_CONFIG]
+    panel_config = dict(panels_config.get(url_path, {}))
 
-    if msg.get("reset"):
-        panels_config.pop(url_path, None)
+    for key in ("title", "icon", "require_admin", "show_in_sidebar"):
+        if key in msg:
+            if msg[key] is None:
+                panel_config.pop(key, None)
+            else:
+                panel_config[key] = msg[key]
+
+    if panel_config:
+        panels_config[url_path] = panel_config
     else:
-        panel_config = dict(panels_config.get(url_path, {}))
-
-        for key in ("title", "icon", "require_admin", "show_in_sidebar"):
-            if key in msg:
-                if msg[key] is None:
-                    panel_config.pop(key, None)
-                else:
-                    panel_config[key] = msg[key]
-
-        if panel_config:
-            panels_config[url_path] = panel_config
-        else:
-            panels_config.pop(url_path, None)
+        panels_config.pop(url_path, None)
 
     hass.data[DATA_PANELS_STORE].async_delay_save(
         lambda: hass.data[DATA_PANELS_CONFIG], PANELS_SAVE_DELAY
