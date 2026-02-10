@@ -60,103 +60,107 @@ USED_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_USED_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    suggested_display_precision=2,
-    value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
+    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=3,
+    value_fn=lambda value: (value or 0) / 60,
 )
 
-TEMPERATURE_DESCRIPTION = SensorEntityDescription(
+TEMPERATURE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
 )
 
-HUMIDITY_DESCRIPTION = SensorEntityDescription(
+HUMIDITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=PERCENTAGE,
 )
 
-BATTERY_DESCRIPTION = SensorEntityDescription(
+BATTERY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_BATTERY,
     device_class=SensorDeviceClass.BATTERY,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=PERCENTAGE,
 )
 
-POWER_DESCRIPTION = SensorEntityDescription(
+POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-VOLTAGE_DESCRIPTION = SensorEntityDescription(
+VOLTAGE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_VOLTAGE,
     device_class=SensorDeviceClass.VOLTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricPotential.VOLT,
 )
 
-CURRENT_DESCRIPTION_IN_MA = SensorEntityDescription(
+CURRENT_DESCRIPTION_IN_MA = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_CURRENT,
     device_class=SensorDeviceClass.CURRENT,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
 )
 
-CURRENT_DESCRIPTION_IN_A = SensorEntityDescription(
+CURRENT_DESCRIPTION_IN_A = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_CURRENT,
     device_class=SensorDeviceClass.CURRENT,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
 )
 
-CO2_DESCRIPTION = SensorEntityDescription(
+CO2_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_CO2,
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
-POWER_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
+POWER_CONSUMPTION_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_POWER_CONSUMPTION,
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-RELAY_SWITCH_2PM_POWER_DESCRIPTION = SensorEntityDescription(
+RELAY_SWITCH_2PM_POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_POWER,
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION = SensorEntityDescription(
+RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE,
     device_class=SensorDeviceClass.VOLTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricPotential.VOLT,
 )
 
-RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SensorEntityDescription(
+RELAY_SWITCH_2PM_CURRENT_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT,
     device_class=SensorDeviceClass.CURRENT,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
 )
 
-RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION = SensorEntityDescription(
+RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY,
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    suggested_display_precision=3,
+    value_fn=lambda value: (value or 0) / 60,
 )
 
-LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
+LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key="lightLevel",
     translation_key="light_level",
     state_class=SensorStateClass.MEASUREMENT,
@@ -221,11 +225,14 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,
         RELAY_SWITCH_2PM_CURRENT_DESCRIPTION,
-        RELAY_SWITCH_2PM_ElECTRICITY_DESCRIPTION,
+        RELAY_SWITCH_2PM_ELECTRICITY_DESCRIPTION,
     ),
     "Curtain": (BATTERY_DESCRIPTION,),
     "Curtain3": (BATTERY_DESCRIPTION,),
@@ -280,12 +287,14 @@ async def async_setup_entry(
 class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
     """Representation of a SwitchBot Cloud sensor entity."""
 
+    entity_description: SwitchbotCloudSensorEntityDescription
+
     def __init__(
         self,
         api: SwitchBotAPI,
         device: Device,
         coordinator: SwitchBotCoordinator,
-        description: SensorEntityDescription,
+        description: SwitchbotCloudSensorEntityDescription,
     ) -> None:
         """Initialize SwitchBot Cloud sensor entity."""
         super().__init__(api, device, coordinator)
@@ -296,7 +305,9 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+        value = self.coordinator.data.get(self.entity_description.key)
+
+        self._attr_native_value = self.entity_description.value_fn(value)
 
 
 class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
@@ -307,7 +318,7 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
         api: SwitchBotAPI,
         device: Device,
         coordinator: SwitchBotCoordinator,
-        description: SensorEntityDescription,
+        description: SwitchbotCloudSensorEntityDescription,
         channel: str,
     ) -> None:
         """Initialize SwitchBot Cloud sensor entity."""
@@ -328,9 +339,10 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_native_value = self.coordinator.data.get(
+        value = self.coordinator.data.get(
             f"switch{self._channel}{self.entity_description.key.strip()}"
         )
+        self._attr_native_value = self.entity_description.value_fn(value)
 
 
 @callback
@@ -338,7 +350,7 @@ def _async_make_entity(
     api: SwitchBotAPI,
     device: Device | Remote,
     coordinator: SwitchBotCoordinator,
-    description: SensorEntityDescription,
+    description: SwitchbotCloudSensorEntityDescription,
 ) -> SwitchBotCloudSensor:
     """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
     return SwitchBotCloudSensor(api, device, coordinator, description)

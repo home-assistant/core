@@ -5,24 +5,40 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
-from .coordinator import VeSyncDataCoordinator
+from .const import VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
+
+def _mist_levels(device: VeSyncBaseDevice) -> list[int]:
+    """Check if the device supports mist level adjustment."""
+    if is_humidifier(device):
+        return device.mist_levels
+    raise HomeAssistantError("Device does not support mist level adjustment.")
+
+
+def _set_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
+    """Set mist level on humidifier."""
+    if is_humidifier(device):
+        return device.set_mist_level(int(value))
+    raise HomeAssistantError("Device does not support mist level adjustment.")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,12 +56,12 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
-        native_min_value_fn=lambda device: min(device.mist_levels),
-        native_max_value_fn=lambda device: max(device.mist_levels),
+        native_min_value_fn=lambda device: min(_mist_levels(device)),
+        native_max_value_fn=lambda device: max(_mist_levels(device)),
         native_step=1,
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
-        set_value_fn=lambda device, value: device.set_mist_level(value),
+        set_value_fn=_set_mist_level,
         value_fn=lambda device: device.state.mist_virtual_level,
     )
 ]
@@ -53,12 +69,12 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -70,13 +86,13 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
+    devices: DeviceContainer | list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
@@ -125,4 +141,4 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         """Set new value."""
         if not await self.entity_description.set_value_fn(self.device, value):
             raise HomeAssistantError(self.device.last_response.message)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
