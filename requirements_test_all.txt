@@ -1557,7 +1557,7 @@ pushover_complete==1.2.0
 pvo==2.2.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.16
+py-aosmith==1.0.17
 
 # homeassistant.components.canary
 py-canary==0.5.4
