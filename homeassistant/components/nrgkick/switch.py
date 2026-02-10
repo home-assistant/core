@@ -27,8 +27,7 @@ class NRGkickSwitchEntityDescription(SwitchEntityDescription):
 
 def _is_charging_enabled(data: NRGkickData) -> bool:
     """Return True if charging is enabled (not paused)."""
-    charge_pause = data.control.get("charge_pause")
-    return charge_pause == 0
+    return bool(data.control.get("charge_pause") == 0)
 
 
 async def _async_set_charging_enabled(
@@ -58,7 +57,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick switches based on a config entry."""
-    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         NRGkickSwitch(coordinator, description) for description in SWITCHES

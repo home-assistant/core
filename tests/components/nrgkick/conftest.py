@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Any, cast
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from nrgkick_api import ConnectorType, GridPhases
@@ -75,7 +75,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_info_data() -> dict[str, Any]:
     """Mock device info data."""
-    res = cast(dict[str, Any], load_json_object_fixture("info.json", DOMAIN))
+    res = load_json_object_fixture("info.json", DOMAIN)
     res["connector"]["type"] = ConnectorType.TYPE2
     res["grid"]["phases"] = GridPhases.L1_L2_L3
     return res

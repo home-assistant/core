@@ -47,14 +47,7 @@ async def test_charge_switch_service_calls_update_state(
 
     mock_nrgkick_api.set_charge_pause.side_effect = set_charge_pause
 
-    entity_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.domain == "switch" and entry.translation_key == "charging_enabled"
-    )
-    entity_id = entity_entry.entity_id
+    entity_id = "switch.nrgkick_test_charging_enabled"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "on"
@@ -104,14 +97,7 @@ async def test_charge_switch_rejected_by_device(
     """Test the switch surfaces device rejection messages and keeps state."""
     await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
 
-    entity_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.domain == "switch" and entry.translation_key == "charging_enabled"
-    )
-    entity_id = entity_entry.entity_id
+    entity_id = "switch.nrgkick_test_charging_enabled"
 
     # Device refuses the command and the library raises an exception.
     mock_nrgkick_api.set_charge_pause.side_effect = NRGkickCommandRejectedError(
