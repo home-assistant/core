@@ -9,6 +9,7 @@
       "invalid_code": "The code you entered was incorrect, please check it and try again.",
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+      "invalid_email_or_region": "Either there is no account associated with the email you entered, or there is no account in the selected region.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
@@ -30,9 +31,11 @@
       },
       "user": {
         "data": {
+          "region": "Roborock server region",
           "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
+          "region": "The server region your Roborock account is registered in when setting up the app. Auto is recommended unless you are having issues.",
           "username": "The email address used to sign in to the Roborock app."
         },
         "description": "Enter your Roborock email address."
@@ -542,6 +545,17 @@
           "zones": "Show zones on the map."
         },
         "description": "Specify which features to draw on the map."
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "auto": "Auto",
+        "cn": "CN",
+        "eu": "EU",
+        "ru": "RU",
+        "us": "US"
       }
     }
   },

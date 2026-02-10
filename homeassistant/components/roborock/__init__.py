@@ -23,8 +23,9 @@ from roborock.mqtt.session import MqttSessionUnauthorized
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BASE_URL,
@@ -47,10 +48,18 @@ from .coordinator import (
     RoborockWetDryVacUpdateCoordinator,
 )
 from .roborock_storage import CacheStore, async_cleanup_map_storage
+from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:

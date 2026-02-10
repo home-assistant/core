@@ -34,14 +34,14 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud API does not require updating entry data from network discovery.
@@ -60,7 +60,9 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: The only configuration option is the API key, which is handled by the reauthentication flow.
   repair-issues:
     status: exempt
     comment: No repair issues to implement at this time.

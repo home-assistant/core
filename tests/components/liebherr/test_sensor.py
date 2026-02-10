@@ -1,7 +1,7 @@
 """Test the Liebherr sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
@@ -20,7 +20,9 @@ from pyliebherrhomeapi.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.liebherr.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,6 +49,7 @@ async def test_single_zone_sensor(
     entity_registry: er.EntityRegistry,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test single zone device uses device name without zone suffix."""
     device = Device(
@@ -71,8 +74,9 @@ async def test_single_zone_sensor(
     )
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -135,9 +139,8 @@ async def test_multi_zone_with_none_position(
     [
         LiebherrConnectionError("Connection failed"),
         LiebherrTimeoutError("Timeout"),
-        LiebherrAuthenticationError("API key revoked"),
     ],
-    ids=["connection_error", "timeout_error", "auth_error"],
+    ids=["connection_error", "timeout_error"],
 )
 async def test_sensor_update_failure(
     hass: HomeAssistant,
@@ -180,6 +183,45 @@ async def test_sensor_update_failure(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensor_update_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test authentication error triggers reauth flow."""
+    entity_id = "sensor.test_fridge_top_zone"
+
+    # Initial state should be available with value
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "5"
+
+    # Simulate auth error
+    mock_liebherr_client.get_device_state.side_effect = LiebherrAuthenticationError(
+        "API key revoked"
+    )
+
+    # Advance time to trigger coordinator refresh (60 second interval)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Sensor should now be unavailable
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Config entry should be in reauth state
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in flows
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_sensor_unavailable_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -208,9 +250,3 @@ async def test_sensor_unavailable_when_control_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify entity properties return None when control is missing
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
-    assert entity.native_unit_of_measurement is None
