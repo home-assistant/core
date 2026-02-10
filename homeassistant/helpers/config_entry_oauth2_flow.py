@@ -511,7 +511,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             ClientError,
         ) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
-            # Only the unauthorized error is non-recoverable
             if isinstance(err, OAuth2TokenRequestReauthError):
                 return self.async_abort(reason="oauth_unauthorized")
             return self.async_abort(reason="oauth_failed")
