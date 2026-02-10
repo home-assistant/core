@@ -17,6 +17,7 @@ from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_TEMPERATURE,
+    PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -206,6 +207,7 @@ RADIATOR_PRESET_MODE_MAP: dict[str, SmartRadiatorThermostatMode] = {
     PRESET_BOOST: SmartRadiatorThermostatMode.FAST_HEATING,
     PRESET_COMFORT: SmartRadiatorThermostatMode.COMFORT,
     PRESET_HOME: SmartRadiatorThermostatMode.MANUAL,
+    PRESET_ACTIVITY: SmartRadiatorThermostatMode.SCHEDULE,
 }
 
 RADIATOR_HA_PRESET_MODE_MAP = {
