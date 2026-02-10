@@ -170,7 +170,7 @@ class _Right(_IntegrationMethod):
 def _decimal_state(state: str) -> Decimal | None:
     try:
         return Decimal(state)
-    except (InvalidOperation, TypeError):
+    except InvalidOperation, TypeError:
         return None
 
 

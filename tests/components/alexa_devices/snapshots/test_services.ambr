@@ -37,6 +37,7 @@
             'type': 'Timer',
           }),
         }),
+        'notifications_supported': True,
         'online': True,
         'sensors': dict({
           'dnd': dict({
@@ -103,6 +104,7 @@
             'type': 'Timer',
           }),
         }),
+        'notifications_supported': True,
         'online': True,
         'sensors': dict({
           'dnd': dict({
