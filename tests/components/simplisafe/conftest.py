@@ -195,10 +195,14 @@ def unique_id_fixture() -> str:
 def websocket_fixture() -> Mock:
     """Define a simplisafe-python websocket object."""
     listen_event = asyncio.Event()
+    state = {"raise_exc": None}  # mutable dict
 
     async def listen_wait_event() -> None:
         """Dummy websocket listen that waits for an event."""
         await listen_event.wait()
+        listen_event.clear()
+        if state["raise_exc"] is not None:
+            raise state["raise_exc"]
 
     ws = Mock(
         async_connect=AsyncMock(),
@@ -206,6 +210,7 @@ def websocket_fixture() -> Mock:
         async_listen=listen_wait_event,
     )
 
-    # Expose the event so tests can trigger it
+    # Expose the event/exception so tests can trigger it
     ws.listen_event = listen_event
+    ws.state = state
     return ws

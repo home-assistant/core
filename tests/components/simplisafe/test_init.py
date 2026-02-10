@@ -1,5 +1,7 @@
 """Define tests for SimpliSafe setup."""
 
+import asyncio
+import contextlib
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,11 +10,14 @@ from simplipy.errors import (
     InvalidCredentialsError,
     RequestError,
     SimplipyError,
+    WebsocketError,
 )
 
 from homeassistant.components.simplisafe import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    WEBSOCKET_RECONNECT_RETRIES,
+    WEBSOCKET_RETRY_DELAY,
     SimpliSafe,
 )
 from homeassistant.core import HomeAssistant
@@ -49,9 +54,7 @@ async def test_base_station_migration(
             "homeassistant.components.simplisafe.API.async_from_refresh_token",
             return_value=api,
         ),
-        patch(
-            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-        ),
+        patch("homeassistant.components.simplisafe.SimpliSafe._async_websocket_loop"),
         patch(
             "homeassistant.components.simplisafe.PLATFORMS",
             [],
@@ -79,7 +82,8 @@ async def test_coordinator_exceptions_and_websocket_behavior(
     expected_exception: type[HomeAssistantError],
     should_cancel_task: bool,
 ) -> None:
-    """Test that exceptions propagate to the coordinator."""
+    """Test that exceptions propagate to the coordinator and successfully stop and restart the websocket task."""
+
     manager: SimpliSafe = simplisafe_manager
     coordinator = manager.coordinator
     assert coordinator is not None
@@ -133,3 +137,82 @@ async def test_coordinator_exceptions_and_websocket_behavior(
     else:
         # For exceptions that don’t cancel the websocket, just assert it’s still running
         assert task_after is not None and not task_after.done()
+
+
+@pytest.mark.parametrize(
+    ("exc_type", "max_retries"),
+    [
+        (WebsocketError, WEBSOCKET_RECONNECT_RETRIES),
+        (asyncio.CancelledError, 1),
+        (Exception, 1),
+    ],
+)
+async def test_websocket_backoff_parametrized(
+    simplisafe_manager: SimpliSafe, websocket, exc_type, max_retries
+) -> None:
+    """Parameterized deterministic test.
+
+    - WebsocketError: automatically tests 1..max_retries retries with exponential backoff
+    - CancelledError: task cancels immediately
+    """
+    manager = simplisafe_manager
+    sleep_calls: list[float] = []
+
+    original_sleep = asyncio.sleep
+
+    async def fake_sleep(delay: float):
+        if delay >= WEBSOCKET_RETRY_DELAY:
+            sleep_calls.append(delay)
+        await original_sleep(0)
+
+    with patch("asyncio.sleep", new=fake_sleep):
+        task = manager._websocket_task
+        assert task is not None
+
+        if exc_type is asyncio.CancelledError:
+            task.cancel()
+            await asyncio.sleep(0)  # yield
+        elif exc_type is Exception:
+            # Generic exception: trigger once and yield
+            websocket.state["raise_exc"] = exc_type("fail")
+            websocket.listen_event.set()
+            await asyncio.sleep(0)
+        else:
+            # Test retries 1..max_retries automatically
+            for retries in range(1, max_retries + 1):
+                # trigger websocket error 'retries' times
+                for i in range(retries):
+                    websocket.state["raise_exc"] = exc_type(f"fail {i}")
+                    websocket.listen_event.set()
+                    # wait until the websocket task has incremented retries and slept
+                    while len(sleep_calls) < i + 1:
+                        await asyncio.sleep(0.01)
+
+                # clear exception → recovery
+                websocket.state["raise_exc"] = None
+                websocket.listen_event.set()
+                await asyncio.sleep(0.01)
+
+                # verify the prefix of expected backoff
+                expected_backoff = [
+                    WEBSOCKET_RETRY_DELAY * (2**i) for i in range(retries)
+                ]
+                assert sleep_calls[-retries:] == expected_backoff, (
+                    f"Backoff for {retries} retries should be {expected_backoff}, got {sleep_calls[-retries:]}"
+                )
+
+    # --- Verify task state ---
+    task = manager._websocket_task
+    if exc_type is asyncio.CancelledError or exc_type is Exception:
+        assert task is None or task.done() or task.cancelled()
+    elif retries < WEBSOCKET_RECONNECT_RETRIES:
+        assert task is not None
+        assert not task.done()
+    else:
+        assert task is None or task.done()
+
+    # --- Cleanup ---
+    if task and not task.done():
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task

@@ -495,15 +495,6 @@ class SimpliSafe:
                 raise
             except WebsocketError as err:
                 retries += 1
-                if retries >= WEBSOCKET_RECONNECT_RETRIES:
-                    LOGGER.error(
-                        "Websocket connection failed (%s/%s): %s",
-                        retries,
-                        WEBSOCKET_RECONNECT_RETRIES,
-                        err,
-                    )
-                    return
-
                 delay = WEBSOCKET_RETRY_DELAY * (2 ** (retries - 1))
                 LOGGER.debug(
                     "Websocket error (%s/%s): %s; retrying in %s seconds",
@@ -514,6 +505,18 @@ class SimpliSafe:
                 )
 
                 await asyncio.sleep(delay)
+                if retries >= WEBSOCKET_RECONNECT_RETRIES:
+                    LOGGER.error(
+                        "Websocket connection failed, task exiting (%s/%s): %s",
+                        retries,
+                        WEBSOCKET_RECONNECT_RETRIES,
+                        err,
+                    )
+                    return
+            except Exception as err:  # noqa: BLE001
+                # unexpected errors → log and stop
+                LOGGER.exception("Unexpected error in websocket loop: %s", err)
+                return
 
     async def _async_cancel_websocket_loop(self) -> None:
         """Cancel the websocket loop task, if running."""
