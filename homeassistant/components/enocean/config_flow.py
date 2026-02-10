@@ -97,9 +97,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 MANUAL_SCHEMA, user_input
             ),
-            data_schema=vol.Schema(
-                {vol.Required(CONF_DEVICE, default=default_value): str}
-            ),
             errors=errors,
         )
 
