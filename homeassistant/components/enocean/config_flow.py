@@ -15,6 +15,12 @@ from homeassistant.helpers.selector import (
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
 
+MANUAL_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE): cv.string,
+    }
+)
+
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
