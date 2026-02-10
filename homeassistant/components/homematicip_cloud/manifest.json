@@ -1,7 +1,7 @@
 {
   "domain": "homematicip_cloud",
   "name": "HomematicIP Cloud",
-  "codeowners": ["@hahn-th"],
+  "codeowners": ["@hahn-th", "@lackas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
   "integration_type": "hub",
