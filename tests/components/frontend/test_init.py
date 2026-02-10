@@ -11,11 +11,15 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.frontend import (
+    CONF_DEVELOPMENT_PR,
     CONF_EXTRA_JS_URL_ES5,
     CONF_EXTRA_MODULE_URL,
+    CONF_GITHUB_TOKEN,
     CONF_THEMES,
+    CONFIG_SCHEMA,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
@@ -32,6 +36,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -279,6 +284,30 @@ async def test_themes_save_storage(
     }
 
 
+@pytest.mark.usefixtures("frontend_themes")
+async def test_themes_save_storage_new_schema(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that theme settings are restores after restart."""
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy", "name_dark": "dark"}, blocking=True
+    )
+
+    # To trigger the call_later
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    assert hass_storage[THEMES_STORAGE_KEY]["data"] == {
+        "frontend_default_theme": "happy",
+        "frontend_default_dark_theme": "dark",
+    }
+
+
 async def test_themes_set_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
@@ -318,9 +347,13 @@ async def test_themes_set_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
-    await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
-    )
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(
+            DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
+        )
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -371,14 +404,58 @@ async def test_themes_set_dark_theme(
     assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
-@pytest.mark.usefixtures("frontend")
-async def test_themes_set_dark_theme_wrong_name(
+async def test_themes_set_combined_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
-    """Test frontend.set_theme service called with mode dark and wrong name."""
+    """Test frontend.set_theme service setting both light and dark modes."""
+
     await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
+        DOMAIN, "set_theme", {"name_dark": "dark"}, blocking=True
     )
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "happy"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_theme",
+        {"name": "light_only", "name_dark": "dark_only"},
+        blocking=True,
+    )
+
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "light_only"
+    assert msg["result"]["default_dark_theme"] == "dark_only"
+
+
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("schema"), [{"name": "wrong", "mode": "dark"}, {"name_dark": "wrong"}]
+)
+async def test_themes_set_dark_theme_wrong_name(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket, schema
+) -> None:
+    """Test frontend.set_theme service called with mode dark and wrong name."""
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -397,9 +474,13 @@ async def test_themes_reload_themes(
         "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
-        await hass.services.async_call(
-            DOMAIN, "set_theme", {"name": "happy"}, blocking=True
-        )
+        with pytest.raises(
+            vol.error.MultipleInvalid,
+            match="Theme happy not found",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+            )
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -860,13 +941,27 @@ async def test_get_version(
     assert msg["result"] == {"version": cur_version}
 
 
-async def test_static_paths(mock_http_client: TestClient) -> None:
+@pytest.mark.parametrize(
+    ("from_url", "to_url", "expected_status"),
+    [
+        ("/.well-known/change-password", "/profile", 302),
+        ("/developer-tools", "/config/developer-tools", 301),
+        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
+        ("/developer-tools/state", "/config/developer-tools/state", 301),
+        ("/developer-tools/action", "/config/developer-tools/action", 301),
+        ("/developer-tools/template", "/config/developer-tools/template", 301),
+        ("/developer-tools/event", "/config/developer-tools/event", 301),
+        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/shopping-list", "/todo", 301),
+    ],
+)
+async def test_static_paths(
+    mock_http_client: TestClient, from_url: str, to_url: str, expected_status: int
+) -> None:
     """Test static paths."""
-    resp = await mock_http_client.get(
-        "/.well-known/change-password", allow_redirects=False
-    )
-    assert resp.status == 302
-    assert resp.headers["location"] == "/profile"
+    resp = await mock_http_client.get(from_url, allow_redirects=False)
+    assert resp.status == expected_status
+    assert resp.headers["location"] == to_url
 
 
 @pytest.mark.usefixtures("frontend_themes")
@@ -1013,3 +1108,104 @@ async def test_www_local_dir(
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
+
+
+async def test_development_pr_and_github_token_inclusive() -> None:
+    """Test that development_pr and github_token must both be set or neither."""
+    # Both present - valid
+    valid_config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+    assert CONFIG_SCHEMA(valid_config)
+
+    valid_config_empty: dict[str, dict[str, Any]] = {DOMAIN: {}}
+    assert CONFIG_SCHEMA(valid_config_empty)
+
+    invalid_config_pr_only = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+        }
+    }
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_pr_only)
+
+    invalid_config_token_only: dict[str, dict[str, Any]] = {
+        DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
+    }
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_token_only)
+
+
+async def test_setup_with_development_pr_and_token(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that setup succeeds when both development_pr and github_token are provided."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Verify GitHub API was called
+    assert mock_github_api.generic.call_count >= 2  # PR + workflow runs
+
+
+async def test_setup_cleans_up_pr_cache_when_not_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test that PR cache is cleaned up when no PR is configured."""
+    hass.config.config_dir = str(tmp_path)
+
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
+    pr_cache_dir.mkdir(parents=True)
+    (pr_cache_dir / "test_file.txt").write_text("test")
+
+    config: dict[str, dict[str, Any]] = {DOMAIN: {}}
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert not pr_cache_dir.exists()
+
+
+async def test_setup_with_development_pr_unexpected_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setup handles unexpected errors during PR download gracefully."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.download_pr_artifact",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        config = {
+            DOMAIN: {
+                CONF_DEVELOPMENT_PR: 12345,
+                CONF_GITHUB_TOKEN: "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Unexpected error downloading PR #12345" in caplog.text

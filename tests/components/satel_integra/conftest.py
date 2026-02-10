@@ -93,3 +93,10 @@ def mock_config_entry_with_subentries(
         }
     )
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_reload_after_entry_update() -> Generator[MagicMock]:
+    """Mock out the reload after updating the entry."""
+    with patch("homeassistant.components.satel_integra.update_listener") as mock_reload:
+        yield mock_reload

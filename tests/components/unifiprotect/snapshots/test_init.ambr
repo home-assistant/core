@@ -25,7 +25,7 @@
     }),
     'manufacturer': 'Ubiquiti',
     'model': 'UNVR-PRO',
-    'model_id': None,
+    'model_id': 'UNVR-PRO',
     'name': 'UnifiProtect',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

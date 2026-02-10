@@ -228,7 +228,7 @@ def _entity_history_to_float_and_state(
                 float_state
             ):
                 append((float_state, state))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
     return float_states
 
@@ -416,8 +416,8 @@ def warn_dip(
         _LOGGER.warning(
             (
                 "Entity %s %shas state class total_increasing, but its state is not"
-                " strictly increasing. Triggered by state %s (%s) with last_updated set"
-                " to %s. Please %s"
+                " strictly increasing. Triggered by state %s (previous state: %s) with"
+                " last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",

@@ -11,7 +11,6 @@ from typing import Any, Concatenate
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -31,16 +30,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import dt as dt_util
 
 from . import KodiConfigEntry
@@ -85,42 +79,12 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
-SERVICE_ADD_MEDIA = "add_to_playlist"
-SERVICE_CALL_METHOD = "call_method"
-
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_MEDIA_NAME = "media_name"
-ATTR_MEDIA_ARTIST_NAME = "artist_name"
-ATTR_MEDIA_ID = "media_id"
-ATTR_METHOD = "method"
-
-
-KODI_ADD_MEDIA_SCHEMA: VolDictType = {
-    vol.Required(ATTR_MEDIA_TYPE): cv.string,
-    vol.Optional(ATTR_MEDIA_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-}
-
-KODI_CALL_METHOD_SCHEMA = cv.make_entity_service_schema(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: KodiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ADD_MEDIA, KODI_ADD_MEDIA_SCHEMA, "async_add_media_to_playlist"
-    )
-    platform.async_register_entity_service(
-        SERVICE_CALL_METHOD, KODI_CALL_METHOD_SCHEMA, "async_call_method"
-    )
-
     data = config_entry.runtime_data
     name = config_entry.data[CONF_NAME]
     if (uid := config_entry.unique_id) is None:
@@ -329,7 +293,7 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             await self._on_ws_connected()
-        except (TransportError, CannotConnectError):
+        except TransportError, CannotConnectError:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to connect to Kodi via websocket")
@@ -340,7 +304,7 @@ class KodiEntity(MediaPlayerEntity):
     async def _ping(self):
         try:
             await self._kodi.ping()
-        except (TransportError, CannotConnectError):
+        except TransportError, CannotConnectError:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.warning("Unable to ping Kodi via websocket")
@@ -382,7 +346,7 @@ class KodiEntity(MediaPlayerEntity):
 
         try:
             self._players = await self._kodi.get_players()
-        except (TransportError, ProtocolError):
+        except TransportError, ProtocolError:
             if not self._connection.can_subscribe:
                 self._reset_state()
                 return
@@ -872,7 +836,7 @@ class KodiEntity(MediaPlayerEntity):
             image_url, _, _ = await get_media_info(
                 self._kodi, media_content_id, media_content_type
             )
-        except (ProtocolError, TransportError):
+        except ProtocolError, TransportError:
             return (None, None)
 
         if image_url:

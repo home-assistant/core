@@ -255,7 +255,7 @@ def _message_to_json_bytes_or_none(message: dict[str, Any]) -> bytes | None:
     """Serialize a websocket message to json or return None."""
     try:
         return json_bytes(message)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         _LOGGER.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(

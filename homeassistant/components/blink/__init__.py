@@ -6,16 +6,9 @@ from typing import Any
 
 from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import (
-    CONF_FILE_PATH,
-    CONF_FILENAME,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,13 +20,6 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
-)
-SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
-SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILE_PATH): cv.string}
-)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -64,6 +50,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
     if entry.version == 2:
         await _reauth_flow_wrapper(hass, entry, data)
         return False
+    if entry.version == 3:
+        # Migrate device_id to hardware_id for blinkpy 0.25.x OAuth2 compatibility
+        if "device_id" in data:
+            data["hardware_id"] = data.pop("device_id")
+            hass.config_entries.async_update_entry(entry, data=data, version=4)
+        return True
     return True
 
 

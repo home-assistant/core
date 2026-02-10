@@ -227,9 +227,11 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
                 deprecated=(
-                    lambda status: ("2025.10.0", "media_player")
-                    if Capability.AUDIO_MUTE in status
-                    else None
+                    lambda status: (
+                        ("2025.10.0", "media_player")
+                        if Capability.AUDIO_MUTE in status
+                        else None
+                    )
                 ),
             )
         ]
@@ -908,11 +910,15 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
-                component_fn=lambda component: component in {"freezer", "cooler"},
+                component_fn=(
+                    lambda component: component in {"freezer", "cooler", "onedoor"}
+                ),
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",
@@ -935,9 +941,11 @@ CAPABILITY_TO_SENSORS: dict[
                     THERMOSTAT_CAPABILITIES,
                 ],
                 deprecated=(
-                    lambda status: ("2025.12.0", "dhw")
-                    if Capability.CUSTOM_OUTING_MODE in status
-                    else None
+                    lambda status: (
+                        ("2025.12.0", "dhw")
+                        if Capability.CUSTOM_OUTING_MODE in status
+                        else None
+                    )
                 ),
             )
         ]
@@ -1299,7 +1307,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
         if self.entity_description.component_translation_key and component != MAIN:
             self._attr_translation_key = (
-                self.entity_description.component_translation_key[component]
+                self.entity_description.component_translation_key.get(component)
             )
 
     @property

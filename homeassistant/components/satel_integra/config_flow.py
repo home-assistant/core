@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryData,
     ConfigSubentryFlow,
-    OptionsFlowWithReload,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
@@ -246,7 +246,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         return result
 
 
-class SatelOptionsFlow(OptionsFlowWithReload):
+class SatelOptionsFlow(OptionsFlow):
     """Handle Satel options flow."""
 
     async def async_step_init(
