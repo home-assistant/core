@@ -11,6 +11,4 @@ DOMAIN = "labs"
 STORAGE_KEY = "core.labs"
 STORAGE_VERSION = 1
 
-EVENT_LABS_UPDATED = "labs_updated"
-
 LABS_DATA: HassKey[LabsData] = HassKey(DOMAIN)

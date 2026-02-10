@@ -291,6 +291,7 @@ class ConfigFlowContext(FlowContext, total=False):
     configuration_url: str
     confirm_only: bool
     discovery_key: DiscoveryKey
+    dismiss_protected: bool
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
@@ -857,7 +858,7 @@ class ConfigEntry[_DataT = Any]:
             )
 
         # pylint: disable-next=broad-except
-        except (SystemExit, Exception):
+        except SystemExit, Exception:
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
@@ -1510,6 +1511,21 @@ class ConfigEntriesFlowManager(
                 subscription("added", flow.flow_id)
 
         return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Continue a configuration flow.
+
+        Mark the flow as dismiss protected since the user has interacted
+        with it. This prevents discovery sources from aborting the flow
+        while the user is actively configuring it.
+        """
+        if (flow := self._progress.get(flow_id)) and flow.context.get(
+            "source"
+        ) in DISCOVERY_SOURCES:
+            flow.context["dismiss_protected"] = True
+        return await super()._async_configure(flow_id, user_input)
 
     async def _async_init(
         self,
@@ -3384,10 +3400,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         if self.source == SOURCE_REAUTH and "entry_id" in self.context:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.

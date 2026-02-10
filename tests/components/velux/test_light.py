@@ -81,6 +81,54 @@ async def test_entity_callbacks(
     assert mock_light.unregister_device_updated_cb.call_args[0][0] is cb
 
 
+# Test availability functionality by using the light platform
+async def test_entity_availability(
+    hass: HomeAssistant, mock_light: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that entity availability updates based on device connection status."""
+
+    entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
+
+    # Initially connected
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    # Simulate disconnection
+    mock_light.pyvlx.get_connected.return_value = False
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
+
+    # Simulate disconnection, check we don't log again
+    mock_light.pyvlx.get_connected.return_value = False
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
+
+    # Simulate reconnection
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is back online") == 1
+
+    # Simulate reconnection, check we don't log again
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is back online") == 1
+
+
 async def test_light_brightness_and_is_on(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
