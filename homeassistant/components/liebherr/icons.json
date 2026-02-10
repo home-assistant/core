@@ -1,0 +1,76 @@
+{
+  "entity": {
+    "switch": {
+      "night_mode": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off",
+          "on": "mdi:sleep"
+        }
+      },
+      "party_mode": {
+        "default": "mdi:glass-cocktail",
+        "state": {
+          "off": "mdi:glass-cocktail-off",
+          "on": "mdi:glass-cocktail"
+        }
+      },
+      "supercool": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake"
+        }
+      },
+      "supercool_bottom_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake"
+        }
+      },
+      "supercool_middle_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake"
+        }
+      },
+      "supercool_top_zone": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake"
+        }
+      },
+      "superfrost": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-alert"
+        }
+      },
+      "superfrost_bottom_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-alert"
+        }
+      },
+      "superfrost_middle_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-alert"
+        }
+      },
+      "superfrost_top_zone": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-alert"
+        }
+      }
+    }
+  }
+}
