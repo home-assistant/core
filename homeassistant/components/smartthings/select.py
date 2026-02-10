@@ -205,7 +205,7 @@ async def async_setup_entry(
 ) -> None:
     """Add select entities for a config entry."""
     entry_data = entry.runtime_data
-    async_add_entities(
+    entities: list[SelectEntity] = [
         SmartThingsSelectEntity(entry_data.client, device, description, component)
         for capability, description in CAPABILITIES_TO_SELECT.items()
         for device in entry_data.devices.values()
@@ -225,7 +225,24 @@ async def async_setup_entry(
                 for capability in description.capability_ignore_list
             )
         )
+    ]
+    # Add FSV select entities
+    entities.extend(
+        SmartThingsFsvSelect(
+            entry_data.client, device, component, fsv_setting, description
+        )
+        for device in entry_data.devices.values()
+        for component in device.status
+        if Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[component]
+        for fsv_settings in device.status[component][
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS
+        ].values()
+        if fsv_settings.value is not None and isinstance(fsv_settings.value, list)
+        for fsv_setting in fsv_settings.value
+        if (fsv_id := fsv_setting["id"]) in FSV_SELECT_DESCRIPTIONS
+        and (description := FSV_SELECT_DESCRIPTIONS[fsv_id]) is not None
     )
+    async_add_entities(entities)
 
 
 class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
@@ -307,4 +324,218 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             self.entity_description.key,
             self.entity_description.command,
             new_option,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsFsvSelectEntityDescription(SelectEntityDescription):
+    """Describe a SmartThings FSV setting select entity."""
+
+    fsv_id: str
+    num_options: int
+    options_offset: int = 0
+
+
+# FSV select entity descriptions for enum-like settings
+FSV_SELECT_DESCRIPTIONS: dict[str, SmartThingsFsvSelectEntityDescription] = {
+    "2041": SmartThingsFsvSelectEntityDescription(
+        key="2041",
+        fsv_id="2041",
+        translation_key="water_law_type_heating",
+        num_options=2,
+        options_offset=1,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "2081": SmartThingsFsvSelectEntityDescription(
+        key="2081",
+        fsv_id="2081",
+        translation_key="water_law_type_cooling",
+        num_options=2,
+        options_offset=1,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "2091": SmartThingsFsvSelectEntityDescription(
+        key="2091",
+        fsv_id="2091",
+        translation_key="external_run_input_zone_1",
+        num_options=5,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "2092": SmartThingsFsvSelectEntityDescription(
+        key="2092",
+        fsv_id="2092",
+        translation_key="external_run_input_zone_2",
+        num_options=5,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "2093": SmartThingsFsvSelectEntityDescription(
+        key="2093",
+        fsv_id="2093",
+        translation_key="remote_controller_room_temp_control",
+        num_options=4,
+        options_offset=1,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3011": SmartThingsFsvSelectEntityDescription(
+        key="3011",
+        fsv_id="3011",
+        translation_key="dhw_tank_function",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3042": SmartThingsFsvSelectEntityDescription(
+        key="3042",
+        fsv_id="3042",
+        translation_key="disinfection_interval_day",
+        num_options=8,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3061": SmartThingsFsvSelectEntityDescription(
+        key="3061",
+        fsv_id="3061",
+        translation_key="use_dhw_thermostat",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3071": SmartThingsFsvSelectEntityDescription(
+        key="3071",
+        fsv_id="3071",
+        translation_key="three_way_valve_direction",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4011": SmartThingsFsvSelectEntityDescription(
+        key="4011",
+        fsv_id="4011",
+        translation_key="dhw_space_heating_priority",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4021": SmartThingsFsvSelectEntityDescription(
+        key="4021",
+        fsv_id="4021",
+        translation_key="backup_heater_application",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4022": SmartThingsFsvSelectEntityDescription(
+        key="4022",
+        fsv_id="4022",
+        translation_key="buh_bsh_priority",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4041": SmartThingsFsvSelectEntityDescription(
+        key="4041",
+        fsv_id="4041",
+        translation_key="mixing_valve_application",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4051": SmartThingsFsvSelectEntityDescription(
+        key="4051",
+        fsv_id="4051",
+        translation_key="inverter_pump_application",
+        num_options=3,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4061": SmartThingsFsvSelectEntityDescription(
+        key="4061",
+        fsv_id="4061",
+        translation_key="two_zone_control",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5022": SmartThingsFsvSelectEntityDescription(
+        key="5022",
+        fsv_id="5022",
+        translation_key="dhw_saving_mode",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5033": SmartThingsFsvSelectEntityDescription(
+        key="5033",
+        fsv_id="5033",
+        translation_key="tdm_priority",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5042": SmartThingsFsvSelectEntityDescription(
+        key="5042",
+        fsv_id="5042",
+        translation_key="power_peak_control_forced_off_parts",
+        num_options=4,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5061": SmartThingsFsvSelectEntityDescription(
+        key="5061",
+        fsv_id="5061",
+        translation_key="ch_dhw_supply_ratio",
+        num_options=7,
+        options_offset=1,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5094": SmartThingsFsvSelectEntityDescription(
+        key="5094",
+        fsv_id="5094",
+        translation_key="smart_grid_dhw_mode",
+        num_options=2,
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
+
+
+class SmartThingsFsvSelect(SmartThingsEntity, SelectEntity):
+    """Define a SmartThings FSV select."""
+
+    entity_description: SmartThingsFsvSelectEntityDescription
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        component: str,
+        fsv_setting: dict,
+        description: SmartThingsFsvSelectEntityDescription,
+    ) -> None:
+        """Initialize the FSV select."""
+        super().__init__(
+            client,
+            device,
+            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
+            component=component,
+        )
+        self.entity_description = description
+        self._fsv_id = description.fsv_id
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{self._fsv_id}"
+        self._attr_options = [
+            str(i + description.options_offset) for i in range(description.num_options)
+        ]
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected option."""
+        value = self._get_fsv_value()
+        if value is None:
+            return None
+        return str(value)
+
+    def _get_fsv_value(self) -> int | None:
+        """Get the current FSV setting value."""
+        fsv_settings = self.get_attribute_value(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
+        )
+        if fsv_settings:
+            for setting in fsv_settings:
+                if setting.get("id") == self._fsv_id:
+                    return int(setting["value"])
+        return None
+
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        value = int(option)
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+            Command.SET_VALUE,
+            [self._fsv_id, value],
         )

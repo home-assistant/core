@@ -133,7 +133,7 @@ async def test_fsv_native_value(
 
     # Check that FSV setting entities exist and have correct values and min/max
     fsv_1031_state = hass.states.get(
-        "number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating"
+        "number.eco_heating_system_target_water_outlet_upper_limit_heating"
     )
     assert fsv_1031_state is not None
     assert fsv_1031_state.state == "70"  # From test fixture
@@ -141,7 +141,7 @@ async def test_fsv_native_value(
     assert fsv_1031_state.attributes["max"] == 70
 
     fsv_1032_state = hass.states.get(
-        "number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating"
+        "number.eco_heating_system_target_water_outlet_lower_limit_heating"
     )
     assert fsv_1032_state is not None
     assert fsv_1032_state.state == "25"  # From test fixture
@@ -181,13 +181,13 @@ async def test_fsv_native_value(
 
     # Verify updated values
     fsv_1031_updated = hass.states.get(
-        "number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating"
+        "number.eco_heating_system_target_water_outlet_upper_limit_heating"
     )
     assert fsv_1031_updated is not None
     assert fsv_1031_updated.state == "65"
 
     fsv_1032_updated = hass.states.get(
-        "number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating"
+        "number.eco_heating_system_target_water_outlet_lower_limit_heating"
     )
     assert fsv_1032_updated is not None
     assert fsv_1032_updated.state == "30"
@@ -208,7 +208,7 @@ async def test_fsv_async_set_native_value(
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: (
-                "number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating"
+                "number.eco_heating_system_target_water_outlet_upper_limit_heating"
             ),
             ATTR_VALUE: 55,
         },
@@ -228,7 +228,7 @@ async def test_fsv_async_set_native_value(
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: (
-                "number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating"
+                "number.eco_heating_system_target_water_outlet_lower_limit_heating"
             ),
             ATTR_VALUE: 20,
         },

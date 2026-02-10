@@ -220,3 +220,155 @@ async def test_select_option_as_integer(
         MAIN,
         argument=300,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+async def test_fsv_select_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test FSV select state."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Check that FSV select entities exist and have correct states and options
+    fsv_2091_state = hass.states.get(
+        "select.eco_heating_system_external_run_input_zone_1"
+    )
+    assert fsv_2091_state is not None
+    assert fsv_2091_state.state == "0"  # value=0 from fixture
+    assert fsv_2091_state.attributes[ATTR_OPTIONS] == ["0", "1", "2", "3", "4"]
+
+    fsv_3011_state = hass.states.get("select.eco_heating_system_dhw_tank_function")
+    assert fsv_3011_state is not None
+    assert fsv_3011_state.state == "2"  # value=2 from fixture
+    assert fsv_3011_state.attributes[ATTR_OPTIONS] == ["0", "1", "2"]
+
+    fsv_3071_state = hass.states.get(
+        "select.eco_heating_system_three_way_valve_direction"
+    )
+    assert fsv_3071_state is not None
+    assert fsv_3071_state.state == "0"  # value=0 from fixture
+    assert fsv_3071_state.attributes[ATTR_OPTIONS] == ["0", "1"]
+
+    # Update FSV settings to change values
+    await trigger_update(
+        hass,
+        devices,
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Attribute.FSV_SETTINGS,
+        [
+            {
+                "id": "2091",
+                "inUse": True,
+                "resolution": 1,
+                "type": "etc",
+                "minValue": 0,
+                "maxValue": 4,
+                "value": 3,  # Changed value
+                "isValid": True,
+            },
+            {
+                "id": "3011",
+                "inUse": True,
+                "resolution": 1,
+                "type": "etc",
+                "minValue": 0,
+                "maxValue": 2,
+                "value": 1,  # Changed value
+                "isValid": True,
+            },
+            {
+                "id": "3071",
+                "inUse": True,
+                "resolution": 1,
+                "type": "etc",
+                "minValue": 0,
+                "maxValue": 1,
+                "value": 1,  # Changed value
+                "isValid": True,
+            },
+        ],
+    )
+
+    # Verify updated values
+    fsv_2091_updated = hass.states.get(
+        "select.eco_heating_system_external_run_input_zone_1"
+    )
+    assert fsv_2091_updated is not None
+    assert fsv_2091_updated.state == "3"
+
+    fsv_3011_updated = hass.states.get("select.eco_heating_system_dhw_tank_function")
+    assert fsv_3011_updated is not None
+    assert fsv_3011_updated.state == "1"
+
+    fsv_3071_updated = hass.states.get(
+        "select.eco_heating_system_three_way_valve_direction"
+    )
+    assert fsv_3071_updated is not None
+    assert fsv_3071_updated.state == "1"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+async def test_fsv_select_option(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test FSV select option."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test selecting option for FSV select 2092
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.eco_heating_system_external_run_input_zone_2",
+            ATTR_OPTION: "2",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Command.SET_VALUE,
+        MAIN,
+        argument=["2092", 2],
+    )
+
+    # Test selecting option for FSV select 4021
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.eco_heating_system_backup_heater_application",
+            ATTR_OPTION: "1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Command.SET_VALUE,
+        MAIN,
+        argument=["4021", 1],
+    )
+
+    # Test selecting option for FSV select 3071
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.eco_heating_system_three_way_valve_direction",
+            ATTR_OPTION: "1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Command.SET_VALUE,
+        MAIN,
+        argument=["3071", 1],
+    )
