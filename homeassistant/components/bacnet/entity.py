@@ -65,6 +65,16 @@ class BACnetEntity(CoordinatorEntity[BACnetDeviceCoordinator]):
             self._attr_device_info["connections"] = connections
 
     @property
+    def _current_object_info(self) -> BACnetObjectInfo | None:
+        """Get the current object info from coordinator data."""
+        if self.coordinator.data is None:
+            return None
+        for obj in self.coordinator.data.objects:
+            if f"{obj.object_type},{obj.object_instance}" == self._obj_key:
+                return obj
+        return None
+
+    @property
     def _current_value(self) -> object:
         """Get the current value from coordinator data."""
         if self.coordinator.data is not None:

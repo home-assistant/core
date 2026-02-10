@@ -8,10 +8,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.bacnet.bacnet_client import BACnetObjectInfo
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import init_integration_with_hub
+from . import init_integration, init_integration_with_hub
 
 
 async def test_coordinator_polls_values(
@@ -251,3 +253,196 @@ async def test_coordinator_object_discovery_error(
     data = await coordinator._async_update_data()
     assert data is not None
     assert len(data.objects) == 0
+
+
+async def test_rediscovery_detects_new_objects(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery detects newly added objects."""
+    _, device_entry = await init_integration_with_hub(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    # Mark initial setup done and expire the rediscovery timer
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = 0  # Expired
+
+    original_count = len(coordinator.data.objects)
+
+    # Return original objects plus a new one on re-discovery
+    new_object = BACnetObjectInfo(
+        object_type="analog-input",
+        object_instance=99,
+        object_name="New Sensor",
+        present_value=42.0,
+        units="degreesCelsius",
+    )
+    mock_bacnet_client.get_device_objects.return_value = [
+        *coordinator.data.objects,
+        new_object,
+    ]
+
+    # Track callback invocations
+    callback_objects: list[BACnetObjectInfo] = []
+    coordinator.new_objects_callbacks.append(callback_objects.extend)
+
+    await coordinator._async_update_data()
+
+    assert len(coordinator.data.objects) == original_count + 1
+    assert any(
+        obj.object_instance == 99 for obj in coordinator.data.objects
+    )
+    assert len(callback_objects) == 1
+    assert callback_objects[0].object_name == "New Sensor"
+
+
+async def test_rediscovery_detects_removed_objects(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery detects removed objects and cleans up entities."""
+    device_entry = await init_integration(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    # Mark initial setup done and expire the rediscovery timer
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = 0
+
+    # Verify we have sensor entities initially
+    entity_registry = er.async_get(hass)
+    entries_before = er.async_entries_for_config_entry(
+        entity_registry, device_entry.entry_id
+    )
+    assert len(entries_before) > 0
+
+    # Return an empty object list on re-discovery (all removed)
+    mock_bacnet_client.get_device_objects.return_value = []
+
+    await coordinator._async_update_data()
+
+    assert len(coordinator.data.objects) == 0
+
+    # All entities should be removed from registry
+    entries_after = er.async_entries_for_config_entry(
+        entity_registry, device_entry.entry_id
+    )
+    assert len(entries_after) == 0
+
+
+async def test_rediscovery_detects_changed_metadata(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery detects changed state_text on objects."""
+    _, device_entry = await init_integration_with_hub(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = 0
+
+    # Modify state_text on the multi-state-input object
+    updated_objects = []
+    for obj in coordinator.data.objects:
+        if obj.object_type == "multi-state-input" and obj.object_instance == 0:
+            updated_obj = BACnetObjectInfo(
+                object_type=obj.object_type,
+                object_instance=obj.object_instance,
+                object_name=obj.object_name,
+                present_value=obj.present_value,
+                units=obj.units,
+                state_text=["Off", "Heating", "Cooling", "Auto", "Emergency"],
+            )
+            updated_objects.append(updated_obj)
+        else:
+            updated_objects.append(obj)
+
+    mock_bacnet_client.get_device_objects.return_value = updated_objects
+
+    await coordinator._async_update_data()
+
+    # Find the updated object in coordinator data
+    for obj in coordinator.data.objects:
+        if obj.object_type == "multi-state-input" and obj.object_instance == 0:
+            assert len(obj.state_text) == 5
+            assert "Emergency" in obj.state_text
+            break
+    else:
+        pytest.fail("multi-state-input,0 not found after re-discovery")
+
+
+async def test_rediscovery_failure_does_not_crash(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery failure is handled gracefully."""
+    _, device_entry = await init_integration_with_hub(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = 0
+    original_count = len(coordinator.data.objects)
+
+    mock_bacnet_client.get_device_objects.side_effect = RuntimeError(
+        "device offline"
+    )
+
+    # Should not raise
+    data = await coordinator._async_update_data()
+    assert data is not None
+    # Objects should remain unchanged
+    assert len(data.objects) == original_count
+
+
+async def test_rediscovery_skipped_before_initial_setup(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery does not run before initial setup is done."""
+    _, device_entry = await init_integration_with_hub(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    # Ensure initial setup is NOT done
+    coordinator._initial_setup_done = False
+    coordinator._last_rediscovery = 0
+
+    assert not coordinator._should_rediscover()
+
+
+async def test_rediscovery_respects_interval(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery does not run before the interval has elapsed."""
+    _, device_entry = await init_integration_with_hub(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    coordinator._initial_setup_done = True
+    # Set last rediscovery to "just now" via a large monotonic value
+    coordinator._last_rediscovery = float("inf")
+
+    assert not coordinator._should_rediscover()
+
+
+async def test_rediscovery_new_object_creates_entity(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that a newly discovered object creates an entity via callback."""
+    device_entry = await init_integration(hass)
+    coordinator = device_entry.runtime_data.coordinator
+
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = 0
+
+    # Start with existing objects plus a brand new binary-input
+    new_object = BACnetObjectInfo(
+        object_type="binary-input",
+        object_instance=99,
+        object_name="New Alarm",
+        present_value=1,
+        units="",
+    )
+    mock_bacnet_client.get_device_objects.return_value = [
+        *coordinator.data.objects,
+        new_object,
+    ]
+
+    await coordinator._async_update_data()
+    await hass.async_block_till_done()
+
+    # The new entity should exist
+    state = hass.states.get("binary_sensor.test_hvac_controller_new_alarm")
+    assert state is not None

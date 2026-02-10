@@ -32,6 +32,7 @@ COV_LIFETIME: Final = 300
 COV_RENEW_INTERVAL: Final = timedelta(seconds=240)
 
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
+REDISCOVERY_INTERVAL: Final = timedelta(minutes=5)
 
 # Timeout constants for async operations (in seconds)
 TIMEOUT_PROPERTY_READ: Final = 5  # Individual property read timeout

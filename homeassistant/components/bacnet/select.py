@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,19 +33,27 @@ async def async_setup_entry(
 
     selected_objects = entry.options.get(CONF_SELECTED_OBJECTS, [])
 
-    if not selected_objects:
-        selected_objects = [
-            f"{obj.object_type},{obj.object_instance}"
-            for obj in coordinator.data.objects
-        ]
+    def _is_selected(obj: BACnetObjectInfo) -> bool:
+        """Check if an object is in the selected list."""
+        if not selected_objects:
+            return True
+        return f"{obj.object_type},{obj.object_instance}" in selected_objects
 
-    async_add_entities(
-        BACnetSelect(coordinator, obj)
-        for obj in coordinator.data.objects
-        if obj.object_type == MULTISTATE_OUTPUT_OBJECT_TYPE
-        and obj.state_text
-        and f"{obj.object_type},{obj.object_instance}" in selected_objects
-    )
+    @callback
+    def _add_new_objects(objects: list[BACnetObjectInfo]) -> None:
+        """Add new select entities for newly discovered objects."""
+        entities = [
+            BACnetSelect(coordinator, obj)
+            for obj in objects
+            if obj.object_type == MULTISTATE_OUTPUT_OBJECT_TYPE
+            and obj.state_text
+            and _is_selected(obj)
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    _add_new_objects(coordinator.data.objects)
+    coordinator.new_objects_callbacks.append(_add_new_objects)
 
 
 class BACnetSelect(BACnetEntity, SelectEntity):
@@ -66,6 +74,13 @@ class BACnetSelect(BACnetEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
+        # Check for updated state_text from re-discovery
+        current_info = self._current_object_info
+        if current_info and current_info.state_text != self._state_text:
+            self._state_text = current_info.state_text
+            if self._state_text:
+                self._attr_options = list(self._state_text)
+
         value = self._current_value
         if value is None:
             return None

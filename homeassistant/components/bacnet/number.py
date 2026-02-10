@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,18 +34,25 @@ async def async_setup_entry(
 
     selected_objects = entry.options.get(CONF_SELECTED_OBJECTS, [])
 
-    if not selected_objects:
-        selected_objects = [
-            f"{obj.object_type},{obj.object_instance}"
-            for obj in coordinator.data.objects
-        ]
+    def _is_selected(obj: BACnetObjectInfo) -> bool:
+        """Check if an object is in the selected list."""
+        if not selected_objects:
+            return True
+        return f"{obj.object_type},{obj.object_instance}" in selected_objects
 
-    async_add_entities(
-        BACnetNumber(coordinator, obj)
-        for obj in coordinator.data.objects
-        if obj.object_type == ANALOG_OUTPUT_OBJECT_TYPE
-        and f"{obj.object_type},{obj.object_instance}" in selected_objects
-    )
+    @callback
+    def _add_new_objects(objects: list[BACnetObjectInfo]) -> None:
+        """Add new number entities for newly discovered objects."""
+        entities = [
+            BACnetNumber(coordinator, obj)
+            for obj in objects
+            if obj.object_type == ANALOG_OUTPUT_OBJECT_TYPE and _is_selected(obj)
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    _add_new_objects(coordinator.data.objects)
+    coordinator.new_objects_callbacks.append(_add_new_objects)
 
 
 class BACnetNumber(BACnetEntity, NumberEntity):

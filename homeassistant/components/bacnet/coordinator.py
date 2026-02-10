@@ -3,17 +3,27 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass, field
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bacnet_client import BACnetClient, BACnetDeviceInfo, BACnetObjectInfo
-from .const import CONF_DEVICE_ADDRESS, CONF_DEVICE_ID, DOMAIN, UPDATE_INTERVAL
+from .const import (
+    CONF_DEVICE_ADDRESS,
+    CONF_DEVICE_ID,
+    CONF_SELECTED_OBJECTS,
+    DOMAIN,
+    REDISCOVERY_INTERVAL,
+    UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +61,16 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
         self._cov_values: dict[str, Any] = {}
         self._initial_setup_done = False
         self._background_setup_task: asyncio.Task | None = None
+
+        # Callback lists for dynamic entity creation (Hydrawise pattern)
+        self.new_objects_callbacks: list[
+            Callable[[list[BACnetObjectInfo]], None]
+        ] = []
+
+        # Track known objects for re-discovery change detection
+        self._known_object_keys: set[str] = set()
+        self._known_object_metadata: dict[str, BACnetObjectInfo] = {}
+        self._last_rediscovery: float | None = None
 
         super().__init__(
             hass,
@@ -154,6 +174,17 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                 )
                 self.data.objects = objects
 
+                # Populate tracking state for re-discovery
+                self._known_object_keys = {
+                    f"{obj.object_type},{obj.object_instance}"
+                    for obj in objects
+                }
+                self._known_object_metadata = {
+                    f"{obj.object_type},{obj.object_instance}": obj
+                    for obj in objects
+                }
+                self._last_rediscovery = time.monotonic()
+
                 # Skip COV setup and polling during initial setup
                 if not self._initial_setup_done:
                     return self.data
@@ -166,6 +197,10 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                 )
                 # Don't raise - allow retry on next update
                 return self.data
+
+        # Periodic re-discovery of objects
+        if self._should_rediscover():
+            await self._async_rediscover_objects()
 
         # Only poll objects that don't have active COV subscriptions
         cov_keys = {
@@ -218,6 +253,154 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             return (obj_key, None)
         else:
             return (obj_key, value)
+
+    def _should_rediscover(self) -> bool:
+        """Return whether it is time to re-discover objects."""
+        if not self._initial_setup_done:
+            return False
+        if self._last_rediscovery is None:
+            return True
+        return (
+            time.monotonic() - self._last_rediscovery
+            >= REDISCOVERY_INTERVAL.total_seconds()
+        )
+
+    async def _async_rediscover_objects(self) -> None:
+        """Re-read the device object list and detect changes."""
+        self._last_rediscovery = time.monotonic()
+        try:
+            new_objects = await self.client.get_device_objects(
+                self._device_address,
+                self._device_id,
+                quick=False,
+            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug(
+                "Failed to re-discover objects for device %d, will retry later",
+                self._device_id,
+            )
+            return
+
+        new_object_map = {
+            f"{obj.object_type},{obj.object_instance}": obj
+            for obj in new_objects
+        }
+        new_keys = set(new_object_map)
+
+        # Detect added objects
+        added_keys = new_keys - self._known_object_keys
+        if added_keys:
+            added_objects = [new_object_map[k] for k in added_keys]
+
+            # Add to coordinator data
+            self.data.objects.extend(added_objects)
+
+            # Set up COV subscriptions for new objects
+            await self._setup_cov_subscriptions(added_objects)
+
+            # Filter by selected_objects before notifying platforms
+            selected = self.config_entry.options.get(CONF_SELECTED_OBJECTS, [])
+            if selected:
+                added_objects = [
+                    obj
+                    for obj in added_objects
+                    if f"{obj.object_type},{obj.object_instance}" in selected
+                ]
+
+            if added_objects:
+                for cb in self.new_objects_callbacks:
+                    cb(added_objects)
+
+            _LOGGER.info(
+                "Discovered %d new object(s) on device %d",
+                len(added_keys),
+                self._device_id,
+            )
+
+        # Detect removed objects
+        removed_keys = self._known_object_keys - new_keys
+        if removed_keys:
+            self.data.objects = [
+                obj
+                for obj in self.data.objects
+                if f"{obj.object_type},{obj.object_instance}" not in removed_keys
+            ]
+            await self._cleanup_cov_for_removed_objects(removed_keys)
+            self._remove_stale_entities(removed_keys)
+
+            for key in removed_keys:
+                self.data.values.pop(key, None)
+                self._cov_values.pop(key, None)
+
+            _LOGGER.info(
+                "Detected %d removed object(s) on device %d",
+                len(removed_keys),
+                self._device_id,
+            )
+
+        # Detect changed metadata (state_text, units, name)
+        for key in new_keys & self._known_object_keys:
+            old_obj = self._known_object_metadata.get(key)
+            new_obj = new_object_map[key]
+            if old_obj and self._object_metadata_changed(old_obj, new_obj):
+                for i, obj in enumerate(self.data.objects):
+                    if f"{obj.object_type},{obj.object_instance}" == key:
+                        self.data.objects[i] = new_obj
+                        break
+                _LOGGER.debug(
+                    "Object metadata changed for %s on device %d",
+                    key,
+                    self._device_id,
+                )
+
+        # Update tracking state
+        self._known_object_keys = new_keys
+        self._known_object_metadata = new_object_map
+
+    @staticmethod
+    def _object_metadata_changed(
+        old: BACnetObjectInfo, new: BACnetObjectInfo
+    ) -> bool:
+        """Check if object metadata that affects entity config has changed."""
+        return (
+            old.state_text != new.state_text
+            or old.units != new.units
+            or old.object_name != new.object_name
+        )
+
+    async def _cleanup_cov_for_removed_objects(
+        self, removed_keys: set[str]
+    ) -> None:
+        """Unsubscribe COV for objects that no longer exist."""
+        keys_to_remove = []
+        for sub_key in self._cov_subscription_keys:
+            obj_key = sub_key.split(":", 1)[1] if ":" in sub_key else sub_key
+            if obj_key in removed_keys:
+                keys_to_remove.append(sub_key)
+
+        for sub_key in keys_to_remove:
+            with contextlib.suppress(Exception):
+                await self.client.unsubscribe_cov(sub_key)
+            self._cov_subscription_keys.remove(sub_key)
+
+    @callback
+    def _remove_stale_entities(self, removed_keys: set[str]) -> None:
+        """Remove entities for objects that no longer exist on the device."""
+        entity_registry = er.async_get(self.hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+        device_id = self.device_info.device_id
+        for entry in entries:
+            # Unique ID format: "{device_id}-{object_type}-{object_instance}"
+            prefix = f"{device_id}-"
+            if entry.unique_id.startswith(prefix):
+                remainder = entry.unique_id[len(prefix) :]
+                parts = remainder.rsplit("-", 1)
+                if len(parts) == 2:
+                    obj_key = f"{parts[0]},{parts[1]}"
+                    if obj_key in removed_keys:
+                        entity_registry.async_remove(entry.entity_id)
 
     def start_background_setup(self) -> None:
         """Start background COV setup and initial polling after config entry is set up."""
