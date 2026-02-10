@@ -39,8 +39,8 @@ ENTITY_ID3_2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_2"
 
 
 @pytest.mark.parametrize(
-    ("device",),
-    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+    "device",
+    [DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE],
 )
 @pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True

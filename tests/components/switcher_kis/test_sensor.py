@@ -66,8 +66,8 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
 
 
 @pytest.mark.parametrize(
-    ("device",),
-    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+    "device",
+    [DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE],
 )
 @pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True

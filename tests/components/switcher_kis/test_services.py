@@ -26,15 +26,15 @@ from .consts import (
     DUMMY_HEATER_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_TIMER_MINUTES_SET,
-    DUMMY_WATER_HEATER_DEVICE,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
+    DUMMY_WATER_HEATER_DEVICE,
 )
 
 
 @pytest.mark.parametrize(
-    ("device",),
-    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+    "device",
+    [DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE],
 )
 @pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
@@ -78,8 +78,8 @@ async def test_turn_on_with_timer_service(
 
 
 @pytest.mark.parametrize(
-    ("device",),
-    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+    "device",
+    [DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE],
 )
 @pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
@@ -110,8 +110,8 @@ async def test_set_auto_off_service(
 
 
 @pytest.mark.parametrize(
-    ("device",),
-    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+    "device",
+    [DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE],
 )
 @pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
