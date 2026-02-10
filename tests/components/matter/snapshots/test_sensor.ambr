@@ -8592,7 +8592,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-entry]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8630,61 +8630,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Mock Humidity Sensor Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-state]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
