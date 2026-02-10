@@ -17,9 +17,6 @@ TEST_NAME = "Hegel H190"
 TEST_SSDP_LOCATION = f"http://{TEST_HOST}:8080/description.xml"
 
 
-# User Flow Tests
-
-
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
