@@ -511,7 +511,7 @@
       "description": "Starts cleaning of the specified segments/rooms.",
       "fields": {
         "segments": {
-          "description": "The segment/room number(s) to clean",
+          "description": "The segment/room number(s) to clean.",
           "name": "Segments"
         }
       },
