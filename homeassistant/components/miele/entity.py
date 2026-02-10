@@ -1,16 +1,18 @@
 """Entity base class for the Miele integration."""
 
-from pymiele import MieleAction, MieleAPI, MieleDevice
+from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
-from .coordinator import MieleDataUpdateCoordinator
+from .coordinator import MieleAuxDataUpdateCoordinator, MieleDataUpdateCoordinator
 
 
-class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
+class MieleBaseEntity[
+    _MieleCoordinatorT: MieleDataUpdateCoordinator | MieleAuxDataUpdateCoordinator
+](CoordinatorEntity[_MieleCoordinatorT]):
     """Base class for Miele entities."""
 
     _attr_has_entity_name = True
@@ -22,7 +24,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: MieleDataUpdateCoordinator,
+        coordinator: _MieleCoordinatorT,
         device_id: str,
         description: EntityDescription,
     ) -> None:
@@ -30,7 +32,26 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = MieleEntity.get_unique_id(device_id, description)
+        self._attr_unique_id = MieleBaseEntity.get_unique_id(device_id, description)
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+
+    @property
+    def api(self) -> MieleAPI:
+        """Return the api object."""
+        return self.coordinator.api
+
+
+class MieleEntity(MieleBaseEntity[MieleDataUpdateCoordinator]):
+    """Base class for Miele entities that use the main data coordinator."""
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, device_id, description)
 
         device = self.device
         appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))
@@ -62,16 +83,20 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         return self.coordinator.data.actions[self._device_id]
 
     @property
-    def api(self) -> MieleAPI:
-        """Return the api object."""
-        return self.coordinator.api
-
-    @property
     def available(self) -> bool:
         """Return the availability of the entity."""
 
         return (
             super().available
             and self._device_id in self.coordinator.data.devices
-            and (self.device.state_status is not StateStatus.NOT_CONNECTED)
+            and (self.device.state_status is not StateStatus.not_connected)
         )
+
+
+class MieleAuxEntity(MieleBaseEntity[MieleAuxDataUpdateCoordinator]):
+    """Base class for Miele entities that use the auxiliary data coordinator."""
+
+    @property
+    def levels(self) -> MieleFillingLevel:
+        """Return the filling levels object."""
+        return self.coordinator.data.filling_levels[self._device_id]

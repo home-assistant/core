@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'House power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -356,6 +362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -442,6 +449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -530,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photovoltaic power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -586,6 +595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -635,6 +645,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,

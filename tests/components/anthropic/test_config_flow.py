@@ -13,6 +13,7 @@ from anthropic import (
 )
 from httpx import URL, Request, Response
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
@@ -26,6 +27,7 @@ from homeassistant.components.anthropic.const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -263,7 +265,7 @@ async def test_subentry_web_search_user_location(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
 
     # Configure advanced step
@@ -274,7 +276,7 @@ async def test_subentry_web_search_user_location(
             "chat_model": "claude-sonnet-4-5",
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
 
     hass.config.country = "US"
@@ -338,7 +340,10 @@ async def test_subentry_web_search_user_location(
 
 
 async def test_model_list(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fetching and processing the list of models."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -354,50 +359,9 @@ async def test_model_list(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
-    assert options["data_schema"].schema["chat_model"].config["options"] == [
-        {
-            "label": "Claude Opus 4.5",
-            "value": "claude-opus-4-5",
-        },
-        {
-            "label": "Claude Haiku 4.5",
-            "value": "claude-haiku-4-5",
-        },
-        {
-            "label": "Claude Sonnet 4.5",
-            "value": "claude-sonnet-4-5",
-        },
-        {
-            "label": "Claude Opus 4.1",
-            "value": "claude-opus-4-1",
-        },
-        {
-            "label": "Claude Opus 4",
-            "value": "claude-opus-4-0",
-        },
-        {
-            "label": "Claude Sonnet 4",
-            "value": "claude-sonnet-4-0",
-        },
-        {
-            "label": "Claude Sonnet 3.7",
-            "value": "claude-3-7-sonnet-latest",
-        },
-        {
-            "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku-latest",
-        },
-        {
-            "label": "Claude Haiku 3",
-            "value": "claude-3-haiku-20240307",
-        },
-        {
-            "label": "Claude Opus 3",
-            "value": "claude-3-opus-20240229",
-        },
-    ]
+    assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
 async def test_model_list_error(
@@ -429,7 +393,7 @@ async def test_model_list_error(
                 "recommended": False,
             },
         )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == []
 
@@ -500,7 +464,7 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                    CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
                     CONF_TEMPERATURE: 1.0,
                 },
                 {
@@ -513,7 +477,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -559,6 +523,45 @@ async def test_model_list_error(
                 CONF_WEB_SEARCH_USER_LOCATION: False,
             },
         ),
+        (  # Model with thinking effort options
+            {
+                CONF_RECOMMENDED: False,
+                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_PROMPT: "bla",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_THINKING_EFFORT: "max",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_LLM_HASS_API: [],
+                },
+                {
+                    CONF_CHAT_MODEL: "claude-opus-4-6",
+                    CONF_TEMPERATURE: 1.0,
+                },
+                {
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_MAX_USES: 10,
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_THINKING_EFFORT: "medium",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_EFFORT: "medium",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 10,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
         (  # Test switching from recommended to custom options
             {
                 CONF_RECOMMENDED: True,
@@ -581,6 +584,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: 0,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -634,7 +638,7 @@ async def test_subentry_options_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
         assert not subentry_flow["errors"]
 
         # Test that current options are showed as suggested values:
@@ -778,3 +782,49 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_WEB_SEARCH_USER_LOCATION: False,
         CONF_THINKING_BUDGET: 0,
     }
+
+
+@pytest.mark.parametrize(
+    ("current_llm_apis", "suggested_llm_apis", "expected_options"),
+    [
+        ("assist", ["assist"], ["assist"]),
+        (["assist"], ["assist"], ["assist"]),
+        ("non-existent", [], ["assist"]),
+        (["non-existent"], [], ["assist"]),
+        (["assist", "non-existent"], ["assist"], ["assist"]),
+    ],
+)
+async def test_reconfigure_conversation_subentry_llm_api_schema(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    current_llm_apis: list[str],
+    suggested_llm_apis: list[str],
+    expected_options: list[str],
+) -> None:
+    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={CONF_LLM_HASS_API: current_llm_apis},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Only valid LLM APIs should be suggested and shown as options
+    schema = subentry_flow["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.description
+    assert key.description.get("suggested_value") == suggested_llm_apis
+    field_schema = schema[key]
+    assert field_schema.config
+    assert [
+        opt["value"] for opt in field_schema.config.get("options")
+    ] == expected_options

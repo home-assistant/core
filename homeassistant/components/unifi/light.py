@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     LightEntityDescription,
     LightEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
@@ -117,6 +118,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiLightEntityDescription, ...] = (
     UnifiLightEntityDescription[Devices, Device](
         key="LED control",
         translation_key="led_control",
+        entity_category=EntityCategory.CONFIG,
         allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,

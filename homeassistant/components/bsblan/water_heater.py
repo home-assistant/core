@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, SetHotWaterParam
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -131,7 +131,9 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         try:
-            await self.coordinator.client.set_hot_water(nominal_setpoint=temperature)
+            await self.coordinator.client.set_hot_water(
+                SetHotWaterParam(nominal_setpoint=temperature)
+            )
         except BSBLANError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -144,7 +146,9 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         """Set new operation mode."""
         bsblan_mode = OPERATION_MODES_REVERSE.get(operation_mode)
         try:
-            await self.coordinator.client.set_hot_water(operating_mode=bsblan_mode)
+            await self.coordinator.client.set_hot_water(
+                SetHotWaterParam(operating_mode=bsblan_mode)
+            )
         except BSBLANError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

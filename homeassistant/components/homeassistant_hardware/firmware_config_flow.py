@@ -457,10 +457,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # This step is necessary to prevent `user_input` from being passed through
         return await self.async_step_continue_zigbee()
 
-    def _extra_zha_hardware_options(self) -> dict[str, Any]:
-        """Return extra ZHA hardware options."""
-        return {}
-
     async def async_step_continue_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -483,7 +479,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
                 "radio_type": "ezsp",
                 "flow_strategy": self._zigbee_flow_strategy,
-                **self._extra_zha_hardware_options(),
             },
         )
         return self._continue_zha_flow(result)

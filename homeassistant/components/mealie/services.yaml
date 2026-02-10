@@ -78,6 +78,9 @@ set_random_mealplan:
             - lunch
             - dinner
             - side
+            - dessert
+            - snack
+            - drink
           translation_key: mealplan_entry_type
 
 set_mealplan:
@@ -98,6 +101,9 @@ set_mealplan:
             - lunch
             - dinner
             - side
+            - dessert
+            - snack
+            - drink
           translation_key: mealplan_entry_type
     recipe_id:
       selector:
