@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import init_integration
+from . import init_integration, inject_rpc_device_event
 
 from tests.common import async_get_device_automations
 
@@ -490,8 +490,6 @@ async def test_bthome_button_event_with_idx(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test for BThome button click events using idx field."""
-    from . import inject_rpc_device_event
-
     entry = await init_integration(hass, 2)
     device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
