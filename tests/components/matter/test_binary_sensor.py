@@ -96,40 +96,6 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-@pytest.mark.parametrize(
-    ("node_fixture", "entity_id"),
-    [
-        ("heiman_co_sensor", "binary_sensor.smart_co_sensor_carbon_monoxide"),
-    ],
-)
-async def test_co_alarm_state_sensors(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-    entity_id: str,
-) -> None:
-    """Test if binary sensors get created from Heiman CO sensor cluster."""
-    state = hass.states.get(entity_id)
-
-    if state is None:
-        existing_ids = [e.entity_id for e in hass.states.async_all()]
-        pytest.fail(
-            f"Entity {entity_id} not found. Found these instead: {existing_ids}"
-        )
-
-    # Initial state: Normal (0) should be "off"
-    assert state.state == "off"
-
-    # Set CoState (Attribute 2) to Warning (1) or Critical (2)
-    set_node_attribute(matter_node, 1, 92, 2, 2)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(matter_node.node_id, "1/92/2", 2)
-    )
-
-    state = hass.states.get(entity_id)
-    assert state.state == "on"
-
-
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
@@ -685,5 +651,62 @@ async def test_smoke_detector(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_co_sensor"])
+async def test_co_detector(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CO detector sensor."""
+    co_state_attribute = clusters.SmokeCoAlarm.Attributes.CoState
+
+    # Test initial state (CoState = 0, kNormal)
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "off"
+
+    # Set CoState to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set CoState to kCritical (value 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set CoState back to kNormal (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
     assert state
     assert state.state == "off"
