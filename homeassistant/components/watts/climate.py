@@ -78,7 +78,7 @@ async def async_setup_entry(
     )
 
 
-class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
+class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
     """Representation of a Watts Vision heater as a climate entity."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -100,13 +100,6 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-
-    @property
-    def device(self) -> ThermostatDevice:
-        """Return the thermostat device."""
-        device = self.coordinator.data.device
-        assert isinstance(device, ThermostatDevice)
-        return device
 
     @property
     def current_temperature(self) -> float | None:
