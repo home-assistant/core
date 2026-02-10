@@ -20,10 +20,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -62,7 +59,7 @@ rules:
   discovery: done
   docs-data-update: todo
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: todo
@@ -73,7 +70,10 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This integration does not define custom icons. All entities use device class icons.
   reconfiguration-flow:
     status: exempt
     comment: |
