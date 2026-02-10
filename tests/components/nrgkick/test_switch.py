@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, call
 
 from nrgkick_api import NRGkickCommandRejectedError
+from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,7 +56,7 @@ async def test_charge_switch_service_calls_update_state(
     # Pause charging
     # Simulate the device reporting the new paused state after the command.
     control_data = mock_nrgkick_api.get_control.return_value.copy()
-    control_data["charge_pause"] = 1
+    control_data[CONTROL_KEY_CHARGE_PAUSE] = 1
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -69,7 +70,7 @@ async def test_charge_switch_service_calls_update_state(
     # Resume charging
     # Simulate the device reporting the resumed state after the command.
     control_data = mock_nrgkick_api.get_control.return_value.copy()
-    control_data["charge_pause"] = 0
+    control_data[CONTROL_KEY_CHARGE_PAUSE] = 0
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -109,7 +110,10 @@ async def test_charge_switch_rejected_by_device(
             blocking=True,
         )
 
-    assert "blocked by solar-charging" in str(err.value)
+    assert err.value.translation_key == "command_rejected"
+    assert err.value.translation_placeholders == {
+        "reason": "Charging pause is blocked by solar-charging"
+    }
 
     # State should reflect actual device control data (still not paused).
     assert (state := hass.states.get(entity_id))

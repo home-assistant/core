@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,7 +20,7 @@ CHARGING_ENABLED_KEY = "charging_enabled"
 
 def _is_charging_enabled(data: NRGkickData) -> bool:
     """Return True if charging is enabled (not paused)."""
-    return bool(data.control.get("charge_pause") == 0)
+    return bool(data.control.get(CONTROL_KEY_CHARGE_PAUSE) == 0)
 
 
 async def async_setup_entry(
