@@ -15,7 +15,6 @@ from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
-    CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_SENDER_ID,
     DOMAIN,
@@ -68,7 +67,6 @@ async def async_setup_entry(
             device_type: EnOceanDeviceType = (
                 EnOceanDeviceType.get_supported_device_types()[device_type_id]
             )
-            device_name = device.get(CONF_ENOCEAN_DEVICE_NAME, "EnOcean Device")
 
             sender_id = gateway.base_id
             sender_id_string: str | None = device.get(CONF_ENOCEAN_SENDER_ID)
@@ -78,7 +76,7 @@ async def async_setup_entry(
             gateway.add_device(
                 enocean_id=enocean_id,
                 device_type=device_type,
-                device_name=device_name,
+                device_name="EnOcean Device",
                 sender_id=sender_id,
             )
 
