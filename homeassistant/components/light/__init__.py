@@ -1054,7 +1054,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _light_internal_supported_color_modes(self) -> set[ColorMode]:
         """Calculate supported color modes with backwards compatibility."""
         if (_supported_color_modes := self.supported_color_modes) is None:
-            _supported_color_modes = {ColorMode.ONOFF}
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) does not set supported color modes"
+            )
         self.__validate_supported_color_modes(_supported_color_modes)
         return _supported_color_modes
 

@@ -2388,21 +2388,23 @@ async def test_report_no_color_mode(
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes",
+    ("color_mode", "supported_color_modes", "error_expected"),
     [
-        None,
-        {light.ColorMode.ONOFF},
+        (light.ColorMode.ONOFF, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
 )
 async def test_report_no_color_modes(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    supported_color_modes: set[light.ColorMode] | None,
+    color_mode: str,
+    supported_color_modes: set[str],
+    error_expected: bool,
 ) -> None:
-    """Test a light setting no color mode is reported as ONOFF only."""
+    """Test a light setting no color mode."""
 
     class MockLightEntityEntity(light.LightEntity):
-        _attr_color_mode = light.ColorMode.ONOFF
+        _attr_color_mode = color_mode
         _attr_is_on = True
         _attr_supported_features = light.LightEntityFeature.EFFECT
         _attr_supported_color_modes = supported_color_modes
@@ -2410,8 +2412,13 @@ async def test_report_no_color_modes(
     entity = MockLightEntityEntity()
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     await platform.async_add_entities([entity])
-    state = entity._async_calculate_state()
-    assert state.attributes["supported_color_modes"] == [light.ColorMode.ONOFF]
+    raised_error = ""
+    try:
+        entity._async_calculate_state()
+    except HomeAssistantError as err:
+        raised_error = str(err)
+    expected_error = "does not set supported color modes"
+    assert (expected_error in raised_error) is error_expected
 
 
 @pytest.mark.parametrize(
