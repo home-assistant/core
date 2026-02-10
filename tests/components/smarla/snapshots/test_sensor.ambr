@@ -68,7 +68,7 @@
     'entity_category': None,
     'entity_id': 'sensor.smarla_amplitude',
     'has_entity_name': True,
-    'hidden_by': None,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
     'icon': None,
     'id': <ANY>,
     'labels': set({
@@ -121,7 +121,7 @@
     'entity_category': None,
     'entity_id': 'sensor.smarla_period',
     'has_entity_name': True,
-    'hidden_by': None,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
     'icon': None,
     'id': <ANY>,
     'labels': set({
@@ -174,7 +174,7 @@
     'entity_category': None,
     'entity_id': 'sensor.smarla_swing_count',
     'has_entity_name': True,
-    'hidden_by': None,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
     'icon': None,
     'id': <ANY>,
     'labels': set({

@@ -35,6 +35,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         value_pos=0,
         native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=False,
     ),
     SmarlaSensorEntityDescription(
         key="period",
@@ -45,6 +46,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         value_pos=1,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_visible_default=False,
     ),
     SmarlaSensorEntityDescription(
         key="activity",
@@ -59,6 +61,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         service="analyser",
         property="swing_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_visible_default=False,
     ),
 ]
 
