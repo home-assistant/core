@@ -57,10 +57,9 @@ def _handle_new_devices(
     if not new_device_ids:
         return
 
-    _LOGGER.info("Discovered %d new device(s): %s", len(new_device_ids), new_device_ids)
-
     device_coordinators = entry.runtime_data.device_coordinators
     client = entry.runtime_data.client
+    supported_device_ids: list[str] = []
 
     for device_id in new_device_ids:
         device = hub_coordinator.data[device_id]
@@ -72,9 +71,18 @@ def _handle_new_devices(
         )
         device_coordinator.async_set_updated_data(WattsVisionDeviceData(device=device))
         device_coordinators[device_id] = device_coordinator
+        supported_device_ids.append(device_id)
 
         _LOGGER.debug("Created device coordinator for device %s", device_id)
 
+    if not supported_device_ids:
+        return
+
+    _LOGGER.info(
+        "Discovered %d new device(s): %s",
+        len(supported_device_ids),
+        supported_device_ids,
+    )
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
 
 
