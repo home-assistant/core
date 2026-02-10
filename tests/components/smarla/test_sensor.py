@@ -38,6 +38,12 @@ SENSOR_ENTITIES = [
         "property": "swing_count",
         "test_value": 1,
     },
+    {
+        "entity_id": "sensor.smarla_total_swing_time",
+        "service": "info",
+        "property": "total_swing_time",
+        "test_value": 1,
+    },
 ]
 
 

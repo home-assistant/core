@@ -93,9 +93,11 @@ def _mock_info_service() -> MagicMock:
     mock_info_service = MagicMock(spec=Service)
     mock_info_service.props = {
         "version": MagicMock(spec=Property),
+        "total_swing_time": MagicMock(spec=Property),
     }
 
     mock_info_service.props["version"].get.return_value = "1.0.0"
+    mock_info_service.props["total_swing_time"].get.return_value = 0
 
     return mock_info_service
 

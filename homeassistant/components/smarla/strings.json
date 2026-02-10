@@ -48,6 +48,9 @@
       "swing_count": {
         "name": "Swing count",
         "unit_of_measurement": "swings"
+      },
+      "total_swing_time": {
+        "name": "Total swing time"
       }
     },
     "switch": {

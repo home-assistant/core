@@ -62,6 +62,14 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         property="swing_count",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SmarlaSensorEntityDescription(
+        key="total_swing_time",
+        translation_key="total_swing_time",
+        service="info",
+        property="total_swing_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 ]
 
 
