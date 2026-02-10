@@ -114,3 +114,20 @@ async def test_async_iterator_writer_abort_late(hass: HomeAssistant) -> None:
 
     with pytest.raises(Abort):
         await fut
+
+
+async def test_async_iterator_reader_exhausted(hass: HomeAssistant) -> None:
+    """Test that read() returns empty bytes after stream exhaustion."""
+
+    async def async_gen() -> AsyncIterator[bytes]:
+        yield b"hello"
+
+    reader = AsyncIteratorReader(hass.loop, async_gen())
+
+    def _read_then_read_again() -> bytes:
+        data = _read_all(reader)
+        # Second read after exhaustion should return b"" immediately
+        assert reader.read(500) == b""
+        return data
+
+    assert await hass.async_add_executor_job(_read_then_read_again) == b"hello"
