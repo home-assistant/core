@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
