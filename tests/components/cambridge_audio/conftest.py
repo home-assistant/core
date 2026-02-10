@@ -67,6 +67,7 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client.audio_output = AudioOutput.from_json(
             load_fixture("get_audio_output.json", DOMAIN)
         )
+        client.audio = Audio.from_json(load_fixture("get_audio.json", DOMAIN))
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position
         client.unregister_state_update_callbacks.return_value = True
