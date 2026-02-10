@@ -11,6 +11,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
@@ -26,6 +27,12 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the EnOcean config flow."""
         self.dongle_path = None
         self.discovery_info = None
+
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
+        """Handle usb discovery."""
+        # TODO: exit for already known dongle paths
+
+        return await self.async_step_manual({CONF_DEVICE: discovery_info.device})
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
