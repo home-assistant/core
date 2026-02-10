@@ -51,49 +51,42 @@ async def test_switch_state(
     assert state.state == STATE_OFF
 
 
-async def test_turn_on(
+@pytest.mark.parametrize(
+    ("service", "expected_state"),
+    [
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
+    ],
+)
+async def test_turn_on_off(
     hass: HomeAssistant,
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
+    expected_state: bool,
 ) -> None:
-    """Test turning switch on."""
+    """Test turning switch on and off."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
 
-    mock_watts_client.set_switch_state.assert_called_once_with("switch_789", True)
-
-
-async def test_turn_off(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test turning switch off."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
-        blocking=True,
+    mock_watts_client.set_switch_state.assert_called_once_with(
+        "switch_789", expected_state
     )
 
-    mock_watts_client.set_switch_state.assert_called_once_with("switch_789", False)
 
-
-async def test_turn_on_triggers_fast_polling(
+async def test_fast_polling(
     hass: HomeAssistant,
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that turning on triggers fast polling."""
+    """Test that turning on triggers fast polling and it stops after duration."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -105,6 +98,7 @@ async def test_turn_on_triggers_fast_polling(
 
     mock_watts_client.get_device.reset_mock()
 
+    # Fast polling should be active
     freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -112,28 +106,9 @@ async def test_turn_on_triggers_fast_polling(
     assert mock_watts_client.get_device.called
     mock_watts_client.get_device.assert_called_with("switch_789", refresh=True)
 
-
-async def test_fast_polling_stops_after_duration(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that fast polling stops after the duration expires."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
-        blocking=True,
-    )
-
-    mock_watts_client.get_device.reset_mock()
-
     # Should still be in fast polling after 55s
     mock_watts_client.get_device.reset_mock()
-    freezer.tick(timedelta(seconds=55))
+    freezer.tick(timedelta(seconds=50))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -153,15 +128,19 @@ async def test_fast_polling_stops_after_duration(
     assert not mock_watts_client.get_device.called
 
 
-async def test_turn_on_api_error(
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+)
+async def test_api_error(
     hass: HomeAssistant,
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
 ) -> None:
-    """Test error handling when turning on fails."""
+    """Test error handling when turning on/off fails."""
     await setup_integration(hass, mock_config_entry)
 
-    # Make the API call fail
     mock_watts_client.set_switch_state.side_effect = RuntimeError("API Error")
 
     with pytest.raises(
@@ -169,29 +148,7 @@ async def test_turn_on_api_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.living_room_switch"},
-            blocking=True,
-        )
-
-
-async def test_turn_off_api_error(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test error handling when turning off fails."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Make the API call fail
-    mock_watts_client.set_switch_state.side_effect = RuntimeError("API Error")
-
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while setting the switch state"
-    ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            service,
             {ATTR_ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )

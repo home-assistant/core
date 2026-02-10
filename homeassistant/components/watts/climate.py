@@ -102,25 +102,26 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     @property
-    def thermostat(self) -> ThermostatDevice:
+    def device(self) -> ThermostatDevice:
         """Return the thermostat device."""
-        assert isinstance(self.device, ThermostatDevice)
-        return self.device
+        device = self.coordinator.data.device
+        assert isinstance(device, ThermostatDevice)
+        return device
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.thermostat.current_temperature
+        return self.device.current_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
-        return self.thermostat.setpoint
+        return self.device.setpoint
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        return THERMOSTAT_MODE_TO_HVAC.get(self.thermostat.thermostat_mode)
+        return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
