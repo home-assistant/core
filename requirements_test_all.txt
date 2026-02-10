@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.14.0
+aioesphomeapi==44.0.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -505,7 +505,7 @@ aprslib==0.7.2
 apsystems-ez1==2.7.0
 
 # homeassistant.components.aranet
-aranet4==2.5.1
+aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.8.2
@@ -1155,7 +1155,7 @@ inkbird-ble==1.1.1
 insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
-intellifire4py==4.2.1
+intellifire4py==4.3.1
 
 # homeassistant.components.iometer
 iometer==0.4.0
@@ -1397,7 +1397,7 @@ notifications-android-tv==0.1.5
 notify-events==1.0.4
 
 # homeassistant.components.nrgkick
-nrgkick-api==1.6.0
+nrgkick-api==1.7.1
 
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.1.3
@@ -1442,7 +1442,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.1.1
+onedrive-personal-sdk==0.1.2
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1560,7 +1560,7 @@ pushover_complete==1.2.0
 pvo==2.2.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.16
+py-aosmith==1.0.17
 
 # homeassistant.components.canary
 py-canary==0.5.4
