@@ -118,6 +118,34 @@ def mock_proxmox_client():
         node_mock.qemu.side_effect = _qemu_resource
         node_mock.lxc.side_effect = _lxc_resource
 
+        # Storage API: nodes(node).storage.get() and nodes(node).storage(id).status.get()
+        storage_list = [
+            {"storage": "local", "type": "dir"},
+            {"storage": "local-lvm", "type": "lvm"},
+        ]
+        storage_status_by_id = {
+            "local": {
+                "total": 500000000000,
+                "used": 100000000000,
+                "avail": 400000000000,
+            },
+            "local-lvm": {
+                "total": 300000000000,
+                "used": 60000000000,
+                "avail": 240000000000,
+            },
+        }
+
+        def _storage_resource(storage_id: str) -> MagicMock:
+            resource = MagicMock()
+            resource.status.get.return_value = storage_status_by_id.get(
+                storage_id, {"total": 0, "used": 0, "avail": 0}
+            )
+            return resource
+
+        node_mock.storage.get.return_value = storage_list
+        node_mock.storage.side_effect = _storage_resource
+
         nodes_mock = MagicMock()
         nodes_mock.get.return_value = load_json_array_fixture(
             "nodes/nodes.json", DOMAIN

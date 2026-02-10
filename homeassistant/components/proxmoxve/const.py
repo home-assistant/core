@@ -6,7 +6,7 @@ CONF_NODE = "node"
 CONF_NODES = "nodes"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
-
+NODE_STORAGE_KEY = "_storage"
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"

@@ -1,0 +1,229 @@
+# serializer version: 1
+# name: test_all_storage_sensors[sensor.pve1_local_disk_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pve1_local_disk_free',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_local Disk Free',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pve1_local Disk Free',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_127.0.0.1_pve1_local_disk_used',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve1_local_disk_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'free_gib': 372.53,
+      'friendly_name': 'pve1_local Disk Free',
+      'percent_used': 20.0,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'total_gib': 465.66,
+      'unit_of_measurement': '%',
+      'used_gib': 93.13,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pve1_local_disk_free',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve1_local_lvm_disk_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pve1_local_lvm_disk_free',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_local-lvm Disk Free',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pve1_local-lvm Disk Free',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_127.0.0.1_pve1_local-lvm_disk_used',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve1_local_lvm_disk_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'free_gib': 223.52,
+      'friendly_name': 'pve1_local-lvm Disk Free',
+      'percent_used': 20.0,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'total_gib': 279.4,
+      'unit_of_measurement': '%',
+      'used_gib': 55.88,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pve1_local_lvm_disk_free',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve2_local_disk_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pve2_local_disk_free',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_local Disk Free',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pve2_local Disk Free',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_127.0.0.1_pve2_local_disk_used',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve2_local_disk_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'free_gib': 372.53,
+      'friendly_name': 'pve2_local Disk Free',
+      'percent_used': 20.0,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'total_gib': 465.66,
+      'unit_of_measurement': '%',
+      'used_gib': 93.13,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pve2_local_disk_free',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve2_local_lvm_disk_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pve2_local_lvm_disk_free',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_local-lvm Disk Free',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pve2_local-lvm Disk Free',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_127.0.0.1_pve2_local-lvm_disk_used',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_storage_sensors[sensor.pve2_local_lvm_disk_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'free_gib': 223.52,
+      'friendly_name': 'pve2_local-lvm Disk Free',
+      'percent_used': 20.0,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'total_gib': 279.4,
+      'unit_of_measurement': '%',
+      'used_gib': 55.88,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pve2_local_lvm_disk_free',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.0',
+  })
+# ---
