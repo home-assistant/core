@@ -56,17 +56,14 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
-        errors = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
-            if await self.validate_enocean_conf(user_input):
-                return self.create_enocean_entry(user_input)
-            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+            return self.async_step_manual(user_input)
 
         devices = await self.hass.async_add_executor_job(dongle.detect)
         if len(devices) == 0:
-            return await self.async_step_manual(user_input)
+            return await self.async_step_manual()
         devices.append(self.MANUAL_PATH_VALUE)
 
         return self.async_show_form(
@@ -82,7 +79,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
-            errors=errors,
+            errors={},
         )
 
     async def async_step_manual(
