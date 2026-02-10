@@ -252,12 +252,20 @@ async def test_zeroconf_confirm_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("ip", "reason"),
+    [(HOMEE_IP, "already_configured"), ("192.168.1.171", "2nd_ip_address")],
+)
 async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    ip: str,
+    reason: str,
 ) -> None:
     """Test zeroconf discovery flow when already configured."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = AsyncMock()
+    mock_config_entry.runtime_data.connected = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -266,15 +274,15 @@ async def test_zeroconf_already_configured(
             name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
             type="_ssh._tcp.local.",
             hostname=f"homee-{HOMEE_ID}.local.",
-            ip_address=ip_address(HOMEE_IP),
-            ip_addresses=[ip_address(HOMEE_IP)],
+            ip_address=ip_address(ip),
+            ip_addresses=[ip_address(ip)],
             port=22,
             properties={},
         ),
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(

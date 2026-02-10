@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import HomeeConfigEntry
 from .const import (
     DOMAIN,
     RESULT_CANNOT_CONNECT,
@@ -113,7 +114,22 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_address")
 
-        await self.async_set_unique_id(self._name)
+        existing_entry: HomeeConfigEntry | None = await self.async_set_unique_id(
+            self._name
+        )
+        if (
+            existing_entry
+            and existing_entry.runtime_data.connected
+            and existing_entry.data[CONF_HOST] != self._host
+        ):
+            _LOGGER.debug(
+                "Aborting config flow for discovered homee with IP %s"
+                "since it is already configured at IP %s",
+                self._host,
+                existing_entry.data[CONF_HOST],
+            )
+            return self.async_abort(reason="2nd_ip_address")
+
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         # Cause an auth-error to see if homee is reachable.
