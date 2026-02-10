@@ -20,15 +20,12 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
-    comment: |
-      No service requests raise any exceptions, so nothing to pass through to UI.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: done
+    status: exempt
     comment: |
-      Only a single configuration option available (which is fully documented).
+      No configuration parameters, so nothing to document.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done

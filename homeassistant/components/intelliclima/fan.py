@@ -51,6 +51,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
+    _attr_preset_modes = ["auto"]
 
     def __init__(
         self,
@@ -97,11 +98,6 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
         return None
 
-    @property
-    def preset_modes(self) -> list[str]:
-        """Return available preset modes."""
-        return ["auto"]
-
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -123,11 +119,11 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage."""
-        return await self.async_set_mode_speed(percentage=percentage)
+        await self.async_set_mode_speed(percentage=percentage)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        return await self.async_set_mode_speed(fan_mode=preset_mode)
+        await self.async_set_mode_speed(fan_mode=preset_mode)
 
     async def async_set_mode_speed(
         self, fan_mode: str | None = None, percentage: int | None = None
@@ -143,10 +139,12 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         if fan_mode == "auto":
             # auto is a special case with special mode and speed setting
             await self.coordinator.api.ecocomfort.set_mode_speed_auto(self._device_sn)
-            return await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
+            return
         if percentage == 0:
             # Setting fan speed to zero turns off the fan
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
 
         # Determine the fan mode
         if fan_mode is not None:
@@ -172,4 +170,4 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         await self.coordinator.api.ecocomfort.set_mode_speed(
             self._device_sn, mode, speed
         )
-        return await self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
