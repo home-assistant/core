@@ -41,7 +41,7 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "detect"
+    assert result["step_id"] == "manual"
     devices = result["data_schema"].schema.get(CONF_DEVICE).config.get("options")
     assert FAKE_DONGLE_PATH in devices
     assert EnOceanFlowHandler.MANUAL_PATH_VALUE in devices
@@ -106,7 +106,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "detect"
+    assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
 
 
