@@ -65,15 +65,20 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
             assert state.state == str(getattr(device, field))
 
 
-@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
+@pytest.mark.parametrize(
+    ("device",),
+    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+)
+@pytest.mark.parametrize(
+    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
+)
 async def test_sensor_update(
-    hass: HomeAssistant, mock_bridge, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, mock_bridge, device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test sensor update."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    device = DUMMY_WATER_HEATER_DEVICE
     field = "power_consumption"
     entity_id = f"sensor.{slugify(device.name)}_power"
 
@@ -81,7 +86,7 @@ async def test_sensor_update(
     assert state.state == str(getattr(device, field))
 
     monkeypatch.setattr(device, field, 1431)
-    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
+    mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

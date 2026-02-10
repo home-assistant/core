@@ -39,16 +39,19 @@ ENTITY_ID3_2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_2"
 
 
 @pytest.mark.parametrize(
+    ("device",),
+    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+)
+@pytest.mark.parametrize(
     "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
 )
 async def test_switch(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, mock_bridge, device, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the switch."""
     await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    device = DUMMY_WATER_HEATER_DEVICE
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     # Test initial state - on
@@ -57,7 +60,7 @@ async def test_switch(
 
     # Test state change on --> off
     monkeypatch.setattr(device, "device_state", DeviceState.OFF)
-    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
+    mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

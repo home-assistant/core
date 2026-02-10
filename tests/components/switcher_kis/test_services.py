@@ -23,26 +23,34 @@ from homeassistant.util import slugify
 from . import init_integration
 from .consts import (
     DUMMY_AUTO_OFF_SET,
+    DUMMY_HEATER_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_TIMER_MINUTES_SET,
     DUMMY_WATER_HEATER_DEVICE,
+    DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
 )
 
 
-@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
+@pytest.mark.parametrize(
+    ("device",),
+    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+)
+@pytest.mark.parametrize(
+    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
+)
 async def test_turn_on_with_timer_service(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, mock_bridge, device, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test the turn on with timer service."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    device = DUMMY_WATER_HEATER_DEVICE
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     # Test initial state - off
     monkeypatch.setattr(device, "device_state", DeviceState.OFF)
-    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
+    mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -69,13 +77,20 @@ async def test_turn_on_with_timer_service(
         assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) -> None:
+@pytest.mark.parametrize(
+    ("device",),
+    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+)
+@pytest.mark.parametrize(
+    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
+)
+async def test_set_auto_off_service(
+    hass: HomeAssistant, mock_bridge, device, mock_api
+) -> None:
     """Test the set auto off service."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    device = DUMMY_WATER_HEATER_DEVICE
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
@@ -94,15 +109,20 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
         )
 
 
-@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
+@pytest.mark.parametrize(
+    ("device",),
+    [(DUMMY_WATER_HEATER_DEVICE,), (DUMMY_HEATER_DEVICE,)],
+)
+@pytest.mark.parametrize(
+    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE, DUMMY_HEATER_DEVICE]], indirect=True
+)
 async def test_set_auto_off_service_fail(
-    hass: HomeAssistant, mock_bridge, mock_api
+    hass: HomeAssistant, mock_bridge, device, mock_api
 ) -> None:
     """Test set auto off service failed."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    device = DUMMY_WATER_HEATER_DEVICE
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
