@@ -8,7 +8,13 @@ from nrgkick_api import NRGkickCommandRejectedError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -53,9 +59,9 @@ async def test_charge_switch_service_calls_update_state(
     control_data["charge_pause"] = 1
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
-        "switch",
-        "turn_off",
-        {"entity_id": entity_id},
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -67,9 +73,9 @@ async def test_charge_switch_service_calls_update_state(
     control_data["charge_pause"] = 0
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": entity_id},
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -99,9 +105,9 @@ async def test_charge_switch_rejected_by_device(
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            "switch",
-            "turn_off",
-            {"entity_id": entity_id},
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
