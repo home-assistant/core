@@ -507,8 +507,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth_timeout")
         except (
-            OAuth2TokenRequestReauthError,
-            OAuth2TokenRequestTransientError,
             OAuth2TokenRequestError,
             ClientError,
         ) as err:
