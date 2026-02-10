@@ -57,8 +57,14 @@
     }
   },
   "exceptions": {
+    "api_call_failed": {
+      "message": "Action execute for {entity} failed."
+    },
     "clear_cache_failed": {
-      "message": "Could not cleat the Velbus cache: {error}"
+      "message": "Could not clear the Velbus cache: {error}"
+    },
+    "connection_failed": {
+      "message": "Could not connect to Velbus."
     },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."

@@ -141,10 +141,12 @@ def mock_backup_generation_fixture(
         patch("pathlib.Path.is_dir", lambda x: x in CONFIG_DIR_DIRS),
         patch(
             "pathlib.Path.exists",
-            lambda x: x
-            not in (
-                Path(hass.config.path("backups")),
-                Path(hass.config.path("tmp_backups")),
+            lambda x: (
+                x
+                not in (
+                    Path(hass.config.path("backups")),
+                    Path(hass.config.path("tmp_backups")),
+                )
             ),
         ),
         patch(

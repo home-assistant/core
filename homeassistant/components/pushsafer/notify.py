@@ -6,6 +6,7 @@ import base64
 from http import HTTPStatus
 import logging
 import mimetypes
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -65,26 +66,23 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushsaferNotificationService:
     """Get the Pushsafer.com notification service."""
-    return PushsaferNotificationService(
-        config.get(CONF_DEVICE_KEY), hass.config.is_allowed_path
-    )
+    return PushsaferNotificationService(config[CONF_DEVICE_KEY])
 
 
 class PushsaferNotificationService(BaseNotificationService):
     """Implementation of the notification service for Pushsafer.com."""
 
-    def __init__(self, private_key, is_allowed_path):
+    def __init__(self, private_key: str) -> None:
         """Initialize the service."""
         self._private_key = private_key
-        self.is_allowed_path = is_allowed_path
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to specified target."""
-        if kwargs.get(ATTR_TARGET) is None:
+        targets: list[str] | None
+        if (targets := kwargs.get(ATTR_TARGET)) is None:
             targets = ["a"]
             _LOGGER.debug("No target specified. Sending push to all")
         else:
-            targets = kwargs.get(ATTR_TARGET)
             _LOGGER.debug("%s target(s) specified", len(targets))
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -170,7 +168,7 @@ class PushsaferNotificationService(BaseNotificationService):
         try:
             if local_path is not None:
                 _LOGGER.debug("Loading image from local path")
-                if self.is_allowed_path(local_path):
+                if self.hass.config.is_allowed_path(local_path):
                     file_mimetype = mimetypes.guess_type(local_path)
                     _LOGGER.debug("Detected mimetype %s", file_mimetype)
                     with open(local_path, "rb") as binary_file:

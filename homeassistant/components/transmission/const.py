@@ -39,6 +39,7 @@ DEFAULT_SCAN_INTERVAL = 120
 STATE_ATTR_TORRENT_INFO = "torrent_info"
 
 ATTR_DELETE_DATA = "delete_data"
+ATTR_LABELS = "labels"
 ATTR_TORRENT = "torrent"
 ATTR_TORRENTS = "torrents"
 ATTR_DOWNLOAD_PATH = "download_path"

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx.lightening_device import LighteningDevice
+from pyvlx.lightening_device import Light
 from pyvlx.opening_device import Blind, Window
 
 from homeassistant.components.velux import DOMAIN
@@ -67,6 +67,7 @@ def mock_window() -> AsyncMock:
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False)
+    window.pyvlx = MagicMock()
     return window
 
 
@@ -87,6 +88,7 @@ def mock_blind() -> AsyncMock:
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()
     blind.set_orientation = AsyncMock()
+    blind.pyvlx = MagicMock()
     return blind
 
 
@@ -94,10 +96,11 @@ def mock_blind() -> AsyncMock:
 @pytest.fixture
 def mock_light() -> AsyncMock:
     """Create a mock Velux light."""
-    light = AsyncMock(spec=LighteningDevice, autospec=True)
+    light = AsyncMock(spec=Light, autospec=True)
     light.name = "Test Light"
     light.serial_number = "0815"
     light.intensity = MagicMock()
+    light.pyvlx = MagicMock()
     return light
 
 
@@ -111,6 +114,7 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_opening = False
     cover.is_closing = False
     cover.position = MagicMock(position_percent=30, closed=False)
+    cover.pyvlx = MagicMock()
     return cover
 
 

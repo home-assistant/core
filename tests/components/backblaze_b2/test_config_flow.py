@@ -158,6 +158,26 @@ async def test_already_configured(
         ),
         ("invalid_prefix", {"mock_prefix": "test/"}, "invalid_prefix", "prefix"),
         (
+            "connection_error",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.B2ConnectionError,
+                "args": ["Connection error"],
+            },
+            "cannot_connect",
+            "base",
+        ),
+        (
+            "timeout_error",
+            {
+                "patch": "b2sdk.v2.RawSimulator.authorize_account",
+                "exception": exception.B2RequestTimeout,
+                "args": ["Request timed out"],
+            },
+            "cannot_connect",
+            "base",
+        ),
+        (
             "unknown_error",
             {
                 "patch": "b2sdk.v2.RawSimulator.authorize_account",
