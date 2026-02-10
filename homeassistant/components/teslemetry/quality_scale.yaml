@@ -66,11 +66,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: |
-      ConfigEntryAuthFailed and UpdateFailed exceptions can have translated messages.
-      Also one "unknown error" that cannot be translated.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
