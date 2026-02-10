@@ -31,7 +31,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
-from homeassistant.helpers.service import get_service_config_entry
+from homeassistant.helpers.service import async_get_service_config_entry
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
@@ -73,7 +73,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> tuple[NordPoolClient, date, str, list[str], int]:
         """Return the parameters for the service."""
-        entry: NordPoolConfigEntry = get_service_config_entry(
+        entry: NordPoolConfigEntry = async_get_service_config_entry(
             hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
         )
         client = entry.runtime_data.client

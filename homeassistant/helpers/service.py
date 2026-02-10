@@ -1207,7 +1207,7 @@ def async_register_platform_entity_service(
 
 
 @callback
-def get_service_config_entry(
+def async_get_service_config_entry(
     hass: HomeAssistant, domain: str, entry_id: str
 ) -> ConfigEntry:
     """Get and validate a service config entry."""

@@ -3095,20 +3095,20 @@ async def test_get_service_config_entry(hass: HomeAssistant) -> None:
     entry1 = MockConfigEntry(domain=domain, entry_id=entry_id)
     entry1.add_to_hass(hass)
     entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
-    assert service.get_service_config_entry(hass, domain, entry_id) is entry1
+    assert service.async_get_service_config_entry(hass, domain, entry_id) is entry1
 
     # Config entry doesn't exist
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_service_config_entry(hass, domain, "another_entry")
+        service.async_get_service_config_entry(hass, domain, "another_entry")
     assert err.value.translation_key == "service_config_entry_not_found"
 
     # Config entry exists, but from wrong domain
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_service_config_entry(hass, "another_domain", entry_id)
+        service.async_get_service_config_entry(hass, "another_domain", entry_id)
     assert err.value.translation_key == "service_config_entry_wrong_domain"
 
     # Config entry exists, but is not loaded
     entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_service_config_entry(hass, domain, entry_id)
+        service.async_get_service_config_entry(hass, domain, entry_id)
     assert err.value.translation_key == "service_config_entry_not_loaded"
