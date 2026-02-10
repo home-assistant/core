@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from typing import TypeVar
 
 import aiohttp
 from nrgkick_api import (
@@ -17,7 +16,6 @@ from nrgkick_api import (
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-
 
 
 class NRGkickApiClientError(HomeAssistantError):

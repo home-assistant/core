@@ -42,11 +42,6 @@ async def test_charge_switch_service_calls_update_state(
     """Test the charge switch calls the API and updates state."""
     await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
 
-    async def set_charge_pause(pause: bool) -> int:
-        return 1 if pause else 0
-
-    mock_nrgkick_api.set_charge_pause.side_effect = set_charge_pause
-
     entity_id = "switch.nrgkick_test_charging_enabled"
 
     assert (state := hass.states.get(entity_id))
@@ -54,7 +49,7 @@ async def test_charge_switch_service_calls_update_state(
 
     # Pause charging
     # Simulate the device reporting the new paused state after the command.
-    control_data = dict(mock_nrgkick_api.get_control.return_value)
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data["charge_pause"] = 1
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
@@ -63,13 +58,12 @@ async def test_charge_switch_service_calls_update_state(
         {"entity_id": entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (state := hass.states.get(entity_id))
     assert state.state == "off"
 
     # Resume charging
     # Simulate the device reporting the resumed state after the command.
-    control_data = dict(mock_nrgkick_api.get_control.return_value)
+    control_data = mock_nrgkick_api.get_control.return_value.copy()
     control_data["charge_pause"] = 0
     mock_nrgkick_api.get_control.return_value = control_data
     await hass.services.async_call(
@@ -78,7 +72,6 @@ async def test_charge_switch_service_calls_update_state(
         {"entity_id": entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert (state := hass.states.get(entity_id))
     assert state.state == "on"
 
