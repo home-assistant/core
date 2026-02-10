@@ -161,7 +161,26 @@ def mock_bacnet_client() -> Generator[AsyncMock]:
         client.connected = True
         client.connect = AsyncMock()
         client.disconnect = AsyncMock()
-        client.discover_devices = AsyncMock(return_value=[device_info])
+
+        async def _mock_discover_devices(
+            timeout: int = 5,
+            low_limit: int | None = None,
+            high_limit: int | None = None,
+        ) -> list:
+            """Return device for targeted discovery, empty for broadcast.
+
+            Targeted discovery (with low_limit/high_limit) returns the mock
+            device when its ID is in range. Broadcast discovery (no limits)
+            returns empty to prevent auto-add reloads in most tests.
+            """
+            if low_limit is not None:
+                if low_limit <= device_info.device_id <= (high_limit or low_limit):
+                    return [device_info]
+                return []
+            return []
+
+        client.discover_devices = AsyncMock(side_effect=_mock_discover_devices)
+        client.discover_device_at_address = AsyncMock(return_value=device_info)
         client.get_device_objects = AsyncMock(return_value=objects)
         client.read_present_value = AsyncMock(side_effect=_mock_read_present_value)
         client.write_present_value = AsyncMock()
@@ -182,10 +201,10 @@ def mock_get_local_interfaces() -> Generator[AsyncMock]:
         "homeassistant.components.bacnet.config_flow.get_local_interfaces",
         autospec=True,
     ) as mock_get_interfaces:
-        # Return interface names as keys, IP + description as values
+        # Return interface names as keys, subnet range as values
         mock_get_interfaces.return_value = {
-            "eth0": "192.168.21.223 (eth0)",
-            "0.0.0.0": "0.0.0.0 (all interfaces)",
+            "eth0": "eth0 192.168.21.0-192.168.21.255",
+            "wlan0": "wlan0 10.0.0.0-10.0.0.255",
             "manual": "Enter IP address manually...",
         }
         yield mock_get_interfaces

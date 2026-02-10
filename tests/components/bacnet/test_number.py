@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import init_integration
+from . import MOCK_DEVICE_KEY, init_integration
 
 
 async def test_number_created(
@@ -82,3 +82,95 @@ async def test_set_native_value_write_error(
             },
             blocking=True,
         )
+
+
+async def test_number_string_value(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test number entity handles string values that can be parsed as float."""
+    await init_integration(hass)
+
+    entry = hass.config_entries.async_entries("bacnet")[0]
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.values["analog-output,0"] = "42.5"
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_hvac_controller_heating_valve")
+    assert state is not None
+    assert float(state.state) == 42.5
+
+
+async def test_number_invalid_string_value(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test number entity handles unparsable string values."""
+    await init_integration(hass)
+
+    entry = hass.config_entries.async_entries("bacnet")[0]
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.values["analog-output,0"] = "bad"
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_hvac_controller_heating_valve")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_number_none_value(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test number entity handles None value."""
+    await init_integration(hass)
+
+    entry = hass.config_entries.async_entries("bacnet")[0]
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.values["analog-output,0"] = None
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_hvac_controller_heating_valve")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_set_native_value_timeout_error(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test error handling when write times out."""
+    await init_integration(hass)
+
+    mock_bacnet_client.write_present_value.side_effect = TimeoutError("timeout")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.test_hvac_controller_heating_valve",
+                ATTR_VALUE: 50.0,
+            },
+            blocking=True,
+        )
+
+
+async def test_number_unexpected_type_value(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test number entity handles unexpected value types (e.g. list)."""
+    await init_integration(hass)
+
+    entry = hass.config_entries.async_entries("bacnet")[0]
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.values["analog-output,0"] = [1, 2, 3]
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_hvac_controller_heating_valve")
+    assert state is not None
+    assert state.state == "unknown"

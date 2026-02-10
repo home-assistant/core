@@ -7,27 +7,23 @@ from typing import Final
 
 DOMAIN: Final = "bacnet"
 
-# Data keys
-DATA_CLIENT: Final = "client"
-DATA_DEVICES: Final = "devices"
-DATA_HUB_ID: Final = "hub_id"
-
-# Config entry types
-CONF_ENTRY_TYPE: Final = "entry_type"
-ENTRY_TYPE_HUB: Final = "hub"
-ENTRY_TYPE_DEVICE: Final = "device"
-
 # Config keys
+CONF_DEVICES: Final = "devices"
 CONF_DEVICE_ID: Final = "device_id"
 CONF_DEVICE_ADDRESS: Final = "device_address"
 CONF_INTERFACE: Final = "interface"
-CONF_HUB_ID: Final = "hub_id"
 CONF_OBJECT_LIST: Final = "object_list"
 CONF_SELECTED_OBJECTS: Final = "selected_objects"
 
+CONF_DEVICE_INSTANCE: Final = "device_instance"
+
 DEFAULT_PORT: Final = 47808
+
+# BACnet device instance range for Home Assistant clients.
+# Physical devices typically use 0–100,000; we use the high end to avoid collisions.
+DEVICE_INSTANCE_MIN: Final = 3_000_000
+DEVICE_INSTANCE_MAX: Final = 4_194_302  # 4,194,303 is the BACnet wildcard
 DISCOVERY_TIMEOUT: Final = 5
-DISCOVERY_INTERVAL: Final = timedelta(minutes=5)
 COV_LIFETIME: Final = 300
 COV_RENEW_INTERVAL: Final = timedelta(seconds=240)
 

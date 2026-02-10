@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .bacnet_client import BACnetObjectInfo
-from .const import CONF_HUB_ID, DOMAIN
+from .const import DOMAIN
 from .coordinator import BACnetDeviceCoordinator
 
 
@@ -38,14 +38,7 @@ class BACnetEntity(CoordinatorEntity[BACnetDeviceCoordinator]):
         else:
             self._attr_name = f"{object_info.object_type} {object_info.object_instance}"
 
-        # Build device info
-        via_device: tuple[str, str] | None = None
-        hub_entry_id = coordinator.config_entry.data.get(CONF_HUB_ID)
-        if hub_entry_id:
-            hub_entry = coordinator.hass.config_entries.async_get_entry(hub_entry_id)
-            if hub_entry and hub_entry.runtime_data:
-                via_device = (DOMAIN, hub_entry.runtime_data.hub_device_id)
-
+        # Build device info for this BACnet device
         connections: set[tuple[str, str]] | None = None
         if device_info.mac_address:
             connections = {(CONNECTION_NETWORK_MAC, device_info.mac_address)}
@@ -59,8 +52,6 @@ class BACnetEntity(CoordinatorEntity[BACnetDeviceCoordinator]):
             sw_version=device_info.firmware_revision,
             hw_version=device_info.hardware_version,
         )
-        if via_device is not None:
-            self._attr_device_info["via_device"] = via_device
         if connections is not None:
             self._attr_device_info["connections"] = connections
 

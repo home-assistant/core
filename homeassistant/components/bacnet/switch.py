@@ -2,68 +2,56 @@
 
 from __future__ import annotations
 
-import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import BACnetConfigEntry
 from .bacnet_client import BACnetObjectInfo, BACnetWriteError
-from .const import BINARY_OUTPUT_OBJECT_TYPE, CONF_SELECTED_OBJECTS, DOMAIN
+from .const import BINARY_OUTPUT_OBJECT_TYPE, DOMAIN
 from .coordinator import BACnetDeviceCoordinator
 from .entity import BACnetEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BACnetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BACnet switch entities from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    for coordinator in entry.runtime_data.coordinators.values():
+        if coordinator.data is None:
+            continue
 
-    if coordinator.data is None:
-        return
+        selected_objects = coordinator.selected_objects
 
-    selected_objects = entry.options.get(CONF_SELECTED_OBJECTS, [])
+        @callback
+        def _add_new_objects(
+            objects: list[BACnetObjectInfo],
+            _coord: BACnetDeviceCoordinator = coordinator,
+            _sel: list[str] = selected_objects,
+        ) -> None:
+            """Add new switch entities for newly discovered objects."""
+            entities = [
+                BACnetSwitch(_coord, obj)
+                for obj in objects
+                if obj.object_type == BINARY_OUTPUT_OBJECT_TYPE
+                and (not _sel or f"{obj.object_type},{obj.object_instance}" in _sel)
+            ]
+            if entities:
+                async_add_entities(entities)
 
-    def _is_selected(obj: BACnetObjectInfo) -> bool:
-        """Check if an object is in the selected list."""
-        if not selected_objects:
-            return True
-        return f"{obj.object_type},{obj.object_instance}" in selected_objects
-
-    @callback
-    def _add_new_objects(objects: list[BACnetObjectInfo]) -> None:
-        """Add new switch entities for newly discovered objects."""
-        entities = [
-            BACnetSwitch(coordinator, obj)
-            for obj in objects
-            if obj.object_type == BINARY_OUTPUT_OBJECT_TYPE and _is_selected(obj)
-        ]
-        if entities:
-            async_add_entities(entities)
-
-    _add_new_objects(coordinator.data.objects)
-    coordinator.new_objects_callbacks.append(_add_new_objects)
+        _add_new_objects(coordinator.data.objects)
+        coordinator.new_objects_callbacks.append(_add_new_objects)
 
 
 class BACnetSwitch(BACnetEntity, SwitchEntity):
     """Represent a BACnet binary output as a switch entity."""
-
-    def __init__(
-        self,
-        coordinator: BACnetDeviceCoordinator,
-        object_info: BACnetObjectInfo,
-    ) -> None:
-        """Initialize the BACnet switch entity."""
-        super().__init__(coordinator, object_info)
 
     @property
     def is_on(self) -> bool | None:
@@ -79,11 +67,11 @@ class BACnetSwitch(BACnetEntity, SwitchEntity):
             return value.lower() in ("active", "1", "true", "on")
         return None
 
-    async def async_turn_on(self, **kwargs: object) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._write_value("active")
 
-    async def async_turn_off(self, **kwargs: object) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._write_value("inactive")
 

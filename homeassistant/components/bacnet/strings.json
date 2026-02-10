@@ -2,56 +2,37 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "device_not_selected": "No device was selected.",
-      "hub_not_ready": "The BACnet hub is not ready. Set up the hub first.",
-      "no_hub": "No BACnet hub is configured. Add a hub first.",
+      "device_added": "The BACnet device has been added successfully.",
+      "hub_not_ready": "The BACnet hub is not ready.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "already_in_use": "This interface is already used by another BACnet hub.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_not_found": "The selected device could not be found.",
-      "discovery_timeout": "Device discovery timed out. Make sure BACnet devices are available on the network.",
       "invalid_ip": "The IP address is not valid.",
-      "no_devices_found": "No BACnet devices were found on the network.",
       "no_interfaces": "No network interfaces were found on this system.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "flow_title": "{name}",
-    "progress": {
-      "discovering_devices": "Discovering BACnet devices on the network...",
-      "discovering_objects": "Reading BACnet objects from the device..."
+    "flow_title": "{name} ({address})",
+    "initiate_flow": {
+      "user": "Add BACnet client"
     },
     "step": {
-      "discover": {
+      "discovery_confirm": {
+        "description": "A BACnet device **{name}** was discovered at `{address}`.\n\nVendor: {vendor}\n\nModel: {model}",
+        "title": "Add BACnet device"
+      },
+      "reconfigure": {
         "data": {
-          "device_id": "Device"
+          "interface": "Network interface"
         },
         "data_description": {
-          "device_id": "The BACnet device to add to Home Assistant."
+          "interface": "The network interface to bind the BACnet client to."
         },
-        "description": "The following BACnet devices were discovered on your network. Select one to add.",
-        "title": "Select a BACnet device"
+        "description": "Select the network interface for the BACnet client.",
+        "title": "Reconfigure BACnet hub"
       },
-      "discover_objects": {
-        "title": "Discovering BACnet objects"
-      },
-      "integration_discovery_confirm": {
-        "description": "Do you want to add **{device_name}** to Home Assistant?",
-        "title": "Discovered BACnet device"
-      },
-      "manual": {
-        "data": {
-          "device_address": "Device network address",
-          "device_id": "Device instance ID"
-        },
-        "data_description": {
-          "device_address": "The IP address and port of the BACnet device (for example, `192.168.1.100:47808`).",
-          "device_id": "The BACnet device instance number."
-        },
-        "description": "Enter the BACnet device ID and network address.",
-        "title": "Manual BACnet device configuration"
-      },
-      "manual_interface": {
+      "reconfigure_manual": {
         "data": {
           "interface": "IP address"
         },
@@ -61,37 +42,48 @@
         "description": "Enter the IP address of the network interface for the BACnet client.",
         "title": "Enter IP address manually"
       },
-      "reconfigure": {
-        "data": {
-          "device_address": "Device network address",
-          "interface": "IP address"
-        },
-        "data_description": {
-          "device_address": "The IP address and port of the BACnet device (for example, `192.168.1.100:47808`).",
-          "interface": "The IP address to bind the BACnet client to (for example, `192.168.1.50`)."
-        },
-        "description": "Update the network configuration for this BACnet entry.",
-        "title": "Reconfigure BACnet"
-      },
-      "sensors": {
-        "data": {
-          "selected_objects": "Objects"
-        },
-        "data_description": {
-          "selected_objects": "The BACnet objects to monitor from this device."
-        },
-        "description": "Select which BACnet objects from **{device_name}** you want to add as entities. {object_count} objects were discovered.",
-        "title": "Select objects to monitor"
-      },
       "user": {
         "data": {
-          "interface": "IP address"
+          "interface": "Network interface"
         },
         "data_description": {
-          "interface": "The IP address of the network interface to bind to, or select 0.0.0.0 to listen on all interfaces."
+          "interface": "The network interface to bind the BACnet client to."
         },
-        "description": "Select the network interface for the BACnet client to listen on.",
-        "title": "Add BACnet hub"
+        "description": "Select the network interface for the BACnet client. Only BACnet devices on the selected subnet will be automatically discovered and added.",
+        "title": "Add BACnet client"
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "device_added": "The BACnet device has been added successfully.",
+        "device_not_found_at_address": "No BACnet device was found at this address.",
+        "hub_not_ready": "The BACnet hub is not ready."
+      },
+      "entry_type": "Device",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found_at_address": "No BACnet device was found at this address.",
+        "invalid_ip": "The IP address is not valid."
+      },
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "step": {
+        "manual": {
+          "data": {
+            "device_address": "IP address",
+            "port": "Port"
+          },
+          "data_description": {
+            "device_address": "The IP address of the BACnet device (for example, `192.168.1.100`).",
+            "port": "The BACnet/IP port number (default: 47808)."
+          },
+          "description": "Adding a device to **{hub_name}**. Enter the IP address of the BACnet device. The device ID will be discovered automatically.",
+          "title": "Add BACnet device"
+        }
       }
     }
   },
@@ -122,24 +114,6 @@
     },
     "write_error": {
       "message": "Could not write to BACnet object `{object}`: {error}"
-    }
-  },
-  "options": {
-    "error": {
-      "hub_not_ready": "The BACnet hub is not ready.",
-      "no_objects": "No BACnet objects have been discovered yet."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "selected_objects": "Objects"
-        },
-        "data_description": {
-          "selected_objects": "The BACnet objects to monitor from this device."
-        },
-        "description": "Select which BACnet objects from **{device_name}** you want to monitor. {object_count} objects are available.",
-        "title": "Configure BACnet device objects"
-      }
     }
   }
 }

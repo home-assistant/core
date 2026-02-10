@@ -2,57 +2,51 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import BACnetConfigEntry
 from .bacnet_client import BACnetObjectInfo, BACnetWriteError
-from .const import ANALOG_OUTPUT_OBJECT_TYPE, CONF_SELECTED_OBJECTS, DOMAIN
+from .const import ANALOG_OUTPUT_OBJECT_TYPE, DOMAIN
 from .coordinator import BACnetDeviceCoordinator
 from .entity import BACnetEntity
 from .units import get_unit_mapping
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BACnetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BACnet number entities from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    for coordinator in entry.runtime_data.coordinators.values():
+        if coordinator.data is None:
+            continue
 
-    if coordinator.data is None:
-        return
+        selected_objects = coordinator.selected_objects
 
-    selected_objects = entry.options.get(CONF_SELECTED_OBJECTS, [])
+        @callback
+        def _add_new_objects(
+            objects: list[BACnetObjectInfo],
+            _coord: BACnetDeviceCoordinator = coordinator,
+            _sel: list[str] = selected_objects,
+        ) -> None:
+            """Add new number entities for newly discovered objects."""
+            entities = [
+                BACnetNumber(_coord, obj)
+                for obj in objects
+                if obj.object_type == ANALOG_OUTPUT_OBJECT_TYPE
+                and (not _sel or f"{obj.object_type},{obj.object_instance}" in _sel)
+            ]
+            if entities:
+                async_add_entities(entities)
 
-    def _is_selected(obj: BACnetObjectInfo) -> bool:
-        """Check if an object is in the selected list."""
-        if not selected_objects:
-            return True
-        return f"{obj.object_type},{obj.object_instance}" in selected_objects
-
-    @callback
-    def _add_new_objects(objects: list[BACnetObjectInfo]) -> None:
-        """Add new number entities for newly discovered objects."""
-        entities = [
-            BACnetNumber(coordinator, obj)
-            for obj in objects
-            if obj.object_type == ANALOG_OUTPUT_OBJECT_TYPE and _is_selected(obj)
-        ]
-        if entities:
-            async_add_entities(entities)
-
-    _add_new_objects(coordinator.data.objects)
-    coordinator.new_objects_callbacks.append(_add_new_objects)
+        _add_new_objects(coordinator.data.objects)
+        coordinator.new_objects_callbacks.append(_add_new_objects)
 
 
 class BACnetNumber(BACnetEntity, NumberEntity):

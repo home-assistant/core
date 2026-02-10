@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import BACnetConfigEntry
 from .bacnet_client import BACnetObjectInfo
-from .const import CONF_SELECTED_OBJECTS
 from .coordinator import BACnetDeviceCoordinator
 from .entity import BACnetEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -28,36 +24,34 @@ BINARY_OBJECT_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BACnetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BACnet binary sensors from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    for coordinator in entry.runtime_data.coordinators.values():
+        if coordinator.data is None:
+            continue
 
-    if coordinator.data is None:
-        return
+        selected_objects = coordinator.selected_objects
 
-    selected_objects = entry.options.get(CONF_SELECTED_OBJECTS, [])
+        @callback
+        def _add_new_objects(
+            objects: list[BACnetObjectInfo],
+            _coord: BACnetDeviceCoordinator = coordinator,
+            _sel: list[str] = selected_objects,
+        ) -> None:
+            """Add new binary sensor entities for newly discovered objects."""
+            entities = [
+                BACnetBinarySensor(_coord, obj)
+                for obj in objects
+                if obj.object_type in BINARY_OBJECT_TYPES
+                and (not _sel or f"{obj.object_type},{obj.object_instance}" in _sel)
+            ]
+            if entities:
+                async_add_entities(entities)
 
-    def _is_selected(obj: BACnetObjectInfo) -> bool:
-        """Check if an object is in the selected list."""
-        if not selected_objects:
-            return True
-        return f"{obj.object_type},{obj.object_instance}" in selected_objects
-
-    @callback
-    def _add_new_objects(objects: list[BACnetObjectInfo]) -> None:
-        """Add new binary sensor entities for newly discovered objects."""
-        entities = [
-            BACnetBinarySensor(coordinator, obj)
-            for obj in objects
-            if obj.object_type in BINARY_OBJECT_TYPES and _is_selected(obj)
-        ]
-        if entities:
-            async_add_entities(entities)
-
-    _add_new_objects(coordinator.data.objects)
-    coordinator.new_objects_callbacks.append(_add_new_objects)
+        _add_new_objects(coordinator.data.objects)
+        coordinator.new_objects_callbacks.append(_add_new_objects)
 
 
 class BACnetBinarySensor(BACnetEntity, BinarySensorEntity):

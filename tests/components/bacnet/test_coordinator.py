@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import math
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,15 +14,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import init_integration, init_integration_with_hub
+from . import MOCK_DEVICE_KEY, create_mock_hub_config_entry, init_integration
 
 
 async def test_coordinator_polls_values(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that the coordinator polls present values."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # The coordinator should have polled values
     assert coordinator.data is not None
@@ -36,8 +37,8 @@ async def test_coordinator_data_none_raises_update_failed(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that _async_update_data raises UpdateFailed when data is None."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Set data to None to trigger UpdateFailed
     coordinator.data = None
@@ -50,8 +51,8 @@ async def test_coordinator_poll_object_error(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test _poll_object returns None on error."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Make read_present_value raise an error
     mock_bacnet_client.read_present_value.side_effect = RuntimeError("read failed")
@@ -66,8 +67,8 @@ async def test_coordinator_cov_callback(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test COV callback updates coordinator data."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Create a COV callback
     cov_callback = coordinator._make_cov_callback("analog-input", 0)
@@ -84,8 +85,8 @@ async def test_coordinator_cov_callback_ignores_non_present_value(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test COV callback ignores notifications without presentValue."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Create a COV callback
     cov_callback = coordinator._make_cov_callback("analog-input", 0)
@@ -101,8 +102,8 @@ async def test_coordinator_setup_cov_subscriptions(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test setting up COV subscriptions."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Reset COV subscriptions
     coordinator._cov_subscription_keys = []
@@ -119,8 +120,8 @@ async def test_coordinator_setup_cov_subscriptions_error(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test COV subscription errors are handled gracefully."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Make subscribe_cov fail
     mock_bacnet_client.subscribe_cov.side_effect = RuntimeError("COV failed")
@@ -137,8 +138,8 @@ async def test_coordinator_update_skips_cov_objects(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that polling skips objects with active COV subscriptions."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Simulate active COV subscription using simple key format
     # The coordinator splits on ":" with maxsplit=1, so the key after the
@@ -163,8 +164,8 @@ async def test_coordinator_background_setup(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test background setup runs and sets initial_setup_done."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # background setup was started in async_setup_entry
     # Wait for it to complete (it does asyncio.sleep(1) first)
@@ -182,8 +183,8 @@ async def test_coordinator_async_shutdown(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test async_shutdown cleans up COV subscriptions."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Add some mock COV subscriptions
     coordinator._cov_subscription_keys = ["sub1", "sub2", "sub3"]
@@ -199,8 +200,8 @@ async def test_coordinator_async_shutdown_handles_errors(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test async_shutdown handles errors during unsubscribe."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Make unsubscribe fail
     mock_bacnet_client.unsubscribe_cov.side_effect = RuntimeError("unsubscribe failed")
@@ -215,8 +216,8 @@ async def test_coordinator_update_with_poll_error(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that polling errors for individual objects don't stop the update."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Make read_present_value fail for some objects
     call_count = 0
@@ -239,8 +240,8 @@ async def test_coordinator_object_discovery_error(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test error during object discovery in _async_update_data."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Clear objects to trigger rediscovery
     coordinator.data.objects = []
@@ -259,8 +260,8 @@ async def test_rediscovery_detects_new_objects(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery detects newly added objects."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Mark initial setup done and expire the rediscovery timer
     coordinator._initial_setup_done = True
@@ -288,9 +289,7 @@ async def test_rediscovery_detects_new_objects(
     await coordinator._async_update_data()
 
     assert len(coordinator.data.objects) == original_count + 1
-    assert any(
-        obj.object_instance == 99 for obj in coordinator.data.objects
-    )
+    assert any(obj.object_instance == 99 for obj in coordinator.data.objects)
     assert len(callback_objects) == 1
     assert callback_objects[0].object_name == "New Sensor"
 
@@ -299,8 +298,8 @@ async def test_rediscovery_detects_removed_objects(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery detects removed objects and cleans up entities."""
-    device_entry = await init_integration(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Mark initial setup done and expire the rediscovery timer
     coordinator._initial_setup_done = True
@@ -308,9 +307,7 @@ async def test_rediscovery_detects_removed_objects(
 
     # Verify we have sensor entities initially
     entity_registry = er.async_get(hass)
-    entries_before = er.async_entries_for_config_entry(
-        entity_registry, device_entry.entry_id
-    )
+    entries_before = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries_before) > 0
 
     # Return an empty object list on re-discovery (all removed)
@@ -320,19 +317,19 @@ async def test_rediscovery_detects_removed_objects(
 
     assert len(coordinator.data.objects) == 0
 
-    # All entities should be removed from registry
-    entries_after = er.async_entries_for_config_entry(
-        entity_registry, device_entry.entry_id
-    )
-    assert len(entries_after) == 0
+    # Entities for removed objects should be cleaned up from the registry
+    entries_after = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    # All device-specific entities should have been removed since all objects are gone
+    device_entries = [e for e in entries_after if e.unique_id.startswith("1234-")]
+    assert len(device_entries) == 0
 
 
 async def test_rediscovery_detects_changed_metadata(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery detects changed state_text on objects."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     coordinator._initial_setup_done = True
     coordinator._last_rediscovery = 0
@@ -371,16 +368,14 @@ async def test_rediscovery_failure_does_not_crash(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery failure is handled gracefully."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     coordinator._initial_setup_done = True
     coordinator._last_rediscovery = 0
     original_count = len(coordinator.data.objects)
 
-    mock_bacnet_client.get_device_objects.side_effect = RuntimeError(
-        "device offline"
-    )
+    mock_bacnet_client.get_device_objects.side_effect = RuntimeError("device offline")
 
     # Should not raise
     data = await coordinator._async_update_data()
@@ -393,8 +388,8 @@ async def test_rediscovery_skipped_before_initial_setup(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery does not run before initial setup is done."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     # Ensure initial setup is NOT done
     coordinator._initial_setup_done = False
@@ -407,12 +402,12 @@ async def test_rediscovery_respects_interval(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that re-discovery does not run before the interval has elapsed."""
-    _, device_entry = await init_integration_with_hub(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     coordinator._initial_setup_done = True
     # Set last rediscovery to "just now" via a large monotonic value
-    coordinator._last_rediscovery = float("inf")
+    coordinator._last_rediscovery = math.inf
 
     assert not coordinator._should_rediscover()
 
@@ -421,8 +416,8 @@ async def test_rediscovery_new_object_creates_entity(
     hass: HomeAssistant, mock_bacnet_client: AsyncMock
 ) -> None:
     """Test that a newly discovered object creates an entity via callback."""
-    device_entry = await init_integration(hass)
-    coordinator = device_entry.runtime_data.coordinator
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
 
     coordinator._initial_setup_done = True
     coordinator._last_rediscovery = 0
@@ -446,3 +441,208 @@ async def test_rediscovery_new_object_creates_entity(
     # The new entity should exist
     state = hass.states.get("binary_sensor.test_hvac_controller_new_alarm")
     assert state is not None
+
+
+async def test_coordinator_setup_cov_empty_list(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test COV subscription setup with empty object list."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator._cov_subscription_keys = []
+    mock_bacnet_client.subscribe_cov.reset_mock()
+
+    await coordinator._setup_cov_subscriptions([])
+
+    mock_bacnet_client.subscribe_cov.assert_not_called()
+
+
+async def test_coordinator_setup_cov_returns_none(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test COV subscription when subscribe returns None (not supported)."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    mock_bacnet_client.subscribe_cov.side_effect = None
+    mock_bacnet_client.subscribe_cov.return_value = None
+    coordinator._cov_subscription_keys = []
+
+    await coordinator._setup_cov_subscriptions(coordinator.data.objects[:1])
+
+    assert len(coordinator._cov_subscription_keys) == 0
+
+
+async def test_coordinator_cleanup_cov_for_removed_objects(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test COV cleanup unsubscribes removed objects."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator._cov_subscription_keys = [
+        "addr:analog-input,0",
+        "addr:analog-input,1",
+        "addr:binary-input,0",
+    ]
+
+    await coordinator._cleanup_cov_for_removed_objects(
+        {"analog-input,0", "binary-input,0"}
+    )
+
+    assert coordinator._cov_subscription_keys == ["addr:analog-input,1"]
+    assert mock_bacnet_client.unsubscribe_cov.call_count == 2
+
+
+async def test_coordinator_cleanup_cov_handles_errors(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test COV cleanup handles unsubscribe errors gracefully."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    mock_bacnet_client.unsubscribe_cov.side_effect = RuntimeError("unsubscribe failed")
+    coordinator._cov_subscription_keys = ["addr:analog-input,0"]
+
+    await coordinator._cleanup_cov_for_removed_objects({"analog-input,0"})
+    assert len(coordinator._cov_subscription_keys) == 0
+
+
+async def test_rediscovery_new_objects_filtered_by_selected(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that re-discovery filters new objects by selected_objects."""
+    entry = create_mock_hub_config_entry(
+        selected_objects=["analog-input,0", "analog-input,1"]
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+    coordinator._initial_setup_done = True
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    coordinator._last_rediscovery = 0
+
+    new_object = BACnetObjectInfo(
+        object_type="analog-input",
+        object_instance=99,
+        object_name="Unselected Sensor",
+        present_value=42.0,
+        units="degreesCelsius",
+    )
+
+    callback_objects: list[BACnetObjectInfo] = []
+    coordinator.new_objects_callbacks.append(callback_objects.extend)
+
+    mock_bacnet_client.get_device_objects.return_value = [
+        *coordinator.data.objects,
+        new_object,
+    ]
+
+    await coordinator._async_update_data()
+
+    # Object added to data but NOT to callback (not in selected_objects)
+    assert any(obj.object_instance == 99 for obj in coordinator.data.objects)
+    assert len(callback_objects) == 0
+
+
+async def test_coordinator_object_discovery_with_cov_setup(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test initial object discovery sets up COV when initial_setup_done."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.objects = []
+    coordinator._initial_setup_done = True
+    mock_bacnet_client.subscribe_cov.reset_mock()
+
+    await coordinator._async_update_data()
+
+    mock_bacnet_client.subscribe_cov.assert_called()
+
+
+async def test_coordinator_background_setup_no_data(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test background setup handles no data gracefully."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator.data.objects = []
+    coordinator._initial_setup_done = False
+    coordinator._background_setup_task = None
+
+    await coordinator._background_setup()
+
+    assert not coordinator._initial_setup_done
+
+
+async def test_coordinator_background_setup_exception(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test background setup handles exceptions gracefully."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    mock_bacnet_client.subscribe_cov.side_effect = Exception("catastrophic")
+    coordinator._initial_setup_done = False
+    coordinator._background_setup_task = None
+    coordinator._cov_subscription_keys = []
+
+    await coordinator._background_setup()
+
+
+async def test_coordinator_should_rediscover_no_last(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test _should_rediscover returns True when _last_rediscovery is None."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    coordinator._initial_setup_done = True
+    coordinator._last_rediscovery = None
+
+    assert coordinator._should_rediscover()
+
+
+async def test_coordinator_poll_exception_handled(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that poll exception during update is handled gracefully."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    # Make polling fail for all objects
+    mock_bacnet_client.read_present_value.side_effect = Exception("read failed")
+    # Clear COV values so objects will be polled
+    coordinator._cov_values.clear()
+
+    # Refresh should succeed (not raise) even though polls fail
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.data is not None
+
+
+async def test_coordinator_background_setup_poll_exception(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that poll exception during background setup is handled."""
+    entry = await init_integration(hass)
+    coordinator = entry.runtime_data.coordinators[MOCK_DEVICE_KEY]
+
+    # Make polling fail during background setup
+    mock_bacnet_client.read_present_value.side_effect = Exception("read failed")
+    coordinator._initial_setup_done = False
+    coordinator._background_setup_task = None
+    coordinator._cov_subscription_keys = []
+
+    await coordinator._background_setup()
+
+    # Should complete without raising
+    assert coordinator._initial_setup_done is True

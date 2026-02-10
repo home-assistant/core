@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from dataclasses import dataclass, field
-import logging
+import ipaddress
 import socket
 from typing import TYPE_CHECKING, Any
 
@@ -32,11 +32,25 @@ if TYPE_CHECKING:
     from bacpypes3.basetypes import PropertyValue
     from bacpypes3.primitivedata import ObjectIdentifier
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class BACnetWriteError(Exception):
     """Raised when a BACnet write operation fails."""
+
+
+def _format_interface_label(iface: str, addr_info: dict[str, str]) -> str | None:
+    """Format a network interface label from address info, or None if loopback."""
+    ip = str(addr_info.get("addr", ""))
+    if not ip or ip.startswith("127."):
+        return None
+    netmask = addr_info.get("netmask", "")
+    if netmask:
+        try:
+            network = ipaddress.IPv4Network(f"{ip}/{netmask}", strict=False)
+        except ValueError:
+            return f"{iface} ({ip})"
+        else:
+            return f"{iface} {network.network_address}-{network.broadcast_address}"
+    return f"{iface} ({ip})"
 
 
 def _get_local_interfaces_sync() -> dict[str, str]:
@@ -54,10 +68,9 @@ def _get_local_interfaces_sync() -> dict[str, str]:
             addrs = netifaces.ifaddresses(iface)  # pylint: disable=c-extension-no-member
             if netifaces.AF_INET in addrs:  # pylint: disable=c-extension-no-member
                 for addr_info in addrs[netifaces.AF_INET]:  # pylint: disable=c-extension-no-member
-                    ip = str(addr_info.get("addr", ""))
-                    if ip and not ip.startswith("127."):
-                        # Store interface name as key, IP and name as value
-                        temp_interfaces[iface] = f"{ip} ({iface})"
+                    label = _format_interface_label(iface, addr_info)
+                    if label:
+                        temp_interfaces[iface] = label
     else:
         try:
             # Get all IP addresses associated with this host
@@ -94,9 +107,6 @@ def _get_local_interfaces_sync() -> dict[str, str]:
     # Sort interfaces by name
     for iface in sorted(temp_interfaces.keys()):
         interfaces[iface] = temp_interfaces[iface]
-
-    # Add 0.0.0.0 as an option
-    interfaces["0.0.0.0"] = "0.0.0.0 (all interfaces)"
 
     # Add manual entry option
     interfaces["manual"] = "Enter IP address manually..."
@@ -137,10 +147,8 @@ def _resolve_interface_to_ip_sync(interface: str) -> str:
                 addrs = netifaces.ifaddresses(interface)  # pylint: disable=c-extension-no-member
                 if netifaces.AF_INET in addrs:  # pylint: disable=c-extension-no-member
                     return addrs[netifaces.AF_INET][0]["addr"]  # pylint: disable=c-extension-no-member
-            except (ValueError, KeyError, IndexError) as err:
-                _LOGGER.warning(
-                    "Could not resolve interface %s to IP: %s", interface, err
-                )
+            except ValueError, KeyError, IndexError:
+                pass
     else:
         return interface
 
@@ -205,12 +213,13 @@ class BACnetClient:
         """Return whether the client is connected."""
         return self._app is not None
 
-    async def connect(self, local_address: str) -> None:
+    async def connect(self, local_address: str, device_instance: int) -> None:
         """Initialize the BACnet application stack.
 
         Args:
             local_address: Local BACnet address in format "ip_address/netmask"
                           or "ip_address" (e.g., "192.168.21.223/24" or "0.0.0.0")
+            device_instance: Unique BACnet device object instance (0–4,194,302).
         """
         if self._app is not None:
             return
@@ -222,7 +231,7 @@ class BACnetClient:
         # Create argparse.Namespace with all required fields for Application.from_args()
         args = argparse.Namespace(
             name="Home Assistant",
-            instance=999999,
+            instance=device_instance,
             vendoridentifier=999,
             address=local_address,
             network=0,
@@ -231,14 +240,10 @@ class BACnetClient:
             bbmd=None,
         )
 
-        try:
-            # Import at runtime to avoid import-time issues
-            from bacpypes3.app import Application  # noqa: PLC0415
+        # Import at runtime to avoid import-time issues
+        from bacpypes3.app import Application  # noqa: PLC0415
 
-            self._app = Application.from_args(args)
-        except Exception:
-            _LOGGER.exception("Failed to create BACnet Application")
-            raise
+        self._app = Application.from_args(args)
 
     async def disconnect(self) -> None:
         """Shut down the BACnet application stack."""
@@ -249,8 +254,71 @@ class BACnetClient:
         self._cov_callbacks.clear()
 
         if self._app is not None:
+            # Cancel all pending BACnet transaction retry timers before
+            # closing the transport, otherwise bacpypes3 SSMs keep firing
+            # retries on a dead socket.
+            if hasattr(self._app, "asap"):
+                for ssm in list(self._app.asap.clientTransactions):
+                    if hasattr(ssm, "_timer_handle") and ssm._timer_handle:  # noqa: SLF001
+                        ssm._timer_handle.cancel()  # noqa: SLF001
+                        ssm._timer_handle = None  # noqa: SLF001
+                for ssm in list(self._app.asap.serverTransactions):
+                    if hasattr(ssm, "_timer_handle") and ssm._timer_handle:  # noqa: SLF001
+                        ssm._timer_handle.cancel()  # noqa: SLF001
+                        ssm._timer_handle = None  # noqa: SLF001
+
             self._app.close()
             self._app = None
+
+    async def discover_device_at_address(
+        self,
+        address: str,
+        timeout: int = DISCOVERY_TIMEOUT,
+    ) -> BACnetDeviceInfo | None:
+        """Discover a BACnet device at a specific IP address using directed WhoIs.
+
+        This sends a unicast WhoIs to the given address rather than a broadcast,
+        useful for devices that are not discoverable via broadcast.
+
+        Returns the first device found at that address, or None.
+        """
+        from bacpypes3.pdu import Address  # noqa: PLC0415
+
+        if self._app is None:
+            raise RuntimeError("BACnet client is not connected")
+
+        i_am_responses = await self._app.who_is(
+            address=Address(address),
+            timeout=timeout,
+        )
+
+        if not i_am_responses:
+            return None
+
+        response = i_am_responses[0]
+        device_id = response.iAmDeviceIdentifier[1]
+        device_address = str(response.pduSource)
+
+        device_info = BACnetDeviceInfo(
+            device_id=device_id,
+            address=device_address,
+            name=f"Device {device_id}",
+        )
+
+        # Read object name for better display
+        obj_ref = f"device,{device_id}"
+        try:
+            async with asyncio.timeout(TIMEOUT_PROPERTY_READ_SHORT):
+                device_info.name = await self._read_property_safe(
+                    device_address,
+                    obj_ref,
+                    "objectName",
+                    default=f"Device {device_id}",
+                )
+        except TimeoutError:
+            pass
+
+        return device_info
 
     async def discover_devices(
         self,
@@ -583,11 +651,7 @@ class BACnetClient:
             # Add timeout to prevent hanging
             async with asyncio.timeout(TIMEOUT_PROPERTY_READ):
                 return await self._app.read_property(address, obj_ref, prop)
-        except KeyboardInterrupt, SystemExit:
-            # Re-raise system exceptions
-            raise
         except BaseException:  # noqa: BLE001
-            # Catch all other exceptions including BACpypes3 errors
             # BACpypes3 errors may not inherit from Exception
             return default
 

@@ -25,8 +25,6 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class BACnetDeviceData:
@@ -37,35 +35,32 @@ class BACnetDeviceData:
     values: dict[str, Any] = field(default_factory=dict)
 
 
-type BACnetConfigEntry = ConfigEntry
-
-
 class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
     """Coordinate data updates for a single BACnet device."""
 
-    config_entry: BACnetConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: BACnetConfigEntry,
+        config_entry: ConfigEntry,
+        device_config: dict[str, Any],
         client: BACnetClient,
         device_info: BACnetDeviceInfo,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
         self.device_info = device_info
-        self._device_address = config_entry.data[CONF_DEVICE_ADDRESS]
-        self._device_id: int = config_entry.data[CONF_DEVICE_ID]
+        self._device_address: str = device_config[CONF_DEVICE_ADDRESS]
+        self._device_id: int = device_config[CONF_DEVICE_ID]
+        self._selected_objects: list[str] = device_config.get(CONF_SELECTED_OBJECTS, [])
         self._cov_subscription_keys: list[str] = []
         self._cov_values: dict[str, Any] = {}
         self._initial_setup_done = False
         self._background_setup_task: asyncio.Task | None = None
 
         # Callback lists for dynamic entity creation (Hydrawise pattern)
-        self.new_objects_callbacks: list[
-            Callable[[list[BACnetObjectInfo]], None]
-        ] = []
+        self.new_objects_callbacks: list[Callable[[list[BACnetObjectInfo]], None]] = []
 
         # Track known objects for re-discovery change detection
         self._known_object_keys: set[str] = set()
@@ -74,11 +69,16 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            logging.getLogger(__name__),
             config_entry=config_entry,
             name=f"BACnet device {device_info.name or device_info.device_id}",
             update_interval=UPDATE_INTERVAL,
         )
+
+    @property
+    def selected_objects(self) -> list[str]:
+        """Return the list of selected objects for this device."""
+        return self._selected_objects
 
     @property
     def initial_setup_done(self) -> bool:
@@ -176,12 +176,10 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
                 # Populate tracking state for re-discovery
                 self._known_object_keys = {
-                    f"{obj.object_type},{obj.object_instance}"
-                    for obj in objects
+                    f"{obj.object_type},{obj.object_instance}" for obj in objects
                 }
                 self._known_object_metadata = {
-                    f"{obj.object_type},{obj.object_instance}": obj
-                    for obj in objects
+                    f"{obj.object_type},{obj.object_instance}": obj for obj in objects
                 }
                 self._last_rediscovery = time.monotonic()
 
@@ -191,10 +189,7 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
                 # Set up COV subscriptions for discovered objects
                 await self._setup_cov_subscriptions(objects)
-            except Exception:
-                _LOGGER.exception(
-                    "Failed to discover objects for device %d", self._device_id
-                )
+            except Exception:  # noqa: BLE001
                 # Don't raise - allow retry on next update
                 return self.data
 
@@ -275,15 +270,10 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                 quick=False,
             )
         except Exception:  # noqa: BLE001
-            _LOGGER.debug(
-                "Failed to re-discover objects for device %d, will retry later",
-                self._device_id,
-            )
             return
 
         new_object_map = {
-            f"{obj.object_type},{obj.object_instance}": obj
-            for obj in new_objects
+            f"{obj.object_type},{obj.object_instance}": obj for obj in new_objects
         }
         new_keys = set(new_object_map)
 
@@ -299,7 +289,7 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             await self._setup_cov_subscriptions(added_objects)
 
             # Filter by selected_objects before notifying platforms
-            selected = self.config_entry.options.get(CONF_SELECTED_OBJECTS, [])
+            selected = self._selected_objects
             if selected:
                 added_objects = [
                     obj
@@ -310,12 +300,6 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             if added_objects:
                 for cb in self.new_objects_callbacks:
                     cb(added_objects)
-
-            _LOGGER.info(
-                "Discovered %d new object(s) on device %d",
-                len(added_keys),
-                self._device_id,
-            )
 
         # Detect removed objects
         removed_keys = self._known_object_keys - new_keys
@@ -332,12 +316,6 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                 self.data.values.pop(key, None)
                 self._cov_values.pop(key, None)
 
-            _LOGGER.info(
-                "Detected %d removed object(s) on device %d",
-                len(removed_keys),
-                self._device_id,
-            )
-
         # Detect changed metadata (state_text, units, name)
         for key in new_keys & self._known_object_keys:
             old_obj = self._known_object_metadata.get(key)
@@ -347,20 +325,13 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
                     if f"{obj.object_type},{obj.object_instance}" == key:
                         self.data.objects[i] = new_obj
                         break
-                _LOGGER.debug(
-                    "Object metadata changed for %s on device %d",
-                    key,
-                    self._device_id,
-                )
 
         # Update tracking state
         self._known_object_keys = new_keys
         self._known_object_metadata = new_object_map
 
     @staticmethod
-    def _object_metadata_changed(
-        old: BACnetObjectInfo, new: BACnetObjectInfo
-    ) -> bool:
+    def _object_metadata_changed(old: BACnetObjectInfo, new: BACnetObjectInfo) -> bool:
         """Check if object metadata that affects entity config has changed."""
         return (
             old.state_text != new.state_text
@@ -368,9 +339,7 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             or old.object_name != new.object_name
         )
 
-    async def _cleanup_cov_for_removed_objects(
-        self, removed_keys: set[str]
-    ) -> None:
+    async def _cleanup_cov_for_removed_objects(self, removed_keys: set[str]) -> None:
         """Unsubscribe COV for objects that no longer exist."""
         keys_to_remove = []
         for sub_key in self._cov_subscription_keys:
@@ -417,7 +386,6 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
             await asyncio.sleep(1)
 
             if not self.data or not self.data.objects:
-                _LOGGER.warning("No objects discovered, skipping background setup")
                 return
 
             # Set up COV subscriptions
@@ -455,10 +423,8 @@ class BACnetDeviceCoordinator(DataUpdateCoordinator[BACnetDeviceData]):
 
             self._initial_setup_done = True
 
-        except Exception:
-            _LOGGER.exception(
-                "Error during background setup for device %d", self._device_id
-            )
+        except Exception:  # noqa: BLE001
+            pass
 
     async def async_shutdown(self) -> None:
         """Clean up COV subscriptions on shutdown."""
