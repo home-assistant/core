@@ -502,7 +502,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
             for choice in self.config["choices"].values():
                 try:
                     validated = selector(choice["selector"])(data)  # type: ignore[operator]
-                except (vol.Invalid, vol.MultipleInvalid):
+                except vol.Invalid, vol.MultipleInvalid:
                     continue
                 else:
                     return validated
