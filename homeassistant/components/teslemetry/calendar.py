@@ -268,7 +268,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
 
                 if season_start <= local_date < season_end:
                     return season_name
-            except (KeyError, ValueError):
+            except KeyError, ValueError:
                 continue
 
         return None  # No matching season found
@@ -282,7 +282,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
             # Get price for the period with fallback to "ALL"
             price = rates.get(period_name, rates.get("ALL"))
             return float(price) if price is not None else None
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return None
 
     def _async_update_attrs(self) -> None:
