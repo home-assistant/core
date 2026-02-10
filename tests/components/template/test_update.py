@@ -540,11 +540,11 @@ async def test_entity_picture_uses_default(hass: HomeAssistant) -> None:
     [
         ("{{ True }}", True, None),
         ("{{ False }}", False, None),
-        ("{{ None }}", False, "Received invalid in_process value: None"),
+        ("{{ None }}", False, "Received invalid update in_progress: None"),
         (
             "{{ 'foo' }}",
             False,
-            "Received invalid in_process value: foo",
+            "Received invalid update in_progress: foo",
         ),
     ],
 )
@@ -621,22 +621,22 @@ async def test_release_summary_and_title_templates(
         (
             "{{ '/local/thing' }}",
             None,
-            "Received invalid release_url: /local/thing",
+            "Received invalid update release_url: /local/thing",
         ),
         (
             "{{ 'foo' }}",
             None,
-            "Received invalid release_url: foo",
+            "Received invalid update release_url: foo",
         ),
         (
             "{{ 1.0 }}",
             None,
-            "Received invalid release_url: 1",
+            "Received invalid update release_url: 1",
         ),
         (
             "{{ True }}",
             None,
-            "Received invalid release_url: True",
+            "Received invalid update release_url: True",
         ),
     ],
 )
@@ -674,9 +674,9 @@ async def test_release_url_template(
         ("{{ 0 }}", 0, None),
         ("{{ 45 }}", 45, None),
         ("{{ None }}", None, None),
-        ("{{ -1 }}", None, "Received invalid update_percentage: -1"),
-        ("{{ 101 }}", None, "Received invalid update_percentage: 101"),
-        ("{{ 'foo' }}", None, "Received invalid update_percentage: foo"),
+        ("{{ -1 }}", None, "Received invalid update update_percentage: -1"),
+        ("{{ 101 }}", None, "Received invalid update update_percentage: 101"),
+        ("{{ 'foo' }}", None, "Received invalid update update_percentage: foo"),
         ("{{ x - 4 }}", None, "UndefinedError: 'x' is undefined"),
     ],
 )
