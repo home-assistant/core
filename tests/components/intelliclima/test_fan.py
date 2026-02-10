@@ -11,6 +11,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -98,14 +99,13 @@ async def test_fan_turn_on_service_calls_api(
         {
             ATTR_ENTITY_ID: FAN_ENTITY_ID,
             ATTR_PERCENTAGE: 30,
-            ATTR_PRESET_MODE: "alternate",
         },
         blocking=True,
     )
 
     # Device serial from single_eco_device.crono_sn
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
-        "11223344", "3", "2"
+        "11223344", "1", "2"
     )
 
 
@@ -128,6 +128,25 @@ async def test_fan_set_percentage_maps_to_speed(
     )
 
 
+async def test_fan_set_preset_mode_service(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+) -> None:
+    """Tests whether the set preset mode service is called and correct api call is followed."""
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        blocking=True,
+    )
+
+    mock_cloud_interface.ecocomfort.set_mode_speed_auto.assert_awaited_once_with(
+        "11223344"
+    )
+    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+
+
 async def test_fan_set_percentage_zero_turns_off(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
@@ -147,10 +166,10 @@ async def test_fan_set_percentage_zero_turns_off(
 @pytest.mark.parametrize(
     ("service_data", "expected_mode", "expected_speed"),
     [
-        # percentage=None, preset_mode=None -> defaults to previous speed > 75% (sleep),
-        # previous mode > "alternate"
+        # percentage=None, preset_mode=None -> defaults to previous speed > 75% (medium),
+        # previous mode > "inward"
         ({}, "1", "3"),
-        # percentage=0, preset_mode=None -> also default 25% (sleep), alternate mode
+        # percentage=0, preset_mode=None -> default 25% (sleep), previous mode (inward)
         ({ATTR_PERCENTAGE: 0}, "1", "1"),
     ],
 )
@@ -173,5 +192,24 @@ async def test_fan_turn_on_defaulting_behavior(
 
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
         "11223344", expected_mode, expected_speed
+    )
+    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+
+
+async def test_fan_turn_on_defaulting_behavior_auto_preset(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+) -> None:
+    """turn_on with auto preset mode calls auto request."""
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        blocking=True,
+    )
+
+    mock_cloud_interface.ecocomfort.set_mode_speed_auto.assert_awaited_once_with(
+        "11223344"
     )
     mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()

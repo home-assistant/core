@@ -45,10 +45,6 @@
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
-        'forward',
-        'reverse',
-        'alternate',
-        'sensor',
         'auto',
       ]),
     }),
@@ -87,12 +83,8 @@
       'friendly_name': 'Test VMC',
       'percentage': 75,
       'percentage_step': 25.0,
-      'preset_mode': 'forward',
+      'preset_mode': None,
       'preset_modes': list([
-        'forward',
-        'reverse',
-        'alternate',
-        'sensor',
         'auto',
       ]),
       'supported_features': <FanEntityFeature: 57>,
