@@ -211,11 +211,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_TRANSITION] and LightEntityFeature.TRANSITION
         )
-        self._attr_color_mode = ColorMode.UNKNOWN
         if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._attr_color_mode = next(iter(self.supported_color_modes))
+            else:
+                self._attr_color_mode = ColorMode.UNKNOWN
         elif config.get(CONF_BRIGHTNESS):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
