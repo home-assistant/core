@@ -662,14 +662,14 @@ async def test_co_detector(
     matter_node: MatterNode,
 ) -> None:
     """Test CO detector sensor."""
-    co_state_attribute = clusters.SmokeCoAlarm.Attributes.CoState
+    co_state_attribute = clusters.SmokeCoAlarm.Attributes.COState
 
-    # Test initial state (CoState = 0, kNormal)
+    # Test initial state (COState = 0, kNormal)
     state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
     assert state
     assert state.state == "off"
 
-    # Set CoState to kWarning (value 1)
+    # Set COState to kWarning (value 1)
     set_node_attribute(
         matter_node,
         1,
@@ -683,7 +683,7 @@ async def test_co_detector(
     assert state
     assert state.state == "on"
 
-    # Set CoState to kCritical (value 2)
+    # Set COState to kCritical (value 2)
     set_node_attribute(
         matter_node,
         1,
@@ -697,7 +697,7 @@ async def test_co_detector(
     assert state
     assert state.state == "on"
 
-    # Set CoState back to kNormal (value 0)
+    # Set COState back to kNormal (value 0)
     set_node_attribute(
         matter_node,
         1,
