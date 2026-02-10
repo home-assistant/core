@@ -2438,7 +2438,7 @@ async def test_report_invalid_color_mode(
 
 
 @pytest.mark.parametrize(
-    ("color_mode", "supported_color_modes", "platform_name", "warning_expected"),
+    ("color_mode", "supported_color_modes", "platform_name", "error_expected"),
     [
         (
             light.ColorMode.ONOFF,
@@ -2464,12 +2464,6 @@ async def test_report_invalid_color_mode(
             "test",
             False,
         ),
-        (
-            light.ColorMode.ONOFF,
-            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
-            "philips_js",  # We don't log issues for philips_js
-            False,
-        ),
     ],
 )
 def test_report_invalid_color_modes(
@@ -2478,7 +2472,7 @@ def test_report_invalid_color_modes(
     color_mode: str,
     supported_color_modes: set[str],
     platform_name: str,
-    warning_expected: bool,
+    error_expected: bool,
 ) -> None:
     """Test a light setting an invalid color mode."""
 
@@ -2490,9 +2484,13 @@ def test_report_invalid_color_modes(
         platform = MockEntityPlatform(hass, platform_name=platform_name)
 
     entity = MockLightEntityEntity()
-    entity._async_calculate_state()
-    expected_warning = "sets invalid supported color modes"
-    assert (expected_warning in caplog.text) is warning_expected
+    raised_error = ""
+    try:
+        entity._async_calculate_state()
+    except HomeAssistantError as err:
+        raised_error = str(err)
+    expected_error = "sets invalid supported color modes"
+    assert (expected_error in raised_error) is error_expected
 
 
 @pytest.mark.parametrize(
