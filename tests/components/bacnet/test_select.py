@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.bacnet.bacnet_client import BACnetWriteError
+from homeassistant.components.bacnet.bacnet_client import (
+    BACnetObjectInfo,
+    BACnetWriteError,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -86,3 +89,24 @@ async def test_select_option_write_error(
             },
             blocking=True,
         )
+
+
+async def test_select_skipped_without_state_text(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that multi-state output without state_text does not create a select entity."""
+    # Replace the object list with one that has no state_text
+    mock_bacnet_client.get_device_objects.return_value = [
+        BACnetObjectInfo(
+            object_type="multi-state-output",
+            object_instance=0,
+            object_name="Fan Speed",
+            present_value=1,
+            units="",
+        ),
+    ]
+
+    await init_integration(hass)
+
+    select_states = hass.states.async_entity_ids("select")
+    assert len(select_states) == 0

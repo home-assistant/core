@@ -43,6 +43,7 @@ async def async_setup_entry(
         BACnetSelect(coordinator, obj)
         for obj in coordinator.data.objects
         if obj.object_type == MULTISTATE_OUTPUT_OBJECT_TYPE
+        and obj.state_text
         and f"{obj.object_type},{obj.object_instance}" in selected_objects
     )
 

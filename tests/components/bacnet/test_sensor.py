@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.bacnet.bacnet_client import BACnetObjectInfo
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
@@ -97,3 +98,26 @@ async def test_device_info_no_suggested_area(
     # If suggested_area was set during device creation, it would populate area_id.
     # Verify no area was assigned (meaning no suggested_area in device_info).
     assert device.area_id is None
+
+
+async def test_multistate_sensor_without_state_text(
+    hass: HomeAssistant, mock_bacnet_client: AsyncMock
+) -> None:
+    """Test that multi-state sensor without state_text shows raw value without ENUM class."""
+    mock_bacnet_client.get_device_objects.return_value = [
+        BACnetObjectInfo(
+            object_type="multi-state-input",
+            object_instance=0,
+            object_name="Operating Mode",
+            present_value=2,
+            units="",
+        ),
+    ]
+
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.test_hvac_controller_operating_mode")
+    assert state is not None
+    assert state.state == "2"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("options") is None

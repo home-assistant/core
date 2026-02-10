@@ -96,7 +96,6 @@ class BACnetSensor(BACnetEntity, SensorEntity):
 class BACnetMultiStateSensor(BACnetEntity, SensorEntity):
     """Represent a BACnet multi-state sensor with text enumeration."""
 
-    _attr_device_class = SensorDeviceClass.ENUM
     _attr_state_class: None = None
 
     def __init__(
@@ -111,6 +110,7 @@ class BACnetMultiStateSensor(BACnetEntity, SensorEntity):
         # States are 1-indexed: state 1 -> state_text[0], state 2 -> state_text[1]
         self._state_text = object_info.state_text
         if self._state_text:
+            self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(self._state_text)
 
     @property
