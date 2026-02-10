@@ -12,11 +12,7 @@ import re
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import (
-    FritzActionError,
-    FritzConnectionException,
-    FritzSecurityError,
-)
+from fritzconnection.core.exceptions import FritzActionError, FritzSecurityError
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -499,12 +495,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
-            )
-            return {}
-        except FritzConnectionException:
-            _LOGGER.exception(
-                "Connection Error: Please check the device is properly configured"
-                " for remote login"
             )
             return {}
         return result
