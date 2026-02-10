@@ -43,11 +43,18 @@ class BACnetEntity(CoordinatorEntity[BACnetDeviceCoordinator]):
         if device_info.mac_address:
             connections = {(CONNECTION_NETWORK_MAC, device_info.mac_address)}
 
+        # Show IP address alongside model in the integration device list
+        address_display = device_info.address.split(":")[0]
+        if device_info.model_name:
+            model = f"{device_info.model_name} ({address_display})"
+        else:
+            model = address_display
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_info.device_id))},
             name=device_info.name or f"BACnet device {device_info.device_id}",
             manufacturer=device_info.vendor_name or "BACnet",
-            model=device_info.model_name,
+            model=model,
             serial_number=f"{device_info.device_id} @ {device_info.address}",
             sw_version=device_info.firmware_revision,
             hw_version=device_info.hardware_version,
