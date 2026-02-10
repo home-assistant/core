@@ -969,7 +969,7 @@ class PipelineRun:
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
-        except (asyncio.CancelledError, TimeoutError):
+        except asyncio.CancelledError, TimeoutError:
             raise  # expected
         except hass_nabucasa.auth.Unauthenticated as src_error:
             raise SpeechToTextError(

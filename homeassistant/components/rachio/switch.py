@@ -513,7 +513,7 @@ class RachioSchedule(RachioSwitch):
         # Schedule ID not passed when running individual zones, so we catch that error
         with suppress(KeyError):
             if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
-                if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
+                if args[0][KEY_SUBTYPE] == SUBTYPE_SCHEDULE_STARTED:
                     self._attr_is_on = True
                 elif args[0][KEY_SUBTYPE] in [
                     SUBTYPE_SCHEDULE_STOPPED,

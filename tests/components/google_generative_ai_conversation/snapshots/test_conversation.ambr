@@ -4,6 +4,57 @@
     Content(
     parts=[
       Part(
+        text='What time is it?'
+      ),
+    ],
+    role='user'
+  ),
+    Content(
+    parts=[
+      Part(
+        function_call=FunctionCall(
+          args={},
+          name='HassGetCurrentTime'
+        )
+      ),
+    ],
+    role='model'
+  ),
+    Content(
+    parts=[
+      Part(
+        function_response=FunctionResponse(
+          name='HassGetCurrentTime',
+          response={
+            'data': {
+              'failed': [],
+              'success': [],
+              'targets': []
+            },
+            'response_type': 'action_done',
+            'speech': {
+              'plain': {<... 2 items at Max depth ...>}
+            },
+            'speech_slots': {
+              'time': '16:24:17.813343'
+            }
+          }
+        )
+      ),
+    ],
+    role='user'
+  ),
+    Content(
+    parts=[
+      Part(
+        text='4:24 PM'
+      ),
+    ],
+    role='model'
+  ),
+    Content(
+    parts=[
+      Part(
         text='Please call the test function'
       ),
     ],

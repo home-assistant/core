@@ -220,7 +220,7 @@ class ONVIFDevice:
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
-            except (IndexError, Fault):
+            except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
             else:
@@ -303,7 +303,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
+        except TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault:
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 

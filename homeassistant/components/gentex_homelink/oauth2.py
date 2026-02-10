@@ -64,7 +64,7 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
                 error_code = error_response.get("error", "unknown")
                 error_description = error_response.get(
