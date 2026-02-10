@@ -368,8 +368,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         # If a color temperature is specified, emulate it if not supported by the light
         if ATTR_COLOR_TEMP_KELVIN in params:
             if (
-                supported_color_modes
-                and ColorMode.COLOR_TEMP not in supported_color_modes
+                ColorMode.COLOR_TEMP not in supported_color_modes
                 and ColorMode.RGBWW in supported_color_modes
             ):
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
@@ -388,27 +387,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     )
 
         # If a color is specified, convert to the color space supported by the light
-        # Backwards compatibility: Fall back to hs color if light.supported_color_modes
-        # is not implemented
         rgb_color: tuple[int, int, int] | None
         rgbww_color: tuple[int, int, int, int, int] | None
-        if not supported_color_modes:
-            if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            elif (rgbw_color := params.pop(ATTR_RGBW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                # https://github.com/python/mypy/issues/13673
-                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
-                    *rgbww_color,
-                    light.min_color_temp_kelvin,
-                    light.max_color_temp_kelvin,
-                )
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-        elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
+        if ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
             hs_color = params.pop(ATTR_HS_COLOR)
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
@@ -516,11 +497,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             params[ATTR_WHITE] = light.brightness
 
         # If both white and brightness are specified, override white
-        if (
-            supported_color_modes
-            and ATTR_WHITE in params
-            and ColorMode.WHITE in supported_color_modes
-        ):
+        if ATTR_WHITE in params and ColorMode.WHITE in supported_color_modes:
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode
