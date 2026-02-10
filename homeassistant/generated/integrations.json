@@ -2370,6 +2370,12 @@
         }
       }
     },
+    "ghost": {
+      "name": "Ghost",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "gios": {
       "name": "GIO\u015a",
       "integration_type": "service",
@@ -2701,16 +2707,35 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "heatit": {
+      "name": "Heatit",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "heatmiser": {
       "name": "Heatmiser",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hegel": {
+      "name": "Hegel Amplifier",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "heicko": {
       "name": "Heicko",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "heiman": {
+      "name": "Heiman",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "heiwa": {
       "name": "Heiwa",
@@ -5207,7 +5232,7 @@
     },
     "portainer": {
       "name": "Portainer",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5574,6 +5599,12 @@
       "name": "Reddit",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "redgtech": {
+      "name": "Redgtech",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "refoss": {
