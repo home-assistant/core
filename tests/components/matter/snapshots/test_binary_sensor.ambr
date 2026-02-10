@@ -347,6 +347,305 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_battery_alert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_co_sensor_battery_alert',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery alert',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery alert',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_alert',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmBatteryAlertSensor-92-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_battery_alert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Smart CO sensor Battery alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_battery_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.smart_co_sensor_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon monoxide',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmCOStateSensor-92-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Smart CO sensor Carbon monoxide',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_end_of_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_co_sensor_end_of_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'End of service',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'End of service',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'end_of_service',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmEndfOfServiceSensor-92-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_end_of_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Smart CO sensor End of service',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_end_of_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_hardware_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_co_sensor_hardware_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hardware fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Hardware fault',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hardware_fault',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmHardwareFaultAlertSensor-92-6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_hardware_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Smart CO sensor Hardware fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_hardware_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_muted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_co_sensor_muted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Muted',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Muted',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'muted',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmDeviceMutedSensor-92-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_muted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart CO sensor Muted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_muted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_test_in_progress-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smart_co_sensor_test_in_progress',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Test in progress',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Test in progress',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'test_in_progress',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-SmokeCoAlarmTestInProgressSensor-92-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_test_in_progress-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Smart CO sensor Test in progress',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smart_co_sensor_test_in_progress',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
