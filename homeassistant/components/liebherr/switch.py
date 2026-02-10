@@ -10,6 +10,7 @@ from pyliebherrhomeapi import (
     LiebherrConnectionError,
     LiebherrTimeoutError,
     ToggleControl,
+    ZonePosition,
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -20,7 +21,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
-from .entity import LiebherrEntity, LiebherrZoneEntity
+from .entity import ZONE_POSITION_MAP, LiebherrEntity
 
 PARALLEL_UPDATES = 1
 REFRESH_DELAY = 5
@@ -48,8 +49,12 @@ class LiebherrDeviceSwitchEntityDescription(SwitchEntityDescription):
     set_fn: Callable[[LiebherrCoordinator, bool], Awaitable[None]]
 
 
-ZONE_SWITCH_TYPES: tuple[LiebherrZoneSwitchEntityDescription, ...] = (
-    LiebherrZoneSwitchEntityDescription(
+type LiebherrSwitchEntityDescription = (
+    LiebherrZoneSwitchEntityDescription | LiebherrDeviceSwitchEntityDescription
+)
+
+ZONE_SWITCH_TYPES: dict[str, LiebherrZoneSwitchEntityDescription] = {
+    CONTROL_SUPERCOOL: LiebherrZoneSwitchEntityDescription(
         key="supercool",
         translation_key="supercool",
         control_name=CONTROL_SUPERCOOL,
@@ -59,7 +64,7 @@ ZONE_SWITCH_TYPES: tuple[LiebherrZoneSwitchEntityDescription, ...] = (
             value=value,
         ),
     ),
-    LiebherrZoneSwitchEntityDescription(
+    CONTROL_SUPERFROST: LiebherrZoneSwitchEntityDescription(
         key="superfrost",
         translation_key="superfrost",
         control_name=CONTROL_SUPERFROST,
@@ -69,10 +74,10 @@ ZONE_SWITCH_TYPES: tuple[LiebherrZoneSwitchEntityDescription, ...] = (
             value=value,
         ),
     ),
-)
+}
 
-DEVICE_SWITCH_TYPES: tuple[LiebherrDeviceSwitchEntityDescription, ...] = (
-    LiebherrDeviceSwitchEntityDescription(
+DEVICE_SWITCH_TYPES: dict[str, LiebherrDeviceSwitchEntityDescription] = {
+    CONTROL_PARTY_MODE: LiebherrDeviceSwitchEntityDescription(
         key="party_mode",
         translation_key="party_mode",
         control_name=CONTROL_PARTY_MODE,
@@ -81,7 +86,7 @@ DEVICE_SWITCH_TYPES: tuple[LiebherrDeviceSwitchEntityDescription, ...] = (
             value=value,
         ),
     ),
-    LiebherrDeviceSwitchEntityDescription(
+    CONTROL_NIGHT_MODE: LiebherrDeviceSwitchEntityDescription(
         key="night_mode",
         translation_key="night_mode",
         control_name=CONTROL_NIGHT_MODE,
@@ -90,21 +95,7 @@ DEVICE_SWITCH_TYPES: tuple[LiebherrDeviceSwitchEntityDescription, ...] = (
             value=value,
         ),
     ),
-)
-
-
-def _get_toggle_control(
-    coordinator: LiebherrCoordinator, name: str, zone_id: int | None = None
-) -> ToggleControl | None:
-    """Get a toggle control from the coordinator data."""
-    for control in coordinator.data.controls:
-        if (
-            isinstance(control, ToggleControl)
-            and control.name == name
-            and (zone_id is None or control.zone_id == zone_id)
-        ):
-            return control
-    return None
+}
 
 
 async def async_setup_entry(
@@ -113,145 +104,87 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Liebherr switch entities."""
-    coordinators = entry.runtime_data
-    entities: list[LiebherrZoneSwitch | LiebherrDeviceSwitch] = []
+    entities: list[LiebherrSwitch] = []
 
-    for coordinator in coordinators.values():
-        temp_controls = coordinator.data.get_temperature_controls()
-        has_multiple_zones = len(temp_controls) > 1
+    for coordinator in entry.runtime_data.values():
+        has_multiple_zones = len(coordinator.data.get_temperature_controls()) > 1
 
         for control in coordinator.data.controls:
             if not isinstance(control, ToggleControl):
                 continue
 
             # Zone-based switches (SuperCool, SuperFrost)
-            entities.extend(
-                LiebherrZoneSwitch(
-                    coordinator=coordinator,
-                    zone_id=control.zone_id,
-                    description=description,
-                    has_multiple_zones=has_multiple_zones,
+            if control.zone_id is not None and (
+                desc := ZONE_SWITCH_TYPES.get(control.name)
+            ):
+                entities.append(
+                    LiebherrSwitch(
+                        coordinator=coordinator,
+                        description=desc,
+                        zone_id=control.zone_id,
+                        has_multiple_zones=has_multiple_zones,
+                    )
                 )
-                for description in ZONE_SWITCH_TYPES
-                if control.name == description.control_name
-                and control.zone_id is not None
-            )
 
             # Device-wide switches (Party Mode, Night Mode)
-            entities.extend(
-                LiebherrDeviceSwitch(
-                    coordinator=coordinator,
-                    description=description,
+            elif device_desc := DEVICE_SWITCH_TYPES.get(control.name):
+                entities.append(
+                    LiebherrSwitch(
+                        coordinator=coordinator,
+                        description=device_desc,
+                    )
                 )
-                for description in DEVICE_SWITCH_TYPES
-                if control.name == description.control_name
-            )
 
     async_add_entities(entities)
 
 
-class LiebherrZoneSwitch(LiebherrZoneEntity, SwitchEntity):
-    """Representation of a zone-based Liebherr switch."""
+class LiebherrSwitch(LiebherrEntity, SwitchEntity):
+    """Representation of a Liebherr switch."""
 
-    entity_description: LiebherrZoneSwitchEntityDescription
-
+    entity_description: LiebherrSwitchEntityDescription
     _cancel_refresh: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
         coordinator: LiebherrCoordinator,
-        zone_id: int,
-        description: LiebherrZoneSwitchEntityDescription,
-        has_multiple_zones: bool,
+        description: LiebherrSwitchEntityDescription,
+        zone_id: int | None = None,
+        has_multiple_zones: bool = False,
     ) -> None:
-        """Initialize the zone switch entity."""
-        super().__init__(coordinator, zone_id)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}_{zone_id}"
-
-        # Add zone suffix only for multi-zone devices
-        if has_multiple_zones and (zone_key := self._get_zone_translation_key()):
-            self._attr_translation_key = f"{description.translation_key}_{zone_key}"
-
-    @property
-    def _toggle_control(self) -> ToggleControl | None:
-        """Get the toggle control for this entity."""
-        return _get_toggle_control(
-            self.coordinator, self.entity_description.control_name, self._zone_id
-        )
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the switch is on."""
-        return self._toggle_control.value  # type: ignore[union-attr]
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self._toggle_control is not None
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        await self._async_set_value(True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self._async_set_value(False)
-
-    async def _async_set_value(self, value: bool) -> None:
-        """Set the switch value."""
-        try:
-            await self.entity_description.set_fn(self.coordinator, self._zone_id, value)
-        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_switch_failed",
-            ) from err
-
-        # Optimistically update local state to avoid flicker from API delay
-        if control := self._toggle_control:
-            control.value = value
-        self.async_write_ha_state()
-
-        # Cancel any pending refresh and schedule a new one
-        if self._cancel_refresh:
-            self._cancel_refresh()
-        self._cancel_refresh = async_call_later(
-            self.hass, REFRESH_DELAY, self._async_refresh_callback
-        )
-
-    @callback
-    def _async_refresh_callback(self, _now: Any) -> None:
-        """Request a coordinator refresh after a delay."""
-        self._cancel_refresh = None
-        self.hass.async_create_task(
-            self.coordinator.async_request_refresh(),
-            eager_start=False,
-        )
-
-
-class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
-    """Representation of a device-wide Liebherr switch."""
-
-    entity_description: LiebherrDeviceSwitchEntityDescription
-    _cancel_refresh: CALLBACK_TYPE | None = None
-
-    def __init__(
-        self,
-        coordinator: LiebherrCoordinator,
-        description: LiebherrDeviceSwitchEntityDescription,
-    ) -> None:
-        """Initialize the device switch entity."""
+        """Initialize the switch entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
+        self._zone_id = zone_id
+
+        if zone_id is not None:
+            self._attr_unique_id = (
+                f"{coordinator.device_id}_{description.key}_{zone_id}"
+            )
+            # Add zone suffix only for multi-zone devices
+            if has_multiple_zones:
+                temp_controls = coordinator.data.get_temperature_controls()
+                if (
+                    (tc := temp_controls.get(zone_id))
+                    and isinstance(tc.zone_position, ZonePosition)
+                    and (zone_key := ZONE_POSITION_MAP.get(tc.zone_position))
+                ):
+                    self._attr_translation_key = (
+                        f"{description.translation_key}_{zone_key}"
+                    )
+        else:
+            self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
     def _toggle_control(self) -> ToggleControl | None:
         """Get the toggle control for this entity."""
-        return _get_toggle_control(
-            self.coordinator, self.entity_description.control_name
-        )
+        for control in self.coordinator.data.controls:
+            if (
+                isinstance(control, ToggleControl)
+                and control.name == self.entity_description.control_name
+                and (self._zone_id is None or control.zone_id == self._zone_id)
+            ):
+                return control
+        return None
 
     @property
     def is_on(self) -> bool | None:
@@ -274,7 +207,13 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     async def _async_set_value(self, value: bool) -> None:
         """Set the switch value."""
         try:
-            await self.entity_description.set_fn(self.coordinator, value)
+            if isinstance(self.entity_description, LiebherrZoneSwitchEntityDescription):
+                assert self._zone_id is not None
+                await self.entity_description.set_fn(
+                    self.coordinator, self._zone_id, value
+                )
+            else:
+                await self.entity_description.set_fn(self.coordinator, value)
         except (LiebherrConnectionError, LiebherrTimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
