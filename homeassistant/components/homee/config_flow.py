@@ -114,6 +114,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_address")
 
+        # If an already configured homee reports with a second IP, abort.
         existing_entry: HomeeConfigEntry | None = await self.async_set_unique_id(
             self._name
         )
