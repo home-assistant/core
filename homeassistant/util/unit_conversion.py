@@ -103,7 +103,9 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_GLUCOSE_MOLAR_MASS = 180.16
 _NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
+_NITROGEN_MONOXIDE_MOLAR_MASS = 30.0061
 _OZONE_MOLAR_MASS = 48.00
 _SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
 
@@ -158,10 +160,8 @@ class BaseUnitConverter:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         if cls._are_unit_inverses(from_unit, to_unit):
-            return (
-                lambda val: None
-                if val is None or val == 0
-                else to_ratio / (val / from_ratio)
+            return lambda val: (
+                None if val is None or val == 0 else to_ratio / (val / from_ratio)
             )
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
@@ -228,7 +228,9 @@ class BloodGlucoseConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "blood_glucose_concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: (
+            _GLUCOSE_MOLAR_MASS / 10
+        ),
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
     }
     VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
@@ -494,6 +496,22 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
+class NitrogenMonoxideConcentrationConverter(BaseUnitConverter):
+    """Convert nitrogen monoxide ratio to mass per volume."""
+
+    UNIT_CLASS = "nitrogen_monoxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _NITROGEN_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
