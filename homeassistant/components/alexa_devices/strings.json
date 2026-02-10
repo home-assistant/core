@@ -112,23 +112,23 @@
   "selector": {
     "info_skill": {
       "options": {
-        "alexa_calendar_next": "Calendar: Next event",
-        "alexa_calendar_today": "Calendar: Today's Calendar",
-        "alexa_calendar_tomorrow": "Calendar: Tomorrow's Calendar",
-        "alexa_cleanup": "Encourage me to clean up",
-        "alexa_date": "Date",
-        "alexa_flashbriefing": "Flash Briefing",
-        "alexa_funfact": "Tell me a fun fact",
-        "alexa_goodmorning": "Good morning",
-        "alexa_goodnight": "Wish me a good night",
-        "alexa_imhome": "Welcome me home",
-        "alexa_joke": "Tell me a joke",
-        "alexa_nationalnews": "National News",
-        "alexa_singasong": "Sing a song",
-        "alexa_tellstory": "Tell me a story",
-        "alexa_time": "Time",
-        "alexa_traffic": "Traffic",
-        "alexa_weather": "Weather"
+        "calendar_next": "Calendar: Next event",
+        "calendar_today": "Calendar: Today's Calendar",
+        "calendar_tomorrow": "Calendar: Tomorrow's Calendar",
+        "cleanup": "Encourage me to clean up",
+        "date": "Date",
+        "flash_briefing": "Flash Briefing",
+        "fun_fact": "Tell me a fun fact",
+        "good_morning": "Good morning",
+        "goodnight": "Wish me a good night",
+        "im_home": "Welcome me home",
+        "national_news": "National News",
+        "sing_song": "Sing a song",
+        "tell_joke": "Tell me a joke",
+        "tell_story": "Tell me a story",
+        "time": "Time",
+        "traffic": "Traffic",
+        "weather": "Weather"
       }
     },
     "sound": {

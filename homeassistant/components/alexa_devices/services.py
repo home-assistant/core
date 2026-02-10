@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, INFO_SKILLS_MAPPING
 from .coordinator import AmazonConfigEntry
 
 ATTR_TEXT_COMMAND = "text_command"
@@ -96,7 +96,8 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
             coordinator.data[device.serial_number], value
         )
     elif attribute == ATTR_INFO_SKILL:
-        if value not in ALEXA_INFO_SKILLS:
+        info_skill = INFO_SKILLS_MAPPING.get(value)
+        if info_skill not in ALEXA_INFO_SKILLS:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_info_skill_value",

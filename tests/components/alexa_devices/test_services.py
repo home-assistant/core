@@ -47,7 +47,7 @@ async def test_info_skill_service(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test send sound service."""
+    """Test info skill service."""
 
     await setup_integration(hass, mock_config_entry)
 
@@ -60,7 +60,7 @@ async def test_info_skill_service(
         DOMAIN,
         SERVICE_INFO_SKILL,
         {
-            ATTR_INFO_SKILL: "alexa_joke",
+            ATTR_INFO_SKILL: "tell_joke",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,

@@ -77,26 +77,26 @@ send_info_skill:
           integration: alexa_devices
     info_skill:
       required: true
-      example: alexa_date
-      default: alexa_date
+      example: date
+      default: date
       selector:
         select:
           options:
-            - alexa_calendar_today
-            - alexa_calendar_tomorrow
-            - alexa_calendar_next
-            - alexa_date
-            - alexa_time
-            - alexa_nationalnews
-            - alexa_flashbriefing
-            - alexa_traffic
-            - alexa_weather
-            - alexa_cleanup
-            - alexa_goodmorning
-            - alexa_singasong
-            - alexa_funfact
-            - alexa_joke
-            - alexa_tellstory
-            - alexa_imhome
-            - alexa_goodnight
+            - calendar_today
+            - calendar_tomorrow
+            - calendar_next
+            - date
+            - time
+            - national_news
+            - flash_briefing
+            - traffic
+            - weather
+            - cleanup
+            - good_morning
+            - sing_song
+            - fun_fact
+            - tell_joke
+            - tell_story
+            - im_home
+            - goodnight
           translation_key: info_skill
