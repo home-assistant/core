@@ -115,6 +115,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.reading.get_consumption_tariff_T2(),
+    ),
     IOmeterEntityDescription(
         key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
