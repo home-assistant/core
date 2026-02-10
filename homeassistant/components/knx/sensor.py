@@ -116,9 +116,11 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
         key="telegram_count",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing
-        + knx.xknx.connection_manager.cemi_count_incoming
-        + knx.xknx.connection_manager.cemi_count_incoming_error,
+        value_fn=lambda knx: (
+            knx.xknx.connection_manager.cemi_count_outgoing
+            + knx.xknx.connection_manager.cemi_count_incoming
+            + knx.xknx.connection_manager.cemi_count_incoming_error
+        ),
     ),
     KNXSystemEntityDescription(
         key="telegrams_data_secure_undecodable",

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 import json
 import logging
 import re
@@ -30,12 +29,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
 from homeassistant.helpers.typing import VolDictType
@@ -47,6 +48,7 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -58,6 +60,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
@@ -86,10 +89,45 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     await client.models.list(timeout=10.0)
+
+
+async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionDict]:
+    """Get list of available models."""
+    try:
+        models = (await client.models.list()).data
+    except anthropic.AnthropicError:
+        models = []
+    _LOGGER.debug("Available models: %s", models)
+    model_options: list[SelectOptionDict] = []
+    short_form = re.compile(r"[^\d]-\d$")
+    for model_info in models:
+        # Resolve alias from versioned model name:
+        model_alias = (
+            model_info.id[:-9]
+            if model_info.id
+            not in (
+                "claude-3-haiku-20240307",
+                "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229",
+            )
+            and model_info.id[-2:-1] != "-"
+            else model_info.id
+        )
+        if short_form.search(model_alias):
+            model_alias += "-0"
+        if model_alias.endswith(("haiku", "opus", "sonnet")):
+            model_alias += "-latest"
+        model_options.append(
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias,
+            )
+        )
+    return model_options
 
 
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -201,10 +239,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                suggested_llm_apis = [suggested_llm_apis]
+            known_apis = {api.id for api in llm.async_get_apis(self.hass)}
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in known_apis
+            ]
 
         step_schema: VolDictType = {}
         errors: dict[str, str] = {}
@@ -317,7 +358,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)):
+        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
+            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
@@ -333,6 +376,22 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
+
+        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_THINKING_EFFORT,
+                    default=DEFAULT[CONF_THINKING_EFFORT],
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=["none", "low", "medium", "high", "max"],
+                    translation_key=CONF_THINKING_EFFORT,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            self.options.pop(CONF_THINKING_EFFORT, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
@@ -398,49 +457,20 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        try:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
-            )
-            models = (await client.models.list()).data
-        except anthropic.AnthropicError:
-            models = []
-        _LOGGER.debug("Available models: %s", models)
-        model_options: list[SelectOptionDict] = []
-        short_form = re.compile(r"[^\d]-\d$")
-        for model_info in models:
-            # Resolve alias from versioned model name:
-            model_alias = (
-                model_info.id[:-9]
-                if model_info.id
-                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
-                else model_info.id
-            )
-            if short_form.search(model_alias):
-                model_alias += "-0"
-            if model_alias.endswith(("haiku", "opus", "sonnet")):
-                model_alias += "-latest"
-            model_options.append(
-                SelectOptionDict(
-                    label=model_info.display_name,
-                    value=model_alias,
-                )
-            )
-        return model_options
+        client = anthropic.AsyncAnthropic(
+            api_key=self._get_entry().data[CONF_API_KEY],
+            http_client=get_async_client(self.hass),
+        )
+        return await get_model_list(client)
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+            client = anthropic.AsyncAnthropic(
+                api_key=self._get_entry().data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(
                 {

@@ -1,25 +1,29 @@
 """Shopping list test helpers."""
 
 from collections.abc import Generator
-from contextlib import suppress
-import os
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.shopping_list import intent as sl_intent
+from homeassistant.components.shopping_list import PERSISTENCE, intent as sl_intent
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def wipe_shopping_list_store(hass: HomeAssistant) -> Generator[None]:
-    """Wipe shopping list store after test."""
-    try:
+def shopping_list_tmp_path(tmp_path: Path, hass: HomeAssistant) -> Generator[None]:
+    """Use a unique temp directory for shopping list storage per test."""
+    orig_path = hass.config.path
+
+    def _mock_path(*args: str) -> str:
+        if args == (PERSISTENCE,):
+            return str(tmp_path / PERSISTENCE)
+        return orig_path(*args)
+
+    with patch.object(hass.config, "path", _mock_path):
         yield
-    finally:
-        with suppress(FileNotFoundError):
-            os.remove(hass.config.path(".shopping_list.json"))
 
 
 @pytest.fixture

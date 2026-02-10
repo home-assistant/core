@@ -12,6 +12,8 @@
       },
       "container_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      "container_state": {
+        "default": "mdi:state-machine"
       },
       "containers_count": {
         "default": "mdi:database"
@@ -78,6 +80,11 @@
           "on": "mdi:arrow-up-box"
         }
       }
+    }
+  },
+  "services": {
+    "prune_images": {
+      "service": "mdi:delete-sweep"
     }
   }
 }
