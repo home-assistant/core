@@ -43,7 +43,6 @@ async def test_charge_switch_service_calls_update_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the charge switch calls the API and updates state."""
     await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
@@ -91,7 +90,6 @@ async def test_charge_switch_rejected_by_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the switch surfaces device rejection messages and keeps state."""
     await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
