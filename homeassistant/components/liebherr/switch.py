@@ -13,7 +13,7 @@ from pyliebherrhomeapi import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -93,12 +93,16 @@ DEVICE_SWITCH_TYPES: tuple[LiebherrDeviceSwitchEntityDescription, ...] = (
 )
 
 
-def _get_toggle_by_name(
-    coordinator: LiebherrCoordinator, name: str
+def _get_toggle_control(
+    coordinator: LiebherrCoordinator, name: str, zone_id: int | None = None
 ) -> ToggleControl | None:
-    """Get a toggle control by name from the coordinator data."""
+    """Get a toggle control from the coordinator data."""
     for control in coordinator.data.controls:
-        if isinstance(control, ToggleControl) and control.name == name:
+        if (
+            isinstance(control, ToggleControl)
+            and control.name == name
+            and (zone_id is None or control.zone_id == zone_id)
+        ):
             return control
     return None
 
@@ -151,6 +155,8 @@ class LiebherrZoneSwitch(LiebherrZoneEntity, SwitchEntity):
 
     entity_description: LiebherrZoneSwitchEntityDescription
 
+    _cancel_refresh: CALLBACK_TYPE | None = None
+
     def __init__(
         self,
         coordinator: LiebherrCoordinator,
@@ -170,8 +176,8 @@ class LiebherrZoneSwitch(LiebherrZoneEntity, SwitchEntity):
     @property
     def _toggle_control(self) -> ToggleControl | None:
         """Get the toggle control for this entity."""
-        return _get_toggle_by_name(
-            self.coordinator, self.entity_description.control_name
+        return _get_toggle_control(
+            self.coordinator, self.entity_description.control_name, self._zone_id
         )
 
     @property
@@ -207,12 +213,17 @@ class LiebherrZoneSwitch(LiebherrZoneEntity, SwitchEntity):
             control.value = value
         self.async_write_ha_state()
 
-        # Schedule a delayed refresh to pick up device-side effects
-        async_call_later(self.hass, REFRESH_DELAY, self._async_refresh_callback)
+        # Cancel any pending refresh and schedule a new one
+        if self._cancel_refresh:
+            self._cancel_refresh()
+        self._cancel_refresh = async_call_later(
+            self.hass, REFRESH_DELAY, self._async_refresh_callback
+        )
 
     @callback
     def _async_refresh_callback(self, _now: Any) -> None:
         """Request a coordinator refresh after a delay."""
+        self._cancel_refresh = None
         self.hass.async_create_task(
             self.coordinator.async_request_refresh(),
             eager_start=False,
@@ -223,6 +234,7 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     """Representation of a device-wide Liebherr switch."""
 
     entity_description: LiebherrDeviceSwitchEntityDescription
+    _cancel_refresh: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -237,7 +249,7 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     @property
     def _toggle_control(self) -> ToggleControl | None:
         """Get the toggle control for this entity."""
-        return _get_toggle_by_name(
+        return _get_toggle_control(
             self.coordinator, self.entity_description.control_name
         )
 
@@ -274,12 +286,17 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
             control.value = value
         self.async_write_ha_state()
 
-        # Schedule a delayed refresh to pick up device-side effects
-        async_call_later(self.hass, REFRESH_DELAY, self._async_refresh_callback)
+        # Cancel any pending refresh and schedule a new one
+        if self._cancel_refresh:
+            self._cancel_refresh()
+        self._cancel_refresh = async_call_later(
+            self.hass, REFRESH_DELAY, self._async_refresh_callback
+        )
 
     @callback
     def _async_refresh_callback(self, _now: Any) -> None:
         """Request a coordinator refresh after a delay."""
+        self._cancel_refresh = None
         self.hass.async_create_task(
             self.coordinator.async_request_refresh(),
             eager_start=False,

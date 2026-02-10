@@ -120,7 +120,11 @@ def mock_liebherr_client() -> Generator[MagicMock]:
     ):
         client = mock_client.return_value
         client.get_devices.return_value = [MOCK_DEVICE]
-        client.get_device_state.return_value = copy.deepcopy(MOCK_DEVICE_STATE)
+        # Return a fresh copy each call so optimistic state mutations
+        # (e.g. toggling a ToggleControl value) don't leak between calls.
+        client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+            MOCK_DEVICE_STATE
+        )
         client.set_temperature = AsyncMock()
         client.set_supercool = AsyncMock()
         client.set_superfrost = AsyncMock()

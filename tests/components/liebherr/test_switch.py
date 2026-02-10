@@ -1,5 +1,6 @@
 """Test the Liebherr switch platform."""
 
+import copy
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -25,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -32,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -60,37 +62,42 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service", "method", "kwargs"),
+    ("entity_id", "service", "method", "kwargs", "expected_state"),
     [
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_ON,
             "set_supercool",
             {"device_id": "test_device_id", "zone_id": 1, "value": True},
+            STATE_ON,
         ),
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_OFF,
             "set_supercool",
             {"device_id": "test_device_id", "zone_id": 1, "value": False},
+            STATE_OFF,
         ),
         (
             "switch.test_fridge_bottom_zone_superfrost",
             SERVICE_TURN_ON,
             "set_superfrost",
             {"device_id": "test_device_id", "zone_id": 2, "value": True},
+            STATE_ON,
         ),
         (
             "switch.test_fridge_party_mode",
             SERVICE_TURN_ON,
             "set_party_mode",
             {"device_id": "test_device_id", "value": True},
+            STATE_ON,
         ),
         (
             "switch.test_fridge_night_mode",
             SERVICE_TURN_OFF,
             "set_night_mode",
             {"device_id": "test_device_id", "value": False},
+            STATE_OFF,
         ),
     ],
 )
@@ -103,6 +110,7 @@ async def test_switch_service_calls(
     service: str,
     method: str,
     kwargs: dict[str, Any],
+    expected_state: str,
 ) -> None:
     """Test switch turn on/off service calls."""
     await hass.services.async_call(
@@ -114,6 +122,11 @@ async def test_switch_service_calls(
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
 
+    # Verify optimistic state update is reflected immediately
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
     # Trigger the delayed refresh callback
     initial_call_count = mock_liebherr_client.get_device_state.call_count
     freezer.tick(timedelta(seconds=REFRESH_DELAY))
@@ -121,6 +134,57 @@ async def test_switch_service_calls(
     await hass.async_block_till_done()
 
     assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "service", "method"),
+    [
+        (
+            "switch.test_fridge_top_zone_supercool",
+            SERVICE_TURN_ON,
+            "set_supercool",
+        ),
+        (
+            "switch.test_fridge_party_mode",
+            SERVICE_TURN_ON,
+            "set_party_mode",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_switch_rapid_toggle_debounces_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    service: str,
+    method: str,
+) -> None:
+    """Test rapid toggling cancels pending refresh and only triggers one."""
+    # First toggle
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    # Second toggle before refresh fires — should cancel the first timer
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    # Advance past REFRESH_DELAY — the cancelled timer should not fire
+    freezer.tick(timedelta(seconds=REFRESH_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entity still functional after debounced refresh
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -178,7 +242,9 @@ async def test_switch_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = None
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        MOCK_DEVICE_STATE
+    )
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
@@ -203,7 +269,7 @@ async def test_switch_when_control_missing(
     assert state.state == STATE_OFF
 
     # Device stops reporting toggle controls
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
 
@@ -232,7 +298,7 @@ async def test_single_zone_switch(
         device_name="K2601",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    single_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -254,6 +320,9 @@ async def test_single_zone_switch(
                 value=False,
             ),
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        single_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
