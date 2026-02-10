@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -88,16 +89,17 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Request manual USB dongle path."""
-        default_value = None
         errors = {}
         if user_input is not None:
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
-            default_value = user_input[CONF_DEVICE]
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
         return self.async_show_form(
             step_id="manual",
+            data_schema=self.add_suggested_values_to_schema(
+                MANUAL_SCHEMA, user_input
+            ),
             data_schema=vol.Schema(
                 {vol.Required(CONF_DEVICE, default=default_value): str}
             ),
