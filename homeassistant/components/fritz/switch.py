@@ -556,7 +556,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
         }
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
-        """Handle deflection switch."""
+        """Handle wifi switch."""
         await self.coordinator.async_set_wlan_configuration(self.network_num, turn_on)
         network = self.coordinator.data["wifi_networks"][self.network_num]
         network["enabled"] = turn_on
