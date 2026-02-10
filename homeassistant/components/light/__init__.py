@@ -1013,13 +1013,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
         _is_on = self.is_on
-        color_mode: ColorMode | None = None
-        if _is_on:
-            color_mode = self.color_mode
-            if color_mode is None:
-                raise HomeAssistantError(
-                    f"{self.entity_id} ({type(self)}) does not report a color mode"
-                )
+        color_mode = self.color_mode if _is_on else None
+        if _is_on and color_mode is None:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) does not report a color mode"
+            )
 
         effect: str | None = None
         if LightEntityFeature.EFFECT in supported_features:
