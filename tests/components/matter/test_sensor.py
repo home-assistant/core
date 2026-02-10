@@ -175,7 +175,7 @@ async def test_battery_sensor_voltage(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
 async def test_battery_sensor_description(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
