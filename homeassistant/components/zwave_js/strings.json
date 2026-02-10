@@ -293,13 +293,7 @@
   },
   "exceptions": {
     "get_lock_usercode_failed": {
-      "message": "Unable to get lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
-    },
-    "get_lock_usercode_only_refresh_single": {
-      "message": "The refresh option is only supported when querying a single code slot"
-    },
-    "get_lock_usercodes_failed": {
-      "message": "Unable to get lock usercodes on lock {entity_id}: {error}"
+      "message": "Code slot {code_slot} not found on lock {entity_id}"
     }
   },
   "issues": {
@@ -393,10 +387,6 @@
         "code_slot": {
           "description": "Code slot to get code from. If not specified, all code slots are returned.",
           "name": "Code slot"
-        },
-        "refresh": {
-          "description": "Whether to poll the lock for fresh data instead of using cached values. Only supported when querying a single code slot.",
-          "name": "Refresh"
         }
       },
       "name": "Get lock user code"

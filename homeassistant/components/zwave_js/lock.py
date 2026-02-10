@@ -15,11 +15,10 @@ from zwave_js_server.const.command_class.lock import (
     DoorLockMode,
     OperationType,
 )
-from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.exceptions import BaseZwaveJSServerError, NotFoundError
 from zwave_js_server.util.lock import (
     clear_usercode,
     get_usercode,
-    get_usercode_from_node,
     get_usercodes,
     set_configuration,
     set_usercode,
@@ -27,7 +26,7 @@ from zwave_js_server.util.lock import (
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity, LockState
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -177,35 +176,25 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         LOGGER.debug("User code at slot %s on lock %s set", code_slot, self.entity_id)
 
     async def async_get_lock_usercode(
-        self, code_slot: int | None = None, refresh: bool = False
+        self, code_slot: int | None = None
     ) -> ServiceResponse:
         """Get the usercode at index X on the lock."""
-        if code_slot is None and refresh:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="get_lock_usercode_only_refresh_single",
-            )
         if code_slot is not None:
-            return await self._async_get_single_usercode(code_slot, refresh)
-        return await self._async_get_all_usercodes()
+            return self._get_single_usercode(code_slot)
+        return self._get_all_usercodes()
 
-    async def _async_get_single_usercode(
-        self, code_slot: int, refresh: bool
-    ) -> ServiceResponse:
+    @callback
+    def _get_single_usercode(self, code_slot: int) -> ServiceResponse:
         """Get the usercode at index X on the lock."""
         try:
-            if refresh:
-                slot = await get_usercode_from_node(self.info.node, code_slot)
-            else:
-                slot = get_usercode(self.info.node, code_slot)
-        except BaseZwaveJSServerError as err:
+            slot = get_usercode(self.info.node, code_slot)
+        except NotFoundError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="get_lock_usercode_failed",
                 translation_placeholders={
-                    "entity_id": self.entity_id,
                     "code_slot": str(code_slot),
-                    "error": str(err),
+                    "entity_id": self.entity_id,
                 },
             ) from err
         return {
@@ -215,19 +204,10 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             },
         }
 
-    async def _async_get_all_usercodes(self) -> ServiceResponse:
+    @callback
+    def _get_all_usercodes(self) -> ServiceResponse:
         """Get all usercodes from the lock."""
-        try:
-            slots = get_usercodes(self.info.node)
-        except BaseZwaveJSServerError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="get_lock_usercodes_failed",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    "error": str(err),
-                },
-            ) from err
+        slots = get_usercodes(self.info.node)
         return {
             str(slot["code_slot"]): {
                 "usercode": slot["usercode"],

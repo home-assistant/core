@@ -1,6 +1,6 @@
 """Test the Z-Wave JS lock platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import CommandClass
@@ -10,7 +10,7 @@ from zwave_js_server.const.command_class.lock import (
     CURRENT_MODE_PROPERTY,
 )
 from zwave_js_server.event import Event
-from zwave_js_server.exceptions import FailedZWaveCommand
+from zwave_js_server.exceptions import FailedZWaveCommand, NotFoundError
 from zwave_js_server.model.node import Node, NodeStatus
 
 from homeassistant.components.lock import (
@@ -22,7 +22,6 @@ from homeassistant.components.lock import (
 from homeassistant.components.zwave_js.const import (
     ATTR_LOCK_TIMEOUT,
     ATTR_OPERATION_TYPE,
-    ATTR_REFRESH,
     DOMAIN,
     SERVICE_GET_LOCK_USERCODE,
 )
@@ -34,7 +33,7 @@ from homeassistant.components.zwave_js.lock import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
 
@@ -318,7 +317,7 @@ async def test_door_lock(
     with (
         patch(
             "homeassistant.components.zwave_js.lock.get_usercode",
-            side_effect=FailedZWaveCommand("test", 1, "test"),
+            side_effect=NotFoundError("usercode for code slot 1 not found"),
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -378,55 +377,13 @@ async def test_door_lock_no_value(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_get_lock_usercode_refresh(
+async def test_get_lock_usercode(
     hass: HomeAssistant,
     client,
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test get lock usercode with refresh=True polls the device."""
-    with patch(
-        "homeassistant.components.zwave_js.lock.get_usercode_from_node",
-        new_callable=AsyncMock,
-        return_value={
-            "code_slot": 1,
-            "name": "test",
-            "in_use": True,
-            "usercode": "5678",
-        },
-    ) as mock_get_usercode_from_node:
-        response = await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
-                ATTR_CODE_SLOT: 1,
-                ATTR_REFRESH: True,
-            },
-            blocking=True,
-            return_response=True,
-        )
-        mock_get_usercode_from_node.assert_awaited_once()
-        args = mock_get_usercode_from_node.call_args[0]
-        assert args[0].node_id == 20
-        assert args[1] == 1
-        assert response == {
-            SCHLAGE_BE469_LOCK_ENTITY: {
-                "1": {
-                    "usercode": "5678",
-                    "in_use": True,
-                },
-            }
-        }
-
-
-async def test_get_lock_usercode_no_refresh(
-    hass: HomeAssistant,
-    client,
-    lock_schlage_be469,
-    integration,
-) -> None:
-    """Test get lock usercode without refresh uses cached values."""
+    """Test get lock usercode returns cached values."""
     with patch(
         "homeassistant.components.zwave_js.lock.get_usercode",
         return_value={
@@ -442,7 +399,6 @@ async def test_get_lock_usercode_no_refresh(
             {
                 ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
-                ATTR_REFRESH: False,
             },
             blocking=True,
             return_response=True,
@@ -461,18 +417,17 @@ async def test_get_lock_usercode_no_refresh(
         }
 
 
-async def test_get_lock_usercode_refresh_error(
+async def test_get_lock_usercode_error(
     hass: HomeAssistant,
     client,
     lock_schlage_be469,
     integration,
 ) -> None:
-    """Test get lock usercode with refresh=True error handling."""
+    """Test get lock usercode error handling."""
     with (
         patch(
-            "homeassistant.components.zwave_js.lock.get_usercode_from_node",
-            new_callable=AsyncMock,
-            side_effect=FailedZWaveCommand("test", 1, "test"),
+            "homeassistant.components.zwave_js.lock.get_usercode",
+            side_effect=NotFoundError("usercode for code slot 1 not found"),
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -482,7 +437,6 @@ async def test_get_lock_usercode_refresh_error(
             {
                 ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
-                ATTR_REFRESH: True,
             },
             blocking=True,
             return_response=True,
@@ -517,54 +471,3 @@ async def test_get_all_lock_usercodes(
                 "2": {"usercode": None, "in_use": False},
             }
         }
-
-
-async def test_get_all_lock_usercodes_refresh_error(
-    hass: HomeAssistant,
-    client,
-    lock_schlage_be469,
-    integration,
-) -> None:
-    """Test get all lock usercodes with refresh raises validation error."""
-    with (
-        patch(
-            "homeassistant.components.zwave_js.lock.get_usercodes",
-            return_value=[
-                {"code_slot": 1, "name": "one", "in_use": True, "usercode": "1234"},
-            ],
-        ),
-        pytest.raises(ServiceValidationError),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
-                ATTR_REFRESH: True,
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_all_lock_usercodes_error(
-    hass: HomeAssistant,
-    client,
-    lock_schlage_be469,
-    integration,
-) -> None:
-    """Test get all lock usercodes error handling."""
-    with (
-        patch(
-            "homeassistant.components.zwave_js.lock.get_usercodes",
-            side_effect=FailedZWaveCommand("test", 1, "test"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
-            blocking=True,
-            return_response=True,
-        )

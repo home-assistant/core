@@ -23,11 +23,6 @@ get_lock_usercode:
       example: 1
       selector:
         text:
-    refresh:
-      required: false
-      default: false
-      selector:
-        boolean:
 
 set_lock_usercode:
   target:

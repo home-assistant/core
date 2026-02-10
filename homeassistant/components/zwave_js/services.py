@@ -489,7 +489,6 @@ class ZWaveServices:
             entity_domain=LOCK_DOMAIN,
             schema={
                 vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
-                vol.Optional(const.ATTR_REFRESH, default=False): cv.boolean,
             },
             func="async_get_lock_usercode",
             supports_response=SupportsResponse.ONLY,

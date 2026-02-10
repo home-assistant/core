@@ -130,8 +130,6 @@ ATTR_METER_TYPE_NAME = "meter_type_name"
 # invoke CC API
 ATTR_METHOD_NAME = "method_name"
 ATTR_PARAMETERS = "parameters"
-# lock get usercode
-ATTR_REFRESH = "refresh"
 # lock set configuration
 ATTR_AUTO_RELOCK_TIME = "auto_relock_time"
 ATTR_BLOCK_TO_BLOCK = "block_to_block"
