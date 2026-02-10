@@ -1089,7 +1089,7 @@ home-assistant-intents==2026.1.28
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.5.0
+homematicip==2.6.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
