@@ -67,6 +67,12 @@
       "total_production": {
         "name": "Total production"
       },
+      "tariff_t1_consumption": {
+        "name": "T1 consumption"
+      },
+      "tariff_t2_consumption": {
+        "name": "T2 consumption"
+      },
       "wifi_rssi": {
         "name": "Signal strength Wi-Fi"
       }
