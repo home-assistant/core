@@ -71,13 +71,7 @@ rules:
     comment: |
       ConfigEntryAuthFailed and UpdateFailed exceptions can have translated messages.
       Also one "unknown error" that cannot be translated.
-  icon-translations:
-    status: todo
-    comment: |
-      number.py:299 uses _attr_icon = icon_for_battery_level() instead of
-      range-based icons in icons.json. Affects backup_reserve_percent and
-      off_grid_vehicle_charging_reserve_percent entities. Remove the dynamic
-      icon assignment and add range-based icon entries to icons.json.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
