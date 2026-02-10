@@ -23,7 +23,8 @@ from homeassistant.util import dt as dt_util
 from . import assert_entities, setup_platform
 from .const import SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
 
-TZ = dt_util.get_default_time_zone()
+ENTITY_BUY = "calendar.energy_site_buy_tariff"
+ENTITY_SELL = "calendar.energy_site_sell_tariff"
 
 
 @pytest.fixture
@@ -68,9 +69,8 @@ async def test_calendar(
     mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the calendar entity is correct."""
-
-    TZ = dt_util.get_default_time_zone()
-    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ))
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
     entry = await setup_platform(hass, [Platform.CALENDAR])
 
@@ -78,18 +78,15 @@ async def test_calendar(
 
 
 @pytest.mark.parametrize(
-    ("entity_id"),
-    [
-        "calendar.energy_site_buy_tariff",
-        "calendar.energy_site_sell_tariff",
-    ],
+    "entity_id",
+    [ENTITY_BUY, ENTITY_SELL],
 )
 @pytest.mark.parametrize(
-    ("time"),
+    "time_tuple",
     [
-        datetime(2024, 1, 1, 10, 0, 0, tzinfo=TZ),  # Starts Yesterday
-        datetime(2024, 1, 1, 20, 0, 0, tzinfo=TZ),  # Both Today
-        datetime(2024, 1, 1, 22, 0, 0, tzinfo=TZ),  # Ends Tomorrow
+        (2024, 1, 1, 10, 0, 0),  # OFF_PEAK period started yesterday
+        (2024, 1, 1, 20, 0, 0),  # ON_PEAK period starts and ends today
+        (2024, 1, 1, 22, 0, 0),  # OFF_PEAK period ends tomorrow
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -100,11 +97,11 @@ async def test_calendar_events(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
     entity_id: str,
-    time: datetime,
+    time_tuple: tuple,
 ) -> None:
     """Tests that the energy tariff calendar entity events are correct."""
-
-    freezer.move_to(time)
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(*time_tuple, tzinfo=tz))
 
     await setup_platform(hass, [Platform.CALENDAR])
 
@@ -137,8 +134,6 @@ async def test_calendar_events(
         ((2024, 1, 7, 12, 0, 0), "on", "Weekend"),
         # Monday (day 0) - WEEKEND period active (end of Fri-Mon range)
         ((2024, 1, 8, 12, 0, 0), "on", "Weekend"),
-        # Wednesday (day 2) - No period active (skipped by week-crossing logic)
-        ((2024, 1, 3, 12, 0, 0), "off", None),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -149,7 +144,7 @@ async def test_calendar_week_crossing(
     mock_site_info_week_crossing: AsyncMock,
     time_tuple: tuple,
     expected_state: str,
-    expected_period: str | None,
+    expected_period: str,
 ) -> None:
     """Test calendar handles week-crossing day ranges correctly."""
     tz = dt_util.get_default_time_zone()
@@ -158,11 +153,29 @@ async def test_calendar_week_crossing(
 
     await setup_platform(hass, [Platform.CALENDAR])
 
-    state = hass.states.get("calendar.energy_site_buy_tariff")
+    state = hass.states.get(ENTITY_BUY)
     assert state
     assert state.state == expected_state
-    if expected_period:
-        assert expected_period in state.attributes["message"]
+    assert expected_period in state.attributes["message"]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_week_crossing_excluded_day(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_week_crossing: AsyncMock,
+) -> None:
+    """Test calendar excludes days outside week-crossing range."""
+    tz = dt_util.get_default_time_zone()
+    # Wednesday (day 2) - No period active (outside Fri-Mon range)
+    freezer.move_to(datetime(2024, 1, 3, 12, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "off"
 
 
 @pytest.mark.parametrize(
@@ -197,7 +210,7 @@ async def test_calendar_multi_season(
 
     await setup_platform(hass, [Platform.CALENDAR])
 
-    state = hass.states.get("calendar.energy_site_buy_tariff")
+    state = hass.states.get(ENTITY_BUY)
     assert state
     assert state.state == "on"
     assert expected_season in state.attributes["description"]
@@ -217,8 +230,7 @@ async def test_calendar_no_tariff_data(
 
     await setup_platform(hass, [Platform.CALENDAR])
 
-    # No calendar entities should be created when seasons are empty
-    state = hass.states.get("calendar.energy_site_buy_tariff")
+    state = hass.states.get(ENTITY_BUY)
     assert state is None
-    state = hass.states.get("calendar.energy_site_sell_tariff")
+    state = hass.states.get(ENTITY_SELL)
     assert state is None

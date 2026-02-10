@@ -117,7 +117,7 @@
     'state': 'on',
   })
 # ---
-# name: test_calendar_events[time0-calendar.energy_site_buy_tariff][event]
+# name: test_calendar_events[time_tuple0-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
@@ -132,7 +132,7 @@
     'start_time': '2023-12-31 21:00:00',
   })
 # ---
-# name: test_calendar_events[time0-calendar.energy_site_buy_tariff][events]
+# name: test_calendar_events[time_tuple0-calendar.energy_site_buy_tariff][events]
   dict({
     'calendar.energy_site_buy_tariff': dict({
       'events': list([
@@ -260,7 +260,7 @@
     }),
   })
 # ---
-# name: test_calendar_events[time0-calendar.energy_site_sell_tariff][event]
+# name: test_calendar_events[time_tuple0-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
@@ -275,7 +275,7 @@
     'start_time': '2023-12-31 21:00:00',
   })
 # ---
-# name: test_calendar_events[time0-calendar.energy_site_sell_tariff][events]
+# name: test_calendar_events[time_tuple0-calendar.energy_site_sell_tariff][events]
   dict({
     'calendar.energy_site_sell_tariff': dict({
       'events': list([
@@ -403,22 +403,22 @@
     }),
   })
 # ---
-# name: test_calendar_events[time1-calendar.energy_site_buy_tariff][event]
+# name: test_calendar_events[time_tuple1-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
       Season: Summer
-      Period: Off peak
-      Price: 0.20/kWh
+      Period: On peak
+      Price: 0.22/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
+    'end_time': '2024-01-01 21:00:00',
     'friendly_name': 'Energy Site Buy tariff',
     'location': '',
-    'message': 'Off peak: 0.20/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    'message': 'On peak: 0.22/kWh',
+    'start_time': '2024-01-01 16:00:00',
   })
 # ---
-# name: test_calendar_events[time1-calendar.energy_site_buy_tariff][events]
+# name: test_calendar_events[time_tuple1-calendar.energy_site_buy_tariff][events]
   dict({
     'calendar.energy_site_buy_tariff': dict({
       'events': list([
@@ -546,22 +546,22 @@
     }),
   })
 # ---
-# name: test_calendar_events[time1-calendar.energy_site_sell_tariff][event]
+# name: test_calendar_events[time_tuple1-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
       Season: Summer
-      Period: Off peak
-      Price: 0.08/kWh
+      Period: On peak
+      Price: 0.16/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
+    'end_time': '2024-01-01 21:00:00',
     'friendly_name': 'Energy Site Sell tariff',
     'location': '',
-    'message': 'Off peak: 0.08/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    'message': 'On peak: 0.16/kWh',
+    'start_time': '2024-01-01 16:00:00',
   })
 # ---
-# name: test_calendar_events[time1-calendar.energy_site_sell_tariff][events]
+# name: test_calendar_events[time_tuple1-calendar.energy_site_sell_tariff][events]
   dict({
     'calendar.energy_site_sell_tariff': dict({
       'events': list([
@@ -689,7 +689,7 @@
     }),
   })
 # ---
-# name: test_calendar_events[time2-calendar.energy_site_buy_tariff][event]
+# name: test_calendar_events[time_tuple2-calendar.energy_site_buy_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
@@ -697,14 +697,14 @@
       Period: Off peak
       Price: 0.20/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
+    'end_time': '2024-01-02 16:00:00',
     'friendly_name': 'Energy Site Buy tariff',
     'location': '',
     'message': 'Off peak: 0.20/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    'start_time': '2024-01-01 21:00:00',
   })
 # ---
-# name: test_calendar_events[time2-calendar.energy_site_buy_tariff][events]
+# name: test_calendar_events[time_tuple2-calendar.energy_site_buy_tariff][events]
   dict({
     'calendar.energy_site_buy_tariff': dict({
       'events': list([
@@ -832,7 +832,7 @@
     }),
   })
 # ---
-# name: test_calendar_events[time2-calendar.energy_site_sell_tariff][event]
+# name: test_calendar_events[time_tuple2-calendar.energy_site_sell_tariff][event]
   ReadOnlyDict({
     'all_day': False,
     'description': '''
@@ -840,14 +840,14 @@
       Period: Off peak
       Price: 0.08/kWh
     ''',
-    'end_time': '2024-01-01 16:00:00',
+    'end_time': '2024-01-02 16:00:00',
     'friendly_name': 'Energy Site Sell tariff',
     'location': '',
     'message': 'Off peak: 0.08/kWh',
-    'start_time': '2023-12-31 21:00:00',
+    'start_time': '2024-01-01 21:00:00',
   })
 # ---
-# name: test_calendar_events[time2-calendar.energy_site_sell_tariff][events]
+# name: test_calendar_events[time_tuple2-calendar.energy_site_sell_tariff][events]
   dict({
     'calendar.energy_site_sell_tariff': dict({
       'events': list([
