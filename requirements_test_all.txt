@@ -502,7 +502,7 @@ aprslib==0.7.2
 apsystems-ez1==2.7.0
 
 # homeassistant.components.aranet
-aranet4==2.5.1
+aranet4==2.6.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.8.2
@@ -1152,7 +1152,7 @@ inkbird-ble==1.1.1
 insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
-intellifire4py==4.2.1
+intellifire4py==4.3.1
 
 # homeassistant.components.iometer
 iometer==0.4.0
@@ -1439,7 +1439,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.1.1
+onedrive-personal-sdk==0.1.2
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
