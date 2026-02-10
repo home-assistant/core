@@ -1,0 +1,214 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'address': 0,
+        'available': True,
+        'dali_types': list([
+        ]),
+        'features': dict({
+          'color_kelvin': dict({
+            'status': 1000.0,
+          }),
+          'color_kelvin_with_fade': None,
+          'color_rgb': dict({
+            'status': dict({
+              'blue': 0.0,
+              'green': 0.0,
+              'red': 0.0,
+            }),
+          }),
+          'color_rgb_with_fade': None,
+          'color_waf': dict({
+            'status': dict({
+              'amber': 0.0,
+              'free_color': 0.0,
+              'white': 0.0,
+            }),
+          }),
+          'color_waf_with_fade': None,
+          'color_xy': None,
+          'color_xy_with_fade': None,
+          'dali_cmd16': None,
+          'dim_down': None,
+          'dim_up': None,
+          'dimmable': dict({
+            'status': 0.0,
+          }),
+          'dimmable_kelvin': None,
+          'dimmable_rgb': None,
+          'dimmable_waf': None,
+          'dimmable_with_fade': None,
+          'dimmable_xy': None,
+          'fade_rate': None,
+          'fade_time': None,
+          'goto_last_active': None,
+          'goto_last_active_with_fade': None,
+          'save_to_scene': None,
+          'scene': None,
+          'scene_with_fade': None,
+          'switchable': dict({
+            'status': False,
+          }),
+        }),
+        'groups': list([
+        ]),
+        'id': 1,
+        'line': 0,
+        'name': 'Device 1',
+        'scenes': list([
+        ]),
+        'status': dict({
+          'control_gear_failure': False,
+          'fade_running': False,
+          'is_unaddressed': False,
+          'lamp_failure': False,
+          'lamp_on': False,
+          'limit_error': False,
+          'power_cycle_see': False,
+          'raw': 0,
+          'reset_state': False,
+        }),
+        'time_signature': None,
+        'type': 'default',
+      }),
+      dict({
+        'address': 1,
+        'available': True,
+        'dali_types': list([
+        ]),
+        'features': dict({
+          'color_kelvin': dict({
+            'status': 1000.0,
+          }),
+          'color_kelvin_with_fade': None,
+          'color_rgb': dict({
+            'status': dict({
+              'blue': 0.0,
+              'green': 0.0,
+              'red': 0.0,
+            }),
+          }),
+          'color_rgb_with_fade': None,
+          'color_waf': dict({
+            'status': dict({
+              'amber': 0.0,
+              'free_color': 0.0,
+              'white': 0.0,
+            }),
+          }),
+          'color_waf_with_fade': None,
+          'color_xy': None,
+          'color_xy_with_fade': None,
+          'dali_cmd16': None,
+          'dim_down': None,
+          'dim_up': None,
+          'dimmable': dict({
+            'status': 0.0,
+          }),
+          'dimmable_kelvin': None,
+          'dimmable_rgb': None,
+          'dimmable_waf': None,
+          'dimmable_with_fade': None,
+          'dimmable_xy': None,
+          'fade_rate': None,
+          'fade_time': None,
+          'goto_last_active': None,
+          'goto_last_active_with_fade': None,
+          'save_to_scene': None,
+          'scene': None,
+          'scene_with_fade': None,
+          'switchable': dict({
+            'status': False,
+          }),
+        }),
+        'groups': list([
+        ]),
+        'id': 2,
+        'line': 0,
+        'name': 'Device 2',
+        'scenes': list([
+        ]),
+        'status': dict({
+          'control_gear_failure': False,
+          'fade_running': False,
+          'is_unaddressed': False,
+          'lamp_failure': False,
+          'lamp_on': False,
+          'limit_error': False,
+          'power_cycle_see': False,
+          'raw': 0,
+          'reset_state': False,
+        }),
+        'time_signature': None,
+        'type': 'default',
+      }),
+    ]),
+    'info': dict({
+      'descriptor': dict({
+        'buffer_size': 0,
+        'device_list_specifier': 0,
+        'implemented_macros': list([
+        ]),
+        'lines': 0,
+        'max_yn_frame_size': 0,
+        'power_supply_implemented': False,
+        'protocol_version_major': 1,
+        'protocol_version_minor': 0,
+        'tick_resolution': 0,
+      }),
+      'device': dict({
+        'article_info': '',
+        'article_number': 87654321,
+        'gtin': 192837465,
+        'pcb': '2a',
+        'production_week': 1,
+        'production_year': 20,
+        'serial': 12345,
+      }),
+      'emergency_light': False,
+      'errors': dict({
+      }),
+      'lines': dict({
+        '0': dict({
+          'device': dict({
+            'article_info': '',
+            'article_number': 87654321,
+            'gtin': 192837465,
+            'pcb': '2a',
+            'production_week': 1,
+            'production_year': 20,
+            'serial': 12345,
+          }),
+          'line_status': 'ok',
+          'send_blocked_initialize': False,
+          'send_blocked_macro_running': False,
+          'send_blocked_quiescent': False,
+          'send_buffer_full': False,
+        }),
+        '1': dict({
+          'device': dict({
+            'article_info': '',
+            'article_number': 12345678,
+            'gtin': 101010101,
+            'pcb': '1a',
+            'production_week': 10,
+            'production_year': 22,
+            'serial': 54321,
+          }),
+          'line_status': 'ok',
+          'send_blocked_initialize': False,
+          'send_blocked_macro_running': False,
+          'send_blocked_quiescent': False,
+          'send_buffer_full': False,
+        }),
+      }),
+      'name': 'Test',
+      'node_red': False,
+      'startup_mode': 'normal',
+      'tier': 'basic',
+      'version': 'v1.14.1/1.4.3',
+    }),
+  })
+# ---
