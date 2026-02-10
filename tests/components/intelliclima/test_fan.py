@@ -32,12 +32,12 @@ FAN_ENTITY_ID = "fan.test_vmc"
 @pytest.fixture(autouse=True)
 async def setup_intelliclima_fan_only(
     hass: HomeAssistant,
-    mock_config_entry_current: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
 ) -> AsyncGenerator[None]:
     """Set up IntelliClima integration with only the fan platform."""
     with patch("homeassistant.components.intelliclima.PLATFORMS", [Platform.FAN]):
-        await setup_integration(hass, mock_config_entry_current)
+        await setup_integration(hass, mock_config_entry)
         # Let tests run against this initialized state
         yield
 
@@ -45,16 +45,14 @@ async def setup_intelliclima_fan_only(
 async def test_all_fan_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_config_entry_current: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_cloud_interface: AsyncMock,
 ) -> None:
     """Test all entities."""
 
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry_current.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # There should be exactly one fan entity
     fan_entries = [
