@@ -7,10 +7,17 @@ rules:
   brands: done
   common-modules:
     status: todo
-    comment: Move coordinator
+    comment: |
+      Move coordinator from __init__.py to coordinator.py.
+      Consider using entity descriptions for binary_sensor and switch.
+      Consider simplifying climate supported features flow.
   config-flow-test-coverage:
     status: todo
-    comment: Needs improvement
+    comment: |
+      Add mock_setup_entry common fixture.
+      Test unique_id of the entry in happy flow.
+      Split duplicate entry test from happy flow, use mock_config_entry.
+      Error flow should end in CREATE_ENTRY to test recovery.
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -22,7 +29,9 @@ rules:
     comment: Entities do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: done
+    comment: Consider extending coordinator to access API via coordinator and remove extra dataclass.
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -34,7 +43,9 @@ rules:
     status: exempt
     comment: Integration only requires IP and port, no additional configuration parameters.
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: MyZone temp entity should be unavailable when MyZone is disabled rather than returning None.
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -43,17 +54,22 @@ rules:
     comment: Integration connects to local device without authentication.
   test-coverage:
     status: todo
-    comment: Needs improvement
+    comment: |
+      Patch the library instead of mocking at integration level.
+      Split binary sensor tests into multiple tests (enable entities etc).
+      Split tests into Creation (right entities with right values), Actions (right library calls), and Other behaviors.
 
   # Gold
   devices:
     status: todo
-    comment: Breaking change to split cover entities to separate devices
+    comment: Consider making every zone its own device for better naming and room assignment. Breaking change to split cover entities to separate devices.
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: Integration does not support discovery.
-  discovery: todo
+    comment: Device is a generic Android device (android-xxxxxxxx) indistinguishable from other Android devices, not discoverable.
+  discovery:
+    status: exempt
+    comment: Check mDNS, DHCP, SSDP confirmed not feasible. Device is a generic Android device (android-xxxxxxxx) indistinguishable from other Android devices.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -65,7 +81,9 @@ rules:
     status: exempt
     comment: AC zones are static per unit and configured on the device itself.
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: Consider using UPDATE device class for app update binary sensor instead of custom.
   entity-disabled-by-default: done
   entity-translations: todo
   exception-translations:
