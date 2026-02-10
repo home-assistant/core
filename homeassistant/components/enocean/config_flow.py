@@ -30,9 +30,22 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        # TODO: exit for already known dongle paths
 
-        return await self.async_step_manual({CONF_DEVICE: discovery_info.device})
+        # TODO: exit for already known dongle paths
+        # await self.async_set_unique_id(device_unique_id)
+        # self._abort_if_unique_id_configured()
+
+        self._device_path = discovery_info.device
+        return await self.async_step_usb_confirm()
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle USB Discovery confirmation."""
+        if user_input is not None:
+            return await self.async_step_manual({CONF_DEVICE: self._device_path})
+        self._set_confirm_only()
+        return self.async_show_form(step_id="usb_confirm")
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
