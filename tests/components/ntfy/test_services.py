@@ -119,12 +119,12 @@ async def test_ntfy_publish(
                 ),
                 ViewAction(
                     label="Open website",
-                    url="https://example.com",
+                    url=URL("https://example.com"),
                     clear=False,
                 ),
                 HttpAction(
                     label="Close door",
-                    url="https://api.example.local/",
+                    url=URL("https://api.example.local/"),
                     method="PUT",
                     headers={"Authorization": "Bearer ..."},
                     body=None,

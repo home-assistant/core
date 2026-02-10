@@ -94,7 +94,7 @@ ACTION_SCHEMA = vol.Schema(
 VIEW_SCHEMA = ACTION_SCHEMA.extend(
     {
         vol.Optional(ATTR_ACTION): vol.All(str, "view"),
-        vol.Required(ATTR_URL): cv.url,
+        vol.Required(ATTR_URL): vol.All(vol.Url(), vol.Coerce(URL)),
     }
 )
 BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
