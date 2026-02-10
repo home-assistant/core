@@ -34,7 +34,6 @@ from .const import (
     DOORTAG_STATUS_OPEN,
     DOORTAG_STATUS_UNDEFINED,
     DOORTAG_STATUS_WEAK_SIGNAL,
-    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
@@ -208,9 +207,7 @@ async def async_setup_entry(
     @callback
     def _create_binary_sensor_entity(
         binarySensorClass: type[
-            NetatmoBinarySensor
-            | NetatmoWeatherBinarySensor
-            | NetatmoOpeningBinarySensor
+            NetatmoWeatherBinarySensor | NetatmoOpeningBinarySensor
         ],
         netatmo_device: NetatmoDevice,
     ) -> None:
@@ -223,11 +220,7 @@ async def async_setup_entry(
             netatmo_device.device.device_category, []
         )
 
-        entities: list[
-            NetatmoBinarySensor
-            | NetatmoWeatherBinarySensor
-            | NetatmoOpeningBinarySensor
-        ] = []
+        entities: list[NetatmoWeatherBinarySensor | NetatmoOpeningBinarySensor] = []
 
         # Create binary sensors for module
         for description in descriptions_to_add:
@@ -251,17 +244,6 @@ async def async_setup_entry(
 
         if entities:
             async_add_entities(entities)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NETATMO_CREATE_BINARY_SENSOR,
-            partial(
-                _create_binary_sensor_entity,
-                NetatmoBinarySensor,
-            ),
-        )
-    )
 
     entry.async_on_unload(
         async_dispatcher_connect(
