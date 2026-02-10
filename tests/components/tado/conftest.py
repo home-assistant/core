@@ -62,8 +62,10 @@ async def init_integration(hass: HomeAssistant):
     me_fixture = "me.json"
     weather_fixture = "weather.json"
     home_fixture = "home.json"
+    home_heating_circuits_fixture = "heating_circuits.json"
     home_state_fixture = "home_state.json"
     zones_fixture = "zones.json"
+    zone_control_fixture = "zone_control.json"
     zone_states_fixture = "zone_states.json"
 
     # WR1 Device
@@ -111,6 +113,10 @@ async def init_integration(hass: HomeAssistant):
         m.get(
             "https://my.tado.com/api/v2/homes/1/",
             text=await async_load_fixture(hass, home_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/heatingCircuits",
+            text=await async_load_fixture(hass, home_heating_circuits_fixture, DOMAIN),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/weather",
@@ -220,6 +226,12 @@ async def init_integration(hass: HomeAssistant):
             "https://my.tado.com/api/v2/homes/1/zones/1/state",
             text=await async_load_fixture(hass, zone_1_state_fixture, DOMAIN),
         )
+        zone_ids = [1, 2, 3, 4, 5, 6]
+        for zone_id in zone_ids:
+            m.get(
+                f"https://my.tado.com/api/v2/homes/1/zones/{zone_id}/control",
+                text=await async_load_fixture(hass, zone_control_fixture, DOMAIN),
+            )
         m.post(
             "https://login.tado.com/oauth2/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
@@ -240,6 +252,7 @@ async def init_integration(hass: HomeAssistant):
         # For a first refresh
         await entry.runtime_data.coordinator.async_refresh()
         await entry.runtime_data.mobile_coordinator.async_refresh()
+        await entry.runtime_data.zone_control_coordinator.async_refresh()
         await hass.async_block_till_done()
 
         yield
