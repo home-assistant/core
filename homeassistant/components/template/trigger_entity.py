@@ -69,6 +69,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        **kwargs,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
@@ -84,8 +86,17 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
         """
-        self.setup_state_template(option, attribute, validator, on_update)
+        if self.add_template(option, attribute, validator, on_update):
+            if render_complex:
+                self._to_render_complex.append(option)
+            else:
+                self._to_render_simple.append(option)
+            self._parse_result.add(option)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -129,33 +140,28 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _handle_rendered_results(self) -> bool:
         """Get a rendered result and return the value."""
         # Handle any templates.
+        write_state = False
         for option, entity_template in self._templates.items():
-            value = _SENTINEL
-            if (rendered := self._rendered.get(option)) is not None:
-                value = rendered
-
-            if entity_template.validator:
-                value = entity_template.validator(rendered)
-
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
-            if value is _SENTINEL:
-                return True
+            if (rendered := self._rendered.get(option, _SENTINEL)) is _SENTINEL:
+                write_state = True
+                continue
+
+            value = (
+                entity_template.validator(rendered)
+                if entity_template.validator
+                else rendered
+            )
 
             if entity_template.on_update:
                 entity_template.on_update(value)
             else:
                 setattr(self, entity_template.attribute, value)
-            return True
+            write_state = True
 
-        if len(self._rendered) > 0:
-            # In some cases, the entity may be state optimistic or
-            # attribute optimistic, in these scenarios the state needs
-            # to update.
-            return True
-
-        return False
+        return write_state
 
     @callback
     def _process_data(self) -> None:
@@ -189,6 +195,12 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             # Check availability after rendering the results because the state
             # template could render the entity unavailable
             if not self.available:
+                write_state = True
+
+            if len(self._rendered) > 0:
+                # In some cases, the entity may be state optimistic or
+                # attribute optimistic, in these scenarios the state needs
+                # to update.
                 write_state = True
 
             if write_state:

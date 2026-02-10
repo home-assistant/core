@@ -235,7 +235,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")
@@ -380,7 +380,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
-        implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        try:
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        except ImplementationUnavailableError as err:
+            self.logger.error(
+                "No OAuth2 implementations available: %s",
+                ", ".join(str(e) for e in err.args),
+            )
+            return self.async_abort(reason="oauth_implementation_unavailable")
 
         if user_input is not None:
             self.flow_impl = implementations[user_input["implementation"]]

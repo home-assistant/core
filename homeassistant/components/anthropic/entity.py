@@ -23,6 +23,7 @@ from anthropic.types import (
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
+    OutputConfigParam,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
@@ -41,6 +42,7 @@ from anthropic.types import (
     TextDelta,
     ThinkingBlock,
     ThinkingBlockParam,
+    ThinkingConfigAdaptiveParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
@@ -78,6 +80,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -89,6 +92,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
+    NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
 )
 
@@ -600,6 +604,16 @@ class AnthropicBaseLLMEntity(Entity):
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
+
+        # System prompt with caching enabled
+        system_prompt: list[TextBlockParam] = [
+            TextBlockParam(
+                type="text",
+                text=system.content,
+                cache_control={"type": "ephemeral"},
+            )
+        ]
+
         messages = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
@@ -608,25 +622,38 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system.content,
+            system=system_prompt,
             stream=True,
         )
 
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
-        if (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
-        ):
-            model_args["thinking"] = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
+        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+            thinking_effort = options.get(
+                CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
             )
+            if thinking_effort != "none":
+                model_args["thinking"] = ThinkingConfigAdaptiveParam(type="adaptive")
+                model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+                )
         else:
-            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+            thinking_budget = options.get(
+                CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
             )
+            if (
+                not model.startswith(tuple(NON_THINKING_MODELS))
+                and thinking_budget >= MIN_THINKING_BUDGET
+            ):
+                model_args["thinking"] = ThinkingConfigEnabledParam(
+                    type="enabled", budget_tokens=thinking_budget
+                )
+            else:
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+                )
 
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
@@ -695,10 +722,6 @@ class AnthropicBaseLLMEntity(Entity):
                     type="auto",
                 )
 
-                if isinstance(model_args["system"], str):
-                    model_args["system"] = [
-                        TextBlockParam(type="text", text=model_args["system"])
-                    ]
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",

@@ -18,6 +18,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
@@ -36,6 +37,7 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_TOP_P,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
@@ -536,6 +538,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: "auto",
                 CONF_VERBOSITY: "high",
                 CONF_CODE_INTERPRETER: False,
                 CONF_WEB_SEARCH: False,
@@ -556,6 +559,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_REASONING_EFFORT: "minimal",
+                    CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                     CONF_CODE_INTERPRETER: False,
                     CONF_VERBOSITY: "high",
                     CONF_WEB_SEARCH: False,
@@ -572,6 +576,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "minimal",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
                 CONF_VERBOSITY: "high",
                 CONF_WEB_SEARCH: False,
@@ -739,6 +744,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: "auto",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
                 CONF_WEB_SEARCH: True,
@@ -771,6 +777,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-5-pro",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_VERBOSITY: "medium",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
@@ -1043,7 +1050,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-1",
+        CONF_IMAGE_MODEL: "gpt-image-1.5",
         CONF_MAX_TOKENS: 200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,
@@ -1086,3 +1093,52 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+
+
+@pytest.mark.parametrize(
+    ("current_llm_apis", "suggested_llm_apis", "expected_options"),
+    [
+        ("assist", ["assist"], ["assist"]),
+        (["assist"], ["assist"], ["assist"]),
+        ("non-existent", [], ["assist"]),
+        (["non-existent"], [], ["assist"]),
+        (["assist", "non-existent"], ["assist"], ["assist"]),
+    ],
+)
+async def test_reconfigure_conversation_subentry_llm_api_schema(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    current_llm_apis: list[str],
+    suggested_llm_apis: list[str],
+    expected_options: list[str],
+) -> None:
+    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_LLM_HASS_API: current_llm_apis},
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI.models",
+    ):
+        subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Only valid LLM APIs should be suggested and shown as options
+    schema = subentry_flow["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.description
+    assert key.description.get("suggested_value") == suggested_llm_apis
+    field_schema = schema[key]
+    assert field_schema.config
+    assert [
+        opt["value"] for opt in field_schema.config.get("options")
+    ] == expected_options
