@@ -79,7 +79,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
-            errors={},
         )
 
     async def async_step_manual(
