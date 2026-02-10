@@ -4,71 +4,61 @@
       "night_mode": {
         "default": "mdi:sleep",
         "state": {
-          "off": "mdi:sleep-off",
-          "on": "mdi:sleep"
+          "off": "mdi:sleep-off"
         }
       },
       "party_mode": {
         "default": "mdi:glass-cocktail",
         "state": {
-          "off": "mdi:glass-cocktail-off",
-          "on": "mdi:glass-cocktail"
+          "off": "mdi:glass-cocktail-off"
         }
       },
       "supercool": {
         "default": "mdi:snowflake",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake"
+          "off": "mdi:snowflake-off"
         }
       },
       "supercool_bottom_zone": {
         "default": "mdi:snowflake",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake"
+          "off": "mdi:snowflake-off"
         }
       },
       "supercool_middle_zone": {
         "default": "mdi:snowflake",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake"
+          "off": "mdi:snowflake-off"
         }
       },
       "supercool_top_zone": {
         "default": "mdi:snowflake",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake"
+          "off": "mdi:snowflake-off"
         }
       },
       "superfrost": {
         "default": "mdi:snowflake-alert",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake-alert"
+          "off": "mdi:snowflake-off"
         }
       },
       "superfrost_bottom_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake-alert"
+          "off": "mdi:snowflake-off"
         }
       },
       "superfrost_middle_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake-alert"
+          "off": "mdi:snowflake-off"
         }
       },
       "superfrost_top_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
-          "off": "mdi:snowflake-off",
-          "on": "mdi:snowflake-alert"
+          "off": "mdi:snowflake-off"
         }
       }
     }
