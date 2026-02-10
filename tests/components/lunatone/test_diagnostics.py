@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.diagnostics import REDACTED
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
-from . import DEVICE_DATA_LIST, INFO_DATA, setup_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -18,6 +19,7 @@ async def test_config_entry_diagnostics(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the config entry level diagnostics."""
     await setup_integration(hass, mock_config_entry)
@@ -26,10 +28,4 @@ async def test_config_entry_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    assert diagnostics == {
-        "entry_data": {"url": REDACTED},
-        "data": {
-            "info": INFO_DATA.model_dump(),
-            "devices": [d.model_dump() for d in DEVICE_DATA_LIST],
-        },
-    }
+    assert diagnostics == snapshot
