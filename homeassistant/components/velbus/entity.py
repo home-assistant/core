@@ -49,8 +49,10 @@ class VelbusEntity(Entity):
                 DOMAIN,
                 self._module_address,
             )
-        serial = channel.get_module_serial() or self._module_address
-        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+        serial = channel.get_module_serial() or str(channel.get_module_address())
+        self._attr_unique_id = (
+            f"{channel.get_module_type_name()}-{serial}-{channel.get_channel_number()}"
+        )
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""

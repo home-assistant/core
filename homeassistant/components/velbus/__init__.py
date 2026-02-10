@@ -15,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -87,6 +91,33 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
                 "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
             )
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
+
+
+def _migrate_entity_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
+    """Migrate entity unique_ids.
+
+    Old: serial|address-channelNumber
+    New: moduleType-serial|address-channelNumber
+    """
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        ent_reg, entry_id
+    )
+
+    for entity in entities:
+        if not entity.unique_id or not entity.device_id:
+            continue
+        device_entry = dev_reg.async_get(entity.device_id)
+        if not device_entry or not device_entry.model:
+            continue
+        new_unique_id = f"{device_entry.model}-{entity.unique_id}"
+        _LOGGER.debug(
+            "migrate unique_id '%s' to '%s'",
+            entity.unique_id,
+            new_unique_id,
+        )
+        ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -166,8 +197,13 @@ async def async_migrate_entry(
         if len(parts) == 4:
             hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
 
+    # this is the config entry migration updating the entities unique ids
+    # migrate from 2.2 to 2.3
+    if config_entry.version < 3 and config_entry.minor_version < 3:
+        _migrate_entity_unique_ids(hass, config_entry.entry_id)
+
     # update the config entry
-    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
+    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=3)
 
     _LOGGER.error(
         "Migration to version %s.%s successful",

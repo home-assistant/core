@@ -36,7 +36,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a1b2c3d4e5f6-2',
+    'unique_id': 'VMB7IN-a1b2c3d4e5f6-2',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -93,7 +93,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a1b2c3d4e5f6-2-counter',
+    'unique_id': 'VMB7IN-a1b2c3d4e5f6-2-counter',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -148,7 +148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a1b2c3d4e5f6-4',
+    'unique_id': 'VMB7IN-a1b2c3d4e5f6-4',
     'unit_of_measurement': 'illuminance',
   })
 # ---
@@ -201,7 +201,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a1b2c3d4e5f6-3',
+    'unique_id': 'VMB7IN-a1b2c3d4e5f6-3',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -257,7 +257,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'asdfghjk-3',
+    'unique_id': 'VMB4GPO-asdfghjk-3',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
