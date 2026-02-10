@@ -59,7 +59,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
-            return self.async_step_manual(user_input)
+            return await self.async_step_manual(user_input)
 
         devices = await self.hass.async_add_executor_job(dongle.detect)
         if len(devices) == 0:
@@ -94,9 +94,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=self.add_suggested_values_to_schema(
-                MANUAL_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(MANUAL_SCHEMA, user_input),
             errors=errors,
         )
 
