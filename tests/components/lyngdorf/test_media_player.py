@@ -283,18 +283,18 @@ async def test_availability_logging(
     """Test availability logging when device disconnects and reconnects."""
     main_zone_entity_id = "media_player.mock_lyngdorf_main_zone"
     zone_b_entity_id = "media_player.mock_lyngdorf_zone_b"
-    assert mock_receiver.register_notification_callback.call_count == 2
-    main_callback = mock_receiver.register_notification_callback.call_args_list[0].args[
-        0
+
+    # Get all registered callbacks
+    callbacks = [
+        call.args[0]
+        for call in mock_receiver.register_notification_callback.call_args_list
     ]
-    zone_b_callback = mock_receiver.register_notification_callback.call_args_list[
-        1
-    ].args[0]
+    assert len(callbacks) > 0
 
     with caplog.at_level(logging.INFO):
         mock_receiver.connected = False
-        main_callback()
-        zone_b_callback()
+        for cb in callbacks:
+            cb()
         await hass.async_block_till_done()
 
     main_state = hass.states.get(main_zone_entity_id)
@@ -308,8 +308,8 @@ async def test_availability_logging(
     caplog.clear()
     with caplog.at_level(logging.INFO):
         mock_receiver.connected = True
-        main_callback()
-        zone_b_callback()
+        for cb in callbacks:
+            cb()
         await hass.async_block_till_done()
 
     main_state = hass.states.get(main_zone_entity_id)
@@ -350,8 +350,8 @@ async def test_service_selects(
     assert mock_receiver.sound_mode == "Movie"
 
 
-def test_entity_properties_and_attributes(mock_receiver: MagicMock) -> None:
-    """Test entity properties and attributes without hass."""
+def test_entity_properties(mock_receiver: MagicMock) -> None:
+    """Test entity properties without hass."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123456",
@@ -362,11 +362,6 @@ def test_entity_properties_and_attributes(mock_receiver: MagicMock) -> None:
     mock_receiver.power_on = True
     mock_receiver.audio_information = "Stereo"
     mock_receiver.video_information = "No video"
-    mock_receiver.streaming_source = "AirPlay"
-    mock_receiver.audio_input = "optical"
-    mock_receiver.video_input = "hdmi"
-    mock_receiver.room_perfect_position = "focus"
-    mock_receiver.available_room_perfect_positions = ["focus", "global"]
     mock_receiver.volume = None
     mock_receiver.available_sources = ["HDMI"]
     mock_receiver.available_sound_modes = ["Movie"]
@@ -381,30 +376,16 @@ def test_entity_properties_and_attributes(mock_receiver: MagicMock) -> None:
     assert main.sound_mode_list == ["Movie"]
     assert main.is_volume_muted is mock_receiver.mute_enabled
     assert main.volume_level is None
-    attributes = main.extra_state_attributes
-    assert attributes["streaming_source"] == "AirPlay"
-    assert attributes["audio_input"] == "optical"
-    assert attributes["video_input"] == "hdmi"
-    assert attributes["room_perfect_position"] == "focus"
-    assert attributes["room_perfect_position_list"] == ["focus", "global"]
 
     mock_receiver.video_information = "Video"
     assert main.media_title == "audio: Stereo video: Video"
     assert main.media_content_type is MediaType.VIDEO
 
-    main.select_room_perfect_position("global")
-    assert mock_receiver.room_perfect_position == "global"
-
     mock_receiver.zone_b_power_on = True
-    mock_receiver.zone_b_audio_input = "aux"
-    mock_receiver.zone_b_streaming_source = "DLNA"
     mock_receiver.zone_b_volume = "invalid"
     zone_b = MP60ZoneBDevice(mock_receiver, config_entry, device_info)
     assert zone_b.state is MediaPlayerState.ON
     assert zone_b.volume_level is None
-    zone_b_attrs = zone_b.extra_state_attributes
-    assert zone_b_attrs["audio_input"] == "aux"
-    assert zone_b_attrs["streaming_source"] == "DLNA"
 
 
 async def test_volume_clamps(

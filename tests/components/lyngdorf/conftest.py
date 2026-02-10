@@ -8,7 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from lyngdorf.const import LyngdorfModel
 import pytest
 
-from homeassistant.components.lyngdorf.const import DOMAIN
+from homeassistant.components.lyngdorf.const import (
+    CONF_MANUFACTURER,
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
@@ -24,8 +28,8 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MODEL: "MP-60",
-            "manufacturer": "Lyngdorf",
-            "serial_number": "123456",
+            CONF_MANUFACTURER: "Lyngdorf",
+            CONF_SERIAL_NUMBER: "123456",
         },
         unique_id="123456",
     )
@@ -34,8 +38,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.lyngdorf.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.lyngdorf.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.lyngdorf.async_unload_entry", return_value=True
+        ),
     ):
         yield
 
@@ -66,6 +73,20 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.mute_enabled = False
         receiver.audio_information = None
         receiver.video_information = None
+        receiver.audio_input = None
+        receiver.video_input = None
+        receiver.streaming_source = None
+        receiver.room_perfect_position = None
+        receiver.available_room_perfect_positions = []
+        receiver.voicing = None
+        receiver.available_voicings = []
+        receiver.lipsync = None
+        receiver.trim_bass = None
+        receiver.trim_treble = None
+        receiver.trim_centre = None
+        receiver.trim_height = None
+        receiver.trim_lfe = None
+        receiver.trim_surround = None
         receiver.source = None
         receiver.available_sources = []
         receiver.sound_mode = None

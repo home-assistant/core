@@ -1,21 +1,20 @@
-"""Config flow for Lyngdorf Integration."""
+"""Config flow for Lyngdorf integration."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
+from functools import partial
+from typing import Any
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmrDevice
+import getmac
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import async_find_receiver_model
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -33,15 +32,12 @@ from .const import (
     SUPPORTED_MANUFACTURERS,
 )
 
-FlowInput = Mapping[str, Any] | None
 
-
-class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a Lyngdorf config flow the mac address is used for the device ID."""
+class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a Lyngdorf config flow."""
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: dict[str, SsdpServiceInfo] = {}
         self._location: str | None = None
         self._device_manufacturer: str | None = None
         self._device_model: str | None = None
@@ -49,72 +45,66 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
         self._host: str
 
-    async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
-        """Handle a flow initialized by the user.
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        return await self.async_step_manual(user_input)
 
-        Let user choose from a list of found and unconfigured devices or to
-        enter an URL manually.
-        """
-
-        if user_input is not None:
-            if not (name := user_input.get(CONF_NAME)):
-                # No device chosen, user might want to directly enter an URL
-                return await self.async_step_manual()
-            # User has chosen a device, ask for confirmation
-            discovery = self._discoveries[name]
-            await self._async_set_info_from_discovery(discovery)
-            return await self._create_entry()
-
-        if not (discoveries := await self._async_get_discoveries()):
-            # Nothing found, maybe the user knows an URL to try
-            return await self.async_step_manual()
-
-        self._discoveries = {
-            discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
-            or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
-            for discovery in discoveries
-        }
-
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_NAME): vol.In(self._discoveries.keys())}
-        )
-        return self.async_show_form(step_id="user", data_schema=data_schema)
-
-    async def async_step_manual(self, user_input: FlowInput = None) -> ConfigFlowResult:
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manual hostname entry by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            self._name = user_input[CONF_NAME]
-            self._device_serial_number = user_input[CONF_SERIAL_NUMBER].lower()
             model: LyngdorfModel | None = None
 
             try:
                 model = await async_find_receiver_model(self._host)
-                if not model:
-                    errors["base"] = "unsupported_model"
             except TimeoutError:
                 errors["base"] = "timeout_connect"
             except (ConnectionError, OSError):
                 errors["base"] = "cannot_connect"
-            except AbortFlow:
-                raise
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
+            if not errors and not model:
+                errors["base"] = "unsupported_model"
+
             if not errors and model:
                 self._device_manufacturer = model.manufacturer
-                self._device_model = model.model
-                await self.async_set_unique_id(self._device_serial_number)
+                self._device_model = model.model_name
+                self._name = model.model_name
+
+                # Resolve MAC address from ARP table to use as serial
+                if mac := await self.hass.async_add_executor_job(
+                    partial(getmac.get_mac_address, ip=self._host)
+                ):
+                    self._device_serial_number = mac.replace(":", "").lower()
+
+                # Check SSDP discoveries for matching host to get name
+                discovery = await self._async_find_discovery_by_host(self._host)
+                if discovery:
+                    if not self._device_serial_number:
+                        self._device_serial_number = (
+                            discovery.upnp.get(ATTR_UPNP_SERIAL) or ""
+                        ).lower() or None
+                    self._name = (
+                        discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._name
+                    )
+
+                unique_id = (
+                    self._device_serial_number or f"{self._device_model}:{self._host}"
+                )
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return await self._create_entry()
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
-                vol.Required(CONF_SERIAL_NUMBER): cv.string,
             }
         )
 
@@ -133,36 +123,8 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_ignore(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Ignore this config flow."""
-        unique_id = user_input["unique_id"]
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
-
-        return self.async_create_entry(
-            title=user_input["title"],
-            data={
-                CONF_MODEL: self._device_model,
-                CONF_MANUFACTURER: self._device_manufacturer,
-                CONF_SERIAL_NUMBER: self._device_serial_number,
-                CONF_HOST: urlparse(self._location).hostname,
-            },
-        )
-
-    async def async_step_unignore(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Rediscover previously ignored devices by their unique_id."""
-        unique_id = user_input["unique_id"]
-        await self.async_set_unique_id(unique_id)
-
-        self.context["title_placeholders"] = {"name": self._name or "Lyngdorf"}
-
-        return await self.async_step_confirm()
-
     async def async_step_confirm(
-        self, user_input: FlowInput = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
@@ -173,22 +135,21 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
-        title: str
         if self._location:
-            title = "" + (
+            title = (
                 self._name or urlparse(self._location).hostname or DEFAULT_DEVICE_NAME
             )
         else:
             title = self._name or DEFAULT_DEVICE_NAME
 
-        data = {
+        data: dict[str, Any] = {
             CONF_MODEL: self._device_model,
             CONF_MANUFACTURER: self._device_manufacturer,
-            CONF_SERIAL_NUMBER: self._device_serial_number,
             CONF_HOST: self._host,
         }
-        # unique_id is already set by calling function (async_step_manual, etc.)
-        # Don't overwrite it here
+        if self._device_serial_number:
+            data[CONF_SERIAL_NUMBER] = self._device_serial_number
+
         return self.async_create_entry(title=title, data=data)
 
     async def _async_set_info_from_discovery(
@@ -208,56 +169,41 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._device_model = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         self._device_serial_number = (
             discovery_info.upnp.get(ATTR_UPNP_SERIAL) or ""
-        ).lower()
+        ).lower() or None
         self._device_manufacturer = (
             discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or ""
         )
 
-        # self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
         self._name = (
             discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_DEVICE_NAME
         )
 
-        # Prefer the device serial number as the unique_id.
+        # Prefer the device serial number as the unique_id
         unique_id = self._device_serial_number or f"{self._device_model}:{self._host}"
         await self.async_set_unique_id(unique_id, raise_on_progress=abort_if_configured)
 
         if abort_if_configured:
             self._abort_if_unique_id_configured(reload_on_update=False)
 
-    async def _async_get_discoveries(self) -> list[SsdpServiceInfo]:
-        """Get list of unconfigured DLNA devices discovered by SSDP."""
-
-        # Get all compatible devices from ssdp's cache
-        discoveries: list[SsdpServiceInfo] = []
+    async def _async_find_discovery_by_host(self, host: str) -> SsdpServiceInfo | None:
+        """Find an SSDP discovery matching the given host."""
         for udn_st in DmrDevice.DEVICE_TYPES:
-            st_discoveries = await ssdp.async_get_discovery_info_by_st(
-                self.hass, udn_st
-            )
-            discoveries.extend(st_discoveries)
-
-        # Filter out devices already configured
-        current_unique_ids = {
-            entry.unique_id
-            for entry in self._async_current_entries(include_ignore=False)
-        }
-        discoveries = [
-            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
-        ]
-
-        return [disc for disc in discoveries if _is_lyngdorf_device(disc)]
+            discoveries = await ssdp.async_get_discovery_info_by_st(self.hass, udn_st)
+            for disc in discoveries:
+                if not _is_lyngdorf_device(disc):
+                    continue
+                disc_host = (
+                    disc.ssdp_headers.get("_host")
+                    or urlparse(disc.ssdp_location or "").hostname
+                )
+                if disc_host == host:
+                    return disc
+        return None
 
 
 def _is_lyngdorf_device(discovery_info: SsdpServiceInfo) -> bool:
-    # Special cases for devices with other discovery methods (e.g. mDNS), or
-    # that advertise multiple unrelated (sent in separate discovery packets)
-    # UPnP devices.
+    """Check if the discovered device is a Lyngdorf device."""
     manufacturer = (discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or "").lower()
-
-    if manufacturer in map(str.lower, SUPPORTED_MANUFACTURERS):
-        # one of ours
-        return True
-
-    return False
+    return manufacturer in map(str.lower, SUPPORTED_MANUFACTURERS)

@@ -1,10 +1,6 @@
-"""Media Player Entities for Lyngdorf Integration."""
+"""Media player platform for Lyngdorf integration."""
 
 from __future__ import annotations
-
-from datetime import timedelta
-import logging
-from typing import cast
 
 from lyngdorf.device import Receiver
 
@@ -15,30 +11,56 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import FEATURES_MP60, FEATURES_MP60_ZONE_B, NAME_MAIN_ZONE, NAME_ZONE_B
+from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
-ATTR_AUDIO_INFO = "audio_info"
-ATTR_VIDEO_INFO = "video_info"
-ATTR_AUDIO_INPUT = "audio_input"
-ATTR_VIDEO_INPUT = "video_input"
-ATTR_STREAMING_SOURCE = "streaming_source"
-ATTR_ROOM_PERFECT_POSITION = "room_perfect_position"
-ATTR_ROOM_PERFECT_POSITION_LIST = "room_perfect_position_list"
-
-SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
-_LOGGER = logging.getLogger(__name__)
+FEATURES_ZONE_B = (
+    MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+)
+
+FEATURES_MAIN = (
+    MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+)
 
 
-class MP60Device(MediaPlayerEntity):
-    """Basic MP60Device."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: LyngdorfConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the receiver from a config entry."""
+    client = config_entry.runtime_data.receiver
+    device_info = config_entry.runtime_data.device_info
+
+    async_add_entities(
+        [
+            MP60MainDevice(client, config_entry, device_info),
+            MP60ZoneBDevice(client, config_entry, device_info),
+        ]
+    )
+
+
+class MP60Device(LyngdorfEntity, MediaPlayerEntity):
+    """Base Lyngdorf media player entity."""
+
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(
         self,
@@ -46,65 +68,16 @@ class MP60Device(MediaPlayerEntity):
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         name: str,
-        id: str,
+        entity_id_suffix: str,
         features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0),
     ) -> None:
         """Initialize the device."""
+        super().__init__(receiver)
         assert config_entry.unique_id
-        self._attr_has_entity_name = True
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{config_entry.unique_id}_{id}"
-        self._receiver = receiver
-        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
+        self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
         self._attr_name = name
         self._attr_supported_features = features
-        self._attr_available = True
-        self._unavailable_logged: bool = False
-
-    async def async_added_to_hass(self) -> None:
-        """Notfies us that haas has started."""
-        self._receiver.register_notification_callback(self._handle_receiver_update)
-        self._update_availability()
-        self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Notfies us that haas is stopping."""
-        self._receiver.un_register_notification_callback(self._handle_receiver_update)
-
-    @callback
-    def _handle_receiver_update(self) -> None:
-        """Handle receiver updates."""
-        self._update_availability()
-        self.async_write_ha_state()
-
-    def _get_is_connected(self) -> bool | None:
-        """Return receiver connection status if available."""
-        for attribute in ("connected", "is_connected"):
-            if (value := getattr(self._receiver, attribute, None)) is not None:
-                return bool(value)
-        return None
-
-    @callback
-    def _update_availability(self) -> None:
-        """Update availability and log transition events."""
-        is_connected = self._get_is_connected()
-        if is_connected is None:
-            return
-
-        if is_connected == self._attr_available:
-            return
-
-        self._attr_available = is_connected
-
-        if not is_connected:
-            if not self._unavailable_logged:
-                _LOGGER.info("Device is unavailable: %s", self.name)
-                self._unavailable_logged = True
-            return
-
-        if self._unavailable_logged:
-            _LOGGER.info("Device is back online: %s", self.name)
-            self._unavailable_logged = False
 
 
 class MP60ZoneBDevice(MP60Device):
@@ -117,14 +90,13 @@ class MP60ZoneBDevice(MP60Device):
         device_info: DeviceInfo,
     ) -> None:
         """Create the device."""
-        MP60Device.__init__(
-            self,
+        super().__init__(
             receiver,
             config_entry,
             device_info,
-            NAME_ZONE_B,
+            "Zone B",
             "zone_b",
-            FEATURES_MP60_ZONE_B,
+            FEATURES_ZONE_B,
         )
 
     @property
@@ -135,33 +107,16 @@ class MP60ZoneBDevice(MP60Device):
         return MediaPlayerState.OFF
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
         return self._receiver.zone_b_mute_enabled
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        # Volume is sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
-        if self._receiver.zone_b_volume is None or not isinstance(
-            self._receiver.zone_b_volume, float
-        ):
+        if not isinstance(self._receiver.zone_b_volume, float):
             return None
-        return (float(self._receiver.zone_b_volume) + 80) / 100
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        state_attributes = {}
-        if self._receiver.zone_b_audio_input is not None:
-            state_attributes[ATTR_AUDIO_INPUT] = self._receiver.zone_b_audio_input
-        if self._receiver.zone_b_streaming_source is not None:
-            state_attributes[ATTR_STREAMING_SOURCE] = (
-                self._receiver.zone_b_streaming_source
-            )
-
-        return state_attributes
+        return (self._receiver.zone_b_volume + 80) / 100
 
     def turn_on(self) -> None:
         """Turn on media player."""
@@ -181,8 +136,6 @@ class MP60ZoneBDevice(MP60Device):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        # Volume has to be sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
         volume_lyngdorf = float((volume * 100) - 80)
         if volume_lyngdorf > 18:
             volume_lyngdorf = float(18)
@@ -194,12 +147,12 @@ class MP60ZoneBDevice(MP60Device):
 
     @property
     def source(self) -> str | None:
-        """Name of the current input source."""
+        """Return the current input source."""
         return self._receiver.zone_b_source
 
     @property
     def source_list(self) -> list[str] | None:
-        """The list of available sources."""
+        """Return the list of available sources."""
         return self._receiver.zone_b_available_sources
 
     def select_source(self, source: str) -> None:
@@ -217,14 +170,13 @@ class MP60MainDevice(MP60Device):
         device_info: DeviceInfo,
     ) -> None:
         """Create the device."""
-        MP60Device.__init__(
-            self,
+        super().__init__(
             receiver,
             config_entry,
             device_info,
-            NAME_MAIN_ZONE,
+            "Main Zone",
             "main_zone",
-            FEATURES_MP60,
+            FEATURES_MAIN,
         )
 
     @property
@@ -238,7 +190,7 @@ class MP60MainDevice(MP60Device):
 
     @property
     def media_title(self) -> str | None:
-        """Title of the Media. Describes the media being played in our case."""
+        """Return title of the current media."""
         response: str = ""
         if self.state == MediaPlayerState.PLAYING:
             if self._playing_audio:
@@ -249,8 +201,8 @@ class MP60MainDevice(MP60Device):
         return None
 
     @property
-    def _playing_video(self):
-        """Video Playing."""
+    def _playing_video(self) -> bool:
+        """Return whether video is playing."""
         return (
             self._receiver.video_information is not None
             and len(self._receiver.video_information) > 0
@@ -258,8 +210,8 @@ class MP60MainDevice(MP60Device):
         )
 
     @property
-    def _playing_audio(self):
-        """Audio Playing."""
+    def _playing_audio(self) -> bool:
+        """Return whether audio is playing."""
         return (
             self._receiver.audio_information is not None
             and len(self._receiver.audio_information) > 0
@@ -267,8 +219,8 @@ class MP60MainDevice(MP60Device):
         )
 
     @property
-    def media_content_type(self):
-        """Video or Audio playing."""
+    def media_content_type(self) -> MediaType | None:
+        """Return the content type of the current media."""
         if self.state == MediaPlayerState.PLAYING:
             if (
                 self._receiver.video_information is not None
@@ -279,65 +231,36 @@ class MP60MainDevice(MP60Device):
         return None
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str] | None:
         """Return a list of available input sources."""
         return self._receiver.available_sources
 
     @property
-    def sound_mode_list(self):
-        """Return a list of available input sources."""
+    def sound_mode_list(self) -> list[str] | None:
+        """Return a list of available sound modes."""
         return self._receiver.available_sound_modes
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
         return self._receiver.mute_enabled
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        # Volume is sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
-        if self._receiver.volume is None or not isinstance(
-            self._receiver.volume, float
-        ):
+        if not isinstance(self._receiver.volume, float):
             return None
-        return (float(self._receiver.volume) + 80) / 100
+        return (self._receiver.volume + 80) / 100
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         return self._receiver.source
 
     @property
-    def sound_mode(self):
-        """Return the current matched sound mode."""
+    def sound_mode(self) -> str | None:
+        """Return the current sound mode."""
         return self._receiver.sound_mode
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        state_attributes = {}
-        if self._receiver.audio_information is not None:
-            state_attributes[ATTR_AUDIO_INFO] = self._receiver.audio_information
-        if self._receiver.video_information is not None:
-            state_attributes[ATTR_VIDEO_INFO] = self._receiver.video_information
-        if self._receiver.audio_input is not None:
-            state_attributes[ATTR_AUDIO_INPUT] = self._receiver.audio_input
-        if self._receiver.video_input is not None:
-            state_attributes[ATTR_VIDEO_INPUT] = self._receiver.video_input
-        if self._receiver.streaming_source is not None:
-            state_attributes[ATTR_STREAMING_SOURCE] = self._receiver.streaming_source
-        if self._receiver.room_perfect_position is not None:
-            state_attributes[ATTR_ROOM_PERFECT_POSITION] = (
-                self._receiver.room_perfect_position
-            )
-        if self._receiver.available_room_perfect_positions is not None:
-            state_attributes[ATTR_ROOM_PERFECT_POSITION_LIST] = (
-                self._receiver.available_room_perfect_positions
-            )
-
-        return state_attributes
 
     def turn_on(self) -> None:
         """Turn on media player."""
@@ -357,8 +280,6 @@ class MP60MainDevice(MP60Device):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        # Volume has to be sent in a format like -50.0. Minimum is -80.0,
-        # maximum is 18.0
         volume_lyngdorf = float((volume * 100) - 80)
         if volume_lyngdorf > 18:
             volume_lyngdorf = float(18)
@@ -375,24 +296,3 @@ class MP60MainDevice(MP60Device):
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._receiver.source = source
-
-    def select_room_perfect_position(self, room_perfect_position: str) -> None:
-        """Select input source."""
-        self._receiver.room_perfect_position = room_perfect_position
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: LyngdorfConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the receiver from a config entry."""
-    client = config_entry.runtime_data.receiver
-    device_info = config_entry.runtime_data.device_info
-
-    entities = [
-        cast(Entity, MP60MainDevice(client, config_entry, device_info)),
-        cast(Entity, MP60ZoneBDevice(client, config_entry, device_info)),
-    ]
-
-    async_add_entities(entities)

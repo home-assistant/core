@@ -16,24 +16,80 @@
       },
       "manual": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "serial_number": "Serial number"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of the Lyngdorf device",
-          "name": "Name for this device",
-          "serial_number": "Serial number reported by the device"
+          "host": "Hostname or IP address of the Lyngdorf device"
         },
         "title": "Lyngdorf device connection"
-      },
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]"
-        },
-        "description": "Choose a device to configure",
-        "title": "Discovered Lyngdorf devices"
       }
+    }
+  },
+  "entity": {
+    "number": {
+      "lipsync": {
+        "name": "Lip sync"
+      },
+      "trim_bass": {
+        "name": "Trim bass"
+      },
+      "trim_centre": {
+        "name": "Trim centre"
+      },
+      "trim_height": {
+        "name": "Trim height"
+      },
+      "trim_lfe": {
+        "name": "Trim LFE"
+      },
+      "trim_surround": {
+        "name": "Trim surround"
+      },
+      "trim_treble": {
+        "name": "Trim treble"
+      }
+    },
+    "select": {
+      "room_perfect_position": {
+        "name": "RoomPerfect position"
+      },
+      "voicing": {
+        "name": "Voicing"
+      }
+    },
+    "sensor": {
+      "audio_information": {
+        "name": "Audio information"
+      },
+      "audio_input": {
+        "name": "Audio input"
+      },
+      "streaming_source": {
+        "name": "Streaming source"
+      },
+      "video_information": {
+        "name": "Video information"
+      },
+      "video_input": {
+        "name": "Video input"
+      },
+      "zone_b_audio_input": {
+        "name": "Zone B audio input"
+      },
+      "zone_b_streaming_source": {
+        "name": "Zone B streaming source"
+      }
+    }
+  },
+  "exceptions": {
+    "setup_connection_error": {
+      "message": "Failed to connect to {host}"
+    },
+    "setup_timeout": {
+      "message": "Timeout connecting to {host}"
+    },
+    "unsupported_model": {
+      "message": "Unsupported model: {model}"
     }
   }
 }

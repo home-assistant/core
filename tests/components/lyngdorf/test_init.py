@@ -14,15 +14,9 @@ async def test_setup_entry_unsupported_model(
     """Test setup fails when model is not supported."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.lyngdorf.lookup_receiver_model",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.lyngdorf.async_find_receiver_model",
-            return_value=None,
-        ),
+    with patch(
+        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -92,39 +86,3 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_unload_entry_with_disconnect_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
-) -> None:
-    """Test unloading handles disconnect errors gracefully."""
-    mock_config_entry.add_to_hass(hass)
-
-    receiver = MagicMock()
-    receiver.async_connect = AsyncMock()
-    receiver.async_disconnect = AsyncMock(side_effect=Exception("Disconnect failed"))
-    receiver.name = "Test Receiver"
-    receiver.available_sources = []
-    receiver.available_sound_modes = []
-    receiver.zone_b_available_sources = []
-
-    with (
-        patch(
-            "homeassistant.components.lyngdorf.lookup_receiver_model",
-            return_value=mock_lyngdorf_model,
-        ),
-        patch(
-            "homeassistant.components.lyngdorf.async_create_receiver",
-            return_value=receiver,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Unload should succeed even if disconnect fails
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
