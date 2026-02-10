@@ -650,12 +650,14 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
+                # BThome devices use 'idx' field for button index, regular inputs use 'id'
+                channel_id = event.get("idx", event["id"])
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {
                         ATTR_DEVICE_ID: self.device_id,
                         ATTR_DEVICE: self.device.hostname,
-                        ATTR_CHANNEL: event["id"] + 1,
+                        ATTR_CHANNEL: channel_id + 1,
                         ATTR_CLICK_TYPE: event["event"],
                         ATTR_GENERATION: 2,
                     },

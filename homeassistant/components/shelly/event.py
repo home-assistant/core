@@ -266,7 +266,9 @@ class ShellyRpcEvent(ShellyRpcEntity, EventEntity):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the event."""
-        if event["id"] == self.event_id:
+        # BThome devices use 'idx' field for button index, regular inputs use 'id'
+        event_id = event.get("idx", event["id"])
+        if event_id == self.event_id:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
 
