@@ -81,6 +81,7 @@
       },
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
+      },
       "container_state": {
         "name": "State",
         "state": {
