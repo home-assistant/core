@@ -36,7 +36,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.start()
             await client.ensure_connected(timeout=5.0)
-        except (HegelConnectionError, TimeoutError, OSError):
+        except HegelConnectionError, TimeoutError, OSError:
             return False
         else:
             return True

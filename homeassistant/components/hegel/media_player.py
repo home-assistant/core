@@ -177,7 +177,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
                 apply_state_changes(self._state, update, logger=_LOGGER, source="push")
                 # notify HA
                 self.async_write_ha_state()
-        except (ValueError, KeyError, AttributeError):
+        except ValueError, KeyError, AttributeError:
             _LOGGER.exception("Failed to handle push message")
 
     async def _connected_watcher(self) -> None:
