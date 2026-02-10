@@ -1127,6 +1127,26 @@
         "tuesday": "[%key:common::time::tuesday%]",
         "wednesday": "[%key:common::time::wednesday%]"
       }
+    },
+    "set_feeder_meal_plan": {
+      "fields": {
+        "days": {
+          "description": "Days of the week for the meal plan.",
+          "name": "Days"
+        },
+        "enabled": {
+          "description": "Whether the meal plan is enabled.",
+          "name": "Enabled"
+        },
+        "portion": {
+          "description": "Amount in grams",
+          "name": "Portion"
+        },
+        "time": {
+          "description": "Time of the meal.",
+          "name": "Time"
+        }
+      }
     }
   },
   "services": {
@@ -1140,7 +1160,6 @@
       },
       "name": "Get feeder meal plan data"
     },
-
     "set_feeder_meal_plan": {
       "description": "Sets data for meal plan on a Tuya feeder.",
       "fields": {

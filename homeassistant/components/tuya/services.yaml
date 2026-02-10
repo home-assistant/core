@@ -17,6 +17,7 @@ set_feeder_meal_plan:
       required: true
       selector:
         object:
+          translation_key: set_feeder_meal_plan
           description_field: portion
           multiple: true
           fields:
