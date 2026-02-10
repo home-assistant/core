@@ -1,25 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Rotarex account is already configured."
+      "already_configured": "This {name} account is already configured."
     },
     "error": {
-      "cannot_connect": "Failed to connect to the Rotarex API. Please check your network connection.",
-      "invalid_auth": "Invalid email or password. Please check your credentials and try again.",
-      "unknown": "An unknown error occurred."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "email": "Email",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Email",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Enter your Rotarex DIMES SRG account credentials.",
-        "title": "Rotarex DIMES SRG Login"
+        "description": "Enter your {name} account credentials.",
+        "title": "{name} Login"
       }
     }
   },

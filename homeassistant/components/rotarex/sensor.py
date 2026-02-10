@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -48,15 +49,16 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         key="level",
         translation_key="level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sync: sync.get("Level") if sync else None,
-        extra_attr_fn=lambda sync: {
-            "last_sync": sync.get("SynchDate"),
-            "temperature": sync.get("Temperature"),
-        }
-        if sync
-        else None,
+        extra_attr_fn=lambda sync: (
+            {
+                "last_sync": sync.get("SynchDate"),
+                "temperature": sync.get("Temperature"),
+            }
+            if sync
+            else None
+        ),
     ),
     RotarexTankSensorEntityDescription(
         key="battery",
@@ -65,9 +67,9 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sync: sync.get("Battery") if sync else None,
-        extra_attr_fn=lambda sync: {"last_sync": sync.get("SynchDate")}
-        if sync
-        else None,
+        extra_attr_fn=lambda sync: (
+            {"last_sync": sync.get("SynchDate")} if sync else None
+        ),
     ),
     RotarexTankSensorEntityDescription(
         key="last_sync",
@@ -89,10 +91,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Rotarex sensors from a config entry."""
     coordinator = config_entry.runtime_data
-    if not isinstance(coordinator, RotarexDataUpdateCoordinator):
-        return
-
-    if not isinstance(coordinator.data, list):
+    if not coordinator.data:
         return
 
     entities = [
@@ -101,8 +100,7 @@ async def async_setup_entry(
         if isinstance(tank, dict) and tank.get("Guid")
         for description in SENSOR_DESCRIPTIONS
     ]
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorEntity):
@@ -160,7 +158,18 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         if not valid_syncs:
             return None
 
-        return max(valid_syncs, key=lambda sync: sync["SynchDate"])
+        # Parse synchronization dates to ensure correct chronological ordering.
+        parsed_syncs: list[tuple[dict[str, Any], datetime]] = []
+        for sync in valid_syncs:
+            parsed = dt_util.parse_datetime(sync["SynchDate"])
+            if parsed is not None:
+                parsed_syncs.append((sync, parsed))
+
+        if not parsed_syncs:
+            return None
+
+        latest_sync, _ = max(parsed_syncs, key=lambda item: item[1])
+        return latest_sync
 
     def _update_state(self) -> None:
         """Update native value and attributes."""

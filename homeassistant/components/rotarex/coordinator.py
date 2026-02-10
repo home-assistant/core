@@ -40,6 +40,10 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             config_entry=config_entry,
         )
 
+    async def async_setup(self) -> None:
+        """Set up the coordinator with initial data refresh."""
+        await self.async_config_entry_first_refresh()
+
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API endpoint."""
         try:
@@ -52,6 +56,12 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 raise ConfigEntryAuthFailed(
                     f"Re-authentication failed: {login_err}"
                 ) from login_err
-            return await self.api.fetch_tanks()
+            # If re-login succeeds, try fetch_tanks again
+            try:
+                return await self.api.fetch_tanks()
+            except InvalidAuth as fetch_err:
+                raise ConfigEntryAuthFailed(
+                    f"Authentication failed after re-login: {fetch_err}"
+                ) from fetch_err
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

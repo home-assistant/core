@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,10 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                self._abort_if_unique_id_configured(
+                    description_placeholders={"name": NAME}
                 )
+                return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -58,4 +58,5 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={"name": NAME},
         )
