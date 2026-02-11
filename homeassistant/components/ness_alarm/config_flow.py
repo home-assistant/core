@@ -103,6 +103,8 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.close()
 
             if not errors:
+                # Brief delay to ensure the panel releases the test connection
+                await asyncio.sleep(1)
                 return self.async_create_entry(
                     title=f"Ness Alarm {host}:{port}",
                     data=user_input,
