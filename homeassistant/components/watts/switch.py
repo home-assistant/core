@@ -86,13 +86,6 @@ class WattsVisionSwitch(WattsVisionEntity[SwitchDevice], SwitchEntity):
         super().__init__(coordinator, switch.device_id)
 
     @property
-    def device(self) -> SwitchDevice:
-        """Return the switch device."""
-        device = self.coordinator.data.device
-        assert isinstance(device, SwitchDevice)
-        return device
-
-    @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.device.is_turned_on
