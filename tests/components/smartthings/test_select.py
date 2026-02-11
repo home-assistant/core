@@ -223,6 +223,7 @@ async def test_select_option_as_integer(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_fsv_select_state(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -324,6 +325,7 @@ async def test_fsv_select_state(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_fsv_select_option(
     hass: HomeAssistant,
     devices: AsyncMock,

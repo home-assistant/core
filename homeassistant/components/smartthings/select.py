@@ -331,6 +331,7 @@ class SmartThingsFsvSelectEntityDescription(SelectEntityDescription):
 
     fsv_id: str
     value_map: dict[int, str]
+    entity_registry_enabled_default: bool = False
 
 
 def _fsv_option_map(*options: str, offset: int = 0) -> dict[int, str]:

@@ -46,6 +46,7 @@ class SmartThingsFsvEntityDescription(NumberEntityDescription):
 
     fsv_id: str
     is_temperature_type: bool = False
+    entity_registry_enabled_default: bool = False
 
 
 # Mapping of FSV setting IDs to entity descriptions

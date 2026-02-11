@@ -123,6 +123,7 @@ async def test_availability_at_start(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_fsv_native_value(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -194,6 +195,7 @@ async def test_fsv_native_value(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_fsv_async_set_native_value(
     hass: HomeAssistant,
     devices: AsyncMock,
