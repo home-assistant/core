@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -58,16 +57,16 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
+    async def async_step_discovery(
+        self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        host = discovery_info.host
+        """Handle UDP broadcast discovery."""
+        host = discovery_info["host"]
 
         try:
             device_data = await self._async_get_device_data(host)
-        except (TimeoutError, ConnectionError, ClientError):
-            _LOGGER.debug("Failed to connect to discovered device at %s", host)
+        except TimeoutError, ConnectionError, ClientError:
+            _LOGGER.warning("Failed to connect to discovered device at %s", host)
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(device_data["sn"])
@@ -77,12 +76,12 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         self._discovered_device_data = device_data
 
-        return await self.async_step_zeroconf_confirm()
+        return await self.async_step_discovery_confirm()
 
-    async def async_step_zeroconf_confirm(
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm zeroconf discovery by user."""
+        """Confirm UDP discovery by user."""
         assert self._discovered_host is not None
         assert self._discovered_device_data is not None
 
@@ -98,9 +97,9 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Retrieve user confirmation
         return self.async_show_form(
-            step_id="zeroconf_confirm",
+            step_id="discovery_confirm",
             description_placeholders={
-                "host": self._discovered_host or "",
+                "host": self._discovered_host,
                 "type": self._discovered_device_data["device_model"],
             },
         )
@@ -116,7 +115,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             device_data = await self._async_get_device_data(user_input[CONF_HOST])
         except TimeoutError:
             errors["base"] = "timeout"
-        except (ConnectionError, ClientError):
+        except ConnectionError, ClientError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unknown error occurred while verifying device")

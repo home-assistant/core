@@ -2,17 +2,56 @@
 
 from __future__ import annotations
 
+import asyncio
+
+from homeassistant.config_entries import ConfigType
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+UDP_DISCOVERY_PORT = 8099
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up UDP discovery listener."""
+    hass.data.setdefault(DOMAIN, {})
+
+    async def _start_udp_discovery() -> None:
+        """Start UDP discovery listener."""
+        loop = asyncio.get_event_loop()
+
+        # Create UDP protocol for device discovery
+        class UDPDiscoveryProtocol(asyncio.DatagramProtocol):
+            def datagram_received(self, data: bytes, addr: tuple) -> None:
+                """Handle UDP broadcast from device."""
+
+                host, _port = addr
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "discovery"},
+                        data={"host": host},
+                    )
+                )
+
+        # Start the actual UDP listener
+        transport = await loop.create_datagram_endpoint(
+            UDPDiscoveryProtocol, local_addr=("0.0.0.0", UDP_DISCOVERY_PORT)
+        )
+
+        hass.data[DOMAIN]["transport"] = transport
+
+    # Start UDP discovery in background
+    hass.async_create_task(_start_udp_discovery())
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
     """Set up indevolt integration entry using given configuration."""
-
     # Setup coordinator and perform initial data refresh
     coordinator = IndevoltCoordinator(hass, entry)
     await coordinator.async_initialize()

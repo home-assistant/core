@@ -7,11 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["indevolt-api==1.1.2"],
-  "zeroconf": [
-    {
-      "name": "smd web server*",
-      "type": "_http._tcp.local."
-    }
-  ]
+  "requirements": ["indevolt-api==1.1.2"]
 }
