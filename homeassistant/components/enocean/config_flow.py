@@ -23,10 +23,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MANUAL_PATH_VALUE = "manual"
 
-    _device: str | None = None
-
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
+        self.data: dict[str, Any] = {}
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
@@ -34,7 +33,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.serial_number)
         self._abort_if_unique_id_configured()
 
-        self._device = discovery_info.device
+        self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.description} {discovery_info.manufacturer} ({discovery_info.serial_number})",
         }
@@ -45,13 +44,13 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle USB Discovery confirmation."""
         if user_input is not None:
-            return await self.async_step_manual({CONF_DEVICE: self._device})
+            return await self.async_step_manual({CONF_DEVICE: self.data[CONF_DEVICE]})
         self._set_confirm_only()
         return self.async_show_form(
             step_id="usb_confirm",
             description_placeholders={
                 ATTR_MANUFACTURER: MANUFACTURER,
-                CONF_DEVICE: self._device or "",
+                CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
             },
             errors={},
         )
