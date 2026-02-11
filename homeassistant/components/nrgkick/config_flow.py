@@ -5,13 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-import aiohttp
-from nrgkick_api import (
-    NRGkickAPI,
-    NRGkickAPIDisabledError,
-    NRGkickAuthenticationError,
-    NRGkickConnectionError,
-)
+from nrgkick_api import NRGkickAPI
 import voluptuous as vol
 import yarl
 
@@ -33,6 +27,7 @@ from .api import (
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
     NRGkickApiClientInvalidResponseError,
+    async_api_call,
 )
 from .const import DOMAIN
 
@@ -96,15 +91,8 @@ async def validate_input(
         session=session,
     )
 
-    try:
-        await api.test_connection()
-        info = await api.get_info(["general"], raw=True)
-    except NRGkickAuthenticationError as err:
-        raise NRGkickApiClientAuthenticationError from err
-    except NRGkickAPIDisabledError as err:
-        raise NRGkickApiClientApiDisabledError from err
-    except (NRGkickConnectionError, TimeoutError, aiohttp.ClientError, OSError) as err:
-        raise NRGkickApiClientCommunicationError from err
+    await async_api_call(api.test_connection())
+    info = await async_api_call(api.get_info(["general"], raw=True))
 
     device_name = info.get("general", {}).get("device_name")
     if not device_name:

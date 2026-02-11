@@ -12,6 +12,7 @@ from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
