@@ -217,6 +217,7 @@ async def test_light_turn_on_without_brightness_calls_turn_on(
     )
 
     node.turn_on.assert_awaited_once_with(wait_for_completion=True)
+    assert node.set_intensity.await_count == 0
 
 
 @pytest.mark.parametrize(
@@ -238,3 +239,4 @@ async def test_light_turn_off_calls_turn_off(
     )
 
     node.turn_off.assert_awaited_once_with(wait_for_completion=True)
+    assert node.set_intensity.await_count == 0
