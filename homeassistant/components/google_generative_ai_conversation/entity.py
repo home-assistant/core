@@ -486,6 +486,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
         default_max_tokens: int | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -602,7 +603,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             )
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 chat_response_generator = await chat.send_message_stream(
                     message=chat_request
