@@ -81,7 +81,7 @@ DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
 
 PANELS_STORAGE_KEY = f"{DOMAIN}_panels"
 PANELS_STORAGE_VERSION = 1
-PANELS_SAVE_DELAY = 1
+PANELS_SAVE_DELAY = 10
 DATA_PANELS_STORE: HassKey[Store[dict[str, dict[str, Any]]]] = HassKey(
     "frontend_panels_store"
 )
