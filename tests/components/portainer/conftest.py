@@ -3,7 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyportainer.models.docker import DockerContainer, DockerContainerStats
+from pyportainer.models.docker import (
+    DockerContainer,
+    DockerContainerStats,
+    DockerSystemDF,
+)
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 import pytest
@@ -64,6 +68,9 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         )
         client.container_stats.return_value = DockerContainerStats.from_dict(
             load_json_value_fixture("container_stats.json", DOMAIN)
+        )
+        client.docker_system_df.return_value = DockerSystemDF.from_dict(
+            load_json_value_fixture("docker_system_df.json", DOMAIN)
         )
 
         client.restart_container = AsyncMock(return_value=None)

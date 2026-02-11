@@ -93,7 +93,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     password=password,
                     ssl_context=client_context_no_verify(),
                 )
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             self.host = None
             return self.async_show_form(
                 step_id="user",

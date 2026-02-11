@@ -547,7 +547,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
 
             try:
                 self._attr_native_value = dateutil.parser.parse(data)
-            except (dateutil.parser.ParserError, OverflowError):
+            except dateutil.parser.ParserError, OverflowError:
                 # If parsing fails we should mark it as unknown, with a log for further debugging.
                 _LOGGER.warning('Failed to parse date for %s: "%s"', key, data)
                 self._attr_native_value = None

@@ -115,12 +115,6 @@
     },
     "connection_error": {
       "message": "Error connecting to the Overseerr instance: {error}"
-    },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     }
   },
   "selector": {

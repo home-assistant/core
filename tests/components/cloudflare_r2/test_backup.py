@@ -367,6 +367,57 @@ async def test_agents_upload_network_failure(
     assert "Upload failed for cloudflare_r2" in caplog.text
 
 
+async def test_multipart_upload_consistent_part_sizes(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that multipart upload uses consistent part sizes.
+
+    S3/R2 requires all non-trailing parts to have the same size. This test
+    verifies that varying chunk sizes still result in consistent part sizes.
+    """
+    agent = R2BackupAgent(hass, mock_config_entry)
+
+    # simulate varying chunk data sizes
+    # total data: 12 + 12 + 10 + 12 + 5 = 51 MiB
+    chunk_sizes = [12, 12, 10, 12, 5]  # in units of 1 MiB
+    mib = 2**20
+
+    async def mock_stream():
+        for size in chunk_sizes:
+            yield b"x" * (size * mib)
+
+    async def open_stream():
+        return mock_stream()
+
+    # Record the sizes of each uploaded part
+    uploaded_part_sizes: list[int] = []
+
+    async def record_upload_part(**kwargs):
+        body = kwargs.get("Body", b"")
+        uploaded_part_sizes.append(len(body))
+        return {"ETag": f"etag-{len(uploaded_part_sizes)}"}
+
+    mock_client.upload_part.side_effect = record_upload_part
+
+    await agent._upload_multipart("test.tar", open_stream)
+
+    # Verify that all non-trailing parts have the same size
+    assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
+    non_trailing_parts = uploaded_part_sizes[:-1]
+    assert all(size == MULTIPART_MIN_PART_SIZE_BYTES for size in non_trailing_parts), (
+        f"All non-trailing parts should be {MULTIPART_MIN_PART_SIZE_BYTES} bytes, got {non_trailing_parts}"
+    )
+
+    # Verify the trailing part contains the remainder
+    total_data = sum(chunk_sizes) * mib
+    expected_trailing = total_data % MULTIPART_MIN_PART_SIZE_BYTES
+    if expected_trailing == 0:
+        expected_trailing = MULTIPART_MIN_PART_SIZE_BYTES
+    assert uploaded_part_sizes[-1] == expected_trailing
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_client: MagicMock,
