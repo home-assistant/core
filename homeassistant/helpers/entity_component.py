@@ -24,7 +24,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
@@ -304,15 +304,27 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     async def async_prepare_reload(self, *, skip_reset: bool = False) -> ConfigType:
         """Prepare reloading this entity component.
 
-        This method must be run in the event loop.
+        This method is intended to be called from service handlers implementing reload.
+        Will raise ServiceValidationError if the config is not valid.
         """
-        conf = await conf_util.async_hass_config_yaml(self.hass)
+        self.logger.warning("Reloading %s.%s", self.domain, self.domain)
+        try:
+            conf = await conf_util.async_hass_config_yaml(self.hass)
+        except HomeAssistantError as err:
+            raise ServiceValidationError(
+                f"Failed to load configuration: {err}"
+            ) from err
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        processed_conf = await conf_util.async_process_component_and_handle_errors(
-            self.hass, conf, integration, raise_on_failure=True
-        )
+        try:
+            processed_conf = await conf_util.async_process_component_and_handle_errors(
+                self.hass, conf, integration, raise_on_failure=True
+            )
+        except HomeAssistantError as err:
+            raise ServiceValidationError(
+                f"Failed to process configuration: {err}"
+            ) from err
 
         if not skip_reset:
             await self._async_reset()

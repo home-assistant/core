@@ -39,7 +39,11 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
@@ -705,7 +709,9 @@ async def test_reload_config_handles_load_fails(
             "homeassistant.config.load_yaml_config_file",
             side_effect=HomeAssistantError("bla"),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            ServiceValidationError, match="Failed to load configuration: bla"
+        ),
     ):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
@@ -714,6 +720,26 @@ async def test_reload_config_handles_load_fails(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+        ),
+        patch(
+            "homeassistant.config.async_process_component_and_handle_errors",
+            side_effect=HomeAssistantError("bla"),
+        ),
+        pytest.raises(
+            ServiceValidationError, match="Failed to process configuration: bla"
+        ),
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert hass.states.get("automation.hello") is not None
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
 
 
 @pytest.mark.parametrize(
