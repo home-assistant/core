@@ -779,7 +779,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
-    _attr_color_mode: ColorMode = ColorMode.UNKNOWN
+    _attr_color_mode: ColorMode | None = None
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
@@ -801,7 +801,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_brightness
 
     @cached_property
-    def color_mode(self) -> ColorMode:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         return self._attr_color_mode
 
@@ -1014,6 +1014,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
+        if _is_on and color_mode is None:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) does not report a color mode"
+            )
 
         effect: str | None = None
         if LightEntityFeature.EFFECT in supported_features:
