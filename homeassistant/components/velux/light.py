@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyvlx import Intensity, Light, OnOffLight
+from pyvlx import DimmableDevice, Intensity, Light, OnOffLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ class VeluxOnOffLight(VeluxEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_name = None
 
-    node: OnOffLight
+    node: DimmableDevice
 
     @property
     def is_on(self) -> bool:
@@ -66,8 +66,6 @@ class VeluxLight(VeluxOnOffLight, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_name = None
-
-    node: Light
 
     @property
     def brightness(self) -> int:
