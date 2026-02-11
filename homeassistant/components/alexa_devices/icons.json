@@ -1,5 +1,8 @@
 {
   "services": {
+    "send_info_skill": {
+      "service": "mdi:information"
+    },
     "send_sound": {
       "service": "mdi:cast-audio"
     },

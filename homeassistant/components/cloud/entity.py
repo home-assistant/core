@@ -50,6 +50,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from .client import CloudClient
@@ -93,7 +94,7 @@ def _convert_content_to_param(
                     {
                         "type": "function_call_output",
                         "call_id": content.tool_call_id,
-                        "output": json.dumps(content.tool_result),
+                        "output": json_dumps(content.tool_result),
                     }
                 )
             continue
@@ -125,7 +126,7 @@ def _convert_content_to_param(
                             {
                                 "type": "function_call",
                                 "name": tool_call.tool_name,
-                                "arguments": json.dumps(tool_call.tool_args),
+                                "arguments": json_dumps(tool_call.tool_args),
                                 "call_id": tool_call.id,
                             }
                         )
