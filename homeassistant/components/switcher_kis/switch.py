@@ -79,9 +79,7 @@ async def async_setup_entry(
 
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
-        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
-            entities.append(SwitcherWaterHeaterSwitchEntity(coordinator))
-        elif coordinator.data.device_type.category == DeviceCategory.HEATER:
+        elif coordinator.data.device_type.category in [DeviceCategory.WATER_HEATER, DeviceCategory.HEATER]:
             entities.append(SwitcherHeaterSwitchEntity(coordinator))
         elif coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
@@ -143,23 +141,6 @@ class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
 
     _attr_device_class = SwitchDeviceClass.OUTLET
-
-
-class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
-    """Representation of a Switcher water heater switch entity."""
-
-    _attr_device_class = SwitchDeviceClass.SWITCH
-
-    async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
-        """Use for handling setting device auto-off service calls."""
-        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
-        self.async_write_ha_state()
-
-    async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
-        """Use for turning device on with a timer service calls."""
-        await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
-        self._attr_is_on = self.control_result = True
-        self.async_write_ha_state()
 
 
 class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
