@@ -94,7 +94,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(host=host, port=port)
             try:
                 await asyncio.wait_for(client.update(), timeout=5)
-            except (OSError, TimeoutError):
+            except OSError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error connecting to %s:%s", host, port)
