@@ -72,12 +72,6 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
-    },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
     },
