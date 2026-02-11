@@ -14,6 +14,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from .model import Config, Integration, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
+    action_setup,
     config_entry_unloading,
     config_flow,
     diagnostics,
@@ -41,7 +42,7 @@ class Rule:
 
 ALL_RULES = [
     # BRONZE
-    Rule("action-setup", ScaledQualityScaleTiers.BRONZE),
+    Rule("action-setup", ScaledQualityScaleTiers.BRONZE, action_setup),
     Rule("appropriate-polling", ScaledQualityScaleTiers.BRONZE),
     Rule("brands", ScaledQualityScaleTiers.BRONZE),
     Rule("common-modules", ScaledQualityScaleTiers.BRONZE),
@@ -275,7 +276,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "derivative",
     "devialet",
     "device_sun_light_trigger",
-    "devolo_home_control",
     "dexcom",
     "dhcp",
     "dialogflow",
@@ -1264,7 +1264,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "derivative",
     "devialet",
     "device_sun_light_trigger",
-    "devolo_home_control",
     "dexcom",
     "dhcp",
     "dialogflow",

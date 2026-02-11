@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from collections.abc import Callable
+from datetime import date, datetime
+from decimal import Decimal
 import logging
 from typing import Any
 
@@ -19,9 +21,6 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorStateClass,
-)
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
-    async_parse_date_datetime,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,16 +40,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -186,6 +184,47 @@ def async_create_preview_sensor(
     )
 
 
+def validate_datetime(
+    entity: AbstractTemplateSensor,
+    attribute: str,
+    resolve_as: SensorDeviceClass,
+    **kwargs,
+) -> Callable[[Any], datetime | date | None]:
+    """Converts the template result into a datetime or date."""
+
+    def convert(result: Any) -> datetime | date | None:
+        if resolve_as == SensorDeviceClass.TIMESTAMP:
+            if isinstance(result, datetime):
+                return result
+
+            if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
+                template_validators.log_validation_result_error(
+                    entity, attribute, result, "expected a valid timestamp"
+                )
+                return None
+
+            if kwargs.get("require_tzinfo", True) and parsed_timestamp.tzinfo is None:
+                template_validators.log_validation_result_error(
+                    entity,
+                    attribute,
+                    result,
+                    "expected a valid timestamp with a timezone",
+                )
+                return None
+
+            return parsed_timestamp
+
+        if (parsed_date := dt_util.parse_date(result)) is not None:
+            return parsed_date
+
+        template_validators.log_validation_result_error(
+            entity, attribute, result, "expected a valid date"
+        )
+        return None
+
+    return convert
+
+
 class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     """Representation of a template sensor features."""
 
@@ -198,38 +237,32 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: template.Template | None = config.get(
-            ATTR_LAST_RESET
+        self._attr_last_reset = None
+
+        self.setup_state_template(
+            CONF_STATE,
+            "_attr_native_value",
+            self._validate_state,
+        )
+        self.setup_template(
+            ATTR_LAST_RESET,
+            "_attr_last_reset",
+            validate_datetime(
+                self, ATTR_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
+            ),
         )
 
-    @callback
-    def _update_last_reset(self, result: Any) -> None:
-        if isinstance(result, datetime):
-            self._attr_last_reset = result
-            return
-
-        parsed_timestamp = dt_util.parse_datetime(result)
-        if parsed_timestamp is None:
-            _LOGGER.warning(
-                "%s rendered invalid timestamp for last_reset attribute: %s",
-                self.entity_id,
-                result,
-            )
-        else:
-            self._attr_last_reset = parsed_timestamp
-
-    def _handle_state(self, result: Any) -> None:
+    def _validate_state(
+        self, result: Any
+    ) -> StateType | date | datetime | Decimal | None:
+        """Validate the state."""
         if result is None or self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         ):
-            self._attr_native_value = result
-            return
+            return result
 
-        self._attr_native_value = async_parse_date_datetime(
-            result, self.entity_id, self.device_class
-        )
+        return validate_datetime(self, CONF_STATE, self.device_class)(result)
 
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
@@ -248,31 +281,6 @@ class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateSensor.__init__(self, config)
 
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        self.add_template_attribute(
-            "_attr_native_value", self._template, None, self._update_state
-        )
-        if self._attr_last_reset_template is not None:
-            self.add_template_attribute(
-                "_attr_last_reset",
-                self._attr_last_reset_template,
-                cv.datetime,
-                self._update_last_reset,
-            )
-
-        super()._async_setup_templates()
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_native_value = None
-            return
-
-        self._handle_state(result)
-
 
 class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
     """Sensor entity based on trigger data."""
@@ -289,15 +297,6 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSensor.__init__(self, config)
 
-        self._to_render_simple.append(CONF_STATE)
-        self._parse_result.add(CONF_STATE)
-
-        if last_reset_template := self._attr_last_reset_template:
-            if last_reset_template.is_static:
-                self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template
-            else:
-                self._to_render_simple.append(ATTR_LAST_RESET)
-
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -311,16 +310,3 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         ):
             self._attr_native_value = extra_data.native_value
             self.restore_attributes(last_state)
-
-    @callback
-    def _process_data(self) -> None:
-        """Process new data."""
-        super()._process_data()
-
-        # Update last_reset
-        if (last_reset := self._rendered.get(ATTR_LAST_RESET)) is not None:
-            self._update_last_reset(last_reset)
-
-        rendered = self._rendered.get(CONF_STATE)
-        self._handle_state(rendered)
-        self.async_write_ha_state()
