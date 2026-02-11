@@ -1421,3 +1421,28 @@ async def test_update_panel_hide_sidebar(
     msg = await ws_client.receive_json()
     assert msg["result"]["light"]["title"] == "light"
     assert msg["result"]["light"]["icon"] == "mdi:lamps"
+
+
+async def test_panels_config_invalid_storage(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that corrupted panel storage is ignored with a warning."""
+    hass_storage["frontend_panels"] = {
+        "key": "frontend_panels",
+        "version": 1,
+        "data": "not_a_dict",
+    }
+
+    assert await async_setup_component(hass, "frontend", {})
+    assert "Ignoring invalid panel storage data" in caplog.text
+
+    client = await hass_ws_client(hass)
+
+    # Panels should still load with defaults
+    await client.send_json({"id": 1, "type": "get_panels"})
+    msg = await client.receive_json()
+    assert msg["result"]["light"]["title"] == "light"
+    assert msg["result"]["light"]["icon"] == "mdi:lamps"

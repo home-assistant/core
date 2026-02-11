@@ -443,7 +443,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     panels_store = hass.data[DATA_PANELS_STORE] = Store[dict[str, dict[str, Any]]](
         hass, PANELS_STORAGE_VERSION, PANELS_STORAGE_KEY
     )
-    hass.data[DATA_PANELS_CONFIG] = await panels_store.async_load() or {}
+    loaded: Any = await panels_store.async_load()
+    if not isinstance(loaded, dict):
+        if loaded is not None:
+            _LOGGER.warning("Ignoring invalid panel storage data")
+        loaded = {}
+    hass.data[DATA_PANELS_CONFIG] = loaded
 
     websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
