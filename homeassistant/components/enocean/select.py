@@ -1,13 +1,10 @@
-"""Support for EnOcean binary sensors."""
+"""Support for EnOcean buttons."""
 
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.entity_properties import HomeAssistantEntityProperties
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,31 +20,31 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id in gateway.binary_sensor_entities:
-        properties: HomeAssistantEntityProperties = gateway.binary_sensor_entities[
-            entity_id
-        ]
+    for entity_id in gateway.select_entities:
+        properties: HomeAssistantEntityProperties = gateway.select_entities[entity_id]
         async_add_entities(
             [
-                EnOceanBinarySensor(
+                EnOceanSelect(
                     entity_id,
                     gateway=gateway,
-                    device_class=gateway.binary_sensor_entities[entity_id].device_class,
                     entity_category=properties.entity_category,
+                    options=properties.options,
+                    current_option=properties.current_option,
                 )
             ]
         )
 
 
-class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
-    """Representation of EnOcean binary sensors."""
+class EnOceanSelect(EnOceanEntity, SelectEntity):
+    """Representation of EnOcean select."""
 
     def __init__(
         self,
         entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        device_class: BinarySensorDeviceClass | None = None,
         entity_category: str | None = None,
+        options: list[str] | None = None,
+        current_option: str | None = None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(
@@ -55,10 +52,11 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             gateway=gateway,
             entity_category=entity_category,
         )
-        self._attr_device_class = device_class
-        self.gateway.register_binary_sensor_callback(entity_id, self.update)
+        self._attr_options = options or []
+        self._attr_current_option = current_option
 
-    def update(self, is_on: bool) -> None:
-        """Update the binary sensor state."""
-        self._attr_is_on = is_on
+    def select_option(self, option: str) -> None:
+        """Change the selected option."""
+        self.gateway.select_option(self.enocean_entity_id, option)
+        self._attr_current_option = option
         self.schedule_update_ha_state()
