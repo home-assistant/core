@@ -2,11 +2,12 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 HOST = "192.168.1.31"
 PORT = 23
+MAC = bytes.fromhex("c4dd57f8a55f")
 
 TVM_ZEROCONF_SERVICE_TYPE = "_tvm._tcp.local."
 
@@ -21,7 +22,9 @@ MOCK_USER_INPUT = {
     CONF_PORT: PORT,
 }
 
-MOCK_ZEROCONF_TVM_SERVICE_INFO_V1 = zeroconf.ZeroconfServiceInfo(
+MOCK_PIN_INPUT = {CONF_PIN: 1234}
+
+MOCK_ZEROCONF_TVM_SERVICE_INFO_V1 = ZeroconfServiceInfo(
     type=TVM_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{TVM_ZEROCONF_SERVICE_TYPE}",
     ip_address=ip_address(ZEROCONF_HOST),
@@ -31,7 +34,7 @@ MOCK_ZEROCONF_TVM_SERVICE_INFO_V1 = zeroconf.ZeroconfServiceInfo(
     properties={"txtvers": "1", "model": "TVM 7675"},
 )
 
-MOCK_ZEROCONF_TVM_SERVICE_INFO_V2 = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_TVM_SERVICE_INFO_V2 = ZeroconfServiceInfo(
     type=TVM_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{TVM_ZEROCONF_SERVICE_TYPE}",
     ip_address=ip_address(ZEROCONF_HOST),

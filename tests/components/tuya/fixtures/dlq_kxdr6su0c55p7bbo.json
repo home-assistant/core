@@ -1,0 +1,135 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": null,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Metering_3PN_WiFi_stable",
+  "category": "dlq",
+  "product_id": "kxdr6su0c55p7bbo",
+  "product_name": "Metering_3PN_WiFi",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2024-12-08T17:37:45+00:00",
+  "create_time": "2024-12-08T17:37:45+00:00",
+  "update_time": "2024-12-08T17:37:45+00:00",
+  "function": {
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_set_1": {
+      "type": "Raw",
+      "value": {}
+    },
+    "alarm_set_2": {
+      "type": "Raw",
+      "value": {}
+    },
+    "online_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["online", "offline"]
+      }
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW.h",
+        "min": 0,
+        "max": 999999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "phase_a": {
+      "type": "Raw",
+      "value": {}
+    },
+    "phase_b": {
+      "type": "Raw",
+      "value": {}
+    },
+    "phase_c": {
+      "type": "Raw",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "short_circuit_alarm",
+          "surge_alarm",
+          "overload_alarm",
+          "leakagecurr_alarm",
+          "temp_dif_fault",
+          "fire_alarm",
+          "high_power_alarm",
+          "self_test_alarm",
+          "ov_cr",
+          "unbalance_alarm",
+          "ov_vol",
+          "undervoltage_alarm",
+          "miss_phase_alarm",
+          "outage_alarm",
+          "magnetism_alarm",
+          "credit_alarm",
+          "no_balance_alarm"
+        ]
+      }
+    },
+    "energy_reset": {
+      "type": "Enum",
+      "value": {
+        "range": ["empty"]
+      }
+    },
+    "alarm_set_1": {
+      "type": "Raw",
+      "value": {}
+    },
+    "alarm_set_2": {
+      "type": "Raw",
+      "value": {}
+    },
+    "breaker_number": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": {
+        "unit": "Hz",
+        "min": 0,
+        "max": 9999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "online_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["online", "offline"]
+      }
+    }
+  },
+  "status": {
+    "forward_energy_total": 2435416,
+    "phase_a": "CKMAAn0AAGw=",
+    "phase_b": "CIsAK8MACWo=",
+    "phase_c": "CJwAA5EAAFw=",
+    "fault": 0,
+    "energy_reset": "",
+    "alarm_set_1": "BwEADQ==",
+    "alarm_set_2": "AQEAPAMBAP0EAQC0BQEAAAcBAAAIAQAeCQAAAA==",
+    "breaker_number": "SPM02_6588",
+    "supply_frequency": 5000,
+    "online_state": "online"
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -3,7 +3,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'zeroconf',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -30,10 +30,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -43,11 +47,12 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'P1 meter',
       }),
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -74,10 +79,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -87,11 +96,12 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
-        'name': 'Energy Socket (aabbccddeeff)',
+        'name': 'Energy Socket (5c2fafabcdef)',
       }),
-      'unique_id': 'HWE-SKT_aabbccddeeff',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -118,10 +128,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'Energy Socket',
-      'unique_id': 'HWE-SKT_aabbccddeeff',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Energy Socket',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -131,7 +145,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': 'HWE-P1_3c39e7aabbcc',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '2.2.2.2',
@@ -158,10 +172,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_3c39e7aabbcc',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

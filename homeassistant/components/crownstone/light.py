@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 from crownstone_cloud.const import DIMMING_ABILITY
@@ -11,33 +11,29 @@ from crownstone_cloud.exceptions import CrownstoneAbilityError
 from crownstone_uart import CrownstoneUart
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CROWNSTONE_INCLUDE_TYPES,
     CROWNSTONE_SUFFIX,
-    DOMAIN,
     SIG_CROWNSTONE_STATE_UPDATE,
     SIG_UART_STATE_CHANGE,
 )
 from .entity import CrownstoneEntity
+from .entry_manager import CrownstoneConfigEntry
 from .helpers import map_from_to
-
-if TYPE_CHECKING:
-    from .entry_manager import CrownstoneEntryManager
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: CrownstoneConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up crownstones from a config entry."""
-    manager: CrownstoneEntryManager = hass.data[DOMAIN][config_entry.entry_id]
+    manager = config_entry.runtime_data
 
     entities: list[CrownstoneLightEntity] = []
 
@@ -94,14 +90,14 @@ class CrownstoneLightEntity(CrownstoneEntity, LightEntity):
         return crownstone_state_to_hass(self.device.state) > 0
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.device.abilities.get(DIMMING_ABILITY).is_enabled:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 

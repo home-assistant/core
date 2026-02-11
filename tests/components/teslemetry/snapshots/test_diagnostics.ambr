@@ -3,6 +3,29 @@
   dict({
     'energysites': list([
       dict({
+        'history': dict({
+          'battery_energy_exported': 36,
+          'battery_energy_imported_from_generator': 0,
+          'battery_energy_imported_from_grid': 0,
+          'battery_energy_imported_from_solar': 684,
+          'consumer_energy_imported_from_battery': 36,
+          'consumer_energy_imported_from_generator': 0,
+          'consumer_energy_imported_from_grid': 0,
+          'consumer_energy_imported_from_solar': 38,
+          'generator_energy_exported': 0,
+          'grid_energy_exported_from_battery': 0,
+          'grid_energy_exported_from_generator': 0,
+          'grid_energy_exported_from_solar': 2,
+          'grid_energy_imported': 0,
+          'grid_services_energy_exported': 0,
+          'grid_services_energy_imported': 0,
+          'solar_energy_exported': 724,
+          'total_battery_charge': 684,
+          'total_battery_discharge': 36,
+          'total_grid_energy_exported': 2,
+          'total_home_usage': 74,
+          'total_solar_generation': 724,
+        }),
         'info': dict({
           'backup_reserve_percent': 0,
           'battery_count': 2,
@@ -168,6 +191,7 @@
       'vehicle_device_data',
       'vehicle_cmds',
       'vehicle_charging_cmds',
+      'vehicle_location',
       'energy_device_data',
       'energy_cmds',
     ]),
@@ -352,7 +376,7 @@
           'vehicle_state_api_version': 71,
           'vehicle_state_autopark_state_v2': 'unavailable',
           'vehicle_state_calendar_supported': True,
-          'vehicle_state_car_version': '2023.44.30.8 06f534d46010',
+          'vehicle_state_car_version': '2026.0.0 06f534d46010',
           'vehicle_state_center_display_state': 0,
           'vehicle_state_dashcam_clip_save_available': True,
           'vehicle_state_dashcam_state': 'Recording',
@@ -431,6 +455,13 @@
           'vehicle_state_vehicle_state_sun_roof_percent_open': 20,
           'vehicle_state_webcam_available': True,
           'vin': '**REDACTED**',
+        }),
+        'stream': dict({
+          'config': dict({
+            'fields': dict({
+            }),
+            'prefer_typed': None,
+          }),
         }),
       }),
     ]),

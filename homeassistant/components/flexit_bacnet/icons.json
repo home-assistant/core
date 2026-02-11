@@ -1,5 +1,17 @@
 {
   "entity": {
+    "climate": {
+      "flexit_bacnet": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "fireplace": "mdi:fireplace",
+              "high": "mdi:fan-speed-3"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "away_extract_fan_setpoint": {
         "default": "mdi:fan-minus"
@@ -15,6 +27,9 @@
       },
       "fireplace_extract_fan_setpoint": {
         "default": "mdi:fan-minus"
+      },
+      "fireplace_mode_runtime": {
+        "default": "mdi:fireplace"
       },
       "fireplace_supply_fan_setpoint": {
         "default": "mdi:fan-plus"
@@ -33,10 +48,22 @@
       }
     },
     "switch": {
+      "cooker_hood_mode": {
+        "default": "mdi:kettle-steam",
+        "state": {
+          "off": "mdi:kettle"
+        }
+      },
       "electric_heater": {
         "default": "mdi:radiator",
         "state": {
           "off": "mdi:radiator-off"
+        }
+      },
+      "fireplace_mode": {
+        "default": "mdi:fireplace",
+        "state": {
+          "off": "mdi:fireplace-off"
         }
       }
     }

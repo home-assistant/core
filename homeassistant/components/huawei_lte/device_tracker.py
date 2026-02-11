@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any, cast
-
-from stringcase import snakecase
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -17,7 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import snakecase
 
 from . import Router
 from .const import (
@@ -53,7 +51,7 @@ def _get_hosts(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
@@ -128,7 +126,7 @@ def _is_us(host: _HostType) -> bool:
 @callback
 def async_add_new_entities(
     router: Router,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
@@ -154,22 +152,6 @@ def async_add_new_entities(
         tracked.add(entity.unique_id)
         new_entities.append(entity)
     async_add_entities(new_entities, True)
-
-
-def _better_snakecase(text: str) -> str:
-    # Awaiting https://github.com/okunishinishi/python-stringcase/pull/18
-    if text == text.upper():
-        # All uppercase to all lowercase to get http for HTTP, not h_t_t_p
-        text = text.lower()
-    else:
-        # Three or more consecutive uppercase with middle part lowercased
-        # to get http_response for HTTPResponse, not h_t_t_p_response
-        text = re.sub(
-            r"([A-Z])([A-Z]+)([A-Z](?:[^A-Z]|$))",
-            lambda match: f"{match.group(1)}{match.group(2).lower()}{match.group(3)}",
-            text,
-        )
-    return cast(str, snakecase(text))
 
 
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
@@ -235,7 +217,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {
-                _better_snakecase(k): v
+                snakecase(k): v
                 for k, v in host.items()
                 if k
                 in {

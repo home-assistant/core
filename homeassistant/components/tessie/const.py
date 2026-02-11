@@ -13,6 +13,17 @@ MODELS = {
     "models": "Model S",
 }
 
+TRANSLATED_ERRORS = {
+    "unknown": "unknown",
+    "not supported": "not_supported",
+    "cable connected": "cable_connected",
+    "already active": "already_active",
+    "already inactive": "already_inactive",
+    "incorrect pin": "incorrect_pin",
+    "no cable": "no_cable",
+    "cpd_enabled": "cpd_enabled",
+}
+
 
 class TessieState(StrEnum):
     """Tessie status."""

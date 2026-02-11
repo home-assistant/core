@@ -1,6 +1,6 @@
 """Config flow for deako."""
 
-from pydeako.discover import DeakoDiscoverer, DevicesNotFoundException
+from pydeako import DeakoDiscoverer, DevicesNotFoundException
 
 from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant

@@ -12,7 +12,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_FLAGS = HumidifierEntityFeature(0)
 
@@ -20,7 +20,7 @@ SUPPORT_FLAGS = HumidifierEntityFeature(0)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo humidifier devices config entry."""
     async_add_entities(
@@ -28,10 +28,11 @@ async def async_setup_entry(
             DemoHumidifier(
                 name="Humidifier",
                 mode=None,
-                target_humidity=68,
+                target_humidity=65,
                 current_humidity=45,
                 action=HumidifierAction.HUMIDIFYING,
                 device_class=HumidifierDeviceClass.HUMIDIFIER,
+                target_humidity_step=5,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
@@ -66,6 +67,7 @@ class DemoHumidifier(HumidifierEntity):
         is_on: bool = True,
         action: HumidifierAction | None = None,
         device_class: HumidifierDeviceClass | None = None,
+        target_humidity_step: float | None = None,
     ) -> None:
         """Initialize the humidifier device."""
         self._attr_name = name
@@ -79,6 +81,7 @@ class DemoHumidifier(HumidifierEntity):
         self._attr_mode = mode
         self._attr_available_modes = available_modes
         self._attr_device_class = device_class
+        self._attr_target_humidity_step = target_humidity_step
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

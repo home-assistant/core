@@ -8,10 +8,11 @@ from datetime import timedelta
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 from aiohttp import ClientConnectorError
 from mozart_api import __version__ as MOZART_API_VERSION
-from mozart_api.exceptions import ApiException
+from mozart_api.exceptions import ApiException, NotFoundException
 from mozart_api.models import (
     Action,
     Art,
@@ -55,34 +56,39 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import BangOlufsenConfigEntry
+from . import BeoConfigEntry
 from .const import (
-    BANG_OLUFSEN_REPEAT_FROM_HA,
-    BANG_OLUFSEN_REPEAT_TO_HA,
-    BANG_OLUFSEN_STATES,
+    BEO_REPEAT_FROM_HA,
+    BEO_REPEAT_TO_HA,
+    BEO_STATES,
+    BEOLINK_JOIN_SOURCES_TO_UPPER,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
+    MANUFACTURER,
     VALID_MEDIA_TYPES,
-    BangOlufsenMediaType,
-    BangOlufsenSource,
+    BeoAttribute,
+    BeoMediaType,
+    BeoSource,
     WebsocketNotification,
 )
-from .entity import BangOlufsenEntity
+from .entity import BeoEntity
 from .util import get_serial_number_from_jid
+
+PARALLEL_UPDATES = 0
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-BANG_OLUFSEN_FEATURES = (
+BEO_FEATURES = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.GROUPING
@@ -105,22 +111,20 @@ BANG_OLUFSEN_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: BangOlufsenConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BeoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
     # Add MediaPlayer entity
     async_add_entities(
-        new_entities=[
-            BangOlufsenMediaPlayer(config_entry, config_entry.runtime_data.client)
-        ]
+        new_entities=[BeoMediaPlayer(config_entry, config_entry.runtime_data.client)],
+        update_before_add=True,
     )
 
 
-class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
+class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_icon = "mdi:speaker-wireless"
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
@@ -134,7 +138,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
             identifiers={(DOMAIN, self._unique_id)},
-            manufacturer="Bang & Olufsen",
+            manufacturer=MANUFACTURER,
             model=self._model,
             serial_number=self._unique_id,
         )
@@ -151,11 +155,15 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
+        self._video_source_id_map: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
 
         # Beolink compatible sources
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
+        # Extra state attributes:
+        # Beolink: peer(s), listener(s), leader and self
+        self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -165,6 +173,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             CONNECTION_STATUS: self._async_update_connection_state,
             WebsocketNotification.ACTIVE_LISTENING_MODE: self._async_update_sound_modes,
             WebsocketNotification.BEOLINK: self._async_update_beolink,
+            WebsocketNotification.CONFIGURATION: self._async_update_name_and_beolink,
             WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
             WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
             WebsocketNotification.PLAYBACK_PROGRESS: self._async_update_playback_progress,
@@ -179,7 +188,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
-                    f"{self._unique_id}_{signal}",
+                    f"{DOMAIN}_{self._unique_id}_{signal}",
                     signal_handler,
                 )
             )
@@ -197,38 +206,15 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self._software_status.software_version,
         )
 
-        # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = await self._client.get_product_state()
-
-        # Get volume information.
-        if product_state.volume:
-            self._volume = product_state.volume
-
-        # Get all playback information.
-        # Ensure that the metadata is not None upon startup
-        if product_state.playback:
-            if product_state.playback.metadata:
-                self._playback_metadata = product_state.playback.metadata
-                self._remote_leader = product_state.playback.metadata.remote_leader
-            if product_state.playback.progress:
-                self._playback_progress = product_state.playback.progress
-            if product_state.playback.source:
-                self._source_change = product_state.playback.source
-            if product_state.playback.state:
-                self._playback_state = product_state.playback.state
-                # Set initial state
-                if self._playback_state.value:
-                    self._state = self._playback_state.value
-
         self._attr_media_position_updated_at = utcnow()
-
-        # Get the highest resolution available of the given images.
-        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
 
         # If the device has been updated with new sources, then the API will fail here.
         await self._async_update_sources()
 
         await self._async_update_sound_modes()
+
+        # Update beolink attributes and device name.
+        await self._async_update_name_and_beolink()
 
     async def async_update(self) -> None:
         """Update queue settings."""
@@ -238,7 +224,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             queue_settings = await self._client.get_settings_queue(_request_timeout=5)
 
             if queue_settings.repeat is not None:
-                self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
+                self._attr_repeat = BEO_REPEAT_TO_HA[queue_settings.repeat]
 
             if queue_settings.shuffle is not None:
                 self._attr_shuffle = queue_settings.shuffle
@@ -307,6 +293,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 and menu_item.label != "TV"
             ):
                 self._video_sources[key] = menu_item.label
+                self._video_source_id_map[
+                    menu_item.content.content_uri.removeprefix("tv://")
+                ] = menu_item.label
 
         # Combine the source dicts
         self._sources = self._audio_sources | self._video_sources
@@ -358,8 +347,8 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Check if source is line-in or optical and progress should be updated
         if self._source_change.id in (
-            BangOlufsenSource.LINE_IN.id,
-            BangOlufsenSource.SPDIF.id,
+            BeoSource.LINE_IN.id,
+            BeoSource.SPDIF.id,
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
@@ -372,8 +361,50 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         self.async_write_ha_state()
 
+    async def _async_update_name_and_beolink(self) -> None:
+        """Update the device friendly name."""
+        beolink_self = await self._client.get_beolink_self()
+
+        # Update device name
+        device_registry = dr.async_get(self.hass)
+        assert self.device_entry is not None
+
+        device_registry.async_update_device(
+            device_id=self.device_entry.id,
+            name=beolink_self.friendly_name,
+        )
+
+        await self._async_update_beolink()
+
     async def _async_update_beolink(self) -> None:
-        """Update the current Beolink leader, listeners, peers and self."""
+        """Update the current Beolink leader, listeners, peers and self.
+
+        Updates Home Assistant state.
+        """
+
+        self._beolink_attributes = {}
+
+        assert self.device_entry is not None
+        assert self.device_entry.name is not None
+
+        # Add Beolink self
+        self._beolink_attributes = {
+            BeoAttribute.BEOLINK: {
+                BeoAttribute.BEOLINK_SELF: {self.device_entry.name: self._beolink_jid}
+            }
+        }
+
+        # Add Beolink peers
+        peers = await self._client.get_beolink_peers()
+
+        if len(peers) > 0:
+            self._beolink_attributes[BeoAttribute.BEOLINK][
+                BeoAttribute.BEOLINK_PEERS
+            ] = {}
+            for peer in peers:
+                self._beolink_attributes[BeoAttribute.BEOLINK][
+                    BeoAttribute.BEOLINK_PEERS
+                ][peer.friendly_name] = peer.jid
 
         # Add Beolink listeners / leader
         self._remote_leader = self._playback_metadata.remote_leader
@@ -394,9 +425,16 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             # Add self
             group_members.append(self.entity_id)
 
+            self._beolink_attributes[BeoAttribute.BEOLINK][
+                BeoAttribute.BEOLINK_LEADER
+            ] = {
+                self._remote_leader.friendly_name: self._remote_leader.jid,
+            }
+
         # If not listener, check if leader.
         else:
             beolink_listeners = await self._client.get_beolink_listeners()
+            beolink_listeners_attribute = {}
 
             # Check if the device is a leader.
             if len(beolink_listeners) > 0:
@@ -417,6 +455,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         for beolink_listener in beolink_listeners
                     ]
                 )
+                # Update Beolink attributes
+                for beolink_listener in beolink_listeners:
+                    for peer in peers:
+                        if peer.jid == beolink_listener.jid:
+                            # Get the friendly names for the listeners from the peers
+                            beolink_listeners_attribute[peer.friendly_name] = (
+                                beolink_listener.jid
+                            )
+                            break
+                self._beolink_attributes[BeoAttribute.BEOLINK][
+                    BeoAttribute.BEOLINK_LISTENERS
+                ] = beolink_listeners_attribute
 
         self._attr_group_members = group_members
 
@@ -474,7 +524,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         for sound_mode in sound_modes:
             label = f"{sound_mode.name} ({sound_mode.id})"
 
-            self._sound_modes[label] = sound_mode.id
+            self._sound_modes[label] = cast(int, sound_mode.id)
 
             if sound_mode.id == active_sound_mode.id:
                 self._attr_sound_mode = label
@@ -487,7 +537,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        features = BANG_OLUFSEN_FEATURES
+        features = BEO_FEATURES
 
         # Add seeking if supported by the current source
         if self._source_change.is_seekable is True:
@@ -498,7 +548,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
-        return BANG_OLUFSEN_STATES[self._state]
+        return BEO_STATES[self._state]
 
     @property
     def volume_level(self) -> float | None:
@@ -515,11 +565,19 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self) -> str:
+    def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
-        # Hard to determine content type
-        if self._source_change.id == BangOlufsenSource.URI_STREAMER.id:
-            return MediaType.URL
+        content_type = {
+            BeoSource.DEEZER.id: BeoMediaType.DEEZER,
+            BeoSource.NET_RADIO.id: BeoMediaType.RADIO,
+            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
+            BeoSource.TV.id: BeoMediaType.TV,
+            BeoSource.URI_STREAMER.id: MediaType.URL,
+        }
+        # Hard to determine content type.
+        if self._source_change.id in content_type:
+            return content_type[self._source_change.id]
+
         return MediaType.MUSIC
 
     @property
@@ -531,6 +589,11 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def media_position(self) -> int | None:
         """Return the current playback progress."""
         return self._playback_progress.progress
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Return internal ID of Deezer, Tidal and radio stations."""
+        return self._playback_metadata.source_internal_id
 
     @property
     def media_image_url(self) -> str | None:
@@ -569,38 +632,23 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     @property
     def source(self) -> str | None:
-        """Return the current audio source."""
-
-        # Try to fix some of the source_change chromecast weirdness.
-        if hasattr(self._playback_metadata, "title"):
-            # source_change is chromecast but line in is selected.
-            if self._playback_metadata.title == BangOlufsenSource.LINE_IN.name:
-                return BangOlufsenSource.LINE_IN.name
-
-            # source_change is chromecast but bluetooth is selected.
-            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH.name:
-                return BangOlufsenSource.BLUETOOTH.name
-
-            # source_change is line in, bluetooth or optical but stale metadata is sent through the WebSocket,
-            # And the source has not changed.
-            if self._source_change.id in (
-                BangOlufsenSource.BLUETOOTH.id,
-                BangOlufsenSource.LINE_IN.id,
-                BangOlufsenSource.SPDIF.id,
-            ):
-                return BangOlufsenSource.CHROMECAST.name
-
-        # source_change is chromecast and there is metadata but no artwork. Bluetooth does support metadata but not artwork
-        # So i assume that it is bluetooth and not chromecast
-        if (
-            hasattr(self._playback_metadata, "art")
-            and self._playback_metadata.art is not None
-            and len(self._playback_metadata.art) == 0
-            and self._source_change.id == BangOlufsenSource.CHROMECAST.id
-        ):
-            return BangOlufsenSource.BLUETOOTH.name
+        """Return the current audio/video source."""
+        # Associate TV content ID with a video source
+        if self.media_content_id in self._video_source_id_map:
+            return self._video_source_id_map[self.media_content_id]
 
         return self._source_change.name
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return information that is not returned anywhere else."""
+        attributes: dict[str, Any] = {}
+
+        # Add Beolink attributes
+        if self._beolink_attributes:
+            attributes.update(self._beolink_attributes)
+
+        return attributes
 
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
@@ -659,9 +707,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set playback queues to repeat."""
         await self._client.set_settings_queue(
-            play_queue_settings=PlayQueueSettings(
-                repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
-            )
+            play_queue_settings=PlayQueueSettings(repeat=BEO_REPEAT_FROM_HA[repeat])
         )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
@@ -690,7 +736,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             await self._client.set_active_source(source_id=key)
         else:
             # Video
-            await self._client.post_remote_trigger(id=key)
+            await self._client.post_remote_trigger(id=UUID(key))
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
@@ -765,7 +811,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         self._volume.level.level + offset_volume, 100
                     )
 
-            if media_type == BangOlufsenMediaType.OVERLAY_TTS:
+            if media_type == BeoMediaType.OVERLAY_TTS:
                 # Bang & Olufsen cloud TTS
                 overlay_play_request.text_to_speech = (
                     OverlayPlayRequestTextToSpeechTextToSpeech(
@@ -782,14 +828,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # The "provider" media_type may not be suitable for overlay all the time.
         # Use it for now.
-        elif media_type == BangOlufsenMediaType.TTS:
+        elif media_type == BeoMediaType.TTS:
             await self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
                     uri=Uri(location=media_id),
                 )
             )
 
-        elif media_type == BangOlufsenMediaType.RADIO:
+        elif media_type == BeoMediaType.RADIO:
             await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
                     action_list=[
@@ -801,13 +847,13 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 )
             )
 
-        elif media_type == BangOlufsenMediaType.FAVOURITE:
+        elif media_type == BeoMediaType.FAVOURITE:
             await self._client.activate_preset(id=int(media_id))
 
-        elif media_type in (BangOlufsenMediaType.DEEZER, BangOlufsenMediaType.TIDAL):
+        elif media_type in (BeoMediaType.DEEZER, BeoMediaType.TIDAL):
             try:
                 # Play Deezer flow.
-                if media_id == "flow" and media_type == BangOlufsenMediaType.DEEZER:
+                if media_id == "flow" and media_type == BeoMediaType.DEEZER:
                     deezer_id = None
 
                     if "id" in kwargs[ATTR_MEDIA_EXTRA]:
@@ -849,7 +895,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                     translation_key="play_media_error",
                     translation_placeholders={
                         "media_type": media_type,
-                        "error_message": json.loads(error.body)["message"],
+                        "error_message": json.loads(cast(str, error.body))["message"],
                     },
                 ) from error
 
@@ -873,23 +919,41 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Beolink compatible B&O device.
         # Repeated presses / calls will cycle between compatible playing devices.
         if len(group_members) == 0:
-            await self._async_beolink_join()
+            await self.async_beolink_join()
             return
 
         # Get JID for each group member
         jids = [self._get_beolink_jid(group_member) for group_member in group_members]
-        await self._async_beolink_expand(jids)
+        await self.async_beolink_expand(jids)
 
     async def async_unjoin_player(self) -> None:
         """Unjoin Beolink session. End session if leader."""
-        await self._async_beolink_leave()
+        await self.async_beolink_leave()
 
-    async def _async_beolink_join(self) -> None:
+    # Custom actions:
+    async def async_beolink_join(
+        self, beolink_jid: str | None = None, source_id: str | None = None
+    ) -> None:
         """Join a Beolink multi-room experience."""
-        await self._client.join_latest_beolink_experience()
+        # Touch to join
+        if beolink_jid is None:
+            await self._client.join_latest_beolink_experience()
+        # Join a peer
+        elif beolink_jid and source_id is None:
+            await self._client.join_beolink_peer(jid=beolink_jid)
+        # Join a peer and select specific source
+        elif beolink_jid and source_id:
+            # Beolink Converter NL/ML sources need to be in upper case
+            if source_id in BEOLINK_JOIN_SOURCES_TO_UPPER:
+                source_id = source_id.upper()
 
-    async def _async_beolink_expand(self, beolink_jids: list[str]) -> None:
+            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
+
+    async def async_beolink_expand(
+        self, beolink_jids: list[str] | None = None, all_discovered: bool = False
+    ) -> None:
         """Expand a Beolink multi-room experience with a device or devices."""
+
         # Ensure that the current source is expandable
         if not self._beolink_sources[cast(str, self._source_change.id)]:
             raise ServiceValidationError(
@@ -901,10 +965,37 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 },
             )
 
-        # Try to expand to all defined devices
-        for beolink_jid in beolink_jids:
-            await self._client.post_beolink_expand(jid=beolink_jid)
+        # Expand to all discovered devices
+        if all_discovered:
+            peers = await self._client.get_beolink_peers()
 
-    async def _async_beolink_leave(self) -> None:
+            for peer in peers:
+                try:
+                    await self._client.post_beolink_expand(jid=peer.jid)
+                except NotFoundException:
+                    _LOGGER.warning("Unable to expand to %s", peer.jid)
+
+        # Try to expand to all defined devices
+        elif beolink_jids:
+            for beolink_jid in beolink_jids:
+                try:
+                    await self._client.post_beolink_expand(jid=beolink_jid)
+                except NotFoundException:
+                    _LOGGER.warning(
+                        "Unable to expand to %s. Is the device available on the network?",
+                        beolink_jid,
+                    )
+
+    async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
+        """Unexpand a Beolink multi-room experience with a device or devices."""
+        # Unexpand all defined devices
+        for beolink_jid in beolink_jids:
+            await self._client.post_beolink_unexpand(jid=beolink_jid)
+
+    async def async_beolink_leave(self) -> None:
         """Leave the current Beolink experience."""
         await self._client.post_beolink_leave()
+
+    async def async_beolink_allstandby(self) -> None:
+        """Set all connected Beolink devices to standby."""
+        await self._client.post_beolink_allstandby()

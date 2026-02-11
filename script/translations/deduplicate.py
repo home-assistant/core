@@ -7,8 +7,7 @@ from pathlib import Path
 from homeassistant.const import Platform
 
 from . import upload
-from .develop import flatten_translations
-from .util import get_base_arg_parser, load_json_from_path
+from .util import flatten_translations, get_base_arg_parser, load_json_from_path
 
 
 def get_arguments() -> argparse.Namespace:
@@ -71,8 +70,10 @@ def run():
         # If we want to only add references to own integrations
         # but not include entity integrations
         if (
-            args.limit_reference
-            and (key_integration != key_to_reference_integration and not is_common)
+            (
+                args.limit_reference
+                and (key_integration != key_to_reference_integration and not is_common)
+            )
             # Do not create self-references in entity integrations
             or key_integration in Platform.__members__.values()
         ):

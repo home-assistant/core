@@ -8,26 +8,27 @@ import logging
 from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN
-from .coordinator import AvmWrapper
+from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up guest WiFi QR code for device."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     guest_wifi_info = await hass.async_add_executor_job(
         avm_wrapper.fritz_guest_wifi.get_info
@@ -64,10 +65,10 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
         super().__init__(avm_wrapper, device_friendly_name)
         ImageEntity.__init__(self, hass)
 
-    async def _fetch_image(self) -> bytes:
+    def _fetch_image(self) -> bytes:
         """Fetch the QR code from the Fritz!Box."""
-        qr_stream: BytesIO = await self.hass.async_add_executor_job(
-            self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code, "png"
+        qr_stream: BytesIO = self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code(
+            "png", border=2
         )
         qr_bytes = qr_stream.getvalue()
         _LOGGER.debug("fetched %s bytes", len(qr_bytes))
@@ -76,13 +77,15 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     async def async_added_to_hass(self) -> None:
         """Fetch and set initial data and state."""
-        self._current_qr_bytes = await self._fetch_image()
+        self._current_qr_bytes = await self.hass.async_add_executor_job(
+            self._fetch_image
+        )
         self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_update(self) -> None:
         """Update the image entity data."""
         try:
-            qr_bytes = await self._fetch_image()
+            qr_bytes = await self.hass.async_add_executor_job(self._fetch_image)
         except RequestException:
             self._current_qr_bytes = None
             self._attr_image_last_updated = None

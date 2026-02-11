@@ -3,6 +3,7 @@
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -36,10 +37,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -49,6 +54,7 @@
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -82,10 +88,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -94,6 +104,7 @@
 # name: test_zeroconf_discovery
   FlowResultSnapshot({
     'context': dict({
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Test Satellite',
@@ -127,10 +138,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'Test Satellite',
       'unique_id': 'test_zeroconf_name._wyoming._tcp.local._Test Satellite',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Test Satellite',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import (
     Health,
@@ -20,14 +20,27 @@ from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.components.calendar import CalendarEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import RadarrConfigEntry
+
+@dataclass(kw_only=True, slots=True)
+class RadarrData:
+    """Radarr data type."""
+
+    calendar: CalendarUpdateCoordinator
+    disk_space: DiskSpaceDataUpdateCoordinator
+    health: HealthDataUpdateCoordinator
+    movie: MoviesDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+
+
+type RadarrConfigEntry = ConfigEntry[RadarrData]
 
 T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int | None)
 
@@ -44,7 +57,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry
@@ -53,6 +66,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
@@ -60,6 +74,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=self._update_interval,
         )
@@ -115,21 +130,20 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
-    """Movies update coordinator."""
+    """Movies count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies data."""
+        """Fetch the total count of movies in Radarr."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
 
 
-class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
-    """Queue update coordinator."""
+class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
+    """Queue count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies in queue."""
-        return (
-            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
-        ).totalRecords
+        """Fetch the number of movies in the download queue."""
+        # page_size=1 is sufficient since we only need the totalRecords count
+        return (await self.api_client.async_get_queue(page_size=1)).totalRecords
 
 
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
@@ -140,11 +154,12 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, host_configuration, api_client)
+        super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 

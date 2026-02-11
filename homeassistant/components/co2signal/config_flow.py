@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from aioelectricitymaps import (
     ElectricityMaps,
-    ElectricityMapsError,
     ElectricityMapsInvalidTokenError,
     ElectricityMapsNoDataError,
 )
@@ -20,8 +20,8 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -35,6 +35,12 @@ from .util import get_extra_name
 TYPE_USE_HOME = "use_home_location"
 TYPE_SPECIFY_COORDINATES = "specify_coordinates"
 TYPE_SPECIFY_COUNTRY = "specify_country_code"
+
+_LOGGER = logging.getLogger(__name__)
+
+DESCRIPTION_PLACEHOLDER = {
+    "register_link": "https://electricitymaps.com/free-tier",
+}
 
 
 class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -68,6 +74,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
+                description_placeholders=DESCRIPTION_PLACEHOLDER,
             )
 
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
@@ -158,7 +165,8 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except ElectricityMapsNoDataError:
                 errors["base"] = "no_data"
-            except ElectricityMapsError:
+            except Exception:
+                _LOGGER.exception("Unexpected error occurred while checking API key")
                 errors["base"] = "unknown"
             else:
                 if self.source == SOURCE_REAUTH:
@@ -168,7 +176,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
                 return self.async_create_entry(
-                    title=get_extra_name(data) or "CO2 Signal",
+                    title=get_extra_name(data) or "Electricity Maps",
                     data=data,
                 )
 
@@ -176,4 +184,5 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=data_schema,
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDER,
         )

@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock
 
-from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+import pytest
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
@@ -13,6 +13,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -27,6 +28,7 @@ async def test_diagnostics(
     ) == snapshot(exclude=props("last_update", "entry_id", "created_at", "modified_at"))
 
 
+@pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
 async def test_diagnostics_missing_items(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -34,7 +36,6 @@ async def test_diagnostics_missing_items(
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostics."""
     mock_psutil.net_if_addrs.return_value = None

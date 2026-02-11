@@ -16,14 +16,12 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice, ViCareRequiredKeysMixinWithSet
+from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
 from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +42,13 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
         value_getter=lambda api: api.getOneTimeCharge(),
         value_setter=lambda api: api.activateOneTimeCharge(),
     ),
+    ViCareButtonEntityDescription(
+        key="deactivate_onetimecharge",
+        translation_key="deactivate_onetimecharge",
+        entity_category=EntityCategory.CONFIG,
+        value_getter=lambda api: api.getOneTimeCharge(),
+        value_setter=lambda api: api.deactivateOneTimeCharge(),
+    ),
 )
 
 
@@ -61,22 +66,20 @@ def _build_entities(
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
-        if is_supported(description.key, description, device.api)
+        if is_supported(description.key, description.value_getter, device.api)
     ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ViCareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         )
     )
 

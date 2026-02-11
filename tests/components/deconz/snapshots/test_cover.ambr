@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window covering device',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -26,6 +28,7 @@
     'original_name': 'Window covering device',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -55,6 +58,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vent',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -75,6 +80,7 @@
     'original_name': 'Vent',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
     'translation_key': None,
     'unique_id': '00:22:a3:00:00:00:00:00-01',
@@ -105,6 +111,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -118,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Covering device',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -125,6 +133,7 @@
     'original_name': 'Covering device',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 255>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:12:34:56-01',

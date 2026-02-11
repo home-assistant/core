@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from functools import partial
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -21,6 +20,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .const import TibberConfigEntry
+
 PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
@@ -33,8 +35,14 @@ SERVICE_SCHEMA: Final = vol.Schema(
 )
 
 
-async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResponse:
-    tibber_connection = hass.data[DOMAIN]
+async def __get_prices(call: ServiceCall) -> ServiceResponse:
+    entries: list[TibberConfigEntry] = call.hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry",
+        )
+    tibber_connection = await entries[0].runtime_data.async_get_client(call.hass)
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
@@ -51,7 +59,6 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
             {
                 "start_time": starts_at,
                 "price": price,
-                "level": tibber_home.price_level.get(starts_at),
             }
             for starts_at, price in tibber_home.price_total.items()
         ]
@@ -59,7 +66,7 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
         selected_data = [
             price
             for price in price_data
-            if start <= dt.datetime.fromisoformat(price["start_time"]) < end
+            if start <= dt.datetime.fromisoformat(str(price["start_time"])) < end
         ]
         tibber_prices[home_nickname] = selected_data
 
@@ -79,7 +86,6 @@ def __get_date(date_input: str | None, mode: str | None) -> datetime:
         return dt_util.as_local(value)
 
     raise ServiceValidationError(
-        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -95,7 +101,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         PRICE_SERVICE_NAME,
-        partial(__get_prices, hass=hass),
+        __get_prices,
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

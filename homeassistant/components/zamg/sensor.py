@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -23,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -82,7 +83,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         para_name="DD",
     ),
     ZamgSensorEntityDescription(
@@ -155,6 +157,14 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TPAM",
     ),
+    ZamgSensorEntityDescription(
+        key="global_radiation",
+        name="Global Radiation",
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        para_name="GLOW",
+    ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
@@ -163,7 +173,9 @@ API_FIELDS: list[str] = [desc.para_name for desc in SENSOR_TYPES]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZAMG sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

@@ -85,9 +85,9 @@
       }
     },
     "moving": {
-      "default": "mdi:arrow-right",
+      "default": "mdi:octagon",
       "state": {
-        "on": "mdi:octagon"
+        "on": "mdi:arrow-right"
       }
     },
     "occupancy": {
@@ -173,6 +173,14 @@
       "state": {
         "on": "mdi:window-open"
       }
+    }
+  },
+  "triggers": {
+    "occupancy_cleared": {
+      "trigger": "mdi:home-outline"
+    },
+    "occupancy_detected": {
+      "trigger": "mdi:home"
     }
   }
 }

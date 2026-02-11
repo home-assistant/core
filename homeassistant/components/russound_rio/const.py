@@ -3,11 +3,12 @@
 import asyncio
 
 from aiorussound import CommandError
-from aiorussound.const import FeatureFlag
-
-from homeassistant.components.media_player import MediaPlayerEntityFeature
 
 DOMAIN = "russound_rio"
+
+RUSSOUND_MEDIA_TYPE_PRESET = "preset"
+
+SELECT_SOURCE_DELAY = 0.5
 
 RUSSOUND_RIO_EXCEPTIONS = (
     CommandError,
@@ -15,10 +16,3 @@ RUSSOUND_RIO_EXCEPTIONS = (
     TimeoutError,
     asyncio.CancelledError,
 )
-
-
-CONNECT_TIMEOUT = 5
-
-MP_FEATURES_BY_FLAG = {
-    FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON: MediaPlayerEntityFeature.VOLUME_MUTE
-}

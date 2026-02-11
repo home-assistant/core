@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -57,7 +58,10 @@ from homeassistant.const import (
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .config import AbstractConfig
 from .const import (
@@ -358,7 +362,7 @@ async def async_api_set_color_temperature(
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_KELVIN: kelvin},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
         blocking=False,
         context=context,
     )
@@ -375,14 +379,14 @@ async def async_api_decrease_color_temp(
 ) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    max_mireds = int(entity.attributes[light.ATTR_MAX_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    min_kelvin = int(entity.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN])
 
-    value = min(max_mireds, current + 50)
+    value = max(min_kelvin, current - 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -399,14 +403,14 @@ async def async_api_increase_color_temp(
 ) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    min_mireds = int(entity.attributes[light.ATTR_MIN_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    max_kelvin = int(entity.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN])
 
-    value = max(min_mireds, current - 50)
+    value = min(max_kelvin, current + 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -526,6 +530,7 @@ async def async_api_unlock(
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }:
         msg = (
@@ -564,7 +569,7 @@ async def async_api_set_volume(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -587,7 +592,7 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST) or []
+    source_list = entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -609,7 +614,7 @@ async def async_api_select_input(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_INPUT_SOURCE: media_input,
+        media_player.ATTR_INPUT_SOURCE: media_input,
     }
 
     await hass.services.async_call(
@@ -634,7 +639,7 @@ async def async_api_adjust_volume(
     volume_delta = int(directive.payload["volume"])
 
     entity = directive.entity
-    current_level = entity.attributes[media_player.const.ATTR_MEDIA_VOLUME_LEVEL]
+    current_level = entity.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL]
 
     # read current state
     try:
@@ -646,7 +651,7 @@ async def async_api_adjust_volume(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -707,7 +712,7 @@ async def async_api_set_mute(
     entity = directive.entity
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
     await hass.services.async_call(
@@ -764,9 +769,25 @@ async def async_api_stop(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
-    )
+    if entity.domain == cover.DOMAIN:
+        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        feature_services: dict[int, str] = {
+            cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
+            cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
+        }
+        await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    entity.domain, service, data, blocking=False, context=context
+                )
+                for feature, service in feature_services.items()
+                if feature & supported
+            )
+        )
+    else:
+        await hass.services.async_call(
+            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        )
 
     return directive.response()
 
@@ -826,7 +847,7 @@ def temperature_from_object(
         temp -= 273.15
 
     if interval:
-        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+        return TemperatureDeltaConverter.convert(temp, from_unit, to_unit)
     return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
@@ -1243,9 +1264,9 @@ async def async_api_set_mode(
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
-        if position == cover.STATE_CLOSED:
+        if position == cover.CoverState.CLOSED:
             service = cover.SERVICE_CLOSE_COVER
-        elif position == cover.STATE_OPEN:
+        elif position == cover.CoverState.OPEN:
             service = cover.SERVICE_OPEN_COVER
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
@@ -1513,7 +1534,7 @@ async def async_api_adjust_range(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
-    response_value: int | None = 0
+    response_value: float | None = 0
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1690,15 +1711,13 @@ async def async_api_changechannel(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
-            media_player.const.MEDIA_TYPE_CHANNEL
-        ),
+        media_player.ATTR_MEDIA_CONTENT_ID: channel,
+        media_player.ATTR_MEDIA_CONTENT_TYPE: (media_player.MediaType.CHANNEL),
     }
 
     await hass.services.async_call(
         entity.domain,
-        media_player.const.SERVICE_PLAY_MEDIA,
+        media_player.SERVICE_PLAY_MEDIA,
         data,
         blocking=False,
         context=context,
@@ -1807,13 +1826,13 @@ async def async_api_set_eq_mode(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process a SetMode request for EqualizerController."""
-    mode = directive.payload["mode"]
+    mode: str = directive.payload["mode"]
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    sound_mode_list = entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+    sound_mode_list = entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
     if sound_mode_list and mode.lower() in sound_mode_list:
-        data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
+        data[media_player.ATTR_SOUND_MODE] = mode.lower()
     else:
         msg = f"failed to map sound mode {mode} to a mode on {entity.entity_id}"
         raise AlexaInvalidValueError(msg)

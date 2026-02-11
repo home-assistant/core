@@ -13,7 +13,7 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError, UnknownAPICallError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
@@ -54,8 +54,11 @@ from .const import (
 )
 from .coordinator import RainMachineDataUpdateCoordinator
 
-DEFAULT_SSL = True
+API_URL_REFERENCE = (
+    "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
+)
 
+DEFAULT_SSL = True
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -455,7 +458,15 @@ async def async_setup_entry(  # noqa: C901
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
-        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
+        hass.services.async_register(
+            DOMAIN,
+            service_name,
+            method,
+            schema=schema,
+            description_placeholders={
+                "api_url": API_URL_REFERENCE,
+            },
+        )
 
     return True
 
@@ -465,12 +476,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload an RainMachine config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state is ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         # If this is the last loaded instance of RainMachine, deregister any services
         # defined during integration setup:
         for service_name in (

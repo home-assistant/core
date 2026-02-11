@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -18,7 +18,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, PRECISION_WHOLE, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TeslaFleetConfigEntry
@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 0
 class TeslaFleetNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[VehicleSpecific, float], Awaitable[Any]]
+    func: Callable[[VehicleFleet, int], Awaitable[Any]]
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -74,19 +74,19 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
 class TeslaFleetNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[EnergySpecific, float], Awaitable[Any]]
+    func: Callable[[EnergySite, int], Awaitable[Any]]
     requires: str | None = None
 
 
 ENERGY_INFO_DESCRIPTIONS: tuple[TeslaFleetNumberBatteryEntityDescription, ...] = (
     TeslaFleetNumberBatteryEntityDescription(
         key="backup_reserve_percent",
-        func=lambda api, value: api.backup(int(value)),
+        func=lambda api, value: api.backup(value),
         requires="components_battery",
     ),
     TeslaFleetNumberBatteryEntityDescription(
         key="off_grid_vehicle_charging_reserve_percent",
-        func=lambda api, value: api.off_grid_vehicle_charging_reserve(int(value)),
+        func=lambda api, value: api.off_grid_vehicle_charging_reserve(value),
         requires="components_off_grid_vehicle_charging_reserve_supported",
     ),
 )
@@ -95,7 +95,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslaFleetNumberBatteryEntityDescription, ...] =
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet number platform from a config entry."""
 

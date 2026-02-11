@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from anova_wifi import AnovaApi, InvalidLogin
 import voluptuous as vol
 
@@ -11,8 +13,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
+
+class AnovaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
     VERSION = 1
@@ -35,7 +39,8 @@ class AnovaConfligFlow(ConfigFlow, domain=DOMAIN):
                 await api.authenticate()
             except InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(

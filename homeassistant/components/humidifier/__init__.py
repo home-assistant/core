@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,11 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -34,15 +28,13 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
-    _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
-    _DEPRECATED_DEVICE_CLASS_HUMIDIFIER,
-    _DEPRECATED_SUPPORT_MODES,
     ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
     ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_TARGET_HUMIDITY_STEP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
@@ -150,6 +142,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "min_humidity",
     "max_humidity",
     "supported_features",
+    "target_humidity_step",
 }
 
 
@@ -157,7 +150,12 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     """Base class for humidifier entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+        {
+            ATTR_MIN_HUMIDITY,
+            ATTR_MAX_HUMIDITY,
+            ATTR_AVAILABLE_MODES,
+            ATTR_TARGET_HUMIDITY_STEP,
+        }
     )
 
     entity_description: HumidifierEntityDescription
@@ -170,6 +168,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     _attr_mode: str | None
     _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(0)
     _attr_target_humidity: float | None = None
+    _attr_target_humidity_step: float | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -178,8 +177,10 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
+        if self.target_humidity_step is not None:
+            data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -208,7 +209,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -261,6 +262,11 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         await self.hass.async_add_executor_job(self.set_mode, mode)
 
     @cached_property
+    def target_humidity_step(self) -> float | None:
+        """Return the supported step of humidity."""
+        return self._attr_target_humidity_step
+
+    @cached_property
     def min_humidity(self) -> float:
         """Return the minimum humidity."""
         return self._attr_min_humidity
@@ -274,19 +280,6 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> HumidifierEntityFeature:
-        """Return the supported features as HumidifierEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = HumidifierEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
 
 async def async_service_humidity_set(
@@ -314,13 +307,3 @@ async def async_service_humidity_set(
         )
 
     await entity.async_set_humidity(humidity)
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

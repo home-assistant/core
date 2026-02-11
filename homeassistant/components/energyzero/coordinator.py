@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
+type EnergyZeroConfigEntry = ConfigEntry[EnergyZeroDataUpdateCoordinator]
+
 
 class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
@@ -35,13 +37,14 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EnergyZeroConfigEntry) -> None:
         """Initialize global EnergyZero data updater."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
         self.energyzero = EnergyZero(session=async_get_clientsession(hass))
@@ -53,11 +56,11 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         energy_tomorrow = None
 
         try:
-            energy_today = await self.energyzero.energy_prices(
+            energy_today = await self.energyzero.get_electricity_prices_legacy(
                 start_date=today, end_date=today
             )
             try:
-                gas_today = await self.energyzero.gas_prices(
+                gas_today = await self.energyzero.get_gas_prices_legacy(
                     start_date=today, end_date=today
                 )
             except EnergyZeroNoDataError:
@@ -66,8 +69,10 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             if dt_util.utcnow().hour >= THRESHOLD_HOUR:
                 tomorrow = today + timedelta(days=1)
                 try:
-                    energy_tomorrow = await self.energyzero.energy_prices(
-                        start_date=tomorrow, end_date=tomorrow
+                    energy_tomorrow = (
+                        await self.energyzero.get_electricity_prices_legacy(
+                            start_date=tomorrow, end_date=tomorrow
+                        )
                     )
                 except EnergyZeroNoDataError:
                     LOGGER.debug("No data for tomorrow for EnergyZero integration")

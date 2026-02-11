@@ -93,12 +93,12 @@ class ProtectData:
     @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
-        return self._entry.options.get(CONF_DISABLE_RTSP, False)
+        return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
 
     @property
     def max_events(self) -> int:
         """Max number of events to load at once."""
-        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
+        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
 
     @callback
     def async_subscribe_adopt(
@@ -349,6 +349,7 @@ def async_ufp_instance_for_config_entry_ids(
             entry.runtime_data.api
             for entry_id in config_entry_ids
             if (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
             and hasattr(entry, "runtime_data")
         ),
         None,

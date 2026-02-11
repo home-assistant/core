@@ -11,8 +11,8 @@ from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
@@ -27,6 +27,10 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
+
 IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k != 2}
 
 
@@ -37,8 +41,8 @@ class RingSwitchEntityDescription(
     """Describes a Ring switch entity."""
 
     exists_fn: Callable[[RingDeviceT], bool]
-    unique_id_fn: Callable[[Self, RingDeviceT], str] = (
-        lambda self, device: f"{device.device_api_id}-{self.key}"
+    unique_id_fn: Callable[[Self, RingDeviceT], str] = lambda self, device: (
+        f"{device.device_api_id}-{self.key}"
     )
     is_on_fn: Callable[[RingDeviceT], bool]
     turn_on_fn: Callable[[RingDeviceT], Coroutine[Any, Any, None]]
@@ -60,8 +64,10 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
-        exists_fn=lambda device: device.family == "doorbots"
-        and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
+        exists_fn=lambda device: (
+            device.family == "doorbots"
+            and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
+        ),
         is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
         turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
@@ -82,7 +88,7 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
     ring_data = entry.runtime_data

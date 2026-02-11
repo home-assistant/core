@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.axis.const import CONF_STREAM_PROFILE
@@ -63,12 +63,12 @@ async def test_camera(
     assert camera_entity.image_source == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi"
     assert (
         camera_entity.mjpeg_source == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi"
-        f"{"" if not stream_profile else f"?{stream_profile}"}"
+        f"{'' if not stream_profile else f'?{stream_profile}'}"
     )
     assert (
         await camera_entity.stream_source()
         == "rtsp://root:pass@1.2.3.4/axis-media/media.amp?videocodec=h264"
-        f"{"" if not stream_profile else f"&{stream_profile}"}"
+        f"{'' if not stream_profile else f'&{stream_profile}'}"
     )
 
 

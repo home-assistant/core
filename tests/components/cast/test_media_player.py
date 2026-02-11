@@ -18,6 +18,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.const import (
+    DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
     HomeAssistantControllerData,
 )
@@ -45,7 +46,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
-    load_fixture,
+    async_load_fixture,
     mock_platform,
 )
 from tests.components.media_player import common
@@ -67,6 +68,7 @@ def get_fake_chromecast(info: ChromecastInfo):
     mock = MagicMock(uuid=info.uuid)
     mock.app_id = None
     mock.media_controller.status = None
+    mock.is_idle = True
     return mock
 
 
@@ -886,6 +888,7 @@ async def test_entity_cast_status(
     assert not state.attributes.get("is_volume_muted")
 
     chromecast.app_id = "1234"
+    chromecast.is_idle = False
     cast_status = MagicMock()
     cast_status.volume_level = 0.5
     cast_status.volume_muted = False
@@ -1037,6 +1040,7 @@ async def test_entity_browse_media(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1049,6 +1053,7 @@ async def test_entity_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1107,6 +1112,7 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1345,7 +1351,7 @@ async def test_entity_play_media_playlist(
 ) -> None:
     """Test playing media."""
     entity_id = "media_player.speaker"
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+    aioclient_mock.get(url, text=await async_load_fixture(hass, fixture, DOMAIN))
 
     await async_process_ha_core_config(
         hass,
@@ -1595,6 +1601,7 @@ async def test_entity_media_states(
 
     # App id updated, but no media status
     chromecast.app_id = app_id
+    chromecast.is_idle = False
     cast_status = MagicMock()
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
@@ -1637,6 +1644,7 @@ async def test_entity_media_states(
 
     # App no longer running
     chromecast.app_id = pychromecast.IDLE_APP_ID
+    chromecast.is_idle = True
     cast_status = MagicMock()
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
@@ -1644,6 +1652,7 @@ async def test_entity_media_states(
     assert state.state == "off"
 
     # No cast status
+    chromecast.app_id = None
     chromecast.is_idle = False
     cast_status_cb(None)
     await hass.async_block_till_done()
@@ -1718,6 +1727,7 @@ async def test_entity_media_states_lovelace_app(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    chromecast.app_id = None
     chromecast.is_idle = False
     media_status_cb(media_status)
     await hass.async_block_till_done()
@@ -1909,6 +1919,7 @@ async def test_group_media_control(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_on_idle(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1939,6 +1950,7 @@ async def test_failed_cast_on_idle(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_other_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1963,6 +1975,7 @@ async def test_failed_cast_other_url(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_internal_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1992,6 +2005,7 @@ async def test_failed_cast_internal_url(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_external_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2204,6 +2218,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2228,6 +2243,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

@@ -1,122 +1,96 @@
 """Define tests for the GIOS config flow."""
 
-import json
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from gios import ApiError
+from gios import ApiError, InvalidSensorsDataError
+import pytest
 
-from homeassistant.components.gios import config_flow
-from homeassistant.components.gios.const import CONF_STATION_ID
+from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import STATIONS
-
-from tests.common import load_fixture
-
 CONFIG = {
-    CONF_NAME: "Foo",
-    CONF_STATION_ID: 123,
+    CONF_STATION_ID: "123",
 }
+
+pytestmark = pytest.mark.usefixtures("mock_gios")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    flow = config_flow.GiosFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert len(result["data_schema"].schema[CONF_STATION_ID].config["options"]) == 2
 
 
-async def test_invalid_station_id(hass: HomeAssistant) -> None:
-    """Test that errors are shown when measuring station ID is invalid."""
-    with patch(
-        "homeassistant.components.gios.coordinator.Gios._get_stations",
-        return_value=STATIONS,
-    ):
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-        flow.context = {}
+async def test_form_with_api_error(hass: HomeAssistant, mock_gios: MagicMock) -> None:
+    """Test the form is aborted because of API error."""
+    mock_gios.create.side_effect = ApiError("error")
 
-        result = await flow.async_step_user(
-            user_input={CONF_NAME: "Foo", CONF_STATION_ID: 0}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        assert result["errors"] == {CONF_STATION_ID: "wrong_station_id"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
-async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
-    """Test that errors are shown when sensor data is invalid."""
-    with (
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_stations",
-            return_value=STATIONS,
+@pytest.mark.parametrize(
+    ("exception", "errors"),
+    [
+        (
+            InvalidSensorsDataError("Invalid data"),
+            {CONF_STATION_ID: "invalid_sensors_data"},
         ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_station",
-            return_value=json.loads(load_fixture("gios/station.json")),
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_sensor",
-            return_value={},
-        ),
-    ):
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-        flow.context = {}
+        (ApiError("error"), {"base": "cannot_connect"}),
+    ],
+)
+async def test_form_submission_errors(
+    hass: HomeAssistant, mock_gios: MagicMock, exception, errors
+) -> None:
+    """Test errors during form submission."""
+    mock_gios.async_update.side_effect = exception
 
-        result = await flow.async_step_user(user_input=CONFIG)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
-        assert result["errors"] == {CONF_STATION_ID: "invalid_sensors_data"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == errors
 
-
-async def test_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that errors are shown when cannot connect to GIOS server."""
-    with patch(
-        "homeassistant.components.gios.coordinator.Gios._async_get",
-        side_effect=ApiError("error"),
-    ):
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-        flow.context = {}
-
-        result = await flow.async_step_user(user_input=CONFIG)
-
-        assert result["errors"] == {"base": "cannot_connect"}
+    mock_gios.async_update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with (
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_stations",
-            return_value=STATIONS,
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_station",
-            return_value=json.loads(load_fixture("gios/station.json")),
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
-            return_value=json.loads(load_fixture("gios/sensors.json")),
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_indexes",
-            return_value=json.loads(load_fixture("gios/indexes.json")),
-        ),
-    ):
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-        flow.context = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
-        result = await flow.async_step_user(user_input=CONFIG)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home"
+    assert result["data"] == {
+        CONF_STATION_ID: 123,
+        CONF_NAME: "Home",
+    }
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Test Name 1"
-        assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
-
-        assert flow.context["unique_id"] == "123"
+    assert result["result"].unique_id == "123"

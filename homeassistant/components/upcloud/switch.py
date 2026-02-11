@@ -3,13 +3,12 @@
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, STATE_OFF
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_UPCLOUD
+from .coordinator import UpCloudConfigEntry
 from .entity import UpCloudServerEntity
 
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
@@ -17,12 +16,12 @@ SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: UpCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UpCloud server switch."""
-    coordinator = hass.data[DATA_UPCLOUD].coordinators[config_entry.data[CONF_USERNAME]]
-    entities = [UpCloudSwitch(coordinator, uuid) for uuid in coordinator.data]
+    coordinator = config_entry.runtime_data
+    entities = [UpCloudSwitch(config_entry, uuid) for uuid in coordinator.data]
     async_add_entities(entities, True)
 
 

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from triggercmd import client, ha
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TriggercmdConfigEntry
 from .const import DOMAIN
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TriggercmdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add switch for passed config_entry in HA."""
     hub = config_entry.runtime_data
@@ -59,13 +60,13 @@ class TRIGGERcmdSwitch(SwitchEntity):
         """Return True if hub is available."""
         return self._switch.hub.online
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.trigger("on")
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.trigger("off")
         self._attr_is_on = False
@@ -81,5 +82,6 @@ class TRIGGERcmdSwitch(SwitchEntity):
                 "params": params,
                 "sender": "Home Assistant",
             },
+            self._switch.hub.httpx_client,
         )
         _LOGGER.debug("TRIGGERcmd trigger response: %s", r.json())

@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -28,6 +30,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -58,6 +61,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -71,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +83,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -106,6 +112,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -119,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -132,6 +140,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -160,6 +169,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -173,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -186,6 +197,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -216,6 +228,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -229,6 +242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -236,6 +250,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -266,6 +281,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -279,6 +295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -286,6 +303,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -304,7 +322,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_downloads_in_queue-entry]
@@ -316,6 +334,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -329,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
     'original_device_class': None,
@@ -336,6 +356,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -354,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '6',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_free_space-entry]
@@ -364,6 +385,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -377,6 +399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -390,6 +413,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -408,7 +432,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '93.1322574606165',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_speed-entry]
@@ -418,6 +442,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -431,6 +456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -444,6 +470,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -462,7 +489,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '43.247704',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_total_downloads-entry]
@@ -474,6 +501,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -487,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -494,6 +523,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -512,7 +542,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '37',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_active_downloads-entry]
@@ -524,6 +554,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -537,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -544,6 +576,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -574,6 +607,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -587,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +629,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -622,6 +658,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -635,6 +672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -648,6 +686,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -676,6 +715,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -689,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -702,6 +743,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -732,6 +774,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -745,6 +788,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -752,6 +796,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',
@@ -782,6 +827,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -795,6 +841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +849,7 @@
     'original_name': 'Active downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.ACTIVE: 'active'>,
     'unique_id': 'XXXXXXXXXXXXXX_active',
@@ -832,6 +880,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -845,6 +894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
     'original_device_class': None,
@@ -852,6 +902,7 @@
     'original_name': 'Downloads in queue',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.QUEUE: 'queue'>,
     'unique_id': 'XXXXXXXXXXXXXX_queue',
@@ -880,6 +931,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -893,6 +945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -906,6 +959,7 @@
     'original_name': 'Free space',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.FREE_SPACE: 'free_space'>,
     'unique_id': 'XXXXXXXXXXXXXX_free_space',
@@ -934,6 +988,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -947,6 +1002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -960,6 +1016,7 @@
     'original_name': 'Speed',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.SPEED: 'speed'>,
     'unique_id': 'XXXXXXXXXXXXXX_speed',
@@ -990,6 +1047,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1003,6 +1061,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1010,6 +1069,7 @@
     'original_name': 'Total downloads',
     'platform': 'pyload',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
     'unique_id': 'XXXXXXXXXXXXXX_total',

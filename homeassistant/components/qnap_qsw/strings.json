@@ -11,15 +11,15 @@
     "step": {
       "discovered_connection": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         }
       },
       "user": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]",
           "url": "[%key:common::config_flow::data::url%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
     }
@@ -56,12 +56,6 @@
       "uptime_timestamp": {
         "name": "Uptime timestamp"
       }
-    }
-  },
-  "issues": {
-    "uptime_seconds_deprecated": {
-      "title": "QNAP QSW uptime seconds sensor deprecated",
-      "description": "The QNAP QSW uptime seconds sensor entity is deprecated and will be removed in HA 2025.2.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the uptime seconds entity from `{info}` then click submit to fix this issue."
     }
   }
 }

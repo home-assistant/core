@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
@@ -52,9 +52,9 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda state, info, connection: state.battery.percentage
-        if state.battery
-        else None,
+        value_fn=lambda state, info, connection: (
+            state.battery.percentage if state.battery else None
+        ),
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_voltage",
@@ -65,9 +65,9 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
         has_entity_name=True,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         entity_registry_enabled_default=False,
-        value_fn=lambda state, info, connection: state.battery.voltage
-        if state.battery
-        else None,
+        value_fn=lambda state, info, connection: (
+            state.battery.voltage if state.battery else None
+        ),
     ),
 )
 
@@ -75,7 +75,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: YALEXSBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YALE XS Bluetooth sensors."""
     data = entry.runtime_data

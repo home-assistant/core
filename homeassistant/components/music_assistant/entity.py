@@ -34,7 +34,7 @@ class MusicAssistantEntity(Entity):
             identifiers={(DOMAIN, player_id)},
             manufacturer=self.player.device_info.manufacturer or provider.name,
             model=self.player.device_info.model or self.player.name,
-            name=self.player.display_name,
+            name=self.player.name,
             configuration_url=f"{mass.server_url}/#/settings/editplayer/{player_id}",
         )
 

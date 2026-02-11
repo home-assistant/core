@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.forecast_interval import ForecastInterval
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -19,19 +19,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AmberConfigEntry
 from .const import ATTRIBUTION
-from .coordinator import AmberUpdateCoordinator, normalize_descriptor
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .helpers import format_cents_to_dollars, normalize_descriptor
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
 
 
 def friendly_channel_type(channel_type: str) -> str:
@@ -52,7 +47,7 @@ class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
         self,
         coordinator: AmberUpdateCoordinator,
         description: SensorEntityDescription,
-        channel_type: ChannelType,
+        channel_type: str,
     ) -> None:
         """Initialize the Sensor."""
         super().__init__(coordinator)
@@ -73,7 +68,7 @@ class AmberPriceSensor(AmberSensor):
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -87,9 +82,9 @@ class AmberPriceSensor(AmberSensor):
             return data
 
         data["duration"] = interval.duration
-        data["date"] = interval.date.isoformat()
+        data["date"] = interval.var_date.isoformat()
         data["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             data["per_kwh"] = data["per_kwh"] * -1
         data["nem_date"] = interval.nem_time.isoformat()
         data["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
@@ -120,7 +115,7 @@ class AmberForecastSensor(AmberSensor):
             return None
         interval = intervals[0]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -142,10 +137,10 @@ class AmberForecastSensor(AmberSensor):
         for interval in intervals:
             datum = {}
             datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
+            datum["date"] = interval.var_date.isoformat()
             datum["nem_date"] = interval.nem_time.isoformat()
             datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
+            if interval.channel_type == ChannelType.FEEDIN:
                 datum["per_kwh"] = datum["per_kwh"] * -1
             datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
             datum["start_time"] = interval.start_time.isoformat()
@@ -197,7 +192,7 @@ class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmberConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = entry.runtime_data

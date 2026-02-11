@@ -16,6 +16,8 @@ from homeassistant.core import callback
 
 from .entity import EsphomeEntity, platform_async_setup_entry
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
     """A camera implementation for ESPHome."""

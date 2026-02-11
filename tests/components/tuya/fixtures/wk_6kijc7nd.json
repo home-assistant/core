@@ -1,0 +1,187 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Кабінет",
+  "category": "wk",
+  "product_id": "6kijc7nd",
+  "product_name": "Thermostat Tervix Pro Line ZigBee color",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-01-22T11:54:29+00:00",
+  "create_time": "2025-01-22T11:54:29+00:00",
+  "update_time": "2025-01-22T11:54:29+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "program"]
+      }
+    },
+    "window_check": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 50,
+        "max": 950,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 350,
+        "max": 950,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -9,
+        "max": 9,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": {
+        "range": ["in", "out"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "program"]
+      }
+    },
+    "window_check": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 50,
+        "max": 950,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 350,
+        "max": 950,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 0,
+        "max": 995,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "window_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["close", "open"]
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -9,
+        "max": 9,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": {
+        "range": ["in", "out"]
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "mode": "manual",
+    "window_check": false,
+    "frost": false,
+    "temp_set": 215,
+    "upper_temp": 450,
+    "temp_current": 195,
+    "window_state": "close",
+    "temp_correction": -2,
+    "humidity": 23,
+    "factory_reset": false,
+    "child_lock": false,
+    "sensor_choose": "all"
+  },
+  "set_up": true,
+  "support_local": true
+}

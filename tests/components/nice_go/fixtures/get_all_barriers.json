@@ -11,7 +11,6 @@
     ],
     "state": {
       "deviceId": "1",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 1",
         "autoDisabled": false,
@@ -42,7 +41,6 @@
     ],
     "state": {
       "deviceId": "2",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 2",
         "autoDisabled": false,
@@ -73,7 +71,6 @@
     ],
     "state": {
       "deviceId": "3",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 3",
         "autoDisabled": false,
@@ -101,7 +98,6 @@
     ],
     "state": {
       "deviceId": "4",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 4",
         "autoDisabled": false,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -20,6 +20,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

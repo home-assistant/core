@@ -21,11 +21,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -60,11 +60,16 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterUpdateEntityDescription(UpdateEntityDescription, MatterEntityDescription):
+    """Describe Matter Update entities."""
 
 
 class MatterUpdate(MatterEntity, UpdateEntity):
@@ -250,8 +255,9 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.UPDATE,
-        entity_description=UpdateEntityDescription(
-            key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE, name=None
+        entity_description=MatterUpdateEntityDescription(
+            key="MatterUpdate",
+            device_class=UpdateDeviceClass.FIRMWARE,
         ),
         entity_class=MatterUpdate,
         required_attributes=(
@@ -261,5 +267,6 @@ DISCOVERY_SCHEMAS = [
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState,
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress,
         ),
+        allow_none_value=True,
     ),
 ]

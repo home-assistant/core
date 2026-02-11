@@ -10,20 +10,21 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN
+from .const import DOMAIN_DATA
 from .entity import AbodeAutomation, AbodeDevice
 
 DEVICE_TYPES = ["switch", "valve"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode switch devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = hass.data[DOMAIN_DATA]
 
     entities: list[SwitchEntity] = [
         AbodeSwitch(data, device)

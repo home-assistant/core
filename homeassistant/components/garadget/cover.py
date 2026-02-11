@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -221,7 +221,7 @@ class GaradgetCover(CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
-        if self._state not in ["stopped"]:
+        if self._state != "stopped":
             self._put_command("setState", "stop")
             self._start_watcher("stop")
 

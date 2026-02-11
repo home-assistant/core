@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_TIMEOUT = 10
@@ -93,7 +93,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
                 _LOGGER.debug("Device %s is connected", mac)
                 self.last_results[mac] = name
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             _LOGGER.exception("Router returned unexpected response")
             return False
         return True

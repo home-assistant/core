@@ -6,18 +6,18 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PingConfigEntry
 from .const import CONF_IMPORTED_BY
-from .coordinator import PingUpdateCoordinator
+from .coordinator import PingConfigEntry, PingUpdateCoordinator
 from .entity import PingEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: PingConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Ping config entry."""
     async_add_entities([PingBinarySensor(entry, entry.runtime_data)])
@@ -31,7 +31,7 @@ class PingBinarySensor(PingEntity, BinarySensorEntity):
     _attr_name = None
 
     def __init__(
-        self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
+        self, config_entry: PingConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
         """Initialize the Ping Binary sensor."""
         super().__init__(config_entry, coordinator, config_entry.entry_id)

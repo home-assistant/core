@@ -12,6 +12,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow export',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +34,7 @@
     'original_name': 'Allow export',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_customer_preferred_export_rule',
     'unique_id': '123456-components_customer_preferred_export_rule',
@@ -69,6 +72,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -82,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +94,7 @@
     'original_name': 'Operation mode',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'default_real_mode',
     'unique_id': '123456-default_real_mode',
@@ -127,6 +133,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -140,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat cooler left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -147,6 +155,7 @@
     'original_name': 'Seat cooler left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_fan_front_left',
     'unique_id': 'VINVINVIN-climate_state_seat_fan_front_left',
@@ -186,6 +195,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -199,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat cooler right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,6 +217,7 @@
     'original_name': 'Seat cooler right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_fan_front_right',
     'unique_id': 'VINVINVIN-climate_state_seat_fan_front_right',
@@ -245,6 +257,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -258,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +279,7 @@
     'original_name': 'Seat heater left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_left',
     'unique_id': 'VINVINVIN-climate_state_seat_heater_left',
@@ -304,6 +319,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -317,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear center',
     'options': dict({
     }),
     'original_device_class': None,
@@ -324,6 +341,7 @@
     'original_name': 'Seat heater rear center',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_center',
     'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_center',
@@ -363,6 +381,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -376,6 +395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -383,6 +403,7 @@
     'original_name': 'Seat heater rear left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_left',
     'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_left',
@@ -422,6 +443,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -435,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -442,6 +465,7 @@
     'original_name': 'Seat heater rear right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_right',
     'unique_id': 'VINVINVIN-climate_state_seat_heater_rear_right',
@@ -481,6 +505,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -494,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -501,6 +527,7 @@
     'original_name': 'Seat heater right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_right',
     'unique_id': 'VINVINVIN-climate_state_seat_heater_right',

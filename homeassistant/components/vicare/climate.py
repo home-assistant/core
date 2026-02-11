@@ -24,7 +24,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
@@ -33,13 +32,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN
+from .const import DOMAIN
 from .entity import ViCareEntity
-from .types import HeatingProgram, ViCareDevice
+from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
 from .utils import get_burners, get_circuits, get_compressors, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +59,7 @@ VICARE_HOLD_MODE_HOME = "home"
 VICARE_HOLD_MODE_OFF = "off"
 
 VICARE_TEMP_HEATING_MIN = 3
-VICARE_TEMP_HEATING_MAX = 37
+VICARE_TEMP_HEATING_MAX = 60
 
 VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
@@ -99,25 +97,22 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ViCareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
 
     platform = entity_platform.async_get_current_platform()
-
     platform.async_register_entity_service(
         SERVICE_SET_VICARE_MODE,
         {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
     )
 
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         )
     )
 
@@ -140,7 +135,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
     _current_program: str | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -234,7 +228,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Return current hvac mode."""
         if self._current_mode is None:
             return None
-        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode, None)
+        return VICARE_TO_HA_HVAC_HEATING.get(self._current_mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
@@ -288,8 +282,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._attr_target_temperature = temp
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_program is None:
+            return None
         return HeatingProgram.to_ha_preset(self._current_program)
 
     def set_preset_mode(self, preset_mode: str) -> None:

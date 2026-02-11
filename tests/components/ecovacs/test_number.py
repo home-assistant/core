@@ -3,10 +3,16 @@
 from dataclasses import dataclass
 
 from deebot_client.command import Command
-from deebot_client.commands.json import SetCutDirection, SetVolume
-from deebot_client.events import CutDirectionEvent, Event, VolumeEvent
+from deebot_client.commands.json import (
+    SetCleanCount,
+    SetCutDirection,
+    SetVolume,
+    SetWaterInfo,
+)
+from deebot_client.events import CleanCountEvent, CutDirectionEvent, Event, VolumeEvent
+from deebot_client.events.water_info import WaterCustomAmountEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -68,8 +74,34 @@ class NumberTestCase:
                 ),
             ],
         ),
+        (
+            "n0vyif",
+            [
+                NumberTestCase(
+                    "number.x8_pro_omni_clean_count",
+                    CleanCountEvent(1),
+                    "1",
+                    4,
+                    SetCleanCount(4),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_volume",
+                    VolumeEvent(5, 11),
+                    "5",
+                    10,
+                    SetVolume(10),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_water_flow_level",
+                    WaterCustomAmountEvent(14),
+                    "14",
+                    7,
+                    SetWaterInfo(custom_amount=7),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "n0vyif"],
 )
 async def test_number_entities(
     hass: HomeAssistant,
@@ -136,9 +168,9 @@ async def test_disabled_by_default_number_entities(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 

@@ -18,13 +18,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
 
 from . import BMWConfigEntry
 from .const import UNIT_MAP
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,8 +148,10 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
         # device class lock: On means unlocked, Off means locked
         # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
-        value_fn=lambda v: v.doors_and_windows.door_lock_state
-        not in {LockState.LOCKED, LockState.SECURED},
+        value_fn=lambda v: (
+            v.doors_and_windows.door_lock_state
+            not in {LockState.LOCKED, LockState.SECURED}
+        ),
         attr_fn=lambda v, u: {
             "door_lock_state": v.doors_and_windows.door_lock_state.value
         },
@@ -187,9 +191,11 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="is_pre_entry_climatization_enabled",
         translation_key="is_pre_entry_climatization_enabled",
-        value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
-        if v.charging_profile
-        else False,
+        value_fn=lambda v: (
+            v.charging_profile.is_pre_entry_climatization_enabled
+            if v.charging_profile
+            else False
+        ),
         is_available=lambda v: v.has_electric_drivetrain,
     ),
 )
@@ -198,10 +204,10 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BMW binary sensors from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities = [
         BMWBinarySensor(coordinator, vehicle, description, hass.config.units)

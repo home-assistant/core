@@ -31,3 +31,8 @@ class OpenUvEntity(CoordinatorEntity):
             name="OpenUV",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+        self._update_attrs()
+
+    def _update_attrs(self) -> None:
+        """Override point for updating attributes during init."""

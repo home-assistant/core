@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"
@@ -49,6 +49,6 @@ def _patch_get_info(device=None, exception=None):
     async def _get_info(*args, **kwargs):
         if exception:
             raise exception
-        return device if device else _mocked_device()
+        return device or _mocked_device()
 
     return patch(f"{MODULE_CONFIG_FLOW}.LookInHttpProtocol.get_info", new=_get_info)

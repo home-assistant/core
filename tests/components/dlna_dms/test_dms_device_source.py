@@ -16,6 +16,7 @@ from homeassistant.components.dlna_dms.dms import DidlPlayMedia
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import BrowseMediaSource, Unresolvable
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import (
     MOCK_DEVICE_BASE_URL,
@@ -68,7 +69,7 @@ async def test_catch_request_error_unavailable(
     # DmsDevice notifies of disconnect via SSDP
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -274,7 +275,7 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.url == res_abs_url
@@ -292,7 +293,7 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.url == res_abs_url
@@ -350,7 +351,7 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.didl_metadata.id == object_ids[-1]

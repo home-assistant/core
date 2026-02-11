@@ -1,0 +1,158 @@
+{
+  "info": {
+    "brand": "GigaBlue",
+    "model": "UHD QUAD 4K",
+    "boxtype": "gbquad4k",
+    "machinebuild": "gb7252",
+    "lcd": 1,
+    "grabpip": 1,
+    "chipset": "bcm7252s",
+    "mem1": "906132 kB",
+    "mem2": "616396 kB",
+    "mem3": "616396 kB frei / 906132 kB insgesamt",
+    "uptime": "46d 15:47",
+    "webifver": "OWIF 2.2.0",
+    "imagedistro": "openatv",
+    "friendlyimagedistro": "openATV",
+    "oever": "OE-Alliance 5.5",
+    "imagever": "7.5.20241101",
+    "enigmaver": "2024-10-31",
+    "driverdate": "20200723",
+    "kernelver": "4.1.20",
+    "fp_version": 0,
+    "friendlychipsetdescription": "Chipsatz",
+    "friendlychipsettext": "Broadcom 7252s",
+    "tuners": [
+      {
+        "name": "Tuner A",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner B",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner C",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner D",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner E",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner F",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner G",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner H",
+        "type": "DVB-S2X NIM(45308X FBC) (DVB-S2X)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      },
+      {
+        "name": "Tuner I",
+        "type": "GIGA DVB-T2/C NIM (TT2L10) (DVB-T2)",
+        "rec": "",
+        "live": "",
+        "stream": ""
+      }
+    ],
+    "ifaces": [
+      {
+        "name": "eth0",
+        "friendlynic": "Broadcom Gigabit Ethernet",
+        "linkspeed": "1 GBit/s",
+        "mac": null,
+        "dhcp": true,
+        "ipv4method": "DHCP",
+        "ip": "192.168.1.100",
+        "mask": "255.255.255.0",
+        "v4prefix": 23,
+        "gw": "192.168.1.1",
+        "ipv6": "2003::2/64",
+        "ipmethod": "SL-AAC",
+        "firstpublic": "2003::2"
+      }
+    ],
+    "hdd": [
+      {
+        "model": "ATA(ST2000LM015-2E81)",
+        "capacity": "1.8 TB",
+        "labelled_capacity": "2.0 TB",
+        "free": "22.5 GB",
+        "mount": "/media/hdd",
+        "friendlycapacity": "22.5 GB frei / 1.8 TB (2.0 TB) insgesamt"
+      }
+    ],
+    "shares": [
+      {
+        "name": "NAS",
+        "method": "autofs",
+        "type": "SMBv2.0",
+        "mode": "r/w",
+        "path": "//192.168.1.2/NAS",
+        "host": "192.168.1.2",
+        "ipaddress": null,
+        "friendlyaddress": "192.168.1.2"
+      }
+    ],
+    "transcoding": true,
+    "EX": "",
+    "streams": [],
+    "timerpipzap": false,
+    "allow_duplicate": false,
+    "timermargins": true,
+    "textinputsupport": true
+  },
+  "service": {
+    "result": false,
+    "name": "",
+    "namespace": "",
+    "aspect": 0,
+    "provider": "",
+    "width": 0,
+    "height": 0,
+    "apid": 0,
+    "vpid": 0,
+    "pcrpid": 0,
+    "pmtpid": 0,
+    "txtpid": "N/A",
+    "tsid": 0,
+    "onid": 0,
+    "sid": 0,
+    "ref": "",
+    "iswidescreen": false,
+    "bqref": "",
+    "bqname": ""
+  }
+}

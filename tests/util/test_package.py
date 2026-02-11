@@ -361,6 +361,69 @@ async def test_async_get_user_site(mock_env_copy) -> None:
     assert ret == os.path.join(deps_dir, "lib_dir")
 
 
+async def test_async_get_installed_packages() -> None:
+    """Test async get installed packages."""
+    mock_output = b'[{"name": "package1", "version": "1.0.0"}, {"name": "package2", "version": "2.0.0"}]'
+
+    async_popen = MagicMock()
+    async_popen.returncode = 0
+
+    async def communicate(input=None):
+        return (mock_output, None)
+
+    async_popen.communicate = communicate
+
+    args = [sys.executable, "-m", "uv", "pip", "list", "--format", "json"]
+    with patch(
+        "homeassistant.util.package.asyncio.create_subprocess_exec",
+        return_value=async_popen,
+    ) as popen_mock:
+        ret = await package.async_get_installed_packages()
+
+    assert popen_mock.call_count == 1
+    assert popen_mock.call_args == call(
+        *args,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+        close_fds=False,
+    )
+    assert ret == [
+        {"name": "package1", "version": "1.0.0"},
+        {"name": "package2", "version": "2.0.0"},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("returncode", "stdout", "test_id"),
+    [
+        (1, b"", "nonzero_return"),
+        (0, b'{"name": "package1", "version": "1.0.0"}', "json_object"),
+        (0, b'"just a string"', "json_string"),
+    ],
+    ids=lambda x: x if isinstance(x, str) else None,
+)
+async def test_async_get_installed_packages_returns_empty(
+    returncode: int, stdout: bytes, test_id: str
+) -> None:
+    """Test async get installed packages returns empty list on errors."""
+    async_popen = MagicMock()
+    async_popen.returncode = returncode
+
+    async def communicate(input=None):
+        return (stdout, None)
+
+    async_popen.communicate = communicate
+
+    with patch(
+        "homeassistant.util.package.asyncio.create_subprocess_exec",
+        return_value=async_popen,
+    ):
+        ret = await package.async_get_installed_packages()
+
+    assert ret == []
+
+
 def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package."""
     pkg = metadata("homeassistant")
@@ -400,6 +463,11 @@ def test_get_is_installed() -> None:
     assert package.is_installed(f"{installed_package}<={installed_version}")
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
+    # URL-based requirements should always return False, as no version check is possible
+    assert not package.is_installed(
+        "homeassistant@git+https://github.com/home-assistant/core.git@dev"
+    )
+
 
 def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
@@ -410,3 +478,47 @@ def test_check_package_previous_failed_install() -> None:
     with patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")
+
+
+@pytest.mark.parametrize("dockerenv", [True, False], ids=["dockerenv", "not_dockerenv"])
+@pytest.mark.parametrize(
+    "containerenv", [True, False], ids=["containerenv", "not_containerenv"]
+)
+@pytest.mark.parametrize(
+    "kubernetes_service_host", [True, False], ids=["kubernetes", "not_kubernetes"]
+)
+@pytest.mark.parametrize(
+    "is_official_image", [True, False], ids=["official_image", "not_official_image"]
+)
+async def test_is_docker_env(
+    dockerenv: bool,
+    containerenv: bool,
+    kubernetes_service_host: bool,
+    is_official_image: bool,
+) -> None:
+    """Test is_docker_env."""
+
+    def new_path_mock(path: str):
+        mock = Mock()
+        if path == "/.dockerenv":
+            mock.exists.return_value = dockerenv
+        elif path == "/run/.containerenv":
+            mock.exists.return_value = containerenv
+        return mock
+
+    env = {}
+    if kubernetes_service_host:
+        env["KUBERNETES_SERVICE_HOST"] = "True"
+
+    package.is_docker_env.cache_clear()
+    with (
+        patch("homeassistant.util.package.Path", side_effect=new_path_mock),
+        patch(
+            "homeassistant.util.package.is_official_image",
+            return_value=is_official_image,
+        ),
+        patch.dict(os.environ, env),
+    ):
+        assert package.is_docker_env() is any(
+            [dockerenv, containerenv, kubernetes_service_host, is_official_image]
+        )

@@ -1,0 +1,20 @@
+"""Constants for the Qbus integration."""
+
+from typing import Final
+
+from homeassistant.const import Platform
+
+DOMAIN: Final = "qbus"
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
+CONF_SERIAL_NUMBER: Final = "serial"
+
+MANUFACTURER: Final = "Qbus"

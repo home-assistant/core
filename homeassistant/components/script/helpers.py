@@ -12,7 +12,7 @@ DATA_BLUEPRINTS = "script_blueprints"
 
 def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
     """Return True if any script references the blueprint."""
-    from . import scripts_with_blueprint  # pylint: disable=import-outside-toplevel
+    from . import scripts_with_blueprint  # noqa: PLC0415
 
     return len(scripts_with_blueprint(hass, blueprint_path)) > 0
 

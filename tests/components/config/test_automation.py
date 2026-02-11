@@ -13,21 +13,15 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
 async def setup_automation(
     hass: HomeAssistant,
     automation_config: dict[str, Any],
-    stub_blueprint_populate: None,
 ) -> None:
     """Set up automation integration."""
     assert await async_setup_component(
@@ -223,7 +217,7 @@ async def test_update_automation_config_with_blueprint_substitution_error(
 
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         resp = await client.post(
             "/api/config/automation/config/moon",

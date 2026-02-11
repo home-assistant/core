@@ -11,11 +11,13 @@ from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import MockSchlageConfigEntry
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry() -> MockSchlageConfigEntry:
     """Mock ConfigEntry."""
     return MockConfigEntry(
         title="asdf@asdf.com",
@@ -31,11 +33,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_added_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
     mock_lock: Mock,
-) -> MockConfigEntry:
+) -> MockSchlageConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
     mock_schlage.locks.return_value = [mock_lock]
     mock_schlage.users.return_value = []

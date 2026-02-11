@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -41,7 +41,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 device_info = await api.get_device_info()
-            except (TimeoutError, ClientConnectionError):
+            except TimeoutError, ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.deviceId)

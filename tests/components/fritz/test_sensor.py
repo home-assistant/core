@@ -14,7 +14,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import MOCK_USER_DATA
 
@@ -28,6 +28,7 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup of Fritz!Tools sensors."""
@@ -43,7 +44,7 @@ async def test_sensor_setup(
 
 
 async def test_sensor_update_fail(
-    hass: HomeAssistant, fc_class_mock, fh_class_mock
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fc_class_mock, fh_class_mock
 ) -> None:
     """Test failed update of Fritz!Tools sensors."""
 
@@ -53,9 +54,11 @@ async def test_sensor_update_fail(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    fc_class_mock().call_action_side_effect(FritzConnectionException)
+    fc_class_mock().call_action_side_effect(FritzConnectionException("Boom"))
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error while updating the data: Boom" in caplog.text
 
     sensors = hass.states.async_all(SENSOR_DOMAIN)
     for sensor in sensors:

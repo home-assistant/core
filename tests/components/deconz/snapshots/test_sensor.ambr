@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP Flur',
     'options': dict({
     }),
     'original_device_class': None,
@@ -26,6 +28,7 @@
     'original_name': 'CLIP Flur',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '/sensors/3-status',
@@ -55,6 +58,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP light level sensor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -75,6 +80,7 @@
     'original_name': 'CLIP light level sensor',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00-light_level',
@@ -106,6 +112,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -119,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light level sensor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -126,6 +134,7 @@
     'original_name': 'Light level sensor',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00-light_level',
@@ -160,6 +169,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -173,13 +183,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light level sensor Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Light level sensor Temperature',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00-internal_temperature',
@@ -209,6 +224,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -222,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,6 +246,7 @@
     'original_name': 'BOSCH Air quality sensor',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality',
@@ -257,6 +275,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -270,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -277,6 +297,7 @@
     'original_name': 'BOSCH Air quality sensor PPB',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb',
@@ -305,6 +326,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -318,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -325,6 +348,7 @@
     'original_name': 'BOSCH Air quality sensor',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality',
@@ -353,6 +377,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -366,6 +391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -373,6 +399,7 @@
     'original_name': 'BOSCH Air quality sensor PPB',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:12:4b:00:14:4d:00:07-02-fdef-air_quality_ppb',
@@ -401,6 +428,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -414,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FSM_STATE Motion stair',
     'options': dict({
     }),
     'original_device_class': None,
@@ -421,6 +450,7 @@
     'original_name': 'FSM_STATE Motion stair',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'fsm-state-1520195376277-status',
@@ -450,6 +480,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -463,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -473,6 +505,7 @@
     'original_name': 'Mi temperature 1',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0405-humidity',
@@ -505,6 +538,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -518,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -525,6 +560,7 @@
     'original_name': 'Mi temperature 1 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0405-battery',
@@ -557,6 +593,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -570,6 +607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil Sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -580,6 +618,7 @@
     'original_name': 'Soil Sensor',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a4:c1:38:fe:86:8f:07:a3-01-0408-moisture',
@@ -611,6 +650,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -624,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil Sensor Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -631,6 +672,7 @@
     'original_name': 'Soil Sensor Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a4:c1:38:fe:86:8f:07:a3-01-0408-battery',
@@ -663,6 +705,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -676,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -683,6 +727,7 @@
     'original_name': 'Motion sensor 4',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:17:88:01:03:28:8c:9b-02-0400-light_level',
@@ -717,6 +762,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -730,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor 4 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -737,6 +784,7 @@
     'original_name': 'Motion sensor 4 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:17:88:01:03:28:8c:9b-02-0400-battery',
@@ -771,6 +819,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -784,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'STARKVIND AirPurifier PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -791,10 +841,11 @@
     'original_name': 'STARKVIND AirPurifier PM25',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload14-expected14][sensor.starkvind_airpurifier_pm25-state]
@@ -803,7 +854,7 @@
       'device_class': 'pm25',
       'friendly_name': 'STARKVIND AirPurifier PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.starkvind_airpurifier_pm25',
@@ -822,6 +873,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -835,13 +887,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power 16',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power 16',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:0d:6f:00:0b:7a:64:29-01-0b04-power',
@@ -876,6 +933,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -889,13 +947,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Mi temperature 1',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0403-pressure',
@@ -928,6 +991,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -941,6 +1005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -948,6 +1013,7 @@
     'original_name': 'Mi temperature 1 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0403-battery',
@@ -980,6 +1046,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -993,6 +1060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1003,6 +1071,7 @@
     'original_name': 'Mi temperature 1',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0402-temperature',
@@ -1035,6 +1104,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1048,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1055,6 +1126,7 @@
     'original_name': 'Mi temperature 1 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:45:dc:53-01-0402-battery',
@@ -1085,6 +1157,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1098,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eTRV Séjour',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1105,6 +1179,7 @@
     'original_name': 'eTRV Séjour',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'cc:cc:cc:ff:fe:38:4d:b3-01-000a-last_set',
@@ -1134,6 +1209,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1147,6 +1223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eTRV Séjour Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1154,6 +1231,7 @@
     'original_name': 'eTRV Séjour Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'cc:cc:cc:ff:fe:38:4d:b3-01-000a-battery',
@@ -1186,6 +1264,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1199,6 +1278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm 10 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1206,6 +1286,7 @@
     'original_name': 'Alarm 10 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:b5:d1:80-01-0500-battery',
@@ -1239,6 +1320,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1252,13 +1334,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm 10 Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Alarm 10 Temperature',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:02:b5:d1:80-01-0500-internal_temperature',
@@ -1290,6 +1377,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1303,6 +1391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1310,10 +1399,11 @@
     'original_name': 'AirQuality 1 CH2O',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ch2o-state]
@@ -1322,7 +1412,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1341,6 +1431,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1354,6 +1445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1361,6 +1453,7 @@
     'original_name': 'AirQuality 1 CO2',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
@@ -1392,6 +1485,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1405,6 +1499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1412,10 +1507,11 @@
     'original_name': 'AirQuality 1 PM25',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_pm25-state]
@@ -1424,7 +1520,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1443,6 +1539,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1456,6 +1553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1463,6 +1561,7 @@
     'original_name': 'AirQuality 1 PPB',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
@@ -1493,6 +1592,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1506,6 +1606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmer switch 3 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1513,6 +1614,7 @@
     'original_name': 'Dimmer switch 3 Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:17:88:01:02:0e:32:a3-02-fc00-battery',
@@ -1544,6 +1646,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1557,6 +1660,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IKEA Starkvind Filter time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1570,6 +1674,7 @@
     'original_name': 'IKEA Starkvind Filter time',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-air_purifier_filter_run_time',
@@ -1600,6 +1705,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1613,6 +1719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1620,10 +1727,11 @@
     'original_name': 'AirQuality 1 CH2O',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ch2o-state]
@@ -1632,7 +1740,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1651,6 +1759,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1664,6 +1773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1671,6 +1781,7 @@
     'original_name': 'AirQuality 1 CO2',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
@@ -1702,6 +1813,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1715,6 +1827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1722,10 +1835,11 @@
     'original_name': 'AirQuality 1 PM25',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_pm25-state]
@@ -1734,7 +1848,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1753,6 +1867,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1766,6 +1881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1773,6 +1889,7 @@
     'original_name': 'AirQuality 1 PPB',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
@@ -1803,6 +1920,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1816,6 +1934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1823,10 +1942,11 @@
     'original_name': 'AirQuality 1 CH2O',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ch2o-state]
@@ -1835,7 +1955,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1854,6 +1974,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1867,6 +1988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1874,6 +1996,7 @@
     'original_name': 'AirQuality 1 CO2',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_co2',
@@ -1905,6 +2028,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1918,6 +2042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1925,10 +2050,11 @@
     'original_name': 'AirQuality 1 PM25',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_pm25-state]
@@ -1937,7 +2063,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1956,6 +2082,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1969,6 +2096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1976,6 +2104,7 @@
     'original_name': 'AirQuality 1 PPB',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_ppb',
@@ -2006,6 +2135,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2019,6 +2149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FYRTUR block-out roller blind Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2026,6 +2157,7 @@
     'original_name': 'FYRTUR block-out roller blind Battery',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:0d:6f:ff:fe:01:23:45-01-0001-battery',
@@ -2058,6 +2190,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2071,6 +2204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CarbonDioxide 35',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -2078,6 +2212,7 @@
     'original_name': 'CarbonDioxide 35',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-040d-carbon_dioxide',
@@ -2109,6 +2244,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2122,13 +2258,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption 15',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption 15',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:0d:6f:00:0b:7a:64:29-01-0702-consumption',
@@ -2160,6 +2301,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2173,6 +2315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daylight',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2180,6 +2323,7 @@
     'original_name': 'Daylight',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01:23:4E:FF:FF:56:78:9A-01-daylight_status',
@@ -2211,6 +2355,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2224,6 +2369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Formaldehyde 34',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -2231,6 +2377,7 @@
     'original_name': 'Formaldehyde 34',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-042b-formaldehyde',

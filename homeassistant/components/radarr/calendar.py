@@ -4,16 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEntityDescription,
+    CalendarEvent,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RadarrConfigEntry
-from .coordinator import CalendarUpdateCoordinator, RadarrEvent
+from .coordinator import CalendarUpdateCoordinator, RadarrConfigEntry, RadarrEvent
 from .entity import RadarrEntity
 
-CALENDAR_TYPE = EntityDescription(
+CALENDAR_TYPE = CalendarEntityDescription(
     key="calendar",
     name=None,
 )
@@ -22,7 +24,7 @@ CALENDAR_TYPE = EntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RadarrConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Radarr calendar entity."""
     coordinator = entry.runtime_data.calendar

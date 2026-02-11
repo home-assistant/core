@@ -3,7 +3,6 @@
 from contextlib import suppress
 from functools import partial
 import logging
-from typing import Generic
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -13,7 +12,6 @@ from broadlink.exceptions import (
     ConnectionClosedError,
     NetworkTimeoutError,
 )
-from typing_extensions import TypeVar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,8 +29,6 @@ from homeassistant.helpers import device_registry as dr
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 from .updater import BroadlinkUpdateManager, get_update_manager
 
-_ApiT = TypeVar("_ApiT", bound=blk.Device, default=blk.Device)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -41,7 +37,7 @@ def get_domains(device_type: str) -> set[Platform]:
     return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
-class BroadlinkDevice(Generic[_ApiT]):
+class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
     """Manages a Broadlink device."""
 
     api: _ApiT
@@ -177,7 +173,7 @@ class BroadlinkDevice(Generic[_ApiT]):
         request = partial(function, *args, **kwargs)
         try:
             return await self.hass.async_add_executor_job(request)
-        except (AuthorizationError, ConnectionClosedError):
+        except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
             return await self.hass.async_add_executor_job(request)

@@ -81,7 +81,7 @@ async def test_flow_user_cannot_connect(
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     with patch(
-        "homeassistant.components.slack.config_flow.WebClient.auth_test"
+        "homeassistant.components.slack.config_flow.AsyncWebClient.auth_test"
     ) as mock:
         mock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(

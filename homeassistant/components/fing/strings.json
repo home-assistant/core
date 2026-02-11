@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "api_version_error": "Your agent is using an outdated API version. The required 'network_id' parameter is missing. Please update to the latest API version."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "http_status_error": "HTTP request failed: {message}",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "url_error": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "api_key": "API key used to authenticate with the Fing API.",
+          "ip_address": "IP address of the Fing agent.",
+          "port": "Port number of the Fing API."
+        },
+        "title": "Set up Fing agent"
+      }
+    }
+  }
+}

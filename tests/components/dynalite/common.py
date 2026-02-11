@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
 
 from homeassistant.components import dynalite
-from homeassistant.const import ATTR_SERVICE
+from homeassistant.const import ATTR_SERVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -34,7 +34,7 @@ async def get_entry_id_from_hass(hass: HomeAssistant) -> str:
 async def create_entity_from_device(hass: HomeAssistant, device: DynaliteBaseDevice):
     """Set up the component and platform and create a light based on the device provided."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"

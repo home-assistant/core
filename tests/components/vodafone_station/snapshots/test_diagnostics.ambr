@@ -9,6 +9,12 @@
           'hostname': 'WifiDevice0',
           'type': 'laptop',
         }),
+        dict({
+          'connected': False,
+          'connection_type': 'lan',
+          'hostname': 'LanDevice1',
+          'type': 'desktop',
+        }),
       ]),
       'last_exception': None,
       'last_update success': True,
@@ -21,6 +27,10 @@
     }),
     'entry': dict({
       'data': dict({
+        'device_details': dict({
+          'device_type': 'Sercomm',
+          'device_url': 'https://fake_host',
+        }),
         'host': 'fake_host',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
@@ -29,12 +39,14 @@
       'discovery_keys': dict({
       }),
       'domain': 'vodafone_station',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 1,

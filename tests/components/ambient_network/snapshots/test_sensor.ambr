@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -34,6 +36,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'AA:AA:AA:AA:AA:AA_baromabsin',
@@ -64,9 +67,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -80,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -93,6 +98,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_dailyrainin',
@@ -106,7 +112,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Daily rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -126,6 +132,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -139,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -149,6 +157,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'AA:AA:AA:AA:AA:AA_dewPoint',
@@ -182,6 +191,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -195,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -205,6 +216,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'AA:AA:AA:AA:AA:AA_feelsLike',
@@ -238,6 +250,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -251,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -264,6 +278,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_hourlyrainin',
@@ -297,6 +312,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -310,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -320,6 +337,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_humidity',
@@ -353,6 +371,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -366,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -376,6 +396,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_solarradiation',
@@ -407,6 +428,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -420,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -427,6 +450,7 @@
     'original_name': 'Last rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_lastRain',
@@ -458,6 +482,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -471,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -484,6 +510,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'AA:AA:AA:AA:AA:AA_maxdailygust',
@@ -514,9 +541,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -530,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -543,6 +572,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_monthlyrainin',
@@ -556,7 +586,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Monthly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -576,6 +606,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -589,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -602,6 +634,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'AA:AA:AA:AA:AA:AA_baromrelin',
@@ -635,6 +668,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -648,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -658,6 +693,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_tempf',
@@ -691,6 +727,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -704,6 +741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -714,6 +752,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'AA:AA:AA:AA:AA:AA_uv',
@@ -743,9 +782,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -759,6 +799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -772,6 +813,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'AA:AA:AA:AA:AA:AA_weeklyrainin',
@@ -785,7 +827,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Weekly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -801,8 +843,11 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -816,16 +861,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'AA:AA:AA:AA:AA:AA_winddir',
@@ -836,8 +883,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station A Wind direction',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -857,6 +906,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -870,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -883,6 +934,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'AA:AA:AA:AA:AA:AA_windgustmph',
@@ -916,6 +968,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -929,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -942,6 +996,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_windspeedmph',
@@ -975,6 +1030,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -988,6 +1044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1001,6 +1058,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'CC:CC:CC:CC:CC:CC_baromabsin',
@@ -1031,9 +1089,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1047,6 +1106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1060,6 +1120,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_dailyrainin',
@@ -1073,7 +1134,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Daily rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1093,6 +1154,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1106,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1116,6 +1179,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'CC:CC:CC:CC:CC:CC_dewPoint',
@@ -1149,6 +1213,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1162,6 +1227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1172,6 +1238,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'CC:CC:CC:CC:CC:CC_feelsLike',
@@ -1205,6 +1272,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1218,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1231,6 +1300,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_hourlyrainin',
@@ -1264,6 +1334,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1277,6 +1348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1287,6 +1359,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_humidity',
@@ -1320,6 +1393,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1333,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1343,6 +1418,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_solarradiation',
@@ -1374,6 +1450,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1387,6 +1464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1394,6 +1472,7 @@
     'original_name': 'Last rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_lastRain',
@@ -1425,6 +1504,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1438,6 +1518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1451,6 +1532,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'CC:CC:CC:CC:CC:CC_maxdailygust',
@@ -1481,9 +1563,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1497,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1510,6 +1594,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_monthlyrainin',
@@ -1523,7 +1608,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Monthly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1543,6 +1628,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1556,6 +1642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1569,6 +1656,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'CC:CC:CC:CC:CC:CC_baromrelin',
@@ -1602,6 +1690,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1615,6 +1704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1625,6 +1715,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_tempf',
@@ -1658,6 +1749,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1671,6 +1763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1681,6 +1774,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'CC:CC:CC:CC:CC:CC_uv',
@@ -1710,9 +1804,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1726,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1739,6 +1835,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'CC:CC:CC:CC:CC:CC_weeklyrainin',
@@ -1752,7 +1849,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Weekly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1768,8 +1865,11 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1783,16 +1883,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'CC:CC:CC:CC:CC:CC_winddir',
@@ -1803,8 +1905,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station C Wind direction',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -1824,6 +1928,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1837,6 +1942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1850,6 +1956,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'CC:CC:CC:CC:CC:CC_windgustmph',
@@ -1883,6 +1990,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1896,6 +2004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1909,6 +2018,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_windspeedmph',
@@ -1942,6 +2052,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1955,6 +2066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1968,6 +2080,7 @@
     'original_name': 'Absolute pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'absolute_pressure',
     'unique_id': 'DD:DD:DD:DD:DD:DD_baromabsin',
@@ -1997,9 +2110,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2013,6 +2127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2026,6 +2141,7 @@
     'original_name': 'Daily rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_dailyrainin',
@@ -2038,7 +2154,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Daily rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2058,6 +2174,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2071,6 +2188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2081,6 +2199,7 @@
     'original_name': 'Dew point',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': 'DD:DD:DD:DD:DD:DD_dewPoint',
@@ -2113,6 +2232,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2126,6 +2246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2136,6 +2257,7 @@
     'original_name': 'Feels like',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feels_like',
     'unique_id': 'DD:DD:DD:DD:DD:DD_feelsLike',
@@ -2168,6 +2290,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2181,6 +2304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2194,6 +2318,7 @@
     'original_name': 'Hourly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_hourlyrainin',
@@ -2226,6 +2351,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2239,6 +2365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2249,6 +2376,7 @@
     'original_name': 'Humidity',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_humidity',
@@ -2281,6 +2409,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2294,6 +2423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2304,6 +2434,7 @@
     'original_name': 'Irradiance',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_solarradiation',
@@ -2336,6 +2467,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2349,6 +2481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2362,6 +2495,7 @@
     'original_name': 'Max daily gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_daily_gust',
     'unique_id': 'DD:DD:DD:DD:DD:DD_maxdailygust',
@@ -2391,9 +2525,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2407,6 +2542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2420,6 +2556,7 @@
     'original_name': 'Monthly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_monthlyrainin',
@@ -2432,7 +2569,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Monthly rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2452,6 +2589,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2465,6 +2603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2478,6 +2617,7 @@
     'original_name': 'Relative pressure',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_pressure',
     'unique_id': 'DD:DD:DD:DD:DD:DD_baromrelin',
@@ -2510,6 +2650,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2523,6 +2664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2533,6 +2675,7 @@
     'original_name': 'Temperature',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_tempf',
@@ -2565,6 +2708,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2578,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2588,6 +2733,7 @@
     'original_name': 'UV index',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': 'DD:DD:DD:DD:DD:DD_uv',
@@ -2616,9 +2762,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2632,6 +2779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2645,6 +2793,7 @@
     'original_name': 'Weekly rain',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_rain',
     'unique_id': 'DD:DD:DD:DD:DD:DD_weeklyrainin',
@@ -2657,7 +2806,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Weekly rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2673,8 +2822,11 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2688,16 +2840,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_direction',
     'unique_id': 'DD:DD:DD:DD:DD:DD_winddir',
@@ -2708,7 +2862,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station D Wind direction',
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -2728,6 +2884,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2741,6 +2898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2754,6 +2912,7 @@
     'original_name': 'Wind gust',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust',
     'unique_id': 'DD:DD:DD:DD:DD:DD_windgustmph',
@@ -2786,6 +2945,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2799,6 +2959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2812,6 +2973,7 @@
     'original_name': 'Wind speed',
     'platform': 'ambient_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_windspeedmph',

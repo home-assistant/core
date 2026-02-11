@@ -26,5 +26,17 @@
         "protocol_info": "file:*:audio/mpegurl:*"
       }
     ]
+  },
+  {
+    "title": "Track with no album or creator",
+    "item_id": "Q:0/3",
+    "parent_id": "Q:0",
+    "original_track_number": 1,
+    "resources": [
+      {
+        "uri": "x-file-cifs://192.168.42.10/music/TrackWithNoAlbumOrCreator.mp3",
+        "protocol_info": "file:*:audio/mpegurl:*"
+      }
+    ]
   }
 ]

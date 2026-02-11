@@ -39,8 +39,10 @@ class MockPyViCare:
                         f"installation{idx}", f"gateway{idx}", f"device{idx}", fixture
                     ),
                     f"deviceId{idx}",
-                    f"model{idx}",
-                    "online",
+                    "Vitovalor"
+                    if fixture.data_file.endswith("VitoValor.json")
+                    else f"model{idx}",
+                    "Online",
                 )
             )
 
@@ -84,7 +86,7 @@ async def mock_vicare_gas_boiler(
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with patch(
-        f"{MODULE}.vicare_login",
+        f"{MODULE}.login",
         return_value=MockPyViCare(fixtures),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -102,7 +104,7 @@ async def mock_vicare_room_sensors(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
     ]
     with patch(
-        f"{MODULE}.vicare_login",
+        f"{MODULE}.login",
         return_value=MockPyViCare(fixtures),
     ):
         await setup_integration(hass, mock_config_entry)

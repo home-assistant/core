@@ -8,13 +8,13 @@ from struct import unpack
 
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio import (
+import pysnmp.hlapi.v3arch.asyncio as hlapi
+from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
-    getCmd,
+    get_cmd,
 )
 from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -45,6 +45,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -94,7 +95,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEFAULT_VALUE): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_AUTH_KEY): cv.string,
@@ -131,7 +134,7 @@ async def async_setup_platform(
 
     try:
         # Try IPv4 first.
-        target = UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
     except PySnmpError:
         # Then try IPv6.
         try:
@@ -156,7 +159,7 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
-    get_result = await getCmd(*request_args)
+    get_result = await get_cmd(*request_args)
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
@@ -173,7 +176,7 @@ async def async_setup_platform(
             continue
         trigger_entity_config[key] = config[key]
 
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+    value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])
@@ -189,7 +192,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
         hass: HomeAssistant,
         data: SnmpData,
         config: ConfigType,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config)
@@ -206,17 +209,16 @@ class SnmpSensor(ManualTriggerSensorEntity):
         """Get the latest data and updates the states."""
         await self.data.async_update()
 
-        raw_value = self.data.value
-
+        variables = self._template_variables_with_value(self.data.value)
         if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, STATE_UNKNOWN
+            value = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, STATE_UNKNOWN
             )
 
-        self._attr_native_value = value
-        self._process_manual_data(raw_value)
+        self._set_native_value_with_possible_timestamp(value)
+        self._process_manual_data(variables)
 
 
 class SnmpData:
@@ -233,7 +235,7 @@ class SnmpData:
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
-        get_result = await getCmd(*self._request_args)
+        get_result = await get_cmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:

@@ -9,12 +9,14 @@ from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
+import math
 from threading import Event
 from typing import Any, Self, cast
 
 import av
 import av.audio
 import av.container
+from av.container import InputContainer
 import av.stream
 
 from homeassistant.core import HomeAssistant
@@ -29,6 +31,7 @@ from .const import (
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
+    StreamClientError,
 )
 from .core import (
     STREAM_SETTINGS_NON_LL_HLS,
@@ -39,27 +42,20 @@ from .core import (
     StreamSettings,
 )
 from .diagnostics import Diagnostics
+from .exceptions import StreamEndedError, StreamWorkerError
 from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
-NEGATIVE_INF = float("-inf")
-
-
-class StreamWorkerError(Exception):
-    """An exception thrown while processing a stream."""
+NEGATIVE_INF = -math.inf
 
 
 def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
-    parts = [str(err.type), err.strerror]  # type: ignore[attr-defined]
+    parts = [err.strerror or ""]
     if err.filename:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
-
-
-class StreamEndedError(StreamWorkerError):
-    """Raised when the stream is complete, exposed for facilitating testing."""
 
 
 class StreamState:
@@ -227,7 +223,7 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = container.add_stream(template=input_vstream)
+        output_vstream = container.add_stream_from_template(input_vstream)
         # Check if audio is requested
         output_astream = None
         if input_astream:
@@ -235,8 +231,8 @@ class StreamMuxer:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream(template=input_astream)
-        return container, output_vstream, output_astream  # type: ignore[return-value]
+            output_astream = container.add_stream_from_template(input_astream)
+        return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
@@ -264,6 +260,7 @@ class StreamMuxer:
         if packet.stream == self._input_video_stream:
             if (
                 packet.is_keyframe
+                and packet.dts
                 and (packet.dts - self._segment_start_dts) * packet.time_base
                 >= self._stream_settings.min_segment_duration
             ):
@@ -335,6 +332,7 @@ class StreamMuxer:
         playback issues in some clients.
         """
         # Part durations should not exceed the part target duration
+        assert packet.dts is not None
         adjusted_dts = min(
             packet.dts,
             self._part_start_dts
@@ -463,9 +461,9 @@ class TimestampValidator:
         """Validate the packet timestamp based on ordering within the stream."""
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
-            if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
+            if self._missing_dts >= MAX_MISSING_DTS:
                 raise StreamWorkerError(
-                    f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
+                    f"No dts in {MAX_MISSING_DTS + 1} consecutive packets"
                 )
             self._missing_dts += 1
             return False
@@ -512,6 +510,47 @@ def get_audio_bitstream_filter(
     return None
 
 
+def try_open_stream(
+    source: str,
+    pyav_options: dict[str, str],
+) -> InputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
+
+    try:
+        return av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
+    except av.HTTPBadRequestError as err:
+        raise StreamWorkerError(
+            f"Bad Request Error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.BadRequest,
+        ) from err
+
+    except av.HTTPUnauthorizedError as err:
+        raise StreamWorkerError(
+            f"Unauthorized error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.Unauthorized,
+        ) from err
+
+    except av.HTTPForbiddenError as err:
+        raise StreamWorkerError(
+            f"Forbidden error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.Forbidden,
+        ) from err
+
+    except av.HTTPNotFoundError as err:
+        raise StreamWorkerError(
+            f"Not Found error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.NotFound,
+        ) from err
+
+    except av.FFmpegError as err:
+        raise StreamWorkerError(
+            f"Error opening stream ({redact_av_error_string(err)})"
+        ) from err
+
+
 def stream_worker(
     source: str,
     pyav_options: dict[str, str],
@@ -526,12 +565,7 @@ def stream_worker(
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
         pyav_options["timeout"] = pyav_options["stimeout"]
         del pyav_options["stimeout"]
-    try:
-        container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
-    except av.FFmpegError as err:
-        raise StreamWorkerError(
-            f"Error opening stream ({redact_av_error_string(err)})"
-        ) from err
+    container = try_open_stream(source, pyav_options)
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError) as ex:
@@ -539,13 +573,13 @@ def stream_worker(
     keyframe_converter.create_codec_context(codec_context=video_stream.codec_context)
     try:
         audio_stream = container.streams.audio[0]
-    except (KeyError, IndexError):
+    except KeyError, IndexError:
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
-        audio_stream = None  # type: ignore[unreachable]
+        audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
         for field in fields(StreamSettings):
@@ -594,6 +628,7 @@ def stream_worker(
         # adjustment, it does not filter out the case where the duration below is
         # 0 and both the first_keyframe and next_video_packet end up with the same
         # dts. Use "or 1" to deal with this.
+        assert next_video_packet.dts is not None
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
     except StreamWorkerError:

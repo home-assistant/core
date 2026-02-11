@@ -1,7 +1,5 @@
 """The tests for Lutron Caséta device triggers."""
 
-from unittest.mock import patch
-
 import pytest
 from pytest_unordered import unordered
 
@@ -37,7 +35,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import MockBridge
+from . import MockBridge, async_setup_integration
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -112,12 +110,7 @@ async def _async_setup_lutron_with_picos(hass: HomeAssistant) -> str:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
-        return_value=MockBridge(can_connect=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry.entry_id)
 
     return config_entry.entry_id
 
@@ -151,6 +144,17 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
             CONF_PLATFORM: "device",
             CONF_SUBTYPE: subtype,
             CONF_TYPE: "release",
+            "metadata": {},
+        }
+        for subtype in ("on", "stop", "off", "raise", "lower")
+    ]
+    expected_triggers += [
+        {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_PLATFORM: "device",
+            CONF_SUBTYPE: subtype,
+            CONF_TYPE: "multi_tap",
             "metadata": {},
         }
         for subtype in ("on", "stop", "off", "raise", "lower")
@@ -446,7 +450,7 @@ async def test_validate_trigger_invalid_triggers(
         },
     )
 
-    assert "value must be one of ['press', 'release']" in caplog.text
+    assert "value must be one of ['multi_tap', 'press', 'release']" in caplog.text
 
 
 async def test_if_fires_on_button_event_late_setup(
@@ -487,9 +491,7 @@ async def test_if_fires_on_button_event_late_setup(
         },
     )
 
-    with patch("homeassistant.components.lutron_caseta.Smartbridge.create_tls"):
-        await hass.config_entries.async_setup(config_entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry_id)
 
     message = {
         ATTR_SERIAL: device.get("serial"),

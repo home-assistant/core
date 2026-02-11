@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
-import telnetlib  # pylint: disable=deprecated-module
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -70,6 +70,7 @@ MEDIA_MODES = {
     "Favorites": "FAVORITES",
     "Internet Radio": "IRADIO",
     "USB/IPOD": "USB/IPOD",
+    "USB": "USB",
 }
 
 # Sub-modes of 'NET/USB'
@@ -279,7 +280,7 @@ class DenonDevice(MediaPlayerEntity):
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         mute_status = "ON" if mute else "OFF"
-        self.telnet_command(f"MU{mute_status})")
+        self.telnet_command(f"MU{mute_status}")
 
     def media_play(self) -> None:
         """Play media player."""

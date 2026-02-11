@@ -1,13 +1,14 @@
 """Teslemetry helper functions."""
 
-import asyncio
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, LOGGER, TeslemetryState
+from .const import DOMAIN, LOGGER
 
 
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
@@ -21,34 +22,6 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
         else:
             result[key] = value
     return result
-
-
-async def wake_up_vehicle(vehicle) -> None:
-    """Wake up a vehicle."""
-    async with vehicle.wakelock:
-        times = 0
-        while vehicle.coordinator.data["state"] != TeslemetryState.ONLINE:
-            try:
-                if times == 0:
-                    cmd = await vehicle.api.wake_up()
-                else:
-                    cmd = await vehicle.api.vehicle()
-                state = cmd["response"]["state"]
-            except TeslaFleetError as e:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="wake_up_failed",
-                    translation_placeholders={"message": e.message},
-                ) from e
-            vehicle.coordinator.data["state"] = state
-            if state != TeslemetryState.ONLINE:
-                times += 1
-                if times >= 4:  # Give up after 30 seconds total
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="wake_up_timeout",
-                    )
-                await asyncio.sleep(times * 5)
 
 
 async def handle_command(command) -> dict[str, Any]:
@@ -77,7 +50,9 @@ async def handle_vehicle_command(command) -> Any:
                 translation_placeholders={"error": error},
             )
         # No response without error (unexpected)
-        raise HomeAssistantError(f"Unknown response: {response}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="command_no_response"
+        )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
             if reason in ("already_set", "not_charging", "requested"):
@@ -95,3 +70,14 @@ async def handle_vehicle_command(command) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_update_device_sw_version(
+    hass: HomeAssistant, identifier: str, sw_version: str
+) -> None:
+    """Update the software version in the device registry."""
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device(identifiers={(DOMAIN, identifier)}):
+        if device.sw_version != sw_version:
+            dev_reg.async_update_device(device.id, sw_version=sw_version)

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCatego
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockBinarySensor
 
@@ -24,11 +24,6 @@ from tests.common import (
     async_get_device_automations,
     setup_test_component_platform,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_triggers(
@@ -185,7 +180,12 @@ async def test_get_trigger_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
     triggers = await async_get_device_automations(
@@ -215,7 +215,12 @@ async def test_get_trigger_capabilities_legacy(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
     triggers = await async_get_device_automations(

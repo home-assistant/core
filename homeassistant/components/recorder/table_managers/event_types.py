@@ -28,8 +28,6 @@ CACHE_SIZE = 2048
 class EventTypeManager(BaseLRUTableManager[EventTypes]):
     """Manage the EventTypes table."""
 
-    active = False
-
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)

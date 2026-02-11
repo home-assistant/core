@@ -15,7 +15,7 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
@@ -26,6 +26,9 @@ STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"
 
 # dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
+SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
+    "knx_data_secure_issue_telegram"
+)
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -74,7 +77,13 @@ class Telegrams:
                 match_for_outgoing=True,
             )
         )
+        self._xknx_data_secure_group_key_issue_cb_handle = (
+            xknx.telegram_queue.register_data_secure_group_key_issue_cb(
+                self._xknx_data_secure_group_key_issue_cb,
+            )
+        )
         self.recent_telegrams: deque[TelegramDict] = deque(maxlen=log_size)
+        self.last_ga_telegrams: dict[str, TelegramDict] = {}
 
     async def load_history(self) -> None:
         """Load history from store."""
@@ -88,6 +97,9 @@ class Telegrams:
             if isinstance(telegram["payload"], list):
                 telegram["payload"] = tuple(telegram["payload"])  # type: ignore[unreachable]
         self.recent_telegrams.extend(telegrams)
+        self.last_ga_telegrams = {
+            t["destination"]: t for t in telegrams if t["payload"] is not None
+        }
 
     async def save_history(self) -> None:
         """Save history to store."""
@@ -98,7 +110,18 @@ class Telegrams:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
+        if telegram_dict["payload"] is not None:
+            # exclude GroupValueRead telegrams
+            self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
+
+    def _xknx_data_secure_group_key_issue_cb(self, telegram: Telegram) -> None:
+        """Handle telegrams with undecodable data secure payload from xknx."""
+        telegram_dict = self.telegram_to_dict(telegram)
+        self.recent_telegrams.append(telegram_dict)
+        async_dispatcher_send(
+            self.hass, SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, telegram, telegram_dict
+        )
 
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:
         """Convert a Telegram to a dict."""

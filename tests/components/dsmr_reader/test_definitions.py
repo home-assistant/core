@@ -4,11 +4,9 @@ import pytest
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.dsmr_reader.definitions import (
-    DSMRReaderSensorEntityDescription,
     dsmr_transform,
     tariff_transform,
 )
-from homeassistant.components.dsmr_reader.sensor import DSMRSensor
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -71,7 +69,7 @@ async def test_entity_tariff(hass: HomeAssistant) -> None:
     assert hass.states.get(electricity_tariff).state == "low"
 
 
-@pytest.mark.usefixtures("mqtt_mock")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mqtt_mock")
 async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
     """Test the state attribute of DSMRReaderSensorEntityDescription when a dsmr transform is needed."""
     config_entry = MockConfigEntry(
@@ -84,16 +82,6 @@ async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Create the entity, since it's not by default
-    description = DSMRReaderSensorEntityDescription(
-        key="dsmr/meter-stats/dsmr_version",
-        name="version_test",
-        state=dsmr_transform,
-    )
-    sensor = DSMRSensor(description, config_entry)
-    sensor.hass = hass
-    await sensor.async_added_to_hass()
 
     # Test dsmr version, if it's a digit
     async_fire_mqtt_message(hass, "dsmr/meter-stats/dsmr_version", "42")

@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -75,7 +76,7 @@ async def test_lock_locked(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
@@ -102,7 +103,7 @@ async def test_lock_unlocking(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.OPENING
 
     mock_msg = Mock()
@@ -129,7 +130,7 @@ async def test_lock_locking(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSING
 
     mock_msg = Mock()
@@ -156,7 +157,7 @@ async def test_lock_jammed(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.JAMMED_WHILE_CLOSING
 
     mock_msg = Mock()
@@ -183,7 +184,7 @@ async def test_lock_unavailable(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.NOT_CALIBRATED
 
     mock_msg = Mock()
@@ -210,17 +211,17 @@ async def test_lock_do_lock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    doorlock.__fields__["close_lock"] = Mock(final=False)
-    doorlock.close_lock = AsyncMock()
+    with patch_ufp_method(
+        doorlock, "close_lock", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "lock",
+            "lock",
+            {ATTR_ENTITY_ID: "lock.test_lock_lock"},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "lock",
-        "lock",
-        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
-        blocking=True,
-    )
-
-    doorlock.close_lock.assert_called_once()
+        mock_method.assert_called_once()
 
 
 async def test_lock_do_unlock(
@@ -234,7 +235,7 @@ async def test_lock_do_unlock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
@@ -245,14 +246,12 @@ async def test_lock_do_unlock(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    new_lock.__fields__["open_lock"] = Mock(final=False)
-    new_lock.open_lock = AsyncMock()
+    with patch_ufp_method(new_lock, "open_lock", new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "lock",
+            "unlock",
+            {ATTR_ENTITY_ID: "lock.test_lock_lock"},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "lock",
-        "unlock",
-        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
-        blocking=True,
-    )
-
-    new_lock.open_lock.assert_called_once()
+        mock_method.assert_called_once()

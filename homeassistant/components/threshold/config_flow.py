@@ -80,8 +80,11 @@ OPTIONS_FLOW = {
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Threshold."""
 
+    MINOR_VERSION = 2
+
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
@@ -131,13 +134,14 @@ def ws_start_preview(
         )
 
     preview_entity = ThresholdSensor(
-        entity_id,
-        name,
-        msg["user_input"].get(CONF_LOWER),
-        msg["user_input"].get(CONF_UPPER),
-        msg["user_input"].get(CONF_HYSTERESIS),
-        None,
-        None,
+        hass,
+        entity_id=entity_id,
+        name=name,
+        lower=msg["user_input"].get(CONF_LOWER),
+        upper=msg["user_input"].get(CONF_UPPER),
+        hysteresis=msg["user_input"].get(CONF_HYSTERESIS),
+        device_class=None,
+        unique_id=None,
     )
     preview_entity.hass = hass
 

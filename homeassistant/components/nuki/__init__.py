@@ -110,6 +110,8 @@ async def _create_webhook(
             translation_placeholders={
                 "base_url": hass_url,
                 "network_link": "https://my.home-assistant.io/redirect/network/",
+                "sample_ip": "192.168.1.10",
+                "sample_url": "http://192.168.1.10:8123",
             },
         )
     else:
@@ -222,7 +224,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_nuki)
     )
 
-    coordinator = NukiCoordinator(hass, bridge, locks, openers)
+    coordinator = NukiCoordinator(hass, entry, bridge, locks, openers)
     hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
         coordinator=coordinator,
         bridge=bridge,

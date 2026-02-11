@@ -34,7 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -197,7 +197,7 @@ SENSOR_TYPES = (
         attribute=TMRW_ATTR_PRECIPITATION_TYPE,
         value_map=PrecipitationType,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Ozone is 48
     TomorrowioSensorEntityDescription(
         key="ozone",
@@ -221,7 +221,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Nitrogen Dioxide is 46.01
     TomorrowioSensorEntityDescription(
         key="nitrogen_dioxide",
@@ -240,7 +240,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Sulphur Dioxide is 64.07
     TomorrowioSensorEntityDescription(
         key="sulphur_dioxide",
@@ -328,7 +328,7 @@ SENSOR_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]

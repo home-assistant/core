@@ -59,8 +59,8 @@ async def test_attributes_on_off(
 
     state = hass.states.get("light.tasmota_test")
     assert state.attributes.get("effect_list") is None
-    assert state.attributes.get("min_mireds") is None
-    assert state.attributes.get("max_mireds") is None
+    assert state.attributes.get("max_color_temp_kelvin") is None
+    assert state.attributes.get("min_color_temp_kelvin") is None
     assert state.attributes.get("supported_features") == 0
     assert state.attributes.get("supported_color_modes") == ["onoff"]
     assert state.attributes.get("color_mode") == "onoff"
@@ -88,8 +88,8 @@ async def test_attributes_dimmer_tuya(
 
     state = hass.states.get("light.tasmota_test")
     assert state.attributes.get("effect_list") is None
-    assert state.attributes.get("min_mireds") is None
-    assert state.attributes.get("max_mireds") is None
+    assert state.attributes.get("max_color_temp_kelvin") is None
+    assert state.attributes.get("min_color_temp_kelvin") is None
     assert state.attributes.get("supported_features") == 0
     assert state.attributes.get("supported_color_modes") == ["brightness"]
     assert state.attributes.get("color_mode") == "brightness"
@@ -116,8 +116,8 @@ async def test_attributes_dimmer(
 
     state = hass.states.get("light.tasmota_test")
     assert state.attributes.get("effect_list") is None
-    assert state.attributes.get("min_mireds") is None
-    assert state.attributes.get("max_mireds") is None
+    assert state.attributes.get("max_color_temp_kelvin") is None
+    assert state.attributes.get("min_color_temp_kelvin") is None
     assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["brightness"]
     assert state.attributes.get("color_mode") == "brightness"
@@ -144,8 +144,8 @@ async def test_attributes_ct(
 
     state = hass.states.get("light.tasmota_test")
     assert state.attributes.get("effect_list") is None
-    assert state.attributes.get("min_mireds") == 153
-    assert state.attributes.get("max_mireds") == 500
+    assert state.attributes.get("max_color_temp_kelvin") == 6535
+    assert state.attributes.get("min_color_temp_kelvin") == 2000
     assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["color_temp"]
     assert state.attributes.get("color_mode") == "color_temp"
@@ -173,8 +173,8 @@ async def test_attributes_ct_reduced(
 
     state = hass.states.get("light.tasmota_test")
     assert state.attributes.get("effect_list") is None
-    assert state.attributes.get("min_mireds") == 200
-    assert state.attributes.get("max_mireds") == 380
+    assert state.attributes.get("max_color_temp_kelvin") == 5000
+    assert state.attributes.get("min_color_temp_kelvin") == 2631
     assert state.attributes.get("supported_features") == LightEntityFeature.TRANSITION
     assert state.attributes.get("supported_color_modes") == ["color_temp"]
     assert state.attributes.get("color_mode") == "color_temp"
@@ -207,8 +207,8 @@ async def test_attributes_rgb(
         "Cycle down",
         "Random",
     ]
-    assert state.attributes.get("min_mireds") is None
-    assert state.attributes.get("max_mireds") is None
+    assert state.attributes.get("max_color_temp_kelvin") is None
+    assert state.attributes.get("min_color_temp_kelvin") is None
     assert (
         state.attributes.get("supported_features")
         == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
@@ -244,8 +244,8 @@ async def test_attributes_rgbw(
         "Cycle down",
         "Random",
     ]
-    assert state.attributes.get("min_mireds") is None
-    assert state.attributes.get("max_mireds") is None
+    assert state.attributes.get("max_color_temp_kelvin") is None
+    assert state.attributes.get("min_color_temp_kelvin") is None
     assert (
         state.attributes.get("supported_features")
         == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
@@ -281,8 +281,8 @@ async def test_attributes_rgbww(
         "Cycle down",
         "Random",
     ]
-    assert state.attributes.get("min_mireds") == 153
-    assert state.attributes.get("max_mireds") == 500
+    assert state.attributes.get("max_color_temp_kelvin") == 6535
+    assert state.attributes.get("min_color_temp_kelvin") == 2000
     assert (
         state.attributes.get("supported_features")
         == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
@@ -319,8 +319,8 @@ async def test_attributes_rgbww_reduced(
         "Cycle down",
         "Random",
     ]
-    assert state.attributes.get("min_mireds") == 200
-    assert state.attributes.get("max_mireds") == 380
+    assert state.attributes.get("max_color_temp_kelvin") == 5000
+    assert state.attributes.get("min_color_temp_kelvin") == 2631
     assert (
         state.attributes.get("supported_features")
         == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
@@ -431,7 +431,7 @@ async def test_controlling_state_via_mqtt_ct(
     )
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get("color_mode") == "color_temp"
 
     # Tasmota will send "Color" also for CT light, this should be ignored
@@ -440,7 +440,7 @@ async def test_controlling_state_via_mqtt_ct(
     )
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -616,7 +616,7 @@ async def test_controlling_state_via_mqtt_rgbww(
     )
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get("color_mode") == "color_temp"
 
     async_fire_mqtt_message(
@@ -625,7 +625,7 @@ async def test_controlling_state_via_mqtt_rgbww(
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
     # Setting white to 0 should clear the color_temp
-    assert not state.attributes.get("color_temp")
+    assert not state.attributes.get("color_temp_kelvin")
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
 
@@ -728,7 +728,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
     )
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get("color_mode") == "color_temp"
 
     async_fire_mqtt_message(
@@ -737,7 +737,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
     # Setting white to 0 should clear the color_temp
-    assert not state.attributes.get("color_temp")
+    assert not state.attributes.get("color_temp_kelvin")
     assert state.attributes.get("color_mode") == "hs"
 
     async_fire_mqtt_message(
@@ -1108,7 +1108,7 @@ async def test_sending_mqtt_commands_rgbww(
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=200)
+    await common.async_turn_on(hass, "light.tasmota_test", color_temp_kelvin=5000)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Power1 ON;NoDelay;CT 200",
@@ -1347,10 +1347,12 @@ async def test_transition(
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 128
-    assert state.attributes.get("color_temp") == 153
+    assert state.attributes.get("color_temp_kelvin") == 6535
 
     # Set color_temp of the light from 153 to 500 @ 50%: Speed should be 6*2*2=24
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=500, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=2000, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;CT 500",
@@ -1366,10 +1368,12 @@ async def test_transition(
     state = hass.states.get("light.tasmota_test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 128
-    assert state.attributes.get("color_temp") == 500
+    assert state.attributes.get("color_temp_kelvin") == 2000
 
     # Set color_temp of the light from 500 to 326 @ 50%: Speed should be 6*2*2*2=48->40
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=326, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=3067, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Power1 ON;NoDelay;CT 326",
@@ -1510,7 +1514,7 @@ async def _test_split_light(
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1520,7 +1524,7 @@ async def _test_split_light(
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Channel{idx+num_switches+1} {(idx+1)*10}",
+            f"NoDelay;Channel{idx + num_switches + 1} {(idx + 1) * 10}",
             0,
             False,
         )
@@ -1591,7 +1595,7 @@ async def _test_unlinked_light(
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1601,7 +1605,7 @@ async def _test_unlinked_light(
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Dimmer{idx+1} {(idx+1)*10}",
+            f"NoDelay;Dimmer{idx + 1} {(idx + 1) * 10}",
             0,
             False,
         )

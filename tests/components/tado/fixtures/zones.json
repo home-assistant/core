@@ -27,7 +27,8 @@
         },
         "characteristics": {
           "capabilities": ["INSIDE_TEMPERATURE_MEASUREMENT", "IDENTIFY"]
-        }
+        },
+        "childLockEnabled": false
       }
     ],
     "dateCreated": "2019-11-28T15:58:48.968Z",

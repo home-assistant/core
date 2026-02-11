@@ -1,0 +1,230 @@
+# serializer version: 1
+# name: test_async_get_config_entry_diagnostics
+  dict({
+    'PlayPause_event': dict({
+      'attributes': dict({
+        'device_class': 'button',
+        'event_type': None,
+        'event_types': list([
+          'short_press_release',
+          'long_press_timeout',
+          'long_press_release',
+          'very_long_press_timeout',
+          'very_long_press_release',
+        ]),
+        'friendly_name': 'Living room Balance Play / Pause',
+      }),
+      'entity_id': 'event.beosound_balance_11111111_play_pause',
+      'state': 'unknown',
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'host': '192.168.0.1',
+        'jid': '1111.1111111.11111111@products.bang-olufsen.com',
+        'model': 'Beosound Balance',
+        'name': 'Beosound Balance-11111111',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'bang_olufsen',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Beosound Balance-11111111',
+      'unique_id': '11111111',
+      'version': 1,
+    }),
+    'media_player': dict({
+      'attributes': dict({
+        'beolink': dict({
+          'listeners': dict({
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'peers': dict({
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'self': dict({
+            'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+          }),
+        }),
+        'device_class': 'speaker',
+        'entity_picture_local': None,
+        'friendly_name': 'Living room Balance',
+        'group_members': list([
+          'media_player.beosound_balance_11111111',
+          'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+          'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+        ]),
+        'media_content_type': 'music',
+        'repeat': 'off',
+        'shuffle': False,
+        'sound_mode': 'Test Listening Mode (123)',
+        'sound_mode_list': list([
+          'Test Listening Mode (123)',
+          'Test Listening Mode (234)',
+          'Test Listening Mode 2 (345)',
+        ]),
+        'source_list': list([
+          'Tidal',
+          'Line-In',
+          'HDMI A',
+        ]),
+        'supported_features': 2095933,
+      }),
+      'entity_id': 'media_player.beosound_balance_11111111',
+      'state': 'playing',
+    }),
+    'remote_55555555': dict({
+      'address': '',
+      'app_version': '1.0.0',
+      'battery_level': 50,
+      'connected': True,
+      'db_version': None,
+      'last_seen': None,
+      'name': 'BEORC',
+      'serial_number': '55555555',
+      'updated': None,
+    }),
+    'remote_55555555_Control/Play_event': dict({
+      'attributes': dict({
+        'device_class': 'button',
+        'event_type': None,
+        'event_types': list([
+          'key_press',
+          'key_release',
+        ]),
+        'friendly_name': 'Beoremote One-55555555-11111111 Control - Play',
+      }),
+      'entity_id': 'event.beoremote_one_55555555_11111111_control_play',
+      'state': 'unknown',
+    }),
+    'remote_55555555_battery_level': dict({
+      'attributes': dict({
+        'device_class': 'battery',
+        'friendly_name': 'Beoremote One-55555555-11111111 Battery',
+        'state_class': 'measurement',
+        'unit_of_measurement': '%',
+      }),
+      'entity_id': 'sensor.beoremote_one_55555555_11111111_battery',
+      'state': '50',
+    }),
+    'websocket_connected': False,
+  })
+# ---
+# name: test_async_get_config_entry_diagnostics_with_battery
+  dict({
+    'battery_level': dict({
+      'attributes': dict({
+        'device_class': 'battery',
+        'friendly_name': 'Living room Balance Battery',
+        'state_class': 'measurement',
+        'unit_of_measurement': '%',
+      }),
+      'entity_id': 'sensor.beosound_a5_44444444_battery',
+      'state': '5',
+    }),
+    'charging': dict({
+      'attributes': dict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'Living room Balance Charging',
+      }),
+      'entity_id': 'binary_sensor.beosound_a5_44444444_charging',
+      'state': 'off',
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'host': '192.168.0.4',
+        'jid': '1111.1111111.44444444@products.bang-olufsen.com',
+        'model': 'Beosound A5',
+        'name': 'Beosound A5-44444444',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'bang_olufsen',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Beosound A5-44444444',
+      'unique_id': '44444444',
+      'version': 1,
+    }),
+    'media_player': dict({
+      'attributes': dict({
+        'beolink': dict({
+          'listeners': dict({
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'peers': dict({
+            'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'self': dict({
+            'Living room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+        }),
+        'device_class': 'speaker',
+        'entity_picture_local': None,
+        'friendly_name': 'Living room Balance',
+        'group_members': list([
+          'media_player.beosound_a5_44444444',
+          'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+          'media_player.beosound_a5_44444444',
+        ]),
+        'media_content_type': 'music',
+        'repeat': 'off',
+        'shuffle': False,
+        'sound_mode': 'Test Listening Mode (123)',
+        'sound_mode_list': list([
+          'Test Listening Mode (123)',
+          'Test Listening Mode (234)',
+          'Test Listening Mode 2 (345)',
+        ]),
+        'source_list': list([
+          'Tidal',
+          'Line-In',
+          'HDMI A',
+        ]),
+        'supported_features': 2095933,
+      }),
+      'entity_id': 'media_player.beosound_a5_44444444',
+      'state': 'playing',
+    }),
+    'remote_55555555': dict({
+      'address': '',
+      'app_version': '1.0.0',
+      'battery_level': 50,
+      'connected': True,
+      'db_version': None,
+      'last_seen': None,
+      'name': 'BEORC',
+      'serial_number': '55555555',
+      'updated': None,
+    }),
+    'remote_55555555_battery_level': dict({
+      'attributes': dict({
+        'device_class': 'battery',
+        'friendly_name': 'Beoremote One-55555555-44444444 Battery',
+        'state_class': 'measurement',
+        'unit_of_measurement': '%',
+      }),
+      'entity_id': 'sensor.beoremote_one_55555555_44444444_battery',
+      'state': '50',
+    }),
+    'websocket_connected': False,
+  })
+# ---

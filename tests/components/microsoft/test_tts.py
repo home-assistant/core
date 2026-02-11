@@ -366,7 +366,7 @@ async def test_service_say_error(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     assert len(mock_tts.mock_calls) == 2

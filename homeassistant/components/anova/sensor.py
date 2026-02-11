@@ -15,12 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AnovaCoordinator
+from .coordinator import AnovaConfigEntry, AnovaCoordinator
 from .entity import AnovaDescriptionEntity
-from .models import AnovaConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -98,7 +97,7 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AnovaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Anova device."""
     anova_data = entry.runtime_data
@@ -109,7 +108,7 @@ async def async_setup_entry(
 
 def setup_coordinator(
     coordinator: AnovaCoordinator,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an individual Anova Coordinator."""
 

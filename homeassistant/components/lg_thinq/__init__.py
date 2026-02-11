@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_CONNECT_CLIENT_ID, MQTT_SUBSCRIPTION_INTERVAL
+from .const import CONF_CONNECT_CLIENT_ID, DOMAIN, MQTT_SUBSCRIPTION_INTERVAL
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 from .mqtt import ThinQMQTT
 
@@ -42,11 +42,13 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.EVENT,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,11 +97,12 @@ async def async_setup_coordinators(
         raise ConfigEntryNotReady(exc.message) from exc
 
     if not bridge_list:
+        _LOGGER.warning("No devices registered with the correct profile")
         return
 
     # Setup coordinator per device.
     task_list = [
-        hass.async_create_task(async_setup_device_coordinator(hass, bridge))
+        hass.async_create_task(async_setup_device_coordinator(hass, entry, bridge))
         for bridge in bridge_list
     ]
     task_result = await asyncio.gather(*task_list)
@@ -135,7 +138,15 @@ async def async_setup_mqtt(
     entry.runtime_data.mqtt_client = mqtt_client
 
     # Try to connect.
-    result = await mqtt_client.async_connect()
+    try:
+        result = await mqtt_client.async_connect()
+    except (AttributeError, ThinQAPIException, TypeError, ValueError) as exc:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_connect_mqtt",
+            translation_placeholders={"error": str(exc)},
+        ) from exc
+
     if not result:
         _LOGGER.error("Failed to set up mqtt connection")
         return

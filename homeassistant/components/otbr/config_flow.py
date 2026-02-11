@@ -16,7 +16,12 @@ import yarl
 from homeassistant.components.hassio import AddonError, AddonManager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -67,11 +72,11 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     if _is_yellow(hass) and device == "/dev/ttyAMA1":
         return f"Home Assistant Yellow ({discovery_info.name})"
 
-    if device and "SkyConnect" in device:
-        return f"Home Assistant SkyConnect ({discovery_info.name})"
-
-    if device and "Connect_ZBT-1" in device:
+    if device and ("Connect_ZBT-1" in device or "SkyConnect" in device):
         return f"Home Assistant Connect ZBT-1 ({discovery_info.name})"
+
+    if device and "Nabu_Casa_ZBT-2" in device:
+        return f"Home Assistant Connect ZBT-2 ({discovery_info.name})"
 
     return discovery_info.name
 
@@ -106,7 +111,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
-                        channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
+                        channel=allowed_channel or DEFAULT_CHANNEL,
                         network_name=compose_default_network_name(pan_id),
                         pan_id=pan_id,
                     )
@@ -201,12 +206,23 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # we have to assume it's the first version
                     # This check can be removed in HA Core 2025.9
                     unique_id = discovery_info.uuid
+
+                if unique_id != discovery_info.uuid:
+                    continue
+
                 if (
-                    unique_id != discovery_info.uuid
-                    or current_url.host != config["host"]
+                    current_url.host != config["host"]
                     or current_url.port == config["port"]
                 ):
+                    # Reload the entry since OTBR has restarted
+                    if current_entry.state == ConfigEntryState.LOADED:
+                        assert current_entry.unique_id is not None
+                        await self.hass.config_entries.async_reload(
+                            current_entry.entry_id
+                        )
+
                     continue
+
                 # Update URL with the new port
                 self.hass.config_entries.async_update_entry(
                     current_entry,

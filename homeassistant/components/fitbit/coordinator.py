@@ -6,29 +6,43 @@ import datetime
 import logging
 from typing import Final
 
+from fitbit_web_api.models.device import Device
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import FitbitApi
 from .exceptions import FitbitApiException, FitbitAuthException
-from .model import FitbitDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
+type FitbitConfigEntry = ConfigEntry[FitbitData]
 
-class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, FitbitDevice]]):
+
+class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Coordinator for fetching fitbit devices from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: FitbitApi) -> None:
+    config_entry: FitbitConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: FitbitConfigEntry, api: FitbitApi
+    ) -> None:
         """Initialize FitbitDeviceCoordinator."""
-        super().__init__(hass, _LOGGER, name="Fitbit", update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Fitbit",
+            update_interval=UPDATE_INTERVAL,
+        )
         self._api = api
 
-    async def _async_update_data(self) -> dict[str, FitbitDevice]:
+    async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(TIMEOUT):
             try:
@@ -37,7 +51,7 @@ class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, FitbitDevice]]):
                 raise ConfigEntryAuthFailed(err) from err
             except FitbitApiException as err:
                 raise UpdateFailed(err) from err
-        return {device.id: device for device in devices}
+        return {device.id: device for device in devices if device.id is not None}
 
 
 @dataclass

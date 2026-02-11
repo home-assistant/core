@@ -1,0 +1,197 @@
+{
+  "items": [
+    {
+      "deviceId": "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18",
+      "name": "Samsung Range",
+      "label": "Vulcan",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-KS-RANGE-0101X",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "597a4912-13c9-47ab-9956-7ebc38b61abd",
+      "ownerId": "c4478c70-9014-e5c9-993c-f62707fa1e61",
+      "roomId": "fc407cd9-3b32-4fc0-bf23-e0d4995101e9",
+      "deviceTypeName": "Samsung OCF Range",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "samsungce.doorState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.customRecipe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.meatProbe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenModeSpecification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "custom.cooktopOperatingState",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Range",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "cavity-01",
+          "label": "cavity-01",
+          "capabilities": [
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "custom.ovenCavityStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2022-02-21T22:37:01.648Z",
+      "profile": {
+        "id": "8e479dd0-9719-337a-9fbe-2c4572f95c71"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.range",
+        "name": "Samsung Range",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP1X_DA-KS-RANGE-0101X|40445041|5001011E031511010200000000000000",
+        "platformVersion": "DAWIT 3.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AKS-WW-TP1-20-OVEN-3-CR_40240205",
+        "vendorId": "DA-KS-RANGE-0101X",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.220727",
+        "lastSignupTime": "2023-11-28T22:49:01.876575Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

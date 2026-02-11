@@ -179,12 +179,18 @@ class Data:
         user_hash = base64.b64decode(found["password"])
 
         # bcrypt.checkpw is timing-safe
-        if not bcrypt.checkpw(password.encode(), user_hash):
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        if not bcrypt.checkpw(password.encode()[:72], user_hash):
             raise InvalidAuth
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        hashed: bytes = bcrypt.hashpw(password.encode()[:72], bcrypt.gensalt(rounds=12))
 
         if for_storage:
             hashed = base64.b64encode(hashed)
@@ -305,7 +311,7 @@ class HassAuthProvider(AuthProvider):
             await data.async_load()
             self.data = data
 
-    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> HassLoginFlow:
         """Return a flow to login."""
         return HassLoginFlow(self)
 
@@ -400,7 +406,7 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class HassLoginFlow(LoginFlow):
+class HassLoginFlow(LoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -411,7 +417,7 @@ class HassLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                await cast(HassAuthProvider, self._auth_provider).async_validate_login(
+                await self._auth_provider.async_validate_login(
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuth:

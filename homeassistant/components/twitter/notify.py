@@ -9,6 +9,7 @@ import json
 import logging
 import mimetypes
 import os
+from typing import Any
 
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
@@ -21,7 +22,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -79,7 +80,7 @@ class TwitterNotificationService(BaseNotificationService):
             consumer_key, consumer_secret, access_token_key, access_token_secret
         )
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
         targets = kwargs.get(ATTR_TARGET)

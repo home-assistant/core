@@ -1,43 +1,51 @@
 """The bluesound component."""
 
-from dataclasses import dataclass
-
-from pyblu import Player, SyncStatus
+from pyblu import Player
 from pyblu.errors import PlayerUnreachableError
+import voluptuous as vol
 
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .services import setup_services
+from .const import ATTR_MASTER, DOMAIN, SERVICE_JOIN, SERVICE_UNJOIN
+from .coordinator import (
+    BluesoundConfigEntry,
+    BluesoundCoordinator,
+    BluesoundRuntimeData,
+)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
-
-
-@dataclass
-class BluesoundRuntimeData:
-    """Bluesound data class."""
-
-    player: Player
-    sync_status: SyncStatus
-
-
-type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bluesound."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = []
-    setup_services(hass)
-
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_JOIN,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema={vol.Required(ATTR_MASTER): cv.entity_id},
+        func="async_bluesound_join",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_UNJOIN,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=None,
+        func="async_bluesound_unjoin",
+    )
     return True
 
 
@@ -48,13 +56,16 @@ async def async_setup_entry(
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
     session = async_get_clientsession(hass)
-    async with Player(host, port, session=session, default_timeout=10) as player:
-        try:
-            sync_status = await player.sync_status(timeout=1)
-        except PlayerUnreachableError as ex:
-            raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
+    player = Player(host, port, session=session, default_timeout=10)
+    try:
+        sync_status = await player.sync_status(timeout=1)
+    except PlayerUnreachableError as ex:
+        raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
 
-    config_entry.runtime_data = BluesoundRuntimeData(player, sync_status)
+    coordinator = BluesoundCoordinator(hass, config_entry, player, sync_status)
+    await coordinator.async_config_entry_first_refresh()
+
+    config_entry.runtime_data = BluesoundRuntimeData(player, sync_status, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

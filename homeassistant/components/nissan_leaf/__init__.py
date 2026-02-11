@@ -18,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -417,7 +417,7 @@ class LeafDataStore:
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             _LOGGER.error("An error occurred parsing response from server")
             return None
         return server_info

@@ -7,7 +7,6 @@ import aiounifi
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -22,7 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    DOMAIN as UNIFI_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -33,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import ConfigEntryFactoryType
 
@@ -100,7 +100,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -139,7 +139,7 @@ async def test_flow_works(hass: HomeAssistant, mock_discovery) -> None:
 async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -166,7 +166,7 @@ async def test_flow_works_negative_discovery(hass: HomeAssistant) -> None:
 async def test_flow_multiple_sites(hass: HomeAssistant) -> None:
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -193,7 +193,7 @@ async def test_flow_multiple_sites(hass: HomeAssistant) -> None:
 async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -218,7 +218,7 @@ async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
 async def test_flow_aborts_configuration_updated(hass: HomeAssistant) -> None:
     """Test config flow aborts since a connected config entry already exists."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -247,7 +247,7 @@ async def test_flow_aborts_configuration_updated(hass: HomeAssistant) -> None:
 async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -273,7 +273,7 @@ async def test_flow_fails_user_credentials_faulty(hass: HomeAssistant) -> None:
 async def test_flow_fails_hub_unavailable(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -480,9 +480,9 @@ async def test_simple_option_flow(
 async def test_form_ssdp(hass: HomeAssistant) -> None:
     """Test we get the form with ssdp source."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
@@ -520,9 +520,9 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
 async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
@@ -542,9 +542,9 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) ->
     """Test we abort if the serial is already configured."""
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
@@ -562,15 +562,15 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) ->
 async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
     """Test we can still setup if there is an ignored never configured entry."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
+        domain=DOMAIN,
         data={"not_controller_key": None},
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:1234/rootDesc.xml",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from pysmlight.const import Events as SmEvents
 from pysmlight.models import Firmware, Info
@@ -20,47 +20,69 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SmConfigEntry
-from .const import LOGGER
-from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
+from .const import DOMAIN, LOGGER
+from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
+
+PARALLEL_UPDATES = 1
+
+
+def zigbee_latest_version(data: SmFwData, idx: int) -> Firmware | None:
+    """Get the latest Zigbee firmware version."""
+
+    if idx < len(data.zb_firmware):
+        firmware_list = data.zb_firmware[idx]
+        if firmware_list:
+            return firmware_list[0]
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
 class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
-    installed_version: Callable[[Info], str | None]
-    fw_list: Callable[[SmFwData], list[Firmware] | None]
+    installed_version: Callable[[Info, int], str | None]
+    latest_version: Callable[[SmFwData, int], Firmware | None]
 
 
-UPDATE_ENTITIES: Final = [
-    SmUpdateEntityDescription(
-        key="core_update",
-        translation_key="core_update",
-        installed_version=lambda x: x.sw_version,
-        fw_list=lambda x: x.esp_firmware,
-    ),
-    SmUpdateEntityDescription(
-        key="zigbee_update",
-        translation_key="zigbee_update",
-        installed_version=lambda x: x.zb_version,
-        fw_list=lambda x: x.zb_firmware,
-    ),
-]
+CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
+    key="core_update",
+    translation_key="core_update",
+    installed_version=lambda x, idx: x.sw_version,
+    latest_version=lambda x, idx: x.esp_firmware[0] if x.esp_firmware else None,
+)
+
+ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
+    key="zigbee_update",
+    translation_key="zigbee_update",
+    installed_version=lambda x, idx: x.radios[idx].zb_version,
+    latest_version=zigbee_latest_version,
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: SmConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SMLIGHT update entities."""
     coordinator = entry.runtime_data.firmware
 
-    async_add_entities(
-        SmUpdateEntity(coordinator, description) for description in UPDATE_ENTITIES
+    # updates not available for legacy API, user will get repair to update externally
+    if coordinator.legacy_api == 2:
+        return
+
+    entities = [SmUpdateEntity(coordinator, CORE_UPDATE_ENTITY)]
+    radios = coordinator.data.info.radios
+
+    entities.extend(
+        SmUpdateEntity(coordinator, ZB_UPDATE_ENTITY, idx)
+        for idx, _ in enumerate(radios)
     )
+
+    async_add_entities(entities)
 
 
 class SmUpdateEntity(SmEntity, UpdateEntity):
@@ -80,42 +102,46 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self,
         coordinator: SmFirmwareUpdateCoordinator,
         description: SmUpdateEntityDescription,
+        idx: int = 0,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        device = description.key + (f"_{idx}" if idx else "")
+        self._attr_unique_id = f"{coordinator.unique_id}-{device}"
 
         self._finished_event = asyncio.Event()
         self._firmware: Firmware | None = None
         self._unload: list[Callable] = []
+        self.idx = idx
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update callbacks."""
+        self._firmware = self.entity_description.latest_version(
+            self.coordinator.data, self.idx
+        )
+        if self._firmware:
+            self.async_write_ha_state()
 
     @property
     def installed_version(self) -> str | None:
         """Version installed.."""
         data = self.coordinator.data
 
-        version = self.entity_description.installed_version(data.info)
-        return version if version != "-1" else None
+        return self.entity_description.installed_version(data.info, self.idx)
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        data = self.coordinator.data
-        if self.coordinator.legacy_api == 2:
-            return None
 
-        fw = self.entity_description.fw_list(data)
-
-        if fw and self.entity_description.key == "zigbee_update":
-            fw = [f for f in fw if f.type == data.info.zb_type]
-
-        if fw:
-            self._firmware = fw[0]
-            return self._firmware.ver
-
-        return None
+        return self._firmware.ver if self._firmware else None
 
     def register_callbacks(self) -> None:
         """Register callbacks for SSE update events."""
@@ -143,9 +169,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     def release_notes(self) -> str | None:
         """Return release notes for firmware."""
+        if "zigbee" in self.entity_description.key:
+            notes = f"### {'ZNP' if self.idx else 'EZSP'} Firmware\n\n"
+        else:
+            notes = "### Core Firmware\n\n"
 
         if self._firmware and self._firmware.notes:
-            return self._firmware.notes
+            notes += self._firmware.notes
+            return notes
 
         return None
 
@@ -179,7 +210,13 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def _update_failed(self, event: MessageEvent) -> None:
         self._update_done()
         self.coordinator.in_progress = False
-        raise HomeAssistantError(f"Update failed for {self.name}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_update_failed",
+            translation_placeholders={
+                "device_name": str(self.name),
+            },
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -192,7 +229,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self._attr_update_percentage = None
             self.register_callbacks()
 
-            await self.coordinator.client.fw_update(self._firmware)
+            await self.coordinator.client.fw_update(self._firmware, self.idx)
 
             # block until update finished event received
             await self._finished_event.wait()

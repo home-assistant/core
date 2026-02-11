@@ -41,6 +41,7 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import Orientation, StreamSettings
+from homeassistant.components.stream.exceptions import StreamClientError
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
@@ -54,6 +55,8 @@ from .common import dynamic_stream_settings, generate_h264_video, generate_h265_
 from .test_ll_hls import TEST_PART_DURATION
 
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
+
+_LOGGER = logging.getLogger(__name__)
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -216,7 +219,7 @@ class FakePyAvBuffer:
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
 
-    def add_stream(self, template=None):
+    def add_stream_from_template(self, template):
         """Create an output buffer that captures packets for test to examine."""
 
         class FakeAvOutputStream:
@@ -228,7 +231,7 @@ class FakePyAvBuffer:
                 return
 
             def mux(self, packet):
-                logging.debug("Muxed packet: %s", packet)
+                _LOGGER.debug("Muxed packet: %s", packet)
                 self.capture_packets.append(packet)
 
             def __str__(self) -> str:
@@ -341,7 +344,18 @@ async def async_decode_stream(
     return py_av.capture_buffer
 
 
-async def test_stream_open_fails(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exception", "error_code"),
+    [
+        # pylint: disable-next=c-extension-no-member
+        (av.error.InvalidDataError(-2, "error"), StreamClientError.Other),
+        (av.HTTPBadRequestError(400, ""), StreamClientError.BadRequest),
+        (av.HTTPUnauthorizedError(401, ""), StreamClientError.Unauthorized),
+    ],
+)
+async def test_stream_open_fails(
+    hass: HomeAssistant, exception: Exception, error_code: StreamClientError
+) -> None:
     """Test failure on stream open."""
     stream = Stream(
         hass,
@@ -352,12 +366,11 @@ async def test_stream_open_fails(hass: HomeAssistant) -> None:
     )
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
-        # pylint: disable-next=c-extension-no-member
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        with pytest.raises(StreamWorkerError):
+        av_open.side_effect = exception
+        with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, STREAM_SOURCE)
-        await hass.async_block_till_done()
         av_open.assert_called_once()
+        assert err.value.error_code == error_code
 
 
 async def test_stream_worker_success(hass: HomeAssistant) -> None:
@@ -788,10 +801,7 @@ async def test_worker_log(
         with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, stream_url)
         await hass.async_block_till_done()
-    assert (
-        str(err.value)
-        == f"Error opening stream (ERRORTYPE_-2, Invalid data, {redacted_url})"
-    )
+    assert str(err.value) == f"Error opening stream (Invalid data, {redacted_url})"
     assert stream_url not in caplog.text
 
 
@@ -971,7 +981,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     segment = complete_segments[0]
     part = segment.parts[0]
     av_part = av.open(io.BytesIO(segment.init + part.data))
-    assert av_part.streams.video[0].codec_tag == "hvc1"
+    assert av_part.streams.video[0].codec_tag == "hev1"
     av_part.close()
 
     await stream.stop()
@@ -992,7 +1002,7 @@ async def test_get_image(hass: HomeAssistant, h264_video, filename) -> None:
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
-        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+        "homeassistant.components.camera.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
         stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
@@ -1055,7 +1065,7 @@ async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> N
 
     # Since libjpeg-turbo is not installed on the CI runner, we use a mock
     with patch(
-        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+        "homeassistant.components.camera.TurboJPEGSingleton"
     ) as mock_turbo_jpeg_singleton:
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
         for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):

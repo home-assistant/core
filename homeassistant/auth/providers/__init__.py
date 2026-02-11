@@ -105,7 +105,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow[Any]:
         """Return the data flow for logging in with auth provider.
 
         Auth provider should extend LoginFlow and return an instance.
@@ -192,12 +192,14 @@ async def load_auth_provider_module(
     return module
 
 
-class LoginFlow(FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]]):
+class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
+    FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
+):
     """Handler for the login flow."""
 
     _flow_result = AuthFlowResult
 
-    def __init__(self, auth_provider: AuthProvider) -> None:
+    def __init__(self, auth_provider: _AuthProviderT) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_module_id: str | None = None

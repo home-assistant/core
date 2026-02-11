@@ -48,8 +48,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
-        if current_temperature:
-            return current_temperature.value_as_float
+
+        if current_temperature and current_temperature.value_as_int:
+            return float(current_temperature.value_as_int)
+
         return None
 
     @property
@@ -58,13 +60,14 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         target_temperature = self.device.states[
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
         ]
-        if target_temperature:
-            return target_temperature.value_as_float
+
+        if target_temperature and target_temperature.value_as_int:
+            return float(target_temperature.value_as_int)
+
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-
         await self.executor.async_execute_command(
             OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE,
             int(kwargs[ATTR_TEMPERATURE]),

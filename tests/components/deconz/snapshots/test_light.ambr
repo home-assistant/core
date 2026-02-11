@@ -10,6 +10,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -23,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -30,6 +32,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -66,15 +69,14 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -88,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -95,6 +98,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -107,7 +111,6 @@
       'all_on': False,
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'effect': None,
       'effect_list': list([
@@ -120,12 +123,10 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -134,7 +135,7 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -160,6 +161,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -173,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -180,6 +183,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -230,14 +234,13 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -251,6 +254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -258,6 +262,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -269,7 +274,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -278,12 +282,10 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -291,7 +293,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -314,6 +316,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -327,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,6 +338,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -370,15 +375,14 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -392,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -399,6 +404,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -411,7 +417,6 @@
       'all_on': False,
       'brightness': 50,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'effect': None,
       'effect_list': list([
@@ -424,12 +429,10 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -438,7 +441,7 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -464,6 +467,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -477,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -484,6 +489,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -534,14 +540,13 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -555,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -562,6 +568,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -573,7 +580,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -582,12 +588,10 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -595,7 +599,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -618,6 +622,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -631,6 +636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -638,6 +644,7 @@
     'original_name': 'Dimmable light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -674,15 +681,14 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -696,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -703,6 +710,7 @@
     'original_name': None,
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '01234E56789A-/groups/0',
@@ -715,7 +723,6 @@
       'all_on': False,
       'brightness': 50,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -728,9 +735,7 @@
       ),
       'is_deconz_group': True,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         221,
@@ -768,6 +773,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -781,6 +787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +795,7 @@
     'original_name': 'RGB light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -838,14 +846,13 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -859,6 +866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -866,6 +874,7 @@
     'original_name': 'Tunable white light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-00',
@@ -877,7 +886,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 2500,
       'color_temp_kelvin': 400,
       'friendly_name': 'Tunable white light',
       'hs_color': tuple(
@@ -886,12 +894,10 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6451,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 155,
       'rgb_color': tuple(
         255,
-        67,
+        68,
         0,
       ),
       'supported_color_modes': list([
@@ -899,7 +905,7 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.674,
+        0.673,
         0.322,
       ),
     }),
@@ -921,9 +927,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -931,6 +935,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -944,6 +949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Go',
     'options': dict({
     }),
     'original_device_class': None,
@@ -951,6 +957,7 @@
     'original_name': 'Hue Go',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-00',
@@ -962,7 +969,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 375,
       'color_temp_kelvin': 2666,
       'effect': None,
       'effect_list': list([
@@ -975,13 +981,11 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         165,
-        84,
+        85,
       ),
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -990,8 +994,8 @@
       ]),
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
-        0.53,
-        0.388,
+        0.529,
+        0.387,
       ),
     }),
     'context': <ANY>,
@@ -1012,9 +1016,7 @@
         'colorloop',
       ]),
       'max_color_temp_kelvin': 7142,
-      'max_mireds': 650,
       'min_color_temp_kelvin': 1538,
-      'min_mireds': 140,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1022,6 +1024,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1035,6 +1038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Ensis',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1042,6 +1046,7 @@
     'original_name': 'Hue Ensis',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-01',
@@ -1053,7 +1058,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -1066,9 +1070,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 7142,
-      'max_mireds': 650,
       'min_color_temp_kelvin': 1538,
-      'min_mireds': 140,
       'rgb_color': tuple(
         255,
         206,
@@ -1122,6 +1124,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1135,6 +1138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LIDL xmas light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1142,6 +1146,7 @@
     'original_name': 'LIDL xmas light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '58:8e:81:ff:fe:db:7b:be-01',
@@ -1180,7 +1185,7 @@
       'is_deconz_group': False,
       'rgb_color': tuple(
         243,
-        113,
+        114,
         255,
       ),
       'supported_color_modes': list([
@@ -1189,7 +1194,7 @@
       'supported_features': <LightEntityFeature: 44>,
       'xy_color': tuple(
         0.357,
-        0.188,
+        0.189,
       ),
     }),
     'context': <ANY>,
@@ -1207,14 +1212,13 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1228,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue White Ambiance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1235,6 +1240,7 @@
     'original_name': 'Hue White Ambiance',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-02',
@@ -1246,7 +1252,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 254,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 396,
       'color_temp_kelvin': 2525,
       'friendly_name': 'Hue White Ambiance',
       'hs_color': tuple(
@@ -1255,9 +1260,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         160,
@@ -1291,6 +1294,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1304,6 +1308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Filament',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1311,6 +1316,7 @@
     'original_name': 'Hue Filament',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 40>,
     'translation_key': None,
     'unique_id': '00:17:88:01:01:23:45:67-03',
@@ -1348,6 +1354,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1361,6 +1368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1368,6 +1376,7 @@
     'original_name': 'Simple Light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:15:8d:00:01:23:45:67-01',
@@ -1408,9 +1417,7 @@
         <LightEffect.SUNRISE: 'sunrise'>,
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -1418,6 +1425,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1431,6 +1439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gradient light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1438,6 +1447,7 @@
     'original_name': 'Gradient light',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 44>,
     'translation_key': None,
     'unique_id': '00:17:88:01:0b:0c:0d:0e-0f',
@@ -1449,7 +1459,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 184,
       'color_mode': <ColorMode.XY: 'xy'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -1467,9 +1476,7 @@
       ),
       'is_deconz_group': False,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         135,
         255,

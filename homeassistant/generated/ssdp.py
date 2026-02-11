@@ -141,6 +141,12 @@ SSDP = {
             "manufacturer": "Logitech",
         },
     ],
+    "hegel": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Hegel",
+        },
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1",
@@ -164,6 +170,13 @@ SSDP = {
         {
             "manufacturer": "Hyperion Open Source Ambient Lighting",
             "st": "urn:hyperion-project.org:device:basic:1",
+        },
+    ],
+    "imeon_inverter": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "IMEON",
+            "st": "upnp:rootdevice",
         },
     ],
     "isy994": [
@@ -211,6 +224,12 @@ SSDP = {
         {
             "st": "nanoleaf:nl52",
         },
+        {
+            "st": "nanoleaf:nl69",
+        },
+        {
+            "st": "inanoleaf:nl81",
+        },
     ],
     "netgear": [
         {
@@ -222,6 +241,44 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "The OctoPrint Project",
+        },
+    ],
+    "onkyo": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "ONKYO",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "Onkyo & Pioneer Corporation",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Pioneer",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Pioneer",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "manufacturer": "Pioneer",
         },
     ],
     "openhome": [
@@ -347,6 +404,16 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda",
+        },
+    ],
+    "xbox": [
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox 360",
+        },
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox One",
         },
     ],
     "yamaha_musiccast": [

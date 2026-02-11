@@ -42,8 +42,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable-next=import-outside-toplevel
-    from gen_requirements_all import main as req_main
+    from gen_requirements_all import main as req_main  # noqa: PLC0415
 
     return req_main(True) == 0
 
@@ -120,7 +119,7 @@ async def pylint(files):
 
 async def ruff(files):
     """Exec ruff."""
-    _, log = await async_exec("pre-commit", "run", "ruff", "--files", *files)
+    _, log = await async_exec("prek", "run", "ruff", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")

@@ -1,17 +1,5 @@
 # Describes the format for available climate services
 
-set_aux_heat:
-  target:
-    entity:
-      domain: climate
-      supported_features:
-        - climate.ClimateEntityFeature.AUX_HEAT
-  fields:
-    aux_heat:
-      required: true
-      selector:
-        boolean:
-
 set_preset_mode:
   target:
     entity:
@@ -112,16 +100,10 @@ set_hvac_mode:
   fields:
     hvac_mode:
       selector:
-        select:
-          options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
-          translation_key: hvac_mode
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 set_swing_mode:
   target:
     entity:
@@ -131,7 +113,20 @@ set_swing_mode:
   fields:
     swing_mode:
       required: true
-      example: "horizontal"
+      example: "on"
+      selector:
+        text:
+
+set_swing_horizontal_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_HORIZONTAL_MODE
+  fields:
+    swing_horizontal_mode:
+      required: true
+      example: "on"
       selector:
         text:
 

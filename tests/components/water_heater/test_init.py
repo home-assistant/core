@@ -8,10 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
@@ -19,19 +16,17 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
 )
@@ -140,13 +135,15 @@ async def test_operation_mode_validation(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
         return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test water_heater platform via config entry."""
         async_add_entities([water_heater_entity])
@@ -209,51 +206,3 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(water_heater)
-
-
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
-        WaterHeaterEntityFeature.OPERATION_MODE,
-        WaterHeaterEntityFeature.AWAY_MODE,
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: WaterHeaterEntityFeature,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, water_heater, enum, "SUPPORT_", "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockWaterHeaterEntity(WaterHeaterEntity):
-        _attr_operation_list = ["mode1", "mode2"]
-        _attr_temperature_unit = UnitOfTemperature.CELSIUS
-        _attr_current_operation = "mode1"
-        _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE.value
-
-    entity = MockWaterHeaterEntity()
-    entity.hass = hass
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "MockWaterHeaterEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "WaterHeaterEntityFeature.OPERATION_MODE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "is using deprecated supported features values" not in caplog.text
-    assert entity.state_attributes[ATTR_OPERATION_MODE] == "mode1"
-    assert entity.capability_attributes[ATTR_OPERATION_LIST] == ["mode1", "mode2"]

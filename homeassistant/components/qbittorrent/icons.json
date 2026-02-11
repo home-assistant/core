@@ -10,10 +10,10 @@
     }
   },
   "services": {
-    "get_torrents": {
+    "get_all_torrents": {
       "service": "mdi:file-arrow-up-down-outline"
     },
-    "get_all_torrents": {
+    "get_torrents": {
       "service": "mdi:file-arrow-up-down-outline"
     }
   }

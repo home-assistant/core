@@ -1,9 +1,12 @@
 """Data coordinators for the ring integration."""
 
+from __future__ import annotations
+
 from asyncio import TaskGroup
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ring_doorbell import (
     AuthenticationError,
@@ -15,7 +18,7 @@ from ring_doorbell import (
 )
 from ring_doorbell.listen import RingEventListener
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
@@ -24,37 +27,33 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _call_api[*_Ts, _R](
-    hass: HomeAssistant,
-    target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
-    *args: *_Ts,
-    msg_suffix: str = "",
-) -> _R:
-    try:
-        return await target(*args)
-    except AuthenticationError as err:
-        # Raising ConfigEntryAuthFailed will cancel future updates
-        # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-        raise ConfigEntryAuthFailed from err
-    except RingTimeout as err:
-        raise UpdateFailed(
-            f"Timeout communicating with API{msg_suffix}: {err}"
-        ) from err
-    except RingError as err:
-        raise UpdateFailed(f"Error communicating with API{msg_suffix}: {err}") from err
+@dataclass
+class RingData:
+    """Class to support type hinting of ring data collection."""
+
+    api: Ring
+    devices: RingDevices
+    devices_coordinator: RingDataCoordinator
+    listen_coordinator: RingListenCoordinator
+
+
+type RingConfigEntry = ConfigEntry[RingData]
 
 
 class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
     """Base class for device coordinators."""
 
+    config_entry: RingConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RingConfigEntry,
         ring_api: Ring,
     ) -> None:
         """Initialize my coordinator."""
@@ -63,16 +62,42 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
             name="devices",
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
         self.ring_api: Ring = ring_api
         self.first_call: bool = True
+
+    async def _call_api[*_Ts, _R](
+        self,
+        target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
+        *args: *_Ts,
+    ) -> _R:
+        try:
+            return await target(*args)
+        except AuthenticationError as err:
+            # Raising ConfigEntryAuthFailed will cancel future updates
+            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication",
+            ) from err
+        except RingTimeout as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
+            ) from err
+        except RingError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
         update_method: str = (
             "async_update_data" if self.first_call else "async_update_devices"
         )
-        await _call_api(self.hass, getattr(self.ring_api, update_method))
+        await self._call_api(getattr(self.ring_api, update_method))
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
@@ -84,18 +109,14 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                     async with TaskGroup() as tg:
                         if device.has_capability("history"):
                             tg.create_task(
-                                _call_api(
-                                    self.hass,
+                                self._call_api(
                                     lambda device: device.async_history(limit=10),
                                     device,
-                                    msg_suffix=f" for device {device.name}",  # device_id is the mac
                                 )
                             )
                         tg.create_task(
-                            _call_api(
-                                self.hass,
+                            self._call_api(
                                 device.async_update_health_data,
-                                msg_suffix=f" for device {device.name}",
                             )
                         )
                 except ExceptionGroup as eg:
@@ -107,11 +128,12 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
 class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Global notifications coordinator."""
 
-    config_entry: config_entries.ConfigEntry
+    config_entry: RingConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RingConfigEntry,
         ring_api: Ring,
         listen_credentials: dict[str, Any] | None,
         listen_credentials_updater: Callable[[dict[str, Any]], None],
@@ -126,9 +148,6 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._listen_callback_id: int | None = None
 
-        config_entry = config_entries.current_entry.get()
-        if TYPE_CHECKING:
-            assert config_entry
         self.config_entry = config_entry
         self.start_timeout = 10
         self.config_entry.async_on_unload(self.async_shutdown)

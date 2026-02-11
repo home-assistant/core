@@ -50,27 +50,28 @@ async def async_setup_entry(
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
-        hass, psutil_wrapper, disk_arguments
+        hass,
+        entry,
+        psutil_wrapper,
+        disk_arguments,
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SystemMonitorConfigEntry
+) -> bool:
     """Unload System Monitor config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SystemMonitorConfigEntry
+) -> bool:
     """Migrate old entry."""
 
     if entry.version > 1:

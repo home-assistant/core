@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,9 +84,12 @@ class LuciDeviceScanner(DeviceScanner):
         (ip), reachable status (reachable), associated router
         (host), hostname if known (hostname) among others.
         """
-        device = next(
-            (result for result in self.last_results if result.mac == device), None
-        )
+        if not (
+            device := next(
+                (result for result in self.last_results if result.mac == device), None
+            )
+        ):
+            return {}
         return device._asdict()
 
     def _update_info(self):

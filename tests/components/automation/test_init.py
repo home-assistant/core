@@ -8,7 +8,7 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.components import automation, input_boolean, script
+from homeassistant.components import automation, input_boolean, labs, script
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
@@ -50,10 +50,8 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,
@@ -62,8 +60,6 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -1379,7 +1375,9 @@ async def test_reload_automation_when_blueprint_changes(
 
         # Reload the automations without any change, but with updated blueprint
         blueprint_path = automation.async_get_blueprints(hass).blueprint_folder
-        blueprint_config = yaml.load_yaml(blueprint_path / "test_event_service.yaml")
+        blueprint_config = yaml_util.load_yaml(
+            blueprint_path / "test_event_service.yaml"
+        )
         blueprint_config["actions"] = [blueprint_config["actions"]]
         blueprint_config["actions"].append(blueprint_config["actions"][-1])
 
@@ -1390,7 +1388,7 @@ async def test_reload_automation_when_blueprint_changes(
                 return_value=config,
             ),
             patch(
-                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
                 autospec=True,
                 return_value=blueprint_config,
             ),
@@ -2234,6 +2232,407 @@ async def test_extraction_functions(
     assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
 
+async def test_extraction_functions_with_trigger_targets(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test extraction functions with targets in triggers.
+
+    This test verifies that targets specified in trigger configurations
+    (using new-style triggers that support target) are properly extracted for
+    entity, device, area, floor, and label references.
+    """
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+
+    trigger_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(
+        hass, "scene", {"scene": {"name": "test", "entities": {}}}
+    )
+    await hass.async_block_till_done()
+
+    # Enable the new_triggers_conditions feature flag to allow new-style triggers
+    assert await async_setup_component(hass, "labs", {})
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "triggers": [
+                        # Single entity_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"entity_id": "scene.target_entity"},
+                        },
+                        # Multiple entity_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "entity_id": [
+                                    "scene.target_entity_list1",
+                                    "scene.target_entity_list2",
+                                ]
+                            },
+                        },
+                        # Single device_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"device_id": trigger_device.id},
+                        },
+                        # Multiple device_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "device_id": [
+                                    "target-device-1",
+                                    "target-device-2",
+                                ]
+                            },
+                        },
+                        # Single area_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"area_id": "area-target-single"},
+                        },
+                        # Multiple area_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"area_id": ["area-target-1", "area-target-2"]},
+                        },
+                        # Single floor_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"floor_id": "floor-target-single"},
+                        },
+                        # Multiple floor_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "floor_id": ["floor-target-1", "floor-target-2"]
+                            },
+                        },
+                        # Single label_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"label_id": "label-target-single"},
+                        },
+                        # Multiple label_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "label_id": ["label-target-1", "label-target-2"]
+                            },
+                        },
+                        # Combined targets
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "entity_id": "scene.combined_entity",
+                                "device_id": "combined-device",
+                                "area_id": "combined-area",
+                                "floor_id": "combined-floor",
+                                "label_id": "combined-label",
+                            },
+                        },
+                    ],
+                    "conditions": [],
+                    "actions": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.action_entity"},
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    # Test entity extraction from trigger targets
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "scene.target_entity",
+        "scene.target_entity_list1",
+        "scene.target_entity_list2",
+        "scene.combined_entity",
+        "light.action_entity",
+    }
+
+    # Test device extraction from trigger targets
+    assert set(automation.devices_in_automation(hass, "automation.test1")) == {
+        trigger_device.id,
+        "target-device-1",
+        "target-device-2",
+        "combined-device",
+    }
+
+    # Test area extraction from trigger targets
+    assert set(automation.areas_in_automation(hass, "automation.test1")) == {
+        "area-target-single",
+        "area-target-1",
+        "area-target-2",
+        "combined-area",
+    }
+
+    # Test floor extraction from trigger targets
+    assert set(automation.floors_in_automation(hass, "automation.test1")) == {
+        "floor-target-single",
+        "floor-target-1",
+        "floor-target-2",
+        "combined-floor",
+    }
+
+    # Test label extraction from trigger targets
+    assert set(automation.labels_in_automation(hass, "automation.test1")) == {
+        "label-target-single",
+        "label-target-1",
+        "label-target-2",
+        "combined-label",
+    }
+
+    # Test automations_with_* functions
+    assert set(automation.automations_with_entity(hass, "scene.target_entity")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_device(hass, trigger_device.id)) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_area(hass, "area-target-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_floor(hass, "floor-target-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_label(hass, "label-target-single")) == {
+        "automation.test1"
+    }
+
+
+async def test_extraction_functions_with_condition_targets(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test extraction functions with targets in conditions."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+
+    condition_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    # Enable the new_triggers_conditions feature flag to allow new-style conditions
+    assert await async_setup_component(hass, "labs", {})
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "automation",
+            "preview_feature": "new_triggers_conditions",
+            "enabled": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "triggers": [
+                        {"trigger": "state", "entity_id": "sensor.trigger_state"},
+                    ],
+                    "conditions": [
+                        # Single entity_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"entity_id": "light.condition_entity"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple entity_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "entity_id": [
+                                    "light.condition_entity_list1",
+                                    "light.condition_entity_list2",
+                                ]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single device_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"device_id": condition_device.id},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple device_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "device_id": [
+                                    "target-device-1",
+                                    "target-device-2",
+                                ]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single area_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple area_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "area_id": ["area-condition-1", "area-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single floor_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple floor_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "floor_id": ["floor-condition-1", "floor-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single label_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple label_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "label_id": ["label-condition-1", "label-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Combined targets
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "entity_id": "light.combined_entity",
+                                "device_id": "combined-device",
+                                "area_id": "combined-area",
+                                "floor_id": "combined-floor",
+                                "label_id": "combined-label",
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                    ],
+                    "actions": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.action_entity"},
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    # Test entity extraction from condition targets
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "sensor.trigger_state",
+        "light.condition_entity",
+        "light.condition_entity_list1",
+        "light.condition_entity_list2",
+        "light.combined_entity",
+        "light.action_entity",
+    }
+
+    # Test device extraction from condition targets
+    assert set(automation.devices_in_automation(hass, "automation.test1")) == {
+        condition_device.id,
+        "target-device-1",
+        "target-device-2",
+        "combined-device",
+    }
+
+    # Test area extraction from condition targets
+    assert set(automation.areas_in_automation(hass, "automation.test1")) == {
+        "area-condition-single",
+        "area-condition-1",
+        "area-condition-2",
+        "combined-area",
+    }
+
+    # Test floor extraction from condition targets
+    assert set(automation.floors_in_automation(hass, "automation.test1")) == {
+        "floor-condition-single",
+        "floor-condition-1",
+        "floor-condition-2",
+        "combined-floor",
+    }
+
+    # Test label extraction from condition targets
+    assert set(automation.labels_in_automation(hass, "automation.test1")) == {
+        "label-condition-single",
+        "label-condition-1",
+        "label-condition-2",
+        "combined-label",
+    }
+
+    # Test automations_with_* functions
+    assert set(automation.automations_with_entity(hass, "light.condition_entity")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_device(hass, condition_device.id)) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_area(hass, "area-condition-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_floor(hass, "floor-condition-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_label(hass, "label-condition-single")) == {
+        "automation.test1"
+    }
+
+
 async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) -> None:
     """Test humanifying Automation Trigger event."""
     hass.config.components.add("recorder")
@@ -2694,7 +3093,7 @@ async def test_blueprint_automation_fails_substitution(
     """Test blueprint automation with bad inputs."""
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         assert await async_setup_component(
             hass,
@@ -3153,30 +3552,6 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(automation)
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement"),
-    [
-        ("AutomationActionType", TriggerActionType),
-        ("AutomationTriggerData", TriggerData),
-        ("AutomationTriggerInfo", TriggerInfo),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
-    )
-
-
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
@@ -3519,3 +3894,92 @@ async def test_valid_configuration(
         },
     )
     await hass.async_block_till_done()
+
+
+async def test_reload_when_labs_flag_changes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calls: list[ServiceCall],
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test automations are reloaded when labs flag changes."""
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "action": "test.automation",
+                    "data_template": {"event": "{{ trigger.event.event_type }}"},
+                },
+            }
+        },
+    )
+    assert await async_setup_component(hass, labs.DOMAIN, {})
+    assert hass.states.get("automation.hello") is not None
+    assert hass.states.get("automation.bye") is None
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event") == 1
+    assert listeners.get("test_event2") is None
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data.get("event") == "test_event"
+
+    test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
+
+    # Check we reload whenever the labs flag is set, even if it's already enabled
+    for enabled in (True, True, False, False):
+        test_reload_event.clear()
+        calls.clear()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {
+                    "alias": "bye",
+                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "action": {
+                        "action": "test.automation",
+                        "data_template": {"event": "{{ trigger.event.event_type }}"},
+                    },
+                }
+            },
+        ):
+            await ws_client.send_json_auto_id(
+                {
+                    "type": "labs/update",
+                    "domain": "automation",
+                    "preview_feature": "new_triggers_conditions",
+                    "enabled": enabled,
+                }
+            )
+
+            msg = await ws_client.receive_json()
+            assert msg["success"]
+            await hass.async_block_till_done()
+
+        assert len(test_reload_event) == 1
+
+        assert hass.states.get("automation.hello") is None
+        assert hass.states.get("automation.bye") is not None
+        listeners = hass.bus.async_listeners()
+        assert listeners.get("test_event") is None
+        assert listeners.get("test_event2") == 1
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 0
+
+        hass.bus.async_fire("test_event2")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+        assert calls[-1].data.get("event") == "test_event2"

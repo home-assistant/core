@@ -20,10 +20,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ class PublicTransportData:
         except rjpl.rjplAPIError as error:
             _LOGGER.debug("API returned error: %s", error)
             return
-        except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
+        except rjpl.rjplConnectionError, rjpl.rjplHTTPError:
             _LOGGER.debug("Error occurred while connecting to the API")
             return
 

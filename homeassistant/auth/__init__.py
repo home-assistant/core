@@ -115,7 +115,7 @@ class AuthManagerFlowManager(
         *,
         context: AuthFlowContext | None = None,
         data: dict[str, Any] | None = None,
-    ) -> LoginFlow:
+    ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -402,6 +402,8 @@ class AuthManager:
         if user.is_owner:
             raise ValueError("Unable to deactivate the owner")
         await self._store.async_deactivate_user(user)
+        for refresh_token in list(user.refresh_tokens.values()):
+            self.async_remove_refresh_token(refresh_token)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""

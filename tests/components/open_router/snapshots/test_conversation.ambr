@@ -1,0 +1,295 @@
+# serializer version: 1
+# name: test_all_entities[assist][conversation.gpt_3_5_turbo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'conversation',
+    'entity_category': None,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'open_router',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ConversationEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'ABCDEF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[assist][conversation.gpt_3_5_turbo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GPT-3.5 Turbo',
+      'supported_features': <ConversationEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[no_assist][conversation.gpt_3_5_turbo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'conversation',
+    'entity_category': None,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'conversation': dict({
+        'should_expose': False,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'open_router',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ABCDEF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[no_assist][conversation.gpt_3_5_turbo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GPT-3.5 Turbo',
+      'supported_features': <ConversationEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'conversation.gpt_3_5_turbo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_default_prompt
+  list([
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': 'Hello, how can I help you?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call[True]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'What time is it?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'mock_tool_call_id',
+          'tool_args': dict({
+          }),
+          'tool_name': 'HassGetCurrentTime',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'mock_tool_call_id',
+      'tool_name': 'HassGetCurrentTime',
+      'tool_result': dict({
+        'data': dict({
+          'failed': list([
+          ]),
+          'success': list([
+          ]),
+          'targets': list([
+          ]),
+        }),
+        'response_type': 'action_done',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': '12:00 PM',
+          }),
+        }),
+        'speech_slots': dict({
+          'time': datetime.time(12, 0),
+        }),
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': '12:00 PM',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'content': 'I have successfully called the function',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call[True].1
+  list([
+    dict({
+      'content': '''
+        You are a helpful assistant.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'role': 'system',
+    }),
+    dict({
+      'content': 'What time is it?',
+      'role': 'user',
+    }),
+    dict({
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'function': dict({
+            'arguments': '{}',
+            'name': 'HassGetCurrentTime',
+          }),
+          'id': 'mock_tool_call_id',
+          'type': 'function',
+        }),
+      ]),
+    }),
+    dict({
+      'content': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"targets":[],"success":[],"failed":[]}}',
+      'role': 'tool',
+      'tool_call_id': 'mock_tool_call_id',
+    }),
+    dict({
+      'content': '12:00 PM',
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'function': dict({
+            'arguments': '{"param1":"call1"}',
+            'name': 'test_tool',
+          }),
+          'id': 'call_call_1',
+          'type': 'function',
+        }),
+      ]),
+    }),
+    dict({
+      'content': '"value1"',
+      'role': 'tool',
+      'tool_call_id': 'call_call_1',
+    }),
+    dict({
+      'content': 'I have successfully called the function',
+      'role': 'assistant',
+    }),
+  ])
+# ---

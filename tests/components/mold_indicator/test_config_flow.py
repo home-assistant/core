@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.mold_indicator.const import (
@@ -70,6 +70,9 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_INDOOR_TEMP: "sensor.indoor_temp",
+            CONF_INDOOR_HUMIDITY: "sensor.indoor_humidity",
+            CONF_OUTDOOR_TEMP: "sensor.outdoor_temp",
             CONF_CALIBRATION_FACTOR: 3.0,
         },
     )
@@ -226,7 +229,7 @@ async def test_config_flow_preview_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
     assert result["preview"] == "mold_indicator"
@@ -291,7 +294,7 @@ async def test_options_flow_preview(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "mold_indicator"
 
@@ -358,7 +361,7 @@ async def test_options_flow_sensor_preview_config_entry_removed(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "mold_indicator"
 

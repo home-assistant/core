@@ -118,7 +118,7 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
         mock_set_20min_ventilator.assert_called_once_with(THERMOSTAT_ID, False)
 
 
-DEVICE_ID = "switch.ecobee2_aux_heat_only"
+DEVICE_ID = "switch.ecobee2_auxiliary_heat_only"
 
 
 async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:

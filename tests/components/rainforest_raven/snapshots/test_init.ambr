@@ -8,6 +8,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -21,7 +22,6 @@
           'abcdef0123456789',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Rainforest Automation, Inc.',
@@ -31,7 +31,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': '2.0.0 (7400)',
       'via_device_id': None,
     }),

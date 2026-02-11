@@ -3,7 +3,7 @@
 from homeassistant.components.todo import DOMAIN, TodoItem, TodoListEntity
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
@@ -34,6 +34,13 @@ class MockTodoListEntity(TodoListEntity):
         """Delete an item in the To-do list."""
         self._attr_todo_items = [item for item in self.items if item.uid not in uids]
 
+    async def async_update_todo_item(self, item: TodoItem) -> None:
+        """Update an item in the To-do list."""
+        for idx, existing_item in enumerate(self.items):
+            if existing_item.uid == item.uid:
+                self._attr_todo_items[idx] = item
+                break
+
 
 async def create_mock_platform(
     hass: HomeAssistant,
@@ -44,7 +51,7 @@ async def create_mock_platform(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
         async_add_entities(entities)

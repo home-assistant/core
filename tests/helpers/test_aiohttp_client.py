@@ -21,7 +21,8 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.aiohttp_client as client
+from homeassistant.helpers import aiohttp_client as client
+from homeassistant.util import ssl as ssl_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
 
@@ -249,7 +250,6 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
         assert mock_close.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -286,13 +286,12 @@ async def test_warning_close_session_integration(
         await session.close()
     assert (
         "Detected that integration 'hue' closes the Home Assistant aiohttp session at "
-        "homeassistant/components/hue/light.py, line 23: await session.close(), "
-        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "homeassistant/components/hue/light.py, line 23: await session.close(). "
+        "Please create a bug report at https://github.com/home-assistant/core/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -330,8 +329,8 @@ async def test_warning_close_session_custom(
         await session.close()
     assert (
         "Detected that custom integration 'hue' closes the Home Assistant aiohttp "
-        "session at custom_components/hue/light.py, line 23: await session.close(), "
-        "please report it to the author of the 'hue' custom integration"
+        "session at custom_components/hue/light.py, line 23: await session.close(). "
+        "Please report it to the author of the 'hue' custom integration"
     ) in caplog.text
 
 
@@ -390,3 +389,54 @@ async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
 
     with pytest.raises(AttributeError):
         session.headers.update({"user-agent": "bla"})
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_async_mdnsresolver(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test async_mdnsresolver."""
+    resp = aioclient_mock.post("http://localhost/xyz", json={"x": 1})
+    session = client.async_create_clientsession(hass)
+    resp = await session.post("http://localhost/xyz", json={"x": 1})
+    assert resp.status == 200
+    assert await resp.json() == {"x": 1}
+
+
+async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
+    """Test that the resolver is a singleton."""
+    session = client.async_get_clientsession(hass)
+    session2 = client.async_get_clientsession(hass)
+    session3 = client.async_create_clientsession(hass)
+    assert isinstance(session._connector, aiohttp.TCPConnector)
+    assert isinstance(session2._connector, aiohttp.TCPConnector)
+    assert isinstance(session3._connector, aiohttp.TCPConnector)
+    assert session._connector._resolver is session2._connector._resolver
+    assert session._connector._resolver is session3._connector._resolver
+
+
+async def test_connector_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector uses HTTP/1.1 ALPN protocols."""
+    with patch.object(
+        ssl_util, "client_context", wraps=ssl_util.client_context
+    ) as mock_client_context:
+        client.async_get_clientsession(hass)
+
+        # Verify client_context was called with HTTP/1.1 ALPN
+        mock_client_context.assert_called_once_with(
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
+        )
+
+
+async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector without SSL verification uses HTTP/1.1 ALPN protocols."""
+    with patch.object(
+        ssl_util, "client_context_no_verify", wraps=ssl_util.client_context_no_verify
+    ) as mock_client_context_no_verify:
+        client.async_get_clientsession(hass, verify_ssl=False)
+
+        # Verify client_context_no_verify was called with HTTP/1.1 ALPN
+        mock_client_context_no_verify.assert_called_once_with(
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
+        )

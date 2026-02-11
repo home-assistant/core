@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, cast
 
 from elvia import Elvia, error as ElviaError
 
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -16,6 +20,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.const import UnitOfEnergy
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN, LOGGER
 
@@ -144,11 +149,12 @@ class ElviaImporter:
         async_add_external_statistics(
             hass=self.hass,
             metadata=StatisticMetaData(
-                has_mean=False,
+                mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{self.metering_point_id} Consumption",
                 source=DOMAIN,
                 statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             ),
             statistics=statistics,

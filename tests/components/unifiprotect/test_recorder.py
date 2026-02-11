@@ -35,8 +35,8 @@ async def test_exclude_attributes(
     now = fixed_now
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
-    _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
     )
 
     event = Event(
@@ -51,7 +51,7 @@ async def test_exclude_attributes(
         camera_id=doorbell.id,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 

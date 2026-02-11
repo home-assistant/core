@@ -121,7 +121,7 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
     assert (
         serv.get_characteristic(CHAR_NAME).value
-        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+        == "Home Accessory that exceeds the maximum maximum maximum maximum"
     )
     assert (
         serv.get_characteristic(CHAR_MANUFACTURER).value
@@ -154,7 +154,7 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     serv = acc4.services[0]  # SERV_ACCESSORY_INFO
     assert (
         serv.get_characteristic(CHAR_NAME).value
-        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+        == "Home Accessory that exceeds the maximum maximum maximum maximum"
     )
     assert (
         serv.get_characteristic(CHAR_MANUFACTURER).value

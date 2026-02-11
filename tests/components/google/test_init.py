@@ -14,13 +14,14 @@ from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
+from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
@@ -60,12 +61,6 @@ def assert_state(actual: State | None, expected: State | None) -> None:
     params=[
         (
             DOMAIN,
-            SERVICE_ADD_EVENT,
-            {"calendar_id": CALENDAR_ID},
-            None,
-        ),
-        (
-            DOMAIN,
             SERVICE_CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
@@ -77,7 +72,7 @@ def assert_state(actual: State | None, expected: State | None) -> None:
             {"entity_id": TEST_API_ENTITY},
         ),
     ],
-    ids=("google.add_event", "google.create_event", "calendar.create_event"),
+    ids=("google.create_event", "calendar.create_event"),
 )
 def add_event_call_service(
     hass: HomeAssistant,
@@ -593,7 +588,7 @@ async def test_unsupported_create_event(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test create event service call is unsupported for virtual calendars."""
-
+    await async_setup_component(hass, "homeassistant", {})
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -601,8 +596,12 @@ async def test_unsupported_create_event(
     start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
+    entity_id = "calendar.backyard_light"
 
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    with pytest.raises(
+        ServiceNotSupported,
+        match=f"Entity {entity_id} does not support action google.create_event",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "create_event",
@@ -613,7 +612,7 @@ async def test_unsupported_create_event(
                 "summary": TEST_EVENT_SUMMARY,
                 "description": TEST_EVENT_DESCRIPTION,
             },
-            target={"entity_id": "calendar.backyard_light"},
+            target={"entity_id": entity_id},
             blocking=True,
         )
 
@@ -813,51 +812,6 @@ async def test_calendar_yaml_update(
 
     # No yaml config loaded that overwrites the entity name
     assert not hass.states.get(TEST_YAML_ENTITY)
-
-
-async def test_update_will_reload(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test updating config entry options will trigger a reload."""
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    await component_setup()
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options == {}  # read_write is default
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=None,
-    ) as mock_reload:
-        # No-op does not reload
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_CALENDAR_ACCESS: "read_write"}
-        )
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
-        # Data change does not trigger reload
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={
-                **config_entry.data,
-                "example": "field",
-            },
-        )
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
-        # Reload when options changed
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
-        )
-        await hass.async_block_till_done()
-        mock_reload.assert_called_once()
 
 
 @pytest.mark.parametrize("config_entry_unique_id", [None])

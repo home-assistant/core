@@ -13,10 +13,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MadVRConfigEntry
 from .const import (
     ASPECT_DEC,
     ASPECT_INT,
@@ -45,7 +44,7 @@ from .const import (
     TEMP_HDMI,
     TEMP_MAINBOARD,
 )
-from .coordinator import MadVRCoordinator
+from .coordinator import MadVRConfigEntry, MadVRCoordinator
 from .entity import MadVREntity
 
 
@@ -58,7 +57,7 @@ def get_temperature(coordinator: MadVRCoordinator, key: str) -> float | None:
     """Get temperature value if valid, otherwise return None."""
     try:
         temp = float(coordinator.data.get(key, 0))
-    except (AttributeError, ValueError):
+    except AttributeError, ValueError:
         return None
     else:
         return temp if is_valid_temperature(temp) else None
@@ -254,7 +253,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MadVRConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
     coordinator = entry.runtime_data

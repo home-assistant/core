@@ -1,4 +1,4 @@
-"""Provides device triggers for KNX."""
+"""Provide device triggers for KNX."""
 
 from __future__ import annotations
 

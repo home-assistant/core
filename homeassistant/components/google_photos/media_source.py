@@ -10,9 +10,8 @@ from typing import Self, cast
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album, MediaItem
 
-from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
-    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -20,8 +19,8 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import GooglePhotosConfigEntry
 from .const import DOMAIN, READ_SCOPE
+from .coordinator import GooglePhotosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

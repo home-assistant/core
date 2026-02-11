@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -73,7 +73,7 @@ def setup_platform(
     credentials = BankCredentials(
         config[CONF_BIN], config[CONF_USERNAME], config[CONF_PIN], config[CONF_URL]
     )
-    fints_name = config.get(CONF_NAME, config[CONF_BIN])
+    fints_name = cast(str, config.get(CONF_NAME, config[CONF_BIN]))
 
     account_config = {
         acc[CONF_ACCOUNT]: acc[CONF_NAME] for acc in config[CONF_ACCOUNTS]

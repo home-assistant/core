@@ -1,0 +1,26 @@
+{
+  "code": 0,
+  "msg": "request success",
+  "traceId": "1234",
+  "result": {
+    "code": 0,
+    "result": {
+      "powerSwitch": 1,
+      "filterLifePercent": 99,
+      "workMode": "manual",
+      "manualSpeedLevel": 1,
+      "fanSpeedLevel": 0,
+      "AQLevel": 1,
+      "PM25": 5,
+      "screenState": 1,
+      "childLockSwitch": 0,
+      "screenSwitch": 1,
+      "lightDetectionSwitch": 0,
+      "environmentLightState": 1,
+      "scheduleCount": 0,
+      "timerRemain": 0,
+      "efficientModeTimeRemain": 0,
+      "errorCode": 0
+    }
+  }
+}

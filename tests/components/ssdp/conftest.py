@@ -1,7 +1,8 @@
 """Configuration for SSDP tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+import socket
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -14,9 +15,9 @@ from homeassistant.core import HomeAssistant
 async def silent_ssdp_listener():
     """Patch SsdpListener class, preventing any actual SSDP traffic."""
     with (
-        patch("homeassistant.components.ssdp.SsdpListener.async_start"),
-        patch("homeassistant.components.ssdp.SsdpListener.async_stop"),
-        patch("homeassistant.components.ssdp.SsdpListener.async_search"),
+        patch("homeassistant.components.ssdp.scanner.SsdpListener.async_start"),
+        patch("homeassistant.components.ssdp.scanner.SsdpListener.async_stop"),
+        patch("homeassistant.components.ssdp.scanner.SsdpListener.async_search"),
     ):
         # Fixtures are initialized before patches. When the component is started here,
         # certain functions/methods might not be patched in time.
@@ -27,9 +28,12 @@ async def silent_ssdp_listener():
 async def disabled_upnp_server():
     """Disable UPnpServer."""
     with (
-        patch("homeassistant.components.ssdp.UpnpServer.async_start"),
-        patch("homeassistant.components.ssdp.UpnpServer.async_stop"),
-        patch("homeassistant.components.ssdp._async_find_next_available_port"),
+        patch("homeassistant.components.ssdp.server.UpnpServer.async_start"),
+        patch("homeassistant.components.ssdp.server.UpnpServer.async_stop"),
+        patch(
+            "homeassistant.components.ssdp.server._async_find_next_available_port",
+            return_value=(40000, MagicMock(spec_set=socket.socket)),
+        ),
     ):
         yield UpnpServer
 

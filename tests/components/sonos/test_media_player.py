@@ -1,22 +1,39 @@
 """Tests for the Sonos Media Player platform."""
 
+from collections.abc import Generator
+from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
-from soco.data_structures import SearchResult
+from soco.data_structures import (
+    DidlAudioBroadcast,
+    DidlAudioLineIn,
+    DidlPlaylistContainer,
+    SearchResult,
+)
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_PLAYLIST,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
@@ -26,19 +43,30 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.components.sonos.services import (
+    ATTR_ALARM_ID,
+    ATTR_ENABLED,
+    ATTR_INCLUDE_LINKED_ZONES,
+    ATTR_QUEUE_POSITION,
+    ATTR_VOLUME,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
-    VOLUME_INCREMENT,
+    SERVICE_UPDATE_ALARM,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -52,7 +80,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -61,6 +89,13 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+
+@pytest.fixture(autouse=True)
+def mock_token() -> Generator[MagicMock]:
+    """Mock token generator."""
+    with patch("secrets.token_hex", return_value="123456789") as token:
+        yield token
 
 
 async def test_device_registry(
@@ -81,11 +116,15 @@ async def test_device_registry(
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.name == "Zone A"
     # Default device provides battery info, area should not be suggested
-    assert reg_device.suggested_area is None
+    assert reg_device.area_id is None
 
 
 async def test_device_registry_not_portable(
-    hass: HomeAssistant, device_registry: DeviceRegistry, async_setup_sonos, soco
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: DeviceRegistry,
+    async_setup_sonos,
+    soco,
 ) -> None:
     """Test non-portable sonos device registered in the device registry to ensure area suggested."""
     soco.get_battery_info.return_value = {}
@@ -95,7 +134,7 @@ async def test_device_registry_not_portable(
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device is not None
-    assert reg_device.suggested_area == "Zone A"
+    assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
 async def test_entity_basic(
@@ -181,6 +220,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -245,6 +297,11 @@ async def test_play_media_library(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )
@@ -383,6 +440,7 @@ async def test_play_media_lib_track_add(
 
 
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
+_share_link_title: str = "playlist title"
 
 
 async def test_play_media_share_link_add(
@@ -400,6 +458,7 @@ async def test_play_media_share_link_add(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -410,6 +469,10 @@ async def test_play_media_share_link_add(
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
 
 
@@ -441,6 +504,10 @@ async def test_play_media_share_link_next(
     )
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["position"] == 1
+    )
+    assert (
+        "dc_title"
+        not in soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs
     )
 
 
@@ -691,6 +758,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -699,6 +767,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -725,6 +803,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
@@ -980,7 +1059,7 @@ async def test_play_media_favorite_item_id(
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
-        SONOS_DOMAIN,
+        DOMAIN,
         {
             "sonos": {
                 "media_player": {
@@ -1005,7 +1084,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.snapshot"
     ) as mock_snapshot:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1018,7 +1097,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.restore"
     ) as mock_restore:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_RESTORE,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1059,11 +1138,11 @@ async def test_volume(
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.57},
         blocking=True,
     )
     # SoCo uses 0..100 for its range.
-    assert soco.volume == 30
+    assert soco.volume == 57
 
 
 @pytest.mark.parametrize(
@@ -1195,7 +1274,7 @@ async def test_media_get_queue(
     """Test getting the media queue."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
-        SONOS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_QUEUE,
         {
             ATTR_ENTITY_ID: "media_player.zone_a",
@@ -1205,3 +1284,296 @@ async def test_media_get_queue(
     )
     soco_mock.get_queue.assert_called_with(max_items=0)
     assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "source_list"),
+    [
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Arc", [SOURCE_TV]),
+        ("Sonos Playbar", [SOURCE_TV]),
+        ("Sonos Connect", [SOURCE_LINEIN]),
+        ("Sonos Play:5", [SOURCE_LINEIN]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Sonos Era", None),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_media_source_list(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    speaker_model: str,
+    source_list: list[str] | None,
+) -> None:
+    """Test the mapping between the speaker model name and source_list."""
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+
+
+async def test_service_update_alarm(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ALARM,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_ALARM_ID: 14,
+            ATTR_TIME: "07:15:00",
+            ATTR_VOLUME: 0.25,
+            ATTR_INCLUDE_LINKED_ZONES: True,
+            ATTR_ENABLED: True,
+        },
+        blocking=True,
+    )
+
+    assert soco.alarmClock.UpdateAlarm.call_count == 1
+    assert soco.alarmClock.UpdateAlarm.call_args.args[0] == [
+        ("ID", "14"),
+        ("StartLocalTime", "07:15:00"),
+        ("Duration", "02:00:00"),
+        ("Recurrence", "DAILY"),
+        ("Enabled", "1"),
+        ("RoomUUID", "RINCON_test"),
+        ("ProgramURI", "x-rincon-buzzer:0"),
+        ("ProgramMetaData", ""),
+        ("PlayMode", "SHUFFLE_NOREPEAT"),
+        ("Volume", 25),
+        ("IncludeLinkedZones", "1"),
+    ]
+
+
+async def test_service_update_alarm_dne(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm that does not exist."""
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Alarm 99 does not exist and cannot be updated",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_ALARM,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_ALARM_ID: 99,
+                ATTR_TIME: "07:15:00",
+                ATTR_VOLUME: 0.25,
+                ATTR_INCLUDE_LINKED_ZONES: True,
+                ATTR_ENABLED: True,
+            },
+            blocking=True,
+        )
+    assert soco.alarmClock.UpdateAlarm.call_count == 0
+
+
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
+async def test_position_updates(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test the media player position updates."""
+
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "media_player.zone_a"
+    state = hass.states.get(entity_id)
+
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    # updated_at should be recent
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert updated_at == datetime.now(UTC)
+
+    # Position only updated by 1 second; should not update attributes
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:00:43"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:00:43"
+    with freeze_time("2024-01-01T12:00:01Z"):
+        soco.avTransport.subscribe.return_value.callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
+
+    # Position jumped by more than 1.5 seconds; should update position
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:01:10"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:01:10"
+    with freeze_time("2024-01-01T12:00:11Z"):
+        soco.avTransport.subscribe.return_value.callback(new_media_event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_MEDIA_POSITION] == 70
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+
+
+@pytest.mark.parametrize(
+    ("track_info", "event_variables"),
+    [
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "playlist_position": "5",
+                "duration": "00:02:36",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "position": "00:00:42",
+                "playlist_position": "5",
+                "duration": "00:02:36",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "playlist_position": "5",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {},
+        ),
+        (
+            {
+                "uri": "x-rincon-stream:0",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "current_track_uri": "x-rincon-stream:0",
+                "current_track_meta_data": DidlAudioLineIn("Line-in", "-1", "-1"),
+            },
+        ),
+        (
+            {
+                "title": "Something",
+                "artist": "The Beatles",
+                "album": "Abbey Road",
+                "album_art": "http://example.com/albumart.jpg",
+                "playlist_position": "5",
+                "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlPlaylistContainer(
+                    "My Playlist", "-1", "-1"
+                )
+            },
+        ),
+        (
+            {
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "duration": "00:02:36",
+                "uri": "x-sonosapi-stream:1234",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1"
+                ),
+                "current_track_uri": "x-sonosapi-stream:1234",
+            },
+        ),
+        (
+            {
+                "album_art": "http://example.com/albumart.jpg",
+                "position": "00:00:42",
+                "duration": "00:02:36",
+                "uri": "x-sonosapi-stream:1234",
+                "metadata": "NOT_IMPLEMENTED",
+            },
+            {
+                "enqueued_transport_uri_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1"
+                ),
+                "current_track_uri": "x-sonosapi-stream:1234",
+                "current_track_meta_data": DidlAudioBroadcast(
+                    "World News", "-1", "-1", radio_show="Live at 6"
+                ),
+            },
+        ),
+    ],
+    ids=[
+        "basic_track",
+        "basic_track_no_art",
+        "basic_track_no_position",
+        "line_in",
+        "playlist_container",
+        "radio_station",
+        "radio_station_with_show",
+    ],
+)
+async def test_media_info_attributes(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    media_event: SonosMockEvent,
+    track_info: dict[str, Any],
+    event_variables: dict[str, Any],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the media player info attributes using a variety of inputs."""
+    media_event.variables.update(event_variables)
+    soco.get_current_track_info.return_value = track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("media_player.zone_a")
+
+    snapshot_keys = [
+        ATTR_MEDIA_ALBUM_NAME,
+        ATTR_MEDIA_ARTIST,
+        ATTR_MEDIA_CONTENT_ID,
+        ATTR_MEDIA_CONTENT_TYPE,
+        ATTR_MEDIA_DURATION,
+        ATTR_MEDIA_POSITION,
+        ATTR_MEDIA_TITLE,
+        ATTR_QUEUE_POSITION,
+        ATTR_ENTITY_PICTURE,
+        ATTR_INPUT_SOURCE,
+        ATTR_MEDIA_PLAYLIST,
+        ATTR_MEDIA_CHANNEL,
+    ]
+
+    # Create a filtered dict of only those attributes
+    filtered_attrs = {k: state.attributes.get(k) for k in snapshot_keys}
+
+    # Use the snapshot assertion
+    assert filtered_attrs == snapshot

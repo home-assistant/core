@@ -114,7 +114,7 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except (BadRequest, Unauthorized):
+            except BadRequest, Unauthorized:
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
@@ -203,7 +203,7 @@ class PlexServer:
                             config_entry_update_needed = True
                         else:
                             # pylint: disable-next=raise-missing-from
-                            raise Unauthorized(  # noqa: TRY200
+                            raise Unauthorized(  # noqa: B904
                                 "New certificate cannot be validated"
                                 " with provided token"
                             )
@@ -402,7 +402,7 @@ class PlexServer:
                     identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except (NotFound, requests.exceptions.ConnectionError):
+            except NotFound, requests.exceptions.ConnectionError:
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -425,9 +425,7 @@ class PlexServer:
                 client = resource.connect(timeout=3)
                 _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error(
-                    "Resource connection failed to plex.tv: %s", resource.name
-                )
+                _LOGGER.info("Resource connection failed to plex.tv: %s", resource.name)
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client

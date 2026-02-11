@@ -11,7 +11,7 @@ from typing import Protocol
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.lock import LockState
-from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from homeassistant.components.vacuum import VacuumActivity
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
@@ -105,9 +105,9 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.VACUUM: (
         {
             STATE_ON,
-            STATE_CLEANING,
-            STATE_RETURNING,
-            STATE_ERROR,
+            VacuumActivity.CLEANING,
+            VacuumActivity.RETURNING,
+            VacuumActivity.ERROR,
         },
         STATE_ON,
         STATE_OFF,

@@ -6,20 +6,22 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.data import AiPort, Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
+    CameraCapabilities,
     CameraEntityFeature,
     CameraState,
     CameraWebRTCProvider,
-    RTCIceCandidate,
     StreamType,
     WebRTCSendMessage,
     async_get_image,
     async_get_stream_source,
     async_register_webrtc_provider,
+    get_camera_from_entity_id,
 )
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
@@ -39,9 +41,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
+from . import patch_ufp_method
 from .utils import (
     Camera,
     MockUFPFixture,
@@ -77,7 +84,7 @@ class MockWebRTCProvider(CameraWebRTCProvider):
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle the WebRTC candidate."""
 
@@ -174,7 +181,7 @@ def validate_common_camera_state(
     entity_id: str,
     features: int = CameraEntityFeature.STREAM,
 ):
-    """Validate state that is common to all camera entity, regradless of type."""
+    """Validate state that is common to all camera entity, regardless of type."""
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
@@ -236,15 +243,15 @@ async def test_basic_setup(
 ) -> None:
     """Test working setup of unifiprotect entry."""
 
-    camera_high_only = camera_all.copy()
-    camera_high_only.channels = [c.copy() for c in camera_all.channels]
+    camera_high_only = camera_all.model_copy()
+    camera_high_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_high_only.name = "Test Camera 1"
     camera_high_only.channels[0].is_rtsp_enabled = True
     camera_high_only.channels[1].is_rtsp_enabled = False
     camera_high_only.channels[2].is_rtsp_enabled = False
 
-    camera_medium_only = camera_all.copy()
-    camera_medium_only.channels = [c.copy() for c in camera_all.channels]
+    camera_medium_only = camera_all.model_copy()
+    camera_medium_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_medium_only.name = "Test Camera 2"
     camera_medium_only.channels[0].is_rtsp_enabled = False
     camera_medium_only.channels[1].is_rtsp_enabled = True
@@ -252,8 +259,8 @@ async def test_basic_setup(
 
     camera_all.name = "Test Camera 3"
 
-    camera_no_channels = camera_all.copy()
-    camera_no_channels.channels = [c.copy() for c in camera_all.channels]
+    camera_no_channels = camera_all.model_copy()
+    camera_no_channels.channels = [c.model_copy() for c in camera_all.channels]
     camera_no_channels.name = "Test Camera 4"
     camera_no_channels.channels[0].is_rtsp_enabled = False
     camera_no_channels.channels[1].is_rtsp_enabled = False
@@ -337,17 +344,19 @@ async def test_webrtc_support(
     camera_all: ProtectCamera,
 ) -> None:
     """Test webrtc support is available."""
-    camera_high_only = camera_all.copy()
-    camera_high_only.channels = [c.copy() for c in camera_all.channels]
+    camera_high_only = camera_all.model_copy()
+    camera_high_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_high_only.name = "Test Camera 1"
     camera_high_only.channels[0].is_rtsp_enabled = True
     camera_high_only.channels[1].is_rtsp_enabled = False
     camera_high_only.channels[2].is_rtsp_enabled = False
     await init_entry(hass, ufp, [camera_high_only])
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
-    state = hass.states.get(entity_id)
-    assert state
-    assert StreamType.WEB_RTC in state.attributes["frontend_stream_type"]
+    assert hass.states.get(entity_id)
+    camera_obj = get_camera_from_entity_id(hass, entity_id)
+    assert camera_obj.camera_capabilities == CameraCapabilities(
+        {StreamType.HLS, StreamType.WEB_RTC}
+    )
 
 
 async def test_adopt(
@@ -355,7 +364,7 @@ async def test_adopt(
 ) -> None:
     """Test setting up camera with no camera channels."""
 
-    camera1 = camera.copy()
+    camera1 = camera.model_copy()
     camera1.channels = []
 
     await init_entry(hass, ufp, [camera1])
@@ -392,10 +401,10 @@ async def test_camera_image(
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    ufp.api.get_camera_snapshot = AsyncMock()
+    ufp.api.get_public_api_camera_snapshot = AsyncMock()
 
     await async_get_image(hass, "camera.test_camera_high_resolution_channel")
-    ufp.api.get_camera_snapshot.assert_called_once()
+    ufp.api.get_public_api_camera_snapshot.assert_called_once()
 
 
 async def test_package_camera_image(
@@ -450,7 +459,7 @@ async def test_camera_interval_update(
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_recording = True
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -527,10 +536,10 @@ async def test_camera_ws_update(
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_recording = True
 
-    no_camera = camera.copy()
+    no_camera = camera.model_copy()
     no_camera.is_adopted = False
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -563,7 +572,7 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "idle"
 
     # camera goes offline
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
@@ -592,45 +601,96 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "idle"
 
 
-async def test_camera_enable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+@pytest.mark.parametrize(
+    ("service", "expected_value"),
+    [
+        ("enable_motion_detection", True),
+        ("disable_motion_detection", False),
+    ],
+)
+async def test_camera_motion_detection(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    service: str,
+    expected_value: bool,
 ) -> None:
-    """Tests generic entity update service."""
-
+    """Test enabling/disabling motion detection on camera."""
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.__fields__["set_motion_detection"] = Mock(final=False)
-    camera.set_motion_detection = AsyncMock()
+    with patch_ufp_method(
+        camera, "set_motion_detection", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "camera",
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "camera",
-        "enable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    camera.set_motion_detection.assert_called_once_with(True)
+        mock_method.assert_called_once_with(expected_value)
 
 
-async def test_camera_disable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+async def test_aiport_no_camera_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
 ) -> None:
-    """Tests generic entity update service."""
+    """Test that AI Port devices do not create camera entities."""
+    await init_entry(hass, ufp, [aiport])
 
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high_resolution_channel"
+    # AI Port should not create any camera entities
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
-    camera.__fields__["set_motion_detection"] = Mock(final=False)
-    camera.set_motion_detection = AsyncMock()
 
-    await hass.services.async_call(
-        "camera",
-        "disable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
+async def test_aiport_rtsp_issue_cleanup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that RTSP disabled issues for AI Ports are cleaned up on setup."""
+    # Set up the integration with the AI Port first
+    # (init_entry regenerates IDs, so we need to get the new ID)
+    await init_entry(hass, ufp, [aiport])
+
+    # Now get the actual AI Port ID after regeneration
+    actual_aiport_id = aiport.id
+
+    # Create an RTSP disabled issue for the AI Port
+    # (simulating an issue that might have been created by a previous buggy version)
+    issue_id = f"rtsp_disabled_{actual_aiport_id}"
+
+    # Get the issue registry and create the issue directly via internal method
+    # to avoid translation validation (as we're simulating a legacy issue)
+    issue_registry = ir.async_get(hass)
+    issue_registry.issues[(DOMAIN, issue_id)] = ir.IssueEntry(
+        active=True,
+        breaks_in_ha_version=None,
+        created=None,
+        data=None,
+        dismissed_version=None,
+        domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=False,
+        issue_domain=None,
+        issue_id=issue_id,
+        learn_more_url=None,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="rtsp_disabled",
+        translation_placeholders=None,
     )
 
-    camera.set_motion_detection.assert_called_once_with(False)
+    # Verify the issue exists
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Reload the integration - this should clean up the issue
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The issue should be cleaned up since AI Ports can't have RTSP
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Verify no camera entities were created
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)

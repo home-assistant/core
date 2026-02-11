@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,17 +29,17 @@ class AnalyticsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[AnalyticsData], StateType]
 
 
-def get_addon_entity_description(
+def get_app_entity_description(
     name_slug: str,
 ) -> AnalyticsSensorEntityDescription:
-    """Get addon entity description."""
+    """Get app entity description."""
     return AnalyticsSensorEntityDescription(
-        key=f"addon_{name_slug}_active_installations",
-        translation_key="addons",
+        key=f"app_{name_slug}_active_installations",
+        translation_key="apps",
         name=name_slug,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="active installations",
-        value_fn=lambda data: data.addons.get(name_slug),
+        value_fn=lambda data: data.apps.get(name_slug),
     )
 
 
@@ -94,7 +94,7 @@ GENERAL_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AnalyticsInsightsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
 
@@ -106,9 +106,9 @@ async def async_setup_entry(
     entities.extend(
         HomeassistantAnalyticsSensor(
             coordinator,
-            get_addon_entity_description(addon_name_slug),
+            get_app_entity_description(app_name_slug),
         )
-        for addon_name_slug in coordinator.data.addons
+        for app_name_slug in coordinator.data.apps
     )
     entities.extend(
         HomeassistantAnalyticsSensor(

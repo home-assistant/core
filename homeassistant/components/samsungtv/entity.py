@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from wakeonlan import send_magic_packet
 
 from homeassistant.const import (
@@ -10,10 +12,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
-    CONF_NAME,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
@@ -22,6 +23,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_MANUFACTURER, DOMAIN, LOGGER
 from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
+
+DEPRECATED_IMPLICIT_WAKE_ON_LAN = "deprecated_implicit_wake_on_lan_{}"
 
 
 class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity):
@@ -39,9 +42,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
-            name=config_entry.data.get(CONF_NAME),
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
-            model=config_entry.data.get(CONF_MODEL),
             model_id=config_entry.data.get(CONF_MODEL),
         )
         if self.unique_id:
@@ -55,7 +56,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._bridge.auth_failed:
+        if not super().available or self._bridge.auth_failed:
             return False
         return (
             self.coordinator.is_on
@@ -77,27 +78,34 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)
+        send_magic_packet(self._mac, ip_address=self._host)  # type: ignore[arg-type]
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
-        send_magic_packet(self._mac)
+        send_magic_packet(self._mac)  # type: ignore[arg-type]
 
-    async def _async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._bridge.async_power_off()
         await self.coordinator.async_refresh()
 
-    async def _async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote on."""
         if self._turn_on_action:
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
-            LOGGER.warning(
-                "Attempting to turn on %s via Wake-On-Lan; if this does not work, "
-                "please ensure that Wake-On-Lan is available for your device or use "
-                "a turn_on automation",
-                self.entity_id,
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                DEPRECATED_IMPLICIT_WAKE_ON_LAN.format(self._mac),
+                is_fixable=False,
+                breaks_in_ha_version="2026.8.0",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_implicit_wake_on_lan",
+                translation_placeholders={
+                    "mac_address": self._mac,
+                    "wol_documentation_url": "https://www.home-assistant.io/integrations/wake_on_lan/",
+                },
             )
             await self.hass.async_add_executor_job(self._wake_on_lan)
         else:
@@ -106,5 +114,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
                 self.entity_id,
             )
             raise HomeAssistantError(
-                f"Entity {self.entity_id} does not support this service."
+                translation_domain=DOMAIN,
+                translation_key="service_unsupported",
+                translation_placeholders={"entity": self.entity_id},
             )

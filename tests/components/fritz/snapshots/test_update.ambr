@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -26,6 +28,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',
@@ -64,6 +67,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -77,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -84,6 +89,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',
@@ -122,6 +128,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -135,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -142,6 +150,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',

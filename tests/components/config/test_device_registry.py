@@ -17,11 +17,6 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(name="client")
 async def client_fixture(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -65,6 +60,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -87,6 +83,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [],
             "created_at": utcnow().timestamp(),
@@ -121,6 +118,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),

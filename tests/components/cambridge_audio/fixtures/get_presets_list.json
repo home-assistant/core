@@ -28,7 +28,7 @@
       "name": "Unknown Preset Type",
       "type": "Unknown",
       "class": "stream.unknown",
-      "state": "OK"
+      "state": "UNAVAILABLE"
     }
   ]
 }

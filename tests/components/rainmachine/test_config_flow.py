@@ -7,7 +7,6 @@ import pytest
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, setup
-from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -18,6 +17,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
@@ -168,7 +168,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -196,7 +196,7 @@ async def test_step_homekit_zeroconf_ip_change(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.2"),
                 ip_addresses=[ip_address("192.168.1.2")],
                 hostname="mock_hostname",
@@ -225,7 +225,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -279,7 +279,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -299,7 +299,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",

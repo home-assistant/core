@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.otp.const import CONF_NEW_TOKEN, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -95,22 +95,6 @@ async def test_errors_and_recover(
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA_RESULT
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("mock_pyotp", "mock_setup_entry")
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test that we can import a YAML config."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=TEST_DATA_RESULT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OTP Sensor"
-    assert result["data"] == TEST_DATA_RESULT
 
 
 @pytest.mark.usefixtures("mock_pyotp")

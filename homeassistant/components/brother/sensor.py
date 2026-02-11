@@ -17,20 +17,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BrotherConfigEntry, BrotherDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
+from .entity import BrotherPrinterEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 ATTR_COUNTER = "counter"
 ATTR_REMAINING_PAGES = "remaining_pages"
-
-UNIT_PAGES = "p"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="page_counter",
         translation_key="page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.page_counter,
@@ -60,7 +59,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="bw_counter",
         translation_key="bw_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.bw_counter,
@@ -68,7 +66,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="color_counter",
         translation_key="color_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.color_counter,
@@ -76,7 +73,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="duplex_unit_pages_counter",
         translation_key="duplex_unit_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.duplex_unit_pages_counter,
@@ -92,7 +88,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="drum_remaining_pages",
         translation_key="drum_remaining_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.drum_remaining_pages,
@@ -100,7 +95,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="drum_counter",
         translation_key="drum_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.drum_counter,
@@ -116,7 +110,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="black_drum_remaining_pages",
         translation_key="black_drum_remaining_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_drum_remaining_pages,
@@ -124,7 +117,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="black_drum_counter",
         translation_key="black_drum_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_drum_counter,
@@ -140,7 +132,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_pages",
         translation_key="cyan_drum_remaining_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_drum_remaining_pages,
@@ -148,7 +139,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="cyan_drum_counter",
         translation_key="cyan_drum_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_drum_counter,
@@ -164,7 +154,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_pages",
         translation_key="magenta_drum_remaining_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_drum_remaining_pages,
@@ -172,7 +161,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="magenta_drum_counter",
         translation_key="magenta_drum_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_drum_counter,
@@ -188,7 +176,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_pages",
         translation_key="yellow_drum_remaining_pages",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_drum_remaining_pages,
@@ -196,7 +183,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="yellow_drum_counter",
         translation_key="yellow_drum_page_counter",
-        native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_drum_counter,
@@ -319,7 +305,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BrotherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Brother entities from a config_entry."""
     coordinator = entry.runtime_data
@@ -346,12 +332,9 @@ async def async_setup_entry(
     )
 
 
-class BrotherPrinterSensor(
-    CoordinatorEntity[BrotherDataUpdateCoordinator], SensorEntity
-):
-    """Define an Brother Printer sensor."""
+class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
+    """Define a Brother Printer sensor."""
 
-    _attr_has_entity_name = True
     entity_description: BrotherSensorEntityDescription
 
     def __init__(
@@ -361,22 +344,11 @@ class BrotherPrinterSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.brother.host}/",
-            identifiers={(DOMAIN, coordinator.brother.serial)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.brother.mac)},
-            serial_number=coordinator.brother.serial,
-            manufacturer="Brother",
-            model=coordinator.brother.model,
-            name=coordinator.brother.model,
-            sw_version=coordinator.brother.firmware,
-        )
-        self._attr_native_value = description.value(coordinator.data)
+
         self._attr_unique_id = f"{coordinator.brother.serial.lower()}_{description.key}"
         self.entity_description = description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the native value of the sensor."""
+        return self.entity_description.value(self.coordinator.data)

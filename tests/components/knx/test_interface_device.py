@@ -25,7 +25,7 @@ async def test_diagnostic_entities(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic entities."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     for entity_id in (
         "sensor.knx_interface_individual_address",
@@ -36,6 +36,7 @@ async def test_diagnostic_entities(
         "sensor.knx_interface_outgoing_telegrams",
         "sensor.knx_interface_outgoing_telegram_errors",
         "sensor.knx_interface_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.entity_category is EntityCategory.DIAGNOSTIC
@@ -43,6 +44,7 @@ async def test_diagnostic_entities(
     for entity_id in (
         "sensor.knx_interface_incoming_telegrams",
         "sensor.knx_interface_outgoing_telegrams",
+        "sensor.knx_interface_undecodable_data_secure_telegrams",
     ):
         entity = entity_registry.async_get(entity_id)
         assert entity.disabled is True
@@ -57,7 +59,7 @@ async def test_diagnostic_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(events) == 3  # 5 polled sensors - 2 disabled
+    assert len(events) == 3  # 6 polled sensors - 3 disabled
     events.clear()
 
     for entity_id, test_state in (
@@ -74,7 +76,7 @@ async def test_diagnostic_entities(
         state=XknxConnectionState.DISCONNECTED
     )
     await hass.async_block_till_done()
-    assert len(events) == 4  # 3 not always_available + 3 force_update - 2 disabled
+    assert len(events) == 4
     events.clear()
 
     knx.xknx.current_address = IndividualAddress("1.1.1")
@@ -103,7 +105,7 @@ async def test_removed_entity(
     with patch(
         "xknx.core.connection_manager.ConnectionManager.unregister_connection_state_changed_cb"
     ) as unregister_mock:
-        await knx.setup_integration({})
+        await knx.setup_integration()
 
         entity_registry.async_update_entity(
             "sensor.knx_interface_connection_established",
@@ -120,7 +122,7 @@ async def test_remove_interface_device(
 ) -> None:
     """Test device removal."""
     assert await async_setup_component(hass, "config", {})
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     knx_devices = device_registry.devices.get_devices_for_config_entry_id(
         knx.mock_config_entry.entry_id

@@ -1,38 +1,38 @@
 """The habitica integration."""
 
-from http import HTTPStatus
+from uuid import UUID
 
-from aiohttp import ClientResponseError
-from habitipy.aio import HabitipyAsync
+from habiticalib import Habitica
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    APPLICATION_NAME,
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-    Platform,
-    __version__,
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_API_USER, DEVELOPER_ID, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .const import CONF_API_USER, DOMAIN, X_CLIENT
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaDataUpdateCoordinator,
+    HabiticaPartyCoordinator,
+)
 from .services import async_setup_services
-from .types import HabiticaConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
+HABITICA_KEY: HassKey[dict[UUID, HabiticaPartyCoordinator]] = HassKey(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
+    Platform.IMAGE,
+    Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TODO,
@@ -50,58 +50,92 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: HabiticaConfigEntry
 ) -> bool:
     """Set up habitica from a config entry."""
+    party_added_by_this_entry: UUID | None = None
+    device_reg = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
-    class HAHabitipyAsync(HabitipyAsync):
-        """Closure API class to hold session."""
-
-        def __call__(self, **kwargs):
-            return super().__call__(websession, **kwargs)
-
-        def _make_headers(self) -> dict[str, str]:
-            headers = super()._make_headers()
-            headers.update(
-                {"x-client": f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"}
-            )
-            return headers
-
-    websession = async_get_clientsession(
+    session = async_get_clientsession(
         hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
     )
 
-    api = await hass.async_add_executor_job(
-        HAHabitipyAsync,
-        {
-            "url": config_entry.data[CONF_URL],
-            "login": config_entry.data[CONF_API_USER],
-            "password": config_entry.data[CONF_API_KEY],
-        },
+    api = Habitica(
+        session,
+        api_user=config_entry.data[CONF_API_USER],
+        api_key=config_entry.data[CONF_API_KEY],
+        url=config_entry.data[CONF_URL],
+        x_client=X_CLIENT,
     )
-    try:
-        user = await api.user.get(userFields="profile")
-    except ClientResponseError as e:
-        if e.status == HTTPStatus.TOO_MANY_REQUESTS:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="setup_rate_limit_exception",
-            ) from e
-        raise ConfigEntryNotReady(e) from e
 
-    if not config_entry.data.get(CONF_NAME):
-        name = user["profile"]["name"]
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_NAME: name},
-        )
-
-    coordinator = HabiticaDataUpdateCoordinator(hass, api)
+    coordinator = HabiticaDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator
+
+    party = coordinator.data.user.party.id
+    hass.data.setdefault(HABITICA_KEY, {})
+
+    if party is not None and party not in hass.data[HABITICA_KEY]:
+        party_coordinator = HabiticaPartyCoordinator(hass, config_entry, api)
+        await party_coordinator.async_config_entry_first_refresh()
+
+        hass.data[HABITICA_KEY][party] = party_coordinator
+        party_added_by_this_entry = party
+
+    @callback
+    def _party_update_listener() -> None:
+        """On party change, unload coordinator, remove device and reload."""
+        nonlocal party, party_added_by_this_entry
+        party_updated = coordinator.data.user.party.id
+
+        if (
+            party is not None and (party not in hass.data[HABITICA_KEY])
+        ) or party != party_updated:
+            if party_added_by_this_entry:
+                config_entry.async_create_task(
+                    hass, shutdown_party_coordinator(hass, party_added_by_this_entry)
+                )
+                party_added_by_this_entry = None
+            if party:
+                identifier = {(DOMAIN, f"{config_entry.unique_id}_{party!s}")}
+                if device := device_reg.async_get_device(identifiers=identifier):
+                    device_reg.async_update_device(
+                        device.id, remove_config_entry_id=config_entry.entry_id
+                    )
+
+                notify_entities = [
+                    entry.entity_id
+                    for entry in entity_registry.entities.values()
+                    if entry.domain == NOTIFY_DOMAIN
+                    and entry.config_entry_id == config_entry.entry_id
+                ]
+                for entity_id in notify_entities:
+                    entity_registry.async_remove(entity_id)
+
+            hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    coordinator.async_add_listener(_party_update_listener)
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: HabiticaConfigEntry
+) -> None:
+    """Handle update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def shutdown_party_coordinator(hass: HomeAssistant, party_added: UUID) -> None:
+    """Handle party coordinator shutdown."""
+    await hass.data[HABITICA_KEY][party_added].async_shutdown()
+    hass.data[HABITICA_KEY].pop(party_added)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

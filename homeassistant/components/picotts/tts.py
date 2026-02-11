@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from typing import Any
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TtsAudioType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,24 +44,31 @@ class PicoProvider(Provider):
         self.name = "PicoTTS"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language, options):
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS using pico2wave."""
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
-        subprocess.call(cmd)
+        cmd = ["pico2wave", "--wave", fname, "-l", language]
+        result = subprocess.run(cmd, text=True, input=message, check=False)
         data = None
         try:
+            if result.returncode != 0:
+                _LOGGER.error(
+                    "Error running pico2wave, return code: %s", result.returncode
+                )
+                return (None, None)
             with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError:

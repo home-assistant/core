@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import cast
+import logging
+from typing import Any, cast
 
-from hass_nabucasa import Cloud
+from hass_nabucasa import Cloud, NabuCasaBaseError
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
@@ -19,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
+    FORMAT_DATETIME,
     Platform,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
@@ -33,47 +36,67 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.signal_type import SignalType
 
-from . import account_link, http_api
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import (
+    account_link,
+    backup,  # noqa: F401
+    http_api,
+)
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
-    CONF_ACCOUNTS_SERVER,
     CONF_ACME_SERVER,
     CONF_ALEXA,
-    CONF_ALEXA_SERVER,
     CONF_ALIASES,
-    CONF_CLOUDHOOK_SERVER,
+    CONF_API_SERVER,
     CONF_COGNITO_CLIENT_ID,
+    CONF_DISCOVERY_SERVICE_ACTIONS,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
     CONF_RELAYER_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
-    CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
     DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
 )
+from .helpers import FixedSizeQueueLogHandler
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.STT,
+    Platform.TTS,
+]
+
+LLM_PLATFORMS = [
+    Platform.AI_TASK,
+    Platform.CONVERSATION,
+]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
+)
+
+_SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
+    "CLOUDHOOKS_UPDATED"
 )
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
@@ -106,28 +129,37 @@ GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
     {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
 )
 
+_BASE_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
+        vol.Optional(CONF_USER_POOL_ID): str,
+        vol.Optional(CONF_REGION): str,
+        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
+        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+        vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
+        vol.Optional(CONF_ACME_SERVER): str,
+        vol.Optional(CONF_API_SERVER): str,
+        vol.Optional(CONF_RELAYER_SERVER): str,
+        vol.Optional(CONF_REMOTESTATE_SERVER): str,
+        vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(
-                    [MODE_DEV, MODE_PROD]
-                ),
-                vol.Optional(CONF_COGNITO_CLIENT_ID): str,
-                vol.Optional(CONF_USER_POOL_ID): str,
-                vol.Optional(CONF_REGION): str,
-                vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-                vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
-                vol.Optional(CONF_ACCOUNTS_SERVER): str,
-                vol.Optional(CONF_ACME_SERVER): str,
-                vol.Optional(CONF_ALEXA_SERVER): str,
-                vol.Optional(CONF_CLOUDHOOK_SERVER): str,
-                vol.Optional(CONF_RELAYER_SERVER): str,
-                vol.Optional(CONF_REMOTESTATE_SERVER): str,
-                vol.Optional(CONF_THINGTALK_SERVER): str,
-                vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
-            }
+        DOMAIN: vol.Any(
+            _BASE_CONFIG_SCHEMA.extend(
+                {
+                    vol.Required(CONF_MODE): vol.In([MODE_DEV]),
+                    vol.Required(CONF_API_SERVER): str,
+                    vol.Optional(CONF_DISCOVERY_SERVICE_ACTIONS): {str: cv.url},
+                }
+            ),
+            _BASE_CONFIG_SCHEMA.extend(
+                {
+                    vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In([MODE_PROD]),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -222,6 +254,24 @@ async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     await hass.data[DATA_CLOUD].cloudhooks.async_delete(webhook_id)
 
 
+@callback
+def async_listen_cloudhook_change(
+    hass: HomeAssistant,
+    webhook_id: str,
+    on_change: Callable[[dict[str, Any] | None], None],
+) -> Callable[[], None]:
+    """Listen for cloudhook changes for the given webhook and notify when modified or deleted."""
+
+    @callback
+    def _handle_cloudhooks_updated(cloudhooks: dict[str, Any]) -> None:
+        """Handle cloudhooks updated signal."""
+        on_change(cloudhooks.get(webhook_id))
+
+    return async_dispatcher_connect(
+        hass, _SIGNAL_CLOUDHOOKS_UPDATED, _handle_cloudhooks_updated
+    )
+
+
 @bind_hass
 @callback
 def async_remote_ui_url(hass: HomeAssistant) -> str:
@@ -240,6 +290,8 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
+    log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
+
     # Process configs
     if DOMAIN in config:
         kwargs = dict(config[DOMAIN])
@@ -262,10 +314,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _shutdown(event: Event) -> None:
         """Shutdown event."""
         await cloud.stop()
+        logging.root.removeHandler(log_handler)
+        del hass.data[DATA_CLOUD_LOG_HANDLER]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    _remote_handle_prefs_updated(cloud)
+    _handle_prefs_updated(hass, cloud)
     _setup_services(hass, prefs)
 
     async def async_startup_repairs(_: datetime) -> None:
@@ -349,31 +403,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
-    """Handle remote preferences updated."""
-    cur_pref = cloud.client.prefs.remote_enabled
+def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
+    """Register handler for cloud preferences updates."""
+    cur_remote_enabled = cloud.client.prefs.remote_enabled
+    cur_cloudhooks = cloud.client.prefs.cloudhooks
     lock = asyncio.Lock()
 
-    # Sync remote connection with prefs
-    async def remote_prefs_updated(prefs: CloudPreferences) -> None:
-        """Update remote status."""
-        nonlocal cur_pref
+    async def on_prefs_updated(prefs: CloudPreferences) -> None:
+        """Handle cloud preferences updates."""
+        nonlocal cur_remote_enabled
+        nonlocal cur_cloudhooks
 
+        # Lock protects cur_ state variables from concurrent updates
         async with lock:
-            if prefs.remote_enabled == cur_pref:
+            if cur_cloudhooks != prefs.cloudhooks:
+                cur_cloudhooks = prefs.cloudhooks
+                async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, cur_cloudhooks)
+
+            if prefs.remote_enabled == cur_remote_enabled:
                 return
 
-            if cur_pref := prefs.remote_enabled:
+            if cur_remote_enabled := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
                 await cloud.remote.disconnect()
 
-    cloud.client.prefs.async_listen_updates(remote_prefs_updated)
+    cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    platforms = PLATFORMS.copy()
+    if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
+        with suppress(NabuCasaBaseError):
+            await cloud.llm.async_ensure_token()
+            platforms += LLM_PLATFORMS
+
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    entry.runtime_data = {"platforms": platforms}
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
@@ -382,7 +449,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry.runtime_data["platforms"]
+    )
 
 
 @callback
@@ -400,3 +469,19 @@ def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
+
+
+async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
+    fmt = (
+        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    )
+    handler = FixedSizeQueueLogHandler()
+    handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+
+    integration = await async_get_integration(hass, DOMAIN)
+    loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}
+
+    for logger_name in loggers:
+        logging.getLogger(logger_name).addHandler(handler)
+
+    return handler

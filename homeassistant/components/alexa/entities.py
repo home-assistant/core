@@ -474,25 +474,30 @@ class ClimateCapabilities(AlexaEntity):
         # If we support two modes, one being off, we allow turning on too.
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
-            self.entity.domain == climate.DOMAIN
-            and climate.HVACMode.OFF
-            in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
-            or self.entity.domain == climate.DOMAIN
-            and (
-                supported_features
-                & (
-                    climate.ClimateEntityFeature.TURN_ON
-                    | climate.ClimateEntityFeature.TURN_OFF
+            (
+                self.entity.domain == climate.DOMAIN
+                and climate.HVACMode.OFF
+                in (self.entity.attributes.get(climate.ATTR_HVAC_MODES) or [])
+            )
+            or (
+                self.entity.domain == climate.DOMAIN
+                and (
+                    supported_features
+                    & (
+                        climate.ClimateEntityFeature.TURN_ON
+                        | climate.ClimateEntityFeature.TURN_OFF
+                    )
                 )
             )
-            or self.entity.domain == water_heater.DOMAIN
-            and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
+            or (
+                self.entity.domain == water_heater.DOMAIN
+                and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
+            )
         ):
             yield AlexaPowerController(self.entity)
 
-        if (
-            self.entity.domain == climate.DOMAIN
-            or self.entity.domain == water_heater.DOMAIN
+        if self.entity.domain == climate.DOMAIN or (
+            self.entity.domain == water_heater.DOMAIN
             and (
                 supported_features
                 & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
@@ -500,8 +505,13 @@ class ClimateCapabilities(AlexaEntity):
         ):
             yield AlexaThermostatController(self.hass, self.entity)
             yield AlexaTemperatureSensor(self.hass, self.entity)
-        if self.entity.domain == water_heater.DOMAIN and (
-            supported_features & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+        if (
+            self.entity.domain == water_heater.DOMAIN
+            and (
+                supported_features
+                & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+            )
+            and self.entity.attributes.get(water_heater.ATTR_OPERATION_LIST)
         ):
             yield AlexaModeController(
                 self.entity,
@@ -559,6 +569,10 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        if supported & (
+            cover.CoverEntityFeature.STOP | cover.CoverEntityFeature.STOP_TILT
+        ):
+            yield AlexaPlaybackController(self.entity, instance=f"{cover.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 
@@ -625,7 +639,9 @@ class FanCapabilities(AlexaEntity):
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
             )
             force_range_controller = False
-        if supported & fan.FanEntityFeature.PRESET_MODE:
+        if supported & fan.FanEntityFeature.PRESET_MODE and self.entity.attributes.get(
+            fan.ATTR_PRESET_MODES
+        ):
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
             )
@@ -663,7 +679,11 @@ class RemoteCapabilities(AlexaEntity):
         yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         activities = self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST) or []
-        if activities and supported & remote.RemoteEntityFeature.ACTIVITY:
+        if (
+            activities
+            and (supported & remote.RemoteEntityFeature.ACTIVITY)
+            and self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        ):
             yield AlexaModeController(
                 self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
             )
@@ -683,7 +703,9 @@ class HumidifierCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & humidifier.HumidifierEntityFeature.MODES:
+        if (
+            supported & humidifier.HumidifierEntityFeature.MODES
+        ) and self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES):
             yield AlexaModeController(
                 self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}"
             )
@@ -710,7 +732,7 @@ class LockCapabilities(AlexaEntity):
         yield Alexa(self.entity)
 
 
-@ENTITY_ADAPTERS.register(media_player.const.DOMAIN)
+@ENTITY_ADAPTERS.register(media_player.DOMAIN)
 class MediaPlayerCapabilities(AlexaEntity):
     """Class to represent MediaPlayer capabilities."""
 
@@ -748,9 +770,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.MediaPlayerEntityFeature.SELECT_SOURCE:
             inputs = AlexaInputController.get_valid_inputs(
-                self.entity.attributes.get(
-                    media_player.const.ATTR_INPUT_SOURCE_LIST, []
-                )
+                self.entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
             )
             if len(inputs) > 0:
                 yield AlexaInputController(self.entity)
@@ -767,8 +787,7 @@ class MediaPlayerCapabilities(AlexaEntity):
             and domain != "denonavr"
         ):
             inputs = AlexaEqualizerController.get_valid_inputs(
-                self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
-                or []
+                self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST) or []
             )
             if len(inputs) > 0:
                 yield AlexaEqualizerController(self.entity)

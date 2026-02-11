@@ -13,7 +13,7 @@ from pyschlage.log import LockLog
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -34,16 +34,30 @@ class SchlageData:
     locks: dict[str, LockData]
 
 
+type SchlageConfigEntry = ConfigEntry[SchlageDataUpdateCoordinator]
+
+
 class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     """The Schlage data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SchlageConfigEntry
 
-    def __init__(self, hass: HomeAssistant, username: str, api: Schlage) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SchlageConfigEntry,
+        username: str,
+        api: Schlage,
+    ) -> None:
         """Initialize the class."""
         super().__init__(
-            hass, LOGGER, name=f"{DOMAIN} ({username})", update_interval=UPDATE_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN} ({username})",
+            update_interval=UPDATE_INTERVAL,
         )
+        self.data = SchlageData(locks={})
         self.api = api
         self.new_locks_callbacks: list[Callable[[dict[str, LockData]], None]] = []
         self.async_add_listener(self._add_remove_locks)
@@ -55,7 +69,9 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         except NotAuthorizedError as ex:
             raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
-            raise UpdateFailed("Failed to refresh Schlage data") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="schlage_refresh_failed"
+            ) from ex
         lock_data = await asyncio.gather(
             *(
                 self.hass.async_add_executor_job(self._get_lock_data, lock)
@@ -83,9 +99,6 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     @callback
     def _add_remove_locks(self) -> None:
         """Add newly discovered locks and remove nonexistent locks."""
-        if self.data is None:
-            return
-
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id

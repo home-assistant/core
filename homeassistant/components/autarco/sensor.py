@@ -16,13 +16,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutarcoConfigEntry
 from .const import DOMAIN
-from .coordinator import AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -173,7 +172,7 @@ SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutarcoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Autarco sensors based on a config entry."""
     entities: list[SensorEntity] = []
@@ -205,13 +204,25 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AutarcoBatterySensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoSensorBase(CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity):
+    """Base class for Autarco sensors."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: AutarcoDataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize Autarco sensor base."""
+        super().__init__(coordinator)
+        self.entity_description = description
+
+
+class AutarcoBatterySensorEntity(AutarcoSensorBase):
     """Defines an Autarco battery sensor."""
 
     entity_description: AutarcoBatterySensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -219,10 +230,8 @@ class AutarcoBatterySensorEntity(
         coordinator: AutarcoDataUpdateCoordinator,
         description: AutarcoBatterySensorEntityDescription,
     ) -> None:
-        """Initialize Autarco sensor."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
+        """Initialize Autarco battery sensor."""
+        super().__init__(coordinator, description)
         self._attr_unique_id = (
             f"{coordinator.account_site.site_id}_battery_{description.key}"
         )
@@ -240,13 +249,10 @@ class AutarcoBatterySensorEntity(
         return self.entity_description.value_fn(self.coordinator.data.battery)
 
 
-class AutarcoSolarSensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoSolarSensorEntity(AutarcoSensorBase):
     """Defines an Autarco solar sensor."""
 
     entity_description: AutarcoSolarSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -254,10 +260,8 @@ class AutarcoSolarSensorEntity(
         coordinator: AutarcoDataUpdateCoordinator,
         description: AutarcoSolarSensorEntityDescription,
     ) -> None:
-        """Initialize Autarco sensor."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
+        """Initialize Autarco solar sensor."""
+        super().__init__(coordinator, description)
         self._attr_unique_id = (
             f"{coordinator.account_site.site_id}_solar_{description.key}"
         )
@@ -274,13 +278,10 @@ class AutarcoSolarSensorEntity(
         return self.entity_description.value_fn(self.coordinator.data.solar)
 
 
-class AutarcoInverterSensorEntity(
-    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
-):
+class AutarcoInverterSensorEntity(AutarcoSensorBase):
     """Defines an Autarco inverter sensor."""
 
     entity_description: AutarcoInverterSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -289,10 +290,8 @@ class AutarcoInverterSensorEntity(
         description: AutarcoInverterSensorEntityDescription,
         serial_number: str,
     ) -> None:
-        """Initialize Autarco sensor."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
+        """Initialize Autarco inverter sensor."""
+        super().__init__(coordinator, description)
         self._serial_number = serial_number
         self._attr_unique_id = f"{serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(

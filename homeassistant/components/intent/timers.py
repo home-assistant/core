@@ -10,7 +10,7 @@ import logging
 import time
 from typing import Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
@@ -21,7 +21,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     intent,
 )
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from .const import TIMER_DATA
 
@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
 NO_TIMER_SUPPORT_RESPONSE = "no_timer_support"
+NO_TIMER_COMMAND_RESPONSE = "no_timer_command"
 
 
 @dataclass
@@ -192,6 +193,17 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
         super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
+class NoTimerCommandError(intent.IntentHandleError):
+    """Error when a conversation command does not match any intent."""
+
+    def __init__(self, command: str) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Intent not recognized: {command}",
+            NO_TIMER_COMMAND_RESPONSE,
+        )
+
+
 class TimersNotSupportedError(intent.IntentHandleError):
     """Error when a timer intent is used from a device that isn't registered to handle timer events."""
 
@@ -261,7 +273,7 @@ class TimerManager:
         if seconds is not None:
             total_seconds += seconds
 
-        timer_id = ulid.ulid_now()
+        timer_id = ulid_util.ulid_now()
         created_at = time.monotonic_ns()
         timer = TimerInfo(
             id=timer_id,
@@ -444,8 +456,9 @@ class TimerManager:
         timer.finish()
 
         if timer.conversation_command:
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.conversation import async_converse
+            from homeassistant.components.conversation import (  # noqa: PLC0415
+                async_converse,
+            )
 
             self.hass.async_create_background_task(
                 async_converse(
@@ -835,6 +848,12 @@ class StartTimerIntentHandler(intent.IntentHandler):
             # Fail early if this is not a delayed command
             raise TimersNotSupportedError(intent_obj.device_id)
 
+        # Validate conversation command if provided
+        if conversation_command and not await self._validate_conversation_command(
+            intent_obj, conversation_command
+        ):
+            raise NoTimerCommandError(conversation_command)
+
         name: str | None = None
         if "name" in slots:
             name = slots["name"]["value"]
@@ -864,6 +883,48 @@ class StartTimerIntentHandler(intent.IntentHandler):
 
         return intent_obj.create_response()
 
+    async def _validate_conversation_command(
+        self, intent_obj: intent.Intent, conversation_command: str
+    ) -> bool:
+        """Validate that a conversation command can be executed."""
+        from homeassistant.components.conversation import (  # noqa: PLC0415
+            ConversationInput,
+            async_get_agent,
+            default_agent,
+        )
+
+        # Only validate if using the default agent
+        conversation_agent = async_get_agent(
+            intent_obj.hass, intent_obj.conversation_agent_id
+        )
+
+        if conversation_agent is None or not isinstance(
+            conversation_agent, default_agent.DefaultAgent
+        ):
+            return True  # Skip validation
+
+        test_input = ConversationInput(
+            text=conversation_command,
+            context=intent_obj.context,
+            conversation_id=None,
+            device_id=intent_obj.device_id,
+            satellite_id=intent_obj.satellite_id,
+            language=intent_obj.language,
+            agent_id=conversation_agent.entity_id,
+        )
+
+        # check for sentence trigger
+        if (
+            await conversation_agent.async_recognize_sentence_trigger(test_input)
+        ) is not None:
+            return True
+
+        # check for intent
+        if (await conversation_agent.async_recognize_intent(test_input)) is not None:
+            return True
+
+        return False
+
 
 class CancelTimerIntentHandler(intent.IntentHandler):
     """Intent handler for cancelling a timer."""
@@ -885,6 +946,36 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         timer = _find_timer(hass, intent_obj.device_id, slots)
         timer_manager.cancel_timer(timer.id)
         return intent_obj.create_response()
+
+
+class CancelAllTimersIntentHandler(intent.IntentHandler):
+    """Intent handler for cancelling all timers."""
+
+    intent_type = intent.INTENT_CANCEL_ALL_TIMERS
+    description = "Cancels all timers"
+    slot_schema = {
+        vol.Optional("area"): cv.string,
+    }
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+        canceled = 0
+
+        for timer in _find_timers(hass, intent_obj.device_id, slots):
+            timer_manager.cancel_timer(timer.id)
+            canceled += 1
+
+        response = intent_obj.create_response()
+        speech_slots = {"canceled": canceled}
+        if "area" in slots:
+            speech_slots["area"] = slots["area"]["value"]
+
+        response.async_set_speech_slots(speech_slots)
+
+        return response
 
 
 class IncreaseTimerIntentHandler(intent.IntentHandler):

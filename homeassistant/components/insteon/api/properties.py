@@ -22,7 +22,7 @@ import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from ..const import (
     DEVICE_ADDRESS,
@@ -282,6 +282,8 @@ async def websocket_reset_properties(
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
+    for prop in device.configuration.values():
+        prop.new_value = None
     for prop in device.operating_flags:
         device.operating_flags[prop].new_value = None
     for prop in device.properties:

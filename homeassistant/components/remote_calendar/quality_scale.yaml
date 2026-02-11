@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry:
+    status: exempt
+    comment: |
+      No unique identifier.
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: |
+      There are no actions.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: No actions available.
+  brands: done
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      There are no actions.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no authentication required.
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration options
+
+  # Gold
+  devices:
+    status: exempt
+    comment: No devices. One URL is always assigned to one calendar.
+  diagnostics: done
+  discovery-update-info:
+    status: todo
+    comment: No discovery protocol available.
+  discovery:
+    status: exempt
+    comment: No discovery protocol available.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: No devices. One URL is always assigned to one calendar.
+  entity-category: done
+  entity-device-class:
+    status: exempt
+    comment: No devices classes for calendars.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Only one entity per entry.
+  entity-translations:
+    status: exempt
+    comment: Entity name is defined by the user, so no translation possible.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Only the default icon is used.
+  reconfiguration-flow:
+    status: exempt
+    comment: no configuration possible
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: No devices. One URL is always assigned to one calendar.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: done

@@ -5,8 +5,8 @@
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/point",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pypoint"],
-  "quality_scale": "silver",
   "requirements": ["pypoint==3.0.0"]
 }

@@ -8,7 +8,7 @@ import functools as ft
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,12 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -62,25 +56,13 @@ STATE_GAS = "gas"
 
 
 class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
+    """Supported features of the water heater entity."""
 
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the WaterHeaterEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TARGET_TEMPERATURE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.TARGET_TEMPERATURE, "2025.1"
-)
-_DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.OPERATION_MODE, "2025.1"
-)
-_DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
-    WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
-)
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -89,6 +71,7 @@ ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
+ATTR_TARGET_TEMP_STEP = "target_temp_step"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
@@ -123,15 +106,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TURN_OFF, None, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
+        SERVICE_SET_AWAY_MODE,
+        SET_AWAY_MODE_SCHEMA,
+        async_service_away_mode,
+        [WaterHeaterEntityFeature.AWAY_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_TEMPERATURE,
+        SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set,
+        [WaterHeaterEntityFeature.TARGET_TEMPERATURE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_handle_set_operation_mode",
+        [WaterHeaterEntityFeature.OPERATION_MODE],
     )
 
     return True
@@ -147,7 +137,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
+class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
@@ -159,6 +149,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature",
     "target_temperature_high",
     "target_temperature_low",
+    "target_temperature_step",
     "is_away_mode_on",
 }
 
@@ -167,10 +158,15 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for water heater entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+        {
+            ATTR_OPERATION_LIST,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_TARGET_TEMP_STEP,
+        }
     )
 
-    entity_description: WaterHeaterEntityEntityDescription
+    entity_description: WaterHeaterEntityDescription
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None
     _attr_is_away_mode_on: bool | None = None
@@ -184,6 +180,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+    _attr_target_temperature_step: float | None = None
 
     @final
     @property
@@ -211,8 +208,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
         }
+        if target_temperature_step := self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
-        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features_compat:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -248,7 +247,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
 
         if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -293,6 +292,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._attr_target_temperature_low
+
+    @cached_property
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._attr_target_temperature_step
 
     @cached_property
     def is_away_mode_on(self) -> bool | None:
@@ -397,19 +401,6 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the list of supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> WaterHeaterEntityFeature:
-        """Return the supported features as WaterHeaterEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = WaterHeaterEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
 
 async def async_service_away_mode(
     entity: WaterHeaterEntity, service: ServiceCall
@@ -437,11 +428,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import BasePrivateDeviceEntity
 
@@ -60,10 +60,13 @@ SENSOR_DESCRIPTIONS = (
         key="estimated_distance",
         translation_key="estimated_distance",
         native_unit_of_measurement=UnitOfLength.METERS,
-        value_fn=lambda _, service_info: service_info.advertisement
-        and service_info.advertisement.tx_power
-        and calculate_distance_meters(
-            service_info.advertisement.tx_power * 10, service_info.advertisement.rssi
+        value_fn=lambda _, service_info: (
+            service_info.advertisement
+            and service_info.advertisement.tx_power
+            and calculate_distance_meters(
+                service_info.advertisement.tx_power * 10,
+                service_info.advertisement.rssi,
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -92,7 +95,9 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for Private BLE component."""
     async_add_entities(

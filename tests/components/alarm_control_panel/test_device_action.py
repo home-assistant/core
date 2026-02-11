@@ -25,11 +25,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
@@ -245,7 +240,9 @@ async def test_get_action_capabilities(
         "arm_night": {"extra_fields": []},
         "arm_vacation": {"extra_fields": []},
         "disarm": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "trigger": {"extra_fields": []},
     }
@@ -293,7 +290,9 @@ async def test_get_action_capabilities_legacy(
         "arm_night": {"extra_fields": []},
         "arm_vacation": {"extra_fields": []},
         "disarm": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "trigger": {"extra_fields": []},
     }
@@ -338,19 +337,29 @@ async def test_get_action_capabilities_arm_code(
 
     expected_capabilities = {
         "arm_away": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_home": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_night": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_vacation": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "disarm": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "trigger": {"extra_fields": []},
     }
@@ -394,19 +403,29 @@ async def test_get_action_capabilities_arm_code_legacy(
 
     expected_capabilities = {
         "arm_away": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_home": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_night": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "arm_vacation": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "disarm": {
-            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "trigger": {"extra_fields": []},
     }

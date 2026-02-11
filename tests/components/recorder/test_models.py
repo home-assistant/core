@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock
 
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
     EventData,
@@ -18,10 +19,15 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+
+from .common import (
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+)
 
 
 def test_from_event_to_db_event() -> None:
@@ -39,7 +45,7 @@ def test_from_event_to_db_event() -> None:
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     db_event.event_type = event.event_type
-    assert event.as_dict() == db_event.to_native().as_dict()
+    assert event.as_dict() == db_event_to_native(db_event).as_dict()
 
 
 def test_from_event_to_db_event_with_null() -> None:
@@ -70,7 +76,10 @@ def test_from_event_to_db_state() -> None:
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert state.as_dict() == States.from_event(event).to_native().as_dict()
+    db_state = States.from_event(event)
+    # Set entity_id, it's set to None by States.from_event
+    db_state.entity_id = state.entity_id
+    assert state.as_dict() == db_state_to_native(db_state).as_dict()
 
 
 def test_from_event_to_db_state_attributes() -> None:
@@ -88,7 +97,7 @@ def test_from_event_to_db_state_attributes() -> None:
     db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
         event, dialect
     )
-    assert db_attrs.to_native() == attrs
+    assert db_state_attributes_to_native(db_attrs) == attrs
 
 
 def test_from_event_to_db_state_attributes_with_null() -> None:
@@ -161,15 +170,13 @@ def test_events_repr_without_timestamp() -> None:
     assert "2016-07-09 11:00:00+00:00" in repr(events)
 
 
-def test_handling_broken_json_state_attributes(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+def test_handling_broken_json_state_attributes() -> None:
     """Test we handle broken json in state attributes."""
     state_attributes = StateAttributes(
         attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
     )
-    assert state_attributes.to_native() == {}
-    assert "Error converting row to state attributes" in caplog.text
+    with pytest.raises(JSON_DECODE_EXCEPTIONS):
+        db_state_attributes_to_native(state_attributes)
 
 
 def test_from_event_to_delete_state() -> None:
@@ -184,7 +191,7 @@ def test_from_event_to_delete_state() -> None:
     )
     db_state = States.from_event(event)
 
-    assert db_state.entity_id == "sensor.temperature"
+    assert db_state.entity_id is None
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
     assert db_state.last_updated_ts == pytest.approx(event.time_fired.timestamp())
@@ -196,9 +203,9 @@ def test_states_from_native_invalid_entity_id() -> None:
     state.entity_id = "test.invalid__id"
     state.attributes = "{}"
     with pytest.raises(InvalidEntityFormatError):
-        state = state.to_native()
+        state = db_state_to_native(state)
 
-    state = state.to_native(validate_entity_id=False)
+    state = db_state_to_native(state, validate_entity_id=False)
     assert state.entity_id == "test.invalid__id"
 
 
@@ -279,10 +286,10 @@ async def test_event_to_db_model() -> None:
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     db_event.event_type = event.event_type
-    native = db_event.to_native()
+    native = db_event_to_native(db_event)
     assert native.as_dict() == event.as_dict()
 
-    native = Events.from_event(event).to_native()
+    native = db_event_to_native(Events.from_event(event))
     native.data = (
         event.data
     )  # data is not set by from_event as its in the event_data table
@@ -325,6 +332,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         state="off",
         attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
+        last_reported_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
     lstate = LazyState(
@@ -339,6 +347,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
     }
     assert lstate.last_updated.timestamp() == row.last_updated_ts
     assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -346,6 +355,9 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
 
 
 async def test_lazy_state_handles_same_last_updated_and_last_changed(
@@ -359,6 +371,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
+        last_reported_ts=None,
     )
     lstate = LazyState(
         row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
@@ -372,6 +385,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
     }
     assert lstate.last_updated.timestamp() == row.last_updated_ts
     assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -379,3 +393,37 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
+
+
+async def test_lazy_state_handles_different_last_reported(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState handles last_reported different from last_updated."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        attributes='{"shared":true}',
+        last_updated_ts=(now - timedelta(seconds=60)).timestamp(),
+        last_reported_ts=now.timestamp(),
+        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
+    )
+    lstate = LazyState(
+        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+    )
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:03:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_reported_ts
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_reported_ts

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.brother.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN

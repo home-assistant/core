@@ -2,10 +2,12 @@ get_profile:
   target:
     entity:
       domain: water_heater
+      integration: osoenergy
 set_profile:
   target:
     entity:
       domain: water_heater
+      integration: osoenergy
   fields:
     hour_00:
       required: false
@@ -227,6 +229,7 @@ set_v40_min:
   target:
     entity:
       domain: water_heater
+      integration: osoenergy
   fields:
     v40_min:
       required: true
@@ -237,10 +240,26 @@ set_v40_min:
           max: 550
           step: 1
           unit_of_measurement: L
+turn_away_mode_on:
+  target:
+    entity:
+      domain: water_heater
+      integration: osoenergy
+  fields:
+    duration_days:
+      required: true
+      example: 7
+      selector:
+        number:
+          min: 1
+          max: 365
+          step: 1
+          unit_of_measurement: days
 turn_off:
   target:
     entity:
       domain: water_heater
+      integration: osoenergy
   fields:
     until_temp_limit:
       required: true
@@ -252,6 +271,7 @@ turn_on:
   target:
     entity:
       domain: water_heater
+      integration: osoenergy
   fields:
     until_temp_limit:
       required: true

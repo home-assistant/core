@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import PhilipsTVConfigEntry
+from .coordinator import PhilipsTVConfigEntry
 
 TO_REDACT = {
     "serialnumber_encrypted",

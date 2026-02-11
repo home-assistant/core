@@ -33,10 +33,11 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
     config_entry.add_to_hass(hass)
 
     weather_mock = mock_ec()
-    ec_data["metadata"]["timestamp"] = datetime(2022, 10, 4, tzinfo=UTC)
+    ec_data["metadata"].timestamp = datetime(2022, 10, 4, tzinfo=UTC)
     weather_mock.conditions = ec_data["conditions"]
     weather_mock.alerts = ec_data["alerts"]
     weather_mock.daily_forecasts = ec_data["daily_forecasts"]
+    weather_mock.hourly_forecasts = ec_data["hourly_forecasts"]
     weather_mock.metadata = ec_data["metadata"]
 
     radar_mock = mock_ec()

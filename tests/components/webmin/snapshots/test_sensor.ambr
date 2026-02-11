@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -28,6 +30,7 @@
     'original_name': 'Disk free inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/_ifree',
@@ -57,6 +60,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -70,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -77,6 +82,7 @@
     'original_name': 'Disk free inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_ifree',
@@ -106,6 +112,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -119,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +134,7 @@
     'original_name': 'Disk free inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_ifree',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_ifree',
@@ -155,6 +164,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -168,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -181,6 +192,7 @@
     'original_name': 'Disk free space /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/_free',
@@ -212,6 +224,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -225,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -238,6 +252,7 @@
     'original_name': 'Disk free space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_free',
@@ -269,6 +284,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -282,6 +298,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -295,6 +312,7 @@
     'original_name': 'Disk free space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_free',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_free',
@@ -326,6 +344,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -339,6 +358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -346,6 +366,7 @@
     'original_name': 'Disk inode usage /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/_iused_percent',
@@ -376,6 +397,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -389,6 +411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -396,6 +419,7 @@
     'original_name': 'Disk inode usage /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused_percent',
@@ -426,6 +450,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -439,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -446,6 +472,7 @@
     'original_name': 'Disk inode usage /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused_percent',
@@ -476,6 +503,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -489,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -496,6 +525,7 @@
     'original_name': 'Disk total inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/_itotal',
@@ -525,6 +555,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -538,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -545,6 +577,7 @@
     'original_name': 'Disk total inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_itotal',
@@ -574,6 +607,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -587,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +629,7 @@
     'original_name': 'Disk total inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_itotal',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_itotal',
@@ -623,6 +659,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -636,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -649,6 +687,7 @@
     'original_name': 'Disk total space /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/_total',
@@ -680,6 +719,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -693,6 +733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -706,6 +747,7 @@
     'original_name': 'Disk total space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_total',
@@ -737,6 +779,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -750,6 +793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -763,6 +807,7 @@
     'original_name': 'Disk total space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_total',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_total',
@@ -794,6 +839,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -807,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -814,6 +861,7 @@
     'original_name': 'Disk usage /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/_used_percent',
@@ -844,6 +892,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -857,6 +906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -864,6 +914,7 @@
     'original_name': 'Disk usage /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_used_percent',
@@ -894,6 +945,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -907,6 +959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -914,6 +967,7 @@
     'original_name': 'Disk usage /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used_percent',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_used_percent',
@@ -944,6 +998,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -957,6 +1012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -964,6 +1020,7 @@
     'original_name': 'Disk used inodes /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/_iused',
@@ -993,6 +1050,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1006,6 +1064,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1013,6 +1072,7 @@
     'original_name': 'Disk used inodes /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused',
@@ -1042,6 +1102,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1055,6 +1116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1062,6 +1124,7 @@
     'original_name': 'Disk used inodes /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_iused',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused',
@@ -1091,6 +1154,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1104,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1117,6 +1182,7 @@
     'original_name': 'Disk used space /',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/_used',
@@ -1148,6 +1214,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1161,6 +1228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1174,6 +1242,7 @@
     'original_name': 'Disk used space /media/disk1',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/media/disk1_used',
@@ -1205,6 +1274,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1218,6 +1288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1231,6 +1302,7 @@
     'original_name': 'Disk used space /media/disk2',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_fs_used',
     'unique_id': '12:34:56:78:9a:bc_/media/disk2_used',
@@ -1262,6 +1334,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1275,6 +1348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1288,6 +1362,7 @@
     'original_name': 'Disks free space',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_free',
     'unique_id': '12:34:56:78:9a:bc_disk_free',
@@ -1319,6 +1394,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1332,6 +1408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks total space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1345,6 +1422,7 @@
     'original_name': 'Disks total space',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_total',
     'unique_id': '12:34:56:78:9a:bc_disk_total',
@@ -1376,6 +1454,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1389,6 +1468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks used space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1402,6 +1482,7 @@
     'original_name': 'Disks used space',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_used',
     'unique_id': '12:34:56:78:9a:bc_disk_used',
@@ -1424,7 +1505,7 @@
     'state': '8794.3125',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1433,12 +1514,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1446,34 +1528,36 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (15 min)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (15m)',
+    'original_name': 'Load (15 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_15m',
     'unique_id': '12:34:56:78:9a:bc_load_15m',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-state]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (15m)',
+      'friendly_name': '192.168.1.1 Load (15 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.37',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1482,12 +1566,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1495,34 +1580,36 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (1 min)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (1m)',
+    'original_name': 'Load (1 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_1m',
     'unique_id': '12:34:56:78:9a:bc_load_1m',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-state]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (1m)',
+      'friendly_name': '192.168.1.1 Load (1 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.29',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1531,12 +1618,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1544,27 +1632,29 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (5 min)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (5m)',
+    'original_name': 'Load (5 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_5m',
     'unique_id': '12:34:56:78:9a:bc_load_5m',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-state]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (5m)',
+      'friendly_name': '192.168.1.1 Load (5 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1580,6 +1670,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1593,6 +1684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1606,6 +1698,7 @@
     'original_name': 'Memory free',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_free',
     'unique_id': '12:34:56:78:9a:bc_mem_free',
@@ -1637,6 +1730,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1650,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1663,6 +1758,7 @@
     'original_name': 'Memory total',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_total',
     'unique_id': '12:34:56:78:9a:bc_mem_total',
@@ -1694,6 +1790,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1707,6 +1804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1720,6 +1818,7 @@
     'original_name': 'Swap free',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'swap_free',
     'unique_id': '12:34:56:78:9a:bc_swap_free',
@@ -1751,6 +1850,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1764,6 +1864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1777,6 +1878,7 @@
     'original_name': 'Swap total',
     'platform': 'webmin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'swap_total',
     'unique_id': '12:34:56:78:9a:bc_swap_total',

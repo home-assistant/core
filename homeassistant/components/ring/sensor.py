@@ -28,7 +28,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
@@ -41,11 +41,14 @@ from .entity import (
     async_check_create_deprecated,
 )
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a sensor for a Ring device."""
     ring_data = entry.runtime_data
@@ -164,28 +167,36 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         key="last_activity",
         translation_key="last_activity",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, None))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (last_event_attrs := _get_last_event_attrs(device.last_history, None))
-        else None,
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (last_event := _get_last_event(device.last_history, None))
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (last_event_attrs := _get_last_event_attrs(device.last_history, None))
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="last_ding",
         translation_key="last_ding",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (
-            last_event_attrs := _get_last_event_attrs(
-                device.last_history, RingEventKind.DING
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (
+                last_event_attrs := _get_last_event_attrs(
+                    device.last_history, RingEventKind.DING
+                )
             )
-        )
-        else None,
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
@@ -195,16 +206,22 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         key="last_motion",
         translation_key="last_motion",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: last_event.get("created_at")
-        if (last_event := _get_last_event(device.last_history, RingEventKind.MOTION))
-        else None,
-        extra_state_attributes_fn=lambda device: last_event_attrs
-        if (
-            last_event_attrs := _get_last_event_attrs(
-                device.last_history, RingEventKind.MOTION
+        value_fn=lambda device: (
+            last_event.get("created_at")
+            if (
+                last_event := _get_last_event(device.last_history, RingEventKind.MOTION)
             )
-        )
-        else None,
+            else None
+        ),
+        extra_state_attributes_fn=lambda device: (
+            last_event_attrs
+            if (
+                last_event_attrs := _get_last_event_attrs(
+                    device.last_history, RingEventKind.MOTION
+                )
+            )
+            else None
+        ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
@@ -255,7 +272,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
     ),
     RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_strength",
-        translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,

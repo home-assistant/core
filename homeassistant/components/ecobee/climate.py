@@ -21,7 +21,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -33,13 +32,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import EcobeeData
+from . import EcobeeConfigEntry, EcobeeData
 from .const import (
     _LOGGER,
     ATTR_ACTIVE_SENSORS,
@@ -201,12 +203,12 @@ SUPPORT_FLAGS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat."""
 
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     entities = []
 
     for index in range(len(data.ecobee.thermostats)):
@@ -353,7 +355,6 @@ class Thermostat(ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_translation_key = "ecobee"
 
     def __init__(
@@ -604,7 +605,7 @@ class Thermostat(ClimateEntity):
         """Return the remote sensor device name_by_user or name for the thermostat."""
         return sorted(
             [
-                f'{item["name_by_user"]} ({item["id"]})'
+                f"{item['name_by_user']} ({item['id']})"
                 for item in self.remote_sensor_ids_names
             ]
         )
@@ -618,9 +619,7 @@ class Thermostat(ClimateEntity):
         return [
             {
                 "id": device.id,
-                "name_by_user": device.name_by_user
-                if device.name_by_user
-                else device.name,
+                "name_by_user": device.name_by_user or device.name,
             }
             for device in device_registry.devices.values()
             for sensor_info in sensors_info
@@ -874,7 +873,7 @@ class Thermostat(ClimateEntity):
                 translation_placeholders={
                     "options": ", ".join(
                         [
-                            f'{item["name_by_user"]} ({item["id"]})'
+                            f"{item['name_by_user']} ({item['id']})"
                             for item in self.remote_sensor_ids_names
                         ]
                     )
@@ -923,7 +922,7 @@ class Thermostat(ClimateEntity):
         sensor_names = self._sensors_in_preset_mode(preset_mode)
         return sorted(
             [
-                device.name_by_user if device.name_by_user else device.name
+                device.name_by_user or device.name
                 for device in device_registry.devices.values()
                 for sensor_name in sensor_names
                 if device.name == sensor_name

@@ -15,32 +15,33 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosConfigEntry
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
     ATTR_CO,
+    ATTR_NO,
     ATTR_NO2,
+    ATTR_NOX,
     ATTR_O3,
     ATTR_PM10,
     ATTR_PM25,
     ATTR_SO2,
     ATTRIBUTION,
     DOMAIN,
-    MANUFACTURER,
-    URL,
 )
-from .coordinator import GiosDataUpdateCoordinator
+from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,6 +77,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         translation_key="co",
     ),
     GiosSensorEntityDescription(
+        key=ATTR_NO,
+        value=lambda sensors: sensors.no.value if sensors.no else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
         key=ATTR_NO2,
         value=lambda sensors: sensors.no2.value if sensors.no2 else None,
         suggested_display_precision=0,
@@ -90,6 +99,14 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="no2_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NOX,
+        translation_key=ATTR_NOX,
+        value=lambda sensors: sensors.nox.value if sensors.nox else None,
+        suggested_display_precision=0,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
@@ -159,11 +176,11 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: GiosConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GiosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    name = entry.data[CONF_NAME]
-
     coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
@@ -186,7 +203,7 @@ async def async_setup_entry(
     for description in SENSOR_TYPES:
         if getattr(coordinator.data, description.key) is None:
             continue
-        sensors.append(GiosSensor(name, coordinator, description))
+        sensors.append(GiosSensor(coordinator, description))
 
     async_add_entities(sensors)
 
@@ -200,19 +217,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        name: str,
         coordinator: GiosDataUpdateCoordinator,
         description: GiosSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
-            manufacturer=MANUFACTURER,
-            name=name,
-            configuration_url=URL.format(station_id=coordinator.gios.station_id),
-        )
+
+        self._attr_device_info = coordinator.device_info
         if description.subkey:
             self._attr_unique_id = (
                 f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"

@@ -6,12 +6,14 @@ core: &core
   - homeassistant/helpers/**
   - homeassistant/package_constraints.txt
   - homeassistant/util/**
+  - mypy.ini
   - pyproject.toml
   - requirements.txt
   - setup.cfg
 
 # Our base platforms, that are used by other integrations
 base_platforms: &base_platforms
+  - homeassistant/components/ai_task/**
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
   - homeassistant/components/assist_satellite/**
@@ -57,6 +59,7 @@ base_platforms: &base_platforms
 # Extra components that trigger the full suite
 components: &components
   - homeassistant/components/alexa/**
+  - homeassistant/components/analytics/**
   - homeassistant/components/application_credentials/**
   - homeassistant/components/assist_pipeline/**
   - homeassistant/components/auth/**
@@ -79,6 +82,7 @@ components: &components
   - homeassistant/components/group/**
   - homeassistant/components/hassio/**
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/homeassistant_hardware/**
   - homeassistant/components/http/**
   - homeassistant/components/image/**
   - homeassistant/components/input_boolean/**
@@ -87,6 +91,7 @@ components: &components
   - homeassistant/components/input_number/**
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
+  - homeassistant/components/labs/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**
@@ -130,6 +135,7 @@ tests: &tests
   - tests/components/conftest.py
   - tests/components/diagnostics/**
   - tests/components/history/**
+  - tests/components/light/common.py
   - tests/components/logbook/**
   - tests/components/recorder/**
   - tests/components/repairs/**

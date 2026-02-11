@@ -23,12 +23,6 @@ from demetriek import (
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_SERIAL,
-    SsdpServiceInfo,
-)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow
@@ -44,9 +38,17 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN, LOGGER
+
+DEVICES_URL = "https://developer.lametric.com/user/devices"
 
 
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -164,6 +166,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_entry",
             data_schema=vol.Schema(schema),
+            description_placeholders={
+                "devices_url": DEVICES_URL,
+            },
             errors=errors,
         )
 
@@ -249,7 +254,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         device = await lametric.device()
 
         if self.source != SOURCE_REAUTH:
-            await self.async_set_unique_id(device.serial_number)
+            await self.async_set_unique_id(
+                device.serial_number,
+                raise_on_progress=False,
+            )
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )

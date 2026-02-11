@@ -5,8 +5,12 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.models import CameraInfoModel
+from pytrafikverket import (
+    CameraInfoModel,
+    InvalidAuthentication,
+    NoCameraFound,
+    UnknownError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN

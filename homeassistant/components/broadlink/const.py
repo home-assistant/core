@@ -11,6 +11,7 @@ DOMAINS_AND_TYPES = {
     Platform.SELECT: {"HYS"},
     Platform.SENSOR: {
         "A1",
+        "A2",
         "MP1S",
         "RM4MINI",
         "RM4PRO",

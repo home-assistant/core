@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow charging from grid',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -26,6 +28,7 @@
     'original_name': 'Allow charging from grid',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_disallow_charge_from_grid_with_solar_installed',
     'unique_id': '123456-components_disallow_charge_from_grid_with_solar_installed',
@@ -53,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -66,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storm watch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -73,6 +78,7 @@
     'original_name': 'Storm watch',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_settings_storm_mode_enabled',
     'unique_id': '123456-user_settings_storm_mode_enabled',
@@ -100,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -113,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate left',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -120,6 +128,7 @@
     'original_name': 'Auto seat climate left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_seat_climate_left',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_auto_seat_climate_left',
@@ -147,6 +156,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -160,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate right',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -167,6 +178,7 @@
     'original_name': 'Auto seat climate right',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_seat_climate_right',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_auto_seat_climate_right',
@@ -194,6 +206,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -207,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto steering wheel heater',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -214,6 +228,7 @@
     'original_name': 'Auto steering wheel heater',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_auto_steering_wheel_heat',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_auto_steering_wheel_heat',
@@ -241,6 +256,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -254,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -261,8 +278,9 @@
     'original_name': 'Charge',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'charge_state_user_charge_enable_request',
+    'translation_key': 'charge_state_charging_state',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_user_charge_enable_request',
     'unit_of_measurement': None,
   })
@@ -278,7 +296,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch[switch.test_defrost-entry]
@@ -288,6 +306,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -301,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrost',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -308,6 +328,7 @@
     'original_name': 'Defrost',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_defrost_mode',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_defrost_mode',
@@ -335,6 +356,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -348,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sentry mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -355,6 +378,7 @@
     'original_name': 'Sentry mode',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_sentry_mode',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sentry_mode',
@@ -456,7 +480,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch_alt[switch.test_defrost-statealt]

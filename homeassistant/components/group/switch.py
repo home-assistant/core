@@ -26,7 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -71,7 +74,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Switch Group config entry."""
     registry = er.async_get(hass)
@@ -153,6 +156,8 @@ class SwitchGroup(GroupEntity, SwitchEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the switch group state."""
+        self._update_assumed_state_from_members()
+
         states = [
             state.state
             for entity_id in self._entity_ids

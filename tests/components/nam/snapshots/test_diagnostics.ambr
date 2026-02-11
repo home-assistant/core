@@ -2,6 +2,7 @@
 # name: test_entry_diagnostics
   dict({
     'data': dict({
+      'bh1750_illuminance': 298.45,
       'bme280_humidity': 45.69,
       'bme280_pressure': 1011.0117,
       'bme280_temperature': 7.56,

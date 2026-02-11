@@ -10,9 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
+    STATE_CLASS_UNITS,
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -30,8 +33,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -39,7 +42,14 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_OPTIONS, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import (
+    CONF_EXPIRE_AFTER,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
+    CONF_STATE_TOPIC,
+    CONF_SUGGESTED_DISPLAY_PRECISION,
+    PAYLOAD_NONE,
+)
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -47,9 +57,7 @@ from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
+PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -60,6 +68,10 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
+
+URL_DOCS_SUPPORTED_SENSOR_UOM = (
+    "https://www.home-assistant.io/integrations/sensor/#device-class"
+)
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
@@ -87,6 +99,12 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class `{state_class}`"
         )
 
+    unit_of_measurement: str | None
+    if (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is not None and not unit_of_measurement.strip():
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
+
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
@@ -105,6 +123,36 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
             )
 
+    if (
+        (state_class := config.get(CONF_STATE_CLASS)) is not None
+        and state_class in STATE_CLASS_UNITS
+        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT))
+        not in STATE_CLASS_UNITS[state_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement '{unit_of_measurement}' is not valid "
+            f"together with state class '{state_class}'"
+        )
+
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return config
+
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS.get(
+        unit_of_measurement, unit_of_measurement
+    )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement `{unit_of_measurement}` is not valid "
+            f"together with device class `{device_class}`",
+        )
+
     return config
 
 
@@ -122,7 +170,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(

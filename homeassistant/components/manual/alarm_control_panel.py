@@ -25,13 +25,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 DOMAIN = "manual"
 
@@ -407,6 +407,20 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
         if not alarm_code or code == alarm_code:
             return
+
+        current_context = (
+            self._context if hasattr(self, "_context") and self._context else None
+        )
+        user_id_from_context = current_context.user_id if current_context else None
+
+        self.hass.bus.async_fire(
+            "manual_alarm_bad_code_attempt",
+            {
+                "entity_id": self.entity_id,
+                "user_id": user_id_from_context,
+                "target_state": state,
+            },
+        )
 
         raise ServiceValidationError(
             "Invalid alarm code provided",

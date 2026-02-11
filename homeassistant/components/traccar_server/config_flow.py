@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
-from pytraccar import ApiClient, ServerModel, TraccarException
+from pytraccar import (
+    ApiClient,
+    ServerModel,
+    TraccarAuthenticationException,
+    TraccarException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
+    CONF_API_TOKEN,
     CONF_HOST,
-    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
@@ -55,10 +60,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default="8082"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        vol.Required(CONF_USERNAME): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.EMAIL)
-        ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        vol.Required(CONF_API_TOKEN): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Optional(CONF_SSL, default=False): BooleanSelector(BooleanSelectorConfig()),
@@ -114,16 +116,17 @@ OPTIONS_FLOW = {
 class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Traccar Server."""
 
+    VERSION = 2
+
     async def _get_server_info(self, user_input: dict[str, Any]) -> ServerModel:
         """Get server info."""
         client = ApiClient(
             client_session=async_get_clientsession(self.hass),
             host=user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
             ssl=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
+            token=user_input[CONF_API_TOKEN],
         )
         return await client.get_server()
 
@@ -158,6 +161,57 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, _entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            test_data = {
+                **reauth_entry.data,
+                **user_input,
+            }
+            try:
+                await self._get_server_info(test_data)
+            except TraccarAuthenticationException:
+                LOGGER.error("Invalid credentials for Traccar Server")
+                errors["base"] = "invalid_auth"
+            except TraccarException as exception:
+                LOGGER.error("Unable to connect to Traccar Server: %s", exception)
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_PORT: reauth_entry.data[CONF_PORT],
+            },
         )
 
     @staticmethod

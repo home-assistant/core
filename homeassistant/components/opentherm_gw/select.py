@@ -20,7 +20,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
 from .const import (
@@ -156,9 +156,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         ],
         select_action=partial(set_gpio_mode, "A"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
@@ -169,9 +171,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         options=list(OpenThermSelectGPIOMode),
         select_action=partial(set_gpio_mode, "B"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
@@ -234,7 +238,7 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway select entities."""
     gw_hub = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]

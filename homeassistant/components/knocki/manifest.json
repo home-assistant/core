@@ -3,9 +3,14 @@
   "name": "Knocki",
   "codeowners": ["@joostlek", "@jgatto1", "@JakeBosh"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "knc*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/knocki",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["knocki"],
-  "requirements": ["knocki==0.3.5"]
+  "requirements": ["knocki==0.4.2"]
 }

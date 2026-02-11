@@ -12,7 +12,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowContext
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
@@ -149,20 +149,16 @@ def websocket_depose_mfa(
     hass.async_create_task(async_depose(msg))
 
 
-def _prepare_result_json(
-    result: data_entry_flow.FlowResult,
-) -> data_entry_flow.FlowResult:
-    """Convert result to JSON."""
+def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
+    """Convert result to JSON serializable dict."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        return result.copy()
-
+        return dict(result)
     if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return result
+        return result  # type: ignore[return-value]
 
-    data = result.copy()
-
-    if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
+    data = dict(result)
+    if (schema := result["data_schema"]) is None:
+        data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 

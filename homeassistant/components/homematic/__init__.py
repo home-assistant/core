@@ -24,8 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -582,7 +581,7 @@ def _hm_event_handler(hass, interface, device, caller, attribute, value):
         channel = int(device.split(":")[1])
         address = device.split(":")[0]
         hmdevice = hass.data[DATA_HOMEMATIC].devices[interface].get(address)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         _LOGGER.error("Event handling channel convert error!")
         return
 

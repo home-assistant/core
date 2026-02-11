@@ -22,7 +22,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"
+            "homeassistant.components.p1_monitor.config_flow.P1Monitor.settings"
         ) as mock_p1monitor,
         patch(
             "homeassistant.components.p1_monitor.async_setup_entry", return_value=True
@@ -36,6 +36,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "P1 Monitor"
     assert result2.get("data") == {CONF_HOST: "example.com", CONF_PORT: 80}
+    assert isinstance(result2["data"][CONF_PORT], int)
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_p1monitor.mock_calls) == 1
@@ -44,7 +45,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 async def test_api_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.p1_monitor.coordinator.P1Monitor.smartmeter",
+        "homeassistant.components.p1_monitor.coordinator.P1Monitor.settings",
         side_effect=P1MonitorError,
     ):
         result = await hass.config_entries.flow.async_init(

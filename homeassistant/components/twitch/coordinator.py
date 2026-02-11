@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
+type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
+
 
 def chunk_list(lst: list, chunk_size: int) -> list[list]:
     """Split a list into chunks of chunk_size."""
@@ -44,12 +46,16 @@ class TwitchUpdate:
 class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
     """Class to manage fetching Twitch data."""
 
-    config_entry: ConfigEntry
+    config_entry: TwitchConfigEntry
     users: list[TwitchUser]
     current_user: TwitchUser
 
     def __init__(
-        self, hass: HomeAssistant, twitch: Twitch, session: OAuth2Session
+        self,
+        hass: HomeAssistant,
+        twitch: Twitch,
+        session: OAuth2Session,
+        entry: TwitchConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.twitch = twitch
@@ -58,6 +64,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
+            config_entry=entry,
         )
         self.session = session
 
@@ -72,6 +79,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
         self.current_user = user
+        self.users.append(self.current_user)  # Add current_user to users list.
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
         await self.session.async_ensure_token_valid()
@@ -88,6 +96,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 user_id=self.current_user.id, first=100
             )
         }
+        async for s in self.twitch.get_streams(user_id=[self.current_user.id]):
+            streams.update({s.user_id: s})
         follows: dict[str, FollowedChannel] = {
             f.broadcaster_id: f
             async for f in await self.twitch.get_followed_channels(
@@ -115,7 +125,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 stream.game_name if stream else None,
                 stream.title if stream else None,
                 stream.started_at if stream else None,
-                stream.thumbnail_url if stream else None,
+                stream.thumbnail_url.format(width="", height="") if stream else None,
                 channel.profile_image_url,
                 bool(sub),
                 sub.is_gift if sub else None,

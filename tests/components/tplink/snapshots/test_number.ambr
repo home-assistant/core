@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -20,7 +21,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -30,12 +30,69 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
 # ---
-# name: test_states[number.my_device_smooth_off-entry]
+# name: test_states[number.my_device_clean_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.my_device_clean_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clean count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean count',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_count',
+    'unique_id': '123456789ABCDEFGH_clean_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[number.my_device_clean_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Clean count',
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.my_device_clean_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_states[number.my_device_pan_degrees-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -47,6 +104,123 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.my_device_pan_degrees',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pan degrees',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pan degrees',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pan_step',
+    'unique_id': '123456789ABCDEFGH_pan_step',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[number.my_device_pan_degrees-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Pan degrees',
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.my_device_pan_degrees',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_states[number.my_device_power_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.my_device_power_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power protection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power protection',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_protection_threshold',
+    'unique_id': '123456789ABCDEFGH_power_protection_threshold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[number.my_device_power_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Power protection',
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.my_device_power_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_states[number.my_device_smooth_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -60,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -67,6 +242,7 @@
     'original_name': 'Smooth off',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_off',
     'unique_id': '123456789ABCDEFGH_smooth_transition_off',
@@ -77,7 +253,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Smooth off',
-      'max': 65536,
+      'max': 60,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
@@ -96,12 +272,13 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
+      'max': 60,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -115,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +300,7 @@
     'original_name': 'Smooth on',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_on',
     'unique_id': '123456789ABCDEFGH_smooth_transition_on',
@@ -132,7 +311,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Smooth on',
-      'max': 65536,
+      'max': 60,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
@@ -151,12 +330,13 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
+      'max': 10,
       'min': -10,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -170,13 +350,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '123456789ABCDEFGH_temperature_offset',
@@ -186,8 +368,9 @@
 # name: test_states[number.my_device_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature_delta',
       'friendly_name': 'my_device Temperature offset',
-      'max': 65536,
+      'max': 10,
       'min': -10,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
@@ -200,7 +383,7 @@
     'state': 'False',
   })
 # ---
-# name: test_states[number.my_device_turn_off_in-entry]
+# name: test_states[number.my_device_tilt_degrees-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -212,6 +395,65 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.my_device_tilt_degrees',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tilt degrees',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tilt degrees',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tilt_step',
+    'unique_id': '123456789ABCDEFGH_tilt_step',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[number.my_device_tilt_degrees-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Tilt degrees',
+      'max': 65536,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.my_device_tilt_degrees',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_states[number.my_device_turn_off_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -225,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off in',
     'options': dict({
     }),
     'original_device_class': None,
@@ -232,6 +475,7 @@
     'original_name': 'Turn off in',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_off_minutes',
     'unique_id': '123456789ABCDEFGH_auto_off_minutes',
@@ -242,7 +486,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Turn off in',
-      'max': 65536,
+      'max': 60,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,

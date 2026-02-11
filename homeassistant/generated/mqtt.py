@@ -16,6 +16,17 @@ MQTT = {
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],
+    "inels": [
+        "inels/status/#",
+    ],
+    "pglab": [
+        "pglab/discovery/#",
+    ],
+    "qbus": [
+        "cloudapp/QBUSMQTTGW/state",
+        "cloudapp/QBUSMQTTGW/config",
+        "cloudapp/QBUSMQTTGW/+/state",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],

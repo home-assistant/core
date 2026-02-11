@@ -81,6 +81,39 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
+async def test_async_step_user_replace_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info can replace an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=PRO_SERVICE_INFO.address,
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.mopeka.config_flow.async_discovered_service_info",
+        return_value=[PRO_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "aa:bb:cc:dd:ee:ff"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Pro Plus EEFF"
+    assert CONF_MEDIUM_TYPE in result2["data"]
+    assert result2["data"][CONF_MEDIUM_TYPE] in [
+        medium_type.value for medium_type in MediumType
+    ]
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+
+
 async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(
@@ -221,7 +254,7 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.AIR.value
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema: vol.Schema = result["data_schema"]
     medium_type_key = next(
@@ -233,7 +266,7 @@ async def test_async_step_reconfigure_options(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={CONF_MEDIUM_TYPE: MediumType.FRESH_WATER.value},
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify the new configuration
     assert entry.data[CONF_MEDIUM_TYPE] == MediumType.FRESH_WATER.value

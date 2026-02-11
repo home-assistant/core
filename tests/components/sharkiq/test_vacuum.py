@@ -15,15 +15,14 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.sharkiq import DOMAIN
+from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
+from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    ATTR_ROOMS,
     FAN_SPEEDS_MAP,
-    SERVICE_CLEAN_ROOM,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
@@ -35,10 +34,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -82,6 +78,9 @@ class MockAyla(AylaApi):
 
     async def async_sign_in(self):
         """Instead of signing in, just return."""
+
+    async def async_set_cookie(self):
+        """Instead of getting cookies, just return."""
 
     async def async_refresh_auth(self):
         """Instead of refreshing auth, just return."""
@@ -160,7 +159,7 @@ async def test_simple_properties(
 
     assert entity
     assert state
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert entity.unique_id == "AC000Wxxxxxxxxx"
 
 
@@ -189,10 +188,10 @@ async def test_initial_attributes(
 @pytest.mark.parametrize(
     ("service", "target_state"),
     [
-        (SERVICE_STOP, STATE_IDLE),
-        (SERVICE_PAUSE, STATE_PAUSED),
-        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        (SERVICE_START, STATE_CLEANING),
+        (SERVICE_STOP, VacuumActivity.IDLE),
+        (SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (SERVICE_START, VacuumActivity.CLEANING),
     ],
 )
 async def test_cleaning_states(

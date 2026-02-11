@@ -1,17 +1,15 @@
 """Test the SSDP integration."""
 
-from datetime import datetime
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer
-from async_upnp_client.ssdp import udn_from_headers
 from async_upnp_client.ssdp_listener import SsdpListener
-from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import scanner
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -19,8 +17,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
+from homeassistant.util import dt as dt_util
+
+from . import _ssdp_headers, init_ssdp_component
 
 from tests.common import (
     MockConfigEntry,
@@ -29,19 +34,6 @@ from tests.common import (
     mock_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-def _ssdp_headers(headers):
-    ssdp_headers = CaseInsensitiveDict(headers, _timestamp=datetime.now())
-    ssdp_headers["_udn"] = udn_from_headers(ssdp_headers)
-    return ssdp_headers
-
-
-async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
-    """Initialize ssdp component and get SsdpListener."""
-    await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-    await hass.async_block_till_done()
-    return hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners[0]
 
 
 @patch(
@@ -74,7 +66,7 @@ async def test_ssdp_flow_dispatched_on_st(
         "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
         "source": config_entries.SOURCE_SSDP,
     }
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
@@ -83,7 +75,7 @@ async def test_ssdp_flow_dispatched_on_st(
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
-    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
+    assert mock_call_data.upnp == {ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
@@ -118,7 +110,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
         "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
         "source": config_entries.SOURCE_SSDP,
     }
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
@@ -127,7 +119,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
-    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
+    assert mock_call_data.upnp == {ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
@@ -227,8 +219,8 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+                ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ATTR_UPNP_MANUFACTURER: "Paulus",
             }
         ]
     },
@@ -270,8 +262,8 @@ async def test_scan_not_all_present(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Not-Paulus",
+                ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ATTR_UPNP_MANUFACTURER: "Not-Paulus",
             }
         ]
     },
@@ -455,13 +447,13 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     assert discovery_info.ssdp_headers["nts"] == "ssdp:alive"
     assert discovery_info.ssdp_headers["_timestamp"] == ANY
     assert discovery_info.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:mock-udn",
     }
 
 
 @patch(
-    "homeassistant.components.ssdp.async_build_source_set",
+    "homeassistant.components.ssdp.common.async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
 async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
@@ -470,7 +462,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -478,7 +470,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -555,7 +547,7 @@ async def test_scan_with_registered_callback(
     assert async_match_any_callback.call_count == 1
     assert async_not_matching_integration_callback.call_count == 0
     assert async_integration_callback.call_args[0][1] == ssdp.SsdpChange.ALIVE
-    mock_call_data: ssdp.SsdpServiceInfo = async_integration_callback.call_args[0][0]
+    mock_call_data: SsdpServiceInfo = async_integration_callback.call_args[0][0]
     assert mock_call_data.ssdp_ext == ""
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_server == "mock-server"
@@ -568,8 +560,8 @@ async def test_scan_with_registered_callback(
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == set()
     assert mock_call_data.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Exception in SSDP callback" in caplog.text
 
@@ -627,8 +619,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_st.ssdp_udn == ANY
     assert discovery_info_by_st.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_st.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     discovery_info_by_udn = await ssdp.async_get_discovery_info_by_udn(
@@ -646,8 +638,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn.ssdp_udn == ANY
     assert discovery_info_by_udn.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_udn.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     discovery_info_by_udn_st = await ssdp.async_get_discovery_info_by_udn_st(
@@ -664,8 +656,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn_st.ssdp_udn == ANY
     assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_udn_st.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     assert (
@@ -713,13 +705,13 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_async_detect_interfaces_setting_empty_route(
@@ -738,13 +730,13 @@ async def test_async_detect_interfaces_setting_empty_route(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_bind_failure_skips_adapter(
@@ -787,13 +779,13 @@ async def test_bind_failure_skips_adapter(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
 )
 @patch(
-    "homeassistant.components.ssdp.network.async_get_adapters",
+    "homeassistant.components.ssdp.common.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_ipv4_does_additional_search_for_sonos(
@@ -804,7 +796,7 @@ async def test_ipv4_does_additional_search_for_sonos(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + scanner.SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert ssdp_listener.async_search.call_count == 6
@@ -999,7 +991,7 @@ async def test_ssdp_rediscover(
     assert len(mock_flow_init.mock_calls) == 1
     assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
 
@@ -1086,7 +1078,7 @@ async def test_ssdp_rediscover_no_match(
     assert len(mock_flow_init.mock_calls) == 1
     assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
 

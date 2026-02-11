@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException
-from google_nest_sdm.structure import Structure
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import (
     CLIENT_ID,
@@ -25,10 +25,9 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
     TEST_CONFIGFLOW_APP_CREDS,
-    FakeSubscriber,
     NestTestConfig,
-    PlatformSetup,
 )
+from .conftest import FakeAuth, PlatformSetup
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -36,9 +35,9 @@ from tests.typing import ClientSessionGenerator
 
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
-RAND_SUBSCRIBER_SUFFIX = "ABCDEF"
+RAND_SUFFIX = "ABCDEF"
 
-FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
+FAKE_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
 )
 
@@ -54,9 +53,14 @@ def mock_rand_topic_name_fixture() -> None:
     """Set the topic name random string to a constant."""
     with patch(
         "homeassistant.components.nest.config_flow.get_random_string",
-        return_value=RAND_SUBSCRIBER_SUFFIX,
+        return_value=RAND_SUFFIX,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_request_setup(auth: FakeAuth) -> None:
+    """Fixture to ensure fake requests are setup."""
 
 
 class OAuthFixture:
@@ -170,7 +174,8 @@ class OAuthFixture:
         selected_topic: str,
         selected_subscription: str = "create_new_subscription",
         user_input: dict | None = None,
-    ) -> ConfigEntry:
+        existing_errors: dict | None = None,
+    ) -> FlowResult:
         """Fixture to walk through the Pub/Sub topic and subscription steps.
 
         This picks a simple set of steps that are reusable for most flows without
@@ -190,6 +195,12 @@ class OAuthFixture:
             },
         )
         assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == "pubsub_topic_confirm"
+        assert not result.get("errors")
+
+        # ACK the topic selection. User is instructed to do some manual
+        result = await self.async_configure(result, {})
+        assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "pubsub_subscription"
         assert not result.get("errors")
 
@@ -203,19 +214,19 @@ class OAuthFixture:
 
     async def async_finish_setup(
         self, result: dict, user_input: dict | None = None
-    ) -> ConfigEntry:
+    ) -> FlowResult:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
             "homeassistant.components.nest.async_setup_entry", return_value=True
         ) as mock_setup:
-            await self.async_configure(result, user_input)
+            new_result = await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1
             await self.hass.async_block_till_done()
-        return self.get_config_entry()
+        return new_result
 
     async def async_configure(
         self, result: dict[str, Any], user_input: dict[str, Any]
-    ) -> dict:
+    ) -> FlowResult:
         """Advance to the next step in the config flow."""
         return await self.hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -242,7 +253,7 @@ async def oauth(
 
 @pytest.fixture(name="sdm_managed_topic")
 def mock_sdm_managed_topic() -> bool:
-    """Fixture to configure fake server responses for SDM owend Pub/Sub topics."""
+    """Fixture to configure fake server responses for SDM owned Pub/Sub topics."""
     return False
 
 
@@ -258,71 +269,19 @@ def mock_subscriptions() -> list[tuple[str, str]]:
     return []
 
 
-@pytest.fixture(name="device_access_project_id")
-def mock_device_access_project_id() -> str:
-    """Fixture to configure the device access console project id used in tests."""
-    return PROJECT_ID
-
-
 @pytest.fixture(name="cloud_project_id")
 def mock_cloud_project_id() -> str:
     """Fixture to configure the cloud console project id used in tests."""
     return CLOUD_PROJECT_ID
 
 
-@pytest.fixture(name="create_subscription_status")
-def mock_create_subscription_status() -> str:
-    """Fixture to configure the return code when creating the subscription."""
-    return HTTPStatus.OK
-
-
-@pytest.fixture(name="list_topics_status")
-def mock_list_topics_status() -> str:
-    """Fixture to configure the return code when listing topics."""
-    return HTTPStatus.OK
-
-
-@pytest.fixture(name="list_subscriptions_status")
-def mock_list_subscriptions_status() -> str:
-    """Fixture to configure the return code when listing subscriptions."""
-    return HTTPStatus.OK
-
-
-@pytest.fixture(autouse=True)
-def mock_pubsub_api_responses(
+def setup_mock_list_subscriptions_responses(
     aioclient_mock: AiohttpClientMocker,
-    sdm_managed_topic: bool,
-    user_managed_topics: list[str],
-    subscriptions: list[tuple[str, str]],
-    device_access_project_id: str,
     cloud_project_id: str,
-    create_subscription_status: HTTPStatus,
-    list_topics_status: HTTPStatus,
-    list_subscriptions_status: HTTPStatus,
+    subscriptions: list[tuple[str, str]],
+    list_subscriptions_status: HTTPStatus = HTTPStatus.OK,
 ) -> None:
-    """Configure a server response for an SDM managed Pub/Sub topic.
-
-    We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
-    or the user has created one themselves in the Google Cloud Project.
-    """
-    aioclient_mock.get(
-        f"https://pubsub.googleapis.com/v1/projects/sdm-prod/topics/enterprise-{device_access_project_id}",
-        status=HTTPStatus.FORBIDDEN if sdm_managed_topic else HTTPStatus.NOT_FOUND,
-    )
-    aioclient_mock.get(
-        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics",
-        json={
-            "topics": [
-                {
-                    "name": topic_name,
-                }
-                for topic_name in user_managed_topics or ()
-            ]
-        },
-        status=list_topics_status,
-    )
-    # We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
-    # or the user has created one themselves in the Google Cloud Project.
+    """Configure the mock responses for listing Pub/Sub subscriptions."""
     aioclient_mock.get(
         f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/subscriptions",
         json={
@@ -341,19 +300,212 @@ def mock_pubsub_api_responses(
         },
         status=list_subscriptions_status,
     )
+
+
+def setup_mock_create_topic_responses(
+    aioclient_mock: AiohttpClientMocker,
+    cloud_project_id: str,
+    create_topic_status: HTTPStatus = HTTPStatus.OK,
+) -> None:
+    """Configure the mock responses for creating a Pub/Sub topic."""
     aioclient_mock.put(
-        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}",
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics/home-assistant-{RAND_SUFFIX}",
+        json={},
+        status=create_topic_status,
+    )
+    aioclient_mock.post(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics/home-assistant-{RAND_SUFFIX}:setIamPolicy",
+        json={},
+        status=create_topic_status,
+    )
+
+
+def setup_mock_create_subscription_responses(
+    aioclient_mock: AiohttpClientMocker,
+    cloud_project_id: str,
+    create_subscription_status: HTTPStatus = HTTPStatus.OK,
+) -> None:
+    """Configure the mock responses for creating a Pub/Sub subscription."""
+    aioclient_mock.put(
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/subscriptions/home-assistant-{RAND_SUFFIX}",
         json={},
         status=create_subscription_status,
     )
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
-async def test_app_credentials(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+class MockPubSubAPIResponses:
+    """Configure mock Pub/Sub API responses for config flow tests."""
+
+    def __init__(self, aioclient_mock: AiohttpClientMocker) -> None:
+        """Initialize the mock Pub/Sub API responses."""
+        self.aioclient_mock = aioclient_mock
+        self.sdm_managed_topic = False
+        self.user_managed_topics: list[str] = []
+        self.subscriptions: list[tuple[str, str]] = []
+        self.device_access_project_id = PROJECT_ID
+        self.cloud_project_id = CLOUD_PROJECT_ID
+        self.create_topic_status = HTTPStatus.OK
+        self.create_subscription_status = HTTPStatus.OK
+        self.list_topics_status = HTTPStatus.OK
+        self.list_subscriptions_status = HTTPStatus.OK
+
+    def register_mock_requests(self) -> None:
+        """Configure a server response for an SDM managed Pub/Sub topic.
+
+        We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
+        or the user has created one themselves in the Google Cloud Project.
+        """
+        self.aioclient_mock.get(
+            f"https://pubsub.googleapis.com/v1/projects/sdm-prod/topics/enterprise-{self.device_access_project_id}",
+            status=HTTPStatus.FORBIDDEN
+            if self.sdm_managed_topic
+            else HTTPStatus.NOT_FOUND,
+        )
+        self.aioclient_mock.get(
+            f"https://pubsub.googleapis.com/v1/projects/{self.cloud_project_id}/topics",
+            json={
+                "topics": [
+                    {
+                        "name": topic_name,
+                    }
+                    for topic_name in self.user_managed_topics or ()
+                ]
+            },
+            status=self.list_topics_status,
+        )
+        # We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
+        # or the user has created one themselves in the Google Cloud Project.
+        setup_mock_list_subscriptions_responses(
+            self.aioclient_mock,
+            self.cloud_project_id,
+            self.subscriptions,
+            self.list_subscriptions_status,
+        )
+        setup_mock_create_topic_responses(
+            self.aioclient_mock, self.cloud_project_id, self.create_topic_status
+        )
+        setup_mock_create_subscription_responses(
+            self.aioclient_mock, self.cloud_project_id, self.create_subscription_status
+        )
+
+
+@pytest.fixture(autouse=True, name="mock_pubsub_api_responses")
+def mock_pubsub_api_responses_fixture(
+    aioclient_mock: AiohttpClientMocker,
+    sdm_managed_topic: bool,
+    user_managed_topics: list[str],
+    subscriptions: list[tuple[str, str]],
+    device_access_project_id: str,
+    cloud_project_id: str,
+) -> MockPubSubAPIResponses:
+    """Fixture to configure mock Pub/Sub API responses for config flow tests."""
+    mock_responses = MockPubSubAPIResponses(aioclient_mock)
+    mock_responses.sdm_managed_topic = sdm_managed_topic
+    mock_responses.user_managed_topics = user_managed_topics
+    mock_responses.subscriptions = subscriptions
+    mock_responses.device_access_project_id = device_access_project_id
+    mock_responses.cloud_project_id = cloud_project_id
+    mock_responses.register_mock_requests()
+    return mock_responses
+
+
+@pytest.mark.parametrize(
+    (
+        "sdm_managed_topic",
+        "user_managed_topics",
+        "subscriptions",
+        "topic_args",
+        "expected_config_entry_data",
+    ),
+    [
+        (
+            True,
+            [],
+            [],
+            {"selected_topic": "create_new_topic"},
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": "create_new_topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "selected_subscription": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                "subscriber_id_imported": True,
+            },
+        ),
+    ],
+    ids=[
+        "sdm-managed-topic",
+        "existing-topics-ignored",
+        "user-managed-topic",
+        "user-managed-topic-existing-subscription",
+    ],
+)
+async def test_full_flow(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+    topic_args: dict[str, str],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Check full flow."""
-    await setup_platform()
+    mock_pubsub_api_responses.sdm_managed_topic = True
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -362,10 +514,14 @@ async def test_app_credentials(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, None)
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+    result = await oauth.async_complete_pubsub_flow(
+        result,
+        **topic_args,
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
 
+    entry = oauth.get_config_entry()
     data = dict(entry.data)
     assert "token" in data
     data["token"].pop("expires_in")
@@ -375,26 +531,123 @@ async def test_app_credentials(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}",
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
             "type": "Bearer",
         },
+        **expected_config_entry_data,
     }
 
 
+@pytest.mark.parametrize(("device_access_project_id"), [("new-project-id")])
+@pytest.mark.parametrize(("cloud_project_id"), [("new-cloud-project-id")])
 @pytest.mark.parametrize(
-    ("sdm_managed_topic", "device_access_project_id", "cloud_project_id"),
-    [(True, "new-project-id", "new-cloud-project-id")],
+    (
+        "sdm_managed_topic",
+        "user_managed_topics",
+        "subscriptions",
+        "topic_args",
+        "expected_config_entry_data",
+    ),
+    [
+        (
+            True,
+            [],
+            [],
+            {"selected_topic": "projects/sdm-prod/topics/enterprise-new-project-id"},
+            {
+                "topic_name": "projects/sdm-prod/topics/enterprise-new-project-id",
+                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            True,
+            [],
+            [],
+            {"selected_topic": "create_new_topic"},
+            {
+                "topic_name": f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                "projects/new-project-id/topics/my-topic",
+            ],
+            [
+                (
+                    "projects/new-project-id/subscriptions/my-subscription",
+                    "projects/new-project-id/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": "create_new_topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/new-cloud-project-id/topics/home-assistant-{RAND_SUFFIX}",
+                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                "projects/new-cloud-project-id/topics/my-topic",
+            ],
+            [
+                (
+                    "projects/new-cloud-project-id/subscriptions/my-subscription",
+                    "projects/new-cloud-project-id/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": "projects/new-cloud-project-id/topics/my-topic",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": "projects/new-cloud-project-id/topics/my-topic",
+                "subscription_name": f"projects/new-cloud-project-id/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [
+                "projects/new-cloud-project-id/topics/my-topic",
+            ],
+            [
+                (
+                    "projects/new-cloud-project-id/subscriptions/my-subscription",
+                    "projects/new-cloud-project-id/topics/my-topic",
+                ),
+            ],
+            {
+                "selected_topic": "projects/new-cloud-project-id/topics/my-topic",
+                "selected_subscription": "projects/new-cloud-project-id/subscriptions/my-subscription",
+            },
+            {
+                "topic_name": "projects/new-cloud-project-id/topics/my-topic",
+                "subscription_name": "projects/new-cloud-project-id/subscriptions/my-subscription",
+                "subscriber_id_imported": True,
+            },
+        ),
+    ],
+    ids=[
+        "sdm-managed-topic-only",
+        "sdm-managed-topic",
+        "existing-topics-ignored",
+        "user-managed-topic",
+        "user-managed-topic-existing-subscription",
+    ],
 )
 async def test_config_flow_restart(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    topic_args: dict[str, str],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Check with auth implementation is re-initialized when aborting the flow."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -422,10 +675,14 @@ async def test_config_flow_restart(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic="projects/sdm-prod/topics/enterprise-new-project-id"
+    result = await oauth.async_complete_pubsub_flow(
+        result,
+        **topic_args,
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == "new-project-id"
 
+    entry = oauth.get_config_entry()
     data = dict(entry.data)
     assert "token" in data
     data["token"].pop("expires_in")
@@ -435,8 +692,7 @@ async def test_config_flow_restart(
         "auth_implementation": "imported-cred",
         "cloud_project_id": "new-cloud-project-id",
         "project_id": "new-project-id",
-        "subscription_name": "projects/new-cloud-project-id/subscriptions/home-assistant-ABCDEF",
-        "topic_name": "projects/sdm-prod/topics/enterprise-new-project-id",
+        **expected_config_entry_data,
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -445,13 +701,12 @@ async def test_config_flow_restart(
     }
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True])
 async def test_config_flow_wrong_project_id(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
 ) -> None:
     """Check the case where the wrong project ids are entered."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -477,10 +732,13 @@ async def test_config_flow_wrong_project_id(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
+    result = await oauth.async_complete_pubsub_flow(
         result, selected_topic="projects/sdm-prod/topics/enterprise-some-project-id"
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
 
+    entry = oauth.get_config_entry()
     data = dict(entry.data)
     assert "token" in data
     data["token"].pop("expires_in")
@@ -500,17 +758,24 @@ async def test_config_flow_wrong_project_id(
     }
 
 
+@pytest.mark.parametrize(("sdm_managed_topic"), [True])
 @pytest.mark.parametrize(
-    ("sdm_managed_topic", "create_subscription_status"), [(True, HTTPStatus.NOT_FOUND)]
+    ("create_subscription_status"),
+    [HTTPStatus.NOT_FOUND, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.UNAUTHORIZED],
 )
-async def test_config_flow_pubsub_configuration_error(
+async def test_config_flow_pubsub_create_subscription_failure(
     hass: HomeAssistant,
-    oauth,
-    setup_platform,
-    mock_subscriber,
+    oauth: OAuthFixture,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+    create_subscription_status: HTTPStatus,
 ) -> None:
     """Check full flow fails with configuration error."""
-    await setup_platform()
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.create_subscription_status = create_subscription_status
+    mock_pubsub_api_responses.register_mock_requests()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -533,6 +798,11 @@ async def test_config_flow_pubsub_configuration_error(
         },
     )
     assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic_confirm"
+    assert not result.get("errors")
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "pubsub_subscription"
     assert result.get("data_schema")({}) == {
         "subscription_name": "create_new_subscription",
@@ -548,60 +818,65 @@ async def test_config_flow_pubsub_configuration_error(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "pubsub_api_error"}
 
+    # Reset the mock to allow success on the next attempt.
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.create_subscription_status = HTTPStatus.OK
+    mock_pubsub_api_responses.register_mock_requests()
 
-@pytest.mark.parametrize(
-    ("sdm_managed_topic", "create_subscription_status"),
-    [(True, HTTPStatus.INTERNAL_SERVER_ERROR)],
-)
-async def test_config_flow_pubsub_subscriber_error(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
-) -> None:
-    """Check full flow with a subscriber error."""
-    await setup_platform()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await oauth.async_configure(
+        result,
+        {
+            "subscription_name": "create_new_subscription",
+        },
     )
-    await oauth.async_app_creds_flow(result)
-    oauth.async_mock_refresh()
-    result = await oauth.async_configure(result, {"code": "1234"})
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub_topic"
-    assert result.get("data_schema")({}) == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
         "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
-    }
-
-    # Select Pub/Sub topic the show available subscriptions (none)
-    result = await oauth.async_configure(
-        result,
-        {
-            "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
         },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub_subscription"
-    assert result.get("data_schema")({}) == {
-        "subscription_name": "create_new_subscription",
     }
-
-    # Failure when creating the subscription
-    result = await oauth.async_configure(
-        result,
-        {
-            "subscription_name": "create_new_subscription",
-        },
-    )
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "pubsub_api_error"}
 
 
 @pytest.mark.parametrize(
-    ("nest_test_config", "sdm_managed_topic", "device_access_project_id"),
-    [(TEST_CONFIG_APP_CREDS, True, "project-id-2")],
+    ("nest_test_config", "sdm_managed_topic", "device_access_project_id", "topic_args"),
+    [
+        (
+            TEST_CONFIG_APP_CREDS,
+            True,
+            "project-id-2",
+            {"selected_topic": "projects/sdm-prod/topics/enterprise-project-id-2"},
+        ),
+        (
+            TEST_CONFIG_APP_CREDS,
+            False,
+            "project-id-2",
+            {
+                "selected_topic": "create_new_topic",
+            },
+        ),
+    ],
 )
 async def test_multiple_config_entries(
-    hass: HomeAssistant, oauth, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    setup_platform: Callable[[], Awaitable[None]],
+    topic_args: dict[str, str],
 ) -> None:
     """Verify config flow can be started when existing config entry exists."""
     await setup_platform()
@@ -615,9 +890,14 @@ async def test_multiple_config_entries(
     await oauth.async_app_creds_flow(result, project_id="project-id-2")
     oauth.async_mock_refresh()
     result = await oauth.async_configure(result, user_input={})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic="projects/sdm-prod/topics/enterprise-project-id-2"
+    result = await oauth.async_complete_pubsub_flow(
+        result,
+        **topic_args,
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == "project-id-2"
+
+    entry = oauth.get_config_entry()
     assert entry.title == "Mock Title"
     assert "token" in entry.data
 
@@ -626,7 +906,8 @@ async def test_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    ("nest_test_config", "sdm_managed_topic"), [(TEST_CONFIG_APP_CREDS, True)]
+    ("nest_test_config", "sdm_managed_topic"),
+    [(TEST_CONFIG_APP_CREDS, True), (TEST_CONFIG_APP_CREDS, False)],
 )
 async def test_duplicate_config_entries(
     hass: HomeAssistant, oauth, setup_platform
@@ -653,7 +934,8 @@ async def test_duplicate_config_entries(
 
 
 @pytest.mark.parametrize(
-    ("nest_test_config", "sdm_managed_topic"), [(TEST_CONFIG_APP_CREDS, True)]
+    ("nest_test_config", "sdm_managed_topic"),
+    [(TEST_CONFIG_APP_CREDS, True), (TEST_CONFIG_APP_CREDS, False)],
 )
 async def test_reauth_multiple_config_entries(
     hass: HomeAssistant, oauth, setup_platform, config_entry
@@ -681,7 +963,9 @@ async def test_reauth_multiple_config_entries(
     await oauth.async_oauth_web_flow(result)
     oauth.async_mock_refresh()
 
-    await oauth.async_finish_setup(result)
+    result = await oauth.async_finish_setup(result)
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
 
     # Only reauth entry was updated, the other entry is preserved
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -705,95 +989,15 @@ async def test_reauth_multiple_config_entries(
     assert entry.data.get("extra_data")
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
-async def test_pubsub_subscription_strip_whitespace(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
-) -> None:
-    """Check that project id has whitespace stripped on entry."""
-    await setup_platform()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await oauth.async_app_creds_flow(
-        result, cloud_project_id=" " + CLOUD_PROJECT_ID + " "
-    )
-    oauth.async_mock_refresh()
-    result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic="projects/sdm-prod/topics/enterprise-some-project-id"
-    )
-    assert entry.title == "Import from configuration.yaml"
-    assert "token" in entry.data
-    entry.data["token"].pop("expires_at")
-    assert entry.unique_id == PROJECT_ID
-    assert entry.data["token"] == {
-        "refresh_token": "mock-refresh-token",
-        "access_token": "mock-access-token",
-        "type": "Bearer",
-        "expires_in": 60,
-    }
-    assert "subscription_name" in entry.data
-    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
-
-
 @pytest.mark.parametrize(
-    ("sdm_managed_topic", "create_subscription_status"),
-    [(True, HTTPStatus.UNAUTHORIZED)],
-)
-async def test_pubsub_subscription_auth_failure(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
-) -> None:
-    """Check flow that creates a pub/sub subscription."""
-    await setup_platform()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    await oauth.async_app_creds_flow(result)
-    oauth.async_mock_refresh()
-    result = await oauth.async_configure(result, {"code": "1234"})
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub_topic"
-    assert result.get("data_schema")({}) == {
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
-    }
-
-    # Select Pub/Sub topic the show available subscriptions (none)
-    result = await oauth.async_configure(
-        result,
-        {
-            "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub_subscription"
-    assert result.get("data_schema")({}) == {
-        "subscription_name": "create_new_subscription",
-    }
-
-    # Failure when creating the subscription
-    result = await oauth.async_configure(
-        result,
-        {
-            "subscription_name": "create_new_subscription",
-        },
-    )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub_subscription"
-    assert result.get("errors") == {"base": "pubsub_api_error"}
-
-
-@pytest.mark.parametrize(
-    ("nest_test_config", "sdm_managed_topic"), [(TEST_CONFIG_APP_CREDS, True)]
+    ("nest_test_config", "sdm_managed_topic"),
+    [(TEST_CONFIG_APP_CREDS, True), (TEST_CONFIG_APP_CREDS, False)],
 )
 async def test_pubsub_subscriber_config_entry_reauth(
     hass: HomeAssistant,
-    oauth,
-    setup_platform,
-    subscriber,
-    config_entry,
+    oauth: OAuthFixture,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the pubsub subscriber id is preserved during reauth."""
     await setup_platform()
@@ -803,7 +1007,11 @@ async def test_pubsub_subscriber_config_entry_reauth(
     oauth.async_mock_refresh()
 
     # Entering an updated access token refreshes the config entry.
-    entry = await oauth.async_finish_setup(result, {"code": "1234"})
+    result = await oauth.async_finish_setup(result, {"code": "1234"})
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+    entry = oauth.get_config_entry()
     entry.data["token"].pop("expires_at")
     assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
@@ -819,25 +1027,22 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_entry_title_from_home(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    auth: FakeAuth,
 ) -> None:
     """Test that the Google Home name is used for the config entry title."""
 
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
-            {
-                "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
-                "traits": {
-                    "sdm.structures.traits.Info": {
-                        "customName": "Example Home",
-                    },
+    auth.structures.append(
+        {
+            "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
+            "traits": {
+                "sdm.structures.traits.Info": {
+                    "customName": "Example Home",
                 },
-            }
-        )
+            },
+        }
     )
-
-    await setup_platform()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -846,15 +1051,19 @@ async def test_config_entry_title_from_home(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
+    result = await oauth.async_complete_pubsub_flow(
         result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
     assert entry.title == "Example Home"
     assert "token" in entry.data
     assert entry.data.get("cloud_project_id") == CLOUD_PROJECT_ID
     assert (
         entry.data.get("subscription_name")
-        == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}"
+        == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
     )
     assert (
         entry.data.get("topic_name")
@@ -862,15 +1071,22 @@ async def test_config_entry_title_from_home(
     )
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.parametrize(
+    ("sdm_managed_topic", "topic_args"),
+    [
+        (True, {"selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"}),
+        (False, {"selected_topic": "create_new_topic"}),
+    ],
+)
 async def test_config_entry_title_multiple_homes(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    auth: FakeAuth,
+    topic_args: dict[str, str],
 ) -> None:
     """Test handling of multiple Google Homes authorized."""
-
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
+    auth.structures.extend(
+        [
             {
                 "name": f"enterprise/{PROJECT_ID}/structures/id-1",
                 "traits": {
@@ -878,11 +1094,7 @@ async def test_config_entry_title_multiple_homes(
                         "customName": "Example Home #1",
                     },
                 },
-            }
-        )
-    )
-    device_manager.add_structure(
-        Structure.MakeStructure(
+            },
             {
                 "name": f"enterprise/{PROJECT_ID}/structures/id-2",
                 "traits": {
@@ -890,11 +1102,9 @@ async def test_config_entry_title_multiple_homes(
                         "customName": "Example Home #2",
                     },
                 },
-            }
-        )
+            },
+        ]
     )
-
-    await setup_platform()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -903,19 +1113,22 @@ async def test_config_entry_title_multiple_homes(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+    result = await oauth.async_complete_pubsub_flow(
+        result,
+        **topic_args,
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
     assert entry.title == "Example Home #1, Example Home #2"
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_title_failure_fallback(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+    hass: HomeAssistant, oauth, mock_subscriber
 ) -> None:
     """Test exception handling when determining the structure names."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -925,16 +1138,19 @@ async def test_title_failure_fallback(
     mock_subscriber.async_get_device_manager.side_effect = AuthException()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
+    result = await oauth.async_complete_pubsub_flow(
         result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
 
+    entry = oauth.get_config_entry()
     assert entry.title == "Import from configuration.yaml"
     assert "token" in entry.data
     assert entry.data.get("cloud_project_id") == CLOUD_PROJECT_ID
     assert (
         entry.data.get("subscription_name")
-        == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}"
+        == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
     )
     assert (
         entry.data.get("topic_name")
@@ -944,22 +1160,17 @@ async def test_title_failure_fallback(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_structure_missing_trait(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
+    hass: HomeAssistant, oauth: OAuthFixture, auth: FakeAuth
 ) -> None:
     """Test handling the case where a structure has no name set."""
 
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
-            {
-                "name": f"enterprise/{PROJECT_ID}/structures/id-1",
-                # Missing Info trait
-                "traits": {},
-            }
-        )
+    auth.structures.append(
+        {
+            "name": f"enterprise/{PROJECT_ID}/structures/id-1",
+            # Missing Info trait
+            "traits": {},
+        }
     )
-
-    await setup_platform()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -968,10 +1179,14 @@ async def test_structure_missing_trait(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
+    result = await oauth.async_complete_pubsub_flow(
         result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
     # Fallback to default name
+    entry = oauth.get_config_entry()
     assert entry.title == "Import from configuration.yaml"
 
 
@@ -987,6 +1202,10 @@ async def test_dhcp_discovery(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await oauth.async_configure(result, {})
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "create_cloud_project"
 
     result = await oauth.async_configure(result, {})
@@ -994,19 +1213,122 @@ async def test_dhcp_discovery(
     assert result.get("reason") == "missing_credentials"
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
+@pytest.mark.parametrize(
+    ("nest_test_config", "sdm_managed_topic", "device_access_project_id"),
+    [(TEST_CONFIG_APP_CREDS, True, "project-id-2")],
+)
+async def test_dhcp_discovery_already_setup(
+    hass: HomeAssistant, oauth: OAuthFixture, setup_platform
+) -> None:
+    """Exercise discovery dhcp with existing config entry."""
+    await setup_platform()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    (
+        "sdm_managed_topic",
+        "user_managed_topics",
+        "subscriptions",
+        "topic_args",
+        "expected_config_entry_data",
+    ),
+    [
+        (
+            True,
+            [],  # No existing topics
+            [],  # No existing subscriptions
+            {
+                "selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            True,
+            # Existing topics are ignored
+            [f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id"],
+            # Existing subscriptions are ignored
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+                )
+            ],
+            {
+                "selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "selected_subscription": "create_new_subscription",
+            },
+            {
+                "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [],  # No existing topics
+            [],  # No existing subscriptions
+            {
+                "selected_topic": "create_new_topic",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-ABCDEF",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+            },
+        ),
+        (
+            False,
+            [f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id"],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",  # Selected subscription
+                    f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+                )
+            ],
+            {
+                "selected_topic": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+                "selected_subscription": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+            },
+            {
+                "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+                "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+                "subscriber_id_imported": True,
+            },
+        ),
+    ],
+    ids=[
+        "sdm-managed-no-existing-subscriptions",
+        "sdm-managed-with-existing-subscriptions",
+        "user-managed-create-new-topic",
+        "user-managed-select-existing-subscription",
+    ],
+)
 async def test_dhcp_discovery_with_creds(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    topic_args: dict[str, str],
+    expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Exercise discovery dhcp with no config present (can't run)."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "oauth_discovery"
+
+    result = await oauth.async_configure(result, {})
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 
@@ -1018,11 +1340,12 @@ async def test_dhcp_discovery_with_creds(
     await oauth.async_oauth_web_flow(result)
     oauth.async_mock_refresh()
 
-    result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
-    )
+    result = await oauth.async_configure(result, None)
+    result = await oauth.async_complete_pubsub_flow(result, **topic_args)
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
 
+    entry = oauth.get_config_entry()
     data = dict(entry.data)
     assert "token" in data
     data["token"].pop("expires_in")
@@ -1032,8 +1355,7 @@ async def test_dhcp_discovery_with_creds(
         "auth_implementation": "imported-cred",
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
-        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}",
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        **expected_config_entry_data,
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -1053,14 +1375,10 @@ async def test_dhcp_discovery_with_creds(
 async def test_token_error(
     hass: HomeAssistant,
     oauth: OAuthFixture,
-    subscriber: FakeSubscriber,
-    setup_platform: PlatformSetup,
     status_code: HTTPStatus,
     error_reason: str,
 ) -> None:
     """Check full flow."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1090,11 +1408,10 @@ async def test_token_error(
     ],
 )
 async def test_existing_topic_and_subscription(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1102,12 +1419,15 @@ async def test_existing_topic_and_subscription(
     oauth.async_mock_refresh()
 
     result = await oauth.async_configure(result, None)
-    entry = await oauth.async_complete_pubsub_flow(
+    result = await oauth.async_complete_pubsub_flow(
         result,
         selected_topic=f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
         selected_subscription=f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
     )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
 
+    entry = oauth.get_config_entry()
     data = dict(entry.data)
     assert "token" in data
     data["token"].pop("expires_in")
@@ -1129,11 +1449,10 @@ async def test_existing_topic_and_subscription(
 
 
 async def test_no_eligible_topics(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
 ) -> None:
-    """Test the case where there are no eligible pub/sub topics."""
-    await setup_platform()
-
+    """Test the case where there are no eligible pub/sub topics and the topic is created."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1142,21 +1461,79 @@ async def test_no_eligible_topics(
 
     result = await oauth.async_configure(result, None)
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub"
-    assert result.get("errors") == {"base": "no_pubsub_topics"}
+    assert result.get("step_id") == "pubsub_topic"
+    assert not result.get("errors")
+    # Option shown to create a new topic
+    assert result.get("data_schema")({}) == {
+        "topic_name": "create_new_topic",
+    }
+
+    result = await oauth.async_complete_pubsub_flow(
+        result,
+        selected_topic="create_new_topic",
+        selected_subscription="create_new_subscription",
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
 
 
-@pytest.mark.parametrize(
-    ("list_topics_status"),
-    [
-        (HTTPStatus.INTERNAL_SERVER_ERROR),
-    ],
-)
 async def test_list_topics_failure(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.list_topics_status = HTTPStatus.INTERNAL_SERVER_ERROR
+    mock_pubsub_api_responses.register_mock_requests()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "pubsub_api_error"
+
+
+async def test_create_topic_failed(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    aioclient_mock: AiohttpClientMocker,
+    cloud_project_id: str,
+    subscriptions: list[tuple[str, str]],
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+) -> None:
+    """Test the case where there are no eligible pub/sub topics and the topic is created."""
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.create_topic_status = HTTPStatus.INTERNAL_SERVER_ERROR
+    mock_pubsub_api_responses.register_mock_requests()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1166,21 +1543,84 @@ async def test_list_topics_failure(
 
     result = await oauth.async_configure(result, None)
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "pubsub"
+    assert result.get("step_id") == "pubsub_topic"
+    assert not result.get("errors")
+    # Option shown to create a new topic
+    assert result.get("data_schema")({}) == {
+        "topic_name": "create_new_topic",
+    }
+
+    result = await oauth.async_configure(result, {"topic_name": "create_new_topic"})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic"
     assert result.get("errors") == {"base": "pubsub_api_error"}
 
+    # Re-register mock requests needed for the rest of the test. The topic
+    # request will now succeed.
+    aioclient_mock.clear_requests()
+    setup_mock_create_topic_responses(aioclient_mock, cloud_project_id)
+    # Fix up other mock responses cleared above
+    auth.register_mock_requests()
+    setup_mock_list_subscriptions_responses(
+        aioclient_mock,
+        cloud_project_id,
+        subscriptions,
+    )
+    setup_mock_create_subscription_responses(aioclient_mock, cloud_project_id)
 
-@pytest.mark.parametrize(
-    ("sdm_managed_topic", "list_subscriptions_status"),
-    [
-        (True, HTTPStatus.INTERNAL_SERVER_ERROR),
-    ],
-)
+    result = await oauth.async_configure(result, {"topic_name": "create_new_topic"})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic_confirm"
+    assert not result.get("errors")
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_subscription"
+    assert not result.get("errors")
+
+    # Create a subscription for the topic and end the flow
+    result = await oauth.async_finish_setup(
+        result,
+        {"subscription_name": "create_new_subscription"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
+@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_list_subscriptions_failure(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.list_subscriptions_status = (
+        HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    mock_pubsub_api_responses.register_mock_requests()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1201,5 +1641,39 @@ async def test_list_subscriptions_failure(
         },
     )
     assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic_confirm"
+    assert not result.get("errors")
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "pubsub_subscription"
     assert result.get("errors") == {"base": "pubsub_api_error"}
+
+    # Continue with the rest of the flow but clear the mocks so that the
+    # flow will now succeed.
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.register_mock_requests()
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("context", {}).get("unique_id") == PROJECT_ID
+
+    entry = oauth.get_config_entry()
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}",
+        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }

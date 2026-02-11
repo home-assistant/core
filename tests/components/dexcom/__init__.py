@@ -1,6 +1,7 @@
 """Tests for the Dexcom integration."""
 
 import json
+from typing import Any
 from unittest.mock import patch
 
 from pydexcom import GlucoseReading
@@ -18,16 +19,20 @@ CONFIG = {
 }
 
 GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("data.json", "dexcom")))
+TEST_ACCOUNT_ID = "99999999-9999-9999-9999-999999999999"
+TEST_SESSION_ID = "55555555-5555-5555-5555-555555555555"
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, options: dict[str, Any] | None = None
+) -> MockConfigEntry:
     """Set up the Dexcom integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="test_username",
         unique_id="test_username",
         data=CONFIG,
-        options=None,
+        options=options,
     )
     with (
         patch(
@@ -35,8 +40,12 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
             return_value=GLUCOSE_READING,
         ),
         patch(
-            "homeassistant.components.dexcom.Dexcom.create_session",
-            return_value="test_session_id",
+            "homeassistant.components.dexcom.Dexcom._get_account_id",
+            return_value=TEST_ACCOUNT_ID,
+        ),
+        patch(
+            "homeassistant.components.dexcom.Dexcom._get_session_id",
+            return_value=TEST_SESSION_ID,
         ),
     ):
         entry.add_to_hass(hass)

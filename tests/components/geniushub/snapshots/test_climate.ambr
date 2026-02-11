@@ -16,6 +16,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -29,6 +30,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom',
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,6 +38,7 @@
     'original_name': 'Bedroom',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_29',
@@ -96,6 +99,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -109,6 +113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ensuite',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +121,7 @@
     'original_name': 'Ensuite',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_5',
@@ -178,6 +184,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -191,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Guest room',
     'options': dict({
     }),
     'original_device_class': None,
@@ -198,6 +206,7 @@
     'original_name': 'Guest room',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_7',
@@ -260,6 +269,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -273,6 +283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +291,7 @@
     'original_name': 'Hall',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_2',
@@ -342,6 +354,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -355,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -362,6 +376,7 @@
     'original_name': 'Kitchen',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_3',
@@ -423,6 +438,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -436,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lounge',
     'options': dict({
     }),
     'original_device_class': None,
@@ -443,6 +460,7 @@
     'original_name': 'Lounge',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_1',
@@ -503,6 +521,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -516,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study',
     'options': dict({
     }),
     'original_device_class': None,
@@ -523,6 +543,7 @@
     'original_name': 'Study',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_30',
