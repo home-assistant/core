@@ -60,7 +60,7 @@ class VeluxOnOffLight(VeluxEntity, LightEntity):
         await self.node.turn_off(wait_for_completion=True)
 
 
-class VeluxLight(VeluxOnOffLight, LightEntity):
+class VeluxLight(VeluxOnOffLight):
     """Representation of a Velux light with brightness control."""
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}

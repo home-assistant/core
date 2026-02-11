@@ -1,6 +1,6 @@
 """Test Velux light entities."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -202,7 +202,7 @@ async def test_light_turn_on_with_brightness_uses_set_intensity(
     "mock_pyvlx", ["mock_light", "mock_onoff_light"], indirect=True
 )
 async def test_light_turn_on_without_brightness_calls_turn_on(
-    hass: HomeAssistant, mock_pyvlx: AsyncMock
+    hass: HomeAssistant, mock_pyvlx: MagicMock
 ) -> None:
     """Turning on without brightness uses node.turn_on."""
 
@@ -224,7 +224,7 @@ async def test_light_turn_on_without_brightness_calls_turn_on(
     "mock_pyvlx", ["mock_light", "mock_onoff_light"], indirect=True
 )
 async def test_light_turn_off_calls_turn_off(
-    hass: HomeAssistant, mock_pyvlx: AsyncMock
+    hass: HomeAssistant, mock_pyvlx: MagicMock
 ) -> None:
     """Turning off calls device.turn_off with wait_for_completion."""
 
