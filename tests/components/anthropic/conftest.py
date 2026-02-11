@@ -142,6 +142,22 @@ def mock_config_entry_with_web_search(
 
 
 @pytest.fixture
+def mock_config_entry_with_no_structured_output(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with a model without structured outputs support."""
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                CONF_CHAT_MODEL: "claude-sonnet-4-0",
+            },
+        )
+    return mock_config_entry
+
+
+@pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:

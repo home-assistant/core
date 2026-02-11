@@ -51,13 +51,13 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
-async def test_generate_structured_data(
+async def test_generate_structured_data_legacy(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_no_structured_output: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task structured data generation."""
+    """Test AI Task structured data generation with legacy method."""
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -88,13 +88,13 @@ async def test_generate_structured_data(
     assert result.data == {"characters": ["Mario", "Luigi"]}
 
 
-async def test_generate_invalid_structured_data(
+async def test_generate_invalid_structured_data_legacy(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_no_structured_output: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task with invalid JSON response."""
+    """Test AI Task with invalid JSON response with legacy method."""
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -124,6 +124,38 @@ async def test_generate_invalid_structured_data(
                 },
             ),
         )
+
+
+async def test_generate_structured_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test AI Task structured data generation."""
+    mock_create_stream.return_value = [
+        create_content_block(0, ['{"charac', 'ters": ["Mario', '", "Luigi"]}'])
+    ]
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
 
 
 async def test_generate_data_with_attachments(

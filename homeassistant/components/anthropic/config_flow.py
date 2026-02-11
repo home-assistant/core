@@ -491,22 +491,24 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         "role": "user",
                         "content": "Where are the following coordinates located: "
                         f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})? Please respond "
-                        "only with a JSON object using the following schema:\n"
-                        f"{convert(location_schema)}",
-                    },
-                    {
-                        "role": "assistant",
-                        "content": "{",  # hints the model to skip any preamble
-                    },
+                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                    }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
+                output_config={
+                    "format": {
+                        "type": "json_schema",
+                        "schema": {
+                            **convert(location_schema),
+                            "additionalProperties": False,
+                        },
+                    }
+                },
             )
             _LOGGER.debug("Model response: %s", response.content)
             location_data = location_schema(
                 json.loads(
-                    "{"
-                    + "".join(
+                    "".join(
                         block.text
                         for block in response.content
                         if isinstance(block, anthropic.types.TextBlock)
