@@ -1,5 +1,7 @@
 """Utility functions for SmartThings integration."""
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from . import FullDevice
 from .const import DOMAIN
 
 
@@ -82,3 +85,43 @@ def get_automations_and_scripts_using_entity(
         for entity_id in entities
         if (item := entity_reg.async_get(entity_id))
     ]
+
+
+def get_range_options_count(
+    device: FullDevice, component: str, capability: Capability, attribute: Attribute
+) -> int:
+    """Get the number of options in a range attribute.
+
+    This helper is intentionally non-throwing. If the underlying status payload
+    is missing or malformed, it will return 0 so callers can skip creating the
+    related entity instead of failing platform setup.
+    """
+    try:
+        status = device.status
+        value = status[component][capability][attribute].value
+    except KeyError, TypeError, AttributeError:
+        # Missing component/capability/attribute or unexpected structure
+        return 0
+
+    if not isinstance(value, dict):
+        return 0
+
+    minimum = value.get("minimum")
+    maximum = value.get("maximum")
+    step = value.get("step")
+
+    if (
+        not isinstance(minimum, int)
+        or not isinstance(maximum, int)
+        or not isinstance(step, int)
+    ):
+        return 0
+
+    if step <= 0 or maximum < minimum:
+        return 0
+
+    try:
+        return len(range(minimum, maximum + 1, step))
+    except ValueError:
+        # range() can still raise ValueError for invalid arguments
+        return 0
