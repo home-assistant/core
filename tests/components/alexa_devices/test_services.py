@@ -190,7 +190,7 @@ async def test_invalid_parameters(
     ("info_skill", "device_id", "translation_key", "translation_placeholders"),
     [
         (
-            "alexa_joke",
+            "tell_joke",
             "fake_device_id",
             "invalid_device_id",
             {"device_id": "fake_device_id"},
