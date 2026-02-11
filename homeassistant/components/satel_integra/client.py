@@ -1,7 +1,6 @@
 """Satel Integra client."""
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 
 from satel_integra.satel_integra import AsyncSatel
 
@@ -26,10 +25,6 @@ class SatelClient:
     """Client to connect to Satel Integra."""
 
     controller: AsyncSatel
-
-    zones_update_callback: Callable[[dict[str, dict[int, int]]], None] | None
-    outputs_update_callback: Callable[[dict[str, dict[int, int]]], None] | None
-    partitions_update_callback: Callable[[], None] | None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the client wrapper."""
@@ -74,14 +69,16 @@ class SatelClient:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close)
         )
 
-    async def async_setup(self) -> None:
+    async def async_connect(
+        self,
+        zones_update_callback: Callable[[dict[str, dict[int, int]]], None],
+        outputs_update_callback: Callable[[dict[str, dict[int, int]]], None],
+        partitions_update_callback: Callable[[], None],
+    ) -> None:
         """Start controller connection."""
         result = await self.controller.connect()
         if not result:
             raise ConfigEntryNotReady("Controller failed to connect")
-
-        if TYPE_CHECKING:
-            assert self.config_entry
 
         self.config_entry.async_create_background_task(
             self.hass,
@@ -93,9 +90,9 @@ class SatelClient:
         self.config_entry.async_create_background_task(
             self.hass,
             self.controller.monitor_status(
-                self.partitions_update_callback,
-                self.zones_update_callback,
-                self.outputs_update_callback,
+                partitions_update_callback,
+                zones_update_callback,
+                outputs_update_callback,
             ),
             f"satel_integra.{self.config_entry.entry_id}.monitor_status",
             eager_start=False,

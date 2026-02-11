@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import SatelClient
+from .client import SatelClient
 from .const import ZONES
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,6 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]])
         super().__init__(hass, entry, client)
 
         self.data = {}
-        client.zones_update_callback = self.zones_update_callback
 
     @callback
     def zones_update_callback(self, status: dict[str, dict[int, int]]):
@@ -81,7 +80,6 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
         super().__init__(hass, entry, client)
 
         self.data = {}
-        client.outputs_update_callback = self.outputs_update_callback
 
     @callback
     def outputs_update_callback(self, status: dict[str, dict[int, int]]):
@@ -107,7 +105,6 @@ class SatelIntegraPartitionsCoordinator(
         super().__init__(hass, entry, client)
 
         self.data = {}
-        client.partitions_update_callback = self.partitions_update_callback
 
     @callback
     def partitions_update_callback(self):

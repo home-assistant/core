@@ -9,7 +9,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .common import SatelClient
+from .client import SatelClient
 from .const import (
     DOMAIN,
     SUBENTRY_TYPE_OUTPUT,

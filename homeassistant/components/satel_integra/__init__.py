@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
+from .client import SatelClient
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
@@ -33,7 +34,6 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
 )
 from .coordinator import (
-    SatelClient,
     SatelConfigEntry,
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
@@ -154,7 +154,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
 
-    await client.async_setup()
+    await client.async_connect(
+        coordinator_zones.zones_update_callback,
+        coordinator_outputs.outputs_update_callback,
+        coordinator_partitions.partitions_update_callback,
+    )
 
     entry.runtime_data = SatelIntegraData(
         client=client,
