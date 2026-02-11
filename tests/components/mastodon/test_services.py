@@ -311,7 +311,7 @@ async def test_service_entry_availability(
 
     payload = {"status": "test toot"}
 
-    with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
@@ -320,9 +320,7 @@ async def test_service_entry_availability(
             return_response=False,
         )
 
-    with pytest.raises(
-        ServiceValidationError, match='Integration "mastodon" not found in registry'
-    ):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,

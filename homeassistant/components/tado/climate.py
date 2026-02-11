@@ -29,7 +29,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConfigEntry
 from .const import (
     CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
@@ -71,7 +70,7 @@ from .const import (
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode, generate_supported_fanmodes
 
