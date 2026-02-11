@@ -10,7 +10,6 @@ from .consts import (
     DUMMY_HEATER_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_SWITCHER_SENSORS_DEVICES,
-    DUMMY_SWITCHER_SENSORS_TOKEN_NEEDED_DEVICES,
     DUMMY_THERMOSTAT_DEVICE,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
@@ -70,7 +69,7 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
 
 
 @pytest.mark.parametrize(
-    "mock_bridge", [DUMMY_SWITCHER_SENSORS_TOKEN_NEEDED_DEVICES], indirect=True
+    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
 )
 async def test_sensor_platform_token_needed(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""

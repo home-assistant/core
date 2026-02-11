@@ -18,8 +18,8 @@ from .consts import (
     DUMMY_DEVICE_ID1,
     DUMMY_DEVICE_ID4,
     DUMMY_DEVICE_ID10,
+    DUMMY_HEATER_DEVICE,
     DUMMY_SWITCHER_DEVICES,
-    DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
 )
@@ -89,7 +89,9 @@ async def test_update_fail_token_needed(
     entry = await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
-    mock_bridge.mock_callbacks(DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES)
+    device = DUMMY_HEATER_DEVICE
+
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
     await hass.async_block_till_done()
 
     assert mock_bridge.is_running is True
@@ -99,35 +101,33 @@ async def test_update_fail_token_needed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    for device in DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES:
-        assert (
-            f"Device {device.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
-            in caplog.text
-        )
+    assert (
+        f"Device {device.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+        in caplog.text
+    )
 
-        entity_id = f"switch.{slugify(device.name)}"
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+    entity_id = f"switch.{slugify(device.name)}"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
-        entity_id = f"sensor.{slugify(device.name)}_power"
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+    entity_id = f"sensor.{slugify(device.name)}_power"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
-    mock_bridge.mock_callbacks(DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES)
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
     await hass.async_block_till_done()
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 2)
     )
     await hass.async_block_till_done()
 
-    for device in DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES:
-        entity_id = f"switch.{slugify(device.name)}"
-        state = hass.states.get(entity_id)
-        assert state.state != STATE_UNAVAILABLE
+    entity_id = f"switch.{slugify(device.name)}"
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
 
-        entity_id = f"sensor.{slugify(device.name)}_power"
-        state = hass.states.get(entity_id)
-        assert state.state != STATE_UNAVAILABLE
+    entity_id = f"sensor.{slugify(device.name)}_power"
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:
@@ -212,7 +212,7 @@ async def test_remove_device_token_needed(
     entry_id = entry.entry_id
     assert mock_bridge
 
-    mock_bridge.mock_callbacks(DUMMY_SWITCHER_TOKEN_NEEDED_DEVICES)
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
     await hass.async_block_till_done()
 
     assert mock_bridge.is_running is True
