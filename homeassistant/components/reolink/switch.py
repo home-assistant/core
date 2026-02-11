@@ -129,9 +129,10 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ptz_patrol",
+        cmd_key="64",
         translation_key="ptz_patrol",
         supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
-        value=lambda api, ch: None,
+        value=lambda api, ch: api.baichuan.ptz_patrol_cruising(ch),
         method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
     ),
     ReolinkSwitchEntityDescription(
