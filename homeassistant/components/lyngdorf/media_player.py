@@ -203,32 +203,27 @@ class MP60MainDevice(MP60Device):
     @property
     def _playing_video(self) -> bool:
         """Return whether video is playing."""
-        return (
-            self._receiver.video_information is not None
-            and len(self._receiver.video_information) > 0
+        return bool(
+            self._receiver.video_information
             and not self._receiver.video_information.startswith("No")
         )
 
     @property
     def _playing_audio(self) -> bool:
         """Return whether audio is playing."""
-        return (
-            self._receiver.audio_information is not None
-            and len(self._receiver.audio_information) > 0
+        return bool(
+            self._receiver.audio_information
             and not self._receiver.audio_information.startswith("No")
         )
 
     @property
     def media_content_type(self) -> MediaType | None:
         """Return the content type of the current media."""
-        if self.state == MediaPlayerState.PLAYING:
-            if (
-                self._receiver.video_information is not None
-                and len(self._receiver.video_information) > 0
-            ):
-                return MediaType.VIDEO
-            return MediaType.MUSIC
-        return None
+        if self.state != MediaPlayerState.PLAYING:
+            return None
+        if self._receiver.video_information:
+            return MediaType.VIDEO
+        return MediaType.MUSIC
 
     @property
     def source_list(self) -> list[str] | None:

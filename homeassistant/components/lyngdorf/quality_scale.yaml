@@ -58,12 +58,20 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single device per config entry.
-  entity-category: todo
+  entity-category:
+    status: exempt
+    comment: Media player entities do not need entity categories.
   entity-device-class: done
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are useful by default.
+  entity-translations:
+    status: exempt
+    comment: Media player entities use name attribute directly.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Media player uses default platform icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
