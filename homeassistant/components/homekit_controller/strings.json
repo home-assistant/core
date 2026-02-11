@@ -143,6 +143,9 @@
           "leader": "Leader",
           "router": "Router"
         }
+      },
+      "water_level": {
+        "name": "Water level"
       }
     }
   },
