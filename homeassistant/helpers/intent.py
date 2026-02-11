@@ -29,8 +29,8 @@ from homeassistant.util.hass_dict import HassKey
 from . import (
     area_registry,
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
     floor_registry,
 )
 from .deprecation import EnumWithDeprecatedMembers
@@ -367,9 +367,9 @@ class MatchTargetsCandidate:
 
     state: State
     is_exposed: bool
-    entity: entity_registry.RegistryEntry | None = None
+    entity: er.RegistryEntry | None = None
     area: area_registry.AreaEntry | None = None
-    device: device_registry.DeviceEntry | None = None
+    device: dr.DeviceEntry | None = None
     matched_name: str | None = None
 
 
@@ -491,7 +491,7 @@ def _filter_by_device_classes(
 
 def _add_areas(
     areas: area_registry.AreaRegistry,
-    devices: device_registry.DeviceRegistry,
+    devices: dr.DeviceRegistry,
     candidates: Iterable[MatchTargetsCandidate],
 ) -> None:
     """Add area and device entries to match candidates."""
@@ -581,9 +581,9 @@ def async_match_targets(  # noqa: C901
         return MatchTargetsResult(True, states=[c.state for c in candidates])
 
     # We need entity registry entries now
-    er = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for candidate in candidates:
-        candidate.entity = er.async_get(candidate.state.entity_id)
+        candidate.entity = ent_reg.async_get(candidate.state.entity_id)
 
     if constraints.name:
         # Filter by entity name or alias
@@ -614,8 +614,8 @@ def async_match_targets(  # noqa: C901
 
     if constraints.floor_name or constraints.area_name:
         ar = area_registry.async_get(hass)
-        dr = device_registry.async_get(hass)
-        _add_areas(ar, dr, candidates)
+        dev_reg = dr.async_get(hass)
+        _add_areas(ar, dev_reg, candidates)
         areas_added = True
 
         if constraints.floor_name:
@@ -678,8 +678,8 @@ def async_match_targets(  # noqa: C901
         # Check for duplicates
         if not areas_added:
             ar = area_registry.async_get(hass)
-            dr = device_registry.async_get(hass)
-            _add_areas(ar, dr, candidates)
+            dev_reg = dr.async_get(hass)
+            _add_areas(ar, dev_reg, candidates)
             areas_added = True
 
         sorted_candidates = sorted(
@@ -749,8 +749,8 @@ def async_match_targets(  # noqa: C901
 
         if not areas_added:
             ar = area_registry.async_get(hass)
-            dr = device_registry.async_get(hass)
-            _add_areas(ar, dr, candidates)
+            dev_reg = dr.async_get(hass)
+            _add_areas(ar, dev_reg, candidates)
             areas_added = True
 
         filtered_candidates: list[MatchTargetsCandidate] = candidates
