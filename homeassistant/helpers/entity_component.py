@@ -24,7 +24,11 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
@@ -320,9 +324,11 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             processed_conf = await conf_util.async_process_component_and_handle_errors(
                 self.hass, conf, integration, raise_on_failure=True
             )
-        except HomeAssistantError as err:
+        except ConfigValidationError as err:
             raise ServiceValidationError(
-                f"Failed to process configuration: {err}"
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
             ) from err
 
         if not skip_reset:

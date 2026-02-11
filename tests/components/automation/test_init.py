@@ -40,6 +40,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import (
+    ConfigValidationError,
     HomeAssistantError,
     ServiceValidationError,
     Unauthorized,
@@ -682,6 +683,8 @@ async def test_reload_config_handles_load_fails(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test the reload config service."""
+    # Set up the homeassistant integration to load translations
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -727,13 +730,22 @@ async def test_reload_config_handles_load_fails(
         ),
         patch(
             "homeassistant.config.async_process_component_and_handle_errors",
-            side_effect=HomeAssistantError("bla"),
+            side_effect=ConfigValidationError(
+                "config_schema_unknown_err",
+                [Exception("bla")],
+                translation_domain="homeassistant",
+                translation_placeholders={"domain": "bla", "error": "bla"},
+            ),
         ),
         pytest.raises(
-            ServiceValidationError, match="Failed to process configuration: bla"
-        ),
+            ServiceValidationError,
+            match="Unknown error calling bla CONFIG_SCHEMA - bla",
+        ) as exc_info,
     ):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == "config_schema_unknown_err"
+    assert exc_info.value.translation_placeholders == {"domain": "bla", "error": "bla"}
 
     assert hass.states.get("automation.hello") is not None
 
