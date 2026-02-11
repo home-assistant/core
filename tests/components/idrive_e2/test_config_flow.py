@@ -29,18 +29,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_aiohttp_session() -> Generator[AsyncMock]:
-    """Patch async_get_clientsession to return a mocked aiohttp session."""
-    mock_session = AsyncMock()
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        yield mock_session
-
-
-@pytest.fixture
-def mock_idrive_client(mock_aiohttp_session: AsyncMock) -> Generator[AsyncMock]:
+def mock_idrive_client() -> Generator[AsyncMock]:
     """Patch IDriveE2Client to return a mocked client."""
     mock_client = AsyncMock()
     mock_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
