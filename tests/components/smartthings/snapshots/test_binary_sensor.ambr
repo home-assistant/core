@@ -892,6 +892,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_second_cavity_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_oven_second_cavity_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second cavity status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second cavity status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cavity_status',
+    'unique_id': '199d7863-ad04-793d-176d-658f10062575_cavity-01_custom.ovenCavityStatus_ovenCavityStatus_ovenCavityStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_second_cavity_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen oven Second cavity status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_oven_second_cavity_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1038,6 +1087,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_second_cavity_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vulcan_second_cavity_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second cavity status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second cavity status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cavity_status',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_cavity-01_custom.ovenCavityStatus_ovenCavityStatus_ovenCavityStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_second_cavity_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vulcan Second cavity status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vulcan_second_cavity_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][binary_sensor.four_child_lock-entry]
