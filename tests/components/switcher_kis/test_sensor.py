@@ -56,7 +56,7 @@ DEVICE_SENSORS_TOKEN_NEEDED_TUPLE = (
 @pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_SENSORS_DEVICES], indirect=True)
 async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
-    entry = await init_integration(hass, USERNAME, TOKEN)
+    entry = await init_integration(hass)
     assert mock_bridge
 
     assert mock_bridge.is_running is True
@@ -69,7 +69,9 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
             assert state.state == str(getattr(device, field))
 
 
-@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_SENSORS_TOKEN_NEEDED_DEVICES], indirect=True)
+@pytest.mark.parametrize(
+    "mock_bridge", [DUMMY_SWITCHER_SENSORS_TOKEN_NEEDED_DEVICES], indirect=True
+)
 async def test_sensor_platform_token_needed(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
     entry = await init_integration(hass, USERNAME, TOKEN)
@@ -85,9 +87,7 @@ async def test_sensor_platform_token_needed(hass: HomeAssistant, mock_bridge) ->
             assert state.state == str(getattr(device, field))
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_sensor_update(
     hass: HomeAssistant, mock_bridge, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -110,9 +110,7 @@ async def test_sensor_update(
     assert state.state == "1431"
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
 async def test_sensor_update_token_needed(
     hass: HomeAssistant, mock_bridge, monkeypatch: pytest.MonkeyPatch
 ) -> None:
