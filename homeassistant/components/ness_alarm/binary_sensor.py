@@ -10,19 +10,12 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_ZONE_CHANGED, NessAlarmConfigEntry, ZoneChangedData
 from .const import (
-    CONF_ZONE_ID,
     CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
     SUBENTRY_TYPE_ZONE,
@@ -55,34 +48,11 @@ async def async_setup_entry(
                     zone_id=zone_num,
                     zone_type=zone_type,
                     entry_id=entry.entry_id,
-                    subentry=subentry,
                     zone_name=zone_name,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
         )
-
-
-async def async_setup_platform(  # pragma: no cover
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Ness Alarm binary sensor devices (deprecated YAML)."""
-    if not discovery_info:
-        return
-
-    configured_zones = discovery_info[CONF_ZONES]
-
-    async_add_entities(
-        NessZoneBinarySensor(
-            zone_id=zone_config[CONF_ZONE_ID],
-            name=zone_config[CONF_ZONE_NAME],
-            zone_type=zone_config[CONF_ZONE_TYPE],
-        )
-        for zone_config in configured_zones
-    )
 
 
 class NessZoneBinarySensor(BinarySensorEntity):
@@ -94,32 +64,19 @@ class NessZoneBinarySensor(BinarySensorEntity):
         self,
         zone_id: int,
         zone_type: BinarySensorDeviceClass,
-        entry_id: str | None = None,
-        subentry=None,
-        name: str | None = None,
+        entry_id: str,
         zone_name: str | None = None,
     ) -> None:
         """Initialize the binary_sensor."""
         self._zone_id = zone_id
         self._attr_device_class = zone_type
         self._attr_is_on = False
-
-        # Config entry setup (has unique_id and device)
-        if entry_id is not None:
-            self._attr_has_entity_name = True
-            self._attr_name = None
-            self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
-
-            # Create device info for this zone (makes it a separate device)
-            # Use zone_name if provided (from YAML import), otherwise default to "Zone {zone_id}"
-            device_name = zone_name or f"Zone {zone_id}"
-            self._attr_device_info = DeviceInfo(
-                name=device_name,
-                identifiers={(DOMAIN, self._attr_unique_id)},
-            )
-        else:  # pragma: no cover
-            # YAML setup (no unique_id, for backward compatibility)
-            self._attr_name = name
+        self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
+        self._attr_name = zone_name or f"Zone {zone_id}"
+        self._attr_device_info = DeviceInfo(
+            name=zone_name or f"Zone {zone_id}",
+            identifiers={(DOMAIN, self._attr_unique_id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

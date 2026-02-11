@@ -20,9 +20,14 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -42,7 +47,7 @@ from .const import (
     SERVICE_PANIC,
     SIGNAL_ARMING_STATE_CHANGED,
     SIGNAL_ZONE_CHANGED,
-    SUBENTRY_TYPE_HOME,
+    SUBENTRY_TYPE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,21 +148,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
 
     async_at_started(hass, _started)
 
-    # Ensure a "Home" subentry exists for the alarm panel
-    home_subentry_exists = any(
-        subentry.subentry_type == SUBENTRY_TYPE_HOME
+    # Auto-create alarm subentry if it doesn't exist
+    has_alarm_subentry = any(
+        subentry.subentry_type == SUBENTRY_TYPE_ALARM
         for subentry in entry.subentries.values()
     )
-
-    if not home_subentry_exists:
-        home_subentry = ConfigSubentry(
-            subentry_type=SUBENTRY_TYPE_HOME,
-            subentry_id="home_subentry",
-            unique_id=f"{SUBENTRY_TYPE_HOME}_main",
-            title="Home",
+    if not has_alarm_subentry:
+        alarm_subentry = ConfigSubentry(
             data=MappingProxyType({}),
+            subentry_type=SUBENTRY_TYPE_ALARM,
+            title="Alarm Panel",
+            unique_id=SUBENTRY_TYPE_ALARM,
         )
-        hass.config_entries.async_add_subentry(entry, home_subentry)
+        hass.config_entries.async_add_subentry(entry, alarm_subentry)
 
     # Forward to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -216,5 +219,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 context={"source": "import"},
                 data=config[DOMAIN],
             )
+        )
+
+        # Notify user that YAML config is deprecated
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2026.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Ness Alarm",
+            },
         )
     return True

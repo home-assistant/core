@@ -16,6 +16,7 @@ from homeassistant.components.ness_alarm.const import (
     DOMAIN,
     SERVICE_AUX,
     SERVICE_PANIC,
+    SUBENTRY_TYPE_ALARM,
     SUBENTRY_TYPE_ZONE,
 )
 from homeassistant.config_entries import ConfigSubentry
@@ -33,6 +34,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -57,6 +59,13 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
 
     # Alarm panel should be created
     assert hass.states.get("alarm_control_panel.alarm_panel")
+
+    # Alarm subentry should be auto-created
+    alarm_subentries = [
+        s for s in entry.subentries.values() if s.subentry_type == SUBENTRY_TYPE_ALARM
+    ]
+    assert len(alarm_subentries) == 1
+    assert alarm_subentries[0].title == "Alarm Panel"
 
     # Client keepalive and update should be called after startup
     assert mock_nessclient.keepalive.call_count == 1
@@ -517,8 +526,8 @@ async def test_entry_reload_on_update(hass: HomeAssistant, mock_nessclient) -> N
     hass.config_entries.async_add_subentry(entry, zone_subentry)
     await hass.async_block_till_done()
 
-    # Entry should have the new subentry
-    assert len(entry.subentries) == 2  # Home subentry + new zone
+    # Entry should have the alarm subentry (auto-created) + new zone subentry
+    assert len(entry.subentries) == 2
 
 
 async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
@@ -546,6 +555,14 @@ async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
         assert len(entries) == 1
         assert entries[0].data[CONF_HOST] == "192.168.1.100"
         assert entries[0].data[CONF_PORT] == 1992
+
+        # Check that a deprecation repair issue was created
+        issue_registry = ir.async_get(hass)
+        issue = issue_registry.async_get_issue(
+            "homeassistant", f"deprecated_yaml_{DOMAIN}"
+        )
+        assert issue is not None
+        assert issue.severity == "warning"
 
 
 class MockClient:

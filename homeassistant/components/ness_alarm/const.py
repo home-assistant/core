@@ -20,7 +20,7 @@ CONF_ZONE_ID = "id"
 CONF_ZONE_NUMBER = "zone_number"
 
 # Subentry types
-SUBENTRY_TYPE_HOME = "home"
+SUBENTRY_TYPE_ALARM = "alarm"
 SUBENTRY_TYPE_ZONE = "zone"
 
 # Defaults
