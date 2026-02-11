@@ -29,6 +29,21 @@
   },
   "entity": {
     "sensor": {
+      "smoke_detector_alarm_counter": {
+        "name": "Alarm counter"
+      },
+      "smoke_detector_dirt_level": {
+        "name": "Dirt level"
+      },
+      "smoke_detector_last_alarm": {
+        "name": "Last alarm"
+      },
+      "smoke_detector_last_test": {
+        "name": "Last test"
+      },
+      "smoke_detector_test_counter": {
+        "name": "Test counter"
+      },
       "tilt_state": {
         "state": {
           "neutral": "Neutral",
