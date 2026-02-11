@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -20,6 +20,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .const import TibberConfigEntry
+
 PRICE_SERVICE_NAME = "get_prices"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
@@ -33,7 +36,13 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 
 async def __get_prices(call: ServiceCall) -> ServiceResponse:
-    tibber_connection = call.hass.data[DOMAIN]
+    entries: list[TibberConfigEntry] = call.hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry",
+        )
+    tibber_connection = await entries[0].runtime_data.async_get_client(call.hass)
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")
@@ -57,7 +66,7 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
         selected_data = [
             price
             for price in price_data
-            if start <= dt.datetime.fromisoformat(price["start_time"]) < end
+            if start <= dt.datetime.fromisoformat(str(price["start_time"])) < end
         ]
         tibber_prices[home_nickname] = selected_data
 

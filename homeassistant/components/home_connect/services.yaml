@@ -15,7 +15,7 @@ set_program_and_options:
             - active_program
             - selected_program
     program:
-      example: dishcare_dishwasher_program_auto2
+      example: dishcare_dishwasher_program_auto_2
       selector:
         select:
           mode: dropdown
@@ -73,6 +73,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_intensiv_45
             - dishcare_dishwasher_program_auto_half_load
             - dishcare_dishwasher_program_intensiv_power
+            - dishcare_dishwasher_program_intensive_fixed_zone
             - dishcare_dishwasher_program_magic_daily
             - dishcare_dishwasher_program_super_60
             - dishcare_dishwasher_program_kurz_60
@@ -121,6 +122,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_pre_heating
             - cooking_oven_program_heating_mode_hot_air
             - cooking_oven_program_heating_mode_hot_air_eco
+            - cooking_oven_program_heating_mode_hot_air_gentle
             - cooking_oven_program_heating_mode_hot_air_grilling
             - cooking_oven_program_heating_mode_top_bottom_heating
             - cooking_oven_program_heating_mode_top_bottom_heating_eco
@@ -147,6 +149,7 @@ set_program_and_options:
             - cooking_oven_program_microwave_900_watt
             - cooking_oven_program_microwave_1000_watt
             - cooking_oven_program_microwave_max
+            - cooking_oven_program_steam_modes_steam
             - cooking_oven_program_heating_mode_warming_drawer
             - laundry_care_washer_program_auto_30
             - laundry_care_washer_program_auto_40
@@ -174,7 +177,7 @@ set_program_and_options:
             - laundry_care_washer_program_rinse_rinse_spin_drain
             - laundry_care_washer_program_sensitive
             - laundry_care_washer_program_shirts_blouses
-            - laundry_care_washer_program_spin_drain
+            - laundry_care_washer_program_spin_spin_drain
             - laundry_care_washer_program_sport_fitness
             - laundry_care_washer_program_super_153045_super_15
             - laundry_care_washer_program_super_153045_super_1530

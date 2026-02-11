@@ -19,6 +19,7 @@ CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_PROMPT = "prompt"
 CONF_REASONING_EFFORT = "reasoning_effort"
+CONF_REASONING_SUMMARY = "reasoning_summary"
 CONF_RECOMMENDED = "recommended"
 CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
@@ -33,9 +34,10 @@ CONF_WEB_SEARCH_TIMEZONE = "timezone"
 CONF_WEB_SEARCH_INLINE_CITATIONS = "inline_citations"
 RECOMMENDED_CODE_INTERPRETER = False
 RECOMMENDED_CHAT_MODEL = "gpt-4o-mini"
-RECOMMENDED_IMAGE_MODEL = "gpt-image-1"
+RECOMMENDED_IMAGE_MODEL = "gpt-image-1.5"
 RECOMMENDED_MAX_TOKENS = 3000
 RECOMMENDED_REASONING_EFFORT = "low"
+RECOMMENDED_REASONING_SUMMARY = "auto"
 RECOMMENDED_TEMPERATURE = 1.0
 RECOMMENDED_TOP_P = 1.0
 RECOMMENDED_VERBOSITY = "medium"
@@ -89,6 +91,8 @@ UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS: list[str] = [
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4o",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
     "gpt-5-mini",
     "gpt-5-nano",
 ]

@@ -53,6 +53,7 @@ homeassistant.components.air_quality.*
 homeassistant.components.airgradient.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
+homeassistant.components.airobot.*
 homeassistant.components.airos.*
 homeassistant.components.airq.*
 homeassistant.components.airthings.*
@@ -220,6 +221,7 @@ homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
+homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*
 homeassistant.components.glances.*
@@ -285,6 +287,7 @@ homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
+homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
@@ -375,6 +378,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.nrgkick.*
 homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
@@ -387,6 +391,7 @@ homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
+homeassistant.components.openevse.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
@@ -407,6 +412,7 @@ homeassistant.components.person.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.pooldose.*
 homeassistant.components.portainer.*
 homeassistant.components.powerfox.*
 homeassistant.components.powerwall.*
@@ -431,6 +437,7 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.redgtech.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
 homeassistant.components.remote_calendar.*
@@ -454,6 +461,7 @@ homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
+homeassistant.components.saunum.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*
