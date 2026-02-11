@@ -11,7 +11,7 @@
   "single_config_entry": true,
   "usb": [
     {
-      "description": "*USB 300*",
+      "description": "*usb 300*",
       "manufacturer": "*enocean*",
       "pid": "6001",
       "vid": "0403"
