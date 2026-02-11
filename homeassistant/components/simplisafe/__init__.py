@@ -473,7 +473,6 @@ class SimpliSafe:
         task = self._websocket_task
 
         if task and not task.done():
-            LOGGER.debug("Websocket loop already running")
             return
 
         LOGGER.debug("Starting websocket loop task")
@@ -659,7 +658,5 @@ class SimpliSafe:
             # Any other SimplipyError not caught per-system
             raise UpdateFailed(f"SimpliSafe error while updating: {err}") from err
         else:
-            # Restart websocket only if last update failed
-            if self.coordinator and not self.coordinator.last_update_success:
-                if not self._websocket_task or self._websocket_task.done():
-                    self._async_start_websocket_if_needed()
+            # Successful update, try to restart websocket if necessary
+            self._async_start_websocket_if_needed()
