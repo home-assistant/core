@@ -73,20 +73,6 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.mute_enabled = False
         receiver.audio_information = None
         receiver.video_information = None
-        receiver.audio_input = None
-        receiver.video_input = None
-        receiver.streaming_source = None
-        receiver.room_perfect_position = None
-        receiver.available_room_perfect_positions = []
-        receiver.voicing = None
-        receiver.available_voicings = []
-        receiver.lipsync = None
-        receiver.trim_bass = None
-        receiver.trim_treble = None
-        receiver.trim_centre = None
-        receiver.trim_height = None
-        receiver.trim_lfe = None
-        receiver.trim_surround = None
         receiver.source = None
         receiver.available_sources = []
         receiver.sound_mode = None
@@ -100,8 +86,6 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.zone_b_mute_enabled = False
         receiver.zone_b_source = None
         receiver.zone_b_available_sources = []
-        receiver.zone_b_audio_input = None
-        receiver.zone_b_streaming_source = None
         receiver.zone_b_volume_up = MagicMock()
         receiver.zone_b_volume_down = MagicMock()
 
