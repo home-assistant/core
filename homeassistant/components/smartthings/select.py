@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
-from .entity import SmartThingsEntity
+from .entity import SmartThingsEntity, SmartThingsFsvEntity
 
 LAMP_TO_HA = {
     "extraHigh": "extra_high",
@@ -228,9 +228,7 @@ async def async_setup_entry(
     ]
     # Add FSV select entities
     entities.extend(
-        SmartThingsFsvSelect(
-            entry_data.client, device, component, fsv_setting, description
-        )
+        SmartThingsFsvSelect(entry_data.client, device, component, description)
         for device in entry_data.devices.values()
         for component in device.status
         if Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[component]
@@ -485,7 +483,7 @@ FSV_SELECT_DESCRIPTIONS: dict[str, SmartThingsFsvSelectEntityDescription] = {
 }
 
 
-class SmartThingsFsvSelect(SmartThingsEntity, SelectEntity):
+class SmartThingsFsvSelect(SmartThingsFsvEntity, SelectEntity):
     """Define a SmartThings FSV select."""
 
     entity_description: SmartThingsFsvSelectEntityDescription
@@ -495,19 +493,16 @@ class SmartThingsFsvSelect(SmartThingsEntity, SelectEntity):
         client: SmartThings,
         device: FullDevice,
         component: str,
-        fsv_setting: dict,
         description: SmartThingsFsvSelectEntityDescription,
     ) -> None:
         """Initialize the FSV select."""
         super().__init__(
             client,
             device,
-            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
             component=component,
+            fsv_id=description.fsv_id,
         )
         self.entity_description = description
-        self._fsv_id = description.fsv_id
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{self._fsv_id}"
         self._attr_options = [
             str(i + description.options_offset) for i in range(description.num_options)
         ]
@@ -520,22 +515,6 @@ class SmartThingsFsvSelect(SmartThingsEntity, SelectEntity):
             return None
         return str(value)
 
-    def _get_fsv_value(self) -> int | None:
-        """Get the current FSV setting value."""
-        fsv_settings = self.get_attribute_value(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
-        )
-        if fsv_settings:
-            for setting in fsv_settings:
-                if setting.get("id") == self._fsv_id:
-                    return int(setting["value"])
-        return None
-
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        value = int(option)
-        await self.execute_device_command(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
-            Command.SET_VALUE,
-            [self._fsv_id, value],
-        )
+        await self._async_set_fsv_value(int(option))

@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
-from .entity import SmartThingsEntity
+from .entity import SmartThingsEntity, SmartThingsFsvEntity
 from .util import deprecate_entity
 
 CAPABILITIES = (
@@ -248,9 +248,7 @@ async def async_setup_entry(
             )
     # Add FSV switch entities
     entities.extend(
-        SmartThingsFsvSwitch(
-            entry_data.client, device, component, fsv_setting, description
-        )
+        SmartThingsFsvSwitch(entry_data.client, device, component, description)
         for device in entry_data.devices.values()
         for component in device.status
         if Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[component]
@@ -415,7 +413,7 @@ FSV_SWITCH_DESCRIPTIONS: dict[str, SmartThingsFsvSwitchEntityDescription] = {
 }
 
 
-class SmartThingsFsvSwitch(SmartThingsEntity, SwitchEntity):
+class SmartThingsFsvSwitch(SmartThingsFsvEntity, SwitchEntity):
     """Define a SmartThings FSV switch."""
 
     entity_description: SmartThingsFsvSwitchEntityDescription
@@ -425,19 +423,16 @@ class SmartThingsFsvSwitch(SmartThingsEntity, SwitchEntity):
         client: SmartThings,
         device: FullDevice,
         component: str,
-        fsv_setting: dict,
         description: SmartThingsFsvSwitchEntityDescription,
     ) -> None:
         """Initialize the FSV switch."""
         super().__init__(
             client,
             device,
-            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
             component=component,
+            fsv_id=description.fsv_id,
         )
         self.entity_description = description
-        self._fsv_id = description.fsv_id
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{self._fsv_id}"
 
     @property
     def is_on(self) -> bool | None:
@@ -447,29 +442,10 @@ class SmartThingsFsvSwitch(SmartThingsEntity, SwitchEntity):
             return None
         return value == 1
 
-    def _get_fsv_value(self) -> int | None:
-        """Get the current FSV setting value."""
-        fsv_settings = self.get_attribute_value(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
-        )
-        if fsv_settings:
-            for setting in fsv_settings:
-                if setting.get("id") == self._fsv_id:
-                    return int(setting["value"])
-        return None
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the FSV setting on (set value to 1)."""
-        await self.execute_device_command(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
-            Command.SET_VALUE,
-            [self._fsv_id, 1],
-        )
+        await self._async_set_fsv_value(1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the FSV setting off (set value to 0)."""
-        await self.execute_device_command(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
-            Command.SET_VALUE,
-            [self._fsv_id, 0],
-        )
+        await self._async_set_fsv_value(0)

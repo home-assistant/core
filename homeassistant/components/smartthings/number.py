@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN, UNIT_MAP
-from .entity import SmartThingsEntity
+from .entity import SmartThingsEntity, SmartThingsFsvEntity
 
 
 class FsvSettingProperty(StrEnum):
@@ -494,7 +494,7 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         )
 
 
-class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
+class SmartThingsFsvSettings(SmartThingsFsvEntity, NumberEntity):
     """Define a SmartThings FSV setting number."""
 
     entity_description: SmartThingsFsvEntityDescription
@@ -511,12 +511,10 @@ class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
         super().__init__(
             client,
             device,
-            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
             component=component,
+            fsv_id=description.fsv_id,
         )
         self.entity_description = description
-        self._fsv_id = description.fsv_id
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{self._fsv_id}"
 
         if (
             description.is_temperature_type
@@ -534,19 +532,8 @@ class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
     @property
     def native_value(self) -> int | None:
         """Return the current value."""
-        fsv_settings = self.get_attribute_value(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
-        )
-        if fsv_settings:
-            for setting in fsv_settings:
-                if setting.get(FsvSettingProperty.ID) == self._fsv_id:
-                    return int(setting[FsvSettingProperty.VALUE])
-        return None
+        return self._get_fsv_value()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
-        await self.execute_device_command(
-            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
-            Command.SET_VALUE,
-            [self._fsv_id, int(value)],
-        )
+        await self._async_set_fsv_value(int(value))
