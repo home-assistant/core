@@ -96,12 +96,11 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
         # Learn min/max rotation if different from action limits
         action = self._dest.action(ACTION_DESC.SlatRotate)
-        if action is not None:
-            rotation = action["rotation"]
-            if rotation and rotation not in (action.minValue, action.maxValue):
-                self._attr_native_value = self._value_func(
-                    self._attr_native_value, rotation
-                )
+        rotation = action["rotation"]
+        if rotation and rotation not in (action.minValue, action.maxValue):
+            self._attr_native_value = self._value_func(
+                self._attr_native_value, rotation
+            )
 
     @property
     def native_min_value(self) -> float:

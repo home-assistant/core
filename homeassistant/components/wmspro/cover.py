@@ -67,7 +67,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         action = self._dest.action(self._drive_action_desc)
-        if action is None or action["percentage"] is None:
+        if action["percentage"] is None:
             return None
         return 100 - action["percentage"]
 
@@ -170,7 +170,7 @@ class WebControlProSlatRotate(WebControlProSlat):
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        if action is None or action["rotation"] is None:
+        if action["rotation"] is None:
             return None
         return 100 - ranged_value_to_percentage(
             (self._min_rotation, self._max_rotation),
