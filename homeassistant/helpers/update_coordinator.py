@@ -27,7 +27,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
 )
 from homeassistant.util.dt import utcnow
 
@@ -356,15 +355,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             await self._async_setup()
 
-        except (
-            OAuth2TokenRequestError,
-        ) as err:
+        except OAuth2TokenRequestError as err:
+            self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
-                self.last_exception = err
                 self.last_update_success = False
                 # Non-recoverable error
                 raise ConfigEntryAuthFailed from err
-            raise
 
         except (
             TimeoutError,
@@ -436,9 +432,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
-        except (
-            OAuth2TokenRequestError,
-        ) as err:
+        except (OAuth2TokenRequestError,) as err:
             self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
                 # Non-recoverable error

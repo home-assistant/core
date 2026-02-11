@@ -397,6 +397,37 @@ async def test_token_request_setup_errors(
     assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
 
 
+async def test_token_request_setup_non_reauth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test non-reauth OAuth2 token request error in setup, raise ConfigEntryNotReady."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing, duh"
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+    oauth_exception = OAuth2TokenRequestError(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.setup_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    # Ensure the last_update_success is False, so it raise a ConfigEntryNotReady
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, OAuth2TokenRequestError)
+
+
 async def test_refresh_no_update_method(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
