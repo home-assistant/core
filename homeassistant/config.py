@@ -899,7 +899,7 @@ async def async_process_component_and_handle_errors(
         hass, config, integration
     )
     async_handle_component_errors(
-        hass, integration_config_info, integration, raise_on_failure=raise_on_failure
+        hass, integration_config_info, integration, raise_on_failure
     )
     return async_drop_config_annotations(integration_config_info, integration)
 
