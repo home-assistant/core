@@ -34,6 +34,7 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the OAuth2 flow."""
+
         access_token = data["token"]["access_token"]
         user_id = WattsVisionAuth.extract_user_id_from_token(access_token)
 
