@@ -368,7 +368,7 @@ async def test_append_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -385,7 +385,7 @@ async def test_append_sheet_invalid_config_entry(
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -427,7 +427,7 @@ async def test_get_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHEET,
