@@ -52,12 +52,8 @@ class BSBLanButtonEntity(BSBLanEntity, ButtonEntity):
         super().__init__(coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
-        self._client = data.client
+        self._data = data
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        if self.entity_description.key == "sync_time":
-            device_name = "Unknown"
-            if self._attr_device_info:
-                device_name = str(self._attr_device_info.get("name", "Unknown"))
-            await async_sync_device_time(self._client, device_name)
+        await async_sync_device_time(self._data.client, self._data.device.name)
