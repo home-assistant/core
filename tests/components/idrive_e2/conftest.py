@@ -45,7 +45,7 @@ def agent_backup(request: pytest.FixtureRequest) -> AgentBackup:
 def mock_client(agent_backup: AgentBackup) -> Generator[AsyncMock]:
     """Mock the IDrive e2 client."""
     with patch(
-        "aiobotocore.session.AioSession.create_client",
+        "homeassistant.components.idrive_e2.AioSession.create_client",
         autospec=True,
         return_value=AsyncMock(),
     ) as create_client:
