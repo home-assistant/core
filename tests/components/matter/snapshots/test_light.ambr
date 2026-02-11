@@ -36,8 +36,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -115,8 +115,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -393,8 +393,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -568,8 +568,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -630,8 +630,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -701,8 +701,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 32>,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -768,8 +768,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterLight-6-0',
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-MatterLight-6-0',
     'unit_of_measurement': None,
   })
 # ---
