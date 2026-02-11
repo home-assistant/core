@@ -84,8 +84,12 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
                     },
                 )
-            return self.async_abort(reason="connection_aborted")
-        errors["base"] = "press_the_button"
+            if self.source == "reauth":
+                errors["base"] = "connection_aborted"
+            else:
+                return self.async_abort(reason="connection_aborted")
+        else:
+            errors["base"] = "press_the_button"
 
         return self.async_show_form(step_id="link", errors=errors)
 
