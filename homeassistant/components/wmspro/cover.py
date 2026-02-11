@@ -141,7 +141,7 @@ class WebControlProSlatRotate(WebControlProSlat):
     _tilt_action_desc = ACTION_DESC.SlatRotate
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover and tilt like the hub."""
+        """Open the cover and tilt to minimum like the WMS WebControl pro."""
         action_drive = self._dest.action(self._drive_action_desc)
         action_list = action_drive.prep(percentage=0)
         action_tilt = self._dest.action(self._tilt_action_desc)
@@ -149,7 +149,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         await action_list()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover and tilt to closed."""
+        """Close the cover and tilt to maximum like the WMS WebControl pro."""
         action_drive = self._dest.action(self._drive_action_desc)
         action_list = action_drive.prep(percentage=100)
         action_tilt = self._dest.action(self._tilt_action_desc)
@@ -157,7 +157,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         await action_list()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Move the cover to a specific position and eventually tilt."""
+        """Move the cover to a specific position and tilt for open/close."""
         target_position = kwargs[ATTR_POSITION]
         if target_position == 0:
             await self.async_close_cover()
