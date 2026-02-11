@@ -1,4 +1,71 @@
 # serializer version: 1
+# name: test_info_skill_service
+  _Call(
+    tuple(
+      dict({
+        'account_name': 'Echo Test',
+        'capabilities': list([
+          'AUDIO_PLAYER',
+          'MICROPHONE',
+        ]),
+        'device_cluster_members': list([
+          'echo_test_serial_number',
+        ]),
+        'device_family': 'mine',
+        'device_owner_customer_id': 'amazon_ower_id',
+        'device_type': 'echo',
+        'endpoint_id': 'G1234567890123456789012345678A',
+        'entity_id': '11111111-2222-3333-4444-555555555555',
+        'household_device': False,
+        'notifications': dict({
+          'Alarm': dict({
+            'label': 'Morning Alarm',
+            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
+            'status': 'ON',
+            'type': 'Alarm',
+          }),
+          'Reminder': dict({
+            'label': 'Take out the trash',
+            'next_occurrence': None,
+            'status': 'ON',
+            'type': 'Reminder',
+          }),
+          'Timer': dict({
+            'label': '',
+            'next_occurrence': None,
+            'status': 'OFF',
+            'type': 'Timer',
+          }),
+        }),
+        'notifications_supported': True,
+        'online': True,
+        'sensors': dict({
+          'dnd': dict({
+            'error': False,
+            'error_msg': None,
+            'error_type': None,
+            'name': 'dnd',
+            'scale': None,
+            'value': False,
+          }),
+          'temperature': dict({
+            'error': False,
+            'error_msg': None,
+            'error_type': None,
+            'name': 'temperature',
+            'scale': 'CELSIUS',
+            'value': '22.5',
+          }),
+        }),
+        'serial_number': 'echo_test_serial_number',
+        'software_version': 'echo_test_software_version',
+      }),
+      'tell_joke',
+    ),
+    dict({
+    }),
+  )
+# ---
 # name: test_send_sound_service
   _Call(
     tuple(
