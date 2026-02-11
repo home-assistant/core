@@ -437,8 +437,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.last_update_success = False
 
         except (
-            OAuth2TokenRequestReauthError,
-            OAuth2TokenRequestTransientError,
             OAuth2TokenRequestError,
         ) as err:
             self.last_exception = err
