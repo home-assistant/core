@@ -3141,6 +3141,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "intelliclima": {
+      "name": "IntelliClima",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "intellifire": {
       "name": "IntelliFire",
       "integration_type": "device",
