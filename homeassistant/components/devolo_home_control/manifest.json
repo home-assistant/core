@@ -8,6 +8,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["HomeControl", "Mydevolo", "MprmRest", "MprmWebsocket", "Mprm"],
+  "quality_scale": "silver",
   "requirements": ["devolo-home-control-api==0.19.0"],
   "zeroconf": ["_dvl-deviceapi._tcp.local."]
 }
