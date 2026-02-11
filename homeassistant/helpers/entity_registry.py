@@ -414,7 +414,7 @@ class RegistryEntry:
 
 
 @callback
-def _async_get_full_entity_name(
+def _async_get_full_entity_name_generic(
     hass: HomeAssistant,
     *,
     device_id: str | None,
@@ -427,6 +427,7 @@ def _async_get_full_entity_name(
     """Get full name for an entity.
 
     This includes the device name if appropriate.
+    Used for both full entity name and entity ID.
     """
     use_device = False
     if name is None:
@@ -454,6 +455,26 @@ def _async_get_full_entity_name(
         return fallback
 
     return name
+
+
+@callback
+def async_get_full_entity_name(
+    hass: HomeAssistant,
+    entry: RegistryEntry,
+    original_name: str | None | UndefinedType = UNDEFINED,
+) -> str:
+    """Get full entity name for an entry."""
+    original_name = (
+        original_name if original_name is not UNDEFINED else entry.original_name
+    )
+    return _async_get_full_entity_name_generic(
+        hass,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        original_name=original_name,
+    )
 
 
 @attr.s(frozen=True, slots=True)
@@ -1014,7 +1035,7 @@ class EntityRegistry(BaseRegistry):
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
-        object_id = _async_get_full_entity_name(
+        object_id = _async_get_full_entity_name_generic(
             self.hass,
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
@@ -1053,25 +1074,6 @@ class EntityRegistry(BaseRegistry):
             reserved_entity_ids=reserved_entity_ids,
             suggested_object_id=entry.suggested_object_id,
             unique_id=entry.unique_id,
-        )
-
-    @callback
-    def async_generate_full_name(
-        self,
-        entry: RegistryEntry,
-        original_name: str | None | UndefinedType = UNDEFINED,
-    ) -> str:
-        """Generate a friendly name for an entry."""
-        original_name = (
-            original_name if original_name is not UNDEFINED else entry.original_name
-        )
-        return _async_get_full_entity_name(
-            self.hass,
-            device_id=entry.device_id,
-            fallback="",
-            has_entity_name=entry.has_entity_name,
-            name=entry.name,
-            original_name=original_name,
         )
 
     @callback
