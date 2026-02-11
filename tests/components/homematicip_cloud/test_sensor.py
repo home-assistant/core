@@ -904,7 +904,9 @@ async def test_hmip_smoke_detector_dirt_level(
 
 
 async def test_hmip_smoke_detector_alarm_counter(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HomematicipSmokeDetectorAlarmCounter."""
     entity_id = "sensor.rauchwarnmelder_smoke_alarm_counter"
@@ -912,7 +914,6 @@ async def test_hmip_smoke_detector_alarm_counter(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -940,7 +941,9 @@ async def test_hmip_smoke_detector_alarm_counter(
 
 
 async def test_hmip_smoke_detector_test_counter(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test HomematicipSmokeDetectorTestCounter."""
     entity_id = "sensor.rauchwarnmelder_smoke_test_counter"
@@ -948,7 +951,6 @@ async def test_hmip_smoke_detector_test_counter(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
