@@ -1837,7 +1837,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="color_mode",
-                    return_type=["ColorMode"],
+                    return_type=["ColorMode", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(

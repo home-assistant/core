@@ -779,7 +779,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
-    _attr_color_mode: ColorMode = ColorMode.UNKNOWN
+    _attr_color_mode: ColorMode | None = None
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
@@ -801,7 +801,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_brightness
 
     @cached_property
-    def color_mode(self) -> ColorMode:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         return self._attr_color_mode
 
@@ -952,8 +952,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __validate_color_mode(
         self,
-        color_mode: ColorMode | str | None,
-        supported_color_modes: set[ColorMode] | set[str],
+        color_mode: ColorMode | None,
+        supported_color_modes: set[ColorMode],
         effect: str | None,
     ) -> None:
         """Validate the color mode."""
@@ -966,23 +966,10 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # color modes
             if color_mode in supported_color_modes:
                 return
-            # Warning added in 2024.3, reject in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) set to unsupported color mode %s, expected one of %s, "
-                        "this will stop working in Home Assistant Core 2025.3, "
-                        "please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    color_mode,
-                    supported_color_modes,
-                    report_issue,
-                )
-            return
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) set to unsupported color mode "
+                f"{color_mode}, expected one of {supported_color_modes}"
+            )
 
         # When an effect is active, the color mode should indicate what adjustments are
         # supported by the effect. To make this possible, we allow the light to set its
@@ -995,49 +982,24 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if color_mode in effect_color_modes:
             return
 
-        # Warning added in 2024.3, reject in 2025.3
-        if not self.__color_mode_reported and self.__should_report_light_issue():
-            self.__color_mode_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                (
-                    "%s (%s) set to unsupported color mode %s when rendering an effect,"
-                    " expected one of %s, this will stop working in Home Assistant "
-                    "Core 2025.3, please %s"
-                ),
-                self.entity_id,
-                type(self),
-                color_mode,
-                effect_color_modes,
-                report_issue,
-            )
-        return
+        raise HomeAssistantError(
+            f"{self.entity_id} ({type(self)}) set to unsupported color mode "
+            f"{color_mode} when rendering an effect, expected one "
+            f"of {effect_color_modes}"
+        )
 
     def __validate_supported_color_modes(
         self,
         supported_color_modes: set[ColorMode],
     ) -> None:
         """Validate the supported color modes."""
-        if self.__color_mode_reported:
-            return
-
         try:
             valid_supported_color_modes(supported_color_modes)
-        except vol.Error:
-            # Warning added in 2024.3, reject in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) sets invalid supported color modes %s, this will stop "
-                        "working in Home Assistant Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    supported_color_modes,
-                    report_issue,
-                )
+        except vol.Error as err:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) sets invalid supported color modes "
+                f"{supported_color_modes}"
+            ) from err
 
     @final
     @property
@@ -1052,12 +1014,16 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
+        if _is_on and color_mode is None:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) does not report a color mode"
+            )
 
-        effect: str | None
+        effect: str | None = None
         if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT] = effect = self.effect if _is_on else None
-        else:
-            effect = None
+            if _is_on:
+                effect = self.effect
+            data[ATTR_EFFECT] = effect
 
         self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
 

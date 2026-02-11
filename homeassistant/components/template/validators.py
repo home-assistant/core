@@ -263,7 +263,7 @@ def list_of_strings(
 def item_in_list[T](
     entity: Entity,
     attribute: str,
-    items: list[Any] | None,
+    items: list[Any] | str | None,
     items_attribute: str | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
@@ -280,7 +280,12 @@ def item_in_list[T](
         # items may be mutable based on another template field. Always
         # perform this check when the items come from an configured
         # attribute.
-        if items is None or (len(items) == 0):
+        if isinstance(items, str):
+            _items = getattr(entity, items)
+        else:
+            _items = items
+
+        if _items is None or (len(_items) == 0):
             if items_attribute:
                 log_validation_result_error(
                     entity,
@@ -291,15 +296,68 @@ def item_in_list[T](
 
             return None
 
-        if result not in items:
+        if result not in _items:
             log_validation_result_error(
                 entity,
                 attribute,
                 result,
-                tuple(str(v) for v in items),
+                tuple(str(v) for v in _items),
             )
             return None
 
         return result
+
+    return convert
+
+
+def url(
+    entity: Entity,
+    attribute: str,
+    **kwargs: Any,
+) -> Callable[[Any], str | None]:
+    """Convert the result to a string url or None."""
+
+    def convert(result: Any) -> str | None:
+        if check_result_for_none(result, **kwargs):
+            return None
+
+        try:
+            return cv.url(result)
+        except vol.Invalid:
+            log_validation_result_error(
+                entity,
+                attribute,
+                result,
+                "expected a url",
+            )
+            return None
+
+    return convert
+
+
+def string(
+    entity: Entity,
+    attribute: str,
+    **kwargs: Any,
+) -> Callable[[Any], str | None]:
+    """Convert the result to a string or None."""
+
+    def convert(result: Any) -> str | None:
+        if check_result_for_none(result, **kwargs):
+            return None
+
+        if isinstance(result, str):
+            return result
+
+        try:
+            return cv.string(result)
+        except vol.Invalid:
+            log_validation_result_error(
+                entity,
+                attribute,
+                result,
+                "expected a string",
+            )
+            return None
 
     return convert
