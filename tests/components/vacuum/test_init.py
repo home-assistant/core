@@ -370,20 +370,27 @@ async def test_clean_area_methods_not_implemented(hass: HomeAssistant) -> None:
         await mock_vacuum.async_clean_segments(["seg_1"])
 
 
-async def test_clean_area_no_registry_entry(caplog: pytest.LogCaptureFixture) -> None:
+async def test_clean_area_no_registry_entry() -> None:
     """Test error handling when registry entry is not set."""
     mock_vacuum = MockVacuumWithCleanArea(name="Testing", entity_id="vacuum.testing")
 
-    assert mock_vacuum.last_seen_segments is None
-    assert "Cannot access last_seen_segments, registry entry is not set" in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot access last_seen_segments, registry entry is not set",
+    ):
+        mock_vacuum.last_seen_segments  # noqa: B018
 
-    caplog.clear()
-    await mock_vacuum.async_internal_clean_area(["area_1"])
-    assert "Cannot perform area clean, registry entry is not set" in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot perform area clean, registry entry is not set",
+    ):
+        await mock_vacuum.async_internal_clean_area(["area_1"])
 
-    caplog.clear()
-    mock_vacuum.async_create_segments_issue()
-    assert "Cannot create segments issue, registry entry is not set" in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match="Cannot create segments issue, registry entry is not set",
+    ):
+        mock_vacuum.async_create_segments_issue()
 
 
 @pytest.mark.usefixtures("config_flow_fixture")

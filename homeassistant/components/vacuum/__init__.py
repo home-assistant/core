@@ -401,11 +401,10 @@ class StateVacuumEntity(
         by the vacuum and create a repair issue.
         """
         if self.registry_entry is None:
-            _LOGGER.error(
-                "Cannot access last_seen_segments, registry entry is not set for %s",
-                self.entity_id,
+            raise RuntimeError(
+                "Cannot access last_seen_segments, registry entry is not set for"
+                f" {self.entity_id}"
             )
-            return None
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         last_seen_segments = options.get("last_seen_segments")
@@ -424,11 +423,10 @@ class StateVacuumEntity(
         Calls async_clean_segments.
         """
         if self.registry_entry is None:
-            _LOGGER.error(
-                "Cannot perform area clean, registry entry is not set for %s",
-                self.entity_id,
+            raise RuntimeError(
+                "Cannot perform area clean, registry entry is not set for"
+                f" {self.entity_id}"
             )
-            return
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
@@ -470,11 +468,10 @@ class StateVacuumEntity(
         will handle the fix by showing the segment mapping dialog.
         """
         if self.registry_entry is None:
-            _LOGGER.error(
-                "Cannot create segments issue, registry entry is not set for %s",
-                self.entity_id,
+            raise RuntimeError(
+                "Cannot create segments issue, registry entry is not set for"
+                f" {self.entity_id}"
             )
-            return
 
         issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
         ir.async_create_issue(
