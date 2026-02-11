@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
+import threading
 from typing import Any
 
 from blinkpy.auth import UnauthorizedError
@@ -227,8 +229,27 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 _LOGGER.error("Unable to start stream for %s", self._camera.name)
                 return None
 
+            def executor_job(livestream, ready):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(livestream.auth())
+                ready.set()
+                loop.run_until_complete(
+                    asyncio.gather(livestream.recv(), livestream.send())
+                )
+
+            ready = threading.Event()
+
+            task = self.hass.async_add_executor_job(executor_job, livestream, ready)
+            if task:
+                task.add_done_callback(self.async_stream_done_callback)
+
+            await self.hass.async_add_executor_job(ready.wait, 10)
+
             name = f"livestream-{self._camera.serial}"
-            task = self.hass.async_create_task(target=livestream.feed(), name=name)
+            task = self.hass.async_create_background_task(
+                target=livestream.poll(), name=name, eager_start=False
+            )
             if task:
                 _LOGGER.debug("%s started streaming", self._camera.name)
                 task.add_done_callback(self.async_stream_done_callback)
