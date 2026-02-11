@@ -79,7 +79,10 @@ async def async_setup_entry(
 
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
-        elif coordinator.data.device_type.category in [DeviceCategory.WATER_HEATER, DeviceCategory.HEATER]:
+        elif coordinator.data.device_type.category in [
+            DeviceCategory.WATER_HEATER,
+            DeviceCategory.HEATER,
+        ]:
             entities.append(SwitcherHeaterSwitchEntity(coordinator))
         elif coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,

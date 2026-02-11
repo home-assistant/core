@@ -100,7 +100,10 @@ async def async_setup_entry(
                 SwitcherSensorEntity(coordinator, description)
                 for description in POWER_PLUG_SENSORS
             )
-        elif coordinator.data.device_type.category in [DeviceCategory.WATER_HEATER, DeviceCategory.HEATER]:
+        elif coordinator.data.device_type.category in [
+            DeviceCategory.WATER_HEATER,
+            DeviceCategory.HEATER,
+        ]:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in HEATER_SENSORS
