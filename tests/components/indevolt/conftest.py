@@ -1,11 +1,17 @@
 """Setup the Indevolt test environment."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.indevolt.const import DOMAIN
+from homeassistant.components.indevolt.const import (
+    CONF_GENERATION,
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -21,13 +27,11 @@ DEVICE_MAPPING = {
     1: {
         "device": "BK1600",
         "generation": 1,
-        "fixture": "gen_1.json",
         "sn": TEST_DEVICE_SN_GEN1,
     },
     2: {
         "device": "CMS-SF2000",
         "generation": 2,
-        "fixture": "gen_2.json",
         "sn": TEST_DEVICE_SN_GEN2,
     },
 }
@@ -36,25 +40,31 @@ DEVICE_MAPPING = {
 @pytest.fixture
 def generation(request: pytest.FixtureRequest) -> int:
     """Return the device generation."""
-    return request.param
+    return getattr(request, "param", 2)
 
 
 @pytest.fixture
-def mock_config_entry(generation: int) -> MockConfigEntry:
+def entry_data(generation: int) -> dict[str, Any]:
+    """Return the config entry data based on generation."""
+    device_info = DEVICE_MAPPING[generation]
+    return {
+        CONF_HOST: TEST_HOST,
+        CONF_SERIAL_NUMBER: device_info["sn"],
+        CONF_MODEL: device_info["device"],
+        CONF_GENERATION: device_info["generation"],
+    }
+
+
+@pytest.fixture
+def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfigEntry:
     """Return the default mocked config entry."""
     device_info = DEVICE_MAPPING[generation]
     return MockConfigEntry(
         domain=DOMAIN,
         title=f"{device_info['device']} ({TEST_HOST})",
         version=1,
-        entry_id=f"indevolt_test_gen{generation}",
-        data={
-            "host": TEST_HOST,
-            "sn": device_info["sn"],
-            "device_model": device_info["device"],
-            "generation": device_info["generation"],
-        },
-        source="user",
+        entry_id=f"{DOMAIN}_{device_info['device'].lower()}_gen{generation}",
+        data=entry_data,
         unique_id=device_info["sn"],
     )
 
@@ -63,7 +73,7 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
 def mock_indevolt(generation: int) -> Generator[AsyncMock]:
     """Mock an IndevoltAPI client."""
     device_info = DEVICE_MAPPING[generation]
-    fixture_data = load_json_object_fixture(device_info["fixture"], DOMAIN)
+    fixture_data = load_json_object_fixture(f"gen_{generation}.json", DOMAIN)
 
     with (
         patch(
@@ -72,8 +82,12 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         ) as mock_client,
         patch(
             "homeassistant.components.indevolt.config_flow.IndevoltAPI",
-            autospec=True,
-        ) as mock_config_flow_client,
+            new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.indevolt.async_setup",
+            return_value=True,
+        ),
     ):
         # Mock coordinator API (get_data)
         client = mock_client.return_value
@@ -87,23 +101,21 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
             }
         }
 
-        # Mock config flow API (get_config)
-        config_flow_client = mock_config_flow_client.return_value
-        config_flow_client.get_config.return_value = {
-            "device": {
-                "sn": device_info["sn"],
-                "type": device_info["device"],
-                "generation": device_info["generation"],
-                "fw": TEST_FW_VERSION,
-            }
-        }
-
         yield client
 
 
-async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock the async_setup_entry function."""
+    with patch(
+        "homeassistant.components.indevolt.async_setup_entry",
+        new_callable=AsyncMock,
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
+
+
+async def setup_integration(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

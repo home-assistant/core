@@ -1,6 +1,7 @@
 """Tests for the Indevolt sensor platform."""
 
 from datetime import timedelta
+from freezegun.api import FrozenDateTimeFactory
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -35,7 +36,10 @@ async def test_sensor(
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 async def test_sensor_availability(
-    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor availability / non-availability."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
@@ -45,7 +49,8 @@ async def test_sensor_availability(
     assert state.state == "92"
 
     mock_indevolt.fetch_data.side_effect = ConnectionError
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=SCAN_INTERVAL))
+    freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass, utcnow())
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.cms_sf2000_192_168_1_100_battery_soc"))
