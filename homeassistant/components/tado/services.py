@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector, service
 
-from .coordinator import TadoConfigEntry
 from .const import (
     ATTR_MESSAGE,
     CONF_CONFIG_ENTRY,
@@ -16,6 +15,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_METER_READING,
 )
+from .coordinator import TadoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMA_ADD_METER_READING = vol.Schema(
