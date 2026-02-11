@@ -33,8 +33,12 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
+  discovery:
+    status: exempt
+    comment: This is a cloud polling integration with no local discovery mechanism.
+  discovery-update-info:
+    status: exempt
+    comment: This is a cloud polling integration with no local discovery mechanism.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -42,18 +46,24 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  dynamic-devices:
+    status: exempt
+    comment: Vehicles are tied to the user account. Changes require integration reload.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No user-actionable repair scenarios beyond reauthentication, which is already handled.
+  stale-devices:
+    status: exempt
+    comment: Vehicles removed from the LoJack account stop appearing in API responses and become unavailable.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: todo
   strict-typing: todo

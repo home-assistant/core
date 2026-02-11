@@ -57,6 +57,9 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
+
             try:
                 info = await validate_input(user_input)
             except CannotConnect:
@@ -67,9 +70,6 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
@@ -171,3 +171,6 @@ class CannotConnect(Exception):
 
 class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
+
+
+
