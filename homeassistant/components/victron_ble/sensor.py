@@ -243,6 +243,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    Keys.CHARGE_STATE: VictronBLESensorEntityDescription(
+        key=Keys.CHARGE_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="charge_state",
+        options=DEVICE_STATE_OPTIONS,
+    ),
     Keys.CHARGER_ERROR: VictronBLESensorEntityDescription(
         key=Keys.CHARGER_ERROR,
         device_class=SensorDeviceClass.ENUM,
