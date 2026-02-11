@@ -20,13 +20,7 @@ rules:
   unique-config-entry: done
   # Silver
   action-exceptions: done
-  config-entry-unloading:
-    status: todo
-    comment: |
-      async_unload_entry must clean up: (1) close TeslemetryStream websocket via
-      stream.close(), (2) call remove_listener() for each vehicle to unsubscribe
-      from stream events, (3) consider using entry.async_on_unload() during setup
-      to register cleanup callbacks automatically.
+  config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
