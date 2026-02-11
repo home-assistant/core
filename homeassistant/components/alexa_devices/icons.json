@@ -1,7 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "volatile_organic_compounds": {
+      "voc_index": {
         "default": "mdi:molecule"
       }
     }
