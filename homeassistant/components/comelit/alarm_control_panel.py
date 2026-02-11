@@ -144,7 +144,7 @@ class ComelitAlarmEntity(
         """Update state after action."""
         self._area.human_status = area_state
         self._area.armed = armed
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
