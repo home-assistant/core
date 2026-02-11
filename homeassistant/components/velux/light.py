@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyvlx import Intensity, Light
+from pyvlx import Intensity, Light, OnOffLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities(
         VeluxLight(node, config_entry.entry_id)
         for node in pyvlx.nodes
-        if isinstance(node, Light)
+        if isinstance(node, (Light, OnOffLight))
     )
 
 
@@ -42,7 +42,7 @@ class VeluxLight(VeluxEntity, LightEntity):
     @property
     def brightness(self):
         """Return the current brightness."""
-        return int((100 - self.node.intensity.intensity_percent) * 255 / 100)
+        return int(self.node.intensity.intensity_percent * 255 / 100)
 
     @property
     def is_on(self):
@@ -53,7 +53,7 @@ class VeluxLight(VeluxEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
-            intensity_percent = int(100 - kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            intensity_percent = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             await self.node.set_intensity(
                 Intensity(intensity_percent=intensity_percent),
                 wait_for_completion=True,
