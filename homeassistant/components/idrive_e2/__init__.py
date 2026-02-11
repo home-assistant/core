@@ -44,21 +44,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
     """Set up IDrive e2 from a config entry."""
 
     session = AioSession()
-    cm: Any | None = None
     client: S3Client | None = None
     try:
-        cm = session.create_client(
+        # pylint: disable-next=unnecessary-dunder-call
+        client = await session.create_client(
             "s3",
             endpoint_url=entry.data[CONF_ENDPOINT_URL],
             aws_secret_access_key=entry.data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
-        )
-        # pylint: disable-next=unnecessary-dunder-call
-        client = await cm.__aenter__()
+        ).__aenter__()
         await cast(Any, client).head_bucket(Bucket=entry.data[CONF_BUCKET])
     except ClientError as err:
         await _async_safe_client_close(client)
-        if str(err.response["Error"]["Code"]) == "404":
+        code = str(err.response.get("Error", {}).get("Code", ""))
+        if code in ("404", "NoSuchBucket"):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="bucket_not_found",
