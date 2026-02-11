@@ -74,12 +74,12 @@ class VenstarColorTouchMock:
         return True
 
     def failed_update_alerts(self):
-        """Mock update_alerts setting alerts to False (silent failure)."""
-        self.alerts = False
+        """Mock update_alerts returning False (silent failure)."""
+        return False
 
     def get_runtimes(self):
         """Mock get runtimes."""
-        return {}
+        return [{"heat1": 100, "cool1": 200}]
 
     def failed_get_runtimes(self):
         """Mock get_runtimes returning False (silent failure)."""

@@ -81,20 +81,22 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
         await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
-            await self.hass.async_add_executor_job(self.client.update_alerts)
+            alerts_success = await self.hass.async_add_executor_job(
+                self.client.update_alerts
+            )
         except (OSError, RequestException) as ex:
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar alert update: {ex}"
             ) from ex
 
-        if not isinstance(self.client.alerts, list):
+        if not alerts_success:
             raise update_coordinator.UpdateFailed("Unable to update Venstar alert data")
 
         # older venstars sometimes cannot handle rapid sequential connections
         await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
-            self.runtimes = await self.hass.async_add_executor_job(
+            runtimes_result = await self.hass.async_add_executor_job(
                 self.client.get_runtimes
             )
         except (OSError, RequestException) as ex:
@@ -102,7 +104,9 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
                 f"Exception during Venstar runtime update: {ex}"
             ) from ex
 
-        if self.runtimes is False:
+        if not runtimes_result:
             raise update_coordinator.UpdateFailed(
                 "Unable to update Venstar runtime data"
             )
+
+        self.runtimes = runtimes_result
