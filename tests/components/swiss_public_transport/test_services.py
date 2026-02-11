@@ -201,7 +201,7 @@ async def test_service_call_load_unload(
         await hass.async_block_till_done()
 
         with pytest.raises(
-            ServiceValidationError, match=f"{config_entry.title} is not loaded"
+            ServiceValidationError, match="service_config_entry_not_loaded"
         ):
             await hass.services.async_call(
                 domain=DOMAIN,
@@ -215,7 +215,7 @@ async def test_service_call_load_unload(
 
         with pytest.raises(
             ServiceValidationError,
-            match=f'Swiss public transport integration instance "{bad_entry_id}" not found',
+            match="service_config_entry_not_found",
         ):
             await hass.services.async_call(
                 domain=DOMAIN,
