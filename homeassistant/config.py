@@ -854,7 +854,6 @@ def _get_log_message_and_stack_print_pref(
 # The complicated overloads are due to a limitation in mypy, details in
 # https://github.com/python/mypy/issues/7333
 @overload
-@callback
 async def async_process_component_and_handle_errors(
     hass: HomeAssistant,
     config: ConfigType,
@@ -863,7 +862,6 @@ async def async_process_component_and_handle_errors(
 
 
 @overload
-@callback
 async def async_process_component_and_handle_errors(
     hass: HomeAssistant,
     config: ConfigType,
@@ -874,7 +872,6 @@ async def async_process_component_and_handle_errors(
 
 
 @overload
-@callback
 async def async_process_component_and_handle_errors(
     hass: HomeAssistant,
     config: ConfigType,
