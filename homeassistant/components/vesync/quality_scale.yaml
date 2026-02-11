@@ -42,8 +42,10 @@ rules:
   diagnostics:
     status: todo
     comment: room to remove content such as entities.
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: Devices aren't connected locally, nothing to update
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

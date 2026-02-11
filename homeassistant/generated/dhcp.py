@@ -1343,6 +1343,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0023C1*",
     },
     {
+        "domain": "vesync",
+        "hostname": "levoit-*",
+    },
+    {
         "domain": "vicare",
         "macaddress": "B87424*",
     },
