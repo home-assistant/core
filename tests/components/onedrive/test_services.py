@@ -18,7 +18,7 @@ from homeassistant.components.onedrive.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -123,7 +123,7 @@ async def test_upload_service_config_entry_not_found(
 ) -> None:
     """Test upload service call with a config entry that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -148,12 +148,12 @@ async def test_config_entry_not_loaded(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.unique_id,
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
                 CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
             },
