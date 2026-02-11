@@ -1079,7 +1079,8 @@ async def test_send_message_config_entry_error(
         )
 
     await hass.async_block_till_done()
-    assert err.value.translation_key == "missing_config_entry"
+    assert err.value.translation_key == "entry_not_loaded"
+    assert err.value.translation_placeholders == {"telegram_bot": "Mock Title"}
 
 
 async def test_delete_message(
