@@ -260,7 +260,7 @@ FSV_NUMBER_DESCRIPTIONS: dict[str, SmartThingsFsvEntityDescription] = {
     "5021": SmartThingsFsvEntityDescription(
         key="5021",
         fsv_id="5021",
-        translation_key="dhw_saving_mode",
+        translation_key="dhw_temp_reduction_offset",
         entity_category=EntityCategory.CONFIG,
     ),
     "5083": SmartThingsFsvEntityDescription(

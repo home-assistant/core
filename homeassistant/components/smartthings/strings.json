@@ -190,6 +190,9 @@
       "dhw_saving_mode": {
         "name": "DHW saving mode"
       },
+      "dhw_temp_reduction_offset": {
+        "name": "Temperature reduction offset for DHW energy saving mode"
+      },
       "freezer_temperature": {
         "name": "Freezer temperature"
       },
