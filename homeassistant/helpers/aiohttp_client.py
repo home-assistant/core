@@ -19,6 +19,7 @@ from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.http import CONF_NAMESERVERS, DOMAIN as HTTP_DOMAIN
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
@@ -403,4 +404,13 @@ def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
 
 @callback
 def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+    kwargs = {}
+
+    http_conf = hass.data.get(HTTP_DOMAIN, {})
+    if (nameservers := http_conf.get(CONF_NAMESERVERS)) is not None:
+        kwargs["nameservers"] = list(map(str, nameservers))
+
+    return HassAsyncDNSResolver(
+        async_zeroconf=zeroconf.async_get_async_zeroconf(hass),
+        **kwargs,  # type: ignore [arg-type]
+    )
