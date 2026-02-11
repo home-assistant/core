@@ -174,7 +174,7 @@ async def test_light_brightness_and_is_on(
 async def test_light_turn_on_with_brightness_uses_set_intensity(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
-    """Turning on with brightness calls set_intensity with inverted percent."""
+    """Turning on with brightness calls set_intensity with percent."""
 
     entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
 
