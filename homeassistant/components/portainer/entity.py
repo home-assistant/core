@@ -3,7 +3,7 @@
 from yarl import URL
 
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -42,6 +42,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             manufacturer=DEFAULT_NAME,
             model="Endpoint",
             name=device_info.endpoint.name,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
@@ -87,6 +88,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
                 f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

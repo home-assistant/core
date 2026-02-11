@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -26,13 +25,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import validators as template_validators
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -152,59 +152,47 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
-    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._code_format_template = config.get(CONF_CODE_FORMAT)
         self._code_format_template_error: TemplateError | None = None
 
-        # Legacy behavior, create all locks as Unlocked.
-        self._set_state(LockState.UNLOCKED)
+        self.setup_state_template(
+            CONF_STATE,
+            "_lock_state",
+            template_validators.strenum(
+                self, CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
+            ),
+            self._set_state,
+        )
 
-    def _iterate_scripts(
-        self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
+        self.setup_template(
+            CONF_CODE_FORMAT,
+            "_attr_code_format",
+            None,
+            self._update_code_format,
+            none_on_template_error=False,
+        )
+
         for action_id, supported_feature in (
             (CONF_LOCK, 0),
             (CONF_UNLOCK, 0),
             (CONF_OPEN, LockEntityFeature.OPEN),
         ):
             if (action_config := config.get(action_id)) is not None:
-                yield (action_id, action_config, supported_feature)
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
     def _set_state(self, state: LockState | None) -> None:
+        if state is None:
+            self._attr_is_locked = None
+            return
+
         self._attr_is_jammed = state == LockState.JAMMED
         self._attr_is_opening = state == LockState.OPENING
         self._attr_is_locking = state == LockState.LOCKING
         self._attr_is_open = state == LockState.OPEN
         self._attr_is_unlocking = state == LockState.UNLOCKING
         self._attr_is_locked = state == LockState.LOCKED
-
-    def _handle_state(self, result: Any) -> None:
-        if isinstance(result, bool):
-            self._set_state(LockState.LOCKED if result else LockState.UNLOCKED)
-            return
-
-        if isinstance(result, str):
-            if result.lower() in (
-                "true",
-                "on",
-                "locked",
-            ):
-                self._set_state(LockState.LOCKED)
-            elif result.lower() in (
-                "false",
-                "off",
-                "unlocked",
-            ):
-                self._set_state(LockState.UNLOCKED)
-            else:
-                try:
-                    self._set_state(LockState(result.lower()))
-                except ValueError:
-                    self._set_state(None)
-            return
-
-        self._set_state(None)
 
     @callback
     def _update_code_format(self, render: str | TemplateError | None):
@@ -281,7 +269,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
                 translation_key="code_format_template_error",
                 translation_placeholders={
                     "entity_id": self.entity_id,
-                    "code_format_template": self._code_format_template.template,
+                    "code_format_template": self._templates[CONF_CODE_FORMAT].template,
                     "cause": str(self._code_format_template_error),
                 },
             )
@@ -300,45 +288,10 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
     ) -> None:
         """Initialize the lock."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        AbstractTemplateLock.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
-
-        for action_id, action_config, supported_feature in self._iterate_scripts(
-            config
-        ):
-            self.add_script(action_id, action_config, name, DOMAIN)
-            self._attr_supported_features |= supported_feature
-
-    @callback
-    def _update_state(self, result: str | TemplateError) -> None:
-        """Update the state from the template."""
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_is_locked = None
-            return
-
-        self._handle_state(result)
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template is not None:
-            self.add_template_attribute(
-                "_attr_is_locked",
-                self._template,
-                None,
-                self._update_state,
-            )
-        if self._code_format_template:
-            self.add_template_attribute(
-                "_attr_code_format",
-                self._code_format_template,
-                None,
-                self._update_code_format,
-            )
-        super()._async_setup_templates()
+        AbstractTemplateLock.__init__(self, name, config)
 
 
 class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
@@ -354,45 +307,5 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateLock.__init__(self, config)
-
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-
-        if CONF_STATE in config:
-            self._to_render_simple.append(CONF_STATE)
-
-        if isinstance(config.get(CONF_CODE_FORMAT), template.Template):
-            self._to_render_simple.append(CONF_CODE_FORMAT)
-            self._parse_result.add(CONF_CODE_FORMAT)
-
-        for action_id, action_config, supported_feature in self._iterate_scripts(
-            config
-        ):
-            self.add_script(action_id, action_config, name, DOMAIN)
-            self._attr_supported_features |= supported_feature
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            return
-
-        write_ha_state = False
-        for key, updater in (
-            (CONF_STATE, self._handle_state),
-            (CONF_CODE_FORMAT, self._update_code_format),
-        ):
-            if (rendered := self._rendered.get(key)) is not None:
-                updater(rendered)
-                write_ha_state = True
-
-        if not self._attr_assumed_state:
-            write_ha_state = True
-        elif self._attr_assumed_state and len(self._rendered) > 0:
-            # In case any non optimistic template
-            write_ha_state = True
-
-        if write_ha_state:
-            self.async_write_ha_state()
+        AbstractTemplateLock.__init__(self, name, config)
