@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_SHUFFLE,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -201,6 +201,8 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
+                | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+                | MediaPlayerEntityFeature.MEDIA_SHUFFLE
             )
 
             if "Mute" in commands:
@@ -244,14 +246,14 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
         """
         command = "PlayNow"
-        shuffle = kwargs.get(ATTR_MEDIA_EXTRA, {}).get("shuffle", False)
+        shuffle = kwargs.get(ATTR_MEDIA_SHUFFLE, False)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, None)
         if bool(shuffle):
             # shuffle takes priority over enqueue
             command = "PlayShuffle"
         elif isinstance(enqueue, str):
             # skip if the default None is passed
-            # both 'now' and 'replace' will act the same in jellyfin, skip them too
+            # both 'now' and 'replace' will act the same in jellyfin, let PlayNow remain if so
             if enqueue.lower() == "next":
                 command = "PlayNext"
             elif enqueue.lower() == "add":

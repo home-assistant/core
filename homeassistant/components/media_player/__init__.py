@@ -187,10 +187,11 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): vol.Any(
+    vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce_shuffle"): vol.Any(
         cv.boolean, vol.Coerce(MediaPlayerEnqueue)
     ),
-    vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
+    vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce_shuffle"): cv.boolean,
+    vol.Exclusive(ATTR_MEDIA_SHUFFLE, "enqueue_announce_shuffle"): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
@@ -427,6 +428,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 media_type=ATTR_MEDIA_CONTENT_TYPE,
                 media_id=ATTR_MEDIA_CONTENT_ID,
                 enqueue=ATTR_MEDIA_ENQUEUE,
+                shuffle=ATTR_MEDIA_SHUFFLE,
             ),
         ),
         "async_play_media",
