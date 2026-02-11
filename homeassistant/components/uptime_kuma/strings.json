@@ -88,6 +88,7 @@
           "dns": "DNS",
           "docker": "Docker",
           "gamedig": "GameDig",
+          "globalping": "Globalping",
           "group": "Group",
           "grpc_keyword": "gRPC(s) - Keyword",
           "http": "HTTP(s)",
@@ -106,11 +107,14 @@
           "radius": "RADIUS",
           "real_browser": "HTTP(s) - Browser engine",
           "redis": "Redis",
+          "sip_options": "SIP OPTIONS Ping",
           "smtp": "SMTP",
           "snmp": "SNMP",
           "sqlserver": "Microsoft SQL Server",
           "steam": "Steam Game Server",
-          "tailscale_ping": "Tailscale Ping"
+          "system_service": "System service",
+          "tailscale_ping": "Tailscale Ping",
+          "websocket_upgrade": "WebSocket-Upgrade"
         }
       },
       "url": {
