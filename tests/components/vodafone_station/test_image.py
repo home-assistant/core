@@ -129,9 +129,9 @@ async def test_image_update(
     }
 
     freezer.tick(SCAN_INTERVAL)
-    new_time = dt_util.utcnow()
-    async_fire_time_changed(hass, new_time)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    new_time = dt_util.utcnow()
 
     resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
