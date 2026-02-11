@@ -99,8 +99,9 @@ class VodafoneGuestWifiQRImage(
 
         If the coordinator has updated the QR code, we can update the image.
         """
-        if self._cached_qr_code != self._qr_code:
-            self._cached_qr_code = self._qr_code
+        qr_code = self._qr_code
+        if self._cached_qr_code != qr_code:
+            self._cached_qr_code = qr_code
             self._attr_image_last_updated = dt_util.utcnow()
 
         super()._handle_coordinator_update()
