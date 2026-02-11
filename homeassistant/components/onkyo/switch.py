@@ -52,7 +52,6 @@ class OnkyoChannelMutingSwitch(
 ):
     """Onkyo Receiver Channel Muting Switch (one per channel)."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
