@@ -115,7 +115,7 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
 
         try:
             state = self.entity_description.value_fn(self.data)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return None
 
         return state

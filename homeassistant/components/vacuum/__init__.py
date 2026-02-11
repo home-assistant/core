@@ -58,10 +58,7 @@ SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
-    "mqtt",
-    "template",
-)
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
 
 # mypy: disallow-any-generics
