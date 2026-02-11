@@ -22,6 +22,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_TTS_SPEED,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
@@ -33,12 +34,14 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -95,6 +98,12 @@ async def test_form(hass: HomeAssistant) -> None:
             "subentry_type": "ai_task_data",
             "data": RECOMMENDED_AI_TASK_OPTIONS,
             "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "tts",
+            "data": RECOMMENDED_TTS_OPTIONS,
+            "title": DEFAULT_TTS_NAME,
             "unique_id": None,
         },
     ]
@@ -945,8 +954,8 @@ async def test_creating_ai_task_subentry(
 ) -> None:
     """Test creating an AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + original ai_task
-    assert len(mock_config_entry.subentries) == 2
+    # Original conversation + original ai_task + original tts
+    assert len(mock_config_entry.subentries) == 3
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
@@ -973,8 +982,8 @@ async def test_creating_ai_task_subentry(
     }
 
     assert (
-        len(mock_config_entry.subentries) == 3
-    )  # Original conversation + original ai_task + new ai_task
+        len(mock_config_entry.subentries) == 4
+    )  # Original conversation + original tts + original ai_task + new ai_task
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1056,6 +1065,91 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_TOP_P: 0.9,
         CONF_CODE_INTERPRETER: False,
     }
+
+
+async def test_creating_tts_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test creating a TTS subentry."""
+    old_subentries = set(mock_config_entry.subentries)
+    # Original conversation + original ai_task + original tts
+    assert len(mock_config_entry.subentries) == 3
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert not result.get("errors")
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Custom TTS",
+            CONF_PROMPT: "Speak like a drunk pirate",
+            CONF_TTS_SPEED: 0.85,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Custom TTS"
+    assert result.get("data") == {
+        CONF_PROMPT: "Speak like a drunk pirate",
+        CONF_TTS_SPEED: 0.85,
+        CONF_CHAT_MODEL: "gpt-4o-mini-tts",
+    }
+
+    assert (
+        len(mock_config_entry.subentries) == 4
+    )  # Original conversation + original ai_task + original tts + new tts
+
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry = mock_config_entry.subentries[new_subentry_id]
+    assert new_subentry.subentry_type == "tts"
+    assert new_subentry.title == "Custom TTS"
+
+
+async def test_tts_subentry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a TTS subentry when entry is not loaded."""
+    # Don't call mock_init_component to simulate not loaded state
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "entry_not_loaded"
+
+
+async def test_tts_reconfigure(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the tts subentry reconfigure flow with."""
+    subentry = [
+        s for s in mock_config_entry.subentries.values() if s.subentry_type == "tts"
+    ][0]
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    options = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "tts_speed": 0.5,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data["prompt"] == "Speak like a pirate"
+    assert subentry.data["tts_speed"] == 0.5
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
