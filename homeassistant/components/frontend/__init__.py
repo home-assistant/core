@@ -923,7 +923,7 @@ def websocket_get_panels(
             if config_override
             else panel.require_admin
         )
-        if not user_is_admin and require_admin:
+        if not user_is_admin and require_admin and panel_key != "home":
             continue
         panels[panel_key] = panel.to_response(config_override)
 

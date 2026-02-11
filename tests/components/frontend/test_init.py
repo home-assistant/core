@@ -1421,3 +1421,39 @@ async def test_update_panel_hide_sidebar(
     msg = await ws_client.receive_json()
     assert msg["result"]["light"]["title"] == "light"
     assert msg["result"]["light"]["icon"] == "mdi:lamps"
+
+
+async def test_home_panel_always_visible(
+    hass: HomeAssistant,
+    ws_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that the home panel is always returned even with require_admin."""
+    # Set home panel to require_admin
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/update_panel",
+            "url_path": "home",
+            "require_admin": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Make user non-admin
+    hass_admin_user.groups = []
+
+    # Home panel should still be present for non-admin
+    await ws_client.send_json({"id": 2, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert "home" in msg["result"]
+
+    # Other admin panels should be filtered out
+    async_register_built_in_panel(
+        hass, "admin_only", "Admin", "mdi:lock", require_admin=True
+    )
+    await ws_client.send_json({"id": 3, "type": "get_panels"})
+    msg = await ws_client.receive_json()
+    assert "admin_only" not in msg["result"]
+    assert "home" in msg["result"]
