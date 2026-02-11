@@ -307,7 +307,6 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         This method is intended to be called from service handlers implementing reload.
         Will raise ServiceValidationError if the config is not valid.
         """
-        self.logger.warning("Reloading %s.%s", self.domain, self.domain)
         try:
             conf = await conf_util.async_hass_config_yaml(self.hass)
         except HomeAssistantError as err:
