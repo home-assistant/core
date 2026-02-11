@@ -394,7 +394,6 @@ ROOM_THERM_TEMPERATURE_DESCRIPTION = NetatmoSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     device_class=SensorDeviceClass.TEMPERATURE,
     suggested_display_precision=1,
-    translation_key="therm_measured_temperature",
 )
 
 
