@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .client import SatelClient
 from .const import (
     DOMAIN,
     SUBENTRY_TYPE_OUTPUT,
@@ -36,7 +37,7 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
     _attr_has_entity_name = True
     _attr_name = None
 
-    _client: SatelClient
+    _controller: AsyncSatel
 
     def __init__(
         self,
@@ -48,7 +49,7 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
         """Initialize the Satel Integra entity."""
         super().__init__(coordinator)
 
-        self._client = coordinator.client
+        self._controller = coordinator.client.controller
 
         self._device_number = device_number
 

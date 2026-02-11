@@ -85,12 +85,12 @@ class SatelIntegraSwitch(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._client.controller.set_output(self._code, self._device_number, True)
+        await self._controller.set_output(self._code, self._device_number, True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._client.controller.set_output(self._code, self._device_number, False)
+        await self._controller.set_output(self._code, self._device_number, False)
         self._attr_is_on = False
         self.async_write_ha_state()

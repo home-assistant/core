@@ -111,7 +111,7 @@ class SatelIntegraAlarmPanel(
     def _read_alarm_state(self) -> AlarmControlPanelState | None:
         """Read current status of the alarm and translate it into HA status."""
 
-        if not self._client.controller.connected:
+        if not self._controller.connected:
             _LOGGER.debug("Alarm panel not connected")
             return None
 
@@ -134,23 +134,21 @@ class SatelIntegraAlarmPanel(
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        await self._client.controller.disarm(code, [self._device_number])
+        await self._controller.disarm(code, [self._device_number])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self._client.controller.clear_alarm(code, [self._device_number])
+            await self._controller.clear_alarm(code, [self._device_number])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         if code:
-            await self._client.controller.arm(code, [self._device_number])
+            await self._controller.arm(code, [self._device_number])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         if code:
-            await self._client.controller.arm(
-                code, [self._device_number], self._arm_home_mode
-            )
+            await self._controller.arm(code, [self._device_number], self._arm_home_mode)
