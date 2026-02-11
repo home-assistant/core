@@ -61,9 +61,6 @@
       "exported_energy": {
         "name": "Exported energy"
       },
-      "frequency": {
-        "name": "Frequency"
-      },
       "imported_energy": {
         "name": "Imported energy"
       },
