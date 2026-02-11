@@ -740,7 +740,7 @@ def _build_targets(
         for chat_id in chat_ids:
             # map chat_id to notify entity ID
 
-            if config_entry.state != ConfigEntryState.LOADED:
+            if config_entry.state is not ConfigEntryState.LOADED:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="entry_not_loaded",
