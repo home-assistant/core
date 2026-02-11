@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from visionpluspython.models import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -11,7 +13,7 @@ from .const import DOMAIN
 from .coordinator import WattsVisionDeviceCoordinator
 
 
-class WattsVisionEntity(CoordinatorEntity[WattsVisionDeviceCoordinator]):
+class WattsVisionEntity[_T: Device](CoordinatorEntity[WattsVisionDeviceCoordinator]):
     """Base entity for Watts Vision devices."""
 
     _attr_has_entity_name = True
@@ -33,9 +35,9 @@ class WattsVisionEntity(CoordinatorEntity[WattsVisionDeviceCoordinator]):
         )
 
     @property
-    def device(self) -> Device:
+    def device(self) -> _T:
         """Return the device from the coordinator data."""
-        return self.coordinator.data.device
+        return cast(_T, self.coordinator.data.device)
 
     @property
     def available(self) -> bool:

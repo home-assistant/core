@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class WattsVisionSwitch(WattsVisionEntity, SwitchEntity):
+class WattsVisionSwitch(WattsVisionEntity[SwitchDevice], SwitchEntity):
     """Representation of a Watts Vision switch."""
 
     _attr_name = None

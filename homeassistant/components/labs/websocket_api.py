@@ -103,7 +103,6 @@ async def websocket_update_preview_feature(
     connection.send_result(msg["id"])
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "labs/subscribe",
@@ -111,7 +110,8 @@ async def websocket_update_preview_feature(
         vol.Required("preview_feature"): str,
     }
 )
-def websocket_subscribe_feature(
+@websocket_api.async_response
+async def websocket_subscribe_feature(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -133,12 +133,17 @@ def websocket_subscribe_feature(
 
     preview_feature = labs_data.preview_features[preview_feature_id]
 
-    async def send_event(event_data: EventLabsUpdatedData) -> None:
+    async def send_event(event_data: EventLabsUpdatedData | None = None) -> None:
         """Send feature state to client."""
+        enabled = (
+            event_data["enabled"]
+            if event_data is not None
+            else async_is_preview_feature_enabled(hass, domain, preview_feature_key)
+        )
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                preview_feature.to_dict(enabled=event_data["enabled"]),
+                preview_feature.to_dict(enabled=enabled),
             )
         )
 
@@ -147,13 +152,4 @@ def websocket_subscribe_feature(
     )
 
     connection.send_result(msg["id"])
-    connection.send_message(
-        websocket_api.event_message(
-            msg["id"],
-            preview_feature.to_dict(
-                enabled=async_is_preview_feature_enabled(
-                    hass, domain, preview_feature_key
-                )
-            ),
-        )
-    )
+    await send_event()
