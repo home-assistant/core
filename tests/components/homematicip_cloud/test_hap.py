@@ -333,6 +333,7 @@ async def test_try_get_state_auth_error_triggers_reauth(
 ) -> None:
     """Test _try_get_state stops retrying on auth error and triggers reauth."""
     hass.config.components.add(DOMAIN)
+    hmip_config_entry.add_to_hass(hass)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
@@ -341,10 +342,14 @@ async def test_try_get_state_auth_error_triggers_reauth(
 
     hap.get_state = AsyncMock(side_effect=HmipAuthenticationError)
 
-    with patch.object(hmip_config_entry, "async_start_reauth") as mock_reauth:
-        await hap._try_get_state()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    await hap._try_get_state()
+    await hass.async_block_till_done()
 
     # Should have called get_state only once (no retries)
     assert hap.get_state.call_count == 1
-    # Should have triggered reauth
-    mock_reauth.assert_called_once_with(hass)
+    # Should have triggered a reauth flow
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
