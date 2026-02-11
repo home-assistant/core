@@ -27,11 +27,11 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from . import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    floor_registry,
+    floor_registry as fr,
 )
 from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
@@ -308,10 +308,10 @@ class MatchTargetsResult:
     no_match_name: str | None = None
     """Name of invalid area/floor or duplicate name when match fails for those reasons."""
 
-    areas: list[area_registry.AreaEntry] = field(default_factory=list)
+    areas: list[ar.AreaEntry] = field(default_factory=list)
     """Areas that were targeted."""
 
-    floors: list[floor_registry.FloorEntry] = field(default_factory=list)
+    floors: list[fr.FloorEntry] = field(default_factory=list)
     """Floors that were targeted."""
 
 
@@ -368,14 +368,12 @@ class MatchTargetsCandidate:
     state: State
     is_exposed: bool
     entity: er.RegistryEntry | None = None
-    area: area_registry.AreaEntry | None = None
+    area: ar.AreaEntry | None = None
     device: dr.DeviceEntry | None = None
     matched_name: str | None = None
 
 
-def find_areas(
-    name: str, areas: area_registry.AreaRegistry
-) -> Iterable[area_registry.AreaEntry]:
+def find_areas(name: str, areas: ar.AreaRegistry) -> Iterable[ar.AreaEntry]:
     """Find all areas matching a name (including aliases)."""
     name_norm = _normalize_name(name)
     for area in areas.async_list_areas():
@@ -393,9 +391,7 @@ def find_areas(
                 break
 
 
-def find_floors(
-    name: str, floors: floor_registry.FloorRegistry
-) -> Iterable[floor_registry.FloorEntry]:
+def find_floors(name: str, floors: fr.FloorRegistry) -> Iterable[fr.FloorEntry]:
     """Find all floors matching a name (including aliases)."""
     name_norm = _normalize_name(name)
     for floor in floors.async_list_floors():
@@ -490,7 +486,7 @@ def _filter_by_device_classes(
 
 
 def _add_areas(
-    areas: area_registry.AreaRegistry,
+    areas: ar.AreaRegistry,
     devices: dr.DeviceRegistry,
     candidates: Iterable[MatchTargetsCandidate],
 ) -> None:
@@ -606,22 +602,22 @@ def async_match_targets(  # noqa: C901
             return MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
 
     # Check floor/area constraints
-    targeted_floors: list[floor_registry.FloorEntry] | None = None
-    targeted_areas: list[area_registry.AreaEntry] | None = None
+    targeted_floors: list[fr.FloorEntry] | None = None
+    targeted_areas: list[ar.AreaEntry] | None = None
 
     # True when area information has been added to candidates
     areas_added = False
 
     if constraints.floor_name or constraints.area_name:
-        ar = area_registry.async_get(hass)
+        area_reg = ar.async_get(hass)
         dev_reg = dr.async_get(hass)
-        _add_areas(ar, dev_reg, candidates)
+        _add_areas(area_reg, dev_reg, candidates)
         areas_added = True
 
         if constraints.floor_name:
             # Filter by areas associated with floor
-            fr = floor_registry.async_get(hass)
-            targeted_floors = list(find_floors(constraints.floor_name, fr))
+            floor_reg = fr.async_get(hass)
+            targeted_floors = list(find_floors(constraints.floor_name, floor_reg))
             if not targeted_floors:
                 return MatchTargetsResult(
                     False,
@@ -632,7 +628,7 @@ def async_match_targets(  # noqa: C901
             possible_floor_ids = {floor.floor_id for floor in targeted_floors}
             possible_area_ids = {
                 area.id
-                for area in ar.async_list_areas()
+                for area in area_reg.async_list_areas()
                 if area.floor_id in possible_floor_ids
             }
 
@@ -645,10 +641,10 @@ def async_match_targets(  # noqa: C901
                 )
         else:
             # All areas are possible
-            possible_area_ids = {area.id for area in ar.async_list_areas()}
+            possible_area_ids = {area.id for area in area_reg.async_list_areas()}
 
         if constraints.area_name:
-            targeted_areas = list(find_areas(constraints.area_name, ar))
+            targeted_areas = list(find_areas(constraints.area_name, area_reg))
             if not targeted_areas:
                 return MatchTargetsResult(
                     False,
@@ -677,9 +673,9 @@ def async_match_targets(  # noqa: C901
     if constraints.name and (not constraints.allow_duplicate_names):
         # Check for duplicates
         if not areas_added:
-            ar = area_registry.async_get(hass)
+            area_reg = ar.async_get(hass)
             dev_reg = dr.async_get(hass)
-            _add_areas(ar, dev_reg, candidates)
+            _add_areas(area_reg, dev_reg, candidates)
             areas_added = True
 
         sorted_candidates = sorted(
@@ -748,9 +744,9 @@ def async_match_targets(  # noqa: C901
             )
 
         if not areas_added:
-            ar = area_registry.async_get(hass)
+            area_reg = ar.async_get(hass)
             dev_reg = dr.async_get(hass)
-            _add_areas(ar, dev_reg, candidates)
+            _add_areas(area_reg, dev_reg, candidates)
             areas_added = True
 
         filtered_candidates: list[MatchTargetsCandidate] = candidates
