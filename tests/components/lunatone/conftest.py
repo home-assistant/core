@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, DEVICES_DATA, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +50,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         "homeassistant.components.lunatone.Devices", autospec=True
     ) as mock_devices:
         devices = mock_devices.return_value
-        devices.data = DEVICES_DATA
+        devices.data = build_devices_data()
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
         )
