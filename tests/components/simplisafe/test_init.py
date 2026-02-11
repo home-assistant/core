@@ -150,11 +150,7 @@ async def test_coordinator_exceptions_and_websocket_behavior(
 async def test_websocket_backoff_parametrized(
     simplisafe_manager: SimpliSafe, websocket, exc_type, max_retries
 ) -> None:
-    """Parameterized deterministic test.
-
-    - WebsocketError: automatically tests 1..max_retries retries with exponential backoff
-    - CancelledError: task cancels immediately
-    """
+    """Test websocket backoff behavior."""
     manager = simplisafe_manager
     sleep_calls: list[float] = []
 
