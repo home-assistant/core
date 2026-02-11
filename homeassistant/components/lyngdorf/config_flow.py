@@ -65,7 +65,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 model = await async_find_receiver_model(self._host)
             except TimeoutError:
                 errors["base"] = "timeout_connect"
-            except (ConnectionError, OSError):
+            except ConnectionError, OSError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
@@ -119,7 +119,12 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self._async_set_info_from_discovery(discovery_info)
 
-        self.context["title_placeholders"] = {"name": self._name or "Lyngdorf"}
+        display_name = (
+            f"{self._device_model} ({self._name})"
+            if self._device_model and self._device_model != self._name
+            else self._name or "Lyngdorf"
+        )
+        self.context["title_placeholders"] = {"name": display_name}
 
         return await self.async_step_confirm()
 
@@ -130,8 +135,16 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._create_entry()
 
+        display_name = (
+            f"{self._device_model} ({self._name})"
+            if self._device_model and self._device_model != self._name
+            else self._name or "Lyngdorf"
+        )
         self._set_confirm_only()
-        return self.async_show_form(step_id="confirm")
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={"name": display_name},
+        )
 
     async def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
