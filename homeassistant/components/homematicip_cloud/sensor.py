@@ -88,9 +88,9 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         attr_name="dirtLevel",
-        value_fn=lambda d: round(d.dirtLevel * 100, 1)
-        if d.dirtLevel is not None
-        else None,
+        value_fn=lambda d: (
+            round(d.dirtLevel * 100, 1) if d.dirtLevel is not None else None
+        ),
     ),
     HmipSmokeDetectorSensorDescription(
         key="smoke_alarm_counter",
