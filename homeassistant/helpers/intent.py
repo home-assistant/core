@@ -1343,7 +1343,7 @@ class IntentResponseType(
     """Response is an error"""
 
 
-class IntentResponseErrorCode(str, Enum):
+class IntentResponseErrorCode(StrEnum):
     """Reason for an intent response error."""
 
     NO_INTENT_MATCH = "no_intent_match"
@@ -1359,7 +1359,7 @@ class IntentResponseErrorCode(str, Enum):
     """Error outside the scope of intent processing"""
 
 
-class IntentResponseTargetType(str, Enum):
+class IntentResponseTargetType(StrEnum):
     """Type of target for an intent response."""
 
     AREA = "area"

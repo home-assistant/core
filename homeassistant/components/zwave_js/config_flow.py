@@ -193,7 +193,7 @@ def get_usb_ports() -> dict[str, str]:
     }
 
     # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
+    return non_na_ports or port_descriptions
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
