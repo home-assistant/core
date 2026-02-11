@@ -11,6 +11,8 @@
       'dhw': dict({
         'dhw_actual_value_top_temperature': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW temperature actual value',
@@ -22,6 +24,8 @@
         }),
         'nominal_setpoint': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW nominal setpoint',
@@ -33,6 +37,8 @@
         }),
         'operating_mode': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'On',
           'error': 0,
           'name': 'DHW operating mode',
@@ -44,6 +50,8 @@
         }),
         'release': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Released',
           'error': 0,
           'name': 'DHW release programme',
@@ -55,6 +63,8 @@
         }),
         'state_dhw_pump': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Off',
           'error': 0,
           'name': 'State DHW circulation pump',
@@ -68,6 +78,8 @@
       'sensor': dict({
         'current_temperature': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'Room temp 1 actual value',
@@ -79,6 +91,8 @@
         }),
         'outside_temperature': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'Outside temp sensor local',
@@ -92,6 +106,8 @@
       'state': dict({
         'current_temperature': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'Room temp 1 actual value',
@@ -103,6 +119,8 @@
         }),
         'hvac_action': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Raumtemp’begrenzung',
           'error': 0,
           'name': 'Status heating circuit 1',
@@ -114,6 +132,8 @@
         }),
         'hvac_mode': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Komfort',
           'error': 0,
           'name': 'Operating mode',
@@ -126,6 +146,8 @@
         'hvac_mode_changeover': None,
         'room1_temp_setpoint_boost': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Boost',
           'error': 0,
           'name': 'Room 1 Temp Setpoint Boost',
@@ -137,6 +159,8 @@
         }),
         'room1_thermostat_mode': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Kein Bedarf',
           'error': 0,
           'name': 'Raumthermostat 1',
@@ -148,6 +172,8 @@
         }),
         'target_temperature': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'Room temperature Comfort setpoint',
@@ -162,6 +188,8 @@
     'info': dict({
       'controller_family': dict({
         'data_type': 0,
+        'data_type_family': '',
+        'data_type_name': '',
         'desc': '',
         'error': 0,
         'name': 'Device family',
@@ -173,6 +201,8 @@
       }),
       'controller_variant': dict({
         'data_type': 0,
+        'data_type_family': '',
+        'data_type_name': '',
         'desc': '',
         'error': 0,
         'name': 'Device variant',
@@ -184,6 +214,8 @@
       }),
       'device_identification': dict({
         'data_type': 7,
+        'data_type_family': '',
+        'data_type_name': '',
         'desc': '',
         'error': 0,
         'name': 'Gerte-Identifikation',
@@ -198,6 +230,8 @@
       'dhw_config': dict({
         'dhw_charging_priority': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'High',
           'error': 0,
           'name': 'DHW charging priority',
@@ -210,6 +244,8 @@
         'dhw_circulation_pump_cycling': None,
         'dhw_circulation_pump_release': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Released',
           'error': 0,
           'name': 'DHW circulation pump release',
@@ -221,6 +257,8 @@
         }),
         'dhw_circulation_setpoint': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW circulation pump setpoint',
@@ -232,6 +270,8 @@
         }),
         'eco_mode_selection': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Comfort',
           'error': 0,
           'name': 'DHW eco mode selection',
@@ -245,6 +285,8 @@
         'legionella_circulation_temp_diff': None,
         'legionella_function': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Off',
           'error': 0,
           'name': 'Legionella function fixed weekday',
@@ -261,6 +303,8 @@
         'legionella_function_time': None,
         'nominal_setpoint_max': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW nominal setpoint maximum',
@@ -272,6 +316,8 @@
         }),
         'operating_mode_changeover': dict({
           'data_type': 1,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': 'Manual',
           'error': 0,
           'name': 'DHW operating mode changeover',
@@ -283,6 +329,8 @@
         }),
         'reduced_setpoint': dict({
           'data_type': 0,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW reduced setpoint',
@@ -296,6 +344,8 @@
       'dhw_schedule': dict({
         'dhw_time_program_friday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Friday',
@@ -307,6 +357,8 @@
         }),
         'dhw_time_program_monday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Monday',
@@ -318,6 +370,8 @@
         }),
         'dhw_time_program_saturday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Saturday',
@@ -329,6 +383,8 @@
         }),
         'dhw_time_program_standard_values': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program standard values',
@@ -340,6 +396,8 @@
         }),
         'dhw_time_program_sunday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Sunday',
@@ -351,6 +409,8 @@
         }),
         'dhw_time_program_thursday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Thursday',
@@ -362,6 +422,8 @@
         }),
         'dhw_time_program_tuesday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Tuesday',
@@ -373,6 +435,8 @@
         }),
         'dhw_time_program_wednesday': dict({
           'data_type': 7,
+          'data_type_family': '',
+          'data_type_name': '',
           'desc': '',
           'error': 0,
           'name': 'DHW time program Wednesday',
@@ -387,6 +451,8 @@
     'static': dict({
       'max_temp': dict({
         'data_type': 0,
+        'data_type_family': '',
+        'data_type_name': '',
         'desc': '',
         'error': 0,
         'name': 'Summer/winter changeover temp heat circuit 1',
@@ -398,6 +464,8 @@
       }),
       'min_temp': dict({
         'data_type': 0,
+        'data_type_family': '',
+        'data_type_name': '',
         'desc': '',
         'error': 0,
         'name': 'Room temp frost protection setpoint',

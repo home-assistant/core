@@ -674,6 +674,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
+/homeassistant/components/hegel/ @boazca
+/tests/components/hegel/ @boazca
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
@@ -804,6 +806,8 @@ build.json @home-assistant/supervisor
 /tests/components/insteon/ @teharris1
 /homeassistant/components/integration/ @dgomes
 /tests/components/integration/ @dgomes
+/homeassistant/components/intelliclima/ @dvdinth
+/tests/components/intelliclima/ @dvdinth
 /homeassistant/components/intellifire/ @jeeftor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
