@@ -103,7 +103,7 @@ async def test_sensor_update(
     assert state.state == str(getattr(device, field))
 
     monkeypatch.setattr(device, field, 1431)
-    mock_bridge.mock_callbacks([device])
+    mock_bridge.mock_callbacks([DUMMY_WATER_HEATER_DEVICE])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
