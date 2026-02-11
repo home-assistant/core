@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 
 from wmspro.const import WMS_WebControl_pro_API_actionDescription as ACTION_DESC
@@ -32,8 +31,8 @@ async def async_setup_entry(
     entities: list[WebControlProGenericEntity] = []
     for d in hub.dests.values():
         if d.hasAction(ACTION_DESC.SlatDrive) and d.hasAction(ACTION_DESC.SlatRotate):
-            entities.append(WebControlProSlatRange(config_entry.entry_id, d, min))
-            entities.append(WebControlProSlatRange(config_entry.entry_id, d, max))
+            entities.append(WebControlProSlatRange(config_entry.entry_id, d, "min"))
+            entities.append(WebControlProSlatRange(config_entry.entry_id, d, "max"))
         if d.hasAction(ACTION_DESC.SlatRotate):
             entities.append(WebControlProSlatRotation(config_entry.entry_id, d))
 
@@ -45,16 +44,17 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, config_entry_id: str, dest: Destination, func: Callable) -> None:
+    def __init__(self, config_entry_id: str, dest: Destination, name: str) -> None:
         """Initialize the entity with destination channel."""
         super().__init__(config_entry_id, dest)
-        self._value_func = func
-        self._attr_translation_key = f"rotation-{func.__name__}"
+        self._attr_translation_key = f"rotation-{name}"
         if self._attr_unique_id:
-            self._attr_unique_id += f"-rotation-{func.__name__}"
-        if self._value_func == min:
+            self._attr_unique_id += f"-rotation-{name}"
+        if name == "min":
+            self._value_func = min
             self._attr_icon = "mdi:rotate-left"
-        elif self._value_func == max:
+        elif name == "max":
+            self._value_func = max
             self._attr_icon = "mdi:rotate-right"
 
     async def async_added_to_hass(self) -> None:
