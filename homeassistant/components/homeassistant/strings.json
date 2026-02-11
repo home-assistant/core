@@ -39,6 +39,15 @@
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
+    "service_config_entry_not_found": {
+      "message": "Integration {domain} config entry with ID {entry_id} was not found."
+    },
+    "service_config_entry_not_loaded": {
+      "message": "Config entry {entry_title} for integration {domain} is not loaded."
+    },
+    "service_config_entry_wrong_domain": {
+      "message": "Config entry {entry_title} does not belong to integration {domain}."
+    },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
     },

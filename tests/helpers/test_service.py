@@ -14,7 +14,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
-from homeassistant import exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
@@ -56,6 +56,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
+    MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
     MockModule,
@@ -3122,3 +3123,30 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             schema=schema,
             func=Mock(),
         )
+
+
+async def test_get_service_config_entry(hass: HomeAssistant) -> None:
+    """Test that we can get a service config entry."""
+    domain = "mock_integration"
+    entry_id = "mock_entry_id"
+    # Config entry exists, and is loaded
+    entry1 = MockConfigEntry(domain=domain, entry_id=entry_id)
+    entry1.add_to_hass(hass)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    assert service.async_get_config_entry(hass, domain, entry_id) is entry1
+
+    # Config entry doesn't exist
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, "another_entry")
+    assert err.value.translation_key == "service_config_entry_not_found"
+
+    # Config entry exists, but from wrong domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, "another_domain", entry_id)
+    assert err.value.translation_key == "service_config_entry_wrong_domain"
+
+    # Config entry exists, but is not loaded
+    entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, entry_id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
