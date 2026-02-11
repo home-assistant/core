@@ -62,6 +62,7 @@ async def test_sensor_availability(
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert state.state == STATE_UNAVAILABLE
 
+    mock_client.get_paginator.return_value.paginate.side_effect = None
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         {"Contents": []}
     ]
