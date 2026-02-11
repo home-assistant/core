@@ -32,9 +32,7 @@ from .consts import (
 )
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_turn_on_with_timer_service(
     hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -74,9 +72,7 @@ async def test_turn_on_with_timer_service(
         assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
 async def test_turn_on_with_timer_service_token_needed(
     hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -116,9 +112,7 @@ async def test_turn_on_with_timer_service_token_needed(
         assert state.state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service(
     hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
@@ -145,9 +139,7 @@ async def test_set_auto_off_service(
         )
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service_token_needed(
     hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
@@ -174,9 +166,7 @@ async def test_set_auto_off_service_token_needed(
         )
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service_fail(
     hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
@@ -207,9 +197,7 @@ async def test_set_auto_off_service_fail(
         assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service_fail_token_needed(
     hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
