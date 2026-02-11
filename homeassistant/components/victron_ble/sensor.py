@@ -246,7 +246,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.CHARGE_STATE: VictronBLESensorEntityDescription(
         key=Keys.CHARGE_STATE,
         device_class=SensorDeviceClass.ENUM,
-        translation_key="device_state",
+        translation_key="charge_state",
         options=DEVICE_STATE_OPTIONS,
     ),
     Keys.CHARGER_ERROR: VictronBLESensorEntityDescription(
