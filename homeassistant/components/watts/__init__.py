@@ -9,7 +9,6 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from visionpluspython.auth import WattsVisionAuth
 from visionpluspython.client import WattsVisionClient
-from visionpluspython.models import ThermostatDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_DEVICE_TYPES
 from .coordinator import (
     WattsVisionDeviceCoordinator,
     WattsVisionDeviceData,
@@ -27,7 +26,7 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
 
 @dataclass
@@ -63,7 +62,7 @@ def _handle_new_devices(
 
     for device_id in new_device_ids:
         device = hub_coordinator.data[device_id]
-        if not isinstance(device, ThermostatDevice):
+        if not isinstance(device, SUPPORTED_DEVICE_TYPES):
             continue
 
         device_coordinator = WattsVisionDeviceCoordinator(
@@ -124,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     device_coordinators: dict[str, WattsVisionDeviceCoordinator] = {}
     for device_id in hub_coordinator.device_ids:
         device = hub_coordinator.data[device_id]
-        if not isinstance(device, ThermostatDevice):
+        if not isinstance(device, SUPPORTED_DEVICE_TYPES):
             continue
 
         device_coordinator = WattsVisionDeviceCoordinator(
