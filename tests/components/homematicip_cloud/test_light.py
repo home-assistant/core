@@ -907,6 +907,6 @@ async def test_hmip_combination_signalling_light(
     assert len(functional_channel.mock_calls) == service_call_counter + 2
 
     # Test state update when turned off
-    await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0.0, channel=1)
+    await async_manipulate_test_data(hass, hmip_device, "on", False, channel=1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
