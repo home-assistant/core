@@ -69,7 +69,7 @@ from homeassistant.helpers.typing import StateType
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channels_from_device
+from .helpers import get_channels_from_device, smoke_detector_channel_data_exists
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,7 +77,7 @@ class HmipSmokeDetectorSensorDescription(SensorEntityDescription):
     """Describes HmIP smoke detector sensor entity."""
 
     value_fn: Callable[[SmokeDetector], StateType | datetime]
-    attr_name: str  # Device attribute name for hasattr check
+    channel_field: str  # Field name in the raw channel payload
 
 
 SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
@@ -87,7 +87,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        attr_name="dirtLevel",
+        channel_field="dirtLevel",
         value_fn=lambda d: (
             round(d.dirtLevel * 100, 1) if d.dirtLevel is not None else None
         ),
@@ -97,7 +97,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         translation_key="smoke_detector_alarm_counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        attr_name="smokeAlarmCounter",
+        channel_field="smokeAlarmCounter",
         value_fn=lambda d: d.smokeAlarmCounter,
     ),
     HmipSmokeDetectorSensorDescription(
@@ -105,7 +105,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         translation_key="smoke_detector_test_counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        attr_name="smokeTestCounter",
+        channel_field="smokeTestCounter",
         value_fn=lambda d: d.smokeTestCounter,
     ),
     HmipSmokeDetectorSensorDescription(
@@ -113,7 +113,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         translation_key="smoke_detector_last_alarm",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        attr_name="lastSmokeAlarmTimestamp",
+        channel_field="lastSmokeAlarmTimestamp",
         value_fn=lambda d: (
             datetime.fromtimestamp(d.lastSmokeAlarmTimestamp / 1000, tz=UTC)
             if d.lastSmokeAlarmTimestamp
@@ -125,7 +125,7 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
         translation_key="smoke_detector_last_test",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
-        attr_name="lastSmokeTestTimestamp",
+        channel_field="lastSmokeTestTimestamp",
         value_fn=lambda d: (
             datetime.fromtimestamp(d.lastSmokeTestTimestamp / 1000, tz=UTC)
             if d.lastSmokeTestTimestamp
@@ -356,13 +356,13 @@ async def async_setup_entry(
         and getattr(channel, "valvePosition", None) is not None
     )
 
-    # Handle smoke detector extended sensors
+    # Handle smoke detector extended sensors (e.g., HmIP-SWSD-2)
     entities.extend(
         HmipSmokeDetectorSensor(hap, device, description)
         for device in hap.home.devices
         if isinstance(device, SmokeDetector)
         for description in SMOKE_DETECTOR_SENSORS
-        if hasattr(device, description.attr_name)
+        if smoke_detector_channel_data_exists(device, description.channel_field)
     )
 
     async_add_entities(entities)

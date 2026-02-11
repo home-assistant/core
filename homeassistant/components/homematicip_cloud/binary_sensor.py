@@ -42,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -125,7 +126,7 @@ async def async_setup_entry(
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, SmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
-            if hasattr(device, "chamberDegraded"):
+            if smoke_detector_channel_data_exists(device, "chamberDegraded"):
                 entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
         if isinstance(device, WaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
