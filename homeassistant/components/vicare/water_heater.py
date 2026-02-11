@@ -102,6 +102,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
+    _dhw_active: bool | None = None
 
     def __init__(
         self,
@@ -131,6 +132,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._current_mode = self._circuit.getActiveMode()
 
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._dhw_active = self._api.getDomesticHotWaterActive()
+
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except PyViCareRateLimitError as limit_exception:
@@ -149,6 +153,8 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
+        if self._dhw_active is not None:
+            return OPERATION_MODE_ON if self._dhw_active else OPERATION_MODE_OFF
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
