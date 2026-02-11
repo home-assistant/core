@@ -113,9 +113,7 @@ async def test_turn_on_with_timer_service_token_needed(
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_set_auto_off_service(
-    hass: HomeAssistant, mock_bridge, mock_api
-) -> None:
+async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) -> None:
     """Test the set auto off service."""
     await init_integration(hass)
     assert mock_bridge
@@ -140,9 +138,7 @@ async def test_set_auto_off_service(
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
-async def test_set_auto_off_service_token_needed(
-    hass: HomeAssistant, mock_bridge, mock_api
-) -> None:
+async def test_set_auto_off_service_token_needed(hass: HomeAssistant, mock_bridge, mock_api) -> None:
     """Test the set auto off service."""
     await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
