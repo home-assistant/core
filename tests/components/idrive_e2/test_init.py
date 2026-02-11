@@ -9,10 +9,8 @@ from botocore.exceptions import (
 )
 import pytest
 
-from homeassistant.components.idrive_e2 import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 
 from . import setup_integration
 
@@ -35,9 +33,8 @@ async def test_async_setup_entry_does_not_mask_when_close_fails(
     # Also force close() to fail
     mock_client.close.side_effect = RuntimeError("boom")
 
-    # If close() masks the original error, this would raise RuntimeError instead
-    with pytest.raises(ConfigEntryError):
-        await async_setup_entry(hass, mock_config_entry)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id) is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     mock_client.close.assert_awaited_once()
 
