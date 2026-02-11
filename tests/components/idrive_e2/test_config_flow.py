@@ -53,10 +53,6 @@ async def test_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_client.list_buckets.return_value = {
-        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
-    }
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -122,9 +118,6 @@ async def test_flow_list_buckets_errors(
 
     # Second attempt: fix and finish to CREATE_ENTRY
     mock_client.list_buckets.side_effect = None
-    mock_client.list_buckets.return_value = {
-        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
-    }
 
     result = await hass.config_entries.flow.async_configure(
         flow_id,
@@ -283,9 +276,6 @@ async def test_flow_get_region_endpoint_error(
     # Second attempt: fix and finish to CREATE_ENTRY
     mock_idrive_client.get_region_endpoint.side_effect = None
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
-    mock_client.list_buckets.return_value = {
-        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
-    }
 
     result = await hass.config_entries.flow.async_configure(
         flow_id,
@@ -324,10 +314,6 @@ async def test_abort_if_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    mock_client.list_buckets.return_value = {
-        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
-    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

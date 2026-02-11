@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.backup import AgentBackup
+from homeassistant.components.idrive_e2 import CONF_BUCKET
 from homeassistant.components.idrive_e2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     suggested_filenames,
@@ -57,6 +58,9 @@ def mock_client(agent_backup: AgentBackup) -> Generator[AsyncMock]:
         }
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
+        client.list_buckets.return_value = {
+            "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
+        }
 
         # To simplify this mock, we assume that backup is always "iterated" over, while metadata is always "read" as a whole
         class MockStream:
