@@ -1091,11 +1091,13 @@ class ReloadServiceHelper[_T]:
 
         if do_reload:
             # Reload, then notify other tasks
-            await self._service_func(service_call)
-            async with self._service_condition:
-                self._service_running = False
-                self._pending_reload_targets -= reload_targets
-                self._service_condition.notify_all()
+            try:
+                await self._service_func(service_call)
+            finally:
+                async with self._service_condition:
+                    self._service_running = False
+                    self._pending_reload_targets -= reload_targets
+                    self._service_condition.notify_all()
 
 
 def _validate_entity_service_schema(
