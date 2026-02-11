@@ -34,6 +34,7 @@ from .const import (
     DOORTAG_STATUS_OPEN,
     DOORTAG_STATUS_UNDEFINED,
     DOORTAG_STATUS_WEAK_SIGNAL,
+    NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
@@ -125,16 +126,10 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     netatmo_name: str | None = (
         None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
     )
-    device_class_fn: (
-        Callable[[NetatmoDevice], BinarySensorDeviceClass | None] | None
-    ) = None  # This is a value_fn variant to calculate device_class exceptions
-    device_key_fn: Callable[[NetatmoDevice], str | None] | None = (
-        None  # This is a value_fn variant to calculate key
-    )
     value_fn: Callable[[str], str | bool | None] = lambda x: x
 
 
-NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
+NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS: Final[
     list[NetatmoBinarySensorEntityDescription]
 ] = [
     NetatmoBinarySensorEntityDescription(
@@ -161,21 +156,15 @@ NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
 #  'name': 'YYYYYY',
 #  'reachable': True,
 #  'rf_strength': 74,
-#  'room_id': '344597214',
+#  'room_id': 'ZZZZZZZZ',
 #  'status': 'open'}
 
 NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
     list[NetatmoBinarySensorEntityDescription]
 ] = [
     NetatmoBinarySensorEntityDescription(
-        key="reachable",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    ),
-    NetatmoBinarySensorEntityDescription(
         key="opening",
         netatmo_name="status",
-        device_class_fn=process_opening_category,
-        device_key_fn=process_opening_key,
         value_fn=OPENING_STATUS_TO_BINARY_SENSOR_STATE.get,
     ),
 ]
@@ -184,12 +173,23 @@ DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
 }
 
-DEVICE_CATEGORY_BINARY_SENSORS: Final[
+DEVICE_CATEGORY_WEATHER_BINARY_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
 ] = {
-    NetatmoDeviceCategory.air_care: NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.air_care: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.weather: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+}
+
+DEVICE_CATEGORY_CONNECTIVITY_BINARY_SENSORS: Final[
+    dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
+] = {
+    NetatmoDeviceCategory.opening: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+}
+
+DEVICE_CATEGORY_OPENING_BINARY_SENSORS: Final[
+    dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
+] = {
     NetatmoDeviceCategory.opening: NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS,
-    NetatmoDeviceCategory.weather: NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS,
 }
 
 DEVICE_CATEGORY_BINARY_PUBLISHERS: Final[list[NetatmoDeviceCategory]] = [
@@ -207,7 +207,12 @@ async def async_setup_entry(
     @callback
     def _create_binary_sensor_entity(
         binarySensorClass: type[
-            NetatmoWeatherBinarySensor | NetatmoOpeningBinarySensor
+            NetatmoWeatherBinarySensor
+            | NetatmoOpeningBinarySensor
+            | NetatmoConnectivityBinarySensor
+        ],
+        descriptions: dict[
+            NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]
         ],
         netatmo_device: NetatmoDevice,
     ) -> None:
@@ -216,11 +221,15 @@ async def async_setup_entry(
         if netatmo_device.device.device_category is None:
             return
 
-        descriptions_to_add = DEVICE_CATEGORY_BINARY_SENSORS.get(
+        descriptions_to_add = descriptions.get(
             netatmo_device.device.device_category, []
         )
 
-        entities: list[NetatmoWeatherBinarySensor | NetatmoOpeningBinarySensor] = []
+        entities: list[
+            NetatmoWeatherBinarySensor
+            | NetatmoOpeningBinarySensor
+            | NetatmoConnectivityBinarySensor
+        ] = []
 
         # Create binary sensors for module
         for description in descriptions_to_add:
@@ -252,6 +261,7 @@ async def async_setup_entry(
             partial(
                 _create_binary_sensor_entity,
                 NetatmoWeatherBinarySensor,
+                DEVICE_CATEGORY_WEATHER_BINARY_SENSORS,
             ),
         )
     )
@@ -263,6 +273,19 @@ async def async_setup_entry(
             partial(
                 _create_binary_sensor_entity,
                 NetatmoOpeningBinarySensor,
+                DEVICE_CATEGORY_OPENING_BINARY_SENSORS,
+            ),
+        )
+    )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
+            partial(
+                _create_binary_sensor_entity,
+                NetatmoConnectivityBinarySensor,
+                DEVICE_CATEGORY_CONNECTIVITY_BINARY_SENSORS,
             ),
         )
     )
@@ -298,6 +321,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
         # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
+        # We need to keep this here because we have two classes depending on it and we want to avoid adding publishers for all binary sensors
         if self.device.device_category in DEVICE_CATEGORY_BINARY_PUBLISHERS:
             self._publishers.extend(
                 [
@@ -313,45 +337,17 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # First we need to know whether we set reachable or another attribute
-        if self.entity_description.key == "reachable":
-            # Setting reachable sensor, so we just get it directly (backward compatibility to weather binary sensor)
-            value = getattr(self.device, self.entity_description.key, None)
+        # Should be the connectivity (reachable) sensor only here as we have update for opening in its class
 
-            if value is None:
-                self._attr_available = False
-                self._attr_is_on = False
-            else:
-                self._attr_available = True
-                self._attr_is_on = cast(bool, value)
-            self.async_write_ha_state()
-            return
+        # Setting reachable sensor, so we just get it directly (backward compatibility to weather binary sensor)
+        value = getattr(self.device, self.entity_description.key, None)
 
-        # We setting other sensor than reachable
-
-        if not self.device.reachable:
-            # If reachable is None or False we set availability to False
+        if value is None:
             self._attr_available = False
-            self._attr_is_on = None
-
+            self._attr_is_on = False
         else:
-            # If reachable is True, we get the actual value
-            if self.entity_description.netatmo_name is None:
-                raw_value = getattr(self.device, self.entity_description.key, None)
-            else:
-                raw_value = getattr(
-                    self.device, self.entity_description.netatmo_name, None
-                )
-
-            if raw_value is not None:
-                value = self.entity_description.value_fn(raw_value)
-            else:
-                value = None
-
-            # Set sensor state
             self._attr_available = True
-            self._attr_is_on = cast(bool, value) if value is not None else None
-
+            self._attr_is_on = cast(bool, value)
         self.async_write_ha_state()
 
 
@@ -385,12 +381,46 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
 
         super().__init__(netatmo_device, description)
 
-        # Apply Dynamic Device Class override if available
-        if description.device_class_fn:
-            self._attr_device_class = description.device_class_fn(netatmo_device)
+        # Apply Dynamic Device Class override
+        self._attr_device_class = process_opening_category(netatmo_device)
 
-        # Apply Dynamic Translation Key if available and needed
-        if description.device_key_fn:
-            device_key = description.device_key_fn(netatmo_device)
-            if device_key is not None:
-                self._attr_translation_key = device_key
+        # Apply Dynamic Translation Key override if needed
+        device_key = process_opening_key(netatmo_device)
+        if device_key is not None:
+            self._attr_translation_key = device_key
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+
+        if not self.device.reachable:
+            # If reachable is None or False we set availability to False
+            self._attr_available = False
+            self._attr_is_on = None
+
+        else:
+            # If reachable is True, we get the actual value
+            if self.entity_description.netatmo_name is None:
+                raw_value = getattr(self.device, self.entity_description.key, None)
+            else:
+                raw_value = getattr(
+                    self.device, self.entity_description.netatmo_name, None
+                )
+
+            if raw_value is not None:
+                value = self.entity_description.value_fn(raw_value)
+            else:
+                value = None
+
+            # Set sensor state
+            self._attr_available = True
+            self._attr_is_on = cast(bool, value) if value is not None else None
+
+        self.async_write_ha_state()
+
+
+class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
+    """Implementation of a Netatmo connectivity binary sensor."""
+
+    entity_description: NetatmoBinarySensorEntityDescription
+    _attr_has_entity_name = True
