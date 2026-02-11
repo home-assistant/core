@@ -1801,6 +1801,9 @@ pyicloud==2.3.0
 # homeassistant.components.insteon
 pyinsteon==1.6.4
 
+# homeassistant.components.intelliclima
+pyintelliclima==0.2.2
+
 # homeassistant.components.ipma
 pyipma==3.0.9
 
