@@ -288,6 +288,9 @@
     "entry_not_loaded": {
       "message": "The selected ntfy service is currently not loaded or disabled in Home Assistant."
     },
+    "media_source_not_supported": {
+      "message": "Media source currently not supported"
+    },
     "publish_failed_exception": {
       "message": "Failed to publish notification due to a connection error"
     },
@@ -353,6 +356,10 @@
           "description": "Attach images or other files by URL.",
           "name": "Attachment URL"
         },
+        "attach_file": {
+          "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the notification.",
+          "name": "Attach local file"
+        },
         "call": {
           "description": "Phone number to call and read the message out loud using text-to-speech. Requires ntfy Pro and prior phone number verification.",
           "name": "Phone call"
@@ -368,6 +375,10 @@
         "email": {
           "description": "Specify the address to forward the notification to, for example mail@example.com",
           "name": "Forward to email"
+        },
+        "filename": {
+          "description": "Specify a custom filename for the attachment, including the file extension (for example, attachment.jpg). If not provided, the original filename will be used.",
+          "name": "Attachment filename"
         },
         "icon": {
           "description": "Include an icon that will appear next to the text of the notification. Only JPEG and PNG images are supported.",
