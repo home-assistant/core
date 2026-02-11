@@ -297,14 +297,17 @@ async def test_flow_get_region_endpoint_error(
 
 async def test_abort_if_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_idrive_client: AsyncMock,
     mock_client: AsyncMock,
 ) -> None:
     """Test we abort if the account is already configured."""
     # Existing entry that should cause abort when selecting the same bucket + endpoint
     MockConfigEntry(
-        domain=DOMAIN,
+        domain=mock_config_entry.domain,
+        title=mock_config_entry.title,
         data={
+            **mock_config_entry.data,
             CONF_BUCKET: USER_INPUT[CONF_BUCKET],
             CONF_ENDPOINT_URL: USER_INPUT[CONF_ENDPOINT_URL],
         },
