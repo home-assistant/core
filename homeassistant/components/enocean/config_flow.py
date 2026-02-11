@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -14,7 +14,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
 
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -25,17 +25,18 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
-        self.dongle_path = None
-        self.discovery_info = None
+        self._usb_discovery_info: UsbServiceInfo | None = None
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
 
-        # TODO: exit for already known dongle paths
-        # await self.async_set_unique_id(device_unique_id)
-        # self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(discovery_info.serial_number)
+        self._abort_if_unique_id_configured()
 
-        self._device_path = discovery_info.device
+        self._usb_discovery_info = discovery_info
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"{discovery_info.description} {discovery_info.manufacturer} ({discovery_info.serial_number})",
+        }
         return await self.async_step_usb_confirm()
 
     async def async_step_usb_confirm(
@@ -43,9 +44,17 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle USB Discovery confirmation."""
         if user_input is not None:
-            return await self.async_step_manual({CONF_DEVICE: self._device_path})
+            return await self.async_step_manual(
+                {CONF_DEVICE: self._usb_discovery_info.device}
+            )
         self._set_confirm_only()
-        return self.async_show_form(step_id="usb_confirm")
+        return self.async_show_form(
+            step_id="usb_confirm",
+            description_placeholders={
+                ATTR_MANUFACTURER: MANUFACTURER,
+                CONF_DEVICE: self._usb_discovery_info.device,
+            },
+        )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
@@ -125,4 +134,4 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
-        return self.async_create_entry(title="EnOcean", data=user_input)
+        return self.async_create_entry(title=MANUFACTURER, data=user_input)
