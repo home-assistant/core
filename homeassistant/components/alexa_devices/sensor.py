@@ -109,7 +109,7 @@ SENSORS: Final = (
     ),
     AmazonSensorEntityDescription(
         key="VOC",
-        device_class=SensorDeviceClass.AQI,
+        # No device class as this is an index not a concentration
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="volatile_organic_compounds",
     ),
