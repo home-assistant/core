@@ -7,11 +7,15 @@ from nessclient import ArmingMode, ArmingState
 import pytest
 
 from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm import async_setup
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
+    CONF_SHOW_HOME_MODE,
     CONF_ZONE_NUMBER,
     DOMAIN,
     SERVICE_AUX,
@@ -528,6 +532,59 @@ async def test_entry_reload_on_update(hass: HomeAssistant, mock_nessclient) -> N
 
     # Entry should have the alarm subentry (auto-created) + new zone subentry
     assert len(entry.subentries) == 2
+
+
+async def test_alarm_panel_home_mode_disabled(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test alarm panel with home mode disabled via options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        options={CONF_SHOW_HOME_MODE: False},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.alarm_panel")
+    assert state is not None
+
+    # ARM_HOME should not be in supported features
+    supported = state.attributes["supported_features"]
+    assert not supported & AlarmControlPanelEntityFeature.ARM_HOME
+    assert supported & AlarmControlPanelEntityFeature.ARM_AWAY
+    assert supported & AlarmControlPanelEntityFeature.TRIGGER
+
+
+async def test_alarm_panel_home_mode_enabled_by_default(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test alarm panel has home mode enabled by default."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.alarm_panel")
+    assert state is not None
+
+    # ARM_HOME should be in supported features by default
+    supported = state.attributes["supported_features"]
+    assert supported & AlarmControlPanelEntityFeature.ARM_HOME
+    assert supported & AlarmControlPanelEntityFeature.ARM_AWAY
+    assert supported & AlarmControlPanelEntityFeature.TRIGGER
 
 
 async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:

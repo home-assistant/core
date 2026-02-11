@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
-from .const import DOMAIN, SUBENTRY_TYPE_ALARM
+from .const import CONF_SHOW_HOME_MODE, DOMAIN, SUBENTRY_TYPE_ALARM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +40,17 @@ async def async_setup_entry(
     """Set up the Ness Alarm alarm control panel from config entry."""
     client = entry.runtime_data
 
-    # Find the alarm subentry
+    # Find the alarm subentry for device grouping
     alarm_subentry = next(
         subentry
         for subentry in entry.subentries.values()
         if subentry.subentry_type == SUBENTRY_TYPE_ALARM
     )
 
+    show_home_mode = entry.options.get(CONF_SHOW_HOME_MODE, True)
+
     async_add_entities(
-        [NessAlarmPanel(client, entry.entry_id)],
+        [NessAlarmPanel(client, entry.entry_id, show_home_mode)],
         config_subentry_id=alarm_subentry.subentry_id,
     )
 
@@ -58,13 +60,8 @@ class NessAlarmPanel(AlarmControlPanelEntity):
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
 
-    def __init__(self, client: Client, entry_id: str) -> None:
+    def __init__(self, client: Client, entry_id: str, show_home_mode: bool) -> None:
         """Initialize the alarm panel."""
         self._client = client
         self._attr_name = "Alarm Panel"
@@ -73,6 +70,13 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             name="Alarm Panel",
             identifiers={(DOMAIN, entry_id)},
         )
+        features = (
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.TRIGGER
+        )
+        if show_home_mode:
+            features |= AlarmControlPanelEntityFeature.ARM_HOME
+        self._attr_supported_features = features
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

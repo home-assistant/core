@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryData,
     ConfigSubentryFlow,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
@@ -25,6 +26,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_INFER_ARMING_STATE,
+    CONF_SHOW_HOME_MODE,
     CONF_ZONE_ID,
     CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
@@ -75,6 +77,14 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             SUBENTRY_TYPE_ZONE: ZoneSubentryFlowHandler,
         }
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return NessAlarmOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -168,6 +178,29 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             },
             subentries=subentries,
+        )
+
+
+class NessAlarmOptionsFlowHandler(OptionsFlow):
+    """Handle options flow for Ness Alarm."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_SHOW_HOME_MODE, default=True): bool,
+                    }
+                ),
+                self.config_entry.options,
+            ),
         )
 
 

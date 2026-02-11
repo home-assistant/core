@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
     CONF_INFER_ARMING_STATE,
+    CONF_SHOW_HOME_MODE,
     CONF_ZONE_ID,
     CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
@@ -375,3 +376,57 @@ async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow to configure alarm panel settings."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Disable home mode
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_SHOW_HOME_MODE: False,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SHOW_HOME_MODE] is False
+
+
+async def test_options_flow_enable_home_mode(hass: HomeAssistant) -> None:
+    """Test options flow to enable home mode."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        options={CONF_SHOW_HOME_MODE: False},
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_SHOW_HOME_MODE: True,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SHOW_HOME_MODE] is True

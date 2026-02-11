@@ -68,6 +68,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_home_mode": "Show arm home mode"
+        },
+        "data_description": {
+          "show_home_mode": "Enable this to show the arm home option on the alarm panel."
+        }
+      }
+    }
+  },
   "services": {
     "aux": {
       "description": "Changes the state of an aux output.",
