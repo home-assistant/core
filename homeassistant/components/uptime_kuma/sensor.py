@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_URL, EntityCategory, UnitOfTime
+from homeassistant.const import CONF_URL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,6 +37,12 @@ class UptimeKumaSensor(StrEnum):
     URL = "url"
     HOSTNAME = "hostname"
     PORT = "port"
+    UPTIME_RATIO_1D = "uptime_1d"
+    UPTIME_RATIO_30D = "uptime_30d"
+    UPTIME_RATIO_365D = "uptime_365d"
+    AVG_RESPONSE_TIME_1D = "avg_response_time_1d"
+    AVG_RESPONSE_TIME_30D = "avg_response_time_30d"
+    AVG_RESPONSE_TIME_365D = "avg_response_time_365d"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -103,6 +109,76 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_port,
         create_entity=lambda t: t in HAS_PORT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.PORT,
+        translation_key=UptimeKumaSensor.PORT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda m: m.monitor_port,
+        create_entity=lambda t: t in HAS_PORT,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_1D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_1D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_1d * 100
+            if m.monitor_uptime_ratio_1d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_30D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_30D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_30d * 100
+            if m.monitor_uptime_ratio_30d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.UPTIME_RATIO_365D,
+        translation_key=UptimeKumaSensor.UPTIME_RATIO_365D,
+        value_fn=lambda m: (
+            m.monitor_uptime_ratio_365d * 100
+            if m.monitor_uptime_ratio_365d is not None
+            else None
+        ),
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        create_entity=lambda t: True,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
+        value_fn=lambda m: m.monitor_response_time_seconds_1d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
+        value_fn=lambda m: m.monitor_response_time_seconds_30d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
+    ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
+        translation_key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
+        value_fn=lambda m: m.monitor_response_time_seconds_365d,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        create_entity=lambda t: True,
     ),
 )
 

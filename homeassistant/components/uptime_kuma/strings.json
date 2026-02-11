@@ -61,6 +61,15 @@
   },
   "entity": {
     "sensor": {
+      "avg_response_time_1d": {
+        "name": "Response time Ø (1 day)"
+      },
+      "avg_response_time_30d": {
+        "name": "Response time Ø (30 days)"
+      },
+      "avg_response_time_365d": {
+        "name": "Response time Ø (365 days)"
+      },
       "cert_days_remaining": {
         "name": "Certificate expiry"
       },
@@ -116,6 +125,15 @@
           "tailscale_ping": "Tailscale Ping",
           "websocket_upgrade": "WebSocket-Upgrade"
         }
+      },
+      "uptime_1d": {
+        "name": "Uptime (1 day)"
+      },
+      "uptime_30d": {
+        "name": "Uptime (30 days)"
+      },
+      "uptime_365d": {
+        "name": "Uptime (365 days)"
       },
       "url": {
         "name": "Monitored URL"
