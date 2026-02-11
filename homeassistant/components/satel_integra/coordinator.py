@@ -50,7 +50,7 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
 
 class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
-    """DataUpdateCoordinatot to handle zone updates."""
+    """DataUpdateCoordinator to handle zone updates."""
 
     def __init__(
         self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
@@ -83,7 +83,7 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
 
     @callback
     def outputs_update_callback(self, status: dict[str, dict[int, int]]):
-        """Update zone objects as per notification from the alarm."""
+        """Update output objects as per notification from the alarm."""
         _LOGGER.debug("Outputs callback, status: %s", status)
 
         update_data = {
@@ -108,7 +108,7 @@ class SatelIntegraPartitionsCoordinator(
 
     @callback
     def partitions_update_callback(self):
-        """Update zone objects as per notification from the alarm."""
+        """Update partition objects as per notification from the alarm."""
         _LOGGER.debug("Sending request to update panel state")
 
         self.async_set_updated_data(self.client.controller.partition_states)

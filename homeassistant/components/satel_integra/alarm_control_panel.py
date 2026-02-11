@@ -71,7 +71,7 @@ async def async_setup_entry(
 class SatelIntegraAlarmPanel(
     SatelIntegraEntity[SatelIntegraPartitionsCoordinator], AlarmControlPanelEntity
 ):
-    """Representation of an Satal Integra-based alarm panel."""
+    """Representation of a Satel Integra-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
