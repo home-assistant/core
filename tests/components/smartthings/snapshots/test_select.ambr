@@ -6,9 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -46,9 +46,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump Backup heater application',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
@@ -56,7 +56,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_space_heating_priority-entry]
@@ -66,8 +66,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -105,8 +105,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump DHW space heating priority',
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'context': <ANY>,
@@ -114,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'heating',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_tank_function-entry]
@@ -124,9 +124,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -164,9 +164,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump DHW tank function',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'context': <ANY>,
@@ -174,7 +174,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'enabled_thermo_on',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_1-entry]
@@ -184,11 +184,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -226,11 +226,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump External run input (zone 1)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'context': <ANY>,
@@ -238,7 +238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_2-entry]
@@ -248,11 +248,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -290,11 +290,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump External run input (zone 2)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'context': <ANY>,
@@ -302,7 +302,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_remote_controller_room_temp_control_internal_sensor-entry]
@@ -312,10 +312,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -353,10 +353,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump Remote controller room temp control (internal sensor)',
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'context': <ANY>,
@@ -364,7 +364,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': 'level_2',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_three_way_valve_direction-entry]
@@ -374,8 +374,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -413,8 +413,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump Three-way valve direction',
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'context': <ANY>,
@@ -422,7 +422,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'room_space_heating',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_two_zone_control-entry]
@@ -432,8 +432,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -471,8 +471,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump Two-zone control',
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'context': <ANY>,
@@ -480,7 +480,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
@@ -964,9 +964,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1004,9 +1004,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System Backup heater application',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
@@ -1014,7 +1014,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_space_heating_priority-entry]
@@ -1024,8 +1024,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1063,8 +1063,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System DHW space heating priority',
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'context': <ANY>,
@@ -1072,7 +1072,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'dhw',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_tank_function-entry]
@@ -1082,9 +1082,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1122,9 +1122,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System DHW tank function',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'context': <ANY>,
@@ -1132,7 +1132,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': 'enabled_thermo_off',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_1-entry]
@@ -1142,11 +1142,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1184,11 +1184,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System External run input (zone 1)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'context': <ANY>,
@@ -1196,7 +1196,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_2-entry]
@@ -1206,11 +1206,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1248,11 +1248,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System External run input (zone 2)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'context': <ANY>,
@@ -1260,7 +1260,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_remote_controller_room_temp_control_internal_sensor-entry]
@@ -1270,10 +1270,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1311,10 +1311,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System Remote controller room temp control (internal sensor)',
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'context': <ANY>,
@@ -1322,7 +1322,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'level_4',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_three_way_valve_direction-entry]
@@ -1332,8 +1332,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1371,8 +1371,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System Three-way valve direction',
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'context': <ANY>,
@@ -1380,7 +1380,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'room_space_heating',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_two_zone_control-entry]
@@ -1390,8 +1390,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1429,8 +1429,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System Two-zone control',
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'context': <ANY>,
@@ -1438,7 +1438,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_backup_heater_application-entry]
@@ -1448,9 +1448,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1488,9 +1488,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main Backup heater application',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
@@ -1498,7 +1498,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_space_heating_priority-entry]
@@ -1508,8 +1508,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1547,8 +1547,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main DHW space heating priority',
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'context': <ANY>,
@@ -1556,7 +1556,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'heating',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_tank_function-entry]
@@ -1566,9 +1566,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1606,9 +1606,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main DHW tank function',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'context': <ANY>,
@@ -1616,7 +1616,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disabled',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_1-entry]
@@ -1626,11 +1626,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1668,11 +1668,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main External run input (zone 1)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'context': <ANY>,
@@ -1680,7 +1680,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'compressor_only',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_2-entry]
@@ -1690,11 +1690,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1732,11 +1732,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main External run input (zone 2)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'context': <ANY>,
@@ -1744,7 +1744,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'compressor_only',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_remote_controller_room_temp_control_internal_sensor-entry]
@@ -1754,10 +1754,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1795,10 +1795,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main Remote controller room temp control (internal sensor)',
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'context': <ANY>,
@@ -1806,7 +1806,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'level_4',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_three_way_valve_direction-entry]
@@ -1816,8 +1816,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1855,8 +1855,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main Three-way valve direction',
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'context': <ANY>,
@@ -1864,7 +1864,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'room_space_heating',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_two_zone_control-entry]
@@ -1874,8 +1874,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1913,8 +1913,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main Two-zone control',
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'context': <ANY>,
@@ -1922,7 +1922,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_backup_heater_application-entry]
@@ -1932,9 +1932,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1972,9 +1972,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe Backup heater application',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
@@ -1982,7 +1982,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_space_heating_priority-entry]
@@ -1992,8 +1992,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2031,8 +2031,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe DHW space heating priority',
       'options': list([
-        '0',
-        '1',
+        'dhw',
+        'heating',
       ]),
     }),
     'context': <ANY>,
@@ -2040,7 +2040,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'dhw',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_tank_function-entry]
@@ -2050,9 +2050,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2090,9 +2090,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe DHW tank function',
       'options': list([
-        '0',
-        '1',
-        '2',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'context': <ANY>,
@@ -2100,7 +2100,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'enabled_thermo_on',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_1-entry]
@@ -2110,11 +2110,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2152,11 +2152,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe External run input (zone 1)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'context': <ANY>,
@@ -2164,7 +2164,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_2-entry]
@@ -2174,11 +2174,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2216,11 +2216,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe External run input (zone 2)',
       'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
       ]),
     }),
     'context': <ANY>,
@@ -2228,7 +2228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'disable',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_remote_controller_room_temp_control_internal_sensor-entry]
@@ -2238,10 +2238,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2279,10 +2279,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe Remote controller room temp control (internal sensor)',
       'options': list([
-        '1',
-        '2',
-        '3',
-        '4',
+        'level_1',
+        'level_2',
+        'level_3',
+        'level_4',
       ]),
     }),
     'context': <ANY>,
@@ -2290,7 +2290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': 'level_4',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_three_way_valve_direction-entry]
@@ -2300,8 +2300,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2339,8 +2339,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe Three-way valve direction',
       'options': list([
-        '0',
-        '1',
+        'room_space_heating',
+        'tank_dhw',
       ]),
     }),
     'context': <ANY>,
@@ -2348,7 +2348,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'room_space_heating',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_two_zone_control-entry]
@@ -2358,8 +2358,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2397,8 +2397,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe Two-zone control',
       'options': list([
-        '0',
-        '1',
+        'no',
+        'yes',
       ]),
     }),
     'context': <ANY>,
@@ -2406,7 +2406,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': 'yes',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]

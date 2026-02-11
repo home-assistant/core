@@ -236,20 +236,33 @@ async def test_fsv_select_state(
         "select.eco_heating_system_external_run_input_zone_1"
     )
     assert fsv_2091_state is not None
-    assert fsv_2091_state.state == "0"  # value=0 from fixture
-    assert fsv_2091_state.attributes[ATTR_OPTIONS] == ["0", "1", "2", "3", "4"]
+    assert fsv_2091_state.state == "disable"  # value=0 from fixture
+    assert fsv_2091_state.attributes[ATTR_OPTIONS] == [
+        "disable",
+        "compressor_only",
+        "compressor_pump_mode_2",
+        "compressor_pump_mode_3",
+        "compressor_pump_mode_4",
+    ]
 
     fsv_3011_state = hass.states.get("select.eco_heating_system_dhw_tank_function")
     assert fsv_3011_state is not None
-    assert fsv_3011_state.state == "2"  # value=2 from fixture
-    assert fsv_3011_state.attributes[ATTR_OPTIONS] == ["0", "1", "2"]
+    assert fsv_3011_state.state == "enabled_thermo_off"  # value=2 from fixture
+    assert fsv_3011_state.attributes[ATTR_OPTIONS] == [
+        "disabled",
+        "enabled_thermo_on",
+        "enabled_thermo_off",
+    ]
 
     fsv_3071_state = hass.states.get(
         "select.eco_heating_system_three_way_valve_direction"
     )
     assert fsv_3071_state is not None
-    assert fsv_3071_state.state == "0"  # value=0 from fixture
-    assert fsv_3071_state.attributes[ATTR_OPTIONS] == ["0", "1"]
+    assert fsv_3071_state.state == "room_space_heating"  # value=0 from fixture
+    assert fsv_3071_state.attributes[ATTR_OPTIONS] == [
+        "room_space_heating",
+        "tank_dhw",
+    ]
 
     # Update FSV settings to change values
     await trigger_update(
@@ -297,17 +310,17 @@ async def test_fsv_select_state(
         "select.eco_heating_system_external_run_input_zone_1"
     )
     assert fsv_2091_updated is not None
-    assert fsv_2091_updated.state == "3"
+    assert fsv_2091_updated.state == "compressor_pump_mode_3"
 
     fsv_3011_updated = hass.states.get("select.eco_heating_system_dhw_tank_function")
     assert fsv_3011_updated is not None
-    assert fsv_3011_updated.state == "1"
+    assert fsv_3011_updated.state == "enabled_thermo_on"
 
     fsv_3071_updated = hass.states.get(
         "select.eco_heating_system_three_way_valve_direction"
     )
     assert fsv_3071_updated is not None
-    assert fsv_3071_updated.state == "1"
+    assert fsv_3071_updated.state == "tank_dhw"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
@@ -325,7 +338,7 @@ async def test_fsv_select_option(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.eco_heating_system_external_run_input_zone_2",
-            ATTR_OPTION: "2",
+            ATTR_OPTION: "pump_off",
         },
         blocking=True,
     )
@@ -343,7 +356,7 @@ async def test_fsv_select_option(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.eco_heating_system_backup_heater_application",
-            ATTR_OPTION: "1",
+            ATTR_OPTION: "buh_two_step",
         },
         blocking=True,
     )
@@ -361,7 +374,7 @@ async def test_fsv_select_option(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.eco_heating_system_three_way_valve_direction",
-            ATTR_OPTION: "1",
+            ATTR_OPTION: "tank_dhw",
         },
         blocking=True,
     )

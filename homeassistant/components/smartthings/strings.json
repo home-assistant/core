@@ -277,29 +277,29 @@
       "backup_heater_application": {
         "name": "Backup heater application",
         "state": {
-          "0": "No",
-          "1": "BUH two step",
-          "2": "BUH one step"
+          "buh_one_step": "BUH one step",
+          "buh_two_step": "BUH two step",
+          "no": "No"
         }
       },
       "buh_bsh_priority": {
         "name": "BUH/BSH priority",
         "state": {
-          "0": "Both",
-          "1": "BUH priority",
-          "2": "BSH priority"
+          "both": "Both",
+          "bsh_priority": "BSH priority",
+          "buh_priority": "BUH priority"
         }
       },
       "ch_dhw_supply_ratio": {
         "name": "CH/DHW supply ratio",
         "state": {
-          "1": "1 (Max DHW)",
-          "2": "2",
-          "3": "3",
-          "4": "4 (Balanced)",
-          "5": "5",
-          "6": "6",
-          "7": "7 (Max CH)"
+          "balanced": "4 (Balanced)",
+          "level_2": "2",
+          "level_3": "3",
+          "level_5": "5",
+          "level_6": "6",
+          "max_ch": "7 (Max CH)",
+          "max_dhw": "1 (Max DHW)"
         }
       },
       "detergent_amount": {
@@ -315,36 +315,36 @@
       "dhw_saving_mode": {
         "name": "DHW saving mode",
         "state": {
-          "0": "Standard",
-          "1": "Advanced"
+          "advanced": "Advanced",
+          "standard": "Standard"
         }
       },
       "dhw_space_heating_priority": {
         "name": "DHW space heating priority",
         "state": {
-          "0": "DHW",
-          "1": "Heating"
+          "dhw": "DHW",
+          "heating": "Heating"
         }
       },
       "dhw_tank_function": {
         "name": "DHW tank function",
         "state": {
-          "0": "No",
-          "1": "Yes (Thermo ON)",
-          "2": "Yes (Thermo OFF)"
+          "disabled": "No",
+          "enabled_thermo_off": "Yes (Thermo OFF)",
+          "enabled_thermo_on": "Yes (Thermo ON)"
         }
       },
       "disinfection_interval_day": {
         "name": "Disinfection interval day",
         "state": {
-          "0": "Sunday",
-          "1": "Monday",
-          "2": "Tuesday",
-          "3": "Wednesday",
-          "4": "Thursday",
-          "5": "Friday",
-          "6": "Saturday",
-          "7": "All days"
+          "all_days": "All days",
+          "friday": "Friday",
+          "monday": "Monday",
+          "saturday": "Saturday",
+          "sunday": "Sunday",
+          "thursday": "Thursday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday"
         }
       },
       "dust_filter_alarm": {
@@ -354,21 +354,21 @@
       "external_run_input_zone_1": {
         "name": "External run input (zone 1)",
         "state": {
-          "0": "Disable",
-          "1": "Compressor only",
-          "2": "Compressor + pump (mode 2)",
-          "3": "Compressor + pump (mode 3)",
-          "4": "Compressor + pump (mode 4)"
+          "compressor_only": "Compressor only",
+          "compressor_pump_mode_2": "Compressor + pump (mode 2)",
+          "compressor_pump_mode_3": "Compressor + pump (mode 3)",
+          "compressor_pump_mode_4": "Compressor + pump (mode 4)",
+          "disable": "Disable"
         }
       },
       "external_run_input_zone_2": {
         "name": "External run input (zone 2)",
         "state": {
-          "0": "Disable",
-          "1": "Compressor only",
-          "2": "Pump off",
-          "3": "Pump on",
-          "4": "Pump cycles"
+          "compressor_only": "Compressor only",
+          "disable": "Disable",
+          "pump_cycles": "Pump cycles",
+          "pump_off": "Pump off",
+          "pump_on": "Pump on"
         }
       },
       "flexible_detergent_amount": {
@@ -384,9 +384,9 @@
       "inverter_pump_application": {
         "name": "Inverter pump application",
         "state": {
-          "0": "No",
-          "1": "Yes (100%)",
-          "2": "Yes (70%)"
+          "no": "No",
+          "yes_100_percent": "Yes (100%)",
+          "yes_70_percent": "Yes (70%)"
         }
       },
       "lamp": {
@@ -403,9 +403,9 @@
       "mixing_valve_application": {
         "name": "Mixing valve application",
         "state": {
-          "0": "No",
-          "1": "ΔT control",
-          "2": "WL control"
+          "delta_t_control": "ΔT control",
+          "no": "No",
+          "water_law_control": "WL control"
         }
       },
       "operating_state": {
@@ -418,26 +418,26 @@
       "power_peak_control_forced_off_parts": {
         "name": "Power peak control forced off parts",
         "state": {
-          "0": "All",
-          "1": "Compressor only",
-          "2": "Booster only",
-          "3": "None"
+          "all": "All",
+          "booster_only": "Booster only",
+          "compressor_only": "Compressor only",
+          "none": "None"
         }
       },
       "remote_controller_room_temp_control": {
         "name": "Remote controller room temp control (internal sensor)",
         "state": {
-          "1": "Level 1",
-          "2": "Level 2",
-          "3": "Level 3",
-          "4": "Level 4"
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4"
         }
       },
       "smart_grid_dhw_mode": {
         "name": "Smart grid DHW mode",
         "state": {
-          "0": "Comfort",
-          "1": "Demand response"
+          "comfort": "Comfort",
+          "demand_response": "Demand response"
         }
       },
       "soil_level": {
@@ -478,44 +478,44 @@
       "tdm_priority": {
         "name": "TDM priority (A2A vs DHW)",
         "state": {
-          "0": "A2A",
-          "1": "DHW"
+          "a2a": "A2A",
+          "dhw": "DHW"
         }
       },
       "three_way_valve_direction": {
         "name": "Three-way valve direction",
         "state": {
-          "0": "Room/Space heating",
-          "1": "Tank/DHW"
+          "room_space_heating": "Room/Space heating",
+          "tank_dhw": "Tank/DHW"
         }
       },
       "two_zone_control": {
         "name": "Two-zone control",
         "state": {
-          "0": "No",
-          "1": "Yes"
+          "no": "No",
+          "yes": "Yes"
         }
       },
       "use_dhw_thermostat": {
         "name": "Use DHW thermostat",
         "state": {
-          "0": "No",
-          "1": "Thermostat only",
-          "2": "Combined"
+          "combined": "Combined",
+          "no": "No",
+          "thermostat_only": "Thermostat only"
         }
       },
       "water_law_type_cooling": {
         "name": "Water law type for cooling",
         "state": {
-          "1": "Floor",
-          "2": "FCU"
+          "fcu": "FCU",
+          "floor": "Floor"
         }
       },
       "water_law_type_heating": {
         "name": "Water law type for heating",
         "state": {
-          "1": "Floor",
-          "2": "FCU"
+          "fcu": "FCU",
+          "floor": "Floor"
         }
       },
       "water_temperature": {
