@@ -1,7 +1,0 @@
-rules:
-  # bronze
-  config-flow-test-coverage: done
-  config_flow: done
-  test-before-configure: done
-  # gold
-  discovery: done
