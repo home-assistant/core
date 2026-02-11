@@ -8,7 +8,6 @@ from typing import Any
 
 from pybotvac import Robot
 from pybotvac.exceptions import NeatoRobotException
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -17,9 +16,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -52,10 +49,6 @@ ATTR_CLEAN_PAUSE_TIME = "clean_pause_time"
 ATTR_CLEAN_ERROR_TIME = "clean_error_time"
 ATTR_LAUNCHED_FROM = "launched_from"
 
-ATTR_NAVIGATION = "navigation"
-ATTR_CATEGORY = "category"
-ATTR_ZONE = "zone"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,20 +69,6 @@ async def async_setup_entry(
 
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
-
-    platform = entity_platform.async_get_current_platform()
-    assert platform is not None
-
-    platform.async_register_entity_service(
-        "custom_cleaning",
-        {
-            vol.Optional(ATTR_MODE, default=2): cv.positive_int,
-            vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
-            vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
-            vol.Optional(ATTR_ZONE): cv.string,
-        },
-        "neato_custom_cleaning",
-    )
 
 
 class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):

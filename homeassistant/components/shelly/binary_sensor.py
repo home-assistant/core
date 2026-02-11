@@ -291,8 +291,8 @@ RPC_SENSORS: Final = {
     "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, BINARY_SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, BINARY_SENSOR_PLATFORM)
         ),
         role=ROLE_GENERIC,
     ),
@@ -328,9 +328,9 @@ RPC_SENSORS: Final = {
     "flood_cable_unplugged": RpcBinarySensorDescription(
         key="flood",
         sub_key="errors",
-        value=lambda status, _: False
-        if status is None
-        else "cable_unplugged" in status,
+        value=lambda status, _: (
+            False if status is None else "cable_unplugged" in status
+        ),
         translation_key="cable_unplugged",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,

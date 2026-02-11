@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import StateType
 from .const import CATEGORY_NOTIFICATIONS, CATEGORY_SENSORS
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
+from .utils import async_remove_unsupported_notification_sensors
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -105,6 +106,9 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    # Remove notification sensors from unsupported devices
+    await async_remove_unsupported_notification_sensors(hass, coordinator)
+
     known_devices: set[str] = set()
 
     def _check_device() -> None:
@@ -122,6 +126,7 @@ async def async_setup_entry(
                 AmazonSensorEntity(coordinator, serial_num, notification_desc)
                 for notification_desc in NOTIFICATIONS
                 for serial_num in new_devices
+                if coordinator.data[serial_num].notifications_supported
             ]
             async_add_entities(sensors_list + notifications_list)
 
