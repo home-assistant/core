@@ -2342,32 +2342,6 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     [
         (
             33,
-            20.0,
-            "2/5",
-            [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium Low", "2"],
-                ["Medium", "3"],
-                ["Medium High", "4"],
-                ["High", "Max", "Fast", "5"],
-            ],
-            40,
-        ),
-        (
-            40,
-            20.0,
-            "2/5",
-            [
-                ["Low", "Min", "Slow", "1"],
-                ["Medium Low", "2"],
-                ["Medium", "3"],
-                ["Medium High", "4"],
-                ["High", "Max", "Fast", "5"],
-            ],
-            40,
-        ),
-        (
-            33,
             100 / 3,
             "1/3",
             [
@@ -2376,6 +2350,65 @@ async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
                 ["High", "Max", "Fast", "3"],
             ],
             33,
+        ),
+        (
+            66,
+            100 / 3,
+            "2/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            66,
+        ),
+        (
+            67,  # some fan controllers round up
+            100 / 3,
+            "2/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            66,
+        ),
+        (
+            100,
+            100 / 3,
+            "3/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            100,
+        ),
+        (
+            33,
+            20.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            40,
+            20.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
         ),
         (
             20,
