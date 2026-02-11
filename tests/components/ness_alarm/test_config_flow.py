@@ -1,7 +1,7 @@
 """Test the Ness Alarm config flow."""
 
 from types import MappingProxyType
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
@@ -30,10 +30,17 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ness_alarm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    mock_client = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.config_flow.Client",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.ness_alarm.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -52,6 +59,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         CONF_INFER_ARMING_STATE: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_client.close.assert_awaited_once()
 
 
 async def test_form_user_with_infer_arming_state(hass: HomeAssistant) -> None:
@@ -60,9 +68,16 @@ async def test_form_user_with_infer_arming_state(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ness_alarm.async_setup_entry",
-        return_value=True,
+    mock_client = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.config_flow.Client",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.ness_alarm.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -104,6 +119,58 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_client = AsyncMock()
+    mock_client.update.side_effect = OSError("Connection refused")
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.Client",
+        return_value=mock_client,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    mock_client.close.assert_awaited_once()
+
+
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_client = AsyncMock()
+    mock_client.update.side_effect = RuntimeError("Unexpected")
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.Client",
+        return_value=mock_client,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+    mock_client.close.assert_awaited_once()
 
 
 async def test_import_yaml_config(hass: HomeAssistant) -> None:

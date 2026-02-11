@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from types import MappingProxyType
 from typing import Any
 
+from nessclient import Client
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -88,17 +90,23 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
-            # Skip connection test - the nessclient connects asynchronously
-            # and the connection will be tested when the integration is set up
-            _LOGGER.debug(
-                "Creating config entry for %s:%s (connection will be tested on setup)",
-                host,
-                port,
-            )
-            return self.async_create_entry(
-                title=f"Ness Alarm {host}:{port}",
-                data=user_input,
-            )
+            # Test connection to the alarm panel
+            client = Client(host=host, port=port)
+            try:
+                await asyncio.wait_for(client.update(), timeout=5)
+            except (OSError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error connecting to %s:%s", host, port)
+                errors["base"] = "unknown"
+            finally:
+                await client.close()
+
+            if not errors:
+                return self.async_create_entry(
+                    title=f"Ness Alarm {host}:{port}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
