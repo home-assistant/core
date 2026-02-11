@@ -4,9 +4,10 @@ from datetime import date
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
+from aiomealie import About, MealplanResponse
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,11 +41,26 @@ async def test_entities(
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the API returns the calendar."""
+    """Test the calendar entities."""
     with patch("homeassistant.components.mealie.PLATFORMS", [Platform.CALENDAR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_no_meal_planned(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the calendar handles no meal planned."""
+    mock_mealie_client.get_mealplans.return_value = MealplanResponse([])
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("calendar.mealie_dinner").state == STATE_OFF
 
 
 async def test_api_events(
@@ -69,3 +85,25 @@ async def test_api_events(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert events == snapshot
+
+
+async def test_legacy_calendars(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that only legacy calendars are created for Mealie versions prior to 3.7.0."""
+
+    mock_mealie_client.get_about.return_value = About(version="v3.6.0")
+
+    with patch("homeassistant.components.mealie.PLATFORMS", [Platform.CALENDAR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get("calendar.mealie_dessert") is None
+    assert entity_registry.async_get("calendar.mealie_drink") is None
+    assert entity_registry.async_get("calendar.mealie_snack") is None
+    assert entity_registry.async_get("calendar.mealie_breakfast") is not None
+    assert entity_registry.async_get("calendar.mealie_lunch") is not None
+    assert entity_registry.async_get("calendar.mealie_dinner") is not None
+    assert entity_registry.async_get("calendar.mealie_side") is not None

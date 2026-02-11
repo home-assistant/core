@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -96,7 +96,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         self._name = name or departure
         self._departure = self.get_station_id(departure)
         self._heading = self.get_station_id(heading) if heading else None
-        self._lines = lines if lines else None
+        self._lines = lines or None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
         self._state = None

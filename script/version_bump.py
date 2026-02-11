@@ -2,13 +2,18 @@
 """Helper script to bump the current version."""
 
 import argparse
+from copy import replace
+from pathlib import Path
 import re
 import subprocess
 
+import packaging
 from packaging.version import Version
 
 from homeassistant import const
 from homeassistant.util import dt as dt_util
+
+_PACKAGING_VERSION_BELOW_26 = Version(packaging.__version__) < Version("26.0dev0")
 
 
 def _bump_release(release, bump_type):
@@ -22,6 +27,13 @@ def _bump_release(release, bump_type):
         patch = 0
 
     return major, minor, patch
+
+
+def _get_dev_change(dev: int) -> int | tuple[str, int]:
+    """Return the dev change based on packaging version."""
+    if _PACKAGING_VERSION_BELOW_26:
+        return ("dev", dev)
+    return dev
 
 
 def bump_version(
@@ -57,9 +69,10 @@ def bump_version(
         # Convert 0.67.3.b5 to 0.67.4.dev0
         # Convert 0.67.3.dev0 to 0.67.3.dev1
         if version.is_devrelease:
-            to_change["dev"] = ("dev", version.dev + 1)
+            to_change["dev"] = _get_dev_change(version.dev + 1)
         else:
-            to_change["pre"] = ("dev", 0)
+            to_change["dev"] = _get_dev_change(0)
+            to_change["pre"] = None
             to_change["release"] = _bump_release(version.release, "minor")
 
     elif bump_type == "beta":
@@ -98,20 +111,24 @@ def bump_version(
                 raise ValueError("Nightly version must be a dev version")
             new_dev = new_version.dev
 
-        to_change["dev"] = ("dev", new_dev)
+        if not isinstance(new_dev, int):
+            new_dev = int(new_dev)
+        to_change["dev"] = _get_dev_change(new_dev)
 
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
 
-    temp = Version("0")
-    temp._version = version._version._replace(**to_change)  # noqa: SLF001
-    return Version(str(temp))
+    if _PACKAGING_VERSION_BELOW_26:
+        temp = Version("0")
+        temp._version = version._version._replace(**to_change)  # noqa: SLF001
+        return Version(str(temp))
+
+    return replace(version, **to_change)
 
 
 def write_version(version):
     """Update Home Assistant constant file with new version."""
-    with open("homeassistant/const.py") as fil:
-        content = fil.read()
+    content = Path("homeassistant/const.py").read_text()
 
     major, minor, patch = str(version).split(".", 2)
 
@@ -125,25 +142,21 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "w") as fil:
-        fil.write(content)
+    Path("homeassistant/const.py").write_text(content)
 
 
 def write_version_metadata(version: Version) -> None:
     """Update pyproject.toml file with new version."""
-    with open("pyproject.toml", encoding="utf8") as fp:
-        content = fp.read()
+    content = Path("pyproject.toml").read_text(encoding="utf8")
 
     content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
 
-    with open("pyproject.toml", "w", encoding="utf8") as fp:
-        fp.write(content)
+    Path("pyproject.toml").write_text(content, encoding="utf8")
 
 
 def write_ci_workflow(version: Version) -> None:
     """Update ci workflow with new version."""
-    with open(".github/workflows/ci.yaml") as fp:
-        content = fp.read()
+    content = Path(".github/workflows/ci.yaml").read_text()
 
     short_version = ".".join(str(version).split(".", maxsplit=2)[:2])
     content = re.sub(
@@ -153,8 +166,7 @@ def write_ci_workflow(version: Version) -> None:
         count=1,
     )
 
-    with open(".github/workflows/ci.yaml", "w") as fp:
-        fp.write(content)
+    Path(".github/workflows/ci.yaml").write_text(content)
 
 
 def main() -> None:
@@ -203,7 +215,7 @@ def main() -> None:
 
 def test_bump_version() -> None:
     """Make sure it all works."""
-    import pytest
+    import pytest  # noqa: PLC0415
 
     assert bump_version(Version("0.56.0"), "beta") == Version("0.56.1b0")
     assert bump_version(Version("0.56.0b3"), "beta") == Version("0.56.0b4")

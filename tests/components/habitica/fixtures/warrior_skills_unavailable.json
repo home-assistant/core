@@ -1,0 +1,59 @@
+{
+  "success": true,
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "buffs": {
+        "str": 26,
+        "int": 26,
+        "per": 26,
+        "con": 26,
+        "stealth": 0,
+        "streaks": false,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
+      "hp": 50,
+      "mp": 10,
+      "exp": 737,
+      "gp": 0,
+      "lvl": 34,
+      "class": "warrior",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 0,
+      "str": 15,
+      "con": 15,
+      "int": 15,
+      "per": 15
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": false,
+      "disableClasses": false,
+      "language": "en"
+    },
+    "flags": {
+      "classSelected": true
+    },
+    "needsCron": false,
+    "items": {
+      "gear": {
+        "equipped": {
+          "weapon": "weapon_warrior_5",
+          "armor": "armor_warrior_5",
+          "head": "head_warrior_5",
+          "shield": "shield_warrior_5",
+          "back": "back_special_heroicAureole",
+          "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
+          "eyewear": "eyewear_armoire_plagueDoctorMask",
+          "body": "body_special_aetherAmulet"
+        }
+      }
+    }
+  }
+}

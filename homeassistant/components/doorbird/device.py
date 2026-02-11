@@ -4,16 +4,18 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import cached_property
+from http import HTTPStatus
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from doorbirdpy import (
     DoorBird,
     DoorBirdScheduleEntry,
     DoorBirdScheduleEntryOutput,
     DoorBirdScheduleEntrySchedule,
 )
+from propcache.api import cached_property
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -100,12 +102,17 @@ class ConfiguredDoorBird:
         """Get token for device."""
         return self._token
 
+    def _get_hass_url(self) -> str:
+        """Get the Home Assistant URL for this device."""
+        if custom_url := self.custom_url:
+            return custom_url
+        return get_url(self._hass, prefer_external=False)
+
     async def async_register_events(self) -> None:
         """Register events on device."""
         if not self.door_station_events:
-            # User may not have permission to get the favorites
+            # The config entry might not have any events configured yet
             return
-
         http_fav = await self._async_register_events()
         event_config = await self._async_get_event_config(http_fav)
         _LOGGER.debug("%s: Event config: %s", self.name, event_config)
@@ -145,13 +152,7 @@ class ConfiguredDoorBird:
 
     async def _async_register_events(self) -> dict[str, Any]:
         """Register events on device."""
-        # Override url if another is specified in the configuration
-        if custom_url := self.custom_url:
-            hass_url = custom_url
-        else:
-            # Get the URL of this server
-            hass_url = get_url(self._hass, prefer_external=False)
-
+        hass_url = self._get_hass_url()
         http_fav = await self._async_get_http_favorites()
         if any(
             # Note that a list comp is used here to ensure all
@@ -171,24 +172,34 @@ class ConfiguredDoorBird:
     ) -> DoorbirdEventConfig:
         """Get events and unconfigured favorites from http favorites."""
         device = self.device
-        schedule = await device.schedule()
+        events: list[DoorbirdEvent] = []
+        unconfigured_favorites: defaultdict[str, list[str]] = defaultdict(list)
+        try:
+            schedule = await device.schedule()
+        except ClientResponseError as ex:
+            if ex.status == HTTPStatus.NOT_FOUND:
+                # D301 models do not support schedules
+                return DoorbirdEventConfig(events, [], unconfigured_favorites)
+            raise
         favorite_input_type = {
             output.param: entry.input
             for entry in schedule
             for output in entry.output
             if output.event == HTTP_EVENT_TYPE
         }
-        events: list[DoorbirdEvent] = []
-        unconfigured_favorites: defaultdict[str, list[str]] = defaultdict(list)
         default_event_types = {
             self._get_event_name(event): event_type
             for event, event_type in DEFAULT_EVENT_TYPES
         }
+        hass_url = self._get_hass_url()
         for identifier, data in http_fav.items():
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
                 continue
-            event = title.split("(")[1].strip(")")
+            value: str | None = data.get("value")
+            if not value or not value.startswith(hass_url):
+                continue  # Not our favorite - different HA instance or stale
+            event = title.partition("(")[2].strip(")")
             if input_type := favorite_input_type.get(identifier):
                 events.append(DoorbirdEvent(event, input_type))
             elif input_type := default_event_types.get(event):
@@ -233,7 +244,7 @@ class ConfiguredDoorBird:
             )
             return False
 
-        _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+        _LOGGER.debug("Successfully registered URL for %s on %s", event, self.name)
         return True
 
     def get_event_data(self, event: str) -> dict[str, str | None]:

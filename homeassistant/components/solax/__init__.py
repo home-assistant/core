@@ -54,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
     coordinator = SolaxDataUpdateCoordinator(
         hass,
         logger=_LOGGER,
+        config_entry=entry,
         name=f"solax {entry.title}",
         update_interval=SCAN_INTERVAL,
         update_method=_async_update,

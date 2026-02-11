@@ -11,7 +11,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, UnitOfTemperatur
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -36,7 +36,7 @@ from .webhook import _extract_sensor_unique_id
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up mobile app sensor from a config entry."""
     entities = []
@@ -59,6 +59,8 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
+        if capabilities := entry.capabilities:
+            config[ATTR_SENSOR_STATE_CLASS] = capabilities.get(ATTR_SENSOR_STATE_CLASS)
         entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
@@ -70,36 +72,40 @@ async def async_setup_entry(
 
         async_add_entities([MobileAppSensor(data, config_entry)])
 
-    async_dispatcher_connect(
-        hass,
-        f"{DOMAIN}_{ENTITY_TYPE}_register",
-        handle_sensor_registration,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{ENTITY_TYPE}_register",
+            handle_sensor_registration,
+        )
     )
 
 
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
-    """Representation of an mobile app sensor."""
+    """Representation of a mobile app sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
-        await super().async_restore_last_state(last_state)
         config = self._config
-        if not (last_sensor_data := await self.async_get_last_sensor_data()):
-            # Workaround to handle migration to RestoreSensor, can be removed
-            # in HA Core 2023.4
-            config[ATTR_SENSOR_STATE] = None
-            webhook_id = self._entry.data[CONF_WEBHOOK_ID]
-            if TYPE_CHECKING:
-                assert self.unique_id is not None
-            sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
-            if (
-                self.device_class == SensorDeviceClass.TEMPERATURE
-                and sensor_unique_id == "battery_temperature"
-            ):
-                config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
-        else:
-            config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
-            config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
+        if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
+            await super().async_restore_last_state(last_state)
+
+            if not (last_sensor_data := await self.async_get_last_sensor_data()):
+                # Workaround to handle migration to RestoreSensor, can be removed
+                # in HA Core 2023.4
+                config[ATTR_SENSOR_STATE] = None
+                webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+                if TYPE_CHECKING:
+                    assert self.unique_id is not None
+                sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
+                if (
+                    self.device_class == SensorDeviceClass.TEMPERATURE
+                    and sensor_unique_id == "battery_temperature"
+                ):
+                    config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
+            else:
+                config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
+                config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
         self._async_update_attr_from_config()
 

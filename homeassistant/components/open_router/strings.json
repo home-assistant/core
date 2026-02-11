@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "An OpenRouter API key"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "user": "Add AI task"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "model": "[%key:component::open_router::config_subentries::conversation::step::init::data::model%]"
+          },
+          "data_description": {
+            "model": "The model to use for the AI task"
+          },
+          "description": "Configure the AI task"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "model": "Model",
+            "prompt": "[%key:common::config_flow::data::prompt%]"
+          },
+          "data_description": {
+            "model": "The model to use for the conversation agent",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          },
+          "description": "Configure the conversation agent"
+        }
+      }
+    }
+  }
+}

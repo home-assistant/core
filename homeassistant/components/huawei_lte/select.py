@@ -18,11 +18,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import DOMAIN, KEY_NET_NET_MODE
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class HuaweiSelectEntityDescription(SelectEntityDescription):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
@@ -46,7 +46,6 @@ async def async_setup_entry(
     desc = HuaweiSelectEntityDescription(
         key=KEY_NET_NET_MODE,
         entity_category=EntityCategory.CONFIG,
-        name="Preferred network mode",
         translation_key="preferred_network_mode",
         options=[
             NetworkModeEnum.MODE_AUTO.value,
@@ -93,11 +92,6 @@ class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
         self.entity_description = entity_description
         self.key = key
         self.item = item
-
-        name = None
-        if self.entity_description.name != UNDEFINED:
-            name = self.entity_description.name
-        self._attr_name = name or self.item
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""

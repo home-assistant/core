@@ -20,6 +20,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -28,10 +30,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -58,6 +64,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -66,10 +74,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -96,6 +108,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -104,10 +118,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -134,6 +152,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -142,10 +162,102 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_flow_with_error[WhoisPrivateRegistry-private_registry]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Example.com',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---
+# name: test_full_flow_with_error[WhoisQuotaExceeded-quota_exceeded]
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+      'unique_id': 'example.com',
+    }),
+    'data': dict({
+      'domain': 'example.com',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'whois',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'domain': 'example.com',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'whois',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Example.com',
+      'unique_id': 'example.com',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -172,6 +284,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -180,10 +294,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

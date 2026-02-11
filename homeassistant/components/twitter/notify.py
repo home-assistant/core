@@ -9,6 +9,7 @@ import json
 import logging
 import mimetypes
 import os
+from typing import Any
 
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
@@ -21,7 +22,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -79,7 +80,7 @@ class TwitterNotificationService(BaseNotificationService):
             consumer_key, consumer_secret, access_token_key, access_token_secret
         )
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
         targets = kwargs.get(ATTR_TARGET)
@@ -129,10 +130,11 @@ class TwitterNotificationService(BaseNotificationService):
         else:
             _LOGGER.debug("Message posted: %s", resp.json())
 
-    def upload_media_then_callback(self, callback, media_path=None):
+    def upload_media_then_callback(self, callback, media_path=None) -> None:
         """Upload media."""
         if not media_path:
-            return callback()
+            callback()
+            return
 
         with open(media_path, "rb") as file:
             total_bytes = os.path.getsize(media_path)
@@ -141,7 +143,7 @@ class TwitterNotificationService(BaseNotificationService):
 
             if 199 > resp.status_code < 300:
                 self.log_error_resp(resp)
-                return None
+                return
 
             media_id = resp.json()["media_id"]
             media_id = self.upload_media_chunked(file, total_bytes, media_id)
@@ -149,10 +151,11 @@ class TwitterNotificationService(BaseNotificationService):
             resp = self.upload_media_finalize(media_id)
             if 199 > resp.status_code < 300:
                 self.log_error_resp(resp)
-                return None
+                return
 
             if resp.json().get("processing_info") is None:
-                return callback(media_id)
+                callback(media_id)
+                return
 
             self.check_status_until_done(media_id, callback)
 
@@ -209,7 +212,7 @@ class TwitterNotificationService(BaseNotificationService):
             "media/upload", {"command": "FINALIZE", "media_id": media_id}
         )
 
-    def check_status_until_done(self, media_id, callback, *args):
+    def check_status_until_done(self, media_id, callback, *args) -> None:
         """Upload media, STATUS phase."""
         resp = self.api.request(
             "media/upload",
@@ -223,7 +226,8 @@ class TwitterNotificationService(BaseNotificationService):
         _LOGGER.debug("media processing %s status: %s", media_id, processing_info)
 
         if processing_info["state"] in {"succeeded", "failed"}:
-            return callback(media_id)
+            callback(media_id)
+            return
 
         check_after_secs = processing_info["check_after_secs"]
         _LOGGER.debug(

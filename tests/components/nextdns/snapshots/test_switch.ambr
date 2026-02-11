@@ -1,1394 +1,4 @@
 # serializer version: 1
-# name: test_switch[binary_sensor.fake_profile_device_connection_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.fake_profile_device_connection_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-    'original_icon': None,
-    'original_name': 'Device connection status',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_connection_status',
-    'unique_id': 'xyz12_this_device_nextdns_connection_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[binary_sensor.fake_profile_device_connection_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Fake Profile Device connection status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.fake_profile_device_connection_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switch[binary_sensor.fake_profile_device_profile_connection_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.fake_profile_device_profile_connection_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-    'original_icon': None,
-    'original_name': 'Device profile connection status',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_profile_connection_status',
-    'unique_id': 'xyz12_this_device_profile_connection_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[binary_sensor.fake_profile_device_profile_connection_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Fake Profile Device profile connection status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.fake_profile_device_profile_connection_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switch[button.fake_profile_clear_logs-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.fake_profile_clear_logs',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Clear logs',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'clear_logs',
-    'unique_id': 'xyz12_clear_logs',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch[button.fake_profile_clear_logs-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Clear logs',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.fake_profile_clear_logs',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_http_3_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_http_3_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-HTTP/3 queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doh3_queries',
-    'unique_id': 'xyz12_doh3_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_http_3_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-HTTP/3 queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_http_3_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_http_3_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_http_3_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-HTTP/3 queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doh3_queries_ratio',
-    'unique_id': 'xyz12_doh3_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_http_3_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-HTTP/3 queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_http_3_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_https_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_https_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-HTTPS queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doh_queries',
-    'unique_id': 'xyz12_doh_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_https_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-HTTPS queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_https_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_https_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_https_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-HTTPS queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doh_queries_ratio',
-    'unique_id': 'xyz12_doh_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_https_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-HTTPS queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_https_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17.4',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_quic_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_quic_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-QUIC queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doq_queries',
-    'unique_id': 'xyz12_doq_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_quic_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-QUIC queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_quic_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_quic_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_quic_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-QUIC queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'doq_queries_ratio',
-    'unique_id': 'xyz12_doq_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_quic_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-QUIC queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_quic_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8.7',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_tls_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_tls_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-TLS queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dot_queries',
-    'unique_id': 'xyz12_dot_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_tls_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-TLS queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_tls_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_tls_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_over_tls_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS-over-TLS queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dot_queries_ratio',
-    'unique_id': 'xyz12_dot_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_over_tls_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS-over-TLS queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_over_tls_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.1',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'all_queries',
-    'unique_id': 'xyz12_all_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_blocked-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_queries_blocked',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS queries blocked',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'blocked_queries',
-    'unique_id': 'xyz12_blocked_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_blocked-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS queries blocked',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_queries_blocked',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_blocked_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_queries_blocked_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS queries blocked ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'blocked_queries_ratio',
-    'unique_id': 'xyz12_blocked_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_blocked_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS queries blocked ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_queries_blocked_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_relayed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dns_queries_relayed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNS queries relayed',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'relayed_queries',
-    'unique_id': 'xyz12_relayed_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dns_queries_relayed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS queries relayed',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dns_queries_relayed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_not_validated_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dnssec_not_validated_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNSSEC not validated queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'not_validated_queries',
-    'unique_id': 'xyz12_not_validated_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_not_validated_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNSSEC not validated queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dnssec_not_validated_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '25',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_validated_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dnssec_validated_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNSSEC validated queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'validated_queries',
-    'unique_id': 'xyz12_validated_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_validated_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNSSEC validated queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dnssec_validated_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '75',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_validated_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_dnssec_validated_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'DNSSEC validated queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'validated_queries_ratio',
-    'unique_id': 'xyz12_validated_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_dnssec_validated_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNSSEC validated queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_dnssec_validated_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '75.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_encrypted_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_encrypted_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Encrypted queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'encrypted_queries',
-    'unique_id': 'xyz12_encrypted_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_encrypted_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Encrypted queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_encrypted_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_encrypted_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_encrypted_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Encrypted queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'encrypted_queries_ratio',
-    'unique_id': 'xyz12_encrypted_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_encrypted_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Encrypted queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_encrypted_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv4_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_ipv4_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IPv4 queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ipv4_queries',
-    'unique_id': 'xyz12_ipv4_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv4_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile IPv4 queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_ipv4_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '90',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv6_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_ipv6_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IPv6 queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ipv6_queries',
-    'unique_id': 'xyz12_ipv6_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv6_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile IPv6 queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_ipv6_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv6_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_ipv6_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IPv6 queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ipv6_queries_ratio',
-    'unique_id': 'xyz12_ipv6_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_ipv6_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile IPv6 queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_ipv6_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_tcp_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_tcp_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'TCP queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'tcp_queries',
-    'unique_id': 'xyz12_tcp_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_tcp_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile TCP queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_tcp_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_tcp_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_tcp_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'TCP queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'tcp_queries_ratio',
-    'unique_id': 'xyz12_tcp_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_tcp_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile TCP queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_tcp_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_udp_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_udp_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'UDP queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'udp_queries',
-    'unique_id': 'xyz12_udp_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_udp_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile UDP queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_udp_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_udp_queries_ratio-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_udp_queries_ratio',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'UDP queries ratio',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'udp_queries_ratio',
-    'unique_id': 'xyz12_udp_queries_ratio',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_udp_queries_ratio-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile UDP queries ratio',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_udp_queries_ratio',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '34.8',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_unencrypted_queries-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fake_profile_unencrypted_queries',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Unencrypted queries',
-    'platform': 'nextdns',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'unencrypted_queries',
-    'unique_id': 'xyz12_unencrypted_queries',
-    'unit_of_measurement': 'queries',
-  })
-# ---
-# name: test_switch[sensor.fake_profile_unencrypted_queries-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Unencrypted queries',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'queries',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fake_profile_unencrypted_queries',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
 # name: test_switch[switch.fake_profile_ai_driven_threat_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1396,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1409,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AI-Driven threat detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1416,6 +28,7 @@
     'original_name': 'AI-Driven threat detection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ai_threat_detection',
     'unique_id': 'xyz12_ai_threat_detection',
@@ -1442,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1455,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow affiliate & tracking links',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1462,6 +77,7 @@
     'original_name': 'Allow affiliate & tracking links',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'allow_affiliate',
     'unique_id': 'xyz12_allow_affiliate',
@@ -1488,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1501,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anonymized EDNS client subnet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1508,6 +126,7 @@
     'original_name': 'Anonymized EDNS client subnet',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'anonymized_ecs',
     'unique_id': 'xyz12_anonymized_ecs',
@@ -1534,6 +153,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1547,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block 9GAG',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1554,6 +175,7 @@
     'original_name': 'Block 9GAG',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_9gag',
     'unique_id': 'xyz12_block_9gag',
@@ -1580,6 +202,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1593,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Amazon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1600,6 +224,7 @@
     'original_name': 'Block Amazon',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_amazon',
     'unique_id': 'xyz12_block_amazon',
@@ -1626,6 +251,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1639,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block BeReal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1646,6 +273,7 @@
     'original_name': 'Block BeReal',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_bereal',
     'unique_id': 'xyz12_block_bereal',
@@ -1672,6 +300,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1685,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Blizzard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1692,6 +322,7 @@
     'original_name': 'Block Blizzard',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_blizzard',
     'unique_id': 'xyz12_block_blizzard',
@@ -1718,6 +349,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1731,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block bypass methods',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1738,6 +371,7 @@
     'original_name': 'Block bypass methods',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_bypass_methods',
     'unique_id': 'xyz12_block_bypass_methods',
@@ -1764,6 +398,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1777,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block ChatGPT',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1784,6 +420,7 @@
     'original_name': 'Block ChatGPT',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_chatgpt',
     'unique_id': 'xyz12_block_chatgpt',
@@ -1810,6 +447,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1823,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block child sexual abuse material',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1830,6 +469,7 @@
     'original_name': 'Block child sexual abuse material',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_csam',
     'unique_id': 'xyz12_block_csam',
@@ -1856,6 +496,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1869,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Dailymotion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1876,6 +518,7 @@
     'original_name': 'Block Dailymotion',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_dailymotion',
     'unique_id': 'xyz12_block_dailymotion',
@@ -1902,6 +545,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1915,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1922,6 +567,7 @@
     'original_name': 'Block dating',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_dating',
     'unique_id': 'xyz12_block_dating',
@@ -1948,6 +594,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1961,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Discord',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1968,6 +616,7 @@
     'original_name': 'Block Discord',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_discord',
     'unique_id': 'xyz12_block_discord',
@@ -1994,6 +643,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2007,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block disguised third-party trackers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2014,6 +665,7 @@
     'original_name': 'Block disguised third-party trackers',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_disguised_trackers',
     'unique_id': 'xyz12_block_disguised_trackers',
@@ -2040,6 +692,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2053,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Disney Plus',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2060,6 +714,7 @@
     'original_name': 'Block Disney Plus',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_disneyplus',
     'unique_id': 'xyz12_block_disneyplus',
@@ -2086,6 +741,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2099,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dynamic DNS hostnames',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2106,6 +763,7 @@
     'original_name': 'Block dynamic DNS hostnames',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_ddns',
     'unique_id': 'xyz12_block_ddns',
@@ -2132,6 +790,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2145,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block eBay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2152,6 +812,7 @@
     'original_name': 'Block eBay',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_ebay',
     'unique_id': 'xyz12_block_ebay',
@@ -2178,6 +839,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2191,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Facebook',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2198,6 +861,7 @@
     'original_name': 'Block Facebook',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_facebook',
     'unique_id': 'xyz12_block_facebook',
@@ -2224,6 +888,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2237,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Fortnite',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2244,6 +910,7 @@
     'original_name': 'Block Fortnite',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_fortnite',
     'unique_id': 'xyz12_block_fortnite',
@@ -2270,6 +937,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2283,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block gambling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2290,6 +959,7 @@
     'original_name': 'Block gambling',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_gambling',
     'unique_id': 'xyz12_block_gambling',
@@ -2316,6 +986,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2329,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Google Chat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2336,6 +1008,7 @@
     'original_name': 'Block Google Chat',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_google_chat',
     'unique_id': 'xyz12_block_google_chat',
@@ -2362,6 +1035,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2375,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block HBO Max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2382,6 +1057,7 @@
     'original_name': 'Block HBO Max',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_hbomax',
     'unique_id': 'xyz12_block_hbomax',
@@ -2408,6 +1084,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2421,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Hulu',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2428,6 +1106,7 @@
     'original_name': 'Block Hulu',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xyz12_block_hulu',
@@ -2454,6 +1133,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2467,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Imgur',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2474,6 +1155,7 @@
     'original_name': 'Block Imgur',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_imgur',
     'unique_id': 'xyz12_block_imgur',
@@ -2500,6 +1182,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2513,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Instagram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2520,6 +1204,7 @@
     'original_name': 'Block Instagram',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_instagram',
     'unique_id': 'xyz12_block_instagram',
@@ -2546,6 +1231,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2559,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block League of Legends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2566,6 +1253,7 @@
     'original_name': 'Block League of Legends',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_leagueoflegends',
     'unique_id': 'xyz12_block_leagueoflegends',
@@ -2592,6 +1280,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2605,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Mastodon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2612,6 +1302,7 @@
     'original_name': 'Block Mastodon',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_mastodon',
     'unique_id': 'xyz12_block_mastodon',
@@ -2638,6 +1329,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2651,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Messenger',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2658,6 +1351,7 @@
     'original_name': 'Block Messenger',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_messenger',
     'unique_id': 'xyz12_block_messenger',
@@ -2684,6 +1378,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2697,6 +1392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Minecraft',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2704,6 +1400,7 @@
     'original_name': 'Block Minecraft',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_minecraft',
     'unique_id': 'xyz12_block_minecraft',
@@ -2730,6 +1427,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2743,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Netflix',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2750,6 +1449,7 @@
     'original_name': 'Block Netflix',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_netflix',
     'unique_id': 'xyz12_block_netflix',
@@ -2776,6 +1476,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2789,6 +1490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block newly registered domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2796,6 +1498,7 @@
     'original_name': 'Block newly registered domains',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_nrd',
     'unique_id': 'xyz12_block_nrd',
@@ -2822,6 +1525,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2835,6 +1539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block online gaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2842,6 +1547,7 @@
     'original_name': 'Block online gaming',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_online_gaming',
     'unique_id': 'xyz12_block_online_gaming',
@@ -2868,6 +1574,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2881,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block page',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2888,6 +1596,7 @@
     'original_name': 'Block page',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_page',
     'unique_id': 'xyz12_block_page',
@@ -2914,6 +1623,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2927,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block parked domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2934,6 +1645,7 @@
     'original_name': 'Block parked domains',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_parked_domains',
     'unique_id': 'xyz12_block_parked_domains',
@@ -2960,6 +1672,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2973,6 +1686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Pinterest',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2980,6 +1694,7 @@
     'original_name': 'Block Pinterest',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_pinterest',
     'unique_id': 'xyz12_block_pinterest',
@@ -3006,6 +1721,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3019,6 +1735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block piracy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3026,6 +1743,7 @@
     'original_name': 'Block piracy',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_piracy',
     'unique_id': 'xyz12_block_piracy',
@@ -3052,6 +1770,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3065,6 +1784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block PlayStation Network',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3072,6 +1792,7 @@
     'original_name': 'Block PlayStation Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_playstation_network',
     'unique_id': 'xyz12_block_playstation_network',
@@ -3098,6 +1819,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3111,6 +1833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block porn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3118,6 +1841,7 @@
     'original_name': 'Block porn',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_porn',
     'unique_id': 'xyz12_block_porn',
@@ -3144,6 +1868,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3157,6 +1882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Prime Video',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3164,6 +1890,7 @@
     'original_name': 'Block Prime Video',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_primevideo',
     'unique_id': 'xyz12_block_primevideo',
@@ -3190,6 +1917,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3203,6 +1931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Reddit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3210,6 +1939,7 @@
     'original_name': 'Block Reddit',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_reddit',
     'unique_id': 'xyz12_block_reddit',
@@ -3236,6 +1966,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3249,6 +1980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Roblox',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3256,6 +1988,7 @@
     'original_name': 'Block Roblox',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_roblox',
     'unique_id': 'xyz12_block_roblox',
@@ -3282,6 +2015,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3295,6 +2029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Signal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3302,6 +2037,7 @@
     'original_name': 'Block Signal',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_signal',
     'unique_id': 'xyz12_block_signal',
@@ -3328,6 +2064,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3341,6 +2078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Skype',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3348,6 +2086,7 @@
     'original_name': 'Block Skype',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_skype',
     'unique_id': 'xyz12_block_skype',
@@ -3374,6 +2113,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3387,6 +2127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Snapchat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3394,6 +2135,7 @@
     'original_name': 'Block Snapchat',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_snapchat',
     'unique_id': 'xyz12_block_snapchat',
@@ -3420,6 +2162,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3433,6 +2176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block social networks',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3440,6 +2184,7 @@
     'original_name': 'Block social networks',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_social_networks',
     'unique_id': 'xyz12_block_social_networks',
@@ -3466,6 +2211,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3479,6 +2225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Spotify',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3486,6 +2233,7 @@
     'original_name': 'Block Spotify',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_spotify',
     'unique_id': 'xyz12_block_spotify',
@@ -3512,6 +2260,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3525,6 +2274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Steam',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3532,6 +2282,7 @@
     'original_name': 'Block Steam',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_steam',
     'unique_id': 'xyz12_block_steam',
@@ -3558,6 +2309,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3571,6 +2323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Telegram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3578,6 +2331,7 @@
     'original_name': 'Block Telegram',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_telegram',
     'unique_id': 'xyz12_block_telegram',
@@ -3604,6 +2358,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3617,6 +2372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block TikTok',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3624,6 +2380,7 @@
     'original_name': 'Block TikTok',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tiktok',
     'unique_id': 'xyz12_block_tiktok',
@@ -3650,6 +2407,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3663,6 +2421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tinder',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3670,6 +2429,7 @@
     'original_name': 'Block Tinder',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tinder',
     'unique_id': 'xyz12_block_tinder',
@@ -3696,6 +2456,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3709,6 +2470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tumblr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3716,6 +2478,7 @@
     'original_name': 'Block Tumblr',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tumblr',
     'unique_id': 'xyz12_block_tumblr',
@@ -3742,6 +2505,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3755,6 +2519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Twitch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3762,6 +2527,7 @@
     'original_name': 'Block Twitch',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_twitch',
     'unique_id': 'xyz12_block_twitch',
@@ -3788,6 +2554,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3801,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block video streaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3808,6 +2576,7 @@
     'original_name': 'Block video streaming',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_video_streaming',
     'unique_id': 'xyz12_block_video_streaming',
@@ -3834,6 +2603,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3847,6 +2617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Vimeo',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3854,6 +2625,7 @@
     'original_name': 'Block Vimeo',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_vimeo',
     'unique_id': 'xyz12_block_vimeo',
@@ -3880,6 +2652,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3893,6 +2666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block VK',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3900,6 +2674,7 @@
     'original_name': 'Block VK',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_vk',
     'unique_id': 'xyz12_block_vk',
@@ -3926,6 +2701,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3939,6 +2715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block WhatsApp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3946,6 +2723,7 @@
     'original_name': 'Block WhatsApp',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_whatsapp',
     'unique_id': 'xyz12_block_whatsapp',
@@ -3972,6 +2750,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3985,6 +2764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block X (formerly Twitter)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3992,6 +2772,7 @@
     'original_name': 'Block X (formerly Twitter)',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_twitter',
     'unique_id': 'xyz12_block_twitter',
@@ -4011,19 +2792,20 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-entry]
+# name: test_switch[switch.fake_profile_block_xbox_network-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4031,26 +2813,28 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Xbox Network',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Block Xbox Live',
+    'original_name': 'Block Xbox Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_xboxlive',
     'unique_id': 'xyz12_block_xboxlive',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-state]
+# name: test_switch[switch.fake_profile_block_xbox_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Xbox Live',
+      'friendly_name': 'Fake Profile Block Xbox Network',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4064,6 +2848,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4077,6 +2862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block YouTube',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4084,6 +2870,7 @@
     'original_name': 'Block YouTube',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_youtube',
     'unique_id': 'xyz12_block_youtube',
@@ -4110,6 +2897,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4123,6 +2911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Zoom',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4130,6 +2919,7 @@
     'original_name': 'Block Zoom',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_zoom',
     'unique_id': 'xyz12_block_zoom',
@@ -4149,6 +2939,55 @@
     'state': 'on',
   })
 # ---
+# name: test_switch[switch.fake_profile_bypass_age_verification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_bypass_age_verification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bypass age verification',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass age verification',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass_age_verification',
+    'unique_id': 'xyz12_bav',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_bypass_age_verification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Bypass age verification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_bypass_age_verification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch[switch.fake_profile_cache_boost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4156,6 +2995,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4169,6 +3009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4176,6 +3017,7 @@
     'original_name': 'Cache boost',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cache_boost',
     'unique_id': 'xyz12_cache_boost',
@@ -4202,6 +3044,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4215,6 +3058,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CNAME flattening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4222,6 +3066,7 @@
     'original_name': 'CNAME flattening',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cname_flattening',
     'unique_id': 'xyz12_cname_flattening',
@@ -4248,6 +3093,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4261,6 +3107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cryptojacking protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4268,6 +3115,7 @@
     'original_name': 'Cryptojacking protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cryptojacking_protection',
     'unique_id': 'xyz12_cryptojacking_protection',
@@ -4294,6 +3142,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4307,6 +3156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS rebinding protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4314,6 +3164,7 @@
     'original_name': 'DNS rebinding protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dns_rebinding_protection',
     'unique_id': 'xyz12_dns_rebinding_protection',
@@ -4340,6 +3191,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4353,6 +3205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domain generation algorithms protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4360,6 +3213,7 @@
     'original_name': 'Domain generation algorithms protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dga_protection',
     'unique_id': 'xyz12_dga_protection',
@@ -4386,6 +3240,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4399,6 +3254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force SafeSearch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4406,6 +3262,7 @@
     'original_name': 'Force SafeSearch',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safesearch',
     'unique_id': 'xyz12_safesearch',
@@ -4432,6 +3289,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4445,6 +3303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force YouTube restricted mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4452,6 +3311,7 @@
     'original_name': 'Force YouTube restricted mode',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'youtube_restricted_mode',
     'unique_id': 'xyz12_youtube_restricted_mode',
@@ -4478,6 +3338,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4491,6 +3352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google safe browsing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4498,6 +3360,7 @@
     'original_name': 'Google safe browsing',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'google_safe_browsing',
     'unique_id': 'xyz12_google_safe_browsing',
@@ -4524,6 +3387,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4537,6 +3401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IDN homograph attacks protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4544,6 +3409,7 @@
     'original_name': 'IDN homograph attacks protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'idn_homograph_attacks_protection',
     'unique_id': 'xyz12_idn_homograph_attacks_protection',
@@ -4570,6 +3436,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4583,6 +3450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Logs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4590,6 +3458,7 @@
     'original_name': 'Logs',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'logs',
     'unique_id': 'xyz12_logs',
@@ -4616,6 +3485,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4629,6 +3499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threat intelligence feeds',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4636,6 +3507,7 @@
     'original_name': 'Threat intelligence feeds',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'threat_intelligence_feeds',
     'unique_id': 'xyz12_threat_intelligence_feeds',
@@ -4662,6 +3534,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4675,6 +3548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Typosquatting protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4682,6 +3556,7 @@
     'original_name': 'Typosquatting protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'typosquatting_protection',
     'unique_id': 'xyz12_typosquatting_protection',
@@ -4708,6 +3583,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4721,6 +3597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Web3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4728,6 +3605,7 @@
     'original_name': 'Web3',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'web3',
     'unique_id': 'xyz12_web3',

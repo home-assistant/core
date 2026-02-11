@@ -10,7 +10,8 @@ import serial
 import serial.tools.list_ports
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.components.dsmr import config_flow
+from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -84,7 +85,7 @@ async def test_setup_network_rfxtrx(
     ],
 ) -> None:
     """Test we can setup network."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_connection_factory, _transport, protocol) = dsmr_connection_send_validate_fixture
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -163,6 +164,16 @@ async def test_setup_network_rfxtrx(
             },
         ),
         (
+            "5EONHU",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5EONHU",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": None,
+            },
+        ),
+        (
             "5S",
             {
                 "port": "/dev/ttyUSB1234",
@@ -234,7 +245,7 @@ async def test_setup_serial_rfxtrx(
     ],
 ) -> None:
     """Test we can setup serial."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_connection_factory, _transport, protocol) = dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -333,7 +344,7 @@ async def test_setup_serial_fail(
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test failed serial connection."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -384,10 +395,10 @@ async def test_setup_serial_timeout(
     ],
 ) -> None:
     """Test failed serial connection."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_connection_factory, _transport, protocol) = dsmr_connection_send_validate_fixture
     (
-        connection_factory,
-        transport,
+        _connection_factory,
+        _transport,
         rfxtrx_protocol,
     ) = rfxtrx_dsmr_connection_send_validate_fixture
 
@@ -442,10 +453,10 @@ async def test_setup_serial_wrong_telegram(
     ],
 ) -> None:
     """Test failed telegram data."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (_connection_factory, _transport, protocol) = dsmr_connection_send_validate_fixture
     (
-        rfxtrx_connection_factory,
-        transport,
+        _rfxtrx_connection_factory,
+        _transport,
         rfxtrx_protocol,
     ) = rfxtrx_dsmr_connection_send_validate_fixture
 

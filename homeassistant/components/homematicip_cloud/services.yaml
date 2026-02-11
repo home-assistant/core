@@ -98,3 +98,14 @@ reset_energy_counter:
       example: switch.livingroom
       selector:
         text:
+
+set_home_cooling_mode:
+  fields:
+    cooling:
+      default: true
+      selector:
+        boolean:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:

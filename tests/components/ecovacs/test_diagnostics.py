@@ -28,4 +28,4 @@ async def test_diagnostics(
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
-    ) == snapshot(exclude=props("entry_id"))
+    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))

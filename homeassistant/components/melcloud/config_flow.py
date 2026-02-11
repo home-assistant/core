@@ -5,27 +5,23 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
-import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 import pymelcloud
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    entry: ConfigEntry | None = None
 
     async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
@@ -38,8 +34,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_client(
         self,
         username: str,
-        *,
-        password: str | None = None,
+        password: str,
         token: str | None = None,
     ) -> ConfigFlowResult:
         """Create client."""
@@ -47,20 +42,24 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(10):
                 if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
-                        username,
-                        password,
-                        async_get_clientsession(self.hass),
+                        email=username,
+                        password=password,
+                        session=async_get_clientsession(self.hass),
                     )
                 await pymelcloud.get_devices(
-                    acquired_token,
-                    async_get_clientsession(self.hass),
+                    token=acquired_token,
+                    session=async_get_clientsession(self.hass),
                 )
         except ClientResponseError as err:
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             return self.async_abort(reason="cannot_connect")
+        except AttributeError:
+            # python-melcloud library bug: login() raises AttributeError on invalid
+            # credentials when API response doesn't contain expected "LoginData" key
+            return self.async_abort(reason="invalid_auth")
 
         return await self._create_entry(username, acquired_token)
 
@@ -75,14 +74,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
                 ),
             )
-        username = user_input[CONF_USERNAME]
-        return await self._create_client(username, password=user_input[CONF_PASSWORD])
+        return await self._create_client(
+            username=user_input[CONF_USERNAME], password=user_input[CONF_PASSWORD]
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with MELCloud."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -91,19 +90,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle re-authentication with MELCloud."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and self.entry:
+        if user_input is not None:
             aquired_token, errors = await self.async_reauthenticate_client(user_input)
 
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={CONF_TOKEN: aquired_token},
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data={CONF_TOKEN: aquired_token}
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
-
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -122,9 +115,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 acquired_token = await pymelcloud.login(
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    async_get_clientsession(self.hass),
+                    email=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
                 )
         except (ClientResponseError, AttributeError) as err:
             if (
@@ -134,16 +127,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     HTTPStatus.UNAUTHORIZED,
                     HTTPStatus.FORBIDDEN,
                 )
-                or isinstance(err, AttributeError)
-                and err.name == "get"
-            ):
+            ) or (isinstance(err, AttributeError) and err.name == "get"):
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
-        except (
-            TimeoutError,
-            ClientError,
-        ):
+        except TimeoutError, ClientError:
             errors["base"] = "cannot_connect"
 
         return acquired_token, errors
@@ -152,25 +140,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         errors: dict[str, str] = {}
         acquired_token = None
-        assert self.entry
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            user_input[CONF_USERNAME] = self.entry.data[CONF_USERNAME]
+            user_input[CONF_USERNAME] = reconfigure_entry.data[CONF_USERNAME]
             try:
                 async with asyncio.timeout(10):
                     acquired_token = await pymelcloud.login(
-                        user_input[CONF_USERNAME],
-                        user_input[CONF_PASSWORD],
-                        async_get_clientsession(self.hass),
+                        email=user_input[CONF_USERNAME],
+                        password=user_input[CONF_PASSWORD],
+                        session=async_get_clientsession(self.hass),
                     )
             except (ClientResponseError, AttributeError) as err:
                 if (
@@ -180,9 +161,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         HTTPStatus.UNAUTHORIZED,
                         HTTPStatus.FORBIDDEN,
                     )
-                    or isinstance(err, AttributeError)
-                    and err.name == "get"
-                ):
+                ) or (isinstance(err, AttributeError) and err.name == "get"):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -195,18 +174,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 user_input[CONF_TOKEN] = acquired_token
                 return self.async_update_reload_and_abort(
-                    self.entry,
-                    data={**self.entry.data, **user_input},
-                    reason="reconfigure_successful",
+                    reconfigure_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: self.entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
+            },
         )

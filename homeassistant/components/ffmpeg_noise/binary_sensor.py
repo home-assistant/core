@@ -19,10 +19,12 @@ from homeassistant.components.ffmpeg import (
     FFmpegManager,
     get_ffmpeg_manager,
 )
-from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
+from homeassistant.components.ffmpeg_motion.binary_sensor import (  # pylint: disable=hass-component-root-import
+    FFmpegBinarySensor,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

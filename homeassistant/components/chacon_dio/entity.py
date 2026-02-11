@@ -51,3 +51,11 @@ class ChaconDioEntity(Entity):
         _LOGGER.debug("Data received from server %s", data)
         self._update_attr(data)
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state when the entity is requested to."""
+
+        _LOGGER.debug("Update called for %s, %s", self, self.target_id)
+        data = await self.client.get_status_details([self.target_id])
+        _LOGGER.debug("Received data from server %s", data)
+        self._update_attr(data[self.target_id])

@@ -23,13 +23,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple(
+DatatypeDescription = namedtuple(  # noqa: PYI024
     "DatatypeDescription", ["name", "unit", "device_class"]
 )
 

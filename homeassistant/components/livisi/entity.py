@@ -5,16 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiolivisi.const import CAPABILITY_MAP
+from livisi.const import CAPABILITY_MAP
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LIVISI_REACHABILITY_CHANGE
-from .coordinator import LivisiDataUpdateCoordinator
+from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
 
 
 class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
@@ -24,7 +23,7 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: LivisiConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
         device: dict[str, Any],
         *,

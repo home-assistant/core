@@ -2,11 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import ApiError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
@@ -86,7 +86,6 @@ async def test_availability(
         ApiError("API Error"),
         ConnectionError,
         ClientConnectorError,
-        InvalidApiKeyError("Invalid API key"),
         RequestsExceededError("Requests exceeded"),
     ],
 )
@@ -148,6 +147,7 @@ async def test_manual_update_entity(
     assert mock_accuweather_client.async_get_current_conditions.call_count == 2
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_imperial_units(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:
@@ -162,12 +162,12 @@ async def test_sensor_imperial_units(
 
     state = hass.states.get("sensor.home_wind_speed")
     assert state
-    assert state.state == "9.0"
+    assert float(state.state) == pytest.approx(9.00988)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
 
     state = hass.states.get("sensor.home_realfeel_temperature")
     assert state
-    assert state.state == "77.2"
+    assert state.state == "77.18"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT
     )

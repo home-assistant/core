@@ -9,14 +9,10 @@ from azure.kusto.ingest import StreamDescriptor
 import pytest
 
 from homeassistant.components import azure_data_explorer
-from homeassistant.components.azure_data_explorer.const import (
-    CONF_SEND_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.azure_data_explorer.const import CONF_SEND_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import FilterTest
@@ -99,27 +95,6 @@ async def test_put_event_on_queue_with_queueing_client(
     assert type(mock_queued_ingest.call_args.args[0]) is StreamDescriptor
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test the popping of the filter and further import of the config."""
-    config = {
-        DOMAIN: {
-            "filter": {
-                "include_domains": ["light"],
-                "include_entity_globs": ["sensor.included_*"],
-                "include_entities": ["binary_sensor.included"],
-                "exclude_domains": ["light"],
-                "exclude_entity_globs": ["sensor.excluded_*"],
-                "exclude_entities": ["binary_sensor.excluded"],
-            },
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert "filter" in hass.data[DOMAIN]
-
-
 async def test_unload_entry(
     hass: HomeAssistant,
     entry_managed: MockConfigEntry,
@@ -131,10 +106,10 @@ async def test_unload_entry(
     this verifies that the unload, calls async_stop, which calls async_send and
     shuts down the hub.
     """
-    assert entry_managed.state == ConfigEntryState.LOADED
+    assert entry_managed.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
     mock_managed_streaming.assert_not_called()
-    assert entry_managed.state == ConfigEntryState.NOT_LOADED
+    assert entry_managed.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
@@ -239,7 +214,6 @@ async def test_filter(
         )
         await hass.async_block_till_done()
         assert mock_managed_streaming.called == test.expect_called
-        assert "filter" in hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(
@@ -287,4 +261,4 @@ async def test_connection(
     entry.add_to_hass(hass)
     mock_execute_query.side_effect = sideeffect
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR

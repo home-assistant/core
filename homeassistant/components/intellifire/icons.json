@@ -1,11 +1,28 @@
 {
   "entity": {
     "binary_sensor": {
+      "cloud_connectivity": {
+        "default": "mdi:cloud-question",
+        "state": {
+          "off": "mdi:cloud-alert-outline",
+          "on": "mdi:cloud-check-variant-outline"
+        }
+      },
+      "fan_delay_error": {
+        "default": "mdi:fan-alert"
+      },
+      "fan_error": {
+        "default": "mdi:fan-alert"
+      },
       "flame": {
         "default": "mdi:fire"
       },
-      "timer_on": {
-        "default": "mdi:camera-timer"
+      "local_connectivity": {
+        "default": "mdi:lan-pending",
+        "state": {
+          "off": "mdi:lan-disconnect",
+          "on": "mdi:lan-connect"
+        }
       },
       "pilot_light_on": {
         "default": "mdi:fire-alert"
@@ -13,11 +30,8 @@
       "thermostat_on": {
         "default": "mdi:home-thermometer-outline"
       },
-      "fan_delay_error": {
-        "default": "mdi:fan-alert"
-      },
-      "fan_error": {
-        "default": "mdi:fan-alert"
+      "timer_on": {
+        "default": "mdi:camera-timer"
       }
     },
     "number": {
@@ -26,11 +40,11 @@
       }
     },
     "sensor": {
-      "flame_height": {
-        "default": "mdi:fire-circle"
-      },
       "fan_speed": {
         "default": "mdi:fan"
+      },
+      "flame_height": {
+        "default": "mdi:fire-circle"
       },
       "timer_end_timestamp": {
         "default": "mdi:timer-sand"

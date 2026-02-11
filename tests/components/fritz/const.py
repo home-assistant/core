@@ -1,8 +1,8 @@
 """Common stuff for Fritz!Tools tests."""
 
-from homeassistant.components import ssdp
+from fritzconnection.lib.fritzstatus import DefaultConnectionService
+
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -10,6 +10,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 
 ATTR_HOST = "host"
@@ -54,9 +59,17 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         "GetInfo": {
             "NewSerialNumber": MOCK_MESH_MASTER_MAC,
             "NewName": "TheName",
+            "NewManufacturerName": "AVM",
+            "NewManufacturerOUI": "00040E",
             "NewModelName": MOCK_MODELNAME,
+            "NewDescription": f"{MOCK_MODELNAME} {MOCK_FIRMWARE}",
+            "NewProductClass": "AVMFB7590AX",
             "NewSoftwareVersion": MOCK_FIRMWARE,
+            "NewHardwareVersion": MOCK_MODELNAME,
+            "NewSpecVersion": "1.0",
+            "NewDeviceLog": "long string here ...",
             "NewUpTime": 2518179,
+            "NewProvisioningCode": "000.044.004.000",
         },
     },
     "Hosts1": {
@@ -68,6 +81,12 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewBytesSent": 23004321,
             "NewBytesReceived": 12045,
         },
+    },
+    "LANConfigSecurity1": {
+        "X_AVM-DE_GetCurrentUser": {
+            "NewX_AVM-DE_CurrentUsername": "fake_user",
+            "NewX_AVM-DE_CurrentUserRights": "<rights><path>BoxAdmin</path><access>readwrite</access><path>Phone</path><access>readwrite</access><path>Dial</path><access>readwrite</access><path>NAS</path><access>none</access><path>HomeAuto</path><access>readwrite</access><path>App</path><access>readwrite</access></rights>",
+        }
     },
     "Layer3Forwarding1": {
         "GetDefaultConnectionService": {
@@ -138,7 +157,27 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewDownstreamMaxBitRate": 43430530,
             "NewExternalIPAddress": "1.2.3.4",
         },
-        "GetPortMappingNumberOfEntries": {},
+        "GetPortMappingNumberOfEntries": {
+            "NewPortMappingNumberOfEntries": 2,
+        },
+        "GetGenericPortMappingEntry": {
+            0: {
+                "NewInternalClient": "10.10.10.10",
+                "NewPortMappingDescription": "Test Port Mapping",
+                "NewInternalPort": 8080,
+                "NewExternalPort": 80,
+                "NewProtocol": "TCP",
+                "NewEnabled": True,
+            },
+            1: {
+                "NewInternalClient": "10.10.10.10",
+                "NewPortMappingDescription": "Test Port Mapping",
+                "NewInternalPort": 8081,
+                "NewExternalPort": 81,
+                "NewProtocol": "UDP",
+                "NewEnabled": True,
+            },
+        },
     },
     "WLANConfiguration1": {
         "GetInfo": {
@@ -149,11 +188,15 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
             "NewStandard": "ax",
             "NewBSSID": "1C:ED:6F:12:34:13",
+            "NewMACAddressControlEnabled": True,
         },
         "GetSSID": {
             "NewSSID": "MyWifi",
         },
         "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+        "GetBeaconAdvertisement": {
+            "NewBeaconAdvertisementEnabled": True,
+        },
     },
     "X_AVM-DE_Homeauto1": {
         "GetGenericDeviceInfos": [
@@ -197,6 +240,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             MOCK_IPS["printer"]: {"NewDisallow": False, "NewWANAccess": "granted"}
         }
     },
+    "X_AVM-DE_UPnP1": {"GetInfo": {"NewEnable": True}},
 }
 
 MOCK_MESH_DATA = {
@@ -655,7 +699,23 @@ MOCK_MESH_DATA = {
                             "cur_data_rate_tx": 0,
                             "cur_availability_rx": 99,
                             "cur_availability_tx": 99,
-                        }
+                        },
+                        {
+                            "uid": "nl-79",
+                            "type": "LAN",
+                            "state": "DISCONNECTED",
+                            "last_connected": 1642872667,
+                            "node_1_uid": "n-167",
+                            "node_2_uid": "n-76",
+                            "node_interface_1_uid": "ni-140",
+                            "node_interface_2_uid": "ni-77",
+                            "max_data_rate_rx": 1000000,
+                            "max_data_rate_tx": 1000000,
+                            "cur_data_rate_rx": 0,
+                            "cur_data_rate_tx": 0,
+                            "cur_availability_rx": 99,
+                            "cur_availability_tx": 99,
+                        },
                     ],
                 }
             ],
@@ -904,6 +964,20 @@ MOCK_HOST_ATTRIBUTES_DATA = [
     },
 ]
 
+MOCK_CALL_DEFLECTION_DATA = {
+    "X_AVM-DE_OnTel1": {
+        "GetDeflections": {
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>1</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+        }
+    }
+}
+
+MOCK_STATUS_CONNECTION_DATA = DefaultConnectionService("1", "WANPPPConnection", "1")
+MOCK_STATUS_DEVICE_INFO_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"]
+MOCK_STATUS_AVM_DEVICE_LOG_DATA = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"][
+    "NewDeviceLog"
+]
+
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
 MOCK_USER_INPUT_SIMPLE = {
@@ -917,7 +991,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",

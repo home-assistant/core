@@ -10,16 +10,16 @@ from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, Cove
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -32,14 +32,14 @@ async def async_setup_entry(
     )
 
 
-class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
+class VeraCover(VeraEntity[veraApi.VeraCurtain], CoverEntity):
     """Representation a Vera Cover."""
 
     def __init__(
         self, vera_device: veraApi.VeraCurtain, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
@@ -61,10 +61,11 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
         self.schedule_update_ha_state()
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
+        return None
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

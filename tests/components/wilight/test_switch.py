@@ -6,7 +6,7 @@ import pytest
 import pywilight
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wilight import DOMAIN as WILIGHT_DOMAIN
+from homeassistant.components.wilight import DOMAIN
 from homeassistant.components.wilight.switch import (
     ATTR_PAUSE_TIME,
     ATTR_TRIGGER,
@@ -159,7 +159,7 @@ async def test_switch_services(
 
     # Set watering time
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_WATERING_TIME,
         {ATTR_WATERING_TIME: 30, ATTR_ENTITY_ID: "switch.wl000000000099_1_watering"},
         blocking=True,
@@ -172,7 +172,7 @@ async def test_switch_services(
 
     # Set pause time
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_PAUSE_TIME,
         {ATTR_PAUSE_TIME: 18, ATTR_ENTITY_ID: "switch.wl000000000099_2_pause"},
         blocking=True,
@@ -185,7 +185,7 @@ async def test_switch_services(
 
     # Set trigger_1
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TRIGGER,
         {
             ATTR_TRIGGER_INDEX: "1",
@@ -202,7 +202,7 @@ async def test_switch_services(
 
     # Set trigger_2
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TRIGGER,
         {
             ATTR_TRIGGER_INDEX: "2",
@@ -219,7 +219,7 @@ async def test_switch_services(
 
     # Set trigger_3
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TRIGGER,
         {
             ATTR_TRIGGER_INDEX: "3",
@@ -236,7 +236,7 @@ async def test_switch_services(
 
     # Set trigger_4
     await hass.services.async_call(
-        WILIGHT_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TRIGGER,
         {
             ATTR_TRIGGER_INDEX: "4",
@@ -254,7 +254,7 @@ async def test_switch_services(
     # Set watering time using WiLight Pause Switch to raise
     with pytest.raises(TypeError) as exc_info:
         await hass.services.async_call(
-            WILIGHT_DOMAIN,
+            DOMAIN,
             SERVICE_SET_WATERING_TIME,
             {ATTR_WATERING_TIME: 30, ATTR_ENTITY_ID: "switch.wl000000000099_2_pause"},
             blocking=True,

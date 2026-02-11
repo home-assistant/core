@@ -83,7 +83,7 @@ def new_simple_controller_config(
 class ComponentFactory:
     """Factory class."""
 
-    def __init__(self, vera_controller_class_mock):
+    def __init__(self, vera_controller_class_mock) -> None:
         """Initialize the factory."""
         self.vera_controller_class_mock = vera_controller_class_mock
 

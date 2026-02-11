@@ -11,15 +11,12 @@ from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -66,8 +63,6 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_MIN_MIREDS not in state.attributes
-            assert ATTR_MAX_MIREDS not in state.attributes
             assert ATTR_SUPPORTED_COLOR_MODES not in state.attributes
             assert ATTR_EFFECT_LIST not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes
@@ -75,7 +70,6 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             assert ATTR_MIN_COLOR_TEMP_KELVIN not in state.attributes
             assert ATTR_BRIGHTNESS not in state.attributes
             assert ATTR_COLOR_MODE not in state.attributes
-            assert ATTR_COLOR_TEMP not in state.attributes
             assert ATTR_COLOR_TEMP_KELVIN not in state.attributes
             assert ATTR_EFFECT not in state.attributes
             assert ATTR_HS_COLOR not in state.attributes

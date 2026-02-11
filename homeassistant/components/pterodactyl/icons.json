@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "button": {
+      "force_stop_server": {
+        "default": "mdi:flash-alert"
+      },
+      "restart_server": {
+        "default": "mdi:refresh"
+      },
+      "start_server": {
+        "default": "mdi:play"
+      },
+      "stop_server": {
+        "default": "mdi:stop"
+      }
+    },
+    "sensor": {
+      "cpu_limit": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_utilization": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "disk_limit": {
+        "default": "mdi:harddisk"
+      },
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "network_inbound": {
+        "default": "mdi:download"
+      },
+      "network_outbound": {
+        "default": "mdi:upload"
+      },
+      "uptime": {
+        "default": "mdi:timer"
+      }
+    }
+  }
+}

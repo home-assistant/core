@@ -1,0 +1,47 @@
+{
+  "id": 1,
+  "name": "My Home",
+  "dateTimeZone": "Europe/Berlin",
+  "dateCreated": "2019-03-24T16:16:19.541Z",
+  "temperatureUnit": "CELSIUS",
+  "partner": null,
+  "simpleSmartScheduleEnabled": true,
+  "awayRadiusInMeters": 100.0,
+  "installationCompleted": true,
+  "incidentDetection": { "supported": true, "enabled": true },
+  "generation": "PRE_LINE_X",
+  "zonesCount": 7,
+  "language": "de-DE",
+  "skills": ["AUTO_ASSIST"],
+  "christmasModeEnabled": true,
+  "showAutoAssistReminders": true,
+  "contactDetails": {
+    "name": "Max Mustermann",
+    "email": "max@example.com",
+    "phone": "+493023125431"
+  },
+  "address": {
+    "addressLine1": "Musterstrasse 123",
+    "addressLine2": null,
+    "zipCode": "12345",
+    "city": "Berlin",
+    "state": null,
+    "country": "DEU"
+  },
+  "geolocation": { "latitude": 52.0, "longitude": 13.0 },
+  "consentGrantSkippable": true,
+  "enabledFeatures": [
+    "EIQ_SETTINGS_AS_WEBVIEW",
+    "HIDE_BOILER_REPAIR_SERVICE",
+    "INTERCOM_ENABLED",
+    "MORE_AS_WEBVIEW",
+    "OWD_SETTINGS_AS_WEBVIEW",
+    "SETTINGS_OVERVIEW_AS_WEBVIEW"
+  ],
+  "isAirComfortEligible": true,
+  "isBalanceAcEligible": false,
+  "isEnergyIqEligible": true,
+  "isHeatSourceInstalled": false,
+  "isHeatPumpInstalled": false,
+  "supportsFlowTemperatureOptimization": false
+}

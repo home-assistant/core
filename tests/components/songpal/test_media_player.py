@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -16,10 +17,8 @@ from songpal.notification import SettingChange
 
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.songpal.const import (
-    ERROR_REQUEST_RETRY,
-    SET_SOUND_SETTING,
-)
+from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
+from homeassistant.components.songpal.services import SET_SOUND_SETTING
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -54,12 +53,12 @@ SUPPORT_SONGPAL = (
 )
 
 
-def _get_attributes(hass):
+def _get_attributes(hass: HomeAssistant) -> dict[str, Any]:
     state = hass.states.get(ENTITY_ID)
     return state.as_dict()["attributes"]
 
 
-async def _call(hass, service, **argv):
+async def _call(hass: HomeAssistant, service: str, **argv: Any) -> None:
     await hass.services.async_call(
         media_player.DOMAIN,
         service,

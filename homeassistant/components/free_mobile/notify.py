@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from freesms import FreeClient
 import voluptuous as vol
@@ -14,7 +15,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.free_client = FreeClient(username, access_token)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 

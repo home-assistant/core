@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -24,8 +23,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     ClimateEntity,
@@ -33,18 +30,18 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -98,11 +95,11 @@ ATTR_FAN_STATE = "fan_state"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave climate from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
@@ -130,10 +127,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
     _attr_precision = PRECISION_TENTHS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize thermostat."""
         super().__init__(config_entry, driver, info)
@@ -236,7 +232,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Optionally return the temperature value of a setpoint."""
         try:
             temp = self._setpoint_value_or_raise(setpoint_type)
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             return None
         return get_value_of_zwave_value(temp)
 
@@ -421,7 +417,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        min_temp = DEFAULT_MIN_TEMP
+        min_temp = 0.0  # Not using DEFAULT_MIN_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
@@ -429,7 +425,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 min_temp = temp.metadata.min
                 base_unit = self.temperature_unit
         # In case of any error, we fallback to the default
-        except (IndexError, ValueError, TypeError):
+        except IndexError, ValueError, TypeError:
             pass
 
         return TemperatureConverter.convert(min_temp, base_unit, self.temperature_unit)
@@ -437,7 +433,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_temp = DEFAULT_MAX_TEMP
+        max_temp = 50.0  # Not using DEFAULT_MAX_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
@@ -445,7 +441,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 max_temp = temp.metadata.max
                 base_unit = self.temperature_unit
         # In case of any error, we fallback to the default
-        except (IndexError, ValueError, TypeError):
+        except IndexError, ValueError, TypeError:
             pass
 
         return TemperatureConverter.convert(max_temp, base_unit, self.temperature_unit)
@@ -495,8 +491,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if (hvac_mode_id := self._hvac_modes.get(hvac_mode)) is None:
-            raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
 
         if not self._current_mode:
             # Thermostat(valve) has no support for setting a mode, so we make it a no-op
@@ -506,7 +500,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # can set it again when turning the device back on.
         if hvac_mode == HVACMode.OFF and self._current_mode.value != ThermostatMode.OFF:
             self._last_hvac_mode_id_before_off = self._current_mode.value
-        await self._async_set_value(self._current_mode, hvac_mode_id)
+        await self._async_set_value(self._current_mode, self._hvac_modes[hvac_mode])
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
@@ -568,7 +562,7 @@ class DynamicCurrentTempClimate(ZWaveClimate):
     """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize thermostat."""
         super().__init__(config_entry, driver, info)

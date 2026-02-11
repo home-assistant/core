@@ -17,9 +17,10 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AppleTvConfigEntry, AppleTVEntity
+from . import AppleTvConfigEntry
+from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ COMMAND_TO_ATTRIBUTE = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AppleTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV remote based on a config entry."""
     name: str = config_entry.data[CONF_NAME]
@@ -49,6 +50,8 @@ async def async_setup_entry(
 
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
+
+    _attr_name = None
 
     @property
     def is_on(self) -> bool:
@@ -85,7 +88,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                 if not attr_value:
                     raise ValueError("Command not found. Exiting sequence")
 
-                _LOGGER.info("Sending command %s", single_command)
+                _LOGGER.debug("Sending command %s", single_command)
 
                 if hold_secs >= 1:
                     await attr_value(action=InputAction.Hold)

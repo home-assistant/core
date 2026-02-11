@@ -9,6 +9,7 @@ from typing import Any
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -23,10 +24,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_USERNAME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -64,10 +61,10 @@ LOCAL_SCHEMA = vol.Schema(
     }
 )
 HA_STATES = [
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_AWAY.value,
+    AlarmControlPanelState.ARMED_HOME.value,
+    AlarmControlPanelState.ARMED_NIGHT.value,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS.value,
 ]
 
 
@@ -223,7 +220,6 @@ class RiscoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
     def _options_schema(self) -> vol.Schema:

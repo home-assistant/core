@@ -8,7 +8,7 @@ from deebot_client.device import Device
 import pytest
 
 from homeassistant.components.ecovacs.const import DOMAIN
-from homeassistant.components.ecovacs.vacuum import SERVICE_RAW_GET_POSITIONS
+from homeassistant.components.ecovacs.services import SERVICE_RAW_GET_POSITIONS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -71,7 +71,7 @@ def mock_device_execute_response(data: dict[str, Any]) -> Generator[dict[str, An
 )
 async def test_get_positions_service(
     hass: HomeAssistant,
-    mock_device_execute_response: dict[str],
+    mock_device_execute_response: dict[str, Any],
     entity_id: str,
 ) -> None:
     """Test that get_positions service response snapshots match."""

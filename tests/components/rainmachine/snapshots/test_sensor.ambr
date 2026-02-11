@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -26,6 +28,7 @@
     'original_name': 'Evening Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_run_completion_time_2',
@@ -53,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -66,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower Box Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -73,6 +78,7 @@
     'original_name': 'Flower Box Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_2',
@@ -100,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -113,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -120,6 +128,7 @@
     'original_name': 'Landscaping Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_1',
@@ -147,6 +156,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -160,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -167,6 +178,7 @@
     'original_name': 'Morning Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_run_completion_time_1',
@@ -194,6 +206,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -207,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor rain start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -214,6 +228,7 @@
     'original_name': 'Rain sensor rain start',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rain_sensor_rain_start',
     'unique_id': 'aa:bb:cc:dd:ee:ff_rain_sensor_rain_start',
@@ -242,6 +257,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -255,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TEST Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -262,6 +279,7 @@
     'original_name': 'TEST Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_3',
@@ -289,6 +307,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -302,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -309,6 +329,7 @@
     'original_name': 'Zone 10 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_10',
@@ -336,6 +357,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -349,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -356,6 +379,7 @@
     'original_name': 'Zone 11 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_11',
@@ -383,6 +407,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -396,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -403,6 +429,7 @@
     'original_name': 'Zone 12 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_12',
@@ -430,6 +457,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -443,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -450,6 +479,7 @@
     'original_name': 'Zone 4 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_4',
@@ -477,6 +507,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -490,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -497,6 +529,7 @@
     'original_name': 'Zone 5 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_5',
@@ -524,6 +557,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -537,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -544,6 +579,7 @@
     'original_name': 'Zone 6 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_6',
@@ -571,6 +607,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -584,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -591,6 +629,7 @@
     'original_name': 'Zone 7 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_7',
@@ -618,6 +657,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -631,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -638,6 +679,7 @@
     'original_name': 'Zone 8 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_8',
@@ -665,6 +707,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -678,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -685,6 +729,7 @@
     'original_name': 'Zone 9 Run Completion Time',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_run_completion_time_9',

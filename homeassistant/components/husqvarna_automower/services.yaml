@@ -19,3 +19,22 @@ override_schedule:
           options:
             - "mow"
             - "park"
+
+override_schedule_work_area:
+  target:
+    entity:
+      integration: "husqvarna_automower"
+      domain: "lawn_mower"
+  fields:
+    duration:
+      required: true
+      example: "{'days': 1, 'hours': 12, 'minutes': 30}"
+      selector:
+        duration:
+          enable_day: true
+    work_area_id:
+      required: true
+      example: "123"
+      selector:
+        text:
+          type: number

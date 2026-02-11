@@ -74,6 +74,7 @@ async def test_discover_routers(
     assert discovered[-1] == (
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
+            instance_name="HomeAssistant OpenThreadBorderRouter #0BBF",
             addresses=["192.168.0.115"],
             border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand="homeassistant",
@@ -101,6 +102,7 @@ async def test_discover_routers(
     assert discovered[-1] == (
         "f6a99b425a67abed",
         discovery.ThreadRouterDiscoveryData(
+            instance_name="Google-Nest-Hub-#ABED",
             addresses=["192.168.0.124"],
             border_agent_id="bc3740c3e963aa8735bebecd7cc503c7",
             brand="google",
@@ -180,6 +182,7 @@ async def test_discover_routers_unconfigured(
     router_discovered_removed.assert_called_once_with(
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
+            instance_name="HomeAssistant OpenThreadBorderRouter #0BBF",
             addresses=["192.168.0.115"],
             border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand="homeassistant",
@@ -226,6 +229,7 @@ async def test_discover_routers_bad_or_missing_optional_data(
     router_discovered_removed.assert_called_once_with(
         "aeeb2f594b570bbf",
         discovery.ThreadRouterDiscoveryData(
+            instance_name="HomeAssistant OpenThreadBorderRouter #0BBF",
             addresses=["192.168.0.115"],
             border_agent_id="230c6a1ac57f6f4be262acf32e5ef52c",
             brand=None,

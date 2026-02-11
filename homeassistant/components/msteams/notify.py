@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pymsteams
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class MSTeamsNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._webhook_url = webhook_url
 
-    def send_message(self, message=None, **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the webhook."""
 
         teams_message = pymsteams.connectorcard(self._webhook_url)

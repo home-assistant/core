@@ -8,23 +8,24 @@ from typing import Any
 from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
+from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InComfortConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an InComfort/InTouch water_heater device."""
     incomfort_coordinator = entry.runtime_data
@@ -35,6 +36,7 @@ async def async_setup_entry(
 class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
     _attr_name = None
@@ -54,11 +56,15 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
         if self._heater.is_pumping:
+            return self._heater.heater_temp
+        if self._heater.heater_temp is None:
+            return self._heater.tap_temp
+        if self._heater.tap_temp is None:
             return self._heater.heater_temp
         return max(self._heater.heater_temp, self._heater.tap_temp)
 

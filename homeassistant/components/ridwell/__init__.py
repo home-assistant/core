@@ -17,13 +17,19 @@ PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.SWITCH
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ridwell from a config entry."""
-    coordinator = RidwellDataUpdateCoordinator(hass, name=entry.title)
+    coordinator = RidwellDataUpdateCoordinator(hass, entry)
     await coordinator.async_initialize()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -55,6 +61,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True

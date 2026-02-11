@@ -4,6 +4,7 @@ import logging
 
 DOMAIN = "analytics_insights"
 
+CONF_TRACKED_APPS = "tracked_apps"
 CONF_TRACKED_INTEGRATIONS = "tracked_integrations"
 CONF_TRACKED_CUSTOM_INTEGRATIONS = "tracked_custom_integrations"
 

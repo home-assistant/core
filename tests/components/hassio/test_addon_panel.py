@@ -1,7 +1,7 @@
 """Test add-on panel."""
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -13,10 +13,11 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker, supervisor_is_connected: AsyncMock
+) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/homeassistant/info",
@@ -128,4 +129,45 @@ async def test_hassio_addon_panel_api(
             hass,
             "test1",
             {"enable": True, "title": "Test", "icon": "mdi:test", "admin": False},
+        )
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_hassio_addon_panel_registration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test panel registration calls frontend.async_register_built_in_panel."""
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels",
+        json={
+            "result": "ok",
+            "data": {
+                "panels": {
+                    "test_addon": {
+                        "enable": True,
+                        "title": "Test Addon",
+                        "icon": "mdi:test-tube",
+                        "admin": True,
+                    },
+                }
+            },
+        },
+    )
+
+    with patch(
+        "homeassistant.components.hassio.addon_panel.frontend.async_register_built_in_panel"
+    ) as mock_register:
+        await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+        # Verify that async_register_built_in_panel was called with correct arguments
+        # for our test addon
+        mock_register.assert_any_call(
+            hass,
+            "app",
+            frontend_url_path="test_addon",
+            sidebar_title="Test Addon",
+            sidebar_icon="mdi:test-tube",
+            require_admin=True,
+            config={"addon": "test_addon"},
         )

@@ -1406,7 +1406,6 @@ async def test_options_flow_exclude_mode_skips_category_entities(
         "switch",
         "sonos",
         "config",
-        device_id="1234",
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(sonos_config_switch.entity_id, "off")
@@ -1415,7 +1414,6 @@ async def test_options_flow_exclude_mode_skips_category_entities(
         "switch",
         "sonos",
         "notconfig",
-        device_id="1234",
         entity_category=None,
     )
     hass.states.async_set(sonos_notconfig_switch.entity_id, "off")
@@ -1510,7 +1508,6 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
         "switch",
         "sonos",
         "config",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(sonos_hidden_switch.entity_id, "off")
@@ -1594,7 +1591,6 @@ async def test_options_flow_include_mode_allows_hidden_entities(
         "switch",
         "sonos",
         "config",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(sonos_hidden_switch.entity_id, "off")

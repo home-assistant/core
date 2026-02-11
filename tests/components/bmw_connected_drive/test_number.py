@@ -13,7 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 
@@ -89,7 +94,10 @@ async def test_service_call_invalid_input(
     old_value = hass.states.get(entity_id).state
 
     # Test
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Target SoC must be an integer between 20 and 100 that is a multiple of 5.",
+    ):
         await hass.services.async_call(
             "number",
             "set_value",
@@ -102,17 +110,32 @@ async def test_service_call_invalid_input(
 
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
-    ("raised", "expected"),
+    ("raised", "expected", "exc_translation"),
     [
-        (MyBMWRemoteServiceError, HomeAssistantError),
-        (MyBMWAPIError, HomeAssistantError),
-        (ValueError, ValueError),
+        (
+            MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            MyBMWAPIError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            ValueError(
+                "Target SoC must be an integer between 20 and 100 that is a multiple of 5."
+            ),
+            ValueError,
+            "Target SoC must be an integer between 20 and 100 that is a multiple of 5.",
+        ),
     ],
 )
 async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
+    exc_translation: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""
@@ -130,7 +153,7 @@ async def test_service_call_fail(
     )
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=exc_translation):
         await hass.services.async_call(
             "number",
             "set_value",

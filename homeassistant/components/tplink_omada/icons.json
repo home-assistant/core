@@ -1,5 +1,21 @@
 {
   "entity": {
+    "binary_sensor": {
+      "online_detection": {
+        "default": "mdi:cloud-check",
+        "state": {
+          "off": "mdi:cloud-cancel"
+        }
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "mem_usage": {
+        "default": "mdi:memory"
+      }
+    },
     "switch": {
       "poe_control": {
         "default": "mdi:ethernet"
@@ -10,14 +26,11 @@
       "wan_connect_ipv6": {
         "default": "mdi:wan"
       }
-    },
-    "binary_sensor": {
-      "online_detection": {
-        "default": "mdi:cloud-check",
-        "state": {
-          "off": "mdi:cloud-cancel"
-        }
-      }
+    }
+  },
+  "services": {
+    "reconnect_client": {
+      "service": "mdi:sync"
     }
   }
 }

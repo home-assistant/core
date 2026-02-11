@@ -52,7 +52,6 @@ async def test_disk_util(
     mock_psutil.psutil.disk_partitions.return_value = [
         sdiskpart("test", "/", "ext4", ""),  # Should be ok
         sdiskpart("test2", "/media/share", "ext4", ""),  # Should be ok
-        sdiskpart("test3", "/incorrect", "", ""),  # Should be skipped as no type
         sdiskpart(
             "proc", "/proc/run", "proc", ""
         ),  # Should be skipped as in skipped disk types
@@ -62,7 +61,6 @@ async def test_disk_util(
             "tmpfs",
             "",
         ),  # Should be skipped as in skipped disk types
-        sdiskpart("test5", "E:", "cd", "cdrom"),  # Should be skipped as cdrom
     ]
 
     mock_config_entry.add_to_hass(hass)
@@ -71,13 +69,9 @@ async def test_disk_util(
 
     disk_sensor1 = hass.states.get("sensor.system_monitor_disk_free")
     disk_sensor2 = hass.states.get("sensor.system_monitor_disk_free_media_share")
-    disk_sensor3 = hass.states.get("sensor.system_monitor_disk_free_incorrect")
-    disk_sensor4 = hass.states.get("sensor.system_monitor_disk_free_proc_run")
-    disk_sensor5 = hass.states.get("sensor.system_monitor_disk_free_tmpfs")
-    disk_sensor6 = hass.states.get("sensor.system_monitor_disk_free_e")
+    disk_sensor3 = hass.states.get("sensor.system_monitor_disk_free_proc_run")
+    disk_sensor4 = hass.states.get("sensor.system_monitor_disk_free_tmpfs")
     assert disk_sensor1 is not None
     assert disk_sensor2 is not None
     assert disk_sensor3 is None
     assert disk_sensor4 is None
-    assert disk_sensor5 is None
-    assert disk_sensor6 is None

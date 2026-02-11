@@ -25,14 +25,14 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -42,9 +42,7 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
-    SERVICE_UPDATE_SETTING,
     SUPPORTED_COMMANDS,
-    UPDATE_SETTING_SCHEMA,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
     VIZIO_MUTE,
@@ -63,7 +61,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
@@ -122,10 +120,6 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
-    )
 
 
 class VizioDevice(MediaPlayerEntity):
@@ -200,7 +194,7 @@ class VizioDevice(MediaPlayerEntity):
             return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._attr_available = True

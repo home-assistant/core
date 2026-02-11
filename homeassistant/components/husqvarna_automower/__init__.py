@@ -1,25 +1,31 @@
 """The Husqvarna Automower integration."""
 
-import logging
-
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from . import api
-from .coordinator import AutomowerDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
+from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.LAWN_MOWER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -27,7 +33,11 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
@@ -42,7 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         aiohttp_client.async_get_clientsession(hass),
         session,
     )
-    automower_api = AutomowerSession(api_api)
+    time_zone_str = str(dt_util.DEFAULT_TIME_ZONE)
+    automower_api = AutomowerSession(
+        api_api,
+        await dt_util.async_get_time_zone(time_zone_str),
+    )
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
@@ -50,7 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
 
-    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
+    if "amc:api" not in entry.data["token"]["scope"]:
+        # We raise ConfigEntryAuthFailed here because the websocket can't be used
+        # without the scope. So only polling would be possible.
+        raise ConfigEntryAuthFailed
+
+    coordinator = AutomowerDataUpdateCoordinator(hass, entry, automower_api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -59,11 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         coordinator.client_listen(hass, entry, automower_api),
         "websocket_task",
     )
-
-    if "amc:api" not in entry.data["token"]["scope"]:
-        # We raise ConfigEntryAuthFailed here because the websocket can't be used
-        # without the scope. So only polling would be possible.
-        raise ConfigEntryAuthFailed
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

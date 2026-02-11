@@ -10,15 +10,15 @@
     "step": {
       "discovered_connection": {
         "data": {
-          "id": "[%key:component::airzone::config::step::user::data::id%]",
           "host": "[%key:common::config_flow::data::host%]",
+          "id": "[%key:component::airzone::config::step::user::data::id%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "user": {
         "data": {
-          "id": "System ID",
           "host": "[%key:common::config_flow::data::host%]",
+          "id": "System ID",
           "port": "[%key:common::config_flow::data::port%]"
         }
       }
@@ -37,34 +37,58 @@
       "grille_angles": {
         "name": "Cold angle",
         "state": {
-          "90deg": "90°",
-          "50deg": "50°",
+          "40deg": "40°",
           "45deg": "45°",
-          "40deg": "40°"
+          "50deg": "50°",
+          "90deg": "90°"
         }
       },
       "heat_angles": {
         "name": "Heat angle",
         "state": {
-          "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]",
-          "50deg": "[%key:component::airzone::entity::select::grille_angles::state::50deg%]",
+          "40deg": "[%key:component::airzone::entity::select::grille_angles::state::40deg%]",
           "45deg": "[%key:component::airzone::entity::select::grille_angles::state::45deg%]",
-          "40deg": "[%key:component::airzone::entity::select::grille_angles::state::40deg%]"
+          "50deg": "[%key:component::airzone::entity::select::grille_angles::state::50deg%]",
+          "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]"
+        }
+      },
+      "modes": {
+        "name": "Mode",
+        "state": {
+          "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+          "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+          "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
+          "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+          "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+          "stop": "Stop"
+        }
+      },
+      "q_adapt": {
+        "name": "Q-Adapt",
+        "state": {
+          "maximum": "Maximum",
+          "minimum": "Minimum",
+          "power": "Power",
+          "silence": "Silence",
+          "standard": "Standard"
         }
       },
       "sleep_times": {
         "name": "Sleep",
         "state": {
-          "off": "[%key:common::state::off%]",
           "30m": "30 minutes",
           "60m": "60 minutes",
-          "90m": "90 minutes"
+          "90m": "90 minutes",
+          "off": "[%key:common::state::off%]"
         }
       }
     },
     "sensor": {
       "rssi": {
         "name": "RSSI"
+      },
+      "thermostat_signal": {
+        "name": "Signal strength"
       }
     }
   }

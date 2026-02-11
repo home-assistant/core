@@ -4,15 +4,33 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+LABEL \
+    io.hass.type="core" \
+    org.opencontainers.image.authors="The Home Assistant Authors" \
+    org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
+    org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
+    org.opencontainers.image.licenses="Apache-2.0" \
+    org.opencontainers.image.source="https://github.com/home-assistant/core" \
+    org.opencontainers.image.title="Home Assistant" \
+    org.opencontainers.image.url="https://www.home-assistant.io/"
+
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
-ARG QEMU_CPU
+# Home Assistant S6-Overlay
+COPY rootfs /
 
-# Install uv
-RUN pip3 install uv==0.2.13
+# Add go2rtc binary
+COPY --from=ghcr.io/alexxit/go2rtc@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
+
+RUN \
+    # Verify go2rtc can be executed
+    go2rtc --version \
+    # Install uv
+    && pip3 install uv==0.9.26
 
 WORKDIR /usr/src
 
@@ -29,15 +47,9 @@ RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
-    && if [ "${BUILD_ARCH}" = "i386" ]; then \
-        linux32 uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    else \
-        uv pip install \
-            --no-build \
-            -r homeassistant/requirements_all.txt; \
-    fi
+    && uv pip install \
+        --no-build \
+        -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
@@ -46,8 +58,5 @@ RUN \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
-
-# Home Assistant S6-Overlay
-COPY rootfs /
 
 WORKDIR /config

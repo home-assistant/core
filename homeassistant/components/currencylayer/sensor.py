@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -108,7 +108,7 @@ class CurrencylayerData:
         try:
             result = requests.get(self._resource, params=self._parameters, timeout=10)
             if "error" in result.json():
-                raise ValueError(result.json()["error"]["info"])
+                raise ValueError(result.json()["error"]["info"])  # noqa: TRY301
             self.data = result.json()["quotes"]
             _LOGGER.debug("Currencylayer data updated: %s", result.json()["timestamp"])
         except ValueError as err:

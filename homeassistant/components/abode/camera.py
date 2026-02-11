@@ -15,21 +15,23 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import AbodeSystem
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN_DATA, LOGGER
 from .entity import AbodeDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode camera devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = hass.data[DOMAIN_DATA]
 
     async_add_entities(
         AbodeCamera(data, device, timeline.CAPTURE_IMAGE)

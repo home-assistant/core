@@ -6,5 +6,6 @@
   "config_flow": false,
   "dependencies": ["hardware"],
   "documentation": "https://www.home-assistant.io/integrations/hardkernel",
-  "integration_type": "hardware"
+  "integration_type": "hardware",
+  "single_config_entry": true
 }

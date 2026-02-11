@@ -1,4 +1,25 @@
 # serializer version: 1
+# name: test_sensor[System Monitor Battery - attributes]
+  ReadOnlyDict({
+    'device_class': 'battery',
+    'friendly_name': 'System Monitor Battery',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[System Monitor Battery - state]
+  '93'
+# ---
+# name: test_sensor[System Monitor Battery empty - attributes]
+  ReadOnlyDict({
+    'device_class': 'timestamp',
+    'friendly_name': 'System Monitor Battery empty',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Battery empty - state]
+  '2024-02-24T19:37:00+00:00'
+# ---
 # name: test_sensor[System Monitor Disk free / - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -114,34 +135,34 @@
 # name: test_sensor[System Monitor Last boot - state]
   '2024-02-24T15:00:00+00:00'
 # ---
-# name: test_sensor[System Monitor Load (15m) - attributes]
+# name: test_sensor[System Monitor Load (1 min) - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (15m)',
+    'friendly_name': 'System Monitor Load (1 min)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (15m) - state]
-  '3'
-# ---
-# name: test_sensor[System Monitor Load (1m) - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (1m)',
-    'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-  })
-# ---
-# name: test_sensor[System Monitor Load (1m) - state]
+# name: test_sensor[System Monitor Load (1 min) - state]
   '1'
 # ---
-# name: test_sensor[System Monitor Load (5m) - attributes]
+# name: test_sensor[System Monitor Load (15 min) - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (5m)',
+    'friendly_name': 'System Monitor Load (15 min)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (5m) - state]
+# name: test_sensor[System Monitor Load (15 min) - state]
+  '3'
+# ---
+# name: test_sensor[System Monitor Load (5 min) - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Load (5 min)',
+    'icon': 'mdi:cpu-64-bit',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Load (5 min) - state]
   '2'
 # ---
 # name: test_sensor[System Monitor Memory free - attributes]
@@ -264,6 +285,24 @@
 # name: test_sensor[System Monitor Network throughput out eth1 - state]
   'unknown'
 # ---
+# name: test_sensor[System Monitor Open file descriptors pip - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Open file descriptors pip',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Open file descriptors pip - state]
+  '15'
+# ---
+# name: test_sensor[System Monitor Open file descriptors python3 - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Open file descriptors python3',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Open file descriptors python3 - state]
+  '42'
+# ---
 # name: test_sensor[System Monitor Packets in eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth0',
@@ -299,24 +338,6 @@
 # ---
 # name: test_sensor[System Monitor Packets out eth1 - state]
   '150'
-# ---
-# name: test_sensor[System Monitor Process pip - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Process pip',
-    'icon': 'mdi:cpu-64-bit',
-  })
-# ---
-# name: test_sensor[System Monitor Process pip - state]
-  'on'
-# ---
-# name: test_sensor[System Monitor Process python3 - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Process python3',
-    'icon': 'mdi:cpu-64-bit',
-  })
-# ---
-# name: test_sensor[System Monitor Process python3 - state]
-  'on'
 # ---
 # name: test_sensor[System Monitor Processor temperature - attributes]
   ReadOnlyDict({
@@ -371,4 +392,24 @@
 # ---
 # name: test_sensor[System Monitor Swap use - state]
   '60.0'
+# ---
+# name: test_sensor[System Monitor another-fan fan speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor another-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor another-fan fan speed - state]
+  '1300'
+# ---
+# name: test_sensor[System Monitor cpu-fan fan speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor cpu-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor cpu-fan fan speed - state]
+  '1200'
 # ---

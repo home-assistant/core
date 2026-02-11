@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import logging
 import ssl
 from typing import Any
@@ -12,7 +13,6 @@ from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
-from deebot_client.models import DeviceInfo
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
@@ -64,43 +64,48 @@ class EcovacsController:
         if not config.get(CONF_VERIFY_MQTT_CERTIFICATE, True) and mqtt_url:
             ssl_context = get_default_no_verify_context()
 
-        self._mqtt = MqttClient(
-            create_mqtt_config(
-                device_id=self._device_id,
-                country=country,
-                override_mqtt_url=mqtt_url,
-                ssl_context=ssl_context,
-            ),
-            self._authenticator,
+        self._mqtt_config_fn = partial(
+            create_mqtt_config,
+            device_id=self._device_id,
+            country=country,
+            override_mqtt_url=mqtt_url,
+            ssl_context=ssl_context,
         )
+        self._mqtt_client: MqttClient | None = None
+
+        self._added_legacy_entities: set[str] = set()
 
     async def initialize(self) -> None:
         """Init controller."""
-        mqtt_config_verfied = False
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
-            for device_config in devices:
-                if isinstance(device_config, DeviceInfo):
-                    # MQTT device
-                    if not mqtt_config_verfied:
-                        await self._mqtt.verify_config()
-                        mqtt_config_verfied = True
-                    device = Device(device_config, self._authenticator)
-                    await device.initialize(self._mqtt)
-                    self._devices.append(device)
-                else:
-                    # Legacy device
-                    bot = VacBot(
-                        credentials.user_id,
-                        EcoVacsAPI.REALM,
-                        self._device_id[0:8],
-                        credentials.token,
-                        device_config,
-                        self._continent,
-                        monitor=True,
-                    )
-                    self._legacy_devices.append(bot)
+            for device_info in devices.mqtt:
+                device = Device(device_info, self._authenticator)
+                mqtt = await self._get_mqtt_client()
+                await device.initialize(mqtt)
+                self._devices.append(device)
+            for device_config in devices.xmpp:
+                bot = VacBot(
+                    credentials.user_id,
+                    EcoVacsAPI.REALM,
+                    self._device_id[0:8],
+                    credentials.token,
+                    device_config,
+                    self._continent,
+                    monitor=True,
+                )
+                self._legacy_devices.append(bot)
+            for device_config in devices.not_supported:
+                _LOGGER.warning(
+                    (
+                        'Device "%s" not supported. More information at '
+                        "https://github.com/DeebotUniverse/client.py/issues/612: %s"
+                    ),
+                    device_config["deviceName"],
+                    device_config,
+                )
+
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:
@@ -114,8 +119,27 @@ class EcovacsController:
             await device.teardown()
         for legacy_device in self._legacy_devices:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
-        await self._mqtt.disconnect()
+        if self._mqtt_client is not None:
+            await self._mqtt_client.disconnect()
         await self._authenticator.teardown()
+
+    def add_legacy_entity(self, device: VacBot, component: str) -> None:
+        """Add legacy entity."""
+        self._added_legacy_entities.add(f"{device.vacuum['did']}_{component}")
+
+    def legacy_entity_is_added(self, device: VacBot, component: str) -> bool:
+        """Check if legacy entity is added."""
+        return f"{device.vacuum['did']}_{component}" in self._added_legacy_entities
+
+    async def _get_mqtt_client(self) -> MqttClient:
+        """Return validated MQTT client."""
+        if self._mqtt_client is None:
+            config = await self._hass.async_add_executor_job(self._mqtt_config_fn)
+            mqtt = MqttClient(config, self._authenticator)
+            await mqtt.verify_config()
+            self._mqtt_client = mqtt
+
+        return self._mqtt_client
 
     @property
     def devices(self) -> list[Device]:

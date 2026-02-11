@@ -3,13 +3,11 @@
 import argparse
 import json
 from pathlib import Path
-import re
-from shutil import rmtree
 import sys
 
 from . import download, upload
 from .const import INTEGRATIONS_DIR
-from .util import get_base_arg_parser
+from .util import flatten_translations, get_base_arg_parser, substitute_references
 
 
 def valid_integration(integration):
@@ -32,65 +30,6 @@ def get_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def flatten_translations(translations):
-    """Flatten all translations."""
-    stack = [iter(translations.items())]
-    key_stack = []
-    flattened_translations = {}
-    while stack:
-        for k, v in stack[-1]:
-            key_stack.append(k)
-            if isinstance(v, dict):
-                stack.append(iter(v.items()))
-                break
-            if isinstance(v, str):
-                common_key = "::".join(key_stack)
-                flattened_translations[common_key] = v
-                key_stack.pop()
-        else:
-            stack.pop()
-            if key_stack:
-                key_stack.pop()
-
-    return flattened_translations
-
-
-def substitute_translation_references(integration_strings, flattened_translations):
-    """Recursively processes all translation strings for the integration."""
-    result = {}
-    for key, value in integration_strings.items():
-        if isinstance(value, dict):
-            sub_dict = substitute_translation_references(value, flattened_translations)
-            result[key] = sub_dict
-        elif isinstance(value, str):
-            result[key] = substitute_reference(value, flattened_translations)
-
-    return result
-
-
-def substitute_reference(value, flattened_translations):
-    """Substitute localization key references in a translation string."""
-    matches = re.findall(r"\[\%key:([a-z0-9_]+(?:::(?:[a-z0-9-_])+)+)\%\]", value)
-    if not matches:
-        return value
-
-    new = value
-    for key in matches:
-        if key in flattened_translations:
-            new = new.replace(
-                f"[%key:{key}%]",
-                # New value can also be a substitution reference
-                substitute_reference(
-                    flattened_translations[key], flattened_translations
-                ),
-            )
-        else:
-            print(f"Invalid substitution key '{key}' found in string '{value}'")
-            sys.exit(1)
-
-    return new
-
-
 def run_single(translations, flattened_translations, integration):
     """Run the script for a single integration."""
     print(f"Generating translations for {integration}")
@@ -101,20 +40,21 @@ def run_single(translations, flattened_translations, integration):
 
     integration_strings = translations["component"][integration]
 
-    translations["component"][integration] = substitute_translation_references(
-        integration_strings, flattened_translations
+    translations["component"][integration] = substitute_references(
+        integration_strings, flattened_translations, fail_on_missing=True
     )
 
     if download.DOWNLOAD_DIR.is_dir():
-        rmtree(str(download.DOWNLOAD_DIR))
-
-    download.DOWNLOAD_DIR.mkdir(parents=True)
+        for lang_file in download.DOWNLOAD_DIR.glob("*.json"):
+            lang_file.unlink()
+    else:
+        download.DOWNLOAD_DIR.mkdir(parents=True)
 
     (download.DOWNLOAD_DIR / "en.json").write_text(
         json.dumps({"component": {integration: translations["component"][integration]}})
     )
 
-    download.write_integration_translations()
+    download.save_integrations_translations()
 
 
 def run():

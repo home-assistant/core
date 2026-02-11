@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -34,6 +36,7 @@
     'original_name': 'Battery power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
     'unique_id': '123456-battery_power',
@@ -65,6 +68,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -78,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -91,6 +96,7 @@
     'original_name': 'Energy left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_left',
     'unique_id': '123456-energy_left',
@@ -122,6 +128,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -135,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -148,6 +156,7 @@
     'original_name': 'Generator power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_power',
     'unique_id': '123456-generator_power',
@@ -179,6 +188,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -192,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -205,6 +216,7 @@
     'original_name': 'Grid power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
     'unique_id': '123456-grid_power',
@@ -236,6 +248,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -249,6 +262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -262,6 +276,7 @@
     'original_name': 'Grid services power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_power',
     'unique_id': '123456-grid_services_power',
@@ -293,6 +308,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -306,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -319,6 +336,7 @@
     'original_name': 'Load power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_power',
     'unique_id': '123456-load_power',
@@ -350,6 +368,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -363,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Percentage charged',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -373,6 +393,7 @@
     'original_name': 'Percentage charged',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'percentage_charged',
     'unique_id': '123456-percentage_charged',
@@ -404,6 +425,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -417,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -430,6 +453,7 @@
     'original_name': 'Solar power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_power',
     'unique_id': '123456-solar_power',
@@ -461,6 +485,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -474,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total pack energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -487,6 +513,7 @@
     'original_name': 'Total pack energy',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pack_energy',
     'unique_id': '123456-total_pack_energy',
@@ -516,6 +543,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -529,13 +557,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VPP backup reserve',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'VPP backup reserve',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpp_backup_reserve_percent',
     'unique_id': '123456-vpp_backup_reserve_percent',
@@ -545,7 +575,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -566,6 +595,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -579,6 +609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -586,6 +617,7 @@
     'original_name': 'Battery level',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
     'unique_id': 'VINVINVIN-charge_state_usable_battery_level',
@@ -617,6 +649,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -630,6 +663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -643,6 +677,7 @@
     'original_name': 'Battery range',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
     'unique_id': 'VINVINVIN-charge_state_battery_range',
@@ -674,6 +709,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -687,6 +723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery range estimate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -700,6 +737,7 @@
     'original_name': 'Battery range estimate',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
     'unique_id': 'VINVINVIN-charge_state_est_battery_range',
@@ -731,6 +769,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -744,6 +783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery range ideal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -757,6 +797,7 @@
     'original_name': 'Battery range ideal',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
     'unique_id': 'VINVINVIN-charge_state_ideal_battery_range',
@@ -788,6 +829,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -801,6 +843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge energy added',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -811,6 +854,7 @@
     'original_name': 'Charge energy added',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
     'unique_id': 'VINVINVIN-charge_state_charge_energy_added',
@@ -842,6 +886,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -855,7 +900,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
@@ -865,6 +914,7 @@
     'original_name': 'Charge rate',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
     'unique_id': 'VINVINVIN-charge_state_charge_rate',
@@ -884,7 +934,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '49.2',
+    'state': '49.2459264',
   })
 # ---
 # name: test_sensors[sensor.test_charger_current-entry]
@@ -896,6 +946,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -909,13 +960,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charger current',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
     'unique_id': 'VINVINVIN-charge_state_charger_actual_current',
@@ -947,6 +1003,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -960,13 +1017,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charger power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
     'unique_id': 'VINVINVIN-charge_state_charger_power',
@@ -998,6 +1060,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1011,13 +1074,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Charger voltage',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
     'unique_id': 'VINVINVIN-charge_state_charger_voltage',
@@ -1056,6 +1124,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1069,6 +1138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1076,6 +1146,7 @@
     'original_name': 'Charging',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
     'unique_id': 'VINVINVIN-charge_state_charging_state',
@@ -1111,6 +1182,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1124,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Destination',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1131,6 +1204,7 @@
     'original_name': 'Destination',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_destination',
     'unique_id': 'VINVINVIN-drive_state_active_route_destination',
@@ -1159,6 +1233,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1172,7 +1247,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to arrival',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
@@ -1182,6 +1261,7 @@
     'original_name': 'Distance to arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_miles_to_arrival',
@@ -1201,7 +1281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '75.168198',
+    'state': '75.168198306432',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-entry]
@@ -1213,6 +1293,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1226,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Driver temperature setting',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1236,6 +1318,7 @@
     'original_name': 'Driver temperature setting',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_driver_temp_setting',
@@ -1258,6 +1341,63 @@
     'state': '22.5',
   })
 # ---
+# name: test_sensors[sensor.test_energy_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_energy_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy remaining',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Energy remaining',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_energy_remaining',
+    'unique_id': 'VINVINVIN-charge_state_energy_remaining',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.test_energy_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Test Energy remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_energy_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '46.92',
+  })
+# ---
 # name: test_sensors[sensor.test_inside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1267,6 +1407,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1280,6 +1421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1290,6 +1432,7 @@
     'original_name': 'Inside temperature',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
     'unique_id': 'VINVINVIN-climate_state_inside_temp',
@@ -1321,6 +1464,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1334,6 +1478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1347,6 +1492,7 @@
     'original_name': 'Odometer',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
     'unique_id': 'VINVINVIN-vehicle_state_odometer',
@@ -1378,6 +1524,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1391,6 +1538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1401,6 +1549,7 @@
     'original_name': 'Outside temperature',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
     'unique_id': 'VINVINVIN-climate_state_outside_temp',
@@ -1432,6 +1581,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1445,6 +1595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Passenger temperature setting',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1455,6 +1606,7 @@
     'original_name': 'Passenger temperature setting',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_passenger_temp_setting',
@@ -1486,6 +1638,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1499,13 +1652,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
     'unique_id': 'VINVINVIN-drive_state_power',
@@ -1542,6 +1700,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1555,6 +1714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shift state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1562,6 +1722,7 @@
     'original_name': 'Shift state',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
     'unique_id': 'VINVINVIN-drive_state_shift_state',
@@ -1585,7 +1746,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'p',
   })
 # ---
 # name: test_sensors[sensor.test_speed-entry]
@@ -1597,6 +1758,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1610,7 +1772,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
@@ -1620,6 +1786,7 @@
     'original_name': 'Speed',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
     'unique_id': 'VINVINVIN-drive_state_speed',
@@ -1651,6 +1818,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1664,6 +1832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge at arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1671,6 +1840,7 @@
     'original_name': 'State of charge at arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_energy_at_arrival',
@@ -1700,6 +1870,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1713,6 +1884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1720,6 +1892,7 @@
     'original_name': 'Time to arrival',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
@@ -1747,6 +1920,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1760,6 +1934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to full charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1767,6 +1942,7 @@
     'original_name': 'Time to full charge',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
     'unique_id': 'VINVINVIN-charge_state_minutes_to_full_charge',
@@ -1796,6 +1972,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1809,6 +1986,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure front left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1822,6 +2000,7 @@
     'original_name': 'Tire pressure front left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fl',
@@ -1853,6 +2032,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1866,6 +2046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure front right',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1879,6 +2060,7 @@
     'original_name': 'Tire pressure front right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fr',
@@ -1910,6 +2092,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1923,6 +2106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure rear left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1936,6 +2120,7 @@
     'original_name': 'Tire pressure rear left',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rl',
@@ -1967,6 +2152,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1980,6 +2166,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure rear right',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1993,6 +2180,7 @@
     'original_name': 'Tire pressure rear right',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rr',
@@ -2024,6 +2212,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2037,13 +2226,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Traffic delay',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Traffic delay',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
     'unique_id': 'VINVINVIN-drive_state_active_route_traffic_minutes_delay',
@@ -2075,6 +2269,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2088,6 +2283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2101,6 +2297,7 @@
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-abd-123-wall_connector_power',
@@ -2132,6 +2329,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2145,6 +2343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2158,6 +2357,7 @@
     'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-bcd-234-wall_connector_power',
@@ -2200,6 +2400,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2213,6 +2414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2220,6 +2422,7 @@
     'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-abd-123-wall_connector_state',
@@ -2272,6 +2475,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2285,6 +2489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2292,6 +2497,7 @@
     'original_name': 'State',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-bcd-234-wall_connector_state',
@@ -2331,6 +2537,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2344,6 +2551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2351,6 +2559,7 @@
     'original_name': 'Vehicle',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-abd-123-vin',
@@ -2377,6 +2586,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2390,6 +2600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2397,6 +2608,7 @@
     'original_name': 'Vehicle',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-bcd-234-vin',

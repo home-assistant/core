@@ -33,7 +33,7 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return KrakenOptionsFlowHandler(config_entry)
+        return KrakenOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -52,10 +52,6 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class KrakenOptionsFlowHandler(OptionsFlow):
     """Handle Kraken client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Kraken options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

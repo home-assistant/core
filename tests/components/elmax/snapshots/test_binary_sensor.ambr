@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  01',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -26,6 +28,7 @@
     'original_name': 'ZONA  01',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-0',
@@ -53,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -66,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  02e',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -73,6 +78,7 @@
     'original_name': 'ZONA  02e',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-1',
@@ -100,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -113,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  03a',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -120,6 +128,7 @@
     'original_name': 'ZONA  03a',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-2',
@@ -147,6 +156,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -160,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  04',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -167,6 +178,7 @@
     'original_name': 'ZONA  04',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-3',
@@ -194,6 +206,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -207,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  05',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -214,6 +228,7 @@
     'original_name': 'ZONA  05',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-4',
@@ -241,6 +256,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -254,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  06',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -261,6 +278,7 @@
     'original_name': 'ZONA  06',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-5',
@@ -288,6 +306,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -301,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  07',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -308,6 +328,7 @@
     'original_name': 'ZONA  07',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-6',
@@ -335,6 +356,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -348,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  08',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -355,6 +378,7 @@
     'original_name': 'ZONA  08',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-zona-7',

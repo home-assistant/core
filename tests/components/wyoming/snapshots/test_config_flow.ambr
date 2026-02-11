@@ -1,46 +1,9 @@
 # serializer version: 1
-# name: test_hassio_addon_discovery
-  FlowResultSnapshot({
-    'context': dict({
-      'source': 'hassio',
-      'unique_id': '1234',
-    }),
-    'data': dict({
-      'host': 'mock-piper',
-      'port': 10200,
-    }),
-    'description': None,
-    'description_placeholders': None,
-    'flow_id': <ANY>,
-    'handler': 'wyoming',
-    'options': dict({
-    }),
-    'result': ConfigEntrySnapshot({
-      'data': dict({
-        'host': 'mock-piper',
-        'port': 10200,
-      }),
-      'disabled_by': None,
-      'domain': 'wyoming',
-      'entry_id': <ANY>,
-      'options': dict({
-      }),
-      'pref_disable_new_entities': False,
-      'pref_disable_polling': False,
-      'source': 'hassio',
-      'title': 'Piper',
-      'unique_id': '1234',
-      'version': 1,
-    }),
-    'title': 'Piper',
-    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
-    'version': 1,
-  })
-# ---
 # name: test_hassio_addon_discovery[info0]
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -64,6 +27,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -72,10 +37,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -85,6 +54,7 @@
   FlowResultSnapshot({
     'context': dict({
       'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
         'name': 'Piper',
@@ -108,6 +78,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -116,10 +88,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'hassio',
+      'subentries': list([
+      ]),
       'title': 'Piper',
       'unique_id': '1234',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Piper',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -128,7 +104,7 @@
 # name: test_zeroconf_discovery
   FlowResultSnapshot({
     'context': dict({
-      'name': 'Test Satellite',
+      'dismiss_protected': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Test Satellite',
@@ -152,6 +128,8 @@
         'port': 12345,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -160,10 +138,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
+      'subentries': list([
+      ]),
       'title': 'Test Satellite',
       'unique_id': 'test_zeroconf_name._wyoming._tcp.local._Test Satellite',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Test Satellite',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

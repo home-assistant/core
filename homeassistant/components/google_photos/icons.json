@@ -1,0 +1,7 @@
+{
+  "services": {
+    "upload": {
+      "service": "mdi:cloud-upload"
+    }
+  }
+}

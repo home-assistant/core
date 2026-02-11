@@ -46,7 +46,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 client_session=async_get_clientsession(self.hass),
             )
 
-            if custom_account := user_input.get(CONF_ACCOUNT) is not None:
+            if (custom_account := user_input.get(CONF_ACCOUNT)) is not None:
                 client.custom_account_id = custom_account
 
             try:
@@ -79,20 +79,26 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        user_input: Mapping[str, Any],
+        entry_data: Mapping[str, Any],
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self.username = entry_data.get(CONF_USERNAME)
+        self.account = entry_data.get(CONF_ACCOUNT)
+
+        if self.username:
+            # If we have a username, use it as flow title
+            self.context["title_placeholders"] = {CONF_USERNAME: self.username}
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: Mapping[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         errors = {}
 
-        if user_input and user_input.get(CONF_USERNAME):
-            self.username = user_input[CONF_USERNAME]
-
-        if user_input and user_input.get(CONF_ACCOUNT):
-            self.account = user_input[CONF_ACCOUNT]
-
-        self.context["title_placeholders"] = {CONF_USERNAME: self.username}
-
-        if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
+        if user_input is not None:
             client = OVOEnergy(
                 client_session=async_get_clientsession(self.hass),
             )
@@ -109,19 +115,13 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             else:
                 if authenticated:
-                    entry = await self.async_set_unique_id(self.username)
-                    if entry:
-                        self.hass.config_entries.async_update_entry(
-                            entry,
-                            data={
-                                CONF_USERNAME: self.username,
-                                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            },
-                        )
-                        return self.async_abort(reason="reauth_successful")
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    )
 
                 errors["base"] = "authorization_error"
 
         return self.async_show_form(
-            step_id="reauth", data_schema=REAUTH_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )

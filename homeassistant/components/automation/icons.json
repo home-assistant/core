@@ -9,10 +9,20 @@
     }
   },
   "services": {
-    "turn_on": "mdi:robot",
-    "turn_off": "mdi:robot-off",
-    "toggle": "mdi:robot",
-    "trigger": "mdi:robot",
-    "reload": "mdi:reload"
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "toggle": {
+      "service": "mdi:robot"
+    },
+    "trigger": {
+      "service": "mdi:robot"
+    },
+    "turn_off": {
+      "service": "mdi:robot-off"
+    },
+    "turn_on": {
+      "service": "mdi:robot"
+    }
   }
 }

@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -194,39 +194,30 @@ class InfluxSensor(SensorEntity):
         """Initialize the sensor."""
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)
-        value_template = query.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            self._value_template = value_template
-            self._value_template.hass = hass
-        else:
-            self._value_template = None
+        self._value_template = query.get(CONF_VALUE_TEMPLATE)
         self._state = None
         self._hass = hass
         self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
-            query_clause = query.get(CONF_QUERY)
-            query_clause.hass = hass
             self.data = InfluxFluxSensorData(
                 influx,
                 query.get(CONF_BUCKET),
                 query.get(CONF_RANGE_START),
                 query.get(CONF_RANGE_STOP),
-                query_clause,
+                query.get(CONF_QUERY),
                 query.get(CONF_IMPORTS),
                 query.get(CONF_GROUP_FUNCTION),
             )
 
         else:
-            where_clause = query.get(CONF_WHERE)
-            where_clause.hass = hass
             self.data = InfluxQLSensorData(
                 influx,
                 query.get(CONF_DB_NAME),
                 query.get(CONF_GROUP_FUNCTION),
                 query.get(CONF_FIELD),
                 query.get(CONF_MEASUREMENT_NAME),
-                where_clause,
+                query.get(CONF_WHERE),
             )
 
     @property

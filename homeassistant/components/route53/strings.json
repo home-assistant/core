@@ -1,8 +1,8 @@
 {
   "services": {
     "update_records": {
-      "name": "Update records",
-      "description": "Triggers update of records."
+      "description": "Triggers update of records.",
+      "name": "Update records"
     }
   }
 }

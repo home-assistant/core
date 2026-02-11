@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioambient import OpenAPI
 import pytest
 
-from homeassistant.components import ambient_network
+from homeassistant.components.ambient_network.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import (
@@ -69,7 +69,7 @@ async def mock_aioambient(open_api: OpenAPI):
 def config_entry_fixture(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
-        domain=ambient_network.DOMAIN,
+        domain=DOMAIN,
         title=f"Station {request.param[0]}",
         data={"mac": request.param},
     )

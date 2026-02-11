@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_STRUCTURE,
@@ -25,20 +26,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
-    CONF_LAZY_ERROR,
-    CONF_RETRIES,
+    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_SWING_MODE_VALUES,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_VIRTUAL_COUNT,
     DEFAULT_HUB,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     PLATFORMS,
     SERIAL,
     DataType,
@@ -46,7 +52,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTRY = namedtuple(
+ENTRY = namedtuple(  # noqa: PYI024
     "ENTRY",
     [
         "struct_id",
@@ -60,7 +66,7 @@ ILLEGAL = "I"
 OPTIONAL = "O"
 DEMANDED = "D"
 
-PARM_IS_LEGAL = namedtuple(
+PARM_IS_LEGAL = namedtuple(  # noqa: PYI024
     "PARM_IS_LEGAL",
     [
         "count",
@@ -220,7 +226,7 @@ def nan_validator(value: Any) -> int:
         return value
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         pass
     try:
         return int(value, 16)
@@ -242,6 +248,46 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
+def not_zero_value(val: float, errMsg: str) -> float:
+    """Check value is not zero."""
+    if val == 0:
+        raise vol.Invalid(errMsg)
+    return val
+
+
+def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
+    """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
+    config_keys = [
+        (CONF_SCALE, CONF_TARGET_TEMP_SCALE, CONF_CURRENT_TEMP_SCALE, DEFAULT_SCALE),
+        (
+            CONF_OFFSET,
+            CONF_TARGET_TEMP_OFFSET,
+            CONF_CURRENT_TEMP_OFFSET,
+            DEFAULT_OFFSET,
+        ),
+    ]
+
+    for generic_key, target_key, current_key, default_value in config_keys:
+        if generic_key in config and (target_key in config or current_key in config):
+            raise vol.Invalid(
+                f"Cannot use both '{generic_key}' and temperature-specific parameters "
+                f"('{target_key}' or '{current_key}') in the same configuration. "
+                f"Either the '{generic_key}' parameter (which applies to both temperatures) "
+                "or the new temperature-specific parameters, but not both."
+            )
+        if generic_key in config:
+            value = config.pop(generic_key)
+            config[target_key] = value
+            config[current_key] = value
+
+        if target_key not in config:
+            config[target_key] = default_value
+        if current_key not in config:
+            config[current_key] = default_value
+
     return config
 
 
@@ -284,27 +330,6 @@ def validate_modbus(
     hub_name_inx: int,
 ) -> bool:
     """Validate modbus entries."""
-    if CONF_RETRIES in hub:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_retries",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_retries",
-            translation_placeholders={
-                "config_key": "retries",
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
-        )
-        _LOGGER.warning(
-            "`retries`: is deprecated and will be removed in version 2024.7"
-        )
-    else:
-        hub[CONF_RETRIES] = 3
-
     host: str = (
         hub[CONF_PORT]
         if hub[CONF_TYPE] == SERIAL
@@ -353,24 +378,6 @@ def validate_entity(
     ent_addr: set[str],
 ) -> bool:
     """Validate entity."""
-    if CONF_LAZY_ERROR in entity:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_lazy_error_count",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_lazy_error_count",
-            translation_placeholders={
-                "config_key": "lazy_error_count",
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
-        )
-        _LOGGER.warning(
-            "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
-        )
     name = f"{component}.{entity[CONF_NAME]}"
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:

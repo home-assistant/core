@@ -14,9 +14,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
-from .const import DOMAIN, PLATFORMS
+from .const import DEFAULT_AUGUST_BRAND, DOMAIN, PLATFORMS
 from .data import AugustData
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
@@ -24,10 +29,20 @@ from .util import async_create_august_clientsession
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Set up August from a config entry."""
+    # Check if this is a legacy config entry that needs migration to OAuth
+    if "auth_implementation" not in entry.data:
+        # This is a legacy entry using username/password, trigger reauth
+        raise ConfigEntryAuthFailed("Migration to OAuth required")
+
     session = async_create_august_clientsession(hass)
-    august_gateway = AugustGateway(Path(hass.config.config_dir), session)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    oauth_session = OAuth2Session(hass, entry, implementation)
+    august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
@@ -40,6 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> None:
+    """Remove an August config entry."""
+    ir.async_delete_issue(hass, DOMAIN, "yale_brand_migration")
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -50,7 +70,7 @@ async def async_setup_august(
 ) -> None:
     """Set up the August component."""
     config = cast(YaleXSConfig, entry.data)
-    await august_gateway.async_setup(config)
+    await august_gateway.async_setup({**config, "brand": DEFAULT_AUGUST_BRAND})
     await august_gateway.async_authenticate()
     await august_gateway.async_refresh_access_token_if_needed()
     data = entry.runtime_data = AugustData(hass, august_gateway)

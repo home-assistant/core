@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "sensor": {
+      "drive_state": {
+        "default": "mdi:harddisk",
+        "state": {
+          "critical": "mdi:alert",
+          "exceeded": "mdi:alert-octagon",
+          "nearing": "mdi:alert-circle-outline",
+          "normal": "mdi:harddisk"
+        }
+      },
+      "remaining_size": {
+        "default": "mdi:database"
+      },
+      "total_size": {
+        "default": "mdi:database"
+      },
+      "used_size": {
+        "default": "mdi:database"
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "service": "mdi:cloud-upload"
+    }
+  }
+}

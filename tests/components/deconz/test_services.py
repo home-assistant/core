@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
@@ -21,13 +21,12 @@ from homeassistant.components.deconz.services import (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .test_gateway import BRIDGEID
+from .test_hub import BRIDGE_ID
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -39,14 +38,14 @@ async def test_configure_service_with_field(
     """Test that service invokes pydeconz with the correct path and data."""
     data = {
         SERVICE_FIELD: "/lights/2",
-        CONF_BRIDGE_ID: BRIDGEID,
+        CONF_BRIDGE_ID: BRIDGE_ID,
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
     aioclient_mock = mock_put_request("/lights/2")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -55,12 +54,10 @@ async def test_configure_service_with_field(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Dimmable light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -74,10 +71,10 @@ async def test_configure_service_with_entity(
         SERVICE_ENTITY: "light.test",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1")
+    aioclient_mock = mock_put_request("/lights/0")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -86,12 +83,10 @@ async def test_configure_service_with_entity(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Dimmable light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -106,10 +101,10 @@ async def test_configure_service_with_entity_and_field(
         SERVICE_FIELD: "/state",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -127,9 +122,7 @@ async def test_configure_service_with_faulty_bridgeid(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -142,7 +135,7 @@ async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+            DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
 
 
@@ -158,9 +151,7 @@ async def test_configure_service_with_faulty_entity(
         SERVICE_DATA: {},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -179,9 +170,7 @@ async def test_calling_service_with_no_master_gateway_fails(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -215,7 +204,7 @@ async def test_service_refresh_devices(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
@@ -232,7 +221,7 @@ async def test_service_refresh_devices(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -243,13 +232,11 @@ async def test_service_refresh_devices(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -283,12 +270,12 @@ async def test_service_refresh_devices_trigger_no_state_update(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
         "sensors": {
-            "1": {
+            "0": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -300,7 +287,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -312,12 +299,10 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Light 1 name",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Light 0 name",
+            "state": {"reachable": True},
+            "type": "Dimmable light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -325,13 +310,11 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000, "gesture": 1},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000, "gesture": 1},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:03-00",
         }
     ],
 )
@@ -339,12 +322,17 @@ async def test_remove_orphaned_entries_service(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test service works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "123")},
+        identifiers={(DOMAIN, BRIDGE_ID)},
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_setup.entry_id,
+        identifiers={(DOMAIN, "orphaned")},
     )
 
     assert (
@@ -355,12 +343,12 @@ async def test_remove_orphaned_entries_service(
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )
-        == 5  # Host, gateway, light, switch and orphan
+        == 4  # Gateway, light, switch and orphan
     )
 
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
-        DECONZ_DOMAIN,
+        DOMAIN,
         "12345",
         suggested_object_id="Orphaned sensor",
         config_entry=config_entry_setup,
@@ -377,9 +365,9 @@ async def test_remove_orphaned_entries_service(
     )
 
     await hass.services.async_call(
-        DECONZ_DOMAIN,
+        DOMAIN,
         SERVICE_REMOVE_ORPHANED_ENTRIES,
-        service_data={CONF_BRIDGE_ID: BRIDGEID},
+        service_data={CONF_BRIDGE_ID: BRIDGE_ID},
     )
     await hass.async_block_till_done()
 
@@ -391,7 +379,7 @@ async def test_remove_orphaned_entries_service(
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )
-        == 4  # Host, gateway, light and switch
+        == 3  # Gateway, light and switch
     )
 
     assert (

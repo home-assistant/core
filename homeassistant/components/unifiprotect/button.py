@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -19,26 +19,31 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DOMAIN
 from .data import ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSettableKeysMixin,
+    T,
+    async_all_device_entities,
+)
+from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectButtonEntityDescription(
-    ProtectSetableKeysMixin[T], ButtonEntityDescription
+    ProtectSettableKeysMixin[T], ButtonEntityDescription
 ):
     """Describes UniFi Protect Button entity."""
 
     ufp_press: str | None = None
-
-
-DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
 
 
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
@@ -46,15 +51,13 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         key="reboot",
         entity_registry_enabled_default=False,
         device_class=ButtonDeviceClass.RESTART,
-        name="Reboot device",
         ufp_press="reboot",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectButtonEntityDescription(
         key="unadopt",
+        translation_key="unadopt_device",
         entity_registry_enabled_default=False,
-        name="Unadopt device",
-        icon="mdi:delete",
         ufp_press="unadopt",
         ufp_perm=PermRequired.DELETE,
     ),
@@ -62,16 +65,14 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 
 ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
     key="adopt",
-    name="Adopt device",
-    icon="mdi:plus-circle",
+    translation_key="adopt_device",
     ufp_press="adopt",
 )
 
 SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="clear_tamper",
-        name="Clear tamper",
-        icon="mdi:notification-clear-all",
+        translation_key="clear_tamper",
         ufp_press="clear_tamper",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -80,15 +81,12 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
-        name="Play chime",
-        device_class=DEVICE_CLASS_CHIME_BUTTON,
-        icon="mdi:play",
+        translation_key="play_chime",
         ufp_press="play",
     ),
     ProtectButtonEntityDescription(
         key="play_buzzer",
-        name="Play buzzer",
-        icon="mdi:play",
+        translation_key="play_buzzer",
         ufp_press="play_buzzer",
     ),
 )
@@ -114,7 +112,7 @@ def _async_remove_adopt_button(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover devices on a UniFi Protect NVR."""
     data = entry.runtime_data
@@ -162,6 +160,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     entity_description: ProtectButtonEntityDescription
 
+    @async_ufp_instance_command
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.ufp_press is not None:

@@ -1,4 +1,460 @@
 # serializer version: 1
+# name: test_sensors[sensor.energy_site_battery_charged-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_charged',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery charged',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery charged',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_battery_charge',
+    'unique_id': '123456-total_battery_charge',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_charged-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery charged',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_charged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_charged-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery charged',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_charged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.684',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_discharged-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_discharged',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery discharged',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery discharged',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_battery_discharge',
+    'unique_id': '123456-total_battery_discharge',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_discharged-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery discharged',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_discharged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_discharged-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery discharged',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_discharged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.036',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery exported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_energy_exported',
+    'unique_id': '123456-battery_energy_exported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_exported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.036',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_generator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_imported_from_generator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery imported from generator',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery imported from generator',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_energy_imported_from_generator',
+    'unique_id': '123456-battery_energy_imported_from_generator',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_generator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_generator-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_imported_from_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery imported from grid',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery imported from grid',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_energy_imported_from_grid',
+    'unique_id': '123456-battery_energy_imported_from_grid',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from grid',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_grid-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from grid',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_solar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_imported_from_solar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery imported from solar',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery imported from solar',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_energy_imported_from_solar',
+    'unique_id': '123456-battery_energy_imported_from_solar',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_solar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_battery_imported_from_solar-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Battery imported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_imported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.684',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8,6 +464,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -34,6 +492,7 @@
     'original_name': 'Battery power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
     'unique_id': '123456-battery_power',
@@ -72,6 +531,310 @@
     'state': '5.06',
   })
 # ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Consumer imported from battery',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumer imported from battery',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumer_energy_imported_from_battery',
+    'unique_id': '123456-consumer_energy_imported_from_battery',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from battery',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_battery-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from battery',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.036',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_generator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_generator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Consumer imported from generator',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumer imported from generator',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumer_energy_imported_from_generator',
+    'unique_id': '123456-consumer_energy_imported_from_generator',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_generator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_generator-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Consumer imported from grid',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumer imported from grid',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumer_energy_imported_from_grid',
+    'unique_id': '123456-consumer_energy_imported_from_grid',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from grid',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_grid-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from grid',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_solar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_solar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Consumer imported from solar',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumer imported from solar',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumer_energy_imported_from_solar',
+    'unique_id': '123456-consumer_energy_imported_from_solar',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_solar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_consumer_imported_from_solar-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Consumer imported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_consumer_imported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.038',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_energy_left-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -81,6 +844,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -94,6 +858,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -107,6 +872,7 @@
     'original_name': 'Energy left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_left',
     'unique_id': '123456-energy_left',
@@ -145,6 +911,82 @@
     'state': '38.8964736842105',
   })
 # ---
+# name: test_sensors[sensor.energy_site_generator_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_generator_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Generator exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Generator exported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'generator_energy_exported',
+    'unique_id': '123456-generator_energy_exported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_generator_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Generator exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_generator_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_generator_exported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Generator exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_generator_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_generator_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -154,6 +996,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -167,6 +1010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -180,6 +1024,7 @@
     'original_name': 'Generator power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'generator_power',
     'unique_id': '123456-generator_power',
@@ -218,6 +1063,386 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.energy_site_grid_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid exported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_grid_energy_exported',
+    'unique_id': '123456-total_grid_energy_exported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.002',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_exported_from_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid exported from battery',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid exported from battery',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_energy_exported_from_battery',
+    'unique_id': '123456-grid_energy_exported_from_battery',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from battery',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_battery-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from battery',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_generator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_exported_from_generator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid exported from generator',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid exported from generator',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_energy_exported_from_generator',
+    'unique_id': '123456-grid_energy_exported_from_generator',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_generator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_generator-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from generator',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_generator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_solar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_exported_from_solar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid exported from solar',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid exported from solar',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_energy_exported_from_solar',
+    'unique_id': '123456-grid_energy_exported_from_solar',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_solar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_exported_from_solar-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid exported from solar',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_exported_from_solar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.002',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_imported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_imported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid imported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid imported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_energy_imported',
+    'unique_id': '123456-grid_energy_imported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_imported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid imported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_imported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_imported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid imported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_imported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_grid_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -227,6 +1452,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -240,6 +1466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -253,6 +1480,7 @@
     'original_name': 'Grid power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_power',
     'unique_id': '123456-grid_power',
@@ -291,6 +1519,158 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.energy_site_grid_services_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_services_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid services exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid services exported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_services_energy_exported',
+    'unique_id': '123456-grid_services_energy_exported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_services_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid services exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_services_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_services_exported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid services exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_services_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_services_imported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_services_imported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid services imported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Grid services imported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_services_energy_imported',
+    'unique_id': '123456-grid_services_energy_imported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_services_imported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid services imported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_services_imported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_grid_services_imported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Grid services imported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_services_imported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_grid_services_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -300,6 +1680,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -313,6 +1694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -326,6 +1708,7 @@
     'original_name': 'Grid services power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_power',
     'unique_id': '123456-grid_services_power',
@@ -364,6 +1747,168 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.energy_site_home_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_home_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home usage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Home usage',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_home_usage',
+    'unique_id': '123456-total_home_usage',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_home_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Home usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_home_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_home_usage-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Home usage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_home_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.074',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_island_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Island status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Island status',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Island status',
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_island_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Island status',
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_island_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -373,6 +1918,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -386,6 +1932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -399,6 +1946,7 @@
     'original_name': 'Load power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_power',
     'unique_id': '123456-load_power',
@@ -437,67 +1985,6 @@
     'state': '6.245',
   })
 # ---
-# name: test_sensors[sensor.energy_site_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.energy_site_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'island_status',
-    'unique_id': '123456-island_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on_grid',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on_grid',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -507,6 +1994,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -520,6 +2008,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Percentage charged',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -530,6 +2019,7 @@
     'original_name': 'Percentage charged',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'percentage_charged',
     'unique_id': '123456-percentage_charged',
@@ -568,6 +2058,158 @@
     'state': '95.5053740373966',
   })
 # ---
+# name: test_sensors[sensor.energy_site_solar_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_solar_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Solar exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Solar exported',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_energy_exported',
+    'unique_id': '123456-solar_energy_exported',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_solar_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Solar exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_solar_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_solar_exported-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Solar exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_solar_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.724',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_solar_generated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_solar_generated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Solar generated',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Solar generated',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_solar_generation',
+    'unique_id': '123456-total_solar_generation',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_solar_generated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Solar generated',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_solar_generated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_solar_generated-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Energy Site Solar generated',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_solar_generated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.724',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_solar_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -577,6 +2219,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -590,6 +2233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -603,6 +2247,7 @@
     'original_name': 'Solar power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_power',
     'unique_id': '123456-solar_power',
@@ -650,6 +2295,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -663,6 +2309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total pack energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -676,6 +2323,7 @@
     'original_name': 'Total pack energy',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pack_energy',
     'unique_id': '123456-total_pack_energy',
@@ -714,65 +2362,6 @@
     'state': '40.727',
   })
 # ---
-# name: test_sensors[sensor.energy_site_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.energy_site_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'version',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '123456-version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.energy_site_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.44.0 eb113390',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_version-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.44.0 eb113390',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -780,6 +2369,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -793,13 +2383,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VPP backup reserve',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'VPP backup reserve',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpp_backup_reserve_percent',
     'unique_id': '123456-vpp_backup_reserve_percent',
@@ -809,7 +2401,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -824,7 +2415,6 @@
 # name: test_sensors[sensor.energy_site_vpp_backup_reserve-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Energy Site VPP backup reserve',
       'unit_of_measurement': '%',
     }),
@@ -836,6 +2426,77 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[sensor.teslemetry_credits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teslemetry_credits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Teslemetry credits',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Teslemetry credits',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'credit_balance',
+    'unique_id': 'abc-123_credit_balance',
+    'unit_of_measurement': 'credits',
+  })
+# ---
+# name: test_sensors[sensor.teslemetry_credits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Teslemetry credits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teslemetry_credits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.teslemetry_credits-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Teslemetry credits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'credits',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teslemetry_credits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[sensor.test_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -845,6 +2506,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -858,16 +2520,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery level',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery level',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -912,6 +2579,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -925,6 +2593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -938,9 +2607,10 @@
     'original_name': 'Battery range',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -983,6 +2653,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -996,6 +2667,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1003,9 +2675,10 @@
     'original_name': 'Charge cable',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_conn_charge_cable',
     'unit_of_measurement': None,
   })
 # ---
@@ -1044,6 +2717,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1057,6 +2731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge energy added',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1067,9 +2742,10 @@
     'original_name': 'Charge energy added',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_energy_added',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_energy_added',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1114,6 +2790,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1127,7 +2804,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
@@ -1137,9 +2818,10 @@
     'original_name': 'Charge rate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_rate',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_rate',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -1156,7 +2838,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.test_charge_rate-statealt]
@@ -1172,7 +2854,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.test_charger_current-entry]
@@ -1184,6 +2866,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1197,16 +2880,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charger current',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_actual_current',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_actual_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1251,6 +2939,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1264,16 +2953,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charger power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_power',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1318,6 +3012,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1331,16 +3026,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Charger voltage',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_voltage',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1392,6 +3092,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1405,6 +3106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1412,9 +3114,10 @@
     'original_name': 'Charging',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charging_state',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charging_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1471,6 +3174,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1484,7 +3188,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to arrival',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
@@ -1494,9 +3202,10 @@
     'original_name': 'Distance to arrival',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_miles_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_miles_to_arrival',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1513,7 +3222,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.063555',
+    'state': '0.063554603904',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-statealt]
@@ -1529,7 +3238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-entry]
@@ -1541,6 +3250,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1554,6 +3264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Driver temperature setting',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1564,9 +3275,10 @@
     'original_name': 'Driver temperature setting',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_driver_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_driver_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1611,6 +3323,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1624,6 +3337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimate battery range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1637,9 +3351,10 @@
     'original_name': 'Estimate battery range',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_est_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_est_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1682,6 +3397,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1695,6 +3411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fast charger type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1702,9 +3419,10 @@
     'original_name': 'Fast charger type',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_fast_charger_type',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_fast_charger_type',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_fast_charger_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -1743,6 +3461,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1756,6 +3475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ideal battery range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1769,9 +3489,10 @@
     'original_name': 'Ideal battery range',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_ideal_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_ideal_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1816,6 +3537,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1829,6 +3551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1839,9 +3562,10 @@
     'original_name': 'Inside temperature',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_inside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_inside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1886,6 +3610,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1899,6 +3624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1912,9 +3638,10 @@
     'original_name': 'Odometer',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_odometer',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_odometer',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -1959,6 +3686,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1972,6 +3700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1982,9 +3711,10 @@
     'original_name': 'Outside temperature',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_outside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_outside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2029,6 +3759,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2042,6 +3773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Passenger temperature setting',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2052,9 +3784,10 @@
     'original_name': 'Passenger temperature setting',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_passenger_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_passenger_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2099,6 +3832,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2112,16 +3846,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_power',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -2171,6 +3910,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2184,6 +3924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shift state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2191,9 +3932,10 @@
     'original_name': 'Shift state',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_shift_state',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_shift_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2246,6 +3988,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2259,7 +4002,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
@@ -2269,9 +4016,10 @@
     'original_name': 'Speed',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_speed',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -2288,7 +4036,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_speed-statealt]
@@ -2304,7 +4052,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-entry]
@@ -2316,6 +4064,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2329,6 +4078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge at arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2336,9 +4086,10 @@
     'original_name': 'State of charge at arrival',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_energy_at_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_energy_at_arrival',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2355,7 +4106,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-statealt]
@@ -2371,7 +4122,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_arrival-entry]
@@ -2381,6 +4132,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2394,6 +4146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2401,9 +4154,10 @@
     'original_name': 'Time to arrival',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_minutes_to_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -2442,6 +4196,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2455,6 +4210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to full charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2462,9 +4218,10 @@
     'original_name': 'Time to full charge',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_minutes_to_full_charge',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_minutes_to_full_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -2505,6 +4262,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2518,6 +4276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure front left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2531,9 +4290,10 @@
     'original_name': 'Tire pressure front left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -2578,6 +4338,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2591,6 +4352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure front right',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2604,9 +4366,10 @@
     'original_name': 'Tire pressure front right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -2651,6 +4414,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2664,6 +4428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure rear left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2677,9 +4442,10 @@
     'original_name': 'Tire pressure rear left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -2724,6 +4490,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2737,6 +4504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure rear right',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2750,9 +4518,10 @@
     'original_name': 'Tire pressure rear right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -2797,6 +4566,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2810,16 +4580,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Traffic delay',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Traffic delay',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_traffic_minutes_delay',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_traffic_minutes_delay',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -2864,6 +4639,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2877,16 +4653,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Usable battery level',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Usable battery level',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_usable_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_usable_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2929,6 +4710,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2942,6 +4724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault state code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2949,6 +4732,7 @@
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_fault_state',
     'unique_id': '123456-abd-123-wall_connector_fault_state',
@@ -2988,6 +4772,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3001,6 +4786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault state code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3008,6 +4794,7 @@
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_fault_state',
     'unique_id': '123456-bcd-234-wall_connector_fault_state',
@@ -3049,6 +4836,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3062,6 +4850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3075,6 +4864,7 @@
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-abd-123-wall_connector_power',
@@ -3122,6 +4912,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3135,6 +4926,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3148,6 +4940,7 @@
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_power',
     'unique_id': '123456-bcd-234-wall_connector_power',
@@ -3193,6 +4986,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3206,6 +5000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3213,6 +5008,7 @@
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-abd-123-wall_connector_state',
@@ -3252,6 +5048,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3265,6 +5062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3272,6 +5070,7 @@
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wall_connector_state',
     'unique_id': '123456-bcd-234-wall_connector_state',
@@ -3311,6 +5110,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3324,6 +5124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3331,6 +5132,7 @@
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-abd-123-vin',
@@ -3347,7 +5149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle-statealt]
@@ -3360,7 +5162,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle_2-entry]
@@ -3370,6 +5172,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3383,6 +5186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3390,6 +5194,7 @@
     'original_name': 'Vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vin',
     'unique_id': '123456-bcd-234-vin',
@@ -3406,7 +5211,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle_2-statealt]
@@ -3419,6 +5224,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---

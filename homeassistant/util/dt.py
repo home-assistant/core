@@ -95,7 +95,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     get_default_time_zone.cache_clear()
 
 
-def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
+def get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """Get time zone from string. Return None if unable to determine.
 
     Must be run in the executor if the ZoneInfo is not already
@@ -107,7 +107,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
         return None
 
 
-async def async_get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
+async def async_get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """Get time zone from string. Return None if unable to determine.
 
     Async friendly.
@@ -168,19 +168,6 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 # of UTC and the function call overhead.
 utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
 """Return a UTC time from a timestamp."""
-
-
-def utc_to_timestamp(utc_dt: dt.datetime) -> float:
-    """Fast conversion of a datetime in UTC to a timestamp."""
-    # Taken from
-    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
-    return (
-        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
-        + utc_dt.hour * 3600
-        + utc_dt.minute * 60
-        + utc_dt.second
-        + (utc_dt.microsecond / 1000000)
-    )
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
@@ -387,7 +374,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif isinstance(parameter, str):
         if parameter.startswith("/"):
             parameter = int(parameter[1:])
-            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+            res = list(
+                range(min_value + (-min_value % parameter), max_value + 1, parameter)
+            )
         else:
             res = [int(parameter)]
 

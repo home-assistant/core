@@ -46,3 +46,5 @@ EVENT_RFXTRX_EVENT = "rfxtrx_event"
 DATA_RFXOBJECT = "rfxobject"
 
 DOMAIN = "rfxtrx"
+
+SIGNAL_EVENT = f"{DOMAIN}_event"

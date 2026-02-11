@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from pywaze.route_calculator import CalcRoutesResponse, WRCError
 
+from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
 from homeassistant.components.waze_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -19,6 +20,7 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
         data=data,
         options=options,
         entry_id="test",
+        version=WazeConfigFlow.VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -51,7 +53,7 @@ def mock_update_fixture():
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture(mock_update):
     """Return valid config entry."""
-    mock_update.return_value = None
+    mock_update.return_value = []
     return mock_update
 
 

@@ -1,0 +1,677 @@
+# serializer version: 1
+# name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.floor_heating_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.2,
+      'friendly_name': 'Floor Heating Thermostat',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 20.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.floor_heating_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.connected_thermostat_ute_3000',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22.5,
+      'friendly_name': 'Connected Thermostat UTE 3000',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 22.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.connected_thermostat_ute_3000',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.eve_thermo_20ebp1701',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.0,
+      'friendly_name': 'Eve Thermo 20EBP1701',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.eve_thermo_20ebp1701',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.eve_thermo_20ecd1701',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 16.2,
+      'friendly_name': 'Eve Thermo 20ECD1701',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 17.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.eve_thermo_20ecd1701',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climates[longan_link_thermostat][climate.longan_link_hvac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.longan_link_hvac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 387>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[longan_link_thermostat][climate.longan_link_hvac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 28.3,
+      'friendly_name': 'Longan link HVAC',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 387>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.longan_link_hvac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.mock_air_purifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Mock Air Purifier',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.mock_air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climates[mock_room_airconditioner][climate.room_airconditioner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 16.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.room_airconditioner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[mock_room_airconditioner][climate.room_airconditioner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Room AirConditioner',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.room_airconditioner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climates[mock_thermostat][climate.mock_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 7.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.mock_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 387>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[mock_thermostat][climate.mock_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18.0,
+      'friendly_name': 'Mock Thermostat',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 7.0,
+      'supported_features': <ClimateEntityFeature: 387>,
+      'target_temp_high': 26.0,
+      'target_temp_low': 20.0,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.mock_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 32.2,
+      'min_temp': 4.4,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.x2s_smart_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.6,
+      'friendly_name': 'X2S Smart Thermostat',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 32.2,
+      'min_temp': 4.4,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 21.7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.x2s_smart_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.smart_radiator_thermostat_x',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 74.92,
+      'current_temperature': 20.9,
+      'friendly_name': 'Smart Radiator Thermostat X',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 18.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.smart_radiator_thermostat_x',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

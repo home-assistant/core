@@ -8,7 +8,7 @@ from typing import Any
 from smarttub import LoginFailed
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import DOMAIN
@@ -24,13 +24,9 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Instantiate config flow."""
-        super().__init__()
-        self._reauth_input: Mapping[str, Any] | None = None
-        self._reauth_entry: ConfigEntry | None = None
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -46,22 +42,17 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(account.id)
 
-                if self._reauth_input is None:
+                if self.source != SOURCE_REAUTH:
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=user_input[CONF_EMAIL], data=user_input
                     )
 
                 # this is a reauth attempt
-                if self._reauth_entry.unique_id != self.unique_id:
-                    # there is a config entry matching this account,
-                    # but it is not the one we were trying to reauth
-                    return self.async_abort(reason="already_configured")
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
+                self._abort_if_unique_id_mismatch(reason="already_configured")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -71,20 +62,19 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Get new credentials if the current ones don't work anymore."""
-        self._reauth_input = entry_data
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             # same as DATA_SCHEMA but with default email
             data_schema = vol.Schema(
                 {
                     vol.Required(
-                        CONF_EMAIL, default=self._reauth_input.get(CONF_EMAIL)
+                        CONF_EMAIL,
+                        default=self._get_reauth_entry().data.get(CONF_EMAIL),
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }

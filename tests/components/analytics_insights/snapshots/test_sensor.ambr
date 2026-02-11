@@ -1,4 +1,57 @@
 # serializer version: 1
+# name: test_all_entities[sensor.homeassistant_analytics_core_samba-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.homeassistant_analytics_core_samba',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'core_samba',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'core_samba',
+    'platform': 'analytics_insights',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apps',
+    'unique_id': 'app_core_samba_active_installations',
+    'unit_of_measurement': 'active installations',
+  })
+# ---
+# name: test_all_entities[sensor.homeassistant_analytics_core_samba-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homeassistant Analytics core_samba',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'active installations',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.homeassistant_analytics_core_samba',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '76357',
+  })
+# ---
 # name: test_all_entities[sensor.homeassistant_analytics_hacs_custom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8,6 +61,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -21,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'hacs (custom)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -28,6 +83,7 @@
     'original_name': 'hacs (custom)',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'custom_integrations',
     'unique_id': 'custom_hacs_active_installations',
@@ -58,6 +114,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -71,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'myq',
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +136,7 @@
     'original_name': 'myq',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_myq_active_installations',
@@ -108,6 +167,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -121,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'spotify',
     'options': dict({
     }),
     'original_device_class': None,
@@ -128,6 +189,7 @@
     'original_name': 'spotify',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_spotify_active_installations',
@@ -149,6 +211,112 @@
     'state': '24388',
   })
 # ---
+# name: test_all_entities[sensor.homeassistant_analytics_total_active_installations-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.homeassistant_analytics_total_active_installations',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total active installations',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total active installations',
+    'platform': 'analytics_insights',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_active_installations',
+    'unique_id': 'total_active_installations',
+    'unit_of_measurement': 'active installations',
+  })
+# ---
+# name: test_all_entities[sensor.homeassistant_analytics_total_active_installations-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homeassistant Analytics Total active installations',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'active installations',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.homeassistant_analytics_total_active_installations',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '310400',
+  })
+# ---
+# name: test_all_entities[sensor.homeassistant_analytics_total_reported_integrations-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.homeassistant_analytics_total_reported_integrations',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total reported integrations',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total reported integrations',
+    'platform': 'analytics_insights',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_reports_integrations',
+    'unique_id': 'total_reports_integrations',
+    'unit_of_measurement': 'active installations',
+  })
+# ---
+# name: test_all_entities[sensor.homeassistant_analytics_total_reported_integrations-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Homeassistant Analytics Total reported integrations',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'active installations',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.homeassistant_analytics_total_reported_integrations',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '249256',
+  })
+# ---
 # name: test_all_entities[sensor.homeassistant_analytics_youtube-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -158,6 +326,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -171,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'YouTube',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,6 +348,7 @@
     'original_name': 'YouTube',
     'platform': 'analytics_insights',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_integrations',
     'unique_id': 'core_youtube_active_installations',

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -26,6 +28,7 @@
     'original_name': 'Activate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activate_air_conditioning',
     'unique_id': 'WBY00000000REXI01-activate_air_conditioning',
@@ -52,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -65,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -72,6 +77,7 @@
     'original_name': 'Find vehicle',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'find_vehicle',
     'unique_id': 'WBY00000000REXI01-find_vehicle',
@@ -98,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -111,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +126,7 @@
     'original_name': 'Flash lights',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_flash',
     'unique_id': 'WBY00000000REXI01-light_flash',
@@ -144,6 +153,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -157,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +175,7 @@
     'original_name': 'Sound horn',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
     'unique_id': 'WBY00000000REXI01-sound_horn',
@@ -190,6 +202,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -203,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,6 +224,7 @@
     'original_name': 'Activate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activate_air_conditioning',
     'unique_id': 'WBA00000000DEMO02-activate_air_conditioning',
@@ -236,6 +251,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -249,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -256,6 +273,7 @@
     'original_name': 'Deactivate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'deactivate_air_conditioning',
     'unique_id': 'WBA00000000DEMO02-deactivate_air_conditioning',
@@ -282,6 +300,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -295,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -302,6 +322,7 @@
     'original_name': 'Find vehicle',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'find_vehicle',
     'unique_id': 'WBA00000000DEMO02-find_vehicle',
@@ -328,6 +349,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -341,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -348,6 +371,7 @@
     'original_name': 'Flash lights',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_flash',
     'unique_id': 'WBA00000000DEMO02-light_flash',
@@ -374,6 +398,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -387,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -394,6 +420,7 @@
     'original_name': 'Sound horn',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
     'unique_id': 'WBA00000000DEMO02-sound_horn',
@@ -420,6 +447,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -433,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -440,6 +469,7 @@
     'original_name': 'Activate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activate_air_conditioning',
     'unique_id': 'WBA00000000DEMO01-activate_air_conditioning',
@@ -466,6 +496,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -479,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -486,6 +518,7 @@
     'original_name': 'Deactivate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'deactivate_air_conditioning',
     'unique_id': 'WBA00000000DEMO01-deactivate_air_conditioning',
@@ -512,6 +545,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -525,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -532,6 +567,7 @@
     'original_name': 'Find vehicle',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'find_vehicle',
     'unique_id': 'WBA00000000DEMO01-find_vehicle',
@@ -558,6 +594,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -571,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -578,6 +616,7 @@
     'original_name': 'Flash lights',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_flash',
     'unique_id': 'WBA00000000DEMO01-light_flash',
@@ -604,6 +643,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -617,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -624,6 +665,7 @@
     'original_name': 'Sound horn',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
     'unique_id': 'WBA00000000DEMO01-sound_horn',
@@ -650,6 +692,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -663,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -670,6 +714,7 @@
     'original_name': 'Activate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activate_air_conditioning',
     'unique_id': 'WBA00000000DEMO03-activate_air_conditioning',
@@ -696,6 +741,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -709,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -716,6 +763,7 @@
     'original_name': 'Deactivate air conditioning',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'deactivate_air_conditioning',
     'unique_id': 'WBA00000000DEMO03-deactivate_air_conditioning',
@@ -742,6 +790,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -755,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
     'original_device_class': None,
@@ -762,6 +812,7 @@
     'original_name': 'Find vehicle',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'find_vehicle',
     'unique_id': 'WBA00000000DEMO03-find_vehicle',
@@ -788,6 +839,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -801,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -808,6 +861,7 @@
     'original_name': 'Flash lights',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_flash',
     'unique_id': 'WBA00000000DEMO03-light_flash',
@@ -834,6 +888,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -847,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -854,6 +910,7 @@
     'original_name': 'Sound horn',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_horn',
     'unique_id': 'WBA00000000DEMO03-sound_horn',

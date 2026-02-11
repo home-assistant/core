@@ -8,24 +8,25 @@ from typing import Any
 from pyfreedompro import put_state
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FreedomproDataUpdateCoordinator
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro fan."""
     api_key: str = entry.data[CONF_API_KEY]
-    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         FreedomproFan(hass, api_key, device, coordinator)
         for device in coordinator.data
@@ -62,8 +63,11 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             model=device["type"],
             name=device["name"],
         )
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         if "rotationSpeed" in self._characteristics:
-            self._attr_supported_features = FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self) -> bool | None:

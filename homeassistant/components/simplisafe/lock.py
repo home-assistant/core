@@ -13,10 +13,11 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
@@ -30,7 +31,9 @@ WEBSOCKET_EVENTS_TO_LISTEN_FOR = (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
@@ -38,7 +41,7 @@ async def async_setup_entry(
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping lock setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping lock setup for V2 system: %s", system.system_id)
             continue
 
         locks.extend(

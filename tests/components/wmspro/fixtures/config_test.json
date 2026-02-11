@@ -1,0 +1,75 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 17776,
+      "animationType": 0,
+      "names": ["Küche", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 2,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 6,
+          "actionType": 2,
+          "actionDescription": 3,
+          "minValue": -127,
+          "maxValue": 127
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 23,
+          "actionType": 7,
+          "actionDescription": 12
+        }
+      ]
+    },
+    {
+      "id": 200951,
+      "animationType": 999,
+      "names": ["Aktor Potentialfrei", "", "", ""],
+      "actions": [
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        },
+        {
+          "id": 26,
+          "actionType": 9,
+          "actionDescription": 999,
+          "minValue": 0,
+          "maxValue": 16
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 42581,
+      "name": "Raum 0",
+      "destinations": [17776, 116682, 194367, 200951],
+      "scenes": [688966]
+    }
+  ],
+  "scenes": [
+    {
+      "id": 688966,
+      "names": ["Gute Nacht", "", "", ""]
+    }
+  ]
+}

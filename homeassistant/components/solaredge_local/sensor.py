@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -223,7 +223,7 @@ def setup_platform(
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
         return
-    except (ConnectTimeout, HTTPError):
+    except ConnectTimeout, HTTPError:
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 

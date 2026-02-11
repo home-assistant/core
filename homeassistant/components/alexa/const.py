@@ -59,6 +59,7 @@ CONF_SUPPORTED_LOCALES = (
     "hi-IN",
     "it-IT",
     "ja-JP",
+    "nl-NL",
     "pt-BR",
 )
 

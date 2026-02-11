@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -94,7 +94,7 @@ def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
             try:
                 func(obj, *args, **kwargs)
                 break
-            except (OSError, TypeError, ValueError):
+            except OSError, TypeError, ValueError:
                 update_retries -= 1
                 if update_retries == 0:
                     obj.set_state(MediaPlayerState.OFF)

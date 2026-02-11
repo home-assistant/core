@@ -11,9 +11,9 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.media_player import (
+from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ
+from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
-    ATTR_DYNAMIC_EQ,
     SERVICE_GET_COMMAND,
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
@@ -60,7 +60,7 @@ def client_fixture():
         yield mock_client_class.return_value
 
 
-async def setup_denonavr(hass):
+async def setup_denonavr(hass: HomeAssistant) -> None:
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,

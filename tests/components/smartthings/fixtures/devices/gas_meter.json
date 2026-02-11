@@ -1,0 +1,56 @@
+{
+  "items": [
+    {
+      "deviceId": "3b57dca3-9a90-4f27-ba80-f947b1e60d58",
+      "name": "copper_gas_meter_v04",
+      "label": "Gas Meter",
+      "manufacturerName": "0A6v",
+      "presentationId": "ST_176e9efa-01d2-4d1b-8130-d37a4ef1b413",
+      "deviceManufacturerCode": "CopperLabs",
+      "locationId": "4e88bf74-3bed-4e6d-9fa7-6acb776a4df9",
+      "ownerId": "6fc21de5-123e-2f8c-2cc6-311635aeaaef",
+      "roomId": "fafae9db-a2b5-480f-8ff5-df8f913356df",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "gasMeter",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "GasMeter",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-02-27T14:06:11.522Z",
+      "profile": {
+        "id": "5cca2553-23d6-43c4-81ad-a1c6c43efa00"
+      },
+      "viper": {
+        "manufacturerName": "CopperLabs",
+        "modelName": "Virtual Gas Meter",
+        "endpointAppId": "viper_1d5767a0-af08-11ed-a999-9f1f172a27ff"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

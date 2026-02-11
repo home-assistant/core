@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
@@ -12,10 +13,9 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.signal_type import SignalType
@@ -29,24 +29,81 @@ from .const import (
     BTHomeBleEvent,
 )
 from .coordinator import BTHomePassiveBluetoothProcessorCoordinator
+from .types import BTHomeConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_encryption_issue_id(entry_id: str) -> str:
+    """Return the repair issue id for encryption removal."""
+    return f"encryption_removed_{entry_id}"
+
+
+def _async_create_encryption_downgrade_issue(
+    hass: HomeAssistant, entry: BTHomeConfigEntry, issue_id: str
+) -> None:
+    """Create a repair issue for encryption downgrade."""
+    _LOGGER.warning(
+        "BTHome device %s was previously encrypted but is now sending "
+        "unencrypted data. This could be a spoofing attempt. "
+        "Data will be ignored until resolved",
+        entry.title,
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="encryption_removed",
+        translation_placeholders={"name": entry.title},
+        data={"entry_id": entry.entry_id},
+    )
+
+
+def _async_clear_encryption_downgrade_issue(
+    hass: HomeAssistant, entry: BTHomeConfigEntry, issue_id: str
+) -> None:
+    """Clear the encryption downgrade repair issue."""
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+    _LOGGER.info(
+        "BTHome device %s is now sending encrypted data again. Resuming normal operation",
+        entry.title,
+    )
+
+
 def process_service_info(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    data: BTHomeBluetoothDeviceData,
-    service_info: BluetoothServiceInfoBleak,
+    entry: BTHomeConfigEntry,
     device_registry: DeviceRegistry,
+    service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    coordinator = entry.runtime_data
+    data = coordinator.device_data
+    issue_registry = ir.async_get(hass)
+    issue_id = get_encryption_issue_id(entry.entry_id)
     update = data.update(service_info)
-    coordinator: BTHomePassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+
+    # Block unencrypted payloads for devices that were previously verified as encrypted.
+    if entry.data.get(CONF_BINDKEY) and data.downgrade_detected:
+        if not coordinator.encryption_downgrade_logged:
+            coordinator.encryption_downgrade_logged = True
+            if not issue_registry.async_get_issue(DOMAIN, issue_id):
+                _async_create_encryption_downgrade_issue(hass, entry, issue_id)
+        return SensorUpdate(title=None, devices={})
+
+    if data.bindkey_verified and (
+        (existing_issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+        or coordinator.encryption_downgrade_logged
+    ):
+        coordinator.encryption_downgrade_logged = False
+        if existing_issue:
+            _async_clear_encryption_downgrade_issue(hass, entry, issue_id)
+
     discovered_event_classes = coordinator.discovered_event_classes
     if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
         hass.config_entries.async_update_entry(
@@ -117,7 +174,7 @@ def format_discovered_event_class(address: str) -> SignalType[str, BTHomeBleEven
     return SignalType(f"{DOMAIN}_discovered_event_class_{address}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bool:
     """Set up BTHome Bluetooth from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -128,34 +185,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = BTHomeBluetoothDeviceData(**kwargs)
 
     device_registry = dr.async_get(hass)
-    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
-        BTHomePassiveBluetoothProcessorCoordinator(
-            hass,
-            _LOGGER,
-            address=address,
-            mode=BluetoothScanningMode.PASSIVE,
-            update_method=lambda service_info: process_service_info(
-                hass, entry, data, service_info, device_registry
-            ),
-            device_data=data,
-            discovered_event_classes=set(
-                entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
-            ),
-            connectable=False,
-            entry=entry,
-        )
+    event_classes = set(entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, ()))
+    coordinator = BTHomePassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address=address,
+        mode=BluetoothScanningMode.PASSIVE,
+        update_method=partial(process_service_info, hass, entry, device_registry),
+        device_data=data,
+        discovered_event_classes=event_classes,
+        connectable=False,
+        entry=entry,
     )
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(
-        coordinator.async_start()
-    )  # only start after all platforms have had a chance to subscribe
+    # only start after all platforms have had a chance to subscribe
+    entry.async_on_unload(coordinator.async_start())
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
+    """Remove a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, get_encryption_issue_id(entry.entry_id))

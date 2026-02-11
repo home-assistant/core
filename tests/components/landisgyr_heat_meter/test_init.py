@@ -1,10 +1,8 @@
 """Test the Landis + Gyr Heat Meter init."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.landisgyr_heat_meter.const import (
-    DOMAIN as LANDISGYR_HEAT_METER_DOMAIN,
-)
+from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -17,7 +15,7 @@ API_HEAT_METER_SERVICE = (
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_unload_entry(_, hass: HomeAssistant) -> None:
+async def test_unload_entry(mock_meter_service: MagicMock, hass: HomeAssistant) -> None:
     """Test removing config entry."""
     mock_entry_data = {
         "device": "/dev/USB0",
@@ -41,7 +39,9 @@ async def test_unload_entry(_, hass: HomeAssistant) -> None:
 
 @patch(API_HEAT_METER_SERVICE)
 async def test_migrate_entry(
-    _, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    mock_meter_service: MagicMock,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entry data from version 1 to 2."""
 
@@ -64,7 +64,7 @@ async def test_migrate_entry(
     # Create entity entry to migrate to new unique ID
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
-        LANDISGYR_HEAT_METER_DOMAIN,
+        DOMAIN,
         "landisgyr_heat_meter_987654321_measuring_range_m3ph",
         suggested_object_id="heat_meter_measuring_range",
         config_entry=mock_entry,

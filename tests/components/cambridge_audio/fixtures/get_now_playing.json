@@ -1,0 +1,25 @@
+{
+  "state": "PLAYING",
+  "source": {
+    "id": "AIRPLAY",
+    "name": "AirPlay"
+  },
+  "allow_apd": false,
+  "listening_on": "Listening on Cambridge Audio CXNv2 - AirPlay",
+  "display": {
+    "line1": "Holiday",
+    "line2": "Green Day",
+    "line3": "Greatest Hits: God's Favorite Band",
+    "format": "44.1kHz/16bit ALAC",
+    "mqa": "none",
+    "playback_source": "iPhone",
+    "class": "stream.service.airplay",
+    "art_file": "/tmp/current/AlbumArtFile-811-363",
+    "art_url": "http://192.168.20.218:80/album-art-2d89?id=1:246",
+    "progress": {
+      "position": 216,
+      "duration": 232
+    }
+  },
+  "controls": ["play_pause", "track_next", "track_previous"]
+}

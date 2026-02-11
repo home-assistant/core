@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -129,5 +129,5 @@ class BanLogParser:
             with open(self.log_file, encoding="utf-8") as file_data:
                 self.data = self.ip_regex[jail].findall(file_data.read())
 
-        except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
+        except IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError:
             _LOGGER.warning("File not present: %s", os.path.basename(self.log_file))

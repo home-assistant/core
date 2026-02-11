@@ -1,13 +1,16 @@
 """Constants for Minecraft Server integration tests."""
 
 from mcstatus.motd import Motd
-from mcstatus.status_response import (
+from mcstatus.responses import (
     BedrockStatusPlayers,
     BedrockStatusResponse,
     BedrockStatusVersion,
     JavaStatusPlayers,
     JavaStatusResponse,
     JavaStatusVersion,
+    LegacyStatusPlayers,
+    LegacyStatusResponse,
+    LegacyStatusVersion,
     RawJavaResponse,
     RawJavaResponsePlayer,
     RawJavaResponsePlayers,
@@ -44,6 +47,7 @@ TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
     icon=None,
     enforces_secure_chat=False,
     latency=5,
+    forge_data=None,
 )
 
 TEST_JAVA_DATA = MinecraftServerData(
@@ -79,4 +83,11 @@ TEST_BEDROCK_DATA = MinecraftServerData(
     edition="Dummy Edition",
     game_mode="Dummy Game Mode",
     map_name="Dummy Map Name",
+)
+
+TEST_LEGACY_JAVA_STATUS_RESPONSE = LegacyStatusResponse(
+    players=LegacyStatusPlayers(online=3, max=10),
+    version=LegacyStatusVersion(name="1.6.4", protocol=78),
+    motd=Motd.parse("Dummy MOTD"),
+    latency=5,
 )

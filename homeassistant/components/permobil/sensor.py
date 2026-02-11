@@ -32,7 +32,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
 from .coordinator import MyPermobilCoordinator
@@ -98,8 +98,9 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
     PermobilSensorEntityDescription(
         # Watt hours the battery can store given battery health
-        value_fn=lambda data: data.battery[BATTERY_MAX_AMPERE_HOURS[0]]
-        * BATTERY_ASSUMED_VOLTAGE,
+        value_fn=lambda data: (
+            data.battery[BATTERY_MAX_AMPERE_HOURS[0]] * BATTERY_ASSUMED_VOLTAGE
+        ),
         available_fn=lambda data: BATTERY_MAX_AMPERE_HOURS[0] in data.battery,
         key="max_watt_hours",
         translation_key="max_watt_hours",
@@ -109,8 +110,9 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
     PermobilSensorEntityDescription(
         # Current amount of watt hours in battery
-        value_fn=lambda data: data.battery[BATTERY_AMPERE_HOURS_LEFT[0]]
-        * BATTERY_ASSUMED_VOLTAGE,
+        value_fn=lambda data: (
+            data.battery[BATTERY_AMPERE_HOURS_LEFT[0]] * BATTERY_ASSUMED_VOLTAGE
+        ),
         available_fn=lambda data: BATTERY_AMPERE_HOURS_LEFT[0] in data.battery,
         key="watt_hours_left",
         translation_key="watt_hours_left",
@@ -175,7 +177,7 @@ DISTANCE_UNITS: dict[Any, UnitOfLength] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create sensors from a config entry created in the integrations UI."""
 

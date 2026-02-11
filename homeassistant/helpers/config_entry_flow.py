@@ -16,11 +16,11 @@ if TYPE_CHECKING:
     import asyncio
 
     from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-    from homeassistant.components.dhcp import DhcpServiceInfo
-    from homeassistant.components.ssdp import SsdpServiceInfo
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
+    from .service_info.dhcp import DhcpServiceInfo
     from .service_info.mqtt import MqttServiceInfo
+    from .service_info.ssdp import SsdpServiceInfo
+    from .service_info.zeroconf import ZeroconfServiceInfo
 
 type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]
 
@@ -67,9 +67,11 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
             in_progress = self._async_in_progress()
 
             if not (has_devices := bool(in_progress)):
-                has_devices = await cast(
-                    "asyncio.Future[bool]", self._discovery_function(self.hass)
-                )
+                discovery_result = self._discovery_function(self.hass)
+                if isinstance(discovery_result, bool):
+                    has_devices = discovery_result
+                else:
+                    has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
                 return self.async_abort(reason="no_devices_found")
@@ -220,16 +222,14 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(step_id="user")
 
         # Local import to be sure cloud is loaded and setup
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.cloud import (
+        from homeassistant.components.cloud import (  # noqa: PLC0415
             async_active_subscription,
             async_create_cloudhook,
             async_is_connected,
         )
 
         # Local import to be sure webhook is loaded and setup
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.webhook import (
+        from homeassistant.components.webhook import (  # noqa: PLC0415
             async_generate_id,
             async_generate_url,
         )
@@ -279,7 +279,6 @@ async def webhook_async_remove_entry(
         return
 
     # Local import to be sure cloud is loaded and setup
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.cloud import async_delete_cloudhook
+    from homeassistant.components.cloud import async_delete_cloudhook  # noqa: PLC0415
 
     await async_delete_cloudhook(hass, entry.data["webhook_id"])

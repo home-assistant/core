@@ -18,9 +18,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import UpnpConfigEntry
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
@@ -38,6 +37,7 @@ from .const import (
     ROUTER_UPTIME,
     WAN_STATUS,
 )
+from .coordinator import UpnpConfigEntry
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -89,6 +89,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=ROUTER_UPTIME,
         translation_key="uptime",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -152,7 +153,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UpnpConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     coordinator = config_entry.runtime_data

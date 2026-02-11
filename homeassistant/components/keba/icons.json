@@ -1,12 +1,28 @@
 {
   "services": {
-    "request_data": "mdi:database-arrow-down",
-    "authorize": "mdi:lock",
-    "deauthorize": "mdi:lock-open",
-    "set_energy": "mdi:flash",
-    "set_current": "mdi:flash",
-    "enable": "mdi:flash",
-    "disable": "mdi:fash-off",
-    "set_failsafe": "mdi:message-alert"
+    "authorize": {
+      "service": "mdi:lock"
+    },
+    "deauthorize": {
+      "service": "mdi:lock-open"
+    },
+    "disable": {
+      "service": "mdi:fash-off"
+    },
+    "enable": {
+      "service": "mdi:flash"
+    },
+    "request_data": {
+      "service": "mdi:database-arrow-down"
+    },
+    "set_current": {
+      "service": "mdi:flash"
+    },
+    "set_energy": {
+      "service": "mdi:flash"
+    },
+    "set_failsafe": {
+      "service": "mdi:message-alert"
+    }
   }
 }

@@ -9,13 +9,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_TIMEOUT = 10
@@ -32,7 +32,7 @@ def get_scanner(
 ) -> LinksysSmartWifiDeviceScanner | None:
     """Validate the configuration and return a Linksys AP scanner."""
     try:
-        return LinksysSmartWifiDeviceScanner(config[DOMAIN])
+        return LinksysSmartWifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     except ConnectionError:
         return None
 
@@ -62,7 +62,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Check for connected devices."""
-        _LOGGER.info("Checking Linksys Smart Wifi")
+        _LOGGER.debug("Checking Linksys Smart Wifi")
 
         self.last_results = {}
         response = self._make_request()
@@ -93,7 +93,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
                 _LOGGER.debug("Device %s is connected", mac)
                 self.last_results[mac] = name
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             _LOGGER.exception("Router returned unexpected response")
             return False
         return True

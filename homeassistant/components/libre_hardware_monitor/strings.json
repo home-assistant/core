@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Libre Hardware Monitor instance.",
+          "username": "The username for your Libre Hardware Monitor instance."
+        },
+        "description": "Please provide your Libre Hardware Monitor credentials.",
+        "title": "Authenticate Libre Hardware Monitor"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the system running Libre Hardware Monitor.",
+          "port": "The port of your Libre Hardware Monitor web server. By default 8085."
+        }
+      }
+    }
+  }
+}

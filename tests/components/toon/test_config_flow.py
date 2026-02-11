@@ -6,11 +6,11 @@ from unittest.mock import patch
 import pytest
 from toonapi import Agreement, ToonError
 
-from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DOMAIN
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -20,20 +20,19 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-async def setup_component(hass):
+async def setup_component(hass: HomeAssistant) -> None:
     """Set up Toon component."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
     )
 
-    with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
+    )
+    await hass.async_block_till_done()
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -214,7 +213,7 @@ async def test_agreement_already_set_up(
 ) -> None:
     """Test showing display form again if display already exists."""
     await setup_component(hass)
-    MockConfigEntry(domain=DOMAIN, unique_id=123).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="123").add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -313,7 +312,7 @@ async def test_import_migration(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test if importing step with migration works."""
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id="123", version=1)
     old_entry.add_to_hass(hass)
 
     await setup_component(hass)
@@ -324,7 +323,8 @@ async def test_import_migration(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow.migrate_entry == old_entry.entry_id
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

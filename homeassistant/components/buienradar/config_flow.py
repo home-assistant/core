@@ -10,8 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaFlowFormStep,

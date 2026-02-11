@@ -10,15 +10,16 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
+    CoverState,
 )
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE, STATE_OPEN
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_DEVICE_DEFAULTS,
     CONF_FIRE_EVENT,
@@ -27,8 +28,8 @@ from . import (
     CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
-    RflinkCommand,
 )
+from .entity import RflinkCommand
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +134,7 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
         """Restore RFLink cover state (OPEN/CLOSE)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
-            self._state = old_state.state == STATE_OPEN
+            self._state = old_state.state == CoverState.OPEN
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

@@ -11,13 +11,14 @@ from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
+    DataMissingException,
 )
+from systembridgeconnector.models.keyboard_key import KeyboardKey
+from systembridgeconnector.models.keyboard_text import KeyboardText
+from systembridgeconnector.models.modules.processes import Process
+from systembridgeconnector.models.open_path import OpenPath
+from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import Version
-from systembridgemodels.keyboard_key import KeyboardKey
-from systembridgemodels.keyboard_text import KeyboardText
-from systembridgemodels.modules.processes import Process
-from systembridgemodels.open_path import OpenPath
-from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,7 +56,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .config_flow import SystemBridgeConfigFlow
-from .const import DOMAIN, MODULES
+from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +106,7 @@ async def async_setup_entry(
     )
     supported = False
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -161,8 +162,9 @@ async def async_setup_entry(
         _LOGGER,
         entry=entry,
     )
+
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -183,7 +185,7 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         ) from exception
-    except TimeoutError as exception:
+    except (DataMissingException, TimeoutError) as exception:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="timeout",
@@ -195,26 +197,6 @@ async def async_setup_entry(
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-
-    try:
-        # Wait for initial data
-        async with asyncio.timeout(10):
-            while not coordinator.is_ready:
-                _LOGGER.debug(
-                    "Waiting for initial data from %s (%s)",
-                    entry.title,
-                    entry.data[CONF_HOST],
-                )
-                await asyncio.sleep(1)
-    except TimeoutError as exception:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="timeout",
-            translation_placeholders={
-                "title": entry.title,
-                "host": entry.data[CONF_HOST],
-            },
-        ) from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -296,11 +278,11 @@ async def async_setup_entry(
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             service_call.data[CONF_BRIDGE]
         ]
-        processes: list[Process] = coordinator.data.processes
+
         # Find processes from list
         items: list[dict[str, Any]] = [
             asdict(process)
-            for process in processes
+            for process in coordinator.data.processes
             if process.name is not None
             and service_call.data[CONF_NAME].lower() in process.name.lower()
         ]
@@ -440,6 +422,9 @@ async def async_setup_entry(
             },
         ),
         supports_response=SupportsResponse.ONLY,
+        description_placeholders={
+            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+        },
     )
 
     hass.services.async_register(

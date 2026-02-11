@@ -6,7 +6,7 @@ from microBeesPy import MicroBeesException
 import pytest
 
 from homeassistant.components.microbees.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -74,7 +74,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@microbees.com"
     assert "result" in result
-    assert result["result"].unique_id == 54321
+    assert result["result"].unique_id == "54321"
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
@@ -144,14 +144,7 @@ async def test_config_reauth_profile(
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -204,15 +197,8 @@ async def test_config_reauth_wrong_account(
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, config_entry)
-    microbees.return_value.getMyProfile.return_value.id = 12345
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    microbees.return_value.getMyProfile.return_value.id = "12345"
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

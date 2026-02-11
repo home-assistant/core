@@ -1,64 +1,4 @@
 # serializer version: 1
-# name: test_setup.32
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://ecotrend.ista.de/',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'ista_ecotrend',
-        '26e93f1a-c828-11ea-87d0-0242ac130003',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'ista SE',
-    'model': 'ista EcoTrend',
-    'name': 'Luxemburger Str. 1',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_setup.33
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'https://ecotrend.ista.de/',
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'ista_ecotrend',
-        'eaf5c5c8-889f-4a3c-b68c-e9a676505762',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'ista SE',
-    'model': 'ista EcoTrend',
-    'name': 'Bahnhofsstr. 1A',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
 # name: test_setup[sensor.bahnhofsstr_1a_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -68,6 +8,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -81,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -91,6 +33,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating',
@@ -121,6 +64,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -134,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -144,6 +89,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_cost',
@@ -175,6 +121,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -188,6 +135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -198,6 +146,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_energy',
@@ -229,6 +178,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -242,6 +192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +203,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water',
@@ -283,6 +235,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -296,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -306,6 +260,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_cost',
@@ -337,6 +292,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -350,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -360,6 +317,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_energy',
@@ -391,6 +349,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -404,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -414,6 +374,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water',
@@ -445,6 +406,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -458,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -468,6 +431,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water_cost',
@@ -499,6 +463,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -512,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -522,6 +488,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating',
@@ -552,6 +519,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -565,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -575,6 +544,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_cost',
@@ -606,6 +576,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -619,6 +590,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -629,6 +601,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_energy',
@@ -660,6 +633,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -673,6 +647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -683,6 +658,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water',
@@ -714,6 +690,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -727,6 +704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -737,6 +715,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_cost',
@@ -768,6 +747,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -781,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -791,6 +772,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_energy',
@@ -822,6 +804,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -835,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -845,6 +829,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water',
@@ -876,6 +861,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -889,6 +875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -899,6 +886,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water_cost',

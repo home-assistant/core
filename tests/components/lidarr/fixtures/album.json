@@ -1,0 +1,155 @@
+[
+  {
+    "id": 0,
+    "title": "string",
+    "disambiguation": "string",
+    "overview": "string",
+    "artistId": 0,
+    "foreignAlbumId": "string",
+    "monitored": true,
+    "anyReleaseOk": true,
+    "profileId": 0,
+    "duration": 0,
+    "albumType": "string",
+    "secondaryTypes": ["string"],
+    "mediumCount": 0,
+    "ratings": {
+      "votes": 0,
+      "value": 0
+    },
+    "releaseDate": "2024-09-09T20:16:28.493Z",
+    "releases": [
+      {
+        "id": 0,
+        "albumId": 0,
+        "foreignReleaseId": "string",
+        "title": "string",
+        "status": "string",
+        "duration": 0,
+        "trackCount": 0,
+        "media": [
+          {
+            "mediumNumber": 0,
+            "mediumName": "string",
+            "mediumFormat": "string"
+          }
+        ],
+        "mediumCount": 0,
+        "disambiguation": "string",
+        "country": ["string"],
+        "label": ["string"],
+        "format": "string",
+        "monitored": true
+      }
+    ],
+    "genres": ["string"],
+    "media": [
+      {
+        "mediumNumber": 0,
+        "mediumName": "string",
+        "mediumFormat": "string"
+      }
+    ],
+    "artist": {
+      "id": 0,
+      "status": "continuing",
+      "ended": true,
+      "artistName": "string",
+      "foreignArtistId": "string",
+      "mbId": "string",
+      "tadbId": 0,
+      "discogsId": 0,
+      "allMusicId": "string",
+      "overview": "string",
+      "artistType": "string",
+      "disambiguation": "string",
+      "links": [
+        {
+          "url": "string",
+          "name": "string"
+        }
+      ],
+      "nextAlbum": "string",
+      "lastAlbum": "string",
+      "images": [
+        {
+          "url": "string",
+          "coverType": "unknown",
+          "extension": "string",
+          "remoteUrl": "string"
+        }
+      ],
+      "members": [
+        {
+          "name": "string",
+          "instrument": "string",
+          "images": [
+            {
+              "url": "string",
+              "coverType": "unknown",
+              "extension": "string",
+              "remoteUrl": "string"
+            }
+          ]
+        }
+      ],
+      "remotePoster": "string",
+      "path": "string",
+      "qualityProfileId": 0,
+      "metadataProfileId": 0,
+      "monitored": true,
+      "monitorNewItems": "all",
+      "rootFolderPath": "string",
+      "folder": "string",
+      "genres": ["string"],
+      "cleanName": "string",
+      "sortName": "string",
+      "tags": [0],
+      "added": "2024-09-09T20:16:28.493Z",
+      "addOptions": {
+        "monitor": "all",
+        "albumsToMonitor": ["string"],
+        "monitored": true,
+        "searchForMissingAlbums": true
+      },
+      "ratings": {
+        "votes": 0,
+        "value": 0
+      },
+      "statistics": {
+        "albumCount": 0,
+        "trackFileCount": 0,
+        "trackCount": 0,
+        "totalTrackCount": 0,
+        "sizeOnDisk": 0,
+        "percentOfTracks": 0
+      }
+    },
+    "images": [
+      {
+        "url": "string",
+        "coverType": "unknown",
+        "extension": "string",
+        "remoteUrl": "string"
+      }
+    ],
+    "links": [
+      {
+        "url": "string",
+        "name": "string"
+      }
+    ],
+    "statistics": {
+      "trackFileCount": 0,
+      "trackCount": 0,
+      "totalTrackCount": 0,
+      "sizeOnDisk": 0,
+      "percentOfTracks": 0
+    },
+    "addOptions": {
+      "addType": "automatic",
+      "searchForNewAlbum": true
+    },
+    "remoteCover": "string"
+  }
+]

@@ -1,5 +1,7 @@
 {
   "services": {
-    "update_records": "mdi:dns"
+    "update_records": {
+      "service": "mdi:dns"
+    }
   }
 }

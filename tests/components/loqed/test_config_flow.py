@@ -8,16 +8,16 @@ import aiohttp
 from loqedAPI import loqed
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-zeroconf_data = zeroconf.ZeroconfServiceInfo(
+zeroconf_data = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.12.34"),
     ip_addresses=[ip_address("192.168.12.34")],
     hostname="LOQED-ffeeddccbbaa.local",
@@ -30,7 +30,7 @@ zeroconf_data = zeroconf.ZeroconfServiceInfo(
 
 async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
     """Test we get can create a lock via zeroconf."""
-    lock_result = json.loads(load_fixture("loqed/status_ok.json"))
+    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
 
     with patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
@@ -47,7 +47,9 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = "Webhook_ID"
-    all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
 
     with (
         patch(
@@ -104,10 +106,12 @@ async def test_create_entry_user(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    lock_result = json.loads(load_fixture("loqed/status_ok.json"))
+    lock_result = json.loads(await async_load_fixture(hass, "status_ok.json", DOMAIN))
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = "Webhook_ID"
-    all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
     found_lock = all_locks_response["data"][0]
 
     with (
@@ -191,7 +195,9 @@ async def test_invalid_auth_when_lock_not_found(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
 
     with patch(
         "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
@@ -219,7 +225,9 @@ async def test_cannot_connect_when_lock_not_reachable(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
+    all_locks_response = json.loads(
+        await async_load_fixture(hass, "get_all_locks.json", DOMAIN)
+    )
 
     with (
         patch(

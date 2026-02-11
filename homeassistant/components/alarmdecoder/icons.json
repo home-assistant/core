@@ -7,7 +7,11 @@
     }
   },
   "services": {
-    "alarm_keypress": "mdi:dialpad",
-    "alarm_toggle_chime": "mdi:abc"
+    "alarm_keypress": {
+      "service": "mdi:dialpad"
+    },
+    "alarm_toggle_chime": {
+      "service": "mdi:abc"
+    }
   }
 }

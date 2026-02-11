@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
@@ -79,7 +79,7 @@ SENSORS: Final = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas sensor entities."""
     pv_entry = entry.runtime_data

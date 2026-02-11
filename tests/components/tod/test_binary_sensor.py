@@ -1,28 +1,28 @@
 """Test Times of the Day Binary Sensor."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
 @pytest.fixture
-def hass_time_zone():
+def hass_time_zone() -> str:
     """Return default hass timezone."""
     return "US/Pacific"
 
 
 @pytest.fixture(autouse=True)
-async def setup_fixture(hass, hass_time_zone):
+async def setup_fixture(hass: HomeAssistant, hass_time_zone: str) -> None:
     """Set up things to be run when tests are started."""
     hass.config.latitude = 50.27583
     hass.config.longitude = 18.98583
@@ -30,7 +30,7 @@ async def setup_fixture(hass, hass_time_zone):
 
 
 @pytest.fixture
-def hass_tz_info(hass):
+def hass_tz_info(hass: HomeAssistant) -> tzinfo | None:
     """Return timezone info for the hass timezone."""
     return dt_util.get_time_zone(hass.config.time_zone)
 

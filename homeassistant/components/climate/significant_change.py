@@ -12,13 +12,13 @@ from homeassistant.helpers.significant_change import (
 )
 
 from . import (
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -26,7 +26,6 @@ from . import (
 )
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -34,6 +33,7 @@ SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
@@ -65,11 +65,11 @@ def async_check_significant_change(
 
     for attr_name in changed_attrs:
         if attr_name in [
-            ATTR_AUX_HEAT,
             ATTR_FAN_MODE,
             ATTR_HVAC_ACTION,
             ATTR_PRESET_MODE,
             ATTR_SWING_MODE,
+            ATTR_SWING_HORIZONTAL_MODE,
         ]:
             return True
 

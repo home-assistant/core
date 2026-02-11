@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
+from homeassistant.components.hardware import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAME = "Home Assistant Green"
-DOCUMENTATION_URL = "https://green.home-assistant.io/documentation/"
+DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24638797677853-Home-Assistant-Green"
 MANUFACTURER = "homeassistant"
 MODEL = "green"
 

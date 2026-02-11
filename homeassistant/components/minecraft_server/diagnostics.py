@@ -4,21 +4,20 @@ from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Any
 
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .coordinator import MinecraftServerConfigEntry
 
-TO_REDACT: Iterable[Any] = {CONF_ADDRESS, CONF_NAME, "players_list"}
+TO_REDACT: Iterable[Any] = {CONF_ADDRESS, "players_list"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     return {
         "config_entry": {

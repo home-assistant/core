@@ -2,7 +2,7 @@
 
 from aiotankerkoenig import PriceInfo, Station, Status
 
-from homeassistant.components.tankerkoenig.const import CONF_FUEL_TYPES, CONF_STATIONS
+from homeassistant.components.tankerkoenig.const import CONF_STATIONS
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -98,7 +98,6 @@ PRICES_MISSING_FUELTYPE = {
 CONFIG_DATA = {
     CONF_NAME: "Home",
     CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
-    CONF_FUEL_TYPES: ["e5"],
     CONF_LOCATION: {CONF_LATITUDE: 51.0, CONF_LONGITUDE: 13.0},
     CONF_RADIUS: 2.0,
     CONF_STATIONS: [

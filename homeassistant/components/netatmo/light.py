@@ -11,17 +11,16 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_CONTROL,
     CONF_URL_SECURITY,
     DOMAIN,
     EVENT_TYPE_LIGHT_MODE,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
-    WEBHOOK_LIGHT_MODE,
-    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
@@ -30,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo camera light platform."""
 
@@ -112,7 +113,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
         if (
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
-            and data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE
+            and data[ATTR_EVENT_TYPE] == EVENT_TYPE_LIGHT_MODE
         ):
             self._attr_is_on = bool(data["sub_type"] == "on")
 
@@ -173,7 +174,9 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self.device.async_set_brightness(kwargs[ATTR_BRIGHTNESS])
+            await self.device.async_set_brightness(
+                round(kwargs[ATTR_BRIGHTNESS] / 2.55)
+            )
 
         else:
             await self.device.async_on()
@@ -194,6 +197,6 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
 
         if (brightness := self.device.brightness) is not None:
             # Netatmo uses a range of [0, 100] to control brightness
-            self._attr_brightness = round((brightness / 100) * 255)
+            self._attr_brightness = round(brightness * 2.55)
         else:
             self._attr_brightness = None

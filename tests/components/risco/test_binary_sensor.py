@@ -1,6 +1,8 @@
 """Tests for the Risco binary sensors."""
 
-from unittest.mock import PropertyMock, patch
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -59,7 +61,13 @@ async def test_cloud_setup(
     assert device.manufacturer == "Risco"
 
 
-async def _check_cloud_state(hass, zones, triggered, entity_id, zone_id):
+async def _check_cloud_state(
+    hass: HomeAssistant,
+    zones: dict[int, Any],
+    triggered: bool,
+    entity_id: str,
+    zone_id: int,
+) -> None:
     with patch.object(
         zones[zone_id],
         "triggered",
@@ -130,8 +138,14 @@ async def test_local_setup(
 
 
 async def _check_local_state(
-    hass, zones, entity_property, value, entity_id, zone_id, callback
-):
+    hass: HomeAssistant,
+    zones: dict[int, Any],
+    entity_property: str,
+    value: bool,
+    entity_id: str,
+    zone_id: int,
+    callback: Callable,
+) -> None:
     with patch.object(
         zones[zone_id],
         entity_property,
@@ -218,7 +232,13 @@ async def test_armed_local_states(
     )
 
 
-async def _check_system_state(hass, system, entity_property, value, callback):
+async def _check_system_state(
+    hass: HomeAssistant,
+    system: MagicMock,
+    entity_property: str,
+    value: bool,
+    callback: Callable,
+) -> None:
     with patch.object(
         system,
         entity_property,

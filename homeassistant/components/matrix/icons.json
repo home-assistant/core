@@ -1,5 +1,10 @@
 {
   "services": {
-    "send_message": "mdi:matrix"
+    "react": {
+      "service": "mdi:emoticon"
+    },
+    "send_message": {
+      "service": "mdi:matrix"
+    }
   }
 }

@@ -9,17 +9,13 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
 
 type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> bool:
     """Set up Airtouch 5 from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     # Create API instance
     host = entry.data[CONF_HOST]

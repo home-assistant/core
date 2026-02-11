@@ -15,13 +15,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from . import OverkizDataConfigEntry
 from .entity import OverkizDescriptiveEntity
 
 
@@ -102,6 +100,15 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    OverkizSwitchDescription(
+        key=UIWidget.DISCRETE_EXTERIOR_HEATING,
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
+        icon="mdi:radiator",
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
+    ),
 ]
 
 SUPPORTED_DEVICES = {
@@ -111,11 +118,11 @@ SUPPORTED_DEVICES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz switch from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         OverkizSwitch(

@@ -2,9 +2,11 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from googlemaps.exceptions import ApiError, Timeout, TransportError
+from google.maps.routing_v2 import ComputeRoutesResponse, Route
+from google.protobuf import duration_pb2
+from google.type import localized_text_pb2
 import pytest
 
 from homeassistant.components.google_travel_time.const import DOMAIN
@@ -30,8 +32,8 @@ async def mock_config_fixture(
     return config_entry
 
 
-@pytest.fixture(name="bypass_setup")
-def bypass_setup_fixture() -> Generator[None]:
+@pytest.fixture
+def mock_setup_entry() -> Generator[None]:
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.google_travel_time.async_setup_entry",
@@ -40,48 +42,42 @@ def bypass_setup_fixture() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="bypass_platform_setup")
-def bypass_platform_setup_fixture() -> Generator[None]:
-    """Bypass platform setup."""
-    with patch(
-        "homeassistant.components.google_travel_time.sensor.async_setup_entry",
-        return_value=True,
-    ):
-        yield
-
-
-@pytest.fixture(name="validate_config_entry")
-def validate_config_entry_fixture() -> Generator[MagicMock]:
-    """Return valid config entry."""
+@pytest.fixture
+def routes_mock() -> Generator[AsyncMock]:
+    """Return valid API result."""
     with (
-        patch("homeassistant.components.google_travel_time.helpers.Client"),
         patch(
-            "homeassistant.components.google_travel_time.helpers.distance_matrix"
-        ) as distance_matrix_mock,
+            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
+            new=mock_client,
+        ),
     ):
-        distance_matrix_mock.return_value = None
-        yield distance_matrix_mock
-
-
-@pytest.fixture(name="invalidate_config_entry")
-def invalidate_config_entry_fixture(validate_config_entry: MagicMock) -> None:
-    """Return invalid config entry."""
-    validate_config_entry.side_effect = ApiError("test")
-
-
-@pytest.fixture(name="invalid_api_key")
-def invalid_api_key_fixture(validate_config_entry: MagicMock) -> None:
-    """Throw a REQUEST_DENIED ApiError."""
-    validate_config_entry.side_effect = ApiError("REQUEST_DENIED", "Invalid API key.")
-
-
-@pytest.fixture(name="timeout")
-def timeout_fixture(validate_config_entry: MagicMock) -> None:
-    """Throw a Timeout exception."""
-    validate_config_entry.side_effect = Timeout()
-
-
-@pytest.fixture(name="transport_error")
-def transport_error_fixture(validate_config_entry: MagicMock) -> None:
-    """Throw a TransportError exception."""
-    validate_config_entry.side_effect = TransportError("Unknown.")
+        client_mock = mock_client.return_value
+        client_mock.compute_routes.return_value = ComputeRoutesResponse(
+            mapping={
+                "routes": [
+                    Route(
+                        mapping={
+                            "localized_values": Route.RouteLocalizedValues(
+                                mapping={
+                                    "distance": localized_text_pb2.LocalizedText(
+                                        text="21.3 km"
+                                    ),
+                                    "duration": localized_text_pb2.LocalizedText(
+                                        text="27 mins"
+                                    ),
+                                    "static_duration": localized_text_pb2.LocalizedText(
+                                        text="26 mins"
+                                    ),
+                                }
+                            ),
+                            "duration": duration_pb2.Duration(seconds=1620),
+                        }
+                    )
+                ]
+            }
+        )
+        yield client_mock

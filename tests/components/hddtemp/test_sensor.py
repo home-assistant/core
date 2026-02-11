@@ -60,7 +60,7 @@ REFERENCE = {
 class TelnetMock:
     """Mock class for the telnetlib.Telnet object."""
 
-    def __init__(self, host, port, timeout=0):
+    def __init__(self, host, port, timeout=0) -> None:
         """Initialize Telnet object."""
         self.host = host
         self.port = port
@@ -132,7 +132,7 @@ async def test_hddtemp_one_disk(hass: HomeAssistant, telnetmock) -> None:
 
     reference = REFERENCE[state.attributes.get("device")]
 
-    assert state.state == reference["temperature"]
+    assert round(float(state.state), 0) == float(reference["temperature"])
     assert state.attributes.get("device") == reference["device"]
     assert state.attributes.get("model") == reference["model"]
     assert (

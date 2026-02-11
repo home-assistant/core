@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import (
@@ -36,7 +37,6 @@ from homeassistant.const import (
     URL_API_STREAM,
     URL_API_TEMPLATE,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
@@ -45,7 +45,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, recorder, template
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
@@ -119,7 +119,10 @@ class APICoreStateView(HomeAssistantView):
         to check if Home Assistant is running.
         """
         hass = request.app[KEY_HASS]
-        return self.json({"state": hass.state.value})
+        migration = recorder.async_migration_in_progress(hass)
+        live = recorder.async_migration_is_live(hass)
+        recorder_state = {"migration_in_progress": migration, "migration_is_live": live}
+        return self.json({"state": hass.state.value, "recorder_state": recorder_state})
 
 
 class APIEventStream(HomeAssistantView):
@@ -257,11 +260,18 @@ class APIEntityStateView(HomeAssistantView):
         if not user.is_admin:
             raise Unauthorized(entity_id=entity_id)
         hass = request.app[KEY_HASS]
+
+        body = await request.text()
+
         try:
-            data = await request.json()
+            data: Any = json_loads(body) if body else None
         except ValueError:
             return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
+        if not isinstance(data, dict):
+            return self.json_message(
+                "State data should be a JSON object.", HTTPStatus.BAD_REQUEST
+            )
         if (new_state := data.get("state")) is None:
             return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
@@ -387,6 +397,27 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        if not hass.services.has_service(domain, service):
+            raise HTTPBadRequest from ServiceNotFound(domain, service)
+
+        if response_requested := "return_response" in request.query:
+            if (
+                hass.services.supports_response(domain, service)
+                is ha.SupportsResponse.NONE
+            ):
+                return self.json_message(
+                    "Service does not support responses. Remove return_response from request.",
+                    HTTPStatus.BAD_REQUEST,
+                )
+        elif (
+            hass.services.supports_response(domain, service) is ha.SupportsResponse.ONLY
+        ):
+            return self.json_message(
+                "Service call requires responses but caller did not ask for responses. "
+                "Add ?return_response to query parameters.",
+                HTTPStatus.BAD_REQUEST,
+            )
+
         changed_states: list[json_fragment] = []
 
         @ha.callback
@@ -403,19 +434,25 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             # shield the service call from cancellation on connection drop
-            await shield(
+            response = await shield(
                 hass.services.async_call(
                     domain,
                     service,
                     data,  # type: ignore[arg-type]
                     blocking=True,
                     context=context,
+                    return_response=response_requested,
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
         finally:
             cancel_listen()
+
+        if response_requested:
+            return self.json(
+                {"changed_states": changed_states, "service_response": response}
+            )
 
         return self.json(changed_states)
 
@@ -447,9 +484,19 @@ class APITemplateView(HomeAssistantView):
     @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Render a template."""
+        body = await request.text()
+
         try:
-            data = await request.json()
-            tpl = _cached_template(data["template"], request.app[KEY_HASS])
+            data: Any = json_loads(body) if body else None
+        except ValueError:
+            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
+
+        if not isinstance(data, dict):
+            return self.json_message(
+                "Template data should be a JSON object.", HTTPStatus.BAD_REQUEST
+            )
+        tpl = _cached_template(data["template"], request.app[KEY_HASS])
+        try:
             return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
         except (ValueError, TemplateError) as ex:
             return self.json_message(

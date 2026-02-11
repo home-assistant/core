@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bot": { "default": "mdi:robot" },
+      "discoverable": { "default": "mdi:magnify-scan" },
+      "indexable": { "default": "mdi:search-web" },
+      "limited": { "default": "mdi:account-cancel" },
+      "locked": {
+        "default": "mdi:account-lock",
+        "state": { "off": "mdi:account-lock-open" }
+      },
+      "memorial": { "default": "mdi:candle" },
+      "moved": { "default": "mdi:truck-delivery" },
+      "suspended": { "default": "mdi:account-off" }
+    },
+    "sensor": {
+      "followers": {
+        "default": "mdi:account-multiple"
+      },
+      "following": {
+        "default": "mdi:account-multiple"
+      },
+      "last_post": {
+        "default": "mdi:message-text-clock"
+      },
+      "posts": {
+        "default": "mdi:message-text"
+      },
+      "username": {
+        "default": "mdi:account"
+      }
+    }
+  },
+  "services": {
+    "post": {
+      "service": "mdi:message-text"
+    }
+  }
+}

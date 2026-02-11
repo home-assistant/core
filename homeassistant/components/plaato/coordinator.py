@@ -5,6 +5,7 @@ import logging
 
 from pyplaato.plaato import Plaato, PlaatoDeviceType
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -18,22 +19,25 @@ _LOGGER = logging.getLogger(__name__)
 class PlaatoCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         auth_token: str,
         device_type: PlaatoDeviceType,
         update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
-        self.hass = hass
         self.device_type = device_type
         self.platforms: list[Platform] = []
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=update_interval,
         )

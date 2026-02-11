@@ -2,12 +2,24 @@
 
 from __future__ import annotations
 
-from wled import WLED, Device as WLEDDevice, WLEDConnectionClosedError, WLEDError
+from typing import TYPE_CHECKING
+
+from wled import (
+    WLED,
+    Device as WLEDDevice,
+    Releases,
+    WLEDConnectionClosedError,
+    WLEDError,
+    WLEDReleases,
+    WLEDUnsupportedVersionError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -15,21 +27,35 @@ from .const import (
     DEFAULT_KEEP_MAIN_LIGHT,
     DOMAIN,
     LOGGER,
+    RELEASES_SCAN_INTERVAL,
     SCAN_INTERVAL,
 )
+
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+
+
+def normalize_mac_address(mac: str) -> str:
+    """Normalize a MAC address to lowercase without separators.
+
+    This format is used by WLED firmware as well as unique IDs in Home Assistant.
+
+    The homeassistant.helpers.device_registry.format_mac function is preferred but
+    returns MAC addresses with colons as separators.
+    """
+    return mac.lower().replace(":", "").replace(".", "").replace("-", "").strip()
 
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_main_light: bool
-    config_entry: ConfigEntry
+    config_entry: WLEDConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: WLEDConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
         self.keep_main_light = entry.options.get(
@@ -38,9 +64,14 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
 
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        self.config_mac_address = normalize_mac_address(entry.unique_id)
+
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
@@ -101,17 +132,65 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
         try:
-            device = await self.wled.update(full_update=not self.last_update_success)
+            device = await self.wled.update()
+        except WLEDUnsupportedVersionError as error:
+            # Error message from WLED library contains version info
+            # better to show that to user, but it is not translatable.
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_version",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+        device_mac_address = normalize_mac_address(device.info.mac_address)
+        if device_mac_address != self.config_mac_address:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="mac_address_mismatch",
+                translation_placeholders={
+                    "expected_mac": format_mac(self.config_mac_address).upper(),
+                    "actual_mac": format_mac(device_mac_address).upper(),
+                },
+            )
 
         # If the device supports a WebSocket, try activating it.
         if (
             device.info.websocket is not None
-            and device.info.leds.cct is not True
             and not self.wled.connected
             and not self.unsub
         ):
             self._use_websocket()
 
         return device
+
+
+class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
+    """Class to manage fetching WLED releases."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize global WLED releases updater."""
+        self.wled = WLEDReleases(session=async_get_clientsession(hass))
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=None,
+            name=DOMAIN,
+            update_interval=RELEASES_SCAN_INTERVAL,
+        )
+
+    async def _async_update_data(self) -> Releases:
+        """Fetch release data from WLED."""
+        try:
+            return await self.wled.releases()
+        except WLEDError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_github_error",
+                translation_placeholders={"error": str(error)},
+            ) from error

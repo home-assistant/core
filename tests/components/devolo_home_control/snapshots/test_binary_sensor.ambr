@@ -20,6 +20,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -33,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -40,6 +42,7 @@
     'original_name': 'Door',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'Test',
@@ -67,6 +70,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -80,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -87,8 +92,9 @@
     'original_name': 'Overload',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overload',
     'unique_id': 'Overload',
     'unit_of_measurement': None,
   })
@@ -113,6 +119,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -126,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,8 +141,9 @@
     'original_name': 'Button 1',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'button',
     'unique_id': 'Test_1',
     'unit_of_measurement': None,
   })

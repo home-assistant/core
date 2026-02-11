@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "api_unavailable": "The API is currently unavailable.",
+      "invalid_station": "Invalid station.",
+      "same_station": "[%key:component::nmbs::config::error::same_station%]"
+    },
+    "error": {
+      "same_station": "Departure and arrival station can not be the same."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "exclude_vias": "Direct connections only",
+          "show_on_map": "Display on map",
+          "station_from": "Departure station",
+          "station_to": "Arrival station"
+        },
+        "data_description": {
+          "exclude_vias": "Exclude connections with transfers",
+          "show_on_map": "Show the station on the map",
+          "station_from": "Station where the train departs",
+          "station_to": "Station where the train arrives"
+        }
+      }
+    }
+  }
+}

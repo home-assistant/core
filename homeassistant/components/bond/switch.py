@@ -6,32 +6,23 @@ from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
-from .const import ATTR_POWER_STATE, SERVICE_SET_POWER_TRACKED_STATE
 from .entity import BondEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond generic devices."""
     data = entry.runtime_data
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_POWER_TRACKED_STATE,
-        {vol.Required(ATTR_POWER_STATE): cv.boolean},
-        "async_set_power_belief",
-    )
 
     async_add_entities(
         BondSwitch(data, device)

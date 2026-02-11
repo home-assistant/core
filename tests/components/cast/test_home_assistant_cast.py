@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.cast import DOMAIN, home_assistant_cast
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, async_mock_signal

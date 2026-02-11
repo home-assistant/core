@@ -4,16 +4,16 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform for a new integration.
 
@@ -44,7 +44,7 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
         self.reset_expiration_date()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_is_on is not None
 

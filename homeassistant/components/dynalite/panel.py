@@ -90,7 +90,7 @@ def save_dynalite_config(
     message_data = {
         conf: message_conf[conf] for conf in RELEVANT_CONFS if conf in message_conf
     }
-    LOGGER.info("Updating Dynalite config entry")
+    LOGGER.debug("Updating Dynalite config entry")
     hass.config_entries.async_update_entry(entry, data=message_data)
     connection.send_result(msg["id"], {})
 

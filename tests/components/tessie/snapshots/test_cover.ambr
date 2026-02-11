@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -26,6 +28,7 @@
     'original_name': 'Charge port door',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'charge_state_charge_port_door_open',
     'unique_id': 'VINVINVIN-charge_state_charge_port_door_open',
@@ -54,6 +57,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -74,6 +79,7 @@
     'original_name': 'Frunk',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 1>,
     'translation_key': 'vehicle_state_ft',
     'unique_id': 'VINVINVIN-vehicle_state_ft',
@@ -95,39 +101,6 @@
     'state': 'closed',
   })
 # ---
-# name: test_covers[cover.test_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.test_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'VINVINVIN-vehicle_state_sun_roof_state',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_covers[cover.test_sunroof-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -135,6 +108,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -148,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -155,6 +130,7 @@
     'original_name': 'Sunroof',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_sun_roof_state',
     'unique_id': 'VINVINVIN-vehicle_state_sun_roof_state',
@@ -183,6 +159,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -196,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -203,6 +181,7 @@
     'original_name': 'Trunk',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_rt',
     'unique_id': 'VINVINVIN-vehicle_state_rt',
@@ -231,6 +210,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -244,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -251,6 +232,7 @@
     'original_name': 'Vent windows',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'windows',
     'unique_id': 'VINVINVIN-windows',

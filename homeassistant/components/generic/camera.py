@@ -28,10 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.template import Template
 
 from . import DOMAIN
 from .const import (
@@ -41,13 +41,16 @@ from .const import (
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
     GET_IMAGE_TIMEOUT,
+    SECTION_ADVANCED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a generic IP Camera."""
 
@@ -60,9 +63,11 @@ def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
     """Generate httpx.Auth object from credentials."""
     username: str | None = device_info.get(CONF_USERNAME)
     password: str | None = device_info.get(CONF_PASSWORD)
-    authentication = device_info.get(CONF_AUTHENTICATION)
     if username and password:
-        if authentication == HTTP_DIGEST_AUTHENTICATION:
+        if (
+            device_info[SECTION_ADVANCED].get(CONF_AUTHENTICATION)
+            == HTTP_DIGEST_AUTHENTICATION
+        ):
             return httpx.DigestAuth(username=username, password=password)
         return httpx.BasicAuth(username=username, password=password)
     return None
@@ -91,28 +96,22 @@ class GenericCamera(Camera):
         self._password = device_info.get(CONF_PASSWORD)
         self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
-        if (
-            not isinstance(self._still_image_url, template_helper.Template)
-            and self._still_image_url
-        ):
-            self._still_image_url = cv.template(self._still_image_url)
         if self._still_image_url:
-            self._still_image_url.hass = hass
+            self._still_image_url = Template(self._still_image_url, hass)
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         if self._stream_source:
-            if not isinstance(self._stream_source, template_helper.Template):
-                self._stream_source = cv.template(self._stream_source)
-            self._stream_source.hass = hass
-        self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
-        self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        if self._stream_source:
+            self._stream_source = Template(self._stream_source, hass)
             self._attr_supported_features = CameraEntityFeature.STREAM
+        self._limit_refetch = device_info[SECTION_ADVANCED].get(
+            CONF_LIMIT_REFETCH_TO_URL_CHANGE, False
+        )
+        self._attr_frame_interval = 1 / device_info[SECTION_ADVANCED][CONF_FRAMERATE]
         self.content_type = device_info[CONF_CONTENT_TYPE]
-        self.verify_ssl = device_info[CONF_VERIFY_SSL]
-        if device_info.get(CONF_RTSP_TRANSPORT):
-            self.stream_options[CONF_RTSP_TRANSPORT] = device_info[CONF_RTSP_TRANSPORT]
+        self.verify_ssl = device_info[SECTION_ADVANCED][CONF_VERIFY_SSL]
+        if rtsp_transport := device_info[SECTION_ADVANCED].get(CONF_RTSP_TRANSPORT):
+            self.stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
         self._auth = generate_auth(device_info)
-        if device_info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+        if device_info[SECTION_ADVANCED].get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
             self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
 
         self._last_url = None

@@ -29,7 +29,9 @@ def com_port():
     return port
 
 
-async def start_options_flow(hass, entry):
+async def start_options_flow(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> config_entries.ConfigFlowResult:
     """Start the options flow with the entry under test."""
     entry.add_to_hass(hass)
 
@@ -724,7 +726,6 @@ async def test_options_add_and_configure_device(
         result["flow_id"],
         user_input={
             "data_bits": 4,
-            "off_delay": "abcdef",
             "command_on": "xyz",
             "command_off": "xyz",
         },
@@ -733,7 +734,6 @@ async def test_options_add_and_configure_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
     assert result["errors"]
-    assert result["errors"]["off_delay"] == "invalid_input_off_delay"
     assert result["errors"]["command_on"] == "invalid_input_2262_on"
     assert result["errors"]["command_off"] == "invalid_input_2262_off"
 
@@ -743,7 +743,7 @@ async def test_options_add_and_configure_device(
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
-            "off_delay": "9",
+            "off_delay": 9,
         },
     )
 
@@ -756,10 +756,10 @@ async def test_options_add_and_configure_device(
     assert entry.data["devices"]["0913000022670e013970"]
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 

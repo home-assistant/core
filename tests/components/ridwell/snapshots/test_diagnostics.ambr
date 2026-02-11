@@ -34,6 +34,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'ridwell',
       'entry_id': '11554ec901379b9cc8f5a6c1d11ce978',
       'minor_version': 1,
@@ -42,6 +44,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 2,

@@ -9,7 +9,6 @@ from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, SENSORS, QSType
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
@@ -19,19 +18,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_QUIKSWITCH, DOMAIN
 
-DOMAIN = "qwikswitch"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_DIMMER_ADJUST = "dimmer_adjust"
 CONF_BUTTON_EVENTS = "button_events"
@@ -70,70 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class QSEntity(Entity):
-    """Qwikswitch Entity base."""
-
-    _attr_should_poll = False
-
-    def __init__(self, qsid, name):
-        """Initialize the QSEntity."""
-        self._name = name
-        self.qsid = qsid
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return f"qs{self.qsid}"
-
-    @callback
-    def update_packet(self, packet):
-        """Receive update packet from QSUSB. Match dispather_send signature."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Listen for updates from QSUSb via dispatcher."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, self.qsid, self.update_packet)
-        )
-
-
-class QSToggleEntity(QSEntity):
-    """Representation of a Qwikswitch Toggle Entity.
-
-    Implemented:
-     - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
-     - QSSwitch extends QSToggleEntity and SwitchEntity[3] (ToggleEntity[1])
-
-    [1] /helpers/entity.py
-    [2] /components/light/__init__.py
-    [3] /components/switch/__init__.py
-    """
-
-    def __init__(self, qsid, qsusb):
-        """Initialize the ToggleEntity."""
-        self.device = qsusb.devices[qsid]
-        super().__init__(qsid, self.device.name)
-
-    @property
-    def is_on(self):
-        """Check if device is on (non-zero)."""
-        return self.device.value > 0
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the device on."""
-        new = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self.hass.data[DOMAIN].devices.set_value(self.qsid, new)
-
-    async def async_turn_off(self, **_):
-        """Turn the device off."""
-        self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Qwiskswitch component setup."""
 
@@ -165,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not await qsusb.update_from_devices():
         return False
 
-    hass.data[DOMAIN] = qsusb
+    hass.data[DATA_QUIKSWITCH] = qsusb
 
     comps: dict[Platform, list] = {
         Platform.SWITCH: [],
@@ -237,7 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_stop(_):
         """Stop the listener."""
-        hass.data[DOMAIN].stop()
+        hass.data[DATA_QUIKSWITCH].stop()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_stop)
 

@@ -1,5 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -9,15 +18,6 @@
           "host": "Hostname or IP address of your Zeversolar inverter."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {

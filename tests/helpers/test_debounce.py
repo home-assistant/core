@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock
+import weakref
 
 import pytest
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
 
-from ..common import async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,12 +61,12 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -117,13 +118,13 @@ async def test_immediate_works_with_schedule_call(hass: HomeAssistant) -> None:
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     debouncer.async_schedule_call()
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -224,12 +225,12 @@ async def test_immediate_works_with_passed_callback_function_raises(
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -287,12 +288,12 @@ async def test_immediate_works_with_passed_coroutine_raises(
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -338,12 +339,12 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     # Reset debouncer
     debouncer.async_cancel()
 
-    # Test calling doesn't schedule if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 1
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -392,13 +393,13 @@ async def test_not_immediate_works_schedule_call(hass: HomeAssistant) -> None:
     # Reset debouncer
     debouncer.async_cancel()
 
-    # Test calling doesn't schedule if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     debouncer.async_schedule_call()
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -454,13 +455,13 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._job.target == debouncer.function
     assert debouncer._job != before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
     assert calls == [1, 2]
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -529,3 +530,37 @@ async def test_background(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=False)
     assert len(calls) == 2
+
+
+async def test_shutdown_releases_parent_class(hass: HomeAssistant) -> None:
+    """Test shutdown releases parent class.
+
+    See https://github.com/home-assistant/core/issues/137237
+    """
+    calls = []
+
+    class SomeClass:
+        def run_func(self) -> None:
+            calls.append(None)
+
+    my_class = SomeClass()
+    my_class_weak_ref = weakref.ref(my_class)
+
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.01,
+        immediate=True,
+        function=my_class.run_func,
+    )
+
+    # Debouncer keeps a reference to the function, prevening GC
+    del my_class
+    await debouncer.async_call()
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert my_class_weak_ref() is not None
+
+    # Debouncer shutdown releases the class
+    debouncer.async_shutdown()
+    assert my_class_weak_ref() is None

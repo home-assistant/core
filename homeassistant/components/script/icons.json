@@ -8,9 +8,17 @@
     }
   },
   "services": {
-    "reload": "mdi:reload",
-    "turn_on": "mdi:script-text-play",
-    "turn_off": "mdi:script-text",
-    "toggle": "mdi:script-text"
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "toggle": {
+      "service": "mdi:script-text"
+    },
+    "turn_off": {
+      "service": "mdi:script-text"
+    },
+    "turn_on": {
+      "service": "mdi:script-text-play"
+    }
   }
 }

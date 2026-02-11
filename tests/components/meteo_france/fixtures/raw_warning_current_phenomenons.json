@@ -1,0 +1,13 @@
+{
+  "update_time": 1591279200,
+  "end_validity_time": 1591365600,
+  "domain_id": "32",
+  "phenomenons_max_colors": [
+    { "phenomenon_id": "6", "phenomenon_max_color_id": 1 },
+    { "phenomenon_id": "4", "phenomenon_max_color_id": 1 },
+    { "phenomenon_id": "5", "phenomenon_max_color_id": 3 },
+    { "phenomenon_id": "2", "phenomenon_max_color_id": 1 },
+    { "phenomenon_id": "1", "phenomenon_max_color_id": 1 },
+    { "phenomenon_id": "3", "phenomenon_max_color_id": 2 }
+  ]
+}

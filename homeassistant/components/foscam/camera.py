@@ -3,25 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from urllib.parse import quote
 
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_RTSP_PORT,
-    CONF_STREAM,
-    DOMAIN,
-    LOGGER,
-    SERVICE_PTZ,
-    SERVICE_PTZ_PRESET,
-)
-from .coordinator import FoscamCoordinator
+from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
 DIR_UP = "up"
@@ -56,8 +49,8 @@ PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FoscamConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.async_get_current_platform()
@@ -89,7 +82,7 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
@@ -103,7 +96,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
     def __init__(
         self,
         coordinator: FoscamCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: FoscamConfigEntry,
     ) -> None:
         """Initialize a Foscam camera."""
         super().__init__(coordinator, config_entry.entry_id)
@@ -129,7 +122,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
         )
 
         if ret == -3:
-            LOGGER.info(
+            LOGGER.warning(
                 (
                     "Can't get motion detection status, camera %s configured with"
                     " non-admin user"
@@ -160,7 +153,9 @@ class HassFoscamCamera(FoscamEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         if self._rtsp_port:
-            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
+            _username = quote(self._username)
+            _password = quote(self._password)
+            return f"rtsp://{_username}:{_password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
 
         return None
 
@@ -171,7 +166,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
             if ret != 0:
                 if ret == -3:
-                    LOGGER.info(
+                    LOGGER.warning(
                         (
                             "Can't set motion detection status, camera %s configured"
                             " with non-admin user"
@@ -197,7 +192,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
             if ret != 0:
                 if ret == -3:
-                    LOGGER.info(
+                    LOGGER.warning(
                         (
                             "Can't set motion detection status, camera %s configured"
                             " with non-admin user"

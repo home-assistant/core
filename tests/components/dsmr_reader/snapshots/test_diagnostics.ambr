@@ -7,6 +7,8 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'dsmr_reader',
       'entry_id': 'TEST_ENTRY_ID',
       'minor_version': 1,
@@ -15,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'dsmr_reader',
       'unique_id': 'UNIQUE_TEST_ID',
       'version': 1,

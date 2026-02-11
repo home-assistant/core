@@ -6,14 +6,14 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND
 from homeassistant.exceptions import HomeAssistantError
 
-from ..models import AuthFlowResult, Credentials, UserMeta
+from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 CONF_ARGS = "args"
@@ -59,7 +59,9 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> CommandLineLoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -133,7 +135,7 @@ class CommandLineAuthProvider(AuthProvider):
         )
 
 
-class CommandLineLoginFlow(LoginFlow):
+class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -145,9 +147,9 @@ class CommandLineLoginFlow(LoginFlow):
         if user_input is not None:
             user_input["username"] = user_input["username"].strip()
             try:
-                await cast(
-                    CommandLineAuthProvider, self._auth_provider
-                ).async_validate_login(user_input["username"], user_input["password"])
+                await self._auth_provider.async_validate_login(
+                    user_input["username"], user_input["password"]
+                )
             except InvalidAuthError:
                 errors["base"] = "invalid_auth"
 

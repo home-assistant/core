@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -19,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -26,6 +28,7 @@
     'original_name': 'Charge cable lock',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_port_latch',
     'unique_id': 'VINVINVIN-charge_state_charge_port_latch',
@@ -53,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -66,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -73,6 +78,7 @@
     'original_name': 'Lock',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_locked',
     'unique_id': 'VINVINVIN-vehicle_state_locked',

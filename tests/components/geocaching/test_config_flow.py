@@ -14,7 +14,7 @@ from homeassistant.components.geocaching.const import (
     ENVIRONMENT,
     ENVIRONMENT_URLS,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -195,9 +195,7 @@ async def test_reauthentication(
     """Test Geocaching reauthentication."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

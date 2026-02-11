@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, FOLDER_IMAGE
 
 _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = "image"
@@ -45,7 +45,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
-    image_dir = pathlib.Path(hass.config.path("image"))
+    image_dir = pathlib.Path(hass.config.path(FOLDER_IMAGE))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     ImageUploadStorageCollectionWebsocket(
@@ -220,18 +220,18 @@ class ImageServeView(HomeAssistantView):
             hass = request.app[KEY_HASS]
             target_file = self.image_folder / image_id / f"{width}x{height}"
 
-            if not target_file.is_file():
+            if not await hass.async_add_executor_job(target_file.is_file):
                 async with self.transform_lock:
                     # Another check in case another request already
                     # finished it while waiting
-                    if not target_file.is_file():
-                        await hass.async_add_executor_job(
-                            _generate_thumbnail,
-                            self.image_folder / image_id / "original",
-                            image_info["content_type"],
-                            target_file,
-                            (width, height),
-                        )
+                    await hass.async_add_executor_job(
+                        _generate_thumbnail_if_file_does_not_exist,
+                        target_file,
+                        self.image_folder / image_id / "original",
+                        image_info["content_type"],
+                        target_file,
+                        (width, height),
+                    )
 
         return web.FileResponse(
             target_file,
@@ -239,16 +239,18 @@ class ImageServeView(HomeAssistantView):
         )
 
 
-def _generate_thumbnail(
+def _generate_thumbnail_if_file_does_not_exist(
+    target_file: pathlib.Path,
     original_path: pathlib.Path,
     content_type: str,
     target_path: pathlib.Path,
     target_size: tuple[int, int],
 ) -> None:
     """Generate a size."""
-    image = ImageOps.exif_transpose(Image.open(original_path))
-    image.thumbnail(target_size)
-    image.save(target_path, format=content_type.partition("/")[-1])
+    if not target_file.is_file():
+        image = ImageOps.exif_transpose(Image.open(original_path))
+        image.thumbnail(target_size)
+        image.save(target_path, format=content_type.partition("/")[-1])
 
 
 def _validate_size_from_filename(filename: str) -> tuple[int, int]:

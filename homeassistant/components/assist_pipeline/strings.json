@@ -7,7 +7,7 @@
     },
     "select": {
       "pipeline": {
-        "name": "Assist pipeline",
+        "name": "Assistant{index}",
         "state": {
           "preferred": "Preferred"
         }
@@ -15,11 +15,23 @@
       "vad_sensitivity": {
         "name": "Finished speaking detection",
         "state": {
-          "default": "Default",
           "aggressive": "Aggressive",
+          "default": "Default",
           "relaxed": "Relaxed"
         }
       }
+    }
+  },
+  "issues": {
+    "assist_in_progress_deprecated": {
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "The {integration_name} in progress binary sensor `{entity_id}` is deprecated.\n\nMigrate your configuration to use the corresponding `{assist_satellite_domain}` entity and then click SUBMIT to disable the in progress binary sensor and fix this issue."
+          }
+        }
+      },
+      "title": "{integration_name} in progress binary sensors are deprecated"
     }
   }
 }

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
+
+from .const import DOMAIN
 
 
 class IntegrationNotFoundFlow(RepairsFlow):
@@ -53,7 +55,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    if issue_id.split(".")[0] == "integration_not_found":
+    if issue_id.split(".", maxsplit=1)[0] == "integration_not_found":
         assert data
         return IntegrationNotFoundFlow(data)
     return ConfirmRepairFlow()

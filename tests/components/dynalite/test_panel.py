@@ -2,9 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.components import dynalite
+from homeassistant import setup
+from homeassistant.components import dynalite, frontend
 from homeassistant.components.cover import DEVICE_CLASSES
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -20,7 +21,7 @@ async def test_get_config(
 
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host, CONF_PORT: port},
+        data={CONF_HOST: host, CONF_PORT: port},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -44,7 +45,7 @@ async def test_get_config(
     result = msg["result"]
     entry_id = entry.entry_id
     assert result == {
-        "config": {entry_id: {dynalite.CONF_HOST: host, CONF_PORT: port}},
+        "config": {entry_id: {CONF_HOST: host, CONF_PORT: port}},
         "default": {
             "DEFAULT_NAME": dynalite.const.DEFAULT_NAME,
             "DEFAULT_PORT": dynalite.const.DEFAULT_PORT,
@@ -66,7 +67,7 @@ async def test_save_config(
 
     entry1 = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host1, CONF_PORT: port1},
+        data={CONF_HOST: host1, CONF_PORT: port1},
     )
     entry1.add_to_hass(hass)
     with patch(
@@ -77,7 +78,7 @@ async def test_save_config(
         await hass.async_block_till_done()
     entry2 = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host2, CONF_PORT: port2},
+        data={CONF_HOST: host2, CONF_PORT: port2},
     )
     entry2.add_to_hass(hass)
     with patch(
@@ -94,7 +95,7 @@ async def test_save_config(
             "id": 24,
             "type": "dynalite/save-config",
             "entry_id": entry2.entry_id,
-            "config": {dynalite.CONF_HOST: host3, CONF_PORT: port3},
+            "config": {CONF_HOST: host3, CONF_PORT: port3},
         }
     )
 
@@ -103,9 +104,9 @@ async def test_save_config(
     assert msg["result"] == {}
 
     existing_entry = hass.config_entries.async_get_entry(entry1.entry_id)
-    assert existing_entry.data == {dynalite.CONF_HOST: host1, CONF_PORT: port1}
+    assert existing_entry.data == {CONF_HOST: host1, CONF_PORT: port1}
     modified_entry = hass.config_entries.async_get_entry(entry2.entry_id)
-    assert modified_entry.data[dynalite.CONF_HOST] == host3
+    assert modified_entry.data[CONF_HOST] == host3
     assert modified_entry.data[CONF_PORT] == port3
 
 
@@ -120,7 +121,7 @@ async def test_save_config_invalid_entry(
 
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host1, CONF_PORT: port1},
+        data={CONF_HOST: host1, CONF_PORT: port1},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -136,7 +137,7 @@ async def test_save_config_invalid_entry(
             "id": 24,
             "type": "dynalite/save-config",
             "entry_id": "junk",
-            "config": {dynalite.CONF_HOST: host2, CONF_PORT: port2},
+            "config": {CONF_HOST: host2, CONF_PORT: port2},
         }
     )
 
@@ -145,4 +146,35 @@ async def test_save_config_invalid_entry(
     assert msg["result"] == {"error": True}
 
     existing_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert existing_entry.data == {dynalite.CONF_HOST: host1, CONF_PORT: port1}
+    assert existing_entry.data == {CONF_HOST: host1, CONF_PORT: port1}
+
+
+async def test_panel_registration(hass: HomeAssistant) -> None:
+    """Test that the dynalite panel is registered with correct module URL format."""
+    with (
+        patch(
+            "homeassistant.components.dynalite.panel.locate_dir",
+            return_value="/mock/path",
+        ),
+        patch(
+            "homeassistant.components.dynalite.panel.get_build_id", return_value="1.2.3"
+        ),
+    ):
+        result = await setup.async_setup_component(hass, dynalite.DOMAIN, {})
+        assert result
+        await hass.async_block_till_done()
+
+    panels = hass.data.get(frontend.DATA_PANELS, {})
+    assert dynalite.DOMAIN in panels
+
+    panel = panels[dynalite.DOMAIN]
+
+    # Verify the panel configuration
+    assert panel.frontend_url_path == dynalite.DOMAIN
+    assert panel.config_panel_domain == dynalite.DOMAIN
+    assert panel.require_admin is True
+
+    # Verify the module_url uses dash format (entrypoint-1.2.3.js) not dot format
+    module_url = panel.config["_panel_custom"]["module_url"]
+    assert module_url == "/dynalite_static/entrypoint-1.2.3.js"
+    assert "entrypoint.1.2.3.js" not in module_url  # Ensure wrong format is not used

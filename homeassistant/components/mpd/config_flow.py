@@ -10,7 +10,7 @@ from mpd.asyncio import MPDClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN, LOGGER
 
@@ -32,7 +32,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             client = MPDClient()
             client.timeout = 30
             client.idletimeout = 10
@@ -63,39 +65,4 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Attempt to import the existing configuration."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
-        client = MPDClient()
-        client.timeout = 30
-        client.idletimeout = 10
-        try:
-            async with timeout(35):
-                await client.connect(import_config[CONF_HOST], import_config[CONF_PORT])
-                if CONF_PASSWORD in import_config:
-                    await client.password(import_config[CONF_PASSWORD])
-                with suppress(mpd.ConnectionError):
-                    client.disconnect()
-        except (
-            TimeoutError,
-            gaierror,
-            mpd.ConnectionError,
-            OSError,
-        ):
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unknown exception")
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(
-            title=import_config.get(CONF_NAME, "Music Player Daemon"),
-            data={
-                CONF_HOST: import_config[CONF_HOST],
-                CONF_PORT: import_config[CONF_PORT],
-                CONF_PASSWORD: import_config.get(CONF_PASSWORD),
-            },
         )

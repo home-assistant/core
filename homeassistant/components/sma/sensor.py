@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-import pysma
+from pysma.sensor import Sensor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,10 +10,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_SSL,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -23,18 +21,18 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PYSMA_COORDINATOR, PYSMA_DEVICE_INFO, PYSMA_SENSORS
+from . import SMAConfigEntry
+from .const import DOMAIN
+from .coordinator import SMADataUpdateCoordinator
 
 SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "status": SensorEntityDescription(
@@ -45,6 +43,12 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "operating_status_general": SensorEntityDescription(
         key="operating_status_general",
         name="Operating Status General",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "operating_status": SensorEntityDescription(
+        key="operating_status",
+        name="Operating Status",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -204,7 +208,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power": SensorEntityDescription(
         key="grid_reactive_power",
         name="Grid Reactive Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -212,7 +216,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l1": SensorEntityDescription(
         key="grid_reactive_power_l1",
         name="Grid Reactive Power L1",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -220,7 +224,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l2": SensorEntityDescription(
         key="grid_reactive_power_l2",
         name="Grid Reactive Power L2",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -228,7 +232,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l3": SensorEntityDescription(
         key="grid_reactive_power_l3",
         name="Grid Reactive Power L3",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -831,41 +835,32 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SMAConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up SMA sensors."""
-    sma_data = hass.data[DOMAIN][config_entry.entry_id]
-
-    coordinator = sma_data[PYSMA_COORDINATOR]
-    used_sensors = sma_data[PYSMA_SENSORS]
-    device_info = sma_data[PYSMA_DEVICE_INFO]
-
-    if TYPE_CHECKING:
-        assert config_entry.unique_id
+    """Setup SMA sensors."""
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SMAsensor(
             coordinator,
-            config_entry.unique_id,
             SENSOR_ENTITIES.get(sensor.name),
-            device_info,
             sensor,
+            entry,
         )
-        for sensor in used_sensors
+        for sensor in coordinator.data.sensors
     )
 
 
-class SMAsensor(CoordinatorEntity, SensorEntity):
+class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
     """Representation of a SMA sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        config_entry_unique_id: str,
+        coordinator: SMADataUpdateCoordinator,
         description: SensorEntityDescription | None,
-        device_info: DeviceInfo,
-        pysma_sensor: pysma.sensor.Sensor,
+        pysma_sensor: Sensor,
+        entry: SMAConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -874,11 +869,24 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         else:
             self._attr_name = pysma_sensor.name
 
-        self._sensor = pysma_sensor
+        protocol = "https" if entry.data[CONF_SSL] else "http"
+        url = f"{protocol}://{entry.data[CONF_HOST]}"
 
-        self._attr_device_info = device_info
+        self._sensor = pysma_sensor
+        self._serial = coordinator.data.sma_device_info.serial
+        assert entry.unique_id
+
+        self._attr_device_info = DeviceInfo(
+            configuration_url=url,
+            identifiers={(DOMAIN, entry.unique_id)},
+            manufacturer=coordinator.data.sma_device_info.manufacturer,
+            model=coordinator.data.sma_device_info.type,
+            name=coordinator.data.sma_device_info.name,
+            sw_version=coordinator.data.sma_device_info.sw_version,
+            serial_number=coordinator.data.sma_device_info.serial,
+        )
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
+            f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
         )
 
         # Set sensor enabled to False.
@@ -894,6 +902,14 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
             name_prefix = "SMA"
 
         return f"{name_prefix} {super().name}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self._serial == self.coordinator.data.sma_device_info.serial
+        )
 
     @property
     def native_value(self) -> StateType:

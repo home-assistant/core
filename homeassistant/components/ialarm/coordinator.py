@@ -7,7 +7,11 @@ import logging
 
 from pyialarm import IAlarm
 
-from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
+from homeassistant.components.alarm_control_panel import (
+    SCAN_INTERVAL,
+    AlarmControlPanelState,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -15,20 +19,31 @@ from .const import DOMAIN, IALARM_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
 
+type IAlarmConfigEntry = ConfigEntry[IAlarmDataUpdateCoordinator]
+
 
 class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching iAlarm data."""
 
-    def __init__(self, hass: HomeAssistant, ialarm: IAlarm, mac: str) -> None:
+    config_entry: IAlarmConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: IAlarmConfigEntry,
+        ialarm: IAlarm,
+        mac: str,
+    ) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarm = ialarm
-        self.state: str | None = None
+        self.state: AlarmControlPanelState | None = None
         self.host: str = ialarm.host
         self.mac = mac
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

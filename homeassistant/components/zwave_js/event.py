@@ -2,37 +2,53 @@
 
 from __future__ import annotations
 
-from zwave_js_server.client import Client as ZwaveClient
+from dataclasses import dataclass
+
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, ValueNotification
 
-from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_VALUE, DATA_CLIENT, DOMAIN
-from .discovery import ZwaveDiscoveryInfo
-from .entity import ZWaveBaseEntity
+from .const import ATTR_VALUE, DOMAIN
+from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
+from .models import (
+    NewZWaveDiscoverySchema,
+    ZwaveJSConfigEntry,
+    ZWaveValueDiscoverySchema,
+)
 
 PARALLEL_UPDATES = 0
 
 
+@dataclass(frozen=True, kw_only=True)
+class ValueNotificationZWaveJSEntityDescription(EventEntityDescription):
+    """Represent a Z-Wave JS event entity description."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Event entity from Config Entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
-    def async_add_event(info: ZwaveDiscoveryInfo) -> None:
+    def async_add_event(info: NewZwaveDiscoveryInfo) -> None:
         """Add Z-Wave event entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        entities: list[ZWaveBaseEntity] = [ZwaveEventEntity(config_entry, driver, info)]
+        entities: list[ZWaveBaseEntity] = [
+            info.entity_class(config_entry, driver, info)
+        ]
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -56,7 +72,10 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
     """Representation of a Z-Wave event entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self,
+        config_entry: ZwaveJSConfigEntry,
+        driver: Driver,
+        info: NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZwaveEventEntity entity."""
         super().__init__(config_entry, driver, info)
@@ -97,3 +116,17 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
                 lambda event: self._async_handle_event(event["value_notification"]),
             )
         )
+
+
+DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        platform=Platform.EVENT,
+        primary_value=ZWaveValueDiscoverySchema(
+            stateful=False,
+        ),
+        entity_description=ValueNotificationZWaveJSEntityDescription(
+            key="value_notification",
+        ),
+        entity_class=ZwaveEventEntity,
+    ),
+]

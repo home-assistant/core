@@ -9,6 +9,7 @@ from wled import WLEDConnectionError, WLEDError
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .entity import WLEDEntity
 
 
@@ -29,9 +30,26 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
         except WLEDConnectionError as error:
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
-            raise HomeAssistantError("Error communicating with WLED API") from error
-
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
-            raise HomeAssistantError("Invalid response from WLED API") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
     return handler
+
+
+def kelvin_to_255(k: int, min_k: int, max_k: int) -> int:
+    """Map color temperature in K from minK-maxK to 0-255."""
+    return int((k - min_k) / (max_k - min_k) * 255)
+
+
+def kelvin_to_255_reverse(v: int, min_k: int, max_k: int) -> int:
+    """Map color temperature from 0-255 to minK-maxK K."""
+    return int(v / 255 * (max_k - min_k) + min_k)

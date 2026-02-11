@@ -1,6 +1,5 @@
 """Test UniFi Network."""
 
-from collections.abc import Callable
 from http import HTTPStatus
 from types import MappingProxyType
 from typing import Any
@@ -9,21 +8,24 @@ from unittest.mock import patch
 import aiounifi
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import DOMAIN
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
+from .conftest import ConfigEntryFactoryType, WebsocketStateManager
+
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_hub_setup(
     device_registry: dr.DeviceRegistry,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -39,6 +41,7 @@ async def test_hub_setup(
             Platform.BUTTON,
             Platform.DEVICE_TRACKER,
             Platform.IMAGE,
+            Platform.LIGHT,
             Platform.SENSOR,
             Platform.SWITCH,
             Platform.UPDATE,
@@ -47,14 +50,14 @@ async def test_hub_setup(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(UNIFI_DOMAIN, config_entry.unique_id)},
+        identifiers={(DOMAIN, config_entry.unique_id)},
     )
 
     assert device_entry.sw_version == "7.4.162"
 
 
 async def test_reset_after_successful_setup(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup."""
     assert config_entry_setup.state is ConfigEntryState.LOADED
@@ -64,7 +67,7 @@ async def test_reset_after_successful_setup(
 
 
 async def test_reset_fails(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
     assert config_entry_setup.state is ConfigEntryState.LOADED
@@ -74,14 +77,14 @@ async def test_reset_fails(
         return_value=False,
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
-        assert config_entry_setup.state is ConfigEntryState.LOADED
+        assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
 
 
 @pytest.mark.usefixtures("mock_device_registry")
 async def test_connection_state_signalling(
     hass: HomeAssistant,
-    mock_websocket_state,
-    config_entry_factory: Callable[[], ConfigEntry],
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_state: WebsocketStateManager,
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
@@ -110,8 +113,8 @@ async def test_connection_state_signalling(
 
 async def test_reconnect_mechanism(
     aioclient_mock: AiohttpClientMocker,
-    mock_websocket_state,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
 ) -> None:
     """Verify reconnect prints only on first reconnection try."""
     aioclient_mock.clear_requests()
@@ -140,7 +143,10 @@ async def test_reconnect_mechanism(
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_reconnect_mechanism_exceptions(mock_websocket_state, exception) -> None:
+async def test_reconnect_mechanism_exceptions(
+    mock_websocket_state: WebsocketStateManager,
+    exception: Exception,
+) -> None:
     """Verify async_reconnect calls expected methods."""
     with (
         patch("aiounifi.Controller.login", side_effect=exception),
@@ -170,8 +176,8 @@ async def test_reconnect_mechanism_exceptions(mock_websocket_state, exception) -
 )
 async def test_get_unifi_api_fails_to_connect(
     hass: HomeAssistant,
-    side_effect,
-    raised_exception,
+    side_effect: Exception,
+    raised_exception: Exception,
     config_entry_data: MappingProxyType[str, Any],
 ) -> None:
     """Check that get_unifi_api can handle UniFi Network being unavailable."""

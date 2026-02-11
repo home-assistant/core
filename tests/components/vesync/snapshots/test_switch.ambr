@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -17,7 +18,6 @@
           'air-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -27,21 +27,68 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_switch_state[Air Purifier 131s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_131s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'air-purifier-display',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 131s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_131s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Air Purifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -55,7 +102,6 @@
           'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -65,21 +111,115 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_switch_state[Air Purifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_200s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_200s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 200s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_200s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 200s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_200s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Air Purifier 400s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -93,7 +233,6 @@
           '400s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -103,21 +242,115 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_switch_state[Air Purifier 400s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_400s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': '400s-purifier-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_400s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': '400s-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 400s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_400s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 400s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_400s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Air Purifier 600s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -131,7 +364,6 @@
           '600s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -141,13 +373,180 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_switch_state[Air Purifier 600s][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_600s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': '600s-purifier-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_600s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': '600s-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 600s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_600s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 600s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_600s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Standby][entities]
   list([
   ])
 # ---
@@ -156,6 +555,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -169,7 +569,6 @@
           'dimmable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -179,8 +578,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -194,6 +592,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -207,7 +606,6 @@
           'dimmable-switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -217,8 +615,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -229,25 +626,497 @@
 # ---
 # name: test_switch_state[Humidifier 200s][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '200s-humidifier4321',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'Classic200S',
+      'model_id': None,
+      'name': 'Humidifier 200s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_switch_state[Humidifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_200s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': '200s-humidifier4321-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_200s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '200s-humidifier4321-auto_off_config',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Humidifier 200s][switch.humidifier_200s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 200s Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_200s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier 200s][switch.humidifier_200s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 200s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_200s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier 6000s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '6000s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-S601S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 6000s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier 6000s][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_6000s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': '6000s-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_6000s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': '6000s-child_lock',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_6000s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '6000s-auto_off_config',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Enable drying mode while power is off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Enable drying mode while power is off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'drying_mode_power_off',
+      'unique_id': '6000s-drying_mode_power_off',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_enable_drying_mode_while_power_is_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Enable drying mode while power is off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Humidifier 600S][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '600s-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A602S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 600S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_switch_state[Humidifier 600S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_600s_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': '600s-humidifier-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_600s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '600s-humidifier-auto_off_config',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Humidifier 600S][switch.humidifier_600s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 600S Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_600s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier 600S][switch.humidifier_600s_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 600S Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_600s_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -261,7 +1130,6 @@
           'outlet',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -271,8 +1139,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -285,6 +1152,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -298,16 +1166,18 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': 'outlet',
+      'unique_id': 'outlet-device_status',
       'unit_of_measurement': None,
     }),
   ])
@@ -315,6 +1185,7 @@
 # name: test_switch_state[Outlet][switch.outlet]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
       'friendly_name': 'Outlet',
     }),
     'context': <ANY>,
@@ -325,11 +1196,96 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[SmartTowerFan][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.smarttowerfan_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'smarttowerfan-display',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SmartTowerFan Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smarttowerfan_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -343,7 +1299,6 @@
           'tunable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -353,8 +1308,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -368,6 +1322,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -381,7 +1336,6 @@
           'switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -391,8 +1345,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -405,6 +1358,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -418,16 +1372,18 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': 'switch',
+      'unique_id': 'switch-device_status',
       'unit_of_measurement': None,
     }),
   ])
@@ -435,6 +1391,7 @@
 # name: test_switch_state[Wall Switch][switch.wall_switch]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'switch',
       'friendly_name': 'Wall Switch',
     }),
     'context': <ANY>,

@@ -1,7 +1,7 @@
 """Test the Cloud Google Config."""
 
 from http import HTTPStatus
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -32,7 +32,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -119,15 +119,13 @@ async def test_sync_entities(
 
     assert len(mock_conf.async_get_agent_users()) == 1
 
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.NOT_FOUND),
-    ) as mock_request_sync:
-        assert (
-            await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
-        )
-        assert len(mock_conf.async_get_agent_users()) == 0
-        assert len(mock_request_sync.mock_calls) == 1
+    mock_conf._cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.NOT_FOUND)
+    )
+
+    assert await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
+    assert len(mock_conf.async_get_agent_users()) == 0
+    assert len(mock_conf._cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_update_expose_trigger_sync(
@@ -264,6 +262,7 @@ async def test_google_entity_registry_sync(
 @pytest.mark.usefixtures("mock_cloud_login")
 async def test_google_device_registry_sync(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     cloud_prefs: CloudPreferences,
 ) -> None:
@@ -275,8 +274,14 @@ async def test_google_device_registry_sync(
     # Enable exposing new entities to Google
     expose_new(hass, True)
 
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     entity_entry = entity_registry.async_get_or_create(
-        "light", "hue", "1234", device_id="1234"
+        "light", "hue", "1234", device_id=device_entry.id
     )
     entity_entry = entity_registry.async_update_entity(
         entity_entry.entity_id, area_id="ABCD"
@@ -294,7 +299,7 @@ async def test_google_device_registry_sync(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
             {
                 "action": "update",
-                "device_id": "1234",
+                "device_id": device_entry.id,
                 "changes": ["manufacturer"],
             },
         )
@@ -308,7 +313,7 @@ async def test_google_device_registry_sync(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
             {
                 "action": "update",
-                "device_id": "1234",
+                "device_id": device_entry.id,
                 "changes": ["area_id"],
             },
         )
@@ -324,7 +329,7 @@ async def test_google_device_registry_sync(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
             {
                 "action": "update",
-                "device_id": "1234",
+                "device_id": device_entry.id,
                 "changes": ["area_id"],
             },
         )

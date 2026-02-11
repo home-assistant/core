@@ -9,6 +9,8 @@
         'use_psk': True,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'braviatv',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'minor_version': 1,
@@ -17,7 +19,9 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'title': 'Mock Title',
+      'subentries': list([
+      ]),
+      'title': 'BRAVIA TV-Model',
       'unique_id': 'very_unique_string',
       'version': 1,
     }),
@@ -33,5 +37,7 @@
       'region': 'XEU',
       'serial': 'serial_number',
     }),
+    'remote_command_list': list([
+    ]),
   })
 # ---

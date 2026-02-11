@@ -1,6 +1,5 @@
 """Tests for Search integration."""
 
-import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.search import ItemType, Searcher
@@ -17,11 +16,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_search(
@@ -250,7 +244,7 @@ async def test_search(
                 {
                     "id": "unique_id",
                     "alias": "blueprint_automation_1",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {
@@ -262,7 +256,7 @@ async def test_search(
                 },
                 {
                     "alias": "blueprint_automation_2",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {

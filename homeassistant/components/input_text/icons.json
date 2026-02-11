@@ -1,6 +1,10 @@
 {
   "services": {
-    "set_value": "mdi:form-textbox",
-    "reload": "mdi:reload"
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "set_value": {
+      "service": "mdi:form-textbox"
+    }
   }
 }

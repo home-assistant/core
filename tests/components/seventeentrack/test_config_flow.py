@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack.errors import SeventeenTrackError
 import pytest
 
 from homeassistant import config_entries
@@ -11,7 +11,7 @@ from homeassistant.components.seventeentrack.const import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -105,55 +105,6 @@ async def test_flow_fails(
     }
 
 
-async def test_import_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=VALID_CONFIG_OLD,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "someemail@gmail.com"
-    assert result["data"][CONF_USERNAME] == "someemail@gmail.com"
-    assert result["data"][CONF_PASSWORD] == "edc3eee7330e4fdda04489e3fbc283d0"
-
-
-@pytest.mark.parametrize(
-    ("return_value", "side_effect", "error"),
-    [
-        (
-            False,
-            None,
-            "invalid_auth",
-        ),
-        (
-            True,
-            SeventeenTrackError(),
-            "cannot_connect",
-        ),
-    ],
-)
-async def test_import_flow_cannot_connect_error(
-    hass: HomeAssistant,
-    mock_seventeentrack: AsyncMock,
-    return_value,
-    side_effect,
-    error,
-) -> None:
-    """Test the import configuration flow with error."""
-    mock_seventeentrack.return_value.profile.login.return_value = return_value
-    mock_seventeentrack.return_value.profile.login.side_effect = side_effect
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=VALID_CONFIG_OLD,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == error
-
-
 async def test_option_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) -> None:
     """Test option flow."""
     entry = MockConfigEntry(
@@ -181,28 +132,3 @@ async def test_option_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SHOW_ARCHIVED]
     assert not result["data"][CONF_SHOW_DELIVERED]
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_seventeentrack: AsyncMock
-) -> None:
-    """Test the import configuration flow with error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=VALID_CONFIG,
-        unique_id=ACCOUNT_ID,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result_aborted = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        VALID_CONFIG,
-    )
-    await hass.async_block_till_done()
-
-    assert result_aborted["type"] is FlowResultType.ABORT
-    assert result_aborted["reason"] == "already_configured"

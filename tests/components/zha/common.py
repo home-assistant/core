@@ -6,9 +6,10 @@ from unittest.mock import AsyncMock, Mock
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.zha.helpers import ZHADeviceProxy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -74,7 +75,7 @@ def update_attribute_cache(cluster):
         attrs.append(make_attribute(attrid, value))
 
     hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
-    hdr.frame_control.disable_default_response = True
+    hdr.frame_control = hdr.frame_control.replace(disable_default_response=True)
     msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
         attribute_reports=attrs
     )
@@ -118,12 +119,14 @@ async def send_attributes_report(
     )
 
     hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
-    hdr.frame_control.disable_default_response = True
+    hdr.frame_control = hdr.frame_control.replace(disable_default_response=True)
     cluster.handle_message(hdr, msg)
     await hass.async_block_till_done()
 
 
-def find_entity_id(domain, zha_device, hass: HomeAssistant, qualifier=None):
+def find_entity_id(
+    domain: str, zha_device: ZHADeviceProxy, hass: HomeAssistant, qualifier=None
+) -> str | None:
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -136,11 +139,13 @@ def find_entity_id(domain, zha_device, hass: HomeAssistant, qualifier=None):
         for entity_id in entities:
             if qualifier in entity_id:
                 return entity_id
-    else:
-        return entities[0]
+        return None
+    return entities[0]
 
 
-def find_entity_ids(domain, zha_device, hass: HomeAssistant):
+def find_entity_ids(
+    domain: str, zha_device: ZHADeviceProxy, hass: HomeAssistant
+) -> list[str]:
     """Find the entity ids under the testing.
 
     This is used to get the entity id in order to get the state from the state

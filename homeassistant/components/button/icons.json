@@ -3,17 +3,24 @@
     "_": {
       "default": "mdi:button-pointer"
     },
-    "restart": {
-      "default": "mdi:restart"
-    },
     "identify": {
       "default": "mdi:crosshairs-question"
+    },
+    "restart": {
+      "default": "mdi:restart"
     },
     "update": {
       "default": "mdi:package-up"
     }
   },
   "services": {
-    "press": "mdi:gesture-tap-button"
+    "press": {
+      "service": "mdi:gesture-tap-button"
+    }
+  },
+  "triggers": {
+    "pressed": {
+      "trigger": "mdi:gesture-tap-button"
+    }
   }
 }

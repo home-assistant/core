@@ -26,17 +26,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
+
 
 class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
     """My aquacell coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: AquacellConfigEntry
 
-    def __init__(self, hass: HomeAssistant, aquacell_api: AquacellApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AquacellConfigEntry,
+        aquacell_api: AquacellApi,
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Aquacell Coordinator",
             update_interval=UPDATE_INTERVAL,
         )
@@ -56,7 +64,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         so entities can quickly look up their data.
         """
 
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(30):
             # Check if the refresh token is expired
             expiry_time = (
                 self.refresh_token_creation_time
@@ -72,7 +80,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
                 softeners = await self.aquacell_api.get_all_softeners()
             except AuthenticationFailed as err:
                 raise ConfigEntryError from err
-            except AquacellApiException as err:
+            except (AquacellApiException, TimeoutError) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         return {softener.dsn: softener for softener in softeners}

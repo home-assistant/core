@@ -11,10 +11,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PhilipsTVConfigEntry
-from .coordinator import PhilipsTVDataUpdateCoordinator
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 
@@ -42,7 +41,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: PhilipsTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
     coordinator = config_entry.runtime_data

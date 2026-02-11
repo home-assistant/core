@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .devices import VoIPDevice
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
     domain_data: DomainData = hass.data[DOMAIN]

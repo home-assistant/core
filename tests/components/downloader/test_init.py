@@ -1,111 +1,71 @@
 """Tests for the downloader component init."""
 
-from unittest.mock import patch
+from pathlib import Path
 
-from homeassistant.components.downloader import (
+import pytest
+
+from homeassistant.components.downloader.const import (
     CONF_DOWNLOAD_DIR,
     DOMAIN,
     SERVICE_DOWNLOAD_FILE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_initialization(hass: HomeAssistant) -> None:
-    """Test the initialization of the downloader component."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_DOWNLOAD_DIR: "/test_dir",
-        },
-    )
-    config_entry.add_to_hass(hass)
-    with patch("os.path.isdir", return_value=True):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+@pytest.fixture
+def download_dir(tmp_path: Path, request: pytest.FixtureRequest) -> Path:
+    """Return a download directory."""
+    if hasattr(request, "param"):
+        return tmp_path / request.param
+    return tmp_path
+
+
+async def test_config_entry_setup(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """Test config entry setup."""
+    config_entry = setup_integration
 
     assert hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_import(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
-    """Test the import of the downloader component."""
-    with patch("os.path.isdir", return_value=True):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_DOWNLOAD_DIR: "/test_dir",
-                },
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {CONF_DOWNLOAD_DIR: "/test_dir"}
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(
-        issue_id="deprecated_yaml_downloader", domain=HOMEASSISTANT_DOMAIN
-    )
-    assert issue
-
-
-async def test_import_directory_missing(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+async def test_config_entry_setup_relative_directory(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the import of the downloader component."""
-    with patch("os.path.isdir", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_DOWNLOAD_DIR: "/test_dir",
-                },
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(
-        issue_id="deprecated_yaml_downloader", domain=DOMAIN
+    """Test config entry setup with a relative download directory."""
+    relative_directory = "downloads"
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_DOWNLOAD_DIR: relative_directory},
     )
-    assert issue
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # The config entry will fail to set up since the directory does not exist.
+    # This is not relevant for this test.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.data[CONF_DOWNLOAD_DIR] == hass.config.path(
+        relative_directory
+    )
 
 
-async def test_import_already_exists(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+@pytest.mark.parametrize(
+    "download_dir",
+    [
+        "not_existing_path",
+    ],
+    indirect=True,
+)
+async def test_config_entry_setup_not_existing_directory(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the import of the downloader component."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_DOWNLOAD_DIR: "/test_dir",
-        },
-    )
-    config_entry.add_to_hass(hass)
-    with patch("os.path.isdir", return_value=True):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_DOWNLOAD_DIR: "/test_dir",
-                },
-            },
-        )
-    await hass.async_block_till_done()
+    """Test config entry setup without existing download directory."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(
-        issue_id="deprecated_yaml_downloader", domain=HOMEASSISTANT_DOMAIN
-    )
-    assert issue
+    assert not hass.services.has_service(DOMAIN, SERVICE_DOWNLOAD_FILE)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

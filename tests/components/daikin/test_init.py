@@ -7,10 +7,10 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.daikin import DaikinApi, update_unique_id
+from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -91,9 +91,7 @@ async def test_duplicate_removal(
         assert device_registry.async_get_device({}, {(KEY_MAC, HOST)}).name is None
 
         assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == HOST
-        assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(
-            HOST
-        )
+        assert entity_registry.async_get("switch.zone_1").unique_id.startswith(HOST)
 
         assert entity_registry.async_get("climate.daikinap00000").unique_id == MAC
         assert entity_registry.async_get(
@@ -111,7 +109,7 @@ async def test_duplicate_removal(
     assert entity_registry.async_get("switch.daikinap00000_zone_1") is None
 
     assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == MAC
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(MAC)
 
 
 async def test_unique_id_migrate(
@@ -143,7 +141,7 @@ async def test_unique_id_migrate(
     assert entity.unique_id == HOST
     assert update_unique_id(entity, MAC) is not None
 
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(HOST)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(HOST)
 
     type(mock_daikin).mac = PropertyMock(return_value=MAC)
     type(mock_daikin).values = PropertyMock(return_value=DATA)
@@ -164,7 +162,7 @@ async def test_unique_id_migrate(
     assert entity.unique_id == MAC
     assert update_unique_id(entity, MAC) is None
 
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(MAC)
 
 
 async def test_client_update_connection_error(
@@ -183,18 +181,15 @@ async def test_client_update_connection_error(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    api: DaikinApi = hass.data[DOMAIN][config_entry.entry_id]
-
-    assert api.available is True
+    assert hass.states.get("climate.daikinap00000").state != STATE_UNAVAILABLE
 
     type(mock_daikin).update_status.side_effect = ClientConnectionError
 
-    freezer.tick(timedelta(seconds=90))
+    freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
-
     await hass.async_block_till_done()
 
-    assert api.available is False
+    assert hass.states.get("climate.daikinap00000").state == STATE_UNAVAILABLE
 
     assert mock_daikin.update_status.call_count == 2
 

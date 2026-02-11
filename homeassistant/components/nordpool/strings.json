@@ -1,0 +1,168 @@
+{
+  "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_data": "API connected but the response was empty"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "areas": "[%key:component::nordpool::config::step::user::data::areas%]",
+          "currency": "[%key:component::nordpool::config::step::user::data::currency%]"
+        },
+        "data_description": {
+          "areas": "[%key:component::nordpool::config::step::user::data_description::areas%]",
+          "currency": "[%key:component::nordpool::config::step::user::data_description::currency%]"
+        }
+      },
+      "user": {
+        "data": {
+          "areas": "Areas",
+          "currency": "Currency"
+        },
+        "data_description": {
+          "areas": "Areas to display prices for according to Nord Pool market areas.",
+          "currency": "Select currency to display prices in, EUR is the base currency."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "block_average": {
+        "name": "{block} average"
+      },
+      "block_end_time": {
+        "name": "{block} time until"
+      },
+      "block_max": {
+        "name": "{block} highest price"
+      },
+      "block_min": {
+        "name": "{block} lowest price"
+      },
+      "block_start_time": {
+        "name": "{block} time from"
+      },
+      "currency": {
+        "name": "Currency"
+      },
+      "current_price": {
+        "name": "Current price"
+      },
+      "daily_average": {
+        "name": "Daily average"
+      },
+      "exchange_rate": {
+        "name": "Exchange rate"
+      },
+      "highest_price": {
+        "name": "Highest price",
+        "state_attributes": {
+          "end": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::end::name%]"
+          },
+          "start": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::start::name%]"
+          }
+        }
+      },
+      "last_price": {
+        "name": "Previous price"
+      },
+      "lowest_price": {
+        "name": "Lowest price",
+        "state_attributes": {
+          "end": {
+            "name": "End time"
+          },
+          "start": {
+            "name": "Start time"
+          }
+        }
+      },
+      "next_price": {
+        "name": "Next price"
+      },
+      "updated_at": {
+        "name": "Last updated"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "There was an authentication error as you tried to retrieve data too far in the past."
+    },
+    "connection_error": {
+      "message": "There was a connection error connecting to the API. Try again later."
+    },
+    "could_not_fetch_data": {
+      "message": "Data could not be retrieved: {error}"
+    },
+    "entry_not_found": {
+      "message": "The Nord Pool integration is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
+    },
+    "initial_update_failed": {
+      "message": "Initial update failed on startup with error {error}"
+    },
+    "no_day_data": {
+      "message": "Data for current day is missing"
+    }
+  },
+  "services": {
+    "get_price_indices_for_date": {
+      "description": "Retrieves the price indices for a specific date.",
+      "fields": {
+        "areas": {
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::description%]",
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::name%]"
+        },
+        "config_entry": {
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::description%]",
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::name%]"
+        },
+        "currency": {
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::description%]",
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::name%]"
+        },
+        "date": {
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::date::description%]",
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::date::name%]"
+        },
+        "resolution": {
+          "description": "Resolution time for the prices, can be any of 15, 30 and 60 minutes.",
+          "name": "Resolution"
+        }
+      },
+      "name": "Get price indices for date"
+    },
+    "get_prices_for_date": {
+      "description": "Retrieves the prices for a specific date.",
+      "fields": {
+        "areas": {
+          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured.",
+          "name": "Areas"
+        },
+        "config_entry": {
+          "description": "The Nord Pool configuration entry for this action.",
+          "name": "Config entry"
+        },
+        "currency": {
+          "description": "Currency to get prices in. If left empty it will use the currency already configured.",
+          "name": "Currency"
+        },
+        "date": {
+          "description": "Only dates in the range from two months in the past to one day in the future are allowed.",
+          "name": "Date"
+        }
+      },
+      "name": "Get prices for date"
+    }
+  }
+}

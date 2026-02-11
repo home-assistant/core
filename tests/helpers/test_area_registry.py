@@ -1,12 +1,19 @@
 """Tests for the Area Registry."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -16,6 +23,27 @@ from homeassistant.helpers import (
 from homeassistant.util.dt import utcnow
 
 from tests.common import ANY, async_capture_events, flush_store
+
+
+@pytest.fixture
+async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
+    """Mock temperature and humidity sensors."""
+    hass.states.async_set(
+        "sensor.mock_temperature",
+        "20",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+    hass.states.async_set(
+        "sensor.mock_humidity",
+        "50",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+        },
+    )
 
 
 async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
@@ -31,6 +59,7 @@ async def test_create_area(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     area_registry: ar.AreaRegistry,
+    mock_temperature_humidity_entity: None,
 ) -> None:
     """Make sure that we can create an area."""
     update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
@@ -45,10 +74,11 @@ async def test_create_area(
         id=ANY,
         labels=set(),
         name="mock",
-        normalized_name=ANY,
         picture=None,
         created_at=utcnow(),
         modified_at=utcnow(),
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     assert len(area_registry.areas) == 1
 
@@ -68,6 +98,8 @@ async def test_create_area(
         aliases={"alias_1", "alias_2"},
         labels={"label1", "label2"},
         picture="/image/example.png",
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
 
     assert area2 == ar.AreaEntry(
@@ -77,10 +109,11 @@ async def test_create_area(
         id=ANY,
         labels={"label1", "label2"},
         name="mock 2",
-        normalized_name=ANY,
         picture="/image/example.png",
         created_at=utcnow(),
         modified_at=utcnow(),
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
     assert len(area_registry.areas) == 2
     assert area.created_at != area2.created_at
@@ -166,6 +199,7 @@ async def test_update_area(
     floor_registry: fr.FloorRegistry,
     label_registry: lr.LabelRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_temperature_humidity_entity: None,
 ) -> None:
     """Make sure that we can read areas."""
     created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
@@ -186,6 +220,8 @@ async def test_update_area(
         labels={"label1", "label2"},
         name="mock1",
         picture="/image/example.png",
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
 
     assert updated_area != area
@@ -196,10 +232,11 @@ async def test_update_area(
         id=ANY,
         labels={"label1", "label2"},
         name="mock1",
-        normalized_name=ANY,
         picture="/image/example.png",
         created_at=created_at,
         modified_at=modified_at,
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
     assert len(area_registry.areas) == 1
 
@@ -242,9 +279,12 @@ async def test_update_area_with_same_name_change_case(
 
 async def test_update_area_with_name_already_in_use(
     area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can't update an area with a name already in use."""
-    area1 = area_registry.async_create("mock1")
+    floor = floor_registry.async_create("mock")
+    floor_id = floor.floor_id
+    area1 = area_registry.async_create("mock1", floor_id=floor_id)
     area2 = area_registry.async_create("mock2")
 
     with pytest.raises(ValueError) as e_info:
@@ -254,6 +294,8 @@ async def test_update_area_with_name_already_in_use(
     assert area1.name == "mock1"
     assert area2.name == "mock2"
     assert len(area_registry.areas) == 2
+
+    assert area_registry.areas.get_areas_for_floor(floor_id) == [area1]
 
 
 async def test_update_area_with_normalized_name_already_in_use(
@@ -270,6 +312,55 @@ async def test_update_area_with_normalized_name_already_in_use(
     assert area1.name == "mock1"
     assert area2.name == "Moc k2"
     assert len(area_registry.areas) == 2
+
+
+@pytest.mark.parametrize(
+    ("create_kwargs", "error_message"),
+    [
+        (
+            {"temperature_entity_id": "sensor.invalid"},
+            "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"temperature_entity_id": "light.kitchen"},
+            "Entity light.kitchen is not a temperature sensor",
+        ),
+        (
+            {"temperature_entity_id": "sensor.random"},
+            "Entity sensor.random is not a temperature sensor",
+        ),
+        (
+            {"humidity_entity_id": "sensor.invalid"},
+            "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"humidity_entity_id": "light.kitchen"},
+            "Entity light.kitchen is not a humidity sensor",
+        ),
+        (
+            {"humidity_entity_id": "sensor.random"},
+            "Entity sensor.random is not a humidity sensor",
+        ),
+    ],
+)
+async def test_update_area_entity_validation(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    mock_temperature_humidity_entity: None,
+    create_kwargs: dict[str, Any],
+    error_message: str,
+) -> None:
+    """Make sure that we can't update an area with an invalid entity."""
+    area = area_registry.async_create("mock")
+    hass.states.async_set("light.kitchen", "on", {})
+    hass.states.async_set("sensor.random", "3", {})
+
+    with pytest.raises(ValueError) as e_info:
+        area_registry.async_update(area.id, **create_kwargs)
+    assert str(e_info.value) == error_message
+
+    assert area.temperature_entity_id is None
+    assert area.humidity_entity_id is None
 
 
 async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
@@ -296,6 +387,8 @@ async def test_loading_area_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored areas on start."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
     hass_storage[ar.STORAGE_KEY] = {
         "version": ar.STORAGE_VERSION_MAJOR,
         "minor_version": ar.STORAGE_VERSION_MINOR,
@@ -309,8 +402,10 @@ async def test_loading_area_from_storage(
                     "labels": ["mock-label1", "mock-label2"],
                     "name": "mock",
                     "picture": "blah",
-                    "created_at": utcnow().isoformat(),
-                    "modified_at": utcnow().isoformat(),
+                    "created_at": created_at.isoformat(),
+                    "modified_at": modified_at.isoformat(),
+                    "temperature_entity_id": "sensor.mock_temperature",
+                    "humidity_entity_id": "sensor.mock_humidity",
                 }
             ]
         },
@@ -320,6 +415,20 @@ async def test_loading_area_from_storage(
     registry = ar.async_get(hass)
 
     assert len(registry.areas) == 1
+    area = registry.areas["12345A"]
+    assert area == ar.AreaEntry(
+        aliases={"alias_1", "alias_2"},
+        floor_id="first_floor",
+        icon="mdi:garage",
+        id="12345A",
+        labels={"mock-label1", "mock-label2"},
+        name="mock",
+        picture="blah",
+        created_at=created_at,
+        modified_at=modified_at,
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
+    )
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -329,15 +438,64 @@ async def test_migration_from_1_1(
     """Test migration from version 1.1."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": 1,
-        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+        "data": {
+            "areas": [
+                {"id": "12345A", "name": "AAA"},
+                {"id": "12345B", "name": "CCC"},
+                {"id": "12345C", "name": "bbb"},
+            ]
+        },
     }
 
     await ar.async_load(hass)
     registry = ar.async_get(hass)
 
     # Test data was loaded
-    entry = registry.async_get_or_create("mock")
+    entry = registry.async_get_or_create("AAA")
     assert entry.id == "12345A"
+
+    # Check sort order
+    assert list(registry.async_list_areas()) == [
+        ar.AreaEntry(
+            name="AAA",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345A",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="bbb",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345C",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="CCC",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345B",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+    ]
 
     # Check we store migrated data
     await flush_store(registry._store)
@@ -349,15 +507,43 @@ async def test_migration_from_1_1(
             "areas": [
                 {
                     "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "floor_id": None,
+                    "humidity_entity_id": None,
                     "icon": None,
                     "id": "12345A",
                     "labels": [],
-                    "name": "mock",
-                    "picture": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
                     "modified_at": "1970-01-01T00:00:00+00:00",
-                }
+                    "name": "AAA",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
+                    "humidity_entity_id": None,
+                    "icon": None,
+                    "id": "12345C",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bbb",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
+                    "humidity_entity_id": None,
+                    "icon": None,
+                    "id": "12345B",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CCC",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
             ]
         },
     }
@@ -381,6 +567,54 @@ async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
     assert len(area_registry.areas) == 1
 
     assert area_registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
+
+
+async def test_async_get_areas_by_alias(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias."""
+    area1 = area_registry.async_create("Mock1", aliases=("alias_1", "alias_2"))
+    area2 = area_registry.async_create("Mock2", aliases=("alias_1", "alias_3"))
+
+    assert len(area_registry.areas) == 2
+
+    assert area_registry.async_get_areas_by_alias("A l i a s_1") == [area1, area2]
+    assert area_registry.async_get_areas_by_alias("A l i a s_2") == [area1]
+    assert area_registry.async_get_areas_by_alias("A l i a s_3")
+
+
+async def test_async_get_areas_by_alias_collisions(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias when the aliases have collisions."""
+    area = area_registry.async_create("Mock1")
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
+
+    # Add an alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(
+        area.id, aliases={"alias1", "alias 1", "alias  1"}
+    )
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove all aliases
+    updated_area = area_registry.async_update(area.id, aliases={})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
 
 
 async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:

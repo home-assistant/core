@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from rocketchat_API.APIExceptions.RocketExceptions import (
     RocketAuthenticationException,
@@ -19,7 +20,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_ROOM, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +53,10 @@ def get_service(
     except RocketConnectionException:
         _LOGGER.warning("Unable to connect to Rocket.Chat server at %s", url)
     except RocketAuthenticationException:
-        _LOGGER.warning("Rocket.Chat authentication failed for user %s", username)
-        _LOGGER.info("Please check your username/password")
+        _LOGGER.warning(
+            "Rocket.Chat authentication failed for user %s. Please check your username/password",
+            username,
+        )
 
     return None
 
@@ -67,7 +70,7 @@ class RocketChatNotificationService(BaseNotificationService):
         self._room = room
         self._server = RocketChat(username, password, server_url=url)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
         resp = self._server.chat_post_message(message, channel=self._room, **data)

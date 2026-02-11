@@ -6,12 +6,12 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.climate import PRESET_AWAY
-from homeassistant.components.generic_thermostat.climate import (
+from homeassistant.components.generic_thermostat.const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
-    CONF_NAME,
+    CONF_KEEP_ALIVE,
     CONF_PRESETS,
     CONF_SENSOR,
     DOMAIN,
@@ -21,6 +21,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     STATE_OFF,
     UnitOfTemperature,
 )
@@ -85,6 +86,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_KEEP_ALIVE: {"seconds": 60},
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
@@ -132,3 +134,94 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
     assert hass.states.get("climate.my_thermostat") == snapshot(name="without_away")
+
+
+async def test_config_flow_preset_accepts_float(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test the config flow with preset is a float."""
+    with patch(
+        "homeassistant.components.generic_thermostat.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result == snapshot(name="init", include=SNAPSHOT_FLOW_PROPS)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My thermostat",
+                CONF_HEATER: "switch.run",
+                CONF_SENSOR: "sensor.temperature",
+                CONF_AC_MODE: False,
+                CONF_COLD_TOLERANCE: 0.3,
+                CONF_HOT_TOLERANCE: 0.3,
+            },
+        )
+        assert result == snapshot(name="presets", include=SNAPSHOT_FLOW_PROPS)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PRESETS[PRESET_AWAY]: 10.4,
+            },
+        )
+        assert result == snapshot(name="create_entry", include=SNAPSHOT_FLOW_PROPS)
+
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["options"] == {
+        "ac_mode": False,
+        "away_temp": 10.4,
+        "cold_tolerance": 0.3,
+        "heater": "switch.run",
+        "hot_tolerance": 0.3,
+        "name": "My thermostat",
+        "target_sensor": "sensor.temperature",
+    }
+
+
+async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
+    """Test the config flow when keep_alive is set."""
+    with patch(
+        "homeassistant.components.generic_thermostat.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        # Keep_alive input data for test
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "My thermostat",
+                CONF_HEATER: "switch.run",
+                CONF_SENSOR: "sensor.temperature",
+                CONF_AC_MODE: False,
+                CONF_COLD_TOLERANCE: 0.3,
+                CONF_HOT_TOLERANCE: 0.3,
+                CONF_KEEP_ALIVE: {"seconds": 60},
+            },
+        )
+
+        # Complete config flow
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PRESETS[PRESET_AWAY]: 21,
+            },
+        )
+
+        assert result["type"] == "create_entry"
+
+        val = result["options"].get(CONF_KEEP_ALIVE)
+        assert val is not None
+        assert isinstance(val, dict)
+        assert val == {"seconds": 60}
+
+        await hass.async_block_till_done()
+        assert len(mock_setup_entry.mock_calls) == 1

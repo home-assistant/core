@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 
-from airthings_ble import AirthingsDevice
+from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,16 +16,18 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     async_entries_for_device,
@@ -34,10 +36,16 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+CONNECTIVITY_MODE_MAP = {
+    AirthingsConnectivityMode.BLE.value: "bluetooth",
+    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
+    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
+}
 
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
@@ -67,18 +75,21 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     "battery": SensorEntityDescription(
         key="battery",
@@ -86,26 +97,55 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "voc": SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
         translation_key="illuminance",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "lux": SensorEntityDescription(
+        key="lux",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "noise": SensorEntityDescription(
+        key="noise",
+        translation_key="ambient_noise",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    "connectivity_mode": SensorEntityDescription(
+        key="connectivity_mode",
+        translation_key="connectivity_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CONNECTIVITY_MODE_MAP.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
+
+PARALLEL_UPDATES = 0
 
 
 @callback
@@ -146,7 +186,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirthingsBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
     is_metric = hass.config.units is METRIC_SYSTEM
@@ -230,4 +270,12 @@ class AirthingsSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data.sensors[self.entity_description.key]
+        value = self.coordinator.data.sensors[self.entity_description.key]
+
+        # Map connectivity mode to enum values
+        if self.entity_description.key == "connectivity_mode":
+            if not isinstance(value, str):
+                return None
+            return CONNECTIVITY_MODE_MAP.get(value)
+
+        return value

@@ -33,7 +33,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
@@ -73,7 +73,9 @@ IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
@@ -85,9 +87,9 @@ async def async_setup_entry(
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
+            _LOGGER.debug("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
-        _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
+        _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
         async_add_entities([device])
@@ -141,7 +143,6 @@ class ControllerDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
@@ -153,14 +154,24 @@ class ControllerDevice(ClimateEntity):
             | ClimateEntityFeature.TURN_ON
         )
 
-        # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
-        # otherwise the unit determines which zone to use as target. See interface manual p. 8
-        # It appears some systems may have a different numbering system, so will trigger
-        # this if the control zone is > total zones.
+        # Typically, iZone will automatically set the controller's target
+        # temperature; but there are situations where Home Assistant should be
+        # allowed to set it:
+        #
+        # 1. The controller is in RAS mode (i.e., not in master/slave mode).
+        # 2. The controller is in master mode, but the control zone is set to
+        #    zone 13 (i.e., the master unit itself), or an invalid zone
+        #    (greater than the total number of zones). In this case, the
+        #    master unit is controlling the temperature directly.
+        # 3. Any of the zones do not have a temperature sensor
         if (
-            controller.ras_mode == "master"
-            and controller.zone_ctrl > controller.zones_total
-        ) or controller.ras_mode == "RAS":
+            controller.ras_mode == "RAS"
+            or (
+                controller.ras_mode == "master"
+                and controller.zone_ctrl > controller.zones_total
+            )
+            or any(zone.temp_current is None for zone in controller.zones)
+        ):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._state_to_pizone = {
@@ -245,9 +256,9 @@ class ControllerDevice(ClimateEntity):
             return
 
         if available:
-            _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
+            _LOGGER.warning("Reconnected controller %s ", self._controller.device_uid)
         else:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Controller %s disconnected due to exception: %s",
                 self._controller.device_uid,
                 ex,
@@ -441,6 +452,9 @@ class ZoneDevice(ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
+    _attr_supported_features = (
+        ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+    )
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""

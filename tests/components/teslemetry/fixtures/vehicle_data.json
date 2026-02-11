@@ -3,7 +3,7 @@
     "id": 1234,
     "user_id": 1234,
     "vehicle_id": 1234,
-    "vin": "LRWXF7EK4KC700000",
+    "vin": "LRW3F7EK4NC700000",
     "color": null,
     "access_type": "OWNER",
     "granular_access": {
@@ -112,6 +112,7 @@
       "wiper_blade_heater": false
     },
     "drive_state": {
+      "active_route_destination": "Home",
       "active_route_latitude": 30.2226265,
       "active_route_longitude": -97.6236871,
       "active_route_miles_to_arrival": 0.039491,
@@ -191,7 +192,7 @@
       "api_version": 71,
       "autopark_state_v2": "unavailable",
       "calendar_supported": true,
-      "car_version": "2023.44.30.8 06f534d46010",
+      "car_version": "2026.0.0 06f534d46010",
       "center_display_state": 0,
       "dashcam_clip_save_available": true,
       "dashcam_state": "Recording",

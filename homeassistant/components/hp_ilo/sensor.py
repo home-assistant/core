@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -131,9 +131,6 @@ class HpIloSensor(SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
-
-        if sensor_value_template is not None:
-            sensor_value_template.hass = hass
         self._sensor_value_template = sensor_value_template
 
         self._state = None

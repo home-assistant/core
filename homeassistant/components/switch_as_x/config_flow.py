@@ -18,12 +18,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 
 TARGET_DOMAIN_OPTIONS = [
-    selector.SelectOptionDict(value=Platform.COVER, label="Cover"),
-    selector.SelectOptionDict(value=Platform.FAN, label="Fan"),
-    selector.SelectOptionDict(value=Platform.LIGHT, label="Light"),
-    selector.SelectOptionDict(value=Platform.LOCK, label="Lock"),
-    selector.SelectOptionDict(value=Platform.SIREN, label="Siren"),
-    selector.SelectOptionDict(value=Platform.VALVE, label="Valve"),
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SIREN,
+    Platform.VALVE,
 ]
 
 CONFIG_FLOW = {
@@ -35,7 +35,9 @@ CONFIG_FLOW = {
                 ),
                 vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
                 vol.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
-                    selector.SelectSelectorConfig(options=TARGET_DOMAIN_OPTIONS),
+                    selector.SelectSelectorConfig(
+                        options=TARGET_DOMAIN_OPTIONS, translation_key="target_domain"
+                    ),
                 ),
             }
         )
@@ -54,9 +56,10 @@ class SwitchAsXConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title and hide the wrapped entity if registered."""

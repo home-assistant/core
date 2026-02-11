@@ -1,0 +1,103 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration doesn't provide any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration doesn't provide any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+    comment: Handled by coordinator.
+  entity-unique-id:
+    status: done
+    comment: Using confid entry ID as the dependency mcstatus doesn't provide a unique information.
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: |
+      Raising ConfigEntryNotReady, if either the initialization or
+      refresh of coordinator isn't successful.
+  unique-config-entry:
+    status: done
+    comment: |
+      As there is no unique information available from the dependency mcstatus,
+      the server address is used to identify that the same service is already configured.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration doesn't provide any service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration doesn't support any configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: Handled by coordinator.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by coordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication is required for the integration.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: No discovery possible.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No discovery possible. Users can use the (local or public) hostname instead of an IP address,
+      if static IP addresses cannot be configured.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: A minecraft server can only have one device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No repair use-cases for this integration.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: |
+      Lookup API of the dependency mcstatus for Bedrock Edition servers is not async,
+      but is non-blocking and therefore OK to be called. Refer to mcstatus FAQ
+      https://mcstatus.readthedocs.io/en/stable/pages/faq/#why-doesn-t-bedrockserver-have-an-async-lookup-method
+  inject-websession:
+    status: exempt
+    comment: Integration isn't making any HTTP requests.
+  strict-typing: done

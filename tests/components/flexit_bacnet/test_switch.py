@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 ENTITY_ID = "switch.device_name_electric_heater"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switches(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -59,7 +60,7 @@ async def test_switches_implementation(
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "disable_electric_heater")
+    mocked_method = mock_flexit_bacnet.disable_electric_heater
     assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
@@ -73,7 +74,7 @@ async def test_switches_implementation(
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "enable_electric_heater")
+    mocked_method = mock_flexit_bacnet.enable_electric_heater
     assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -88,7 +89,7 @@ async def test_switches_implementation(
             blocking=True,
         )
 
-    mocked_method = getattr(mock_flexit_bacnet, "disable_electric_heater")
+    mocked_method = mock_flexit_bacnet.disable_electric_heater
     assert len(mocked_method.mock_calls) == 2
 
     mock_flexit_bacnet.disable_electric_heater.side_effect = None
@@ -114,7 +115,7 @@ async def test_switches_implementation(
             blocking=True,
         )
 
-    mocked_method = getattr(mock_flexit_bacnet, "enable_electric_heater")
+    mocked_method = mock_flexit_bacnet.enable_electric_heater
     assert len(mocked_method.mock_calls) == 2
 
     mock_flexit_bacnet.enable_electric_heater.side_effect = None

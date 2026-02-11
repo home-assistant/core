@@ -16,7 +16,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
@@ -59,26 +59,21 @@ TYPES_DOORBELL: tuple[AugustEventEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AugustConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the august event platform."""
     data = config_entry.runtime_data
-    entities: list[AugustEventEntity] = []
-
-    for lock in data.locks:
-        detail = data.get_device_detail(lock.device_id)
-        if detail.doorbell:
-            entities.extend(
-                AugustEventEntity(data, lock, description)
-                for description in TYPES_DOORBELL
-            )
-
-    for doorbell in data.doorbells:
-        entities.extend(
-            AugustEventEntity(data, doorbell, description)
-            for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
-        )
-
+    entities: list[AugustEventEntity] = [
+        AugustEventEntity(data, lock, description)
+        for description in TYPES_DOORBELL
+        for lock in data.locks
+        if (detail := data.get_device_detail(lock.device_id)) and detail.doorbell
+    ]
+    entities.extend(
+        AugustEventEntity(data, doorbell, description)
+        for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
+        for doorbell in data.doorbells
+    )
     async_add_entities(entities)
 
 
@@ -86,7 +81,6 @@ class AugustEventEntity(AugustDescriptionEntity, EventEntity):
     """An august event entity."""
 
     entity_description: AugustEventEntityDescription
-    _attr_has_entity_name = True
     _last_activity: Activity | None = None
 
     @callback

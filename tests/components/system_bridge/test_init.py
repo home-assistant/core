@@ -81,3 +81,53 @@ async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
     assert config_entry.minor_version == config_entry_minor_version
     assert config_entry.data == config_entry_data
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_timeout(hass: HomeAssistant) -> None:
+    """Test setup with timeout error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data=FIXTURE_USER_INPUT,
+        version=SystemBridgeConfigFlow.VERSION,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
+    )
+
+    with patch(
+        "systembridgeconnector.version.Version.check_supported",
+        side_effect=TimeoutError,
+    ):
+        config_entry.add_to_hass(hass)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result is False
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_get_data_timeout(hass: HomeAssistant) -> None:
+    """Test coordinator handling timeout during get_data."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data=FIXTURE_USER_INPUT,
+        version=SystemBridgeConfigFlow.VERSION,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
+    )
+
+    with (
+        patch(
+            "systembridgeconnector.version.Version.check_supported",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.system_bridge.coordinator.SystemBridgeDataUpdateCoordinator.async_get_data",
+            side_effect=TimeoutError,
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result is False
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY

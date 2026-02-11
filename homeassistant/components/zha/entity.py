@@ -4,18 +4,26 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import functools
+from functools import partial
 import logging
 from typing import Any
 
+from propcache.api import cached_property
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import (
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_VIA_DEVICE,
+    EntityCategory,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
 from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
@@ -43,15 +51,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         meta = self.entity_data.entity.info_object
         self._attr_unique_id = meta.unique_id
 
-        if meta.translation_key is not None:
-            self._attr_translation_key = meta.translation_key
-        elif meta.fallback_name is not None:
-            # Only custom quirks will create entities with just a fallback name!
-            #
-            # This is to allow local development and to register niche devices, since
-            # their translation_key will probably never be added to `zha/strings.json`.
-            self._attr_name = meta.fallback_name
-
         if meta.entity_category is not None:
             self._attr_entity_category = EntityCategory(meta.entity_category)
 
@@ -59,10 +58,51 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             meta.entity_registry_enabled_default
         )
 
+        if meta.translation_key is not None:
+            self._attr_translation_key = meta.translation_key
+
+        if meta.translation_placeholders is not None:
+            self._attr_translation_placeholders = meta.translation_placeholders
+
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity.
+
+        Built-in quirks have translations in HA, so those are used.
+        Custom quirks with new translation keys won't have translations.
+        For them, the fallback name should be used instead.
+        If a device class is set but no translation key,
+        the device class name is used.
+        """
+        meta = self.entity_data.entity.info_object
+        if meta.primary:
+            self._attr_name = None
+            return super().name
+
+        # If we do not have a fallback_name, use default behavior
+        if meta.fallback_name is None:
+            return super().name
+
+        # If we do not have a translation key, only use fallback_name
+        # if device class is also missing
+        if meta.translation_key is None:
+            if super().name in (UNDEFINED, None):
+                self._attr_name = meta.fallback_name
+            return super().name
+
+        # If we do have a translation key, only use fallback_name
+        # if translation is missing (custom quirks)
+        if not (
+            (translation_key := self._name_translation_key) is not None
+            and translation_key in self.platform_data.platform_translations
+        ):
+            self._attr_name = meta.fallback_name
+        return super().name
+
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.entity_data.device_proxy.device.available
+        return self.entity_data.entity.available
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -71,14 +111,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         ieee = zha_device_info["ieee"]
         zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, zha_gateway.state.node_info.ieee),
         )
+        if ieee != str(zha_gateway.state.node_info.ieee):
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                str(zha_gateway.state.node_info.ieee),
+            )
+        return device_info
 
     @callback
     def _handle_entity_events(self, event: Any) -> None:
@@ -102,7 +147,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             async_dispatcher_connect(
                 self.hass,
                 remove_signal,
-                functools.partial(self.async_remove, force_remove=True),
+                partial(self.async_remove, force_remove=True),
             )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(

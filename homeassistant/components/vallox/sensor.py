@@ -21,19 +21,19 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
-    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
+    VALLOX_PROFILE_TO_PRESET_MODE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ValloxSensorEntity(ValloxEntity, SensorEntity):
@@ -78,7 +78,7 @@ class ValloxProfileSensor(ValloxSensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
@@ -278,7 +278,9 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
     name = hass.data[DOMAIN][entry.entry_id]["name"]

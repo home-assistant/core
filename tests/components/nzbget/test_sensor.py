@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,9 +18,8 @@ from homeassistant.util import dt as dt_util
 from . import init_integration
 
 
-async def test_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, nzbget_api
-) -> None:
+@pytest.mark.usefixtures("nzbget_api")
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
@@ -35,14 +36,14 @@ async def test_sensors(
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1.250000",
+            "1.25",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2.500000",
+            "2.5",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
@@ -69,7 +70,7 @@ async def test_sensors(
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "1.000000",
+            "1.0",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),

@@ -1,0 +1,37 @@
+{
+  "entity": {
+    "button": {
+      "reconnect_zigbee_router": {
+        "default": "mdi:connection"
+      },
+      "zigbee_flash_mode": {
+        "default": "mdi:memory-arrow-down"
+      }
+    },
+    "sensor": {
+      "device_mode": {
+        "default": "mdi:connection"
+      },
+      "firmware_channel": {
+        "default": "mdi:update"
+      },
+      "zigbee_type": {
+        "default": "mdi:zigbee"
+      }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "default": "mdi:autorenew"
+      },
+      "disable_led": {
+        "default": "mdi:led-off"
+      },
+      "night_mode": {
+        "default": "mdi:lightbulb-night"
+      },
+      "vpn_enabled": {
+        "default": "mdi:shield-lock"
+      }
+    }
+  }
+}

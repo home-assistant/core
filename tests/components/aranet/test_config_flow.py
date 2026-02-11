@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.aranet.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -275,3 +276,31 @@ async def test_async_step_user_integrations_disabled(hass: HomeAssistant) -> Non
         )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "integrations_disabled"
+
+
+async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
+    """Test the user initiated form can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", source=SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.aranet.config_flow.async_discovered_service_info",
+        return_value=[VALID_DATA_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"address": "aa:bb:cc:dd:ee:ff"}
+        )
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Aranet4 12345"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"

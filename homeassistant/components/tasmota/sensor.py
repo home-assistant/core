@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -35,16 +34,17 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 DEVICE_CLASS = "device_class"
 STATE_CLASS = "state_class"
@@ -227,7 +227,7 @@ SENSOR_UNIT_MAP = {
     hc.PERCENTAGE: PERCENTAGE,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
-    hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,
+    hc.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     hc.SPEED_KILOMETERS_PER_HOUR: UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -243,7 +243,7 @@ SENSOR_UNIT_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota sensor dynamically through discovery."""
 

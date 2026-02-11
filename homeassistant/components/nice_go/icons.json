@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "event": {
+      "barrier_obstructed": {
+        "default": "mdi:garage-alert"
+      }
+    },
+    "switch": {
+      "vacation_mode": {
+        "default": "mdi:beach"
+      }
+    }
+  }
+}

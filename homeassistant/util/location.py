@@ -163,14 +163,15 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query whoami.home-assistant.io for location data."""
     try:
         resp = await session.get(
-            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL, timeout=30
+            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL,
+            timeout=aiohttp.ClientTimeout(total=30),
         )
-    except (aiohttp.ClientError, TimeoutError):
+    except aiohttp.ClientError, TimeoutError:
         return None
 
     try:
         raw_info = await resp.json()
-    except (aiohttp.ClientError, ValueError):
+    except aiohttp.ClientError, ValueError:
         return None
 
     return {

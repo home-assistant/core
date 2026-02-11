@@ -8,7 +8,6 @@ from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType, Direction
-import voluptuous as vol
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -18,8 +17,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -27,7 +25,6 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import BondConfigEntry
-from .const import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
 from .models import BondData
 from .utils import BondDevice
@@ -40,16 +37,10 @@ PRESET_MODE_BREEZE = "Breeze"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
     data = entry.runtime_data
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_FAN_SPEED_TRACKED_STATE,
-        {vol.Required("speed"): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
-        "async_set_speed_belief",
-    )
 
     async_add_entities(
         BondFan(data, device)
@@ -69,7 +60,7 @@ class BondFan(BondEntity, FanEntity):
         super().__init__(data, device)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         if self._device.supports_speed():
             features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():

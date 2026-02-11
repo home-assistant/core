@@ -34,7 +34,8 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
             },
             name=f"Wallbox {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
-            model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
+            model=self.coordinator.data[CHARGER_NAME_KEY].split(" SN")[0],
+            model_id=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
             sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
                 CHARGER_CURRENT_VERSION_KEY
             ],
