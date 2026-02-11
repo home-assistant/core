@@ -546,7 +546,7 @@ async def test_list_backups_with_pagination(
     }
 
     # Setup mock client
-    mock_client = mock_config_entry.runtime_data
+    mock_client = mock_config_entry.runtime_data.client
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
