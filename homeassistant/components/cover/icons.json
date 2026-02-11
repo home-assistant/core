@@ -52,6 +52,14 @@
         "opening": "mdi:arrow-right"
       }
     },
+    "projector_screen": {
+      "default": "mdi:projector-screen",
+      "state": {
+        "closed": "mdi:projector-screen-off",
+        "closing": "mdi:arrow-up-box",
+        "opening": "mdi:arrow-down-box"
+      }
+    },
     "shade": {
       "default": "mdi:roller-shade",
       "state": {

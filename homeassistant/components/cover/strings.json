@@ -72,6 +72,9 @@
     "gate": {
       "name": "Gate"
     },
+    "projector_screen": {
+      "name": "Projector screen"
+    },
     "shade": {
       "name": "Shade"
     },
