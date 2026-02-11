@@ -177,23 +177,22 @@ async def test_setup_config_entry(
 
 @pytest.mark.parametrize(
     ("count", "config", "state_template"),
-    [(1, {}, "It {{ states.sensor.test_state.state }}.")],
+    [(1, {}, "{{ states('sensor.test_state') }}")],
 )
 @pytest.mark.parametrize(
-    ("style", "initial_state"),
-    [
-        (ConfigurationStyle.LEGACY, "It ."),
-        (ConfigurationStyle.MODERN, "It ."),
-        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
-    ],
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_sensor")
-async def test_sensor_state(hass: HomeAssistant, initial_state: str) -> None:
+async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test template."""
-    assert hass.states.get(TEST_SENSOR.entity_id).state == initial_state
+    assert hass.states.get(TEST_SENSOR.entity_id).state == STATE_UNKNOWN
 
-    await async_trigger(hass, TEST_STATE_SENSOR, "Works")
+    await async_trigger(hass, TEST_STATE_SENSOR, "It Works.")
     assert hass.states.get(TEST_SENSOR.entity_id).state == "It Works."
+
+    await async_trigger(hass, TEST_STATE_SENSOR, STATE_UNKNOWN)
+    assert hass.states.get(TEST_SENSOR.entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

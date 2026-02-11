@@ -240,6 +240,11 @@ async def test_template_state_text(
             entity_id == "sensor.uv_index" and style == ConfigurationStyle.LEGACY
         )
 
+    await async_trigger(hass, "sensor.condition", STATE_UNKNOWN)
+    state = hass.states.get(TEST_WEATHER.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize(
     ("style", "config"),

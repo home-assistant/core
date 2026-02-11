@@ -246,6 +246,14 @@ async def test_template_number(
     await async_trigger(hass, TEST_STATE_ENTITY_ID, 2)
     _verify(hass, 2, 2, 2, 6, None)
 
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_UNKNOWN)
+    state = hass.states.get(TEST_NUMBER.entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_STEP) == 2
+    assert state.attributes.get(ATTR_MAX) == 2
+    assert state.attributes.get(ATTR_MIN) == 6
+    assert state.attributes.get(CONF_UNIT_OF_MEASUREMENT) is None
+
 
 def _verify(
     hass: HomeAssistant,

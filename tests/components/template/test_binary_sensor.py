@@ -207,7 +207,8 @@ async def setup_single_attribute_binary_sensor(
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template", "extra_config"), [(1, "{{ True }}", {})]
+    ("count", "state_template", "extra_config"),
+    [(1, "{{ states('binary_sensor.test_state') }}", {})],
 )
 @pytest.mark.parametrize(
     "style",
@@ -224,6 +225,12 @@ async def test_setup_minimal(hass: HomeAssistant) -> None:
     assert state.name == TEST_OBJECT_ID
     assert state.state == STATE_ON
     assert state.attributes == {"friendly_name": TEST_OBJECT_ID}
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

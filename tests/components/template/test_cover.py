@@ -358,6 +358,7 @@ async def setup_empty_action(
         (CoverState.CLOSED, CoverState.CLOSED, ""),
         (CoverState.OPENING, CoverState.OPENING, ""),
         (CoverState.CLOSING, CoverState.CLOSING, ""),
+        (STATE_UNKNOWN, STATE_UNKNOWN, ""),
         ("dog", STATE_UNKNOWN, "Received invalid cover state: dog"),
         ("cat", STATE_UNKNOWN, "Received invalid cover state: cat"),
         ("bear", STATE_UNKNOWN, "Received invalid cover state: bear"),

@@ -786,6 +786,15 @@ async def test_template_state_text(hass: HomeAssistant, setup_state_light) -> No
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
+    set_state = STATE_UNKNOWN
+    hass.states.async_set("light.test_state", set_state)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.state == set_state
+    assert state.attributes["color_mode"] is None
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
