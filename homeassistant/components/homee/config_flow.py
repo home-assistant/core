@@ -15,7 +15,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import HomeeConfigEntry
 from .const import (
     DOMAIN,
     RESULT_CANNOT_CONNECT,
@@ -115,9 +114,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipv6_address")
 
         # If an already configured homee reports with a second IP, abort.
-        existing_entry: HomeeConfigEntry | None = await self.async_set_unique_id(
-            self._name
-        )
+        existing_entry = await self.async_set_unique_id(self._name)
         if (
             existing_entry
             and existing_entry.runtime_data.connected
