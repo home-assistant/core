@@ -20,7 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import MastodonConfigEntry
+from .const import ATTR_BIO, ATTR_CREATED, ATTR_DISPLAY_NAME
+from .coordinator import MastodonConfigEntry, MastodonCoordinator
 from .entity import MastodonEntity
 from .utils import construct_mastodon_username
 
@@ -34,6 +35,7 @@ class MastodonSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Account, InstanceV2 | Instance], StateType | datetime]
     attributes_fn: Callable[[Account], Mapping[str, Any]] | None = None
+    unrecorded_attributes: frozenset[str] = frozenset()
     entity_picture_fn: Callable[[Account], str] | None = None
 
 
@@ -41,9 +43,9 @@ def account_meta(data: Account) -> Mapping[str, Any]:
     """Account attributes."""
 
     return {
-        "display_name": data.display_name,
-        "bio": data.note,
-        "created": dt_util.as_local(data.created_at).date(),
+        ATTR_DISPLAY_NAME: data.display_name,
+        ATTR_BIO: data.note,
+        ATTR_CREATED: dt_util.as_local(data.created_at).date(),
     }
 
 
@@ -81,6 +83,7 @@ ENTITY_DESCRIPTIONS = (
         translation_key="username",
         value_fn=lambda data, instance: construct_mastodon_username(instance, data),
         attributes_fn=account_meta,
+        unrecorded_attributes=frozenset({ATTR_DISPLAY_NAME, ATTR_BIO, ATTR_CREATED}),
         entity_picture_fn=lambda data: data.avatar,
     ),
 )
@@ -108,6 +111,17 @@ class MastodonSensorEntity(MastodonEntity, SensorEntity):
     """A Mastodon sensor entity."""
 
     entity_description: MastodonSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MastodonCoordinator,
+        entity_description: MastodonSensorEntityDescription,
+        data: MastodonConfigEntry,
+    ) -> None:
+        """Initialize the sensor entity."""
+        super().__init__(coordinator, entity_description, data)
+        self.entity_description = entity_description
+        self._unrecorded_attributes = entity_description.unrecorded_attributes
 
     @property
     def native_value(self) -> StateType | datetime:
