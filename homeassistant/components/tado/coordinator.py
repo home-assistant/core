@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-if TYPE_CHECKING:
-    from . import TadoConfigEntry
 
 from .const import (
     CONF_FALLBACK,
@@ -32,6 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
+
+type TadoConfigEntry = ConfigEntry[TadoData]
+
+
+@dataclass
+class TadoData:
+    """Class to hold Tado data."""
+
+    coordinator: TadoDataUpdateCoordinator
+    mobile_coordinator: TadoMobileDeviceUpdateCoordinator
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
