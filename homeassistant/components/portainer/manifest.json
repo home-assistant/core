@@ -4,7 +4,7 @@
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/portainer",
-  "integration_type": "hub",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
   "requirements": ["pyportainer==1.0.23"]

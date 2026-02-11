@@ -145,6 +145,30 @@
           "title": "Model-specific options"
         }
       }
+    },
+    "tts": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::openai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Text-to-speech",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "tts_speed": "Speed"
+          },
+          "data_description": {
+            "prompt": "Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, whispering, and more",
+            "tts_speed": "Speed of the generated speech"
+          }
+        }
+      }
     }
   },
   "exceptions": {
