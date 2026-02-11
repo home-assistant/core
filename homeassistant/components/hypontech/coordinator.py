@@ -22,14 +22,7 @@ class HypontechCoordinatorData:
     plants: dict[str, PlantData]
 
 
-@dataclass
-class HypontechData:
-    """Store runtime data."""
-
-    coordinator: HypontechDataCoordinator
-
-
-type HypontechConfigEntry = ConfigEntry[HypontechData]
+type HypontechConfigEntry = ConfigEntry[HypontechDataCoordinator]
 
 
 class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):

@@ -38,7 +38,6 @@ class HypontechPlantSensorDescription(SensorEntityDescription):
 OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
     HypontechSensorDescription(
         key="pv_power",
-        translation_key="pv_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -65,7 +64,6 @@ OVERVIEW_SENSORS: tuple[HypontechSensorDescription, ...] = (
 PLANT_SENSORS: tuple[HypontechPlantSensorDescription, ...] = (
     HypontechPlantSensorDescription(
         key="pv_power",
-        translation_key="pv_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -96,7 +94,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities: list[SensorEntity] = [
         HypontechOverviewSensor(coordinator, desc) for desc in OVERVIEW_SENSORS
@@ -151,6 +149,6 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data.plants[self.plant_id]
-        )
+        if self.plant is None:
+            return None
+        return self.entity_description.value_fn(self.plant)

@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -25,16 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    session = async_get_clientsession(hass)
-    hypon = HyponCloud(data[CONF_USERNAME], data[CONF_PASSWORD], session)
-    await hypon.connect()
-
-
 class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hypontech Cloud."""
 
@@ -45,7 +34,11 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
+                session = async_get_clientsession(self.hass)
+                hypon = HyponCloud(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+                )
+                await hypon.connect()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except (TimeoutError, ConnectionError):

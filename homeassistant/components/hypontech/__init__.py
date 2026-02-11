@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import HypontechConfigEntry, HypontechData, HypontechDataCoordinator
+from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
     coordinator = HypontechDataCoordinator(hass, entry, hypontech_cloud)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = HypontechData(coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

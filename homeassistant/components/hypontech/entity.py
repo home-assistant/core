@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from hyponcloud import PlantData
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,9 +21,8 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name="Hypontech",
+            name="Overview",
             manufacturer="Hypontech",
-            model="Overview",
         )
 
 
@@ -39,5 +40,14 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
             identifiers={(DOMAIN, plant_id)},
             name=plant.plant_name,
             manufacturer="Hypontech",
-            model="Plant",
         )
+
+    @property
+    def plant(self) -> PlantData | None:
+        """Return the plant data."""
+        return self.coordinator.data.plants.get(self.plant_id)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.plant is not None

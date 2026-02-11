@@ -26,9 +26,6 @@
       "lifetime_energy": {
         "name": "Lifetime energy"
       },
-      "pv_power": {
-        "name": "Power"
-      },
       "today_energy": {
         "name": "Today energy"
       }
