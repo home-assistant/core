@@ -68,9 +68,7 @@ async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
             assert state.state == str(getattr(device, field))
 
 
-@pytest.mark.parametrize(
-    "mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True
-)
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
 async def test_sensor_platform_token_needed(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
     entry = await init_integration(hass, USERNAME, TOKEN)
