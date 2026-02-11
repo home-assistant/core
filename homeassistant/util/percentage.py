@@ -46,13 +46,21 @@ def percentage_to_ordered_list_item[_T](ordered_list: list[_T], percentage: int)
         26-50: medium
         51-75: high
         76-100: very_high
+
+        or
+
+        1-33: low
+        34-67: medium
+        68-100: high
     """
     if not (list_len := len(ordered_list)):
         raise ValueError("The ordered list is empty")
 
     for offset, speed in enumerate(ordered_list):
         list_position = offset + 1
-        upper_bound = (list_position * 100) // list_len
+        # rounding should be used to ensure that the upper bound is inclusive
+        # some fan modules/controllers do not store percentage as floats and round (IE 66.666 => 67)
+        upper_bound = round((list_position * 100) / list_len)
         if percentage <= upper_bound:
             return speed
 
