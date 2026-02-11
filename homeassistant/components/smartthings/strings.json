@@ -157,11 +157,44 @@
       }
     },
     "number": {
+      "anti_legionella_function_day": {
+        "name": "Anti-legionella function day"
+      },
+      "anti_legionella_function_hold_time": {
+        "name": "Anti-legionella function hold time"
+      },
+      "anti_legionella_function_start_time": {
+        "name": "Anti-legionella function start time"
+      },
+      "anti_legionella_function_target_temperature": {
+        "name": "Anti-legionella function target temperature"
+      },
+      "back_up_heater_1st_step": {
+        "name": "Back up heater 1st step"
+      },
+      "back_up_heater_2nd_step": {
+        "name": "Back up heater 2nd step"
+      },
+      "booster_heater_capacity_kw_rating": {
+        "name": "Booster heater capacity"
+      },
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
       },
       "cooler_temperature": {
         "name": "Fridge temperature"
+      },
+      "dhw_hysteresis_temperature_difference_hp_off": {
+        "name": "DHW hysteresis temperature difference (HP OFF)"
+      },
+      "dhw_hysteresis_temperature_difference_hp_on": {
+        "name": "DHW hysteresis temperature difference (HP ON)"
+      },
+      "dhw_saving_mode": {
+        "name": "DHW saving mode"
+      },
+      "dhw_temp_reduction_offset": {
+        "name": "Temperature reduction offset for DHW energy saving mode"
       },
       "freezer_temperature": {
         "name": "Freezer temperature"
@@ -169,15 +202,112 @@
       "hood_fan_speed": {
         "name": "Fan speed"
       },
+      "hotwater_boost_timer_duration": {
+        "name": "Hotwater boost timer duration"
+      },
+      "inverter_pump_control_control_factor_gain": {
+        "name": "Inverter pump control factor gain"
+      },
+      "inverter_pump_control_pwm_minimum_output": {
+        "name": "Inverter pump control PWM minimum output"
+      },
+      "inverter_pump_control_target_deltat": {
+        "name": "Inverter pump control target delta T"
+      },
+      "max_cylinder_heating_time_hp_before_booster_assist": {
+        "name": "Max cylinder heating time (HP before booster assist)"
+      },
+      "max_cylinder_heating_time_hp_vs_space_heating": {
+        "name": "Max cylinder heating time (HP vs space heating)"
+      },
+      "maximum_dhw_tank_temperature_heat_pump_limit": {
+        "name": "Maximum DHW tank temperature (heat pump limit)"
+      },
+      "maximum_dhw_tank_temperature_user_limit": {
+        "name": "Maximum DHW tank temperature (user limit)"
+      },
+      "mixing_valve_target_temperature_difference_heating": {
+        "name": "Mixing valve target temperature difference (heating)"
+      },
+      "outdoor_temperature_for_priority_changeover": {
+        "name": "Outdoor temperature for priority changeover"
+      },
+      "pv_control_heating_setpoint_addition": {
+        "name": "PV control heating setpoint addition"
+      },
+      "remote_controller_room_temp_control_internal_sensor": {
+        "name": "Remote controller room temp control (internal sensor)"
+      },
+      "target_dhw_tank_temperature_lower_limit_user_limit": {
+        "name": "Target DHW tank temperature lower limit (user limit)"
+      },
+      "target_room_temperature_lower_limit": {
+        "name": "Target room temperature lower limit"
+      },
+      "target_room_temperature_upper_limit": {
+        "name": "Target room temperature upper limit"
+      },
       "target_temperature": {
         "name": "Target temperature"
+      },
+      "target_water_outlet_lower_limit_heating": {
+        "name": "Target water outlet lower limit (heating)"
+      },
+      "target_water_outlet_upper_limit_heating": {
+        "name": "Target water outlet upper limit (heating)"
       },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
+      },
+      "water_law_flow_temp_at_high_ambient_zone_1": {
+        "name": "Water law flow temp at high ambient (zone 1)"
+      },
+      "water_law_flow_temp_at_high_ambient_zone_2": {
+        "name": "Water law flow temp at high ambient (zone 2)"
+      },
+      "water_law_flow_temp_at_low_ambient_zone_1": {
+        "name": "Water law flow temp at low ambient (zone 1)"
+      },
+      "water_law_flow_temp_at_low_ambient_zone_2": {
+        "name": "Water law flow temp at low ambient (zone 2)"
+      },
+      "water_law_high_ambient_outdoor_temp_setpoint": {
+        "name": "Water law high ambient outdoor temp setpoint"
+      },
+      "water_law_low_ambient_outdoor_temp_setpoint": {
+        "name": "Water law low ambient outdoor temp setpoint"
       }
     },
     "select": {
+      "backup_heater_application": {
+        "name": "Backup heater application",
+        "state": {
+          "buh_one_step": "BUH one step",
+          "buh_two_step": "BUH two step",
+          "no": "No"
+        }
+      },
+      "buh_bsh_priority": {
+        "name": "BUH/BSH priority",
+        "state": {
+          "both": "Both",
+          "bsh_priority": "BSH priority",
+          "buh_priority": "BUH priority"
+        }
+      },
+      "ch_dhw_supply_ratio": {
+        "name": "CH/DHW supply ratio",
+        "state": {
+          "balanced": "4 (Balanced)",
+          "level_2": "2",
+          "level_3": "3",
+          "level_5": "5",
+          "level_6": "6",
+          "max_ch": "7 (Max CH)",
+          "max_dhw": "1 (Max DHW)"
+        }
+      },
       "detergent_amount": {
         "name": "Detergent dispense amount",
         "state": {
@@ -188,9 +318,64 @@
           "standard": "Standard"
         }
       },
+      "dhw_saving_mode": {
+        "name": "DHW saving mode",
+        "state": {
+          "advanced": "Advanced",
+          "standard": "Standard"
+        }
+      },
+      "dhw_space_heating_priority": {
+        "name": "DHW space heating priority",
+        "state": {
+          "dhw": "DHW",
+          "heating": "Heating"
+        }
+      },
+      "dhw_tank_function": {
+        "name": "DHW tank function",
+        "state": {
+          "disabled": "No",
+          "enabled_thermo_off": "Yes (Thermo OFF)",
+          "enabled_thermo_on": "Yes (Thermo ON)"
+        }
+      },
+      "disinfection_interval_day": {
+        "name": "Disinfection interval day",
+        "state": {
+          "all_days": "All days",
+          "friday": "Friday",
+          "monday": "Monday",
+          "saturday": "Saturday",
+          "sunday": "Sunday",
+          "thursday": "Thursday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday"
+        }
+      },
       "dust_filter_alarm": {
         "name": "Dust filter alarm threshold",
         "unit_of_measurement": "hours"
+      },
+      "external_run_input_zone_1": {
+        "name": "External run input (zone 1)",
+        "state": {
+          "compressor_only": "Compressor only",
+          "compressor_pump_mode_2": "Compressor + pump (mode 2)",
+          "compressor_pump_mode_3": "Compressor + pump (mode 3)",
+          "compressor_pump_mode_4": "Compressor + pump (mode 4)",
+          "disable": "Disable"
+        }
+      },
+      "external_run_input_zone_2": {
+        "name": "External run input (zone 2)",
+        "state": {
+          "compressor_only": "Compressor only",
+          "disable": "Disable",
+          "pump_cycles": "Pump cycles",
+          "pump_off": "Pump off",
+          "pump_on": "Pump on"
+        }
       },
       "flexible_detergent_amount": {
         "name": "Flexible compartment dispense amount",
@@ -200,6 +385,14 @@
           "less": "[%key:component::smartthings::entity::select::detergent_amount::state::less%]",
           "none": "[%key:common::state::off%]",
           "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]"
+        }
+      },
+      "inverter_pump_application": {
+        "name": "Inverter pump application",
+        "state": {
+          "no": "No",
+          "yes_100_percent": "Yes (100%)",
+          "yes_70_percent": "Yes (70%)"
         }
       },
       "lamp": {
@@ -213,11 +406,44 @@
           "on": "[%key:common::state::on%]"
         }
       },
+      "mixing_valve_application": {
+        "name": "Mixing valve application",
+        "state": {
+          "delta_t_control": "ΔT control",
+          "no": "No",
+          "water_law_control": "WL control"
+        }
+      },
       "operating_state": {
         "state": {
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "power_peak_control_forced_off_parts": {
+        "name": "Power peak control forced off parts",
+        "state": {
+          "all": "All",
+          "booster_only": "Booster only",
+          "compressor_only": "Compressor only",
+          "none": "None"
+        }
+      },
+      "remote_controller_room_temp_control": {
+        "name": "Room temperature sensor control mode for wired remote controller",
+        "state": {
+          "room_or_wl_pump_cycle": "Room or water law with pump cycling",
+          "room_or_wl_pump_off": "Room or water law with pump off",
+          "room_or_wl_pump_on": "Room or water law with pump on",
+          "room_sensor_only": "Room sensor only"
+        }
+      },
+      "smart_grid_dhw_mode": {
+        "name": "Smart grid DHW mode",
+        "state": {
+          "comfort": "Comfort",
+          "demand_response": "Demand response"
         }
       },
       "soil_level": {
@@ -253,6 +479,49 @@
           "no_spin": "No spin",
           "none": "None",
           "rinse_hold": "Rinse hold"
+        }
+      },
+      "tdm_priority": {
+        "name": "TDM priority (A2A vs DHW)",
+        "state": {
+          "a2a": "A2A",
+          "dhw": "DHW"
+        }
+      },
+      "three_way_valve_direction": {
+        "name": "Three-way valve direction",
+        "state": {
+          "room_space_heating": "Room/Space heating",
+          "tank_dhw": "Tank/DHW"
+        }
+      },
+      "two_zone_control": {
+        "name": "Two-zone control",
+        "state": {
+          "no": "No",
+          "yes": "Yes"
+        }
+      },
+      "use_dhw_thermostat": {
+        "name": "Use DHW thermostat",
+        "state": {
+          "combined": "Combined",
+          "no": "No",
+          "thermostat_only": "Thermostat only"
+        }
+      },
+      "water_law_type_cooling": {
+        "name": "Water law type for cooling",
+        "state": {
+          "fcu": "FCU",
+          "floor": "Floor"
+        }
+      },
+      "water_law_type_heating": {
+        "name": "Water law type for heating",
+        "state": {
+          "fcu": "FCU",
+          "floor": "Floor"
         }
       },
       "water_temperature": {
@@ -828,11 +1097,32 @@
       "auto_cycle_link": {
         "name": "Auto Cycle Link"
       },
+      "boiler_priority": {
+        "name": "Boiler priority"
+      },
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "cold_weather_compensation": {
+        "name": "Cold weather compensation"
+      },
       "display_lighting": {
         "name": "Display lighting"
+      },
+      "enable_booster_heater": {
+        "name": "Enable booster heater"
+      },
+      "enable_disinfection": {
+        "name": "Enable disinfection"
+      },
+      "external_boiler_application": {
+        "name": "External boiler application"
+      },
+      "forced_dhw_timer_function": {
+        "name": "Forced DHW timer function"
+      },
+      "frequency_ratio_control": {
+        "name": "Frequency ratio control"
       },
       "ice_maker": {
         "name": "Cubed ice"
@@ -849,11 +1139,23 @@
       "power_freeze": {
         "name": "Power freeze"
       },
+      "power_peak_control_application": {
+        "name": "Power peak control application"
+      },
+      "power_peak_control_input_voltage_type": {
+        "name": "Power peak control input voltage type"
+      },
+      "pv_control_application": {
+        "name": "PV control application"
+      },
       "sabbath_mode": {
         "name": "Sabbath mode"
       },
       "sanitize": {
         "name": "Sanitize"
+      },
+      "smart_grid_control_application": {
+        "name": "Smart grid control application"
       },
       "sound_effect": {
         "name": "Sound effect"

@@ -109,3 +109,58 @@ class SmartThingsEntity(Entity):
         await self.client.execute_device_command(
             self.device.device.device_id, capability, command, self.component, **kwargs
         )
+
+
+class SmartThingsFsvEntity(SmartThingsEntity):
+    """Define shared behavior for SmartThings FSV entities."""
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        *,
+        component: str,
+        fsv_id: str,
+    ) -> None:
+        """Initialize the FSV entity."""
+        super().__init__(
+            client,
+            device,
+            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
+            component=component,
+        )
+        self._fsv_id = fsv_id
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}_"
+            f"{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_"
+            f"{Attribute.FSV_SETTINGS}_{self._fsv_id}"
+        )
+
+    def _get_fsv_setting(self) -> dict[str, Any] | None:
+        """Return the current FSV setting data for this entity."""
+        fsv_settings: list[dict[str, Any]] | None = self.get_attribute_value(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
+        )
+        if not fsv_settings:
+            return None
+
+        return next(
+            (setting for setting in fsv_settings if setting.get("id") == self._fsv_id),
+            None,
+        )
+
+    def _get_fsv_value(self) -> int | None:
+        """Return the current integer FSV value."""
+        if (setting := self._get_fsv_setting()) is None:
+            return None
+        if (value := setting.get("value")) is None:
+            return None
+        return int(value)
+
+    async def _async_set_fsv_value(self, value: int) -> None:
+        """Set the current FSV value."""
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+            Command.SET_VALUE,
+            [self._fsv_id, value],
+        )

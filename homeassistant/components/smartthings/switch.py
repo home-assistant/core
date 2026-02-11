@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
-from .entity import SmartThingsEntity
+from .entity import SmartThingsEntity, SmartThingsFsvEntity
 from .util import deprecate_entity
 
 CAPABILITIES = (
@@ -246,6 +246,20 @@ async def async_setup_entry(
                     Capability.SWITCH,
                 )
             )
+    # Add FSV switch entities
+    entities.extend(
+        SmartThingsFsvSwitch(entry_data.client, device, component, description)
+        for device in entry_data.devices.values()
+        for component in device.status
+        if Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[component]
+        for fsv_settings in device.status[component][
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS
+        ].values()
+        if fsv_settings.value is not None and isinstance(fsv_settings.value, list)
+        for fsv_setting in fsv_settings.value
+        if (fsv_id := fsv_setting["id"]) in FSV_SWITCH_DESCRIPTIONS
+        and (description := FSV_SWITCH_DESCRIPTIONS[fsv_id]) is not None
+    )
     async_add_entities(entities)
 
 
@@ -319,3 +333,119 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
             self.entity_description.command,
             "on",
         )
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsFsvSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a SmartThings FSV setting switch entity."""
+
+    fsv_id: str
+
+
+# FSV switch entity descriptions for binary (Boolean) settings
+FSV_SWITCH_DESCRIPTIONS: dict[str, SmartThingsFsvSwitchEntityDescription] = {
+    "3031": SmartThingsFsvSwitchEntityDescription(
+        key="3031",
+        fsv_id="3031",
+        translation_key="enable_booster_heater",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3041": SmartThingsFsvSwitchEntityDescription(
+        key="3041",
+        fsv_id="3041",
+        translation_key="enable_disinfection",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "3051": SmartThingsFsvSwitchEntityDescription(
+        key="3051",
+        fsv_id="3051",
+        translation_key="forced_dhw_timer_function",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4023": SmartThingsFsvSwitchEntityDescription(
+        key="4023",
+        fsv_id="4023",
+        translation_key="cold_weather_compensation",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4031": SmartThingsFsvSwitchEntityDescription(
+        key="4031",
+        fsv_id="4031",
+        translation_key="external_boiler_application",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "4032": SmartThingsFsvSwitchEntityDescription(
+        key="4032",
+        fsv_id="4032",
+        translation_key="boiler_priority",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5041": SmartThingsFsvSwitchEntityDescription(
+        key="5041",
+        fsv_id="5041",
+        translation_key="power_peak_control_application",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5043": SmartThingsFsvSwitchEntityDescription(
+        key="5043",
+        fsv_id="5043",
+        translation_key="power_peak_control_input_voltage_type",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5051": SmartThingsFsvSwitchEntityDescription(
+        key="5051",
+        fsv_id="5051",
+        translation_key="frequency_ratio_control",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5081": SmartThingsFsvSwitchEntityDescription(
+        key="5081",
+        fsv_id="5081",
+        translation_key="pv_control_application",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    "5091": SmartThingsFsvSwitchEntityDescription(
+        key="5091",
+        fsv_id="5091",
+        translation_key="smart_grid_control_application",
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
+
+
+class SmartThingsFsvSwitch(SmartThingsFsvEntity, SwitchEntity):
+    """Define a SmartThings FSV switch."""
+
+    entity_description: SmartThingsFsvSwitchEntityDescription
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        component: str,
+        description: SmartThingsFsvSwitchEntityDescription,
+    ) -> None:
+        """Initialize the FSV switch."""
+        super().__init__(
+            client,
+            device,
+            component=component,
+            fsv_id=description.fsv_id,
+        )
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the FSV setting is on (value = 1)."""
+        value = self._get_fsv_value()
+        if value is None:
+            return None
+        return value == 1
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the FSV setting on (set value to 1)."""
+        await self._async_set_fsv_value(1)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the FSV setting off (set value to 0)."""
+        await self._async_set_fsv_value(0)
