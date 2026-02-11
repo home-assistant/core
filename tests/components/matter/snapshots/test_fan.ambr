@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fans[longan_link_thermostat][fan.longan_link_hvac-entry]
+# name: test_fans[longan_link_thermostat-fan.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -38,11 +38,11 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[longan_link_thermostat][fan.longan_link_hvac-state]
+# name: test_fans[longan_link_thermostat-fan.longan_link_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Longan link HVAC',
@@ -63,7 +63,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fans[mock_air_purifier][fan.mock_air_purifier-entry]
+# name: test_fans[mock_air_purifier-fan.mock_air_purifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -104,11 +104,11 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 63>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[mock_air_purifier][fan.mock_air_purifier-state]
+# name: test_fans[mock_air_purifier-fan.mock_air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'direction': 'forward',
@@ -135,7 +135,7 @@
     'state': 'on',
   })
 # ---
-# name: test_fans[mock_extractor_hood][fan.mock_extractor_hood-entry]
+# name: test_fans[mock_extractor_hood-fan.mock_extractor_hood-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -173,11 +173,11 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[mock_extractor_hood][fan.mock_extractor_hood-state]
+# name: test_fans[mock_extractor_hood-fan.mock_extractor_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extractor hood',
@@ -197,7 +197,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fans[mock_fan][fan.mocked_fan_switch-entry]
+# name: test_fans[mock_fan-fan.mocked_fan_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -238,11 +238,11 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-0000000000000026-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[mock_fan][fan.mocked_fan_switch-state]
+# name: test_fans[mock_fan-fan.mocked_fan_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mocked Fan Switch',
@@ -267,7 +267,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fans[mock_room_airconditioner][fan.room_airconditioner-entry]
+# name: test_fans[mock_room_airconditioner-fan.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -307,11 +307,11 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
     'translation_key': 'fan',
-    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-1-MatterFan-514-0',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[mock_room_airconditioner][fan.room_airconditioner-state]
+# name: test_fans[mock_room_airconditioner-fan.room_airconditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Room AirConditioner',

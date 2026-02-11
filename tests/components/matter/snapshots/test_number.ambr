@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-entry]
+# name: test_numbers[aqara_motion_p2-number.aqara_motion_and_light_sensor_p2_hold_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -36,11 +36,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hold_time',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-state]
+# name: test_numbers[aqara_motion_p2-number.aqara_motion_and_light_sensor_p2_hold_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Motion and Light Sensor P2 Hold time',
@@ -58,7 +58,7 @@
     'state': '30',
   })
 # ---
-# name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-entry]
+# name: test_numbers[aqara_presence_fp300-number.presence_multi_sensor_fp300_1_hold_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -95,11 +95,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hold_time',
-    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-state]
+# name: test_numbers[aqara_presence_fp300-number.presence_multi_sensor_fp300_1_hold_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Presence Multi-Sensor FP300 1 Hold time',
@@ -117,7 +117,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-entry]
+# name: test_numbers[aqara_thermostat_w500-number.floor_heating_thermostat_occupied_setback-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -154,11 +154,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'occupied_setback',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-state]
+# name: test_numbers[aqara_thermostat_w500-number.floor_heating_thermostat_occupied_setback-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Floor Heating Thermostat Occupied setback',
@@ -176,7 +176,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-entry]
+# name: test_numbers[aqara_thermostat_w500-number.floor_heating_thermostat_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -213,11 +213,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-state]
+# name: test_numbers[aqara_thermostat_w500-number.floor_heating_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -236,7 +236,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
+# name: test_numbers[aqara_u200-number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -273,11 +273,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-state]
+# name: test_numbers[aqara_u200-number.aqara_smart_lock_u200_user_code_temporary_disable_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Smart Lock U200 User code temporary disable time',
@@ -295,7 +295,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_wrong_code_limit-entry]
+# name: test_numbers[aqara_u200-number.aqara_smart_lock_u200_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -332,11 +332,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_wrong_code_limit-state]
+# name: test_numbers[aqara_u200-number.aqara_smart_lock_u200_wrong_code_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Smart Lock U200 Wrong code limit',
@@ -353,7 +353,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_level-entry]
+# name: test_numbers[color_temperature_light-number.mock_color_temperature_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -390,11 +390,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_level-state]
+# name: test_numbers[color_temperature_light-number.mock_color_temperature_light_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Color Temperature Light On level',
@@ -411,7 +411,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
+# name: test_numbers[eve_thermo_v4-number.eve_thermo_20ebp1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -448,11 +448,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000011-MatterNodeDevice-1-EveTemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-state]
+# name: test_numbers[eve_thermo_v4-number.eve_thermo_20ebp1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -471,7 +471,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-entry]
+# name: test_numbers[eve_thermo_v5-number.eve_thermo_20ecd1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -508,11 +508,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-EveTemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-EveTemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-state]
+# name: test_numbers[eve_thermo_v5-number.eve_thermo_20ecd1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -531,7 +531,7 @@
     'state': '-1.5',
   })
 # ---
-# name: test_numbers[eve_weather_sensor][number.eve_weather_altitude_above_sea_level-entry]
+# name: test_numbers[eve_weather_sensor-number.eve_weather_altitude_above_sea_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -568,11 +568,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'altitude',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-EveWeatherAltitude-319486977-319422483',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-EveWeatherAltitude-319486977-319422483',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_numbers[eve_weather_sensor][number.eve_weather_altitude_above_sea_level-state]
+# name: test_numbers[eve_weather_sensor-number.eve_weather_altitude_above_sea_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -591,7 +591,7 @@
     'state': '40.0',
   })
 # ---
-# name: test_numbers[extended_color_light][number.mock_extended_color_light_on_level-entry]
+# name: test_numbers[extended_color_light-number.mock_extended_color_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -628,11 +628,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[extended_color_light][number.mock_extended_color_light_on_level-state]
+# name: test_numbers[extended_color_light-number.mock_extended_color_light_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extended Color Light On level',
@@ -649,7 +649,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-entry]
+# name: test_numbers[heiman_motion_sensor_m1-number.smart_motion_sensor_hold_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -686,11 +686,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hold_time',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-state]
+# name: test_numbers[heiman_motion_sensor_m1-number.smart_motion_sensor_hold_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart motion sensor Hold time',
@@ -708,7 +708,7 @@
     'state': '70',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_led_off_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -745,11 +745,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_off',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_led_off_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch LED off intensity (Load Control)',
@@ -766,7 +766,7 @@
     'state': '1',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_led_on_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -803,11 +803,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_on',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_led_on_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch LED on intensity (Load Control)',
@@ -824,7 +824,7 @@
     'state': '33',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_off_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -861,11 +861,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_off_transition_time_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch Off transition time (Load Control)',
@@ -883,7 +883,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_level_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -920,11 +920,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_level_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch On level (Load Control)',
@@ -941,7 +941,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_rgb_indicator-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_level_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -978,11 +978,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-6-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_rgb_indicator-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_level_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch On level (RGB Indicator)',
@@ -999,7 +999,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_off_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1036,11 +1036,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_off_transition_time_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch On/Off transition time (Load Control)',
@@ -1058,7 +1058,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1095,11 +1095,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-6-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch On/Off transition time (RGB Indicator)',
@@ -1117,7 +1117,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-entry]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1154,11 +1154,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-state]
+# name: test_numbers[inovelli_vtm30-number.white_series_onoff_switch_on_transition_time_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch On transition time (Load Control)',
@@ -1176,7 +1176,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_off_intensity-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_led_off_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1213,11 +1213,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_off',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_off_intensity-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_led_off_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED off intensity',
@@ -1234,7 +1234,7 @@
     'state': '1',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_on_intensity-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_led_on_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1271,11 +1271,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_on',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_led_on_intensity-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_led_on_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED on intensity',
@@ -1292,7 +1292,7 @@
     'state': '33',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_off_transition_time-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1329,11 +1329,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_off_transition_time-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Off transition time',
@@ -1351,7 +1351,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_level_1-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_level_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1388,11 +1388,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_level_1-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_level_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli On level (1)',
@@ -1409,7 +1409,7 @@
     'state': '137',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_level_6-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_level_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1446,11 +1446,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-6-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-6-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_level_6-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_level_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli On level (6)',
@@ -1467,7 +1467,7 @@
     'state': '254',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_off_transition_time-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1504,11 +1504,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_off_transition_time-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli On/Off transition time',
@@ -1526,7 +1526,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_transition_time-entry]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1563,11 +1563,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm31][number.inovelli_on_transition_time-state]
+# name: test_numbers[inovelli_vtm31-number.inovelli_on_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli On transition time',
@@ -1585,7 +1585,7 @@
     'state': '1.5',
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_off_transition_time-entry]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1622,11 +1622,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_off_transition_time-state]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Dimmable Light Off transition time',
@@ -1644,7 +1644,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_level-entry]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1681,11 +1681,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_level-state]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Dimmable Light On level',
@@ -1702,7 +1702,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_off_transition_time-entry]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1739,11 +1739,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_off_transition_time-state]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Dimmable Light On/Off transition time',
@@ -1761,7 +1761,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-entry]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1798,11 +1798,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-state]
+# name: test_numbers[mock_dimmable_light-number.mock_dimmable_light_on_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Dimmable Light On transition time',
@@ -1820,7 +1820,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-entry]
+# name: test_numbers[mock_dimmable_plugin_unit-number.dimmable_plugin_unit_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1857,11 +1857,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-state]
+# name: test_numbers[mock_dimmable_plugin_unit-number.dimmable_plugin_unit_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dimmable Plugin Unit On level',
@@ -1878,7 +1878,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-entry]
+# name: test_numbers[mock_dimmable_plugin_unit-number.dimmable_plugin_unit_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1915,11 +1915,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-state]
+# name: test_numbers[mock_dimmable_plugin_unit-number.dimmable_plugin_unit_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dimmable Plugin Unit On/Off transition time',
@@ -1937,7 +1937,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_auto_relock_time-entry]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1974,11 +1974,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_auto_relock_time-state]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock Auto-relock time',
@@ -1996,7 +1996,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2033,11 +2033,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_user_code_temporary_disable_time-state]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_user_code_temporary_disable_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock User code temporary disable time',
@@ -2055,7 +2055,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_wrong_code_limit-entry]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2092,11 +2092,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_door_lock][number.mock_door_lock_wrong_code_limit-state]
+# name: test_numbers[mock_door_lock-number.mock_door_lock_wrong_code_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock Wrong code limit',
@@ -2113,7 +2113,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2150,11 +2150,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-state]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock with unbolt Auto-relock time',
@@ -2172,7 +2172,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-entry]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2209,11 +2209,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-state]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock with unbolt User code temporary disable time',
@@ -2231,7 +2231,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-entry]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2268,11 +2268,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-state]
+# name: test_numbers[mock_door_lock_with_unbolt-number.mock_door_lock_with_unbolt_wrong_code_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock with unbolt Wrong code limit',
@@ -2289,7 +2289,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-entry]
+# name: test_numbers[mock_lock-number.mock_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2326,11 +2326,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-state]
+# name: test_numbers[mock_lock-number.mock_lock_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock Auto-relock time',
@@ -2348,7 +2348,7 @@
     'state': '60',
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-entry]
+# name: test_numbers[mock_lock-number.mock_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2385,11 +2385,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-state]
+# name: test_numbers[mock_lock-number.mock_lock_user_code_temporary_disable_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock User code temporary disable time',
@@ -2407,7 +2407,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-entry]
+# name: test_numbers[mock_lock-number.mock_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2444,11 +2444,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-state]
+# name: test_numbers[mock_lock-number.mock_lock_wrong_code_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock Wrong code limit',
@@ -2465,7 +2465,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[mock_microwave_oven][number.mock_microwave_oven_cooking_time-entry]
+# name: test_numbers[mock_microwave_oven-number.mock_microwave_oven_cooking_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2502,11 +2502,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_time',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlCookTime-95-0',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MicrowaveOvenControlCookTime-95-0',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_microwave_oven][number.mock_microwave_oven_cooking_time-state]
+# name: test_numbers[mock_microwave_oven-number.mock_microwave_oven_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -2525,7 +2525,7 @@
     'state': '30',
   })
 # ---
-# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture-number.mock_mounted_dimmable_load_control_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2562,11 +2562,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-state]
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture-number.mock_mounted_dimmable_load_control_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Mounted dimmable load control On level',
@@ -2583,7 +2583,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-entry]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2620,11 +2620,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-state]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOffPluginUnit Off transition time',
@@ -2642,7 +2642,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_level-entry]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2679,11 +2679,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_level-state]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOffPluginUnit On level',
@@ -2700,7 +2700,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-entry]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2737,11 +2737,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-state]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOffPluginUnit On/Off transition time',
@@ -2759,7 +2759,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-entry]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2796,11 +2796,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-state]
+# name: test_numbers[mock_on_off_plugin_unit-number.mock_onoffpluginunit_on_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOffPluginUnit On transition time',
@@ -2818,7 +2818,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-entry]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2855,11 +2855,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-state]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light Off transition time',
@@ -2877,7 +2877,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_level-entry]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2914,11 +2914,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_level-state]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light On level',
@@ -2935,7 +2935,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-entry]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2972,11 +2972,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-state]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light On/Off transition time',
@@ -2994,7 +2994,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-entry]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3031,11 +3031,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-state]
+# name: test_numbers[mock_onoff_light_alt_name-number.mock_onoff_light_on_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light On transition time',
@@ -3053,7 +3053,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_off_transition_time-entry]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3090,11 +3090,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_off_transition_time-state]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Light Off transition time',
@@ -3112,7 +3112,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_level-entry]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3149,11 +3149,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_level-state]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Light On level',
@@ -3170,7 +3170,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_off_transition_time-entry]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3207,11 +3207,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_off_transition_time-state]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Light On/Off transition time',
@@ -3229,7 +3229,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-entry]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3266,11 +3266,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-state]
+# name: test_numbers[mock_onoff_light_no_name-number.mock_light_on_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Light On transition time',
@@ -3288,7 +3288,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_oven][number.mock_oven_temperature_setpoint-entry]
+# name: test_numbers[mock_oven-number.mock_oven_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3325,11 +3325,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[mock_oven][number.mock_oven_temperature_setpoint-state]
+# name: test_numbers[mock_oven-number.mock_oven_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Oven Temperature setpoint',
@@ -3347,7 +3347,7 @@
     'state': '76.0',
   })
 # ---
-# name: test_numbers[mock_pump][number.mock_pump_on_level-entry]
+# name: test_numbers[mock_pump-number.mock_pump_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3384,11 +3384,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mock_pump][number.mock_pump_on_level-state]
+# name: test_numbers[mock_pump-number.mock_pump_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump On level',
@@ -3405,7 +3405,7 @@
     'state': '0',
   })
 # ---
-# name: test_numbers[mock_pump][number.mock_pump_setpoint-entry]
+# name: test_numbers[mock_pump-number.mock_pump_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3442,11 +3442,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_setpoint',
-    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-pump_setpoint-8-0',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-pump_setpoint-8-0',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_numbers[mock_pump][number.mock_pump_setpoint-state]
+# name: test_numbers[mock_pump-number.mock_pump_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump Setpoint',
@@ -3464,7 +3464,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_numbers[mock_speaker][number.mock_speaker_volume-entry]
+# name: test_numbers[mock_speaker-number.mock_speaker_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3501,11 +3501,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'speaker_setpoint',
-    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
+    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-1-speaker_setpoint-8-0',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_numbers[mock_speaker][number.mock_speaker_volume-state]
+# name: test_numbers[mock_speaker-number.mock_speaker_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock speaker Volume',
@@ -3523,7 +3523,7 @@
     'state': '47',
   })
 # ---
-# name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-entry]
+# name: test_numbers[mock_thermostat-number.mock_thermostat_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3560,11 +3560,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-TemperatureOffset-513-16',
+    'unique_id': '00000000000004D2-000000000000003E-MatterNodeDevice-1-TemperatureOffset-513-16',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-state]
+# name: test_numbers[mock_thermostat-number.mock_thermostat_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3583,7 +3583,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[mock_valve][number.mock_valve_default_open_duration-entry]
+# name: test_numbers[mock_valve-number.mock_valve_default_open_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3620,11 +3620,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_configuration_and_control_default_open_duration',
-    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[mock_valve][number.mock_valve_default_open_duration-state]
+# name: test_numbers[mock_valve-number.mock_valve_default_open_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Valve Default open duration',
@@ -3642,7 +3642,7 @@
     'state': '0',
   })
 # ---
-# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_level-entry]
+# name: test_numbers[onoff_light_with_levelcontrol_present-number.d215s_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3679,11 +3679,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000046-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_level-state]
+# name: test_numbers[onoff_light_with_levelcontrol_present-number.d215s_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'D215S On level',
@@ -3700,7 +3700,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_off_transition_time-entry]
+# name: test_numbers[onoff_light_with_levelcontrol_present-number.d215s_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3737,11 +3737,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000046-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_off_transition_time-state]
+# name: test_numbers[onoff_light_with_levelcontrol_present-number.d215s_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'D215S On/Off transition time',
@@ -3759,7 +3759,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-entry]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3796,11 +3796,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-0000000000000048-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-state]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Secuyou Smart Lock Auto-relock time',
@@ -3818,7 +3818,7 @@
     'state': '0',
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-entry]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3855,11 +3855,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000048-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-state]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_user_code_temporary_disable_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Secuyou Smart Lock User code temporary disable time',
@@ -3877,7 +3877,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-entry]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3914,11 +3914,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000048-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-state]
+# name: test_numbers[secuyou_smart_lock-number.secuyou_smart_lock_wrong_code_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Secuyou Smart Lock Wrong code limit',
@@ -3935,7 +3935,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
+# name: test_numbers[silabs_laundrywasher-number.laundrywasher_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3972,11 +3972,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-state]
+# name: test_numbers[silabs_laundrywasher-number.laundrywasher_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LaundryWasher Temperature setpoint',
@@ -3994,7 +3994,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-entry]
+# name: test_numbers[silabs_refrigerator-number.refrigerator_temperature_setpoint_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4031,11 +4031,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-000000000000004D-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-state]
+# name: test_numbers[silabs_refrigerator-number.refrigerator_temperature_setpoint_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Temperature setpoint (2)',
@@ -4053,7 +4053,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_3-entry]
+# name: test_numbers[silabs_refrigerator-number.refrigerator_temperature_setpoint_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4090,11 +4090,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-3-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-000000000000004D-MatterNodeDevice-3-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_3-state]
+# name: test_numbers[silabs_refrigerator-number.refrigerator_temperature_setpoint_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Temperature setpoint (3)',

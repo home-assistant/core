@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_vacuum[ecovacs_deebot][vacuum.ecodeebot-entry]
+# name: test_vacuum[ecovacs_deebot-vacuum.ecodeebot-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -31,11 +31,11 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12828>,
     'translation_key': 'vacuum',
-    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[ecovacs_deebot][vacuum.ecodeebot-state]
+# name: test_vacuum[ecovacs_deebot-vacuum.ecodeebot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'ecodeebot',
@@ -49,7 +49,7 @@
     'state': 'docked',
   })
 # ---
-# name: test_vacuum[eufy_vacuum_omni_e28][vacuum.2bavs_ab6031x_44pe-entry]
+# name: test_vacuum[eufy_vacuum_omni_e28-vacuum.2bavs_ab6031x_44pe-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -81,11 +81,11 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12828>,
     'translation_key': 'vacuum',
-    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[eufy_vacuum_omni_e28][vacuum.2bavs_ab6031x_44pe-state]
+# name: test_vacuum[eufy_vacuum_omni_e28-vacuum.2bavs_ab6031x_44pe-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '2BAVS-AB6031X-44PE',
@@ -99,7 +99,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_vacuum[mock_vacuum_cleaner][vacuum.mock_vacuum-entry]
+# name: test_vacuum[mock_vacuum_cleaner-vacuum.mock_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -131,11 +131,11 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12316>,
     'translation_key': 'vacuum',
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unique_id': '00000000000004D2-000000000000003F-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[mock_vacuum_cleaner][vacuum.mock_vacuum-state]
+# name: test_vacuum[mock_vacuum_cleaner-vacuum.mock_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Vacuum',
@@ -149,7 +149,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_vacuum[switchbot_k11_plus][vacuum.k11-entry]
+# name: test_vacuum[switchbot_k11_plus-vacuum.k11-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,11 +181,11 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12316>,
     'translation_key': 'vacuum',
-    'unique_id': '00000000000004D2-0000000000000061-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unique_id': '00000000000004D2-000000000000004F-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[switchbot_k11_plus][vacuum.k11-state]
+# name: test_vacuum[switchbot_k11_plus-vacuum.k11-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'K11+',
