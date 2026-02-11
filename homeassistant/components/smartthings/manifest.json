@@ -31,5 +31,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "quality_scale": "bronze",
-  "requirements": ["pysmartthings==3.5.1"]
+  "requirements": ["pysmartthings==3.5.2"]
 }
