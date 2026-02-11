@@ -183,19 +183,21 @@ async def test_dhcp_discovery(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    config_entry_id = result["result"].entry_id
+    assert result["result"].unique_id == "TESTACCOUNTID"
 
-    # Create a device entry under the config entry
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_id,
-        identifiers={(DOMAIN, service_info.macaddress)},
-    )
 
-    # Second DHCP discovery should abort
+async def test_dhcp_discovery_duplicate(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery flow with already setup integration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=service_info,
+        data=DhcpServiceInfo(
+            hostname="Levoit-Purifier",
+            ip="1.2.3.4",
+            macaddress="aabbccddeeff",
+        ),
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
