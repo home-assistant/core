@@ -17,9 +17,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import TadoConfigEntry
 from .const import DOMAIN
-from .coordinator import TadoMobileDeviceUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoMobileDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

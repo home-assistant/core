@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConfigEntry
 from .const import (
     TYPE_AIR_CONDITIONING,
     TYPE_BATTERY,
@@ -24,7 +23,7 @@ from .const import (
     TYPE_HOT_WATER,
     TYPE_POWER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoDeviceEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)

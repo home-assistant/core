@@ -15,7 +15,6 @@ from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -31,6 +30,7 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
+from .coordinator import TadoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TadoConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

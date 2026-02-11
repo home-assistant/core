@@ -15,7 +15,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConfigEntry
 from .const import (
     CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
@@ -27,7 +26,7 @@ from .const import (
     CONST_OVERLAY_TIMER,
     TYPE_HOT_WATER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode
 from .repairs import manage_water_heater_fallback_issue
