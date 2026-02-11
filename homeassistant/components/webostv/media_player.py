@@ -32,6 +32,7 @@ from homeassistant.helpers.trigger import PluggableAction
 
 from .const import (
     ATTR_PAYLOAD,
+    ATTR_SCREEN_IS_ON,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
@@ -249,11 +250,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if serial_number := tv_info.system.get("serialNumber"):
                 self._attr_device_info["serial_number"] = serial_number
 
-        self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes = {
+            ATTR_SCREEN_IS_ON: tv_state.is_screen_on
+        }
         if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
-            self._attr_extra_state_attributes = {
-                ATTR_SOUND_OUTPUT: tv_state.sound_output
-            }
+            self._attr_extra_state_attributes[ATTR_SOUND_OUTPUT] = tv_state.sound_output
 
     def _update_sources(self) -> None:
         """Update list of sources from current source, apps, inputs and configured list."""
