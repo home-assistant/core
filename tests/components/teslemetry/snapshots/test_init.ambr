@@ -26,7 +26,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123456',
-    'sw_version': None,
+    'sw_version': '23.44.0 eb113390',
     'via_device_id': None,
   })
 # ---
@@ -52,12 +52,12 @@
     }),
     'manufacturer': 'Tesla',
     'model': 'Model 3',
-    'model_id': None,
+    'model_id': '3',
     'name': 'Test',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'LRW3F7EK4NC700000',
-    'sw_version': None,
+    'sw_version': '2026.0.0',
     'via_device_id': None,
   })
 # ---
