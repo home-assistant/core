@@ -4,15 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hass_nabucasa.llm import LLMError
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.cloud.const import DATA_CLOUD, DOMAIN
-from homeassistant.components.cloud.conversation import (
-    CloudConversationEntity,
-    async_setup_entry,
-)
+from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.conversation import CloudConversationEntity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent, llm
 
@@ -130,38 +126,3 @@ async def test_async_handle_message_converse_error(
     handle_chat_log.assert_not_called()
     assert result.response is error_response
     assert result.conversation_id == user_input.conversation_id
-
-
-async def test_async_setup_entry_adds_entity(hass: HomeAssistant) -> None:
-    """Test the platform setup adds the conversation entity."""
-    cloud = MagicMock()
-    cloud.llm = MagicMock(async_ensure_token=AsyncMock())
-    cloud.is_logged_in = True
-    cloud.valid_subscription = True
-    hass.data[DATA_CLOUD] = cloud
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    add_entities = MagicMock()
-
-    await async_setup_entry(hass, entry, add_entities)
-
-    cloud.llm.async_ensure_token.assert_awaited_once()
-    assert add_entities.call_count == 1
-    assert isinstance(add_entities.call_args[0][0][0], CloudConversationEntity)
-
-
-async def test_async_setup_entry_llm_error(hass: HomeAssistant) -> None:
-    """Test entity setup is aborted when ensuring the token fails."""
-    cloud = MagicMock()
-    cloud.llm = MagicMock(async_ensure_token=AsyncMock(side_effect=LLMError("fail")))
-    cloud.is_logged_in = True
-    cloud.valid_subscription = True
-    hass.data[DATA_CLOUD] = cloud
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    add_entities = MagicMock()
-
-    await async_setup_entry(hass, entry, add_entities)
-
-    cloud.llm.async_ensure_token.assert_awaited_once()
-    add_entities.assert_not_called()

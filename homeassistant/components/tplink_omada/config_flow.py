@@ -177,6 +177,10 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await self._test_login(self._omada_opts, errors)
 
             if info is not None:
+                # Check the controller ID is the same as before
+                await self.async_set_unique_id(info.controller_id)
+                self._abort_if_unique_id_mismatch(reason="device_mismatch")
+
                 # Auth successful - update the config entry with the new credentials
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data=self._omada_opts

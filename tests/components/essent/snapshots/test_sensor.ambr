@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -55,62 +56,6 @@
     'state': '0.29591',
   })
 # ---
-# name: test_entities[sensor.essent_average_gas_price_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.essent_average_gas_price_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Average gas price today',
-    'platform': 'essent',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_average_today',
-    'unique_id': 'gas-average_today',
-    'unit_of_measurement': '€/m³',
-  })
-# ---
-# name: test_entities[sensor.essent_average_gas_price_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Essent',
-      'friendly_name': 'Essent Average gas price today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '€/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.essent_average_gas_price_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.13959',
-  })
-# ---
 # name: test_entities[sensor.essent_current_electricity_market_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -134,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity market price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -190,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -246,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity price excl. VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -302,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity purchasing fee',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -358,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity tax',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -414,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -470,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas market price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -526,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -582,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas price excl. VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -638,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas purchasing fee',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -694,6 +649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas tax',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -750,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -806,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -862,6 +820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -918,6 +877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next electricity price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -974,6 +934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next gas price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,

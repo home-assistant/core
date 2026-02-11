@@ -8,6 +8,8 @@ import datetime
 import logging
 from typing import Any, Final, cast
 
+from fitbit_web_api.models.device import Device
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,7 +34,7 @@ from .api import FitbitApi
 from .const import ATTRIBUTION, BATTERY_LEVELS, DOMAIN, FitbitScope, FitbitUnitSystem
 from .coordinator import FitbitConfigEntry, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
-from .model import FitbitDevice, config_from_entry_data
+from .model import config_from_entry_data
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -459,7 +461,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="sleep/timeInBed",
         translation_key="sleep_time_in_bed",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        icon="mdi:hotel",
+        icon="mdi:bed",
         device_class=SensorDeviceClass.DURATION,
         scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -657,7 +659,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
         coordinator: FitbitDeviceCoordinator,
         user_profile_id: str,
         description: FitbitSensorEntityDescription,
-        device: FitbitDevice,
+        device: Device,
         enable_default_override: bool,
     ) -> None:
         """Initialize the Fitbit sensor."""
@@ -677,7 +679,9 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if battery_level := BATTERY_LEVELS.get(self.device.battery):
+        if self.device.battery is not None and (
+            battery_level := BATTERY_LEVELS.get(self.device.battery)
+        ):
             return icon_for_battery_level(battery_level=battery_level)
         return self.entity_description.icon
 
@@ -697,7 +701,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.device = self.coordinator.data[self.device.id]
+        self.device = self.coordinator.data[cast(str, self.device.id)]
         self._attr_native_value = self.device.battery
         self.async_write_ha_state()
 
@@ -715,7 +719,7 @@ class FitbitBatteryLevelSensor(
         coordinator: FitbitDeviceCoordinator,
         user_profile_id: str,
         description: FitbitSensorEntityDescription,
-        device: FitbitDevice,
+        device: Device,
     ) -> None:
         """Initialize the Fitbit sensor."""
         super().__init__(coordinator)
@@ -736,6 +740,6 @@ class FitbitBatteryLevelSensor(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.device = self.coordinator.data[self.device.id]
+        self.device = self.coordinator.data[cast(str, self.device.id)]
         self._attr_native_value = self.device.battery_level
         self.async_write_ha_state()

@@ -1,7 +1,5 @@
 """Test Roborock Number platform."""
 
-from unittest.mock import Mock
-
 import pytest
 from roborock.exceptions import RoborockTimeout
 
@@ -9,6 +7,8 @@ from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from .conftest import FakeDevice
 
 from tests.common import MockConfigEntry
 
@@ -19,57 +19,56 @@ def platforms() -> list[Platform]:
     return [Platform.NUMBER]
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "value"),
-    [
-        ("number.roborock_s7_maxv_volume", 3.0),
-    ],
-)
-async def test_update_success(
+async def test_update_sound_volume(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
-    entity_id: str,
-    value: float,
-    mock_send_message: Mock,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test allowed changing values for number entities."""
+
     # Ensure that the entity exist, as these test can pass even if there is no entity.
-    assert hass.states.get(entity_id) is not None
+    state = hass.states.get("number.roborock_s7_maxv_volume")
+    assert state is not None
+    assert state.state == "50.0"
+
     await hass.services.async_call(
         "number",
         SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: value},
+        service_data={ATTR_VALUE: 3.0},
         blocking=True,
-        target={"entity_id": entity_id},
+        target={"entity_id": "number.roborock_s7_maxv_volume"},
     )
-    assert mock_send_message.assert_called_once
+
+    assert fake_vacuum.v1_properties is not None
+    assert fake_vacuum.v1_properties.sound_volume.set_volume.call_count == 1
+    assert fake_vacuum.v1_properties.sound_volume.set_volume.call_args[0] == (3.0,)
+
+    # Verify the entity state is updated with the latest information from the trait
+    state = hass.states.get("number.roborock_s7_maxv_volume")
+    assert state is not None
+    assert state.state == "3.0"
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "value"),
-    [
-        ("number.roborock_s7_maxv_volume", 3.0),
-    ],
-)
-@pytest.mark.parametrize("send_message_side_effect", [RoborockTimeout])
-async def test_update_failed(
+async def test_volume_update_failed(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
-    entity_id: str,
-    value: float,
-    mock_send_message: Mock,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test allowed changing values for number entities."""
+    assert fake_vacuum.v1_properties is not None
+    fake_vacuum.v1_properties.sound_volume.set_volume.side_effect = RoborockTimeout
+
     # Ensure that the entity exist, as these test can pass even if there is no entity.
-    assert hass.states.get(entity_id) is not None
+    assert hass.states.get("number.roborock_s7_maxv_volume") is not None
+
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "number",
             SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: value},
+            service_data={ATTR_VALUE: 3.0},
             blocking=True,
-            target={"entity_id": entity_id},
+            target={"entity_id": "number.roborock_s7_maxv_volume"},
         )
-    assert mock_send_message.assert_called_once
+
+    assert fake_vacuum.v1_properties.sound_volume.set_volume.call_count == 1
+    assert fake_vacuum.v1_properties.sound_volume.set_volume.call_args[0] == (3.0,)

@@ -63,16 +63,14 @@ class HueBLELight(LightEntity):
 
         self._api = light
         self._attr_unique_id = light.address
-        self._attr_min_color_temp_kelvin = (
-            color_util.color_temperature_mired_to_kelvin(light.maximum_mireds)
-            if light.maximum_mireds
-            else None
-        )
-        self._attr_max_color_temp_kelvin = (
-            color_util.color_temperature_mired_to_kelvin(light.minimum_mireds)
-            if light.minimum_mireds
-            else None
-        )
+        if light.maximum_mireds:
+            self._attr_min_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(light.maximum_mireds)
+            )
+        if light.minimum_mireds:
+            self._attr_max_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(light.minimum_mireds)
+            )
         self._attr_device_info = DeviceInfo(
             name=light.name,
             connections={(CONNECTION_BLUETOOTH, light.address)},
@@ -113,7 +111,7 @@ class HueBLELight(LightEntity):
 
     async def async_update(self) -> None:
         """Fetch latest state from light and make available via properties."""
-        await self._api.poll_state(run_callbacks=True)
+        await self._api.poll_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set properties then turn the light on."""

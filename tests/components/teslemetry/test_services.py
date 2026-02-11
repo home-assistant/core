@@ -51,17 +51,51 @@ lon = 153.3726526
 
 async def test_services(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services are correct."""
 
     await setup_platform(hass)
-    entity_registry = er.async_get(hass)
 
     # Get a vehicle device ID
     vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
     energy_device = entity_registry.async_get(
         "sensor.energy_site_battery_power"
     ).device_id
+
+    # Test set_scheduled_charging with enable=False (time should default to 0)
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_charging",
+        return_value=COMMAND_OK,
+    ) as set_scheduled_charging_off:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+        set_scheduled_charging_off.assert_called_once_with(enable=False, time=0)
+
+    # Test set_scheduled_departure with enable=False (times should default to 0)
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_departure",
+        return_value=COMMAND_OK,
+    ) as set_scheduled_departure_off:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+        set_scheduled_departure_off.assert_called_once_with(
+            False, False, False, 0, False, False, 0
+        )
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.navigation_gps_request",
@@ -304,13 +338,15 @@ async def test_services(
 
 async def test_service_validation_errors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services handle bad data."""
 
     await setup_platform(hass)
+    vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
 
-    # Bad device ID
-    with pytest.raises(ServiceValidationError):
+    # Bad device ID - verify translation key is used
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
@@ -320,3 +356,43 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "invalid_device"
+
+    # Test set_scheduled_charging validation error (enable=True but no time)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "set_scheduled_charging_time"
+
+    # Test set_scheduled_departure validation error (preconditioning_enabled=True but no departure_time)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_PRECONDITIONING_ENABLED: True,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "set_scheduled_departure_preconditioning"
+
+    # Test set_scheduled_departure validation error (off_peak_charging_enabled=True but no end_off_peak_time)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "set_scheduled_departure_off_peak"

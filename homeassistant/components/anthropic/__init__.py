@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
-
 import anthropic
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -14,10 +12,19 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, DEFAULT, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .const import (
+    CONF_CHAT_MODEL,
+    DATA_REPAIR_DEFER_RELOAD,
+    DEFAULT_CONVERSATION_NAME,
+    DEPRECATED_MODELS,
+    DOMAIN,
+    LOGGER,
+)
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -27,24 +34,18 @@ type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Anthropic."""
+    hass.data.setdefault(DOMAIN, {}).setdefault(DATA_REPAIR_DEFER_RELOAD, set())
     await async_migrate_integration(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     try:
-        # Use model from first conversation subentry for validation
-        subentries = list(entry.subentries.values())
-        if subentries:
-            model_id = subentries[0].data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
-        else:
-            model_id = DEFAULT[CONF_CHAT_MODEL]
-        model = await client.models.retrieve(model_id=model_id, timeout=10.0)
-        LOGGER.debug("Anthropic model: %s", model.display_name)
+        await client.models.list(timeout=10.0)
     except anthropic.AuthenticationError as err:
         LOGGER.error("Invalid API key: %s", err)
         return False
@@ -56,6 +57,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+
+    for subentry in entry.subentries.values():
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
+            tuple(DEPRECATED_MODELS)
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "model_deprecated",
+                is_fixable=True,
+                is_persistent=False,
+                learn_more_url="https://platform.claude.com/docs/en/about-claude/model-deprecations",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="model_deprecated",
+            )
+            break
 
     return True
 
@@ -69,6 +86,11 @@ async def async_update_options(
     hass: HomeAssistant, entry: AnthropicConfigEntry
 ) -> None:
     """Update options."""
+    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
+        DATA_REPAIR_DEFER_RELOAD, set()
+    )
+    if entry.entry_id in defer_reload_entries:
+        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 

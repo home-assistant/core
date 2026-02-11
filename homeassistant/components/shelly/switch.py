@@ -36,7 +36,7 @@ from .entity import (
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
@@ -100,8 +100,8 @@ RPC_SWITCHES = {
     "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SWITCH_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SWITCH_PLATFORM)
         ),
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -264,8 +264,10 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "left", value),
         entity_registry_enabled_default=True,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_left_boost": RpcSwitchDescription(
         key="cury",
@@ -276,8 +278,10 @@ RPC_SWITCHES = {
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "left"),
         entity_registry_enabled_default=True,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right": RpcSwitchDescription(
         key="cury",
@@ -288,8 +292,10 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "right", value),
         entity_registry_enabled_default=True,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_boost": RpcSwitchDescription(
         key="cury",
@@ -300,13 +306,14 @@ RPC_SWITCHES = {
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "right"),
         entity_registry_enabled_default=True,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_away_mode": RpcSwitchDescription(
         key="cury",
         sub_key="away_mode",
-        name="Away mode",
         translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
         method_on="cury_set_away_mode",
@@ -338,11 +345,11 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_RELAY_SWITCHES, BlockRelaySwitch
     )
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass,
         config_entry,
         async_add_entities,

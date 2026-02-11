@@ -14,7 +14,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 # To prevent circular import when running just this file
-from homeassistant import exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
 from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, Group
@@ -56,6 +56,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
+    MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
     MockModule,
@@ -1397,6 +1398,96 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     assert descriptions[logger_domain]["new_service"]["description"] == "new service"
 
 
+async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> None:
+    """Test descriptions async_get_all_descriptions with placeholders.
+
+    Placeholders supplied with a service registration should be included.
+    """
+    service_descriptions = """
+    happy_time:
+      fields:
+        topic:
+          selector:
+            text:
+        duration:
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 300
+              unit_of_measurement: "seconds"
+    """
+
+    service_schema = vol.Schema(
+        {
+            "topic": cv.string,
+            "duration": cv.positive_int,
+        }
+    )
+
+    domain = "test_domain"
+
+    hass.services.async_register(
+        domain,
+        "happy_time",
+        lambda call: None,
+        schema=service_schema,
+        description_placeholders={"placeholder": "beer"},
+    )
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    assert await async_setup_component(hass, domain, {})
+
+    def load_yaml(fname, secrets=None):
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_files",
+            side_effect=service._load_services_files,
+        ) as proxy_load_services_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=load_yaml,
+        ) as mock_load_yaml,
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
+        [
+            await async_get_integration(hass, domain),
+        ]
+    )
+
+    assert descriptions == {
+        "test_domain": {
+            "happy_time": {
+                "fields": {
+                    "topic": {
+                        "selector": {"text": {"multiple": False, "multiline": False}}
+                    },
+                    "duration": {
+                        "default": 5,
+                        "selector": {
+                            "number": {
+                                "min": 1.0,
+                                "max": 300.0,
+                                "unit_of_measurement": "seconds",
+                                "step": 1.0,
+                                "mode": "slider",
+                            }
+                        },
+                    },
+                },
+                "description_placeholders": {"placeholder": "beer"},
+            }
+        }
+    }
+
+
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
     """Test registering a service with mixed case.
 
@@ -1840,6 +1931,37 @@ async def test_register_admin_service(
     )
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+async def test_register_admin_service_with_placeholders(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test the register admin service with description placeholders."""
+    calls = []
+
+    async def mock_service(call):
+        calls.append(call)
+
+    service.async_register_admin_service(
+        hass,
+        "test",
+        "test",
+        mock_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    await hass.services.async_call(
+        "test",
+        "test",
+        {},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+    assert len(calls) == 1
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions["test"]["test"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
 
 
 @pytest.mark.parametrize(
@@ -2345,11 +2467,14 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     """Test the reload service helper."""
 
     active_reload_calls = 0
+    service_error: type[Exception] | None = None
     reloaded = []
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         nonlocal active_reload_calls
+        if service_error:
+            raise service_error
         # Assert the reload helper prevents parallel reloads
         assert not active_reload_calls
         active_reload_calls += 1
@@ -2556,6 +2681,41 @@ async def test_reload_service_helper(hass: HomeAssistant) -> None:
     await asyncio.gather(*tasks)
     assert reloaded == unordered(["all", "target1", "target2", "target3", "target4"])
 
+    # Test error handling when reload fails, and that we can recover from it
+    reloaded.clear()
+    service_error = Exception("Test error")
+    tasks = [
+        # This reload task will start executing first, (all)
+        reloader.execute_service(ServiceCall(hass, "test", "test")),
+        # These reload tasks will be deduplicated to (target1, target2, target3, target4)
+        # while the first task is reloaded.
+        reloader.execute_service(
+            ServiceCall(hass, "test", "test", {"target": "target1"})
+        ),
+        reloader.execute_service(
+            ServiceCall(hass, "test", "test", {"target": "target2"})
+        ),
+        reloader.execute_service(
+            ServiceCall(hass, "test", "test", {"target": "target3"})
+        ),
+        reloader.execute_service(
+            ServiceCall(hass, "test", "test", {"target": "target4"})
+        ),
+    ]
+    with pytest.raises(Exception, match="Test error"):
+        await asyncio.gather(*tasks)
+    assert reloaded == unordered([])
+
+    service_error = None
+    tasks2 = [
+        reloader.execute_service(
+            ServiceCall(hass, "test", "test", {"target": "target1"})
+        ),
+    ]
+    await asyncio.gather(*tasks2)
+    # We don't try to reload the failed targets again, so only the new reload is executed
+    assert reloaded == unordered(["target1"])
+
 
 async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> None:
     """Test that the deprecated ServiceTargetSelector class forwards correctly."""
@@ -2578,7 +2738,7 @@ async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> 
     assert selector.device_ids == {"device1", "device2"}
     assert selector.floor_ids == {"first_floor"}
     assert selector.label_ids == {"label1", "label2"}
-    assert selector.has_any_selector is True
+    assert selector.has_any_target is True
 
 
 async def test_deprecated_selected_entities_class(
@@ -2651,6 +2811,13 @@ async def test_register_platform_entity_service(
         entity_domain="mock_integration",
         schema={},
         func=handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert (
+        descriptions["mock_platform"]["hello"]["description_placeholders"]
+        == {"test_placeholder": "beer"}
+        == {"test_placeholder": "beer"}
     )
 
     await hass.services.async_call(
@@ -2956,3 +3123,30 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             schema=schema,
             func=Mock(),
         )
+
+
+async def test_get_service_config_entry(hass: HomeAssistant) -> None:
+    """Test that we can get a service config entry."""
+    domain = "mock_integration"
+    entry_id = "mock_entry_id"
+    # Config entry exists, and is loaded
+    entry1 = MockConfigEntry(domain=domain, entry_id=entry_id)
+    entry1.add_to_hass(hass)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    assert service.async_get_config_entry(hass, domain, entry_id) is entry1
+
+    # Config entry doesn't exist
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, "another_entry")
+    assert err.value.translation_key == "service_config_entry_not_found"
+
+    # Config entry exists, but from wrong domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, "another_domain", entry_id)
+    assert err.value.translation_key == "service_config_entry_wrong_domain"
+
+    # Config entry exists, but is not loaded
+    entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, entry_id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"

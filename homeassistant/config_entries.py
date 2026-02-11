@@ -291,6 +291,7 @@ class ConfigFlowContext(FlowContext, total=False):
     configuration_url: str
     confirm_only: bool
     discovery_key: DiscoveryKey
+    dismiss_protected: bool
     entry_id: str
     title_placeholders: Mapping[str, str]
     unique_id: str | None
@@ -754,6 +755,7 @@ class ConfigEntry[_DataT = Any]:
         error_reason_translation_key = None
         error_reason_translation_placeholders = None
 
+        result = False
         try:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
@@ -775,8 +777,6 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload(hass)
-            result = False
         except ConfigEntryAuthFailed as exc:
             message = str(exc)
             auth_base_message = "could not authenticate"
@@ -792,9 +792,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
-            result = False
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -835,14 +833,39 @@ class ConfigEntry[_DataT = Any]:
                     functools.partial(self._async_setup_again, hass),
                 )
 
-            await self._async_process_on_unload(hass)
             return
-        # pylint: disable-next=broad-except
-        except (asyncio.CancelledError, SystemExit, Exception):
+
+        except asyncio.CancelledError:
+            # We want to propagate CancelledError if we are being cancelled.
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                _LOGGER.exception(
+                    "Setup of config entry '%s' for %s integration cancelled",
+                    self.title,
+                    self.domain,
+                )
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    None,
+                    None,
+                    None,
+                )
+                raise
+
+            # This was not a "real" cancellation, log it and treat as a normal error.
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
-            result = False
+
+        # pylint: disable-next=broad-except
+        except SystemExit, Exception:
+            _LOGGER.exception(
+                "Error setting up entry %s for %s", self.title, integration.domain
+            )
+
+        finally:
+            if not result and domain_is_integration:
+                await self._async_process_on_unload(hass)
 
         #
         # After successfully calling async_setup_entry, it is important that this function
@@ -1488,6 +1511,21 @@ class ConfigEntriesFlowManager(
                 subscription("added", flow.flow_id)
 
         return result
+
+    async def _async_configure(
+        self, flow_id: str, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Continue a configuration flow.
+
+        Mark the flow as dismiss protected since the user has interacted
+        with it. This prevents discovery sources from aborting the flow
+        while the user is actively configuring it.
+        """
+        if (flow := self._progress.get(flow_id)) and flow.context.get(
+            "source"
+        ) in DISCOVERY_SOURCES:
+            flow.context["dismiss_protected"] = True
+        return await super()._async_configure(flow_id, user_input)
 
     async def _async_init(
         self,
@@ -3362,10 +3400,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         if self.source == SOURCE_REAUTH and "entry_id" in self.context:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.
