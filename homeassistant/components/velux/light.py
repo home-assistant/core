@@ -26,12 +26,42 @@ async def async_setup_entry(
     async_add_entities(
         VeluxLight(node, config_entry.entry_id)
         for node in pyvlx.nodes
-        if isinstance(node, (Light, OnOffLight))
+        if isinstance(node, Light)
+    )
+    async_add_entities(
+        VeluxOnOffLight(node, config_entry.entry_id)
+        for node in pyvlx.nodes
+        if isinstance(node, OnOffLight)
     )
 
 
-class VeluxLight(VeluxEntity, LightEntity):
-    """Representation of a Velux light."""
+class VeluxOnOffLight(VeluxEntity, LightEntity):
+    """Representation of a Velux light without brightness control."""
+
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_name = None
+
+    node: OnOffLight
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return not self.node.intensity.off and self.node.intensity.known
+
+    @wrap_pyvlx_call_exceptions
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Instruct the light to turn on."""
+        await self.node.turn_on(wait_for_completion=True)
+
+    @wrap_pyvlx_call_exceptions
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Instruct the light to turn off."""
+        await self.node.turn_off(wait_for_completion=True)
+
+
+class VeluxLight(VeluxOnOffLight, LightEntity):
+    """Representation of a Velux light with brightness control."""
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -40,14 +70,9 @@ class VeluxLight(VeluxEntity, LightEntity):
     node: Light
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness."""
         return int(self.node.intensity.intensity_percent * 255 / 100)
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return not self.node.intensity.off and self.node.intensity.known
 
     @wrap_pyvlx_call_exceptions
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -60,8 +85,3 @@ class VeluxLight(VeluxEntity, LightEntity):
             )
         else:
             await self.node.turn_on(wait_for_completion=True)
-
-    @wrap_pyvlx_call_exceptions
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the light to turn off."""
-        await self.node.turn_off(wait_for_completion=True)
