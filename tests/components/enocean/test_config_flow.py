@@ -2,12 +2,15 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
-from homeassistant.components.enocean.const import DOMAIN
+from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -171,3 +174,66 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_dongle_path"
+
+
+@pytest.mark.parametrize(
+    ("usb_discovery_info", "device", "discovery_name"),
+    [
+        (
+            UsbServiceInfo(
+                device="/dev/enocean0",
+                pid="6001",
+                vid="0403",
+                serial_number="1234",
+                description="USB 300",
+                manufacturer="EnOcean GmbH",
+            ),
+            "/dev/enocean0",
+            "EnOcean USB 300",
+        ),
+    ],
+)
+async def test_usb_discovery(
+    hass: HomeAssistant,
+    # mock_usb_serial_by_id: MagicMock,
+    usb_discovery_info: UsbServiceInfo,
+    device: str,
+    discovery_name: str,
+) -> None:
+    """Test usb discovery success path."""
+    # test discovery step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=usb_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "usb_confirm"
+    assert result["errors"] == {}
+
+    # test invalid device path
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    # await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"device": "invalid_dongle_path"}
+
+    # test valid device path
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MANUFACTURER
+    assert result["data"] == {
+        "device": "/dev/enocean0",
+    }
