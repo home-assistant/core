@@ -2072,7 +2072,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.13.0
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.1
+pysmartthings==3.5.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2260,7 +2260,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.28
+pyvlx==0.2.29
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2597,7 +2597,7 @@ twilio==6.32.0
 twitchAPI==4.2.1
 
 # homeassistant.components.monarch_money
-typedmonarchmoney==0.4.4
+typedmonarchmoney==0.7.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
