@@ -590,6 +590,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_register_built_in_panel(hass, "profile")
+    async_register_built_in_panel(hass, "notfound")
 
     @callback
     def async_change_listener(
@@ -923,7 +924,7 @@ def websocket_get_panels(
             if config_override
             else panel.require_admin
         )
-        if not user_is_admin and require_admin and panel_key != "home":
+        if not user_is_admin and require_admin:
             continue
         panels[panel_key] = panel.to_response(config_override)
 
