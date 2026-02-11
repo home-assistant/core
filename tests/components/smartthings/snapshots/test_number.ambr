@@ -179,64 +179,6 @@
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_remote_controller_room_temp_control_internal_sensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_remote_controller_room_temp_control_internal_sensor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Remote controller room temp control (internal sensor)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Remote controller room temp control (internal sensor)',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'remote_controller_room_temp_control_internal_sensor',
-    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2093',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_remote_controller_room_temp_control_internal_sensor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump Remote controller room temp control (internal sensor)',
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.heat_pump_remote_controller_room_temp_control_internal_sensor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
 # name: test_all_entities[da_ac_ehs_01001][number.heat_pump_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1435,64 +1377,6 @@
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_remote_controller_room_temp_control_internal_sensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_remote_controller_room_temp_control_internal_sensor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Remote controller room temp control (internal sensor)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Remote controller room temp control (internal sensor)',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'remote_controller_room_temp_control_internal_sensor',
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2093',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_remote_controller_room_temp_control_internal_sensor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System Remote controller room temp control (internal sensor)',
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_remote_controller_room_temp_control_internal_sensor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
 # name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2213,64 +2097,6 @@
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_remote_controller_room_temp_control_internal_sensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_remote_controller_room_temp_control_internal_sensor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Remote controller room temp control (internal sensor)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Remote controller room temp control (internal sensor)',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'remote_controller_room_temp_control_internal_sensor',
-    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2093',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_remote_controller_room_temp_control_internal_sensor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main Remote controller room temp control (internal sensor)',
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_remote_controller_room_temp_control_internal_sensor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2989,64 +2815,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
-  })
-# ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_remote_controller_room_temp_control_internal_sensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_remote_controller_room_temp_control_internal_sensor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Remote controller room temp control (internal sensor)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Remote controller room temp control (internal sensor)',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'remote_controller_room_temp_control_internal_sensor',
-    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2093',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_remote_controller_room_temp_control_internal_sensor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe Remote controller room temp control (internal sensor)',
-      'max': 4,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.warmepumpe_remote_controller_room_temp_control_internal_sensor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_target_dhw_tank_temperature_lower_limit_user_limit-entry]

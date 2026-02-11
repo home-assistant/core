@@ -312,10 +312,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -353,10 +353,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat pump Remote controller room temp control (internal sensor)',
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'context': <ANY>,
@@ -364,7 +364,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'level_2',
+    'state': 'room_or_wl_pump_off',
   })
 # ---
 # name: test_all_entities[da_ac_ehs_01001][select.heat_pump_three_way_valve_direction-entry]
@@ -1270,10 +1270,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1311,10 +1311,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eco Heating System Remote controller room temp control (internal sensor)',
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'context': <ANY>,
@@ -1322,7 +1322,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'level_4',
+    'state': 'room_or_wl_pump_cycle',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_three_way_valve_direction-entry]
@@ -1754,10 +1754,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1795,10 +1795,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Heat Pump Main Remote controller room temp control (internal sensor)',
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'context': <ANY>,
@@ -1806,7 +1806,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'level_4',
+    'state': 'room_or_wl_pump_cycle',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_three_way_valve_direction-entry]
@@ -2238,10 +2238,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2279,10 +2279,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wärmepumpe Remote controller room temp control (internal sensor)',
       'options': list([
-        'level_1',
-        'level_2',
-        'level_3',
-        'level_4',
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
       ]),
     }),
     'context': <ANY>,
@@ -2290,7 +2290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'level_4',
+    'state': 'room_or_wl_pump_cycle',
   })
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_three_way_valve_direction-entry]

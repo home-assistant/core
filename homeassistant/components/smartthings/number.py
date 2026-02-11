@@ -137,12 +137,6 @@ FSV_NUMBER_DESCRIPTIONS: dict[str, SmartThingsFsvEntityDescription] = {
         is_temperature_type=True,
         entity_category=EntityCategory.CONFIG,
     ),
-    "2093": SmartThingsFsvEntityDescription(
-        key="2093",
-        fsv_id="2093",
-        translation_key="remote_controller_room_temp_control_internal_sensor",
-        entity_category=EntityCategory.CONFIG,
-    ),
     "3021": SmartThingsFsvEntityDescription(
         key="3021",
         fsv_id="3021",
@@ -174,12 +168,6 @@ FSV_NUMBER_DESCRIPTIONS: dict[str, SmartThingsFsvEntityDescription] = {
         key="3032",
         fsv_id="3032",
         translation_key="max_cylinder_heating_time_hp_before_booster_assist",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    "3042": SmartThingsFsvEntityDescription(
-        key="3042",
-        fsv_id="3042",
-        translation_key="anti_legionella_function_day",
         entity_category=EntityCategory.CONFIG,
     ),
     "3043": SmartThingsFsvEntityDescription(

@@ -431,12 +431,12 @@
         }
       },
       "remote_controller_room_temp_control": {
-        "name": "Remote controller room temp control (internal sensor)",
+        "name": "Room temperature sensor control mode for wired remote controller",
         "state": {
-          "level_1": "Level 1",
-          "level_2": "Level 2",
-          "level_3": "Level 3",
-          "level_4": "Level 4"
+          "room_or_wl_pump_cycle": "Room or water law with pump cycling",
+          "room_or_wl_pump_off": "Room or water law with pump off",
+          "room_or_wl_pump_on": "Room or water law with pump on",
+          "room_sensor_only": "Room sensor only"
         }
       },
       "smart_grid_dhw_mode": {

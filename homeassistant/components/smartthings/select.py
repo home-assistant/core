@@ -385,7 +385,13 @@ FSV_SELECT_DESCRIPTIONS: dict[str, SmartThingsFsvSelectEntityDescription] = {
         key="2093",
         fsv_id="2093",
         translation_key="remote_controller_room_temp_control",
-        value_map=_fsv_option_map("level_1", "level_2", "level_3", "level_4", offset=1),
+        value_map=_fsv_option_map(
+            "room_sensor_only",
+            "room_or_wl_pump_off",
+            "room_or_wl_pump_on",
+            "room_or_wl_pump_cycle",
+            offset=1,
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
     "3011": SmartThingsFsvSelectEntityDescription(
