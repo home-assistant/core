@@ -46,7 +46,7 @@
           'readonly': 0,
           'readwrite': 0,
           'unit': '',
-          'value': 'On',
+          'value': 1,
         }),
         'release': dict({
           'data_type': 1,
