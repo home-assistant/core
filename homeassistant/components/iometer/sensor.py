@@ -30,7 +30,7 @@ from .entity import IOmeterEntity
 class IOmeterEntityDescription(SensorEntityDescription):
     """Describes IOmeter sensor entity."""
 
-    value_fn: Callable[[IOmeterData], str | int | float]
+    value_fn: Callable[[IOmeterData], str | int | float | None]
 
 
 SENSOR_TYPES: list[IOmeterEntityDescription] = [
@@ -73,7 +73,11 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: int(round(data.status.device.core.battery_level)),
+        value_fn=lambda data: (
+            int(round(data.status.device.core.battery_level))
+            if data.status.device.core.battery_level is not None
+            else None
+        ),
     ),
     IOmeterEntityDescription(
         key="pin_status",
