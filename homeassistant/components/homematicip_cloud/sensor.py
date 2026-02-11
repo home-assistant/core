@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
@@ -27,6 +29,7 @@ from homematicip.device import (
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SmokeDetector,
     SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
@@ -43,6 +46,7 @@ from homematicip.device import (
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -65,7 +69,70 @@ from homeassistant.helpers.typing import StateType
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channels_from_device
+from .helpers import get_channels_from_device, smoke_detector_channel_data_exists
+
+
+@dataclass(frozen=True, kw_only=True)
+class HmipSmokeDetectorSensorDescription(SensorEntityDescription):
+    """Describes HmIP smoke detector sensor entity."""
+
+    value_fn: Callable[[SmokeDetector], StateType | datetime]
+    channel_field: str  # Field name in the raw channel payload
+
+
+SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
+    HmipSmokeDetectorSensorDescription(
+        key="dirt_level",
+        translation_key="smoke_detector_dirt_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        channel_field="dirtLevel",
+        value_fn=lambda d: (
+            round(d.dirtLevel * 100, 1) if d.dirtLevel is not None else None
+        ),
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="smoke_alarm_counter",
+        translation_key="smoke_detector_alarm_counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        channel_field="smokeAlarmCounter",
+        value_fn=lambda d: d.smokeAlarmCounter,
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="smoke_test_counter",
+        translation_key="smoke_detector_test_counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        channel_field="smokeTestCounter",
+        value_fn=lambda d: d.smokeTestCounter,
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="last_smoke_alarm",
+        translation_key="smoke_detector_last_alarm",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        channel_field="lastSmokeAlarmTimestamp",
+        value_fn=lambda d: (
+            datetime.fromtimestamp(d.lastSmokeAlarmTimestamp / 1000, tz=UTC)
+            if d.lastSmokeAlarmTimestamp
+            else None
+        ),
+    ),
+    HmipSmokeDetectorSensorDescription(
+        key="last_smoke_test",
+        translation_key="smoke_detector_last_test",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        channel_field="lastSmokeTestTimestamp",
+        value_fn=lambda d: (
+            datetime.fromtimestamp(d.lastSmokeTestTimestamp / 1000, tz=UTC)
+            if d.lastSmokeTestTimestamp
+            else None
+        ),
+    ),
+)
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
@@ -287,6 +354,15 @@ async def async_setup_entry(
         for channel in device.functionalChannels
         if isinstance(channel, FloorTerminalBlockMechanicChannel)
         and getattr(channel, "valvePosition", None) is not None
+    )
+
+    # Handle smoke detector extended sensors (e.g., HmIP-SWSD-2)
+    entities.extend(
+        HmipSmokeDetectorSensor(hap, device, description)
+        for device in hap.home.devices
+        if isinstance(device, SmokeDetector)
+        for description in SMOKE_DETECTOR_SENSORS
+        if smoke_detector_channel_data_exists(device, description.channel_field)
     )
 
     async_add_entities(entities)
@@ -934,6 +1010,33 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEnt
         state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter
 
         return state_attr
+
+
+class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
+    """Sensor for HomematicIP smoke detector extended properties."""
+
+    entity_description: HmipSmokeDetectorSensorDescription
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: SmokeDetector,
+        description: HmipSmokeDetectorSensorDescription,
+    ) -> None:
+        """Initialize the smoke detector sensor."""
+        super().__init__(hap, device, post=description.key)
+        self.entity_description = description
+        self._sensor_unique_id = f"{device.id}_{description.key}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._sensor_unique_id
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self._device)
 
 
 def _get_wind_direction(wind_direction_degree: float) -> str:
