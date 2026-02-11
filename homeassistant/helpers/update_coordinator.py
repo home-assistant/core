@@ -357,8 +357,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self._async_setup()
 
         except (
-            OAuth2TokenRequestReauthError,
-            OAuth2TokenRequestTransientError,
             OAuth2TokenRequestError,
         ) as err:
             if isinstance(err, OAuth2TokenRequestReauthError):
