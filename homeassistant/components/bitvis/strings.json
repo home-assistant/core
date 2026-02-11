@@ -1,0 +1,134 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Bitvis Power Hub device.",
+          "name": "Name for this Bitvis Power Hub device.",
+          "port": "UDP port the Bitvis Power Hub sends data to."
+        },
+        "description": "Enter the network details for your Bitvis Power Hub device",
+        "title": "Set up Bitvis Power Hub"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the discovered Bitvis Power Hub ({name}) at {host} to Home Assistant?",
+        "title": "Discovered Bitvis Power Hub"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_active_delivered_by_client": {
+        "name": "Active energy export"
+      },
+      "energy_active_delivered_to_client": {
+        "name": "Active energy import"
+      },
+      "energy_reactive_delivered_by_client": {
+        "name": "Reactive energy export"
+      },
+      "energy_reactive_delivered_to_client": {
+        "name": "Reactive energy import"
+      },
+      "han_msg_buffer_overflow": {
+        "name": "HAN buffer overflows"
+      },
+      "han_msg_successfully_parsed": {
+        "name": "HAN messages successfully parsed"
+      },
+      "mac_address": {
+        "name": "MAC address"
+      },
+      "model_name": {
+        "name": "[%key:common::generic::model%]"
+      },
+      "phase_current_l1": {
+        "name": "Current L1"
+      },
+      "phase_current_l2": {
+        "name": "Current L2"
+      },
+      "phase_current_l3": {
+        "name": "Current L3"
+      },
+      "phase_voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "phase_voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "phase_voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "power_active_delivered_by_client": {
+        "name": "Active power export"
+      },
+      "power_active_delivered_to_client": {
+        "name": "Active power import"
+      },
+      "power_active_l1_delivered_by_client": {
+        "name": "Active power export L1"
+      },
+      "power_active_l1_delivered_to_client": {
+        "name": "Active power import L1"
+      },
+      "power_active_l2_delivered_by_client": {
+        "name": "Active power export L2"
+      },
+      "power_active_l2_delivered_to_client": {
+        "name": "Active power import L2"
+      },
+      "power_active_l3_delivered_by_client": {
+        "name": "Active power export L3"
+      },
+      "power_active_l3_delivered_to_client": {
+        "name": "Active power import L3"
+      },
+      "power_reactive_delivered_by_client": {
+        "name": "Reactive power export"
+      },
+      "power_reactive_delivered_to_client": {
+        "name": "Reactive power import"
+      },
+      "power_reactive_l1_delivered_by_client": {
+        "name": "Reactive power export L1"
+      },
+      "power_reactive_l1_delivered_to_client": {
+        "name": "Reactive power import L1"
+      },
+      "power_reactive_l2_delivered_by_client": {
+        "name": "Reactive power export L2"
+      },
+      "power_reactive_l2_delivered_to_client": {
+        "name": "Reactive power import L2"
+      },
+      "power_reactive_l3_delivered_by_client": {
+        "name": "Reactive power export L3"
+      },
+      "power_reactive_l3_delivered_to_client": {
+        "name": "Reactive power import L3"
+      },
+      "sw_version": {
+        "name": "Software version"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "wifi_rssi": {
+        "name": "WiFi signal strength"
+      }
+    }
+  }
+}

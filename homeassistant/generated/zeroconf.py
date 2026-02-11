@@ -845,6 +845,11 @@ ZEROCONF = {
             "domain": "plugwise",
         },
     ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
