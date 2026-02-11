@@ -76,7 +76,7 @@ async def test_setup_entry_create_client_errors(
 ) -> None:
     """Test various setup errors."""
     with patch(
-        "aiobotocore.session.AioSession.create_client",
+        "homeassistant.components.idrive_e2.AioSession.create_client",
         side_effect=exception,
     ):
         await setup_integration(hass, mock_config_entry)
