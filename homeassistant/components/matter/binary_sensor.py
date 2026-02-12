@@ -180,7 +180,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="LockActuatorEnabledSensor",
-            translation_key="actuator_enabled",
+            translation_key="actuator",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterBinarySensor,

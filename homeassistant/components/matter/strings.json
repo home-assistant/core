@@ -47,8 +47,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "actuator_enabled": {
-        "name": "Actuator enabled"
+      "actuator": {
+        "name": "Actuator"
       },
       "alarm_door": {
         "name": "Door alarm"

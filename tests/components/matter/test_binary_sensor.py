@@ -120,14 +120,14 @@ async def test_battery_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
-async def test_actuator_enabled_sensor(
+async def test_actuator_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test actuator enabled sensor."""
-    entity_id = "binary_sensor.mock_door_lock_actuator_enabled"
+    entity_id = "binary_sensor.mock_door_lock_actuator"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
