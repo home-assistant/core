@@ -1,5 +1,43 @@
 {
   "entity": {
+    "number": {
+      "boiler_target_temperature": {
+        "default": "mdi:water-boiler"
+      },
+      "boiler_target_temperature_const": {
+        "default": "mdi:water-boiler"
+      },
+      "heating_target_temperature_const": {
+        "default": "mdi:radiator"
+      },
+      "mixer_target_temperature": {
+        "default": "mdi:valve"
+      },
+      "mixer_target_temperature_zone": {
+        "default": "mdi:valve"
+      },
+      "target_temperature_comfort": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_const": {
+        "default": "mdi:thermometer-lines"
+      },
+      "target_temperature_eco": {
+        "default": "mdi:leaf"
+      },
+      "target_temperature_eco_cooling": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "target_temperature_eco_winter": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_holiday": {
+        "default": "mdi:beach"
+      },
+      "target_temperature_out_of_home": {
+        "default": "mdi:thermometer-off"
+      }
+    },
     "select": {
       "aero_by_pass": {
         "default": "mdi:valve",

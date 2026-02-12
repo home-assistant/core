@@ -33,6 +33,44 @@
     }
   },
   "entity": {
+    "number": {
+      "boiler_target_temperature": {
+        "name": "Boiler target temperature"
+      },
+      "boiler_target_temperature_const": {
+        "name": "Constant boiler target temperature"
+      },
+      "heating_target_temperature_const": {
+        "name": "Constant heating target temperature"
+      },
+      "mixer_target_temperature": {
+        "name": "Mixer target temperature"
+      },
+      "mixer_target_temperature_zone": {
+        "name": "Mixer {zone} target temperature"
+      },
+      "target_temperature_comfort": {
+        "name": "Target comfort temperature"
+      },
+      "target_temperature_const": {
+        "name": "Constant target temperature"
+      },
+      "target_temperature_eco": {
+        "name": "Target eco temperature"
+      },
+      "target_temperature_eco_cooling": {
+        "name": "Target eco cooling temperature"
+      },
+      "target_temperature_eco_winter": {
+        "name": "Target eco winter temperature"
+      },
+      "target_temperature_holiday": {
+        "name": "Target holiday temperature"
+      },
+      "target_temperature_out_of_home": {
+        "name": "Target out of home temperature"
+      }
+    },
     "select": {
       "aero_by_pass": {
         "name": "Bypass",
