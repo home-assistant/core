@@ -2872,6 +2872,12 @@
         "zwave"
       ]
     },
+    "homevolt": {
+      "name": "Homevolt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "homewizard": {
       "name": "HomeWizard",
       "integration_type": "device",

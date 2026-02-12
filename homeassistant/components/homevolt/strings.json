@@ -1,0 +1,147 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The local password configured for your Homevolt battery."
+        },
+        "description": "This device requires a password to connect. Please enter the password for {host}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Homevolt battery on your local network."
+        },
+        "description": "Connect Home Assistant to your Homevolt battery over the local network."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "available_charging_energy": {
+        "name": "Available charging energy"
+      },
+      "available_charging_power": {
+        "name": "Available charging power"
+      },
+      "available_discharge_energy": {
+        "name": "Available discharge energy"
+      },
+      "available_discharge_power": {
+        "name": "Available discharge power"
+      },
+      "average_rssi": {
+        "name": "Average RSSI"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery state of charge"
+      },
+      "charge_cycles": {
+        "unit_of_measurement": "cycles"
+      },
+      "energy_exported": {
+        "name": "Energy exported"
+      },
+      "energy_imported": {
+        "name": "Energy imported"
+      },
+      "exported_energy": {
+        "name": "Exported energy"
+      },
+      "imported_energy": {
+        "name": "Imported energy"
+      },
+      "l1_current": {
+        "name": "L1 current"
+      },
+      "l1_l2_voltage": {
+        "name": "L1-L2 voltage"
+      },
+      "l1_power": {
+        "name": "L1 power"
+      },
+      "l1_voltage": {
+        "name": "L1 voltage"
+      },
+      "l2_current": {
+        "name": "L2 current"
+      },
+      "l2_l3_voltage": {
+        "name": "L2-L3 voltage"
+      },
+      "l2_power": {
+        "name": "L2 power"
+      },
+      "l2_voltage": {
+        "name": "L2 voltage"
+      },
+      "l3_current": {
+        "name": "L3 current"
+      },
+      "l3_l1_voltage": {
+        "name": "L3-L1 voltage"
+      },
+      "l3_power": {
+        "name": "L3 power"
+      },
+      "l3_voltage": {
+        "name": "L3 voltage"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "schedule_id": {
+        "name": "Schedule ID"
+      },
+      "schedule_max_discharge": {
+        "name": "Schedule max discharge"
+      },
+      "schedule_max_power": {
+        "name": "Schedule max power"
+      },
+      "schedule_power_setpoint": {
+        "name": "Schedule power setpoint"
+      },
+      "schedule_type": {
+        "name": "Schedule type",
+        "state": {
+          "frequency_reserve": "Frequency reserve",
+          "full_solar_export": "Full solar export",
+          "grid_charge": "Grid charge",
+          "grid_charge_discharge": "Grid charge/discharge",
+          "grid_discharge": "Grid discharge",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge",
+          "solar_charge_discharge": "Solar charge/discharge"
+        }
+      },
+      "system_temperature": {
+        "name": "System temperature"
+      },
+      "tmax": {
+        "name": "Maximum temperature"
+      },
+      "tmin": {
+        "name": "Minimum temperature"
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "homevolt",
+  "name": "Homevolt",
+  "codeowners": ["@danielhiversen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homevolt",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["homevolt==0.4.3"]
+}
