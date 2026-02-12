@@ -2906,7 +2906,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.12.0
+slixmpp==1.13.2
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
