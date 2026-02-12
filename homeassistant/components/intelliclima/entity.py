@@ -32,8 +32,6 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
         if description is not None:
             self.entity_description = description
 
-        self._attr_unique_id = device.id
-
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},

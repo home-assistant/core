@@ -81,6 +81,17 @@ class IntelliClimaBinarySensor(IntelliClimaECOEntity, BinarySensorEntity):
 
     entity_description: IntelliClimaBinarySensorEntityDescription
 
+    def __init__(
+        self,
+        coordinator: IntelliClimaCoordinator,
+        device: IntelliClimaECO,
+        description: IntelliClimaBinarySensorEntityDescription,
+    ) -> None:
+        """Class initializer."""
+        super().__init__(coordinator, device, description)
+
+        self._attr_unique_id = f"{device.id}_{description.key}"
+
     @property
     def is_on(self) -> bool | None:
         """Use this to get the correct value."""

@@ -93,6 +93,17 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
 
     entity_description: IntelliClimaSensorEntityDescription
 
+    def __init__(
+        self,
+        coordinator: IntelliClimaCoordinator,
+        device: IntelliClimaECO,
+        description: IntelliClimaSensorEntityDescription,
+    ) -> None:
+        """Class initializer."""
+        super().__init__(coordinator, device, description)
+
+        self._attr_unique_id = f"{device.id}_{description.key}"
+
     @property
     def native_value(self) -> int | float | str | None:
         """Use this to get the correct value."""

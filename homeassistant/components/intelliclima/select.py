@@ -1,12 +1,13 @@
 """Select platform for IntelliClima VMC."""
 
+from pyintelliclima import IntelliClimaECO
 from pyintelliclima.const import FanMode, FanSpeed
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import IntelliClimaConfigEntry
+from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 from .entity import IntelliClimaECOEntity
 
 # Coordinator is used to centralize the data updates
@@ -45,6 +46,16 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     """Representation of an IntelliClima VMC fan mode selector."""
 
     _attr_translation_key = "fan_mode"
+
+    def __init__(
+        self,
+        coordinator: IntelliClimaCoordinator,
+        device: IntelliClimaECO,
+    ) -> None:
+        """Class initializer."""
+        super().__init__(coordinator, device)
+
+        self._attr_unique_id = device.id
 
     @property
     def options(self) -> list[str]:
