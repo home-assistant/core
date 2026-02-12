@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_PLATFORM,
@@ -291,8 +291,8 @@ RPC_SENSORS: Final = {
     "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, BINARY_SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, BINARY_SENSOR_PLATFORM)
         ),
         role=ROLE_GENERIC,
     ),
@@ -328,13 +328,14 @@ RPC_SENSORS: Final = {
     "flood_cable_unplugged": RpcBinarySensorDescription(
         key="flood",
         sub_key="errors",
-        value=lambda status, _: False
-        if status is None
-        else "cable_unplugged" in status,
+        value=lambda status, _: (
+            False if status is None else "cable_unplugged" in status
+        ),
         translation_key="cable_unplugged",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("alarm") is not None,
+        models={MODEL_FLOOD_G4},
     ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",

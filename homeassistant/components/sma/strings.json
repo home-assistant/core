@@ -35,7 +35,6 @@
         "data": {
           "group": "[%key:component::sma::config::step::user::data::group%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
@@ -55,6 +54,14 @@
         },
         "description": "Enter your SMA device information.",
         "title": "Set up SMA Solar"
+      }
+    }
+  },
+  "selector": {
+    "group": {
+      "options": {
+        "installer": "Installer",
+        "user": "User"
       }
     }
   }
