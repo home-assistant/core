@@ -7,9 +7,9 @@ from homeassistant.components.google_assistant import const, error, helpers, tra
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
 
-from . import MockConfig
-from tests.common import async_mock_service
+from . import BASIC_CONFIG, MockConfig
 
+from tests.common import async_mock_service
 
 ACK_CONFIG = MockConfig(
     entity_config={
@@ -20,7 +20,11 @@ ACK_CONFIG = MockConfig(
 )
 
 ACK_DATA = helpers.RequestData(
-    ACK_CONFIG, "test-agent", const.SOURCE_CLOUD, "ff36a3cc-ec34-11e6-b1a0-64510650abcf", None
+    ACK_CONFIG,
+    "test-agent",
+    const.SOURCE_CLOUD,
+    "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+    None,
 )
 
 
@@ -52,7 +56,10 @@ async def test_brightness_require_acknowledgment(hass: HomeAssistant) -> None:
         {"ack": True},
     )
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "light.dimmer", light.ATTR_BRIGHTNESS_PCT: 50}
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "light.dimmer",
+        light.ATTR_BRIGHTNESS_PCT: 50,
+    }
 
 
 async def test_onoff_require_acknowledgment(hass: HomeAssistant) -> None:
@@ -113,8 +120,6 @@ async def test_lockunlock_require_acknowledgment(hass: HomeAssistant) -> None:
 
 async def test_require_acknowledgment_disabled(hass: HomeAssistant) -> None:
     """Test that commands execute normally when require_acknowledgment is not set."""
-    from . import BASIC_CONFIG
-
     trt = trait.OnOffTrait(
         hass,
         State("switch.test", "on"),
@@ -125,7 +130,11 @@ async def test_require_acknowledgment_disabled(hass: HomeAssistant) -> None:
 
     # Without require_acknowledgment, command should execute without challenge
     basic_data = helpers.RequestData(
-        BASIC_CONFIG, "test-agent", const.SOURCE_CLOUD, "ff36a3cc-ec34-11e6-b1a0-64510650abcf", None
+        BASIC_CONFIG,
+        "test-agent",
+        const.SOURCE_CLOUD,
+        "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        None,
     )
     await trt.execute(trait.COMMAND_ON_OFF, basic_data, {"on": False}, {})
 
