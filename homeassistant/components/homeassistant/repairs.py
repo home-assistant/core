@@ -56,7 +56,7 @@ class OrphanedConfigEntryFlow(RepairsFlow):
     def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
         self.entry_id = data["entry_id"]
-        self.description_placeholders: dict[str, str] = data
+        self.description_placeholders = data
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
