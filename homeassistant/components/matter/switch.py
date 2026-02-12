@@ -50,6 +50,7 @@ class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescrip
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
+    entity_description: MatterSwitchEntityDescription
     _platform_translation_key = "switch"
 
     def _get_command_for_value(self, value: bool) -> ClusterCommand:
@@ -58,7 +59,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
         Applies ha_to_device conversion if needed (e.g., for inverted logic like mute).
         """
         send_value = value
-        if value_convert := self.entity_description.ha_to_device:  # type: ignore[attr-defined]
+        if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
         return (
             clusters.OnOff.Commands.On()
@@ -78,7 +79,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.device_to_ha:  # type: ignore[attr-defined]
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_is_on = value
 
@@ -132,9 +133,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterGenericCommandSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+class MatterGenericCommandSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Generic command Switch entities."""
 
     # command: a custom callback to create the command to send to the device
@@ -144,9 +143,7 @@ class MatterGenericCommandSwitchEntityDescription(
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterNumericSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+class MatterNumericSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Numeric Switch entities."""
 
 
