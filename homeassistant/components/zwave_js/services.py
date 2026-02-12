@@ -11,6 +11,7 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
+from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT
 from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
@@ -26,8 +27,9 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -36,6 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
+from homeassistant.helpers.service import async_register_platform_entity_service
 
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
@@ -477,6 +480,18 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_GET_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
+            },
+            func="async_get_lock_usercode",
+            supports_response=SupportsResponse.ONLY,
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
