@@ -209,7 +209,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        name="Satel Integra",
         manufacturer="Satel",
     )
 
