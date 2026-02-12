@@ -368,7 +368,7 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
 
-@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_room_airconditioner(
     hass: HomeAssistant,
     matter_client: MagicMock,
