@@ -43,7 +43,7 @@ async def test_setup_entry_success(
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
-        (False, ConfigEntryState.SETUP_RETRY),
+        ([False, False], ConfigEntryState.SETUP_RETRY),
         (ClientConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
         (TimeoutError(), ConfigEntryState.SETUP_RETRY),
         ([True, False], ConfigEntryState.SETUP_ERROR),
@@ -53,16 +53,13 @@ async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_hass_splunk: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: bool | Exception | list[bool],
+    side_effect: Exception | list[bool],
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup with various errors results in appropriate states."""
     mock_config_entry.add_to_hass(hass)
 
-    if isinstance(side_effect, bool):
-        mock_hass_splunk.check.return_value = side_effect
-    else:
-        mock_hass_splunk.check.side_effect = side_effect
+    mock_hass_splunk.check.side_effect = side_effect
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
