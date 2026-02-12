@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nightlight',
     'options': dict({
     }),
     'original_device_class': None,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 reverse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync receive',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync send',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nightlight',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -362,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync receive',
     'options': dict({
     }),
     'original_device_class': None,
@@ -411,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync send',
     'options': dict({
     }),
     'original_device_class': None,

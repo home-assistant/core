@@ -1,5 +1,17 @@
 {
   "entity": {
+    "climate": {
+      "flexit_bacnet": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "fireplace": "mdi:fireplace",
+              "high": "mdi:fan-speed-3"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "away_extract_fan_setpoint": {
         "default": "mdi:fan-minus"

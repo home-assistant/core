@@ -77,12 +77,17 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         )
         LOGGER.debug("enable smarthome templates: %s", self.has_templates)
 
-        self.has_triggers = await self.hass.async_add_executor_job(
-            self.fritz.has_triggers
-        )
+        try:
+            self.has_triggers = await self.hass.async_add_executor_job(
+                self.fritz.has_triggers
+            )
+        except HTTPError:
+            # Fritz!OS < 7.39 just don't have this api endpoint
+            # so we need to fetch the HTTPError here and assume no triggers
+            self.has_triggers = False
         LOGGER.debug("enable smarthome triggers: %s", self.has_triggers)
 
-        self.configuration_url = self.fritz.get_prefixed_host()
+        self.configuration_url = self.fritz.base_url
 
         await self.async_config_entry_first_refresh()
         self.cleanup_removed_devices(self.data)

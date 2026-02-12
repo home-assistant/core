@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from functools import partial
-from typing import TYPE_CHECKING, Any, Literal, Self
+import logging
+from typing import Any, Literal, Self
 
 import voluptuous as vol
 
@@ -41,8 +41,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -56,7 +55,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
-from .coordinator import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -71,6 +70,8 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 CHECK_FORECAST_KEYS = (
     set()
     .union(Forecast.__annotations__.keys())
@@ -79,23 +80,23 @@ CHECK_FORECAST_KEYS = (
     .union(("apparent_temperature", "wind_gust_speed", "dew_point"))
 )
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES = [
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING,
     ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_LIGHTNING,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
-    ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SUNNY,
-    ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-    ATTR_CONDITION_EXCEPTIONAL,
-}
+    ATTR_CONDITION_WINDY,
+]
 
 CONF_APPARENT_TEMPERATURE = "apparent_temperature"
 CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
@@ -159,8 +160,9 @@ LEGACY_FIELDS = {
     CONF_WIND_SPEED_TEMPLATE: CONF_WIND_SPEED,
 }
 
-
-WEATHER_COMMON_SCHEMA = vol.Schema(
+# These options that are templates all have _template. These fields will
+# enter deprecation after legacy templates are removed.
+WEATHER_COMMON_LEGACY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
@@ -186,32 +188,7 @@ WEATHER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-
-WEATHER_YAML_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
-        }
-    )
-    .extend(WEATHER_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
-    )
-)
-
-PLATFORM_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(WEATHER_COMMON_SCHEMA.schema)
-    .extend(WEATHER_PLATFORM_SCHEMA.schema)
-)
-
-
-WEATHER_CONFIG_ENTRY_SCHEMA = vol.Schema(
+WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
         vol.Optional(CONF_ATTRIBUTION): cv.template,
@@ -236,7 +213,40 @@ WEATHER_CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_WIND_SPEED): cv.template,
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
     }
-).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
+)
+
+
+WEATHER_YAML_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
+        }
+    )
+    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
+    .extend(
+        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+    )
+)
+
+WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
+    make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+)
+
+PLATFORM_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
+    .extend(WEATHER_PLATFORM_SCHEMA.schema)
+)
+
+
+WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -306,6 +316,75 @@ def async_create_preview_weather(
     )
 
 
+def validate_forecast(
+    entity: AbstractTemplateWeather,
+    option: str,
+    forecast_type: Literal["daily", "hourly", "twice_daily"],
+) -> Callable[[Any], list[Forecast] | None]:
+    """Validate a forecast."""
+
+    weather_message = (
+        "see Weather documentation https://www.home-assistant.io/integrations/weather/"
+    )
+
+    def validate(result: Any) -> list[Forecast] | None:
+        if template_validators.check_result_for_none(result):
+            return None
+
+        if not isinstance(result, list):
+            template_validators.log_validation_result_error(
+                entity,
+                option,
+                result,
+                f"expected a list, {weather_message}",
+            )
+
+        raised = False
+        for forecast in result:
+            if not isinstance(forecast, dict):
+                raised = True
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    f"expected a list of forecast dictionaries, got {forecast}, {weather_message}",
+                )
+                continue
+
+            diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
+            if diff_result:
+                raised = True
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    f"expected valid forecast keys, unallowed keys: ({diff_result}) for {forecast}, {weather_message}",
+                )
+            if forecast_type == "twice_daily" and "is_daytime" not in forecast:
+                raised = True
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    f"`is_daytime` is missing in twice_daily forecast {forecast}, {weather_message}",
+                )
+            if "datetime" not in forecast:
+                raised = True
+                template_validators.log_validation_result_error(
+                    entity,
+                    option,
+                    result,
+                    f"`datetime` is missing in forecast, got {forecast}, {weather_message}",
+                )
+
+        if raised:
+            return None
+
+        return result
+
+    return validate
+
+
 class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     """Representation of a template weathers features."""
 
@@ -315,28 +394,79 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(  # pylint: disable=super-init-not-called
-        self, config: dict[str, Any], initial_state: bool | None = False
+        self, config: dict[str, Any]
     ) -> None:
         """Initialize the features."""
 
-        # Templates
-        self._apparent_temperature_template = config.get(CONF_APPARENT_TEMPERATURE)
-        self._attribution_template = config.get(CONF_ATTRIBUTION)
-        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE)
-        self._condition_template = config[CONF_CONDITION]
-        self._dew_point_template = config.get(CONF_DEW_POINT)
-        self._forecast_daily_template = config.get(CONF_FORECAST_DAILY)
-        self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY)
-        self._forecast_twice_daily_template = config.get(CONF_FORECAST_TWICE_DAILY)
-        self._humidity_template = config[CONF_HUMIDITY]
-        self._ozone_template = config.get(CONF_OZONE)
-        self._pressure_template = config.get(CONF_PRESSURE)
-        self._temperature_template = config[CONF_TEMPERATURE]
-        self._uv_index_template = config.get(CONF_UV_INDEX)
-        self._visibility_template = config.get(CONF_VISIBILITY)
-        self._wind_bearing_template = config.get(CONF_WIND_BEARING)
-        self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED)
-        self._wind_speed_template = config.get(CONF_WIND_SPEED)
+        # Required options
+        self.setup_template(
+            CONF_CONDITION,
+            "_attr_condition",
+            template_validators.item_in_list(self, CONF_CONDITION, CONDITION_CLASSES),
+        )
+        self.setup_template(
+            CONF_HUMIDITY,
+            "_attr_humidity",
+            template_validators.number(self, CONF_HUMIDITY, 0.0, 100.0),
+        )
+        self.setup_template(
+            CONF_TEMPERATURE,
+            "_attr_native_temperature",
+            template_validators.number(self, CONF_TEMPERATURE),
+        )
+
+        # Optional options
+
+        self.setup_template(
+            CONF_ATTRIBUTION,
+            "_attribution",
+            vol.Coerce(str),
+        )
+        self.setup_template(
+            CONF_WIND_BEARING, "_attr_wind_bearing", None, self._update_wind_bearing
+        )
+
+        # Optional numeric options
+        for option, attribute in (
+            (CONF_APPARENT_TEMPERATURE, "_attr_native_apparent_temperature"),
+            (CONF_CLOUD_COVERAGE, "_attr_cloud_coverage"),
+            (CONF_DEW_POINT, "_attr_native_dew_point"),
+            (CONF_OZONE, "_attr_ozone"),
+            (CONF_PRESSURE, "_attr_native_pressure"),
+            (CONF_UV_INDEX, "_attr_uv_index"),
+            (CONF_VISIBILITY, "_attr_native_visibility"),
+            (CONF_WIND_GUST_SPEED, "_attr_native_wind_gust_speed"),
+            (CONF_WIND_SPEED, "_attr_native_wind_speed"),
+        ):
+            self.setup_template(
+                option, attribute, template_validators.number(self, option)
+            )
+
+        # Forecasts
+
+        self._forecast_daily: list[Forecast] | None = []
+        self.setup_template(
+            CONF_FORECAST_DAILY,
+            "_forecast_daily",
+            validate_forecast(self, CONF_FORECAST_DAILY, "daily"),
+            self._update_forecast("daily"),
+        )
+
+        self._forecast_hourly: list[Forecast] | None = []
+        self.setup_template(
+            CONF_FORECAST_HOURLY,
+            "_forecast_hourly",
+            validate_forecast(self, CONF_FORECAST_HOURLY, "hourly"),
+            self._update_forecast("hourly"),
+        )
+
+        self._forecast_twice_daily: list[Forecast] | None = []
+        self.setup_template(
+            CONF_FORECAST_TWICE_DAILY,
+            "_forecast_twice_daily",
+            validate_forecast(self, CONF_FORECAST_TWICE_DAILY, "twice_daily"),
+            self._update_forecast("twice_daily"),
+        )
 
         # Legacy support
         self._attribution: str | None = None
@@ -350,11 +480,11 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
         # Supported Features
         self._attr_supported_features = 0
-        if self._forecast_daily_template:
+        if CONF_FORECAST_DAILY in self._templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
-        if self._forecast_hourly_template:
+        if CONF_FORECAST_HOURLY in self._templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
-        if self._forecast_twice_daily_template:
+        if CONF_FORECAST_TWICE_DAILY in self._templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
     @property
@@ -364,62 +494,6 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             return "Powered by Home Assistant"
         return self._attribution
 
-    def _validate[T](
-        self,
-        validator: Callable[[Any], T],
-        result: Any,
-    ) -> T | None:
-        try:
-            return validator(result)
-        except vol.Invalid:
-            return None
-
-    @callback
-    def _update_apparent_temperature(self, result: Any) -> None:
-        self._attr_native_apparent_temperature = self._validate(
-            vol.Coerce(float), result
-        )
-
-    @callback
-    def _update_attribution(self, result: Any) -> None:
-        self._attribution = vol.Coerce(str)(result)
-
-    @callback
-    def _update_condition(self, result: Any) -> None:
-        self._attr_condition = result if result in CONDITION_CLASSES else None
-
-    @callback
-    def _update_coverage(self, result: Any) -> None:
-        self._attr_cloud_coverage = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_dew_point(self, result: Any) -> None:
-        self._attr_native_dew_point = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_humidity(self, result: Any) -> None:
-        self._attr_humidity = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_ozone(self, result: Any) -> None:
-        self._attr_ozone = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_pressure(self, result: Any) -> None:
-        self._attr_native_pressure = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_temperature(self, result: Any) -> None:
-        self._attr_native_temperature = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_uv_index(self, result: Any) -> None:
-        self._attr_uv_index = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_visibility(self, result: Any) -> None:
-        self._attr_native_visibility = self._validate(vol.Coerce(float), result)
-
     @callback
     def _update_wind_bearing(self, result: Any) -> None:
         try:
@@ -428,48 +502,31 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             self._attr_wind_bearing = vol.Coerce(str)(result)
 
     @callback
-    def _update_wind_gust_speed(self, result: Any) -> None:
-        self._attr_native_wind_gust_speed = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _update_wind_speed(self, result: Any) -> None:
-        self._attr_native_wind_speed = self._validate(vol.Coerce(float), result)
-
-    @callback
-    def _validate_forecast(
+    def _update_forecast(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-        result: Any,
-    ) -> list[Forecast] | None:
-        """Validate the forecasts."""
-        if result is None:
-            return None
+    ) -> Callable[[list[Forecast] | None], None]:
+        """Save template result and trigger forecast listener."""
 
-        if not isinstance(result, list):
-            raise vol.Invalid(
-                "Forecasts is not a list, see Weather documentation https://www.home-assistant.io/integrations/weather/"
+        def update(result: list[Forecast] | None) -> None:
+            setattr(self, f"_forecast_{forecast_type}", result)
+            self.hass.async_create_task(
+                self.async_update_listeners([forecast_type]), eager_start=True
             )
-        for forecast in result:
-            if not isinstance(forecast, dict):
-                raise vol.Invalid(
-                    "Forecast in list is not a dict, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                )
-            diff_result = set().union(forecast.keys()).difference(CHECK_FORECAST_KEYS)
-            if diff_result:
-                raise vol.Invalid(
-                    f"Only valid keys in Forecast are allowed, unallowed keys: ({diff_result}), "
-                    "see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                )
-            if forecast_type == "twice_daily" and "is_daytime" not in forecast:
-                raise vol.Invalid(
-                    "`is_daytime` is missing in twice_daily forecast, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                )
-            if "datetime" not in forecast:
-                raise vol.Invalid(
-                    "`datetime` is required in forecasts, see Weather documentation https://www.home-assistant.io/integrations/weather/"
-                )
-            continue
-        return result
+
+        return update
+
+    async def async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast_daily or []
+
+    async def async_forecast_hourly(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast_hourly or []
+
+    async def async_forecast_twice_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast_twice_daily or []
 
 
 class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
@@ -486,152 +543,6 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
         """Initialize the Template weather."""
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateWeather.__init__(self, config)
-
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
-
-        # Forecasts
-        self._forecast_daily: list[Forecast] | None = []
-        self._forecast_hourly: list[Forecast] | None = []
-        self._forecast_twice_daily: list[Forecast] | None = []
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-
-        if self._apparent_temperature_template:
-            self.add_template_attribute(
-                "_attr_native_apparent_temperature",
-                self._apparent_temperature_template,
-                on_update=self._update_apparent_temperature,
-            )
-        if self._attribution_template:
-            self.add_template_attribute(
-                "_attribution",
-                self._attribution_template,
-                on_update=self._update_attribution,
-            )
-        if self._cloud_coverage_template:
-            self.add_template_attribute(
-                "_attr_cloud_coverage",
-                self._cloud_coverage_template,
-                on_update=self._update_coverage,
-            )
-        if self._condition_template:
-            self.add_template_attribute(
-                "_attr_condition",
-                self._condition_template,
-                on_update=self._update_condition,
-            )
-        if self._dew_point_template:
-            self.add_template_attribute(
-                "_attr_native_dew_point",
-                self._dew_point_template,
-                on_update=self._update_dew_point,
-            )
-        if self._forecast_daily_template:
-            self.add_template_attribute(
-                "_forecast_daily",
-                self._forecast_daily_template,
-                on_update=partial(self._update_forecast, "daily"),
-                validator=partial(self._validate_forecast, "daily"),
-            )
-        if self._forecast_hourly_template:
-            self.add_template_attribute(
-                "_forecast_hourly",
-                self._forecast_hourly_template,
-                on_update=partial(self._update_forecast, "hourly"),
-                validator=partial(self._validate_forecast, "hourly"),
-            )
-        if self._forecast_twice_daily_template:
-            self.add_template_attribute(
-                "_forecast_twice_daily",
-                self._forecast_twice_daily_template,
-                on_update=partial(self._update_forecast, "twice_daily"),
-                validator=partial(self._validate_forecast, "twice_daily"),
-            )
-        if self._humidity_template:
-            self.add_template_attribute(
-                "_attr_humidity",
-                self._humidity_template,
-                on_update=self._update_humidity,
-            )
-        if self._ozone_template:
-            self.add_template_attribute(
-                "_attr_ozone",
-                self._ozone_template,
-                on_update=self._update_ozone,
-            )
-        if self._pressure_template:
-            self.add_template_attribute(
-                "_attr_native_pressure",
-                self._pressure_template,
-                on_update=self._update_pressure,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_attr_native_temperature",
-                self._temperature_template,
-                on_update=self._update_temperature,
-            )
-        if self._uv_index_template:
-            self.add_template_attribute(
-                "_attr_uv_index",
-                self._uv_index_template,
-                on_update=self._update_uv_index,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_attr_native_visibility",
-                self._visibility_template,
-                on_update=self._update_visibility,
-            )
-        if self._wind_bearing_template:
-            self.add_template_attribute(
-                "_attr_wind_bearing",
-                self._wind_bearing_template,
-                on_update=self._update_wind_bearing,
-            )
-        if self._wind_gust_speed_template:
-            self.add_template_attribute(
-                "_attr_native_wind_gust_speed",
-                self._wind_gust_speed_template,
-                on_update=self._update_wind_gust_speed,
-            )
-        if self._wind_speed_template:
-            self.add_template_attribute(
-                "_attr_native_wind_speed",
-                self._wind_speed_template,
-                on_update=self._update_wind_speed,
-            )
-
-        super()._async_setup_templates()
-
-    async def async_forecast_daily(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return self._forecast_daily or []
-
-    async def async_forecast_hourly(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return self._forecast_hourly or []
-
-    async def async_forecast_twice_daily(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return self._forecast_twice_daily or []
-
-    @callback
-    def _update_forecast(
-        self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
-        result: list[Forecast] | TemplateError,
-    ) -> None:
-        """Save template result and trigger forecast listener."""
-        attr_result = None if isinstance(result, TemplateError) else result
-        setattr(self, f"_forecast_{forecast_type}", attr_result)
-        self.hass.async_create_task(
-            self.async_update_listeners([forecast_type]), eager_start=True
-        )
 
 
 @dataclass(kw_only=True)
@@ -658,34 +569,47 @@ class WeatherExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored event state from a dict."""
-        try:
-            return cls(
-                last_apparent_temperature=restored["last_apparent_temperature"],
-                last_cloud_coverage=restored["last_cloud_coverage"],
-                last_dew_point=restored["last_dew_point"],
-                last_humidity=restored["last_humidity"],
-                last_ozone=restored["last_ozone"],
-                last_pressure=restored["last_pressure"],
-                last_temperature=restored["last_temperature"],
-                last_uv_index=restored["last_uv_index"],
-                last_visibility=restored["last_visibility"],
-                last_wind_bearing=restored["last_wind_bearing"],
-                last_wind_gust_speed=restored["last_wind_gust_speed"],
-                last_wind_speed=restored["last_wind_speed"],
-            )
-        except KeyError:
-            return None
+        for key, vtypes in (
+            ("last_apparent_temperature", (float, int)),
+            ("last_cloud_coverage", (float, int)),
+            ("last_dew_point", (float, int)),
+            ("last_humidity", (float, int)),
+            ("last_ozone", (float, int)),
+            ("last_pressure", (float, int)),
+            ("last_temperature", (float, int)),
+            ("last_uv_index", (float, int)),
+            ("last_visibility", (float, int)),
+            ("last_wind_bearing", (float, int, str)),
+            ("last_wind_gust_speed", (float, int)),
+            ("last_wind_speed", (float, int)),
+        ):
+            # This is needed to safeguard against previous restore data that has strings
+            # instead of floats or ints.
+            if key not in restored or (
+                (value := restored[key]) is not None and not isinstance(value, vtypes)
+            ):
+                return None
+
+        return cls(
+            last_apparent_temperature=restored["last_apparent_temperature"],
+            last_cloud_coverage=restored["last_cloud_coverage"],
+            last_dew_point=restored["last_dew_point"],
+            last_humidity=restored["last_humidity"],
+            last_ozone=restored["last_ozone"],
+            last_pressure=restored["last_pressure"],
+            last_temperature=restored["last_temperature"],
+            last_uv_index=restored["last_uv_index"],
+            last_visibility=restored["last_visibility"],
+            last_wind_bearing=restored["last_wind_bearing"],
+            last_wind_gust_speed=restored["last_wind_gust_speed"],
+            last_wind_speed=restored["last_wind_speed"],
+        )
 
 
 class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity):
     """Weather entity based on trigger data."""
 
     domain = WEATHER_DOMAIN
-    extra_template_keys = (
-        CONF_CONDITION,
-        CONF_TEMPERATURE,
-        CONF_HUMIDITY,
-    )
 
     def __init__(
         self,
@@ -695,26 +619,7 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
     ) -> None:
         """Initialize."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateWeather.__init__(self, config, None)
-
-        for key in (
-            CONF_APPARENT_TEMPERATURE,
-            CONF_CLOUD_COVERAGE,
-            CONF_DEW_POINT,
-            CONF_FORECAST_DAILY,
-            CONF_FORECAST_HOURLY,
-            CONF_FORECAST_TWICE_DAILY,
-            CONF_OZONE,
-            CONF_PRESSURE,
-            CONF_UV_INDEX,
-            CONF_VISIBILITY,
-            CONF_WIND_BEARING,
-            CONF_WIND_GUST_SPEED,
-            CONF_WIND_SPEED,
-        ):
-            if isinstance(config.get(key), template.Template):
-                self._to_render_simple.append(key)
-                self._parse_result.add(key)
+        AbstractTemplateWeather.__init__(self, config)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -741,77 +646,22 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
             self._attr_native_wind_gust_speed = weather_data.last_wind_gust_speed
             self._attr_native_wind_speed = weather_data.last_wind_speed
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        write_ha_state = False
-        for key, updater in (
-            (CONF_APPARENT_TEMPERATURE, self._update_apparent_temperature),
-            (CONF_CLOUD_COVERAGE, self._update_coverage),
-            (CONF_CONDITION, self._update_condition),
-            (CONF_DEW_POINT, self._update_dew_point),
-            (CONF_HUMIDITY, self._update_humidity),
-            (CONF_OZONE, self._update_ozone),
-            (CONF_PRESSURE, self._update_pressure),
-            (CONF_TEMPERATURE, self._update_temperature),
-            (CONF_UV_INDEX, self._update_uv_index),
-            (CONF_VISIBILITY, self._update_visibility),
-            (CONF_WIND_BEARING, self._update_wind_bearing),
-            (CONF_WIND_GUST_SPEED, self._update_wind_gust_speed),
-            (CONF_WIND_SPEED, self._update_wind_speed),
-        ):
-            if (rendered := self._rendered.get(key)) is not None:
-                updater(rendered)
-                write_ha_state = True
-
-        if write_ha_state:
-            self.async_write_ha_state()
-
-    async def async_forecast_daily(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast("daily", self._rendered.get(CONF_FORECAST_DAILY))
-            or []
-        )
-
-    async def async_forecast_hourly(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast("hourly", self._rendered.get(CONF_FORECAST_HOURLY))
-            or []
-        )
-
-    async def async_forecast_twice_daily(self) -> list[Forecast]:
-        """Return the daily forecast in native units."""
-        return (
-            self._validate_forecast(
-                "twice_daily", self._rendered.get(CONF_FORECAST_TWICE_DAILY)
-            )
-            or []
-        )
-
     @property
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(
-            last_apparent_temperature=self._rendered.get(CONF_APPARENT_TEMPERATURE),
-            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE),
-            last_dew_point=self._rendered.get(CONF_DEW_POINT),
-            last_humidity=self._rendered.get(CONF_HUMIDITY),
-            last_ozone=self._rendered.get(CONF_OZONE),
-            last_pressure=self._rendered.get(CONF_PRESSURE),
-            last_temperature=self._rendered.get(CONF_TEMPERATURE),
-            last_uv_index=self._rendered.get(CONF_UV_INDEX),
-            last_visibility=self._rendered.get(CONF_VISIBILITY),
-            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING),
-            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED),
-            last_wind_speed=self._rendered.get(CONF_WIND_SPEED),
+            last_apparent_temperature=self.native_apparent_temperature,
+            last_cloud_coverage=self._attr_cloud_coverage,
+            last_dew_point=self.native_dew_point,
+            last_humidity=self.humidity,
+            last_ozone=self.ozone,
+            last_pressure=self.native_pressure,
+            last_temperature=self.native_temperature,
+            last_uv_index=self.uv_index,
+            last_visibility=self.native_visibility,
+            last_wind_bearing=self.wind_bearing,
+            last_wind_gust_speed=self.native_wind_gust_speed,
+            last_wind_speed=self.native_wind_speed,
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:

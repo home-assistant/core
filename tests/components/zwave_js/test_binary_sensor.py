@@ -383,6 +383,13 @@ async def test_smoke_co_notification_sensors(
         assert entity_entry
         assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
+    # Test that no idle states are created as entities
+    entity_id = "binary_sensor.zcombo_g_smoke_co_alarm_idle"
+    state = hass.states.get(entity_id)
+    assert state is None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is None
+
     # Test state updates for smoke alarm
     event = Event(
         type="value updated",
