@@ -149,6 +149,55 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[aqara_u200][binary_sensor.aqara_smart_lock_u200_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aqara_smart_lock_u200_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[aqara_u200][binary_sensor.aqara_smart_lock_u200_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Smart Lock U200 Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aqara_smart_lock_u200_actuator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[eve_contact_sensor][binary_sensor.eve_door_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1045,6 +1094,55 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_door_lock_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_door_lock_actuator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1093,6 +1191,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_unbolt_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_unbolt_actuator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_battery-entry]
@@ -1239,6 +1386,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_leak_detector_water_leak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_lock_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_lock_actuator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2140,6 +2336,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[secuyou_smart_lock][binary_sensor.secuyou_smart_lock_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.secuyou_smart_lock_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[secuyou_smart_lock][binary_sensor.secuyou_smart_lock_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.secuyou_smart_lock_actuator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-entry]
