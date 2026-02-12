@@ -15,7 +15,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 UDP_DISCOVERY_PORT = 8099
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
