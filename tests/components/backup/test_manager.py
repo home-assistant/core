@@ -510,10 +510,6 @@ async def test_create_backup_wrong_parameters(
         {"password": "pass123"},
     ],
 )
-# To make sure backups are not included in the backup
-@pytest.mark.parametrize(
-    "available_backups", [[TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456]]
-)
 async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
