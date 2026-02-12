@@ -34,7 +34,6 @@ async def async_get_config_entry_diagnostics(
 
     result["device"] = {
         "unique_id": client.unique_id,
-        "base_url": client.base_url,
     }
     result["sensors"] = {
         key: {"value": sensor.value, "type": sensor.type}

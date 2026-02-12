@@ -40,7 +40,6 @@ async def test_config_entry_diagnostics(
 
     device = diagnostics["device"]
     assert device["unique_id"] == "40580137858664"
-    assert device["base_url"] == "http://127.0.0.1"
 
     sensors = diagnostics["sensors"]
     assert isinstance(sensors, dict)
