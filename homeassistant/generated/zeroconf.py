@@ -594,10 +594,6 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
-            "domain": "indevolt",
-            "name": "smd web server*",
-        },
-        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
