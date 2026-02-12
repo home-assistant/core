@@ -111,6 +111,16 @@ def installation_type_mock() -> Generator[None]:
         yield
 
 
+@pytest.fixture
+def labs_snapshots_enabled() -> Generator[None]:
+    """Mock the labs feature to enable snapshots."""
+    with patch(
+        "homeassistant.components.analytics.analytics.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield
+
+
 def _last_call_payload(aioclient: AiohttpClientMocker) -> dict[str, Any]:
     """Return the payload of the last call."""
     return aioclient.mock_calls[-1][2]
@@ -1201,6 +1211,7 @@ async def test_devices_payload_with_entities(
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         original_device_class=NumberDeviceClass.TEMPERATURE,
+        suggested_object_id="hue_1",
     )
     hass.states.async_set("number.hue_1", "2")
     # Entity with assumed state
@@ -1210,6 +1221,7 @@ async def test_devices_payload_with_entities(
         unique_id="2",
         device_id=device_entry.id,
         has_entity_name=True,
+        suggested_object_id="hue_2",
     )
     hass.states.async_set("light.hue_2", "on", {ATTR_ASSUMED_STATE: True})
     # Entity from a different integration
@@ -1452,6 +1464,7 @@ async def test_analytics_platforms(
     }
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_send_snapshot_disabled(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -1467,6 +1480,7 @@ async def test_send_snapshot_disabled(
     assert len(aioclient_mock.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_send_snapshot_success(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1491,6 +1505,7 @@ async def test_send_snapshot_success(
     assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_send_snapshot_with_existing_identifier(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1526,6 +1541,7 @@ async def test_send_snapshot_with_existing_identifier(
     assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_send_snapshot_invalid_identifier(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1562,6 +1578,7 @@ async def test_send_snapshot_invalid_identifier(
     assert "Invalid submission identifier" in caplog.text
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 @pytest.mark.parametrize(
     ("post_kwargs", "expected_log"),
     [
@@ -1626,6 +1643,7 @@ async def test_send_snapshot_error(
     assert expected_log in caplog.text
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_async_schedule(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -1662,6 +1680,7 @@ async def test_async_schedule(
     assert 0 <= preferences["snapshot_submission_time"] <= 86400
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_async_schedule_disabled(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -1686,6 +1705,7 @@ async def test_async_schedule_disabled(
     assert len(aioclient_mock.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_async_schedule_already_scheduled(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -1719,6 +1739,7 @@ async def test_async_schedule_already_scheduled(
     )
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 @pytest.mark.parametrize(("onboarded"), [True, False])
 async def test_async_schedule_cancel_when_disabled(
     hass: HomeAssistant,
@@ -1757,6 +1778,7 @@ async def test_async_schedule_cancel_when_disabled(
     assert len(aioclient_mock.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("labs_snapshots_enabled")
 async def test_async_schedule_snapshots_url(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -1785,29 +1807,3 @@ async def test_async_schedule_snapshots_url(
 
     assert len(aioclient_mock.mock_calls) == 1
     assert str(aioclient_mock.mock_calls[0][1]) == endpoint
-
-
-async def test_async_schedule_snapshots_disabled(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test that snapshots are disabled when configured."""
-    aioclient_mock.post(SNAPSHOT_ENDPOINT_URL, status=200, json={})
-
-    analytics = Analytics(hass, disable_snapshots=True)
-    with patch(
-        "homeassistant.helpers.storage.Store.async_load",
-        return_value={
-            "onboarded": True,
-            "preferences": {ATTR_BASE: False, ATTR_SNAPSHOTS: True},
-            "uuid": "12345",
-        },
-    ):
-        await analytics.load()
-
-    await analytics.async_schedule()
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
-    await hass.async_block_till_done()
-
-    assert len(aioclient_mock.mock_calls) == 0

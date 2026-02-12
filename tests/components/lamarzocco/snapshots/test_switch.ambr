@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -55,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -213,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler',
     'options': dict({
     }),
     'original_device_class': None,
