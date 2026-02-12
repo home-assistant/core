@@ -550,12 +550,6 @@
     "delete_todos_failed": {
       "message": "Unable to delete item from Habitica to-do list, please try again"
     },
-    "entry_not_found": {
-      "message": "The selected character is not configured in Home Assistant."
-    },
-    "entry_not_loaded": {
-      "message": "The selected character is currently not loaded or disabled in Home Assistant."
-    },
     "frequency_not_monthly": {
       "message": "Unable to update task, monthly repeat settings apply only to monthly recurring dailies."
     },
