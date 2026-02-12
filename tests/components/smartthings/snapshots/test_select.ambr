@@ -560,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Selected zone',
     'options': dict({
     }),
     'original_device_class': None,
@@ -618,6 +619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone booster',
     'options': dict({
     }),
     'original_device_class': None,
@@ -735,6 +737,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Selected zone',
     'options': dict({
     }),
     'original_device_class': None,
