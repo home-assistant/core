@@ -32,7 +32,7 @@ async def test_switches(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_turn_on(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -67,7 +67,7 @@ async def test_turn_on(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -95,7 +95,7 @@ async def test_turn_off(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["switch_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_switch_unit"])
 async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a switch entity is discovered from any (non-light) OnOf cluster device."""
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
@@ -107,7 +107,7 @@ async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None
     assert state.attributes["friendly_name"] == "Mock SwitchUnit"
 
 
-@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
     state = hass.states.get("switch.room_airconditioner_power")
@@ -170,7 +170,7 @@ async def test_numeric_switch(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_matter_exception_on_command(
     hass: HomeAssistant,
     matter_client: MagicMock,
