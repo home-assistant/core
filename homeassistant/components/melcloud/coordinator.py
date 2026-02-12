@@ -81,12 +81,12 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
         return data
 
     @property
-    def device_id(self) -> str | None:
+    def device_id(self) -> str:
         """Return device ID."""
         return self.device.device_id
 
     @property
-    def building_id(self) -> str | None:
+    def building_id(self) -> str:
         """Return building ID of the device."""
         return self.device.building_id
 
