@@ -52,7 +52,7 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="7101",
-        translation_key="working_mode",
+        translation_key="energy_mode",
         state_mapping={
             0: "outdoor_portable",
             1: "self_consumed_prioritized",

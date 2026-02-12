@@ -634,6 +634,69 @@
     'state': 'master',
   })
 # ---
+# name: test_sensor[1][sensor.bk1600_192_168_1_100_energy_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charge_discharge_schedule',
+        'outdoor_portable',
+        'real_time_control',
+        'self_consumed_prioritized',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bk1600_192_168_1_100_energy_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Energy mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_mode',
+    'unique_id': 'BK1600-12345678_7101',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_192_168_1_100_energy_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'BK1600 (192.168.1.100) Energy mode',
+      'options': list([
+        'charge_discharge_schedule',
+        'outdoor_portable',
+        'real_time_control',
+        'self_consumed_prioritized',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bk1600_192_168_1_100_energy_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charge_discharge_schedule',
+  })
+# ---
 # name: test_sensor[1][sensor.bk1600_192_168_1_100_meter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -803,69 +866,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '58.1',
-  })
-# ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_working_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'charge_discharge_schedule',
-        'outdoor_portable',
-        'real_time_control',
-        'self_consumed_prioritized',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_working_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Working mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Working mode',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'working_mode',
-    'unique_id': 'BK1600-12345678_7101',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_working_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'BK1600 (192.168.1.100) Working mode',
-      'options': list([
-        'charge_discharge_schedule',
-        'outdoor_portable',
-        'real_time_control',
-        'self_consumed_prioritized',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_working_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'charge_discharge_schedule',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_ac_input_power-entry]
@@ -3725,6 +3725,69 @@
     'state': 'slave',
   })
 # ---
+# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_energy_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charge_discharge_schedule',
+        'outdoor_portable',
+        'real_time_control',
+        'self_consumed_prioritized',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cms_sf2000_192_168_1_100_energy_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Energy mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_mode',
+    'unique_id': 'SolidFlex2000-87654321_7101',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_energy_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'CMS-SF2000 (192.168.1.100) Energy mode',
+      'options': list([
+        'charge_discharge_schedule',
+        'outdoor_portable',
+        'real_time_control',
+        'self_consumed_prioritized',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_192_168_1_100_energy_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumed_prioritized',
+  })
+# ---
 # name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4396,68 +4459,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1500',
-  })
-# ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_working_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'charge_discharge_schedule',
-        'outdoor_portable',
-        'real_time_control',
-        'self_consumed_prioritized',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_working_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Working mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Working mode',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'working_mode',
-    'unique_id': 'SolidFlex2000-87654321_7101',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_working_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Working mode',
-      'options': list([
-        'charge_discharge_schedule',
-        'outdoor_portable',
-        'real_time_control',
-        'self_consumed_prioritized',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_working_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'self_consumed_prioritized',
   })
 # ---

@@ -186,6 +186,15 @@
       "dc_output_power": {
         "name": "DC output power"
       },
+      "energy_mode": {
+        "name": "Energy mode",
+        "state": {
+          "charge_discharge_schedule": "Charge/discharge schedule",
+          "outdoor_portable": "Outdoor portable",
+          "real_time_control": "Real-time control",
+          "self_consumed_prioritized": "Self-consumed prioritized"
+        }
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -235,15 +244,6 @@
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
-      },
-      "working_mode": {
-        "name": "Working mode",
-        "state": {
-          "charge_discharge_schedule": "Charge/discharge schedule",
-          "outdoor_portable": "Outdoor portable",
-          "real_time_control": "Real-time control",
-          "self_consumed_prioritized": "Self-consumed prioritized"
-        }
       }
     }
   }
