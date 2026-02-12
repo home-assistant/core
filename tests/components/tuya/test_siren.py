@@ -46,8 +46,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"basic_wdr": False}, "off", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"basic_wdr": False}, "off", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"siren_switch": True}, "on", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change

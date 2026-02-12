@@ -164,8 +164,8 @@
 # name: test_media_players[media_player.xone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
-      'entity_picture_local': '/api/media_player_proxy/media_player.xone?token=mock_token&cache=739260d7bff66329',
+      'entity_picture': 'https://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
+      'entity_picture_local': '/api/media_player_proxy/media_player.xone?token=mock_token&cache=1cae983bd1c4c429',
       'friendly_name': 'XONE',
       'media_content_id': '9WZDNCRFJ3TJ',
       'media_content_type': <MediaType.APP: 'app'>,
@@ -220,8 +220,8 @@
 # name: test_media_players[media_player.xonex-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
-      'entity_picture_local': '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=739260d7bff66329',
+      'entity_picture': 'https://store-images.s-microsoft.com/image/apps.9815.9007199266246365.7dc5d343-fe4a-40c3-93dd-c78e77f97331.45eebdef-f725-4799-bbf8-9ad8391a8279',
+      'entity_picture_local': '/api/media_player_proxy/media_player.xonex?token=mock_token&cache=1cae983bd1c4c429',
       'friendly_name': 'XONEX',
       'media_content_id': '9WZDNCRFJ3TJ',
       'media_content_type': <MediaType.APP: 'app'>,

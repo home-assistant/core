@@ -691,7 +691,7 @@ class CalendarEventView(http.HomeAssistantView):
         try:
             start_date = dt_util.parse_datetime(start)
             end_date = dt_util.parse_datetime(end)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)

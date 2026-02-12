@@ -27,6 +27,9 @@
     "set_hvac_mode_error": {
       "message": "An error occurred while setting the HVAC mode."
     },
+    "set_switch_state_error": {
+      "message": "An error occurred while setting the switch state."
+    },
     "set_temperature_error": {
       "message": "An error occurred while setting the temperature."
     }
