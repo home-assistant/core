@@ -463,6 +463,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9030",
@@ -472,6 +473,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9049",
@@ -481,6 +483,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9068",
@@ -490,6 +493,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9163",
@@ -499,6 +503,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9216",
@@ -508,6 +513,7 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Battery Pack Voltage
     IndevoltSensorEntityDescription(
@@ -633,15 +639,6 @@ SENSORS: Final = (
     ),
 )
 
-# Sensors per battery pack (SN, SOC, Temperature, Voltage, Current)
-BATTERY_PACK_SENSOR_KEYS = [
-    ("9032", "9016", "9030", "9020", "19173"),  # Battery Pack 1
-    ("9051", "9035", "9049", "9039", "19174"),  # Battery Pack 2
-    ("9070", "9054", "9068", "9058", "19175"),  # Battery Pack 3
-    ("9165", "9149", "9163", "9153", "19176"),  # Battery Pack 4
-    ("9218", "9202", "9216", "9206", "19177"),  # Battery Pack 5
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -652,29 +649,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device_gen = coordinator.generation
 
-    # Initialize sensor values (first fetch), required to check available battery packs
-    initial_keys = [
-        description.key
-        for description in SENSORS
-        if device_gen in description.generation
-    ]
-    coordinator.set_initial_sensor_keys(initial_keys)
-    await coordinator.async_config_entry_first_refresh()
-
     # Sensor initialization
     async_add_entities(
         IndevoltSensorEntity(coordinator=coordinator, description=description)
         for description in SENSORS
         if device_gen in description.generation
     )
-
-
-def _find_battery_pack_sn_key(sensor_key: str) -> str | None:
-    """Return the SN key for the battery pack this sensor belongs to, or None."""
-    for pack_keys in BATTERY_PACK_SENSOR_KEYS:
-        if sensor_key in pack_keys:
-            return pack_keys[0]
-    return None
 
 
 class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
@@ -697,18 +677,15 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         if description.device_class == SensorDeviceClass.ENUM:
             self._attr_options = sorted(set(description.state_mapping.values()))
 
-        # Dynamically disable sensors for missing battery packs (no SN)
-        self._battery_pack_sn_key = _find_battery_pack_sn_key(description.key)
-        if self._battery_pack_sn_key is not None:
-            battery_pack_sn = self.coordinator.data.get(self._battery_pack_sn_key)
-            if not battery_pack_sn:
-                self._attr_entity_registry_enabled_default = False
-
     @property
     def native_value(self) -> str | int | float | None:
         """Return the current value of the sensor in its native unit."""
-        raw_value = self.coordinator.data.get(self.entity_description.key)
+        # Handle None values on initialization
+        if self.coordinator.data is None:
+            return None
 
+        # Attempt to retrieve actual value
+        raw_value = self.coordinator.data.get(self.entity_description.key)
         if raw_value is None:
             return None
 

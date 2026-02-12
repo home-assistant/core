@@ -51,19 +51,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.generation: int
         self._initial_sensor_keys: list[str] = []
 
-    def set_initial_sensor_keys(self, keys: list[str]) -> None:
-        """Set the initial sensor keys for first data fetch before entities are created."""
-        self._initial_sensor_keys = keys
-
-    def _get_api_keys(self) -> list[str]:
-        """Get sensor keys from registered contexts or fall back to initial keys."""
-        api_keys = list(self.async_contexts())
-
-        # Use initial_sensor_keys for first refresh (before sensor creation)
-        if not api_keys:
-            api_keys = self._initial_sensor_keys
-        return api_keys
-
     async def async_initialize(self) -> None:
         """Fetch device info once on boot."""
         try:
@@ -83,7 +70,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
-        sensor_keys = self._get_api_keys()
+        sensor_keys = list(self.async_contexts())
         if not sensor_keys:
             return {}
 
