@@ -69,7 +69,13 @@ from .helpers.event import (
 )
 from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
-from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    NoEventData,
+    UndefinedType,
+)
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
@@ -389,6 +395,7 @@ class ConfigEntry[_DataT = Any]:
     domain: str
     title: str
     data: MappingProxyType[str, Any]
+
     runtime_data: _DataT
     options: MappingProxyType[str, Any]
     subentries: MappingProxyType[str, ConfigSubentry]
@@ -2241,7 +2248,9 @@ class ConfigEntries:
             EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
         )
 
-    async def _async_scan_orphan_ignored_entries(self, event: Event[NoEventData]) -> None:
+    async def _async_scan_orphan_ignored_entries(
+        self, event: Event[NoEventData]
+    ) -> None:
         """Scan for ignored entries that can be removed.
 
         Orphaned ignored entries are entries that are in ignored state
