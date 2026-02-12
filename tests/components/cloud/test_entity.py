@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -206,15 +207,57 @@ async def test_prepare_chat_for_generation_appends_attachments(
     assert response["messages"] is messages
     mock_prepare_files_for_prompt.assert_awaited_once_with([attachment])
 
+    # Verify that files are actually added to the last user message
+    last_message = messages[-1]
+    assert last_message["type"] == "message"
+    assert last_message["role"] == "user"
+    assert isinstance(last_message["content"], list)
+    assert last_message["content"][0] == {
+        "type": "input_text",
+        "text": "Describe the door",
+    }
+    assert last_message["content"][1] == files[0]
+
 
 async def test_prepare_chat_for_generation_passes_messages_through(
     hass: HomeAssistant, cloud_entity: BaseCloudLLMEntity
 ) -> None:
     """Test that prepared messages are forwarded unchanged."""
     chat_log = conversation.ChatLog(hass, "conversation-id")
-    chat_log.async_add_assistant_content_without_tools(
-        conversation.AssistantContent(agent_id="agent", content="Ready")
+
+    chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
     )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id="agent",
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="mock-tool-call-id",
+                    external=True,
+                )
+            ],
+        )
+    )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id="agent",
+            tool_call_id="mock-tool-call-id",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(12, 0)},
+                "data": {"targets": [], "success": [], "failed": []},
+            },
+        )
+    )
+    chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(agent_id="agent", content="12:00 PM")
+    )
+
     messages = _convert_content_to_param(chat_log.content)
 
     response = await cloud_entity._prepare_chat_for_generation(chat_log, messages)
