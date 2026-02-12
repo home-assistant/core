@@ -2203,7 +2203,7 @@ class ConfigEntries:
             EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
         )
 
-    async def _async_scan_orphan_ignored_entries(self, event: Event) -> None:
+    async def _async_scan_orphan_ignored_entries(self, event: Event[NoEventData]) -> None:
         """Scan for ignored entries that can be removed.
 
         Orphaned ignored entries are entries that are in ignored state
