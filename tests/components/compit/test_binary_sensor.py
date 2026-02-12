@@ -54,7 +54,7 @@ async def test_binary_sensor_return_value(
         mock_return_value
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("binary_sensor.nano_color_2_window")
+    state = hass.states.get("binary_sensor.nano_color_2_airing")
     assert state.state == expected_state
 
 
@@ -71,5 +71,5 @@ async def test_binary_sensor_no_sensor(
     await setup_integration(hass, mock_config_entry)
 
     # Check that airing sensor is not created
-    airing_entity = entity_registry.async_get("binary_sensor.nano_color_2_window")
+    airing_entity = entity_registry.async_get("binary_sensor.nano_color_2_airing")
     assert airing_entity is None
