@@ -37,14 +37,14 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("identifier", "exception_msg"),
     [
-        ("unique_id", "Could not resolve identifier that has no mime-type"),
+        ("unique_id", "identifier_no_mime_type_unresolvable"),
         (
             "unique_id|albums|album_id",
-            "Could not resolve identifier that has no mime-type",
+            "identifier_no_mime_type_unresolvable",
         ),
         (
             "unique_id|albums|album_id|asset_id|filename",
-            "Could not parse identifier",
+            "identifier_unresolvable",
         ),
     ],
 )

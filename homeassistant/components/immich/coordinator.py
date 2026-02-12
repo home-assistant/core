@@ -85,7 +85,11 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 translation_key="auth_error",
             ) from err
         except CONNECT_ERRORS as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
         return ImmichData(
             server_about, server_storage, server_usage, server_version_check
