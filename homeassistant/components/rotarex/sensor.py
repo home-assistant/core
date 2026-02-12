@@ -50,11 +50,11 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         translation_key="level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sync: sync.get("Level") if sync else None,
+        value_fn=lambda sync: sync["Level"] if sync else None,
         extra_attr_fn=lambda sync: (
             {
-                "last_sync": sync.get("SynchDate"),
-                "temperature": sync.get("Temperature"),
+                "last_sync": sync["SynchDate"],
+                "temperature": sync["Temperature"],
             }
             if sync
             else None
@@ -66,9 +66,9 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sync: sync.get("Battery") if sync else None,
+        value_fn=lambda sync: sync["Battery"] if sync else None,
         extra_attr_fn=lambda sync: (
-            {"last_sync": sync.get("SynchDate")} if sync else None
+            {"last_sync": sync["SynchDate"]} if sync else None
         ),
     ),
     RotarexTankSensorEntityDescription(
@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sync: (
             dt_util.parse_datetime(sync["SynchDate"])
-            if sync and sync.get("SynchDate")
+            if sync and sync["SynchDate"]
             else None
         ),
     ),
@@ -91,8 +91,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Rotarex sensors from a config entry."""
     coordinator = config_entry.runtime_data
-    if not coordinator.data:
-        return
 
     entities = [
         RotarexTankSensor(coordinator, tank, description)
@@ -131,14 +129,10 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
 
     def _get_latest_sync(self) -> dict[str, Any] | None:
         """Return the most recent synchronization entry for the tank."""
-        data = self.coordinator.data
-        if not isinstance(data, list):
-            return None
-
         tank = next(
             (
                 item
-                for item in data
+                for item in self.coordinator.data
                 if isinstance(item, dict) and item.get("Guid") == self._tank_id
             ),
             None,
@@ -153,7 +147,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         valid_syncs = [
             sync
             for sync in synch_datas
-            if isinstance(sync, dict) and sync.get("SynchDate")
+            if isinstance(sync, dict) and sync["SynchDate"]
         ]
         if not valid_syncs:
             return None
@@ -186,17 +180,14 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information."""
-        data = self.coordinator.data
-        tank_data = None
-        if isinstance(data, list):
-            tank_data = next(
-                (
-                    item
-                    for item in data
-                    if isinstance(item, dict) and item.get("Guid") == self._tank_id
-                ),
-                None,
-            )
+        tank_data = next(
+            (
+                item
+                for item in self.coordinator.data
+                if isinstance(item, dict) and item.get("Guid") == self._tank_id
+            ),
+            None,
+        )
 
         return DeviceInfo(
             identifiers={(DOMAIN, self._tank_id)},

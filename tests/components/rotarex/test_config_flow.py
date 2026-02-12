@@ -66,44 +66,6 @@ async def test_form_errors(
     assert result2["errors"] == {"base": error}
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_rotarex_api: AsyncMock
-) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_rotarex_api.login.side_effect = InvalidAuth
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_rotarex_api: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_rotarex_api.login.side_effect = Exception
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

@@ -33,7 +33,7 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "cannot_connect"
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
                 self._abort_if_unique_id_configured(

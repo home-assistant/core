@@ -8,7 +8,7 @@ from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -40,9 +40,18 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             config_entry=config_entry,
         )
 
-    async def async_setup(self) -> None:
-        """Set up the coordinator with initial data refresh."""
-        await self.async_config_entry_first_refresh()
+    async def _async_setup(self) -> None:
+        """Set up the coordinator with initial authentication check."""
+        try:
+            await self.api.login(self._email, self._password)
+        except InvalidAuth as err:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed: {err}"
+            ) from err
+        except Exception as err:
+            raise ConfigEntryNotReady(
+                f"Error connecting to Rotarex API: {err}"
+            ) from err
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API endpoint."""
