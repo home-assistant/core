@@ -22,9 +22,6 @@
       "target_temperature_const": {
         "default": "mdi:thermometer-lines"
       },
-      "target_temperature_const": {
-        "default": "mdi:thermometer-lines"
-      },
       "target_temperature_eco": {
         "default": "mdi:leaf"
       },
