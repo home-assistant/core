@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .browse_media import build_item_response
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import XboxConsoleBaseEntity
+from .entity import XboxConsoleBaseEntity, to_https
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,15 +171,13 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if not (app_details := self.data.app_details) or not (
-            image := _find_media_image(app_details.localized_properties[0].images)
-        ):
-            return None
 
-        url = image.uri
-        if url[0] == "/":
-            url = f"http:{url}"
-        return url
+        return (
+            to_https(image.uri)
+            if (app_details := self.data.app_details)
+            and (image := _find_media_image(app_details.localized_properties[0].images))
+            else None
+        )
 
     @exception_handler
     async def async_turn_on(self) -> None:

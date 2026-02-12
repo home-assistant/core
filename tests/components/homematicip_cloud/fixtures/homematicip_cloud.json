@@ -5377,7 +5377,13 @@
           ],
           "index": 1,
           "label": "",
-          "smokeDetectorAlarmType": "IDLE_OFF"
+          "smokeDetectorAlarmType": "IDLE_OFF",
+          "chamberDegraded": false,
+          "dirtLevel": 0.15,
+          "smokeAlarmCounter": 2,
+          "smokeTestCounter": 5,
+          "lastSmokeAlarmTimestamp": 1704067200000,
+          "lastSmokeTestTimestamp": 1706745600000
         }
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
