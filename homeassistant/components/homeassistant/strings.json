@@ -39,6 +39,15 @@
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
+    "service_config_entry_not_found": {
+      "message": "Integration {domain} config entry with ID {entry_id} was not found."
+    },
+    "service_config_entry_not_loaded": {
+      "message": "Config entry {entry_title} for integration {domain} is not loaded."
+    },
+    "service_config_entry_wrong_domain": {
+      "message": "Config entry {entry_title} does not belong to integration {domain}."
+    },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
     },
@@ -156,10 +165,6 @@
     "platform_only": {
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
       "title": "The {domain} integration does not support YAML configuration under its own key"
-    },
-    "python_version": {
-      "description": "Support for running Home Assistant in the currently used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking.",
-      "title": "Support for Python {current_python_version} is being removed"
     },
     "storage_corruption": {
       "fix_flow": {

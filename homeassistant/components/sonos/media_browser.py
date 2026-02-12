@@ -112,7 +112,7 @@ def _get_title(id_string: str) -> str:
         # Format is S://server/share/folder
         # If just S: this will be in the mappings; otherwise use the last folder in path.
         title = LIBRARY_TITLES_MAPPING.get(
-            id_string, urllib.parse.unquote(id_string.split("/")[-1])
+            id_string, urllib.parse.unquote(id_string.rsplit("/", maxsplit=1)[-1])
         )
     else:
         parts = id_string.split("/")

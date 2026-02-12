@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -311,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
