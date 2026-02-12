@@ -51,7 +51,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
     async def validate_input(self, data: dict) -> bool:
