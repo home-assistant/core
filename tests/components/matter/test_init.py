@@ -28,7 +28,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import create_node_from_fixture, setup_integration_with_node_fixture
+from .common import (
+    FIXTURES,
+    create_node_from_fixture,
+    setup_integration_with_node_fixture,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -50,12 +54,19 @@ def listen_ready_timeout_fixture() -> Generator[int]:
         yield timeout
 
 
+def test_fixture_list() -> None:
+    """Test validity of the fixture list."""
+    # Ensure it is sorted - makes it easier to identify duplicate entries or
+    # locate specific fixtures
+    assert sorted(FIXTURES) == FIXTURES, "Fixture list is not sorted"
+
+
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
     entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
@@ -608,7 +619,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Matter Server add-on" in caplog.text
+    assert "Failed to stop the Matter Server app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -632,7 +643,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Matter Server add-on" in caplog.text
+    assert "Failed to create a backup of the Matter Server app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -657,7 +668,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Matter Server add-on" in caplog.text
+    assert "Failed to uninstall the Matter Server app" in caplog.text
 
 
 async def test_remove_config_entry_device(

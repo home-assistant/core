@@ -5,6 +5,7 @@ All evohome systems have controllers and at least one zone.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -32,6 +33,8 @@ from homeassistant.exceptions import HomeAssistantError
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
 
+from tests.common import async_fire_time_changed
+
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
 async def test_setup_platform(
@@ -43,7 +46,7 @@ async def test_setup_platform(
 ) -> None:
     """Test entities and their states after setup of evohome."""
 
-    # Cannot use the evohome fixture, as need to set dtm first
+    # Cannot use the evohome fixture here, as need to set dtm first
     #  - some extended state attrs are relative the current time
     freezer.move_to("2024-07-10T12:00:00Z")
 
@@ -52,6 +55,36 @@ async def test_setup_platform(
 
     for x in hass.states.async_all(Platform.CLIMATE):
         assert x == snapshot(name=f"{x.entity_id}-state")
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_entities_update_over_time(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test extended attributes update as time passes.
+
+    Verifies that time-dependent state attrs (e.g. schedules) vary as time advances.
+    """
+
+    # Cannot use the evohome fixture here, as need to set dtm first
+    #  - some extended state attrs are relative the current time
+    freezer.move_to("2024-07-10T05:30:00Z")
+
+    # stay inside this context to have the mocked RESTful API
+    async for _ in setup_evohome(hass, config, install=install):
+        for x in hass.states.async_all(Platform.CLIMATE):
+            assert x == snapshot(name=f"{x.entity_id}-state-initial")
+
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        for x in hass.states.async_all(Platform.CLIMATE):
+            assert x == snapshot(name=f"{x.entity_id}-state-updated")
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

@@ -46,6 +46,9 @@
       "condensing_temperature": {
         "name": "Condensing temperature"
       },
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
       "energy_produced": {
         "name": "Energy produced"
       },
