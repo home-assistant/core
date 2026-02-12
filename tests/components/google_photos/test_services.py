@@ -146,7 +146,7 @@ async def test_upload_service_config_entry_not_found(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test upload service call with a config entry that does not exist."""
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(HomeAssistantError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -171,12 +171,12 @@ async def test_config_entry_not_loaded(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(HomeAssistantError, match="service_config_entry_not_loaded"):
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.unique_id,
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
                 CONF_ALBUM: ALBUM_TITLE,
             },

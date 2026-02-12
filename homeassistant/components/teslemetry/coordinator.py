@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 from homeassistant.util import dt as dt_util
 
-from .const import ENERGY_HISTORY_FIELDS, LOGGER
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
 
 RETRY_EXCEPTIONS = (
@@ -96,9 +96,16 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                retry_after=_get_retry_after(e),
+            ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from e
         return flatten(data)
 
 
@@ -138,9 +145,16 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                retry_after=_get_retry_after(e),
+            ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from e
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
             wc["din"]: wc for wc in (data.get("wall_connectors") or [])
@@ -178,9 +192,16 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                retry_after=_get_retry_after(e),
+            ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from e
         return flatten(data)
 
 
@@ -213,12 +234,22 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                retry_after=_get_retry_after(e),
+            ) from e
         except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from e
 
         if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed("Received invalid data")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_invalid_data",
+            )
 
         time_series = data["time_series"]
 

@@ -308,3 +308,56 @@ def item_in_list[T](
         return result
 
     return convert
+
+
+def url(
+    entity: Entity,
+    attribute: str,
+    **kwargs: Any,
+) -> Callable[[Any], str | None]:
+    """Convert the result to a string url or None."""
+
+    def convert(result: Any) -> str | None:
+        if check_result_for_none(result, **kwargs):
+            return None
+
+        try:
+            return cv.url(result)
+        except vol.Invalid:
+            log_validation_result_error(
+                entity,
+                attribute,
+                result,
+                "expected a url",
+            )
+            return None
+
+    return convert
+
+
+def string(
+    entity: Entity,
+    attribute: str,
+    **kwargs: Any,
+) -> Callable[[Any], str | None]:
+    """Convert the result to a string or None."""
+
+    def convert(result: Any) -> str | None:
+        if check_result_for_none(result, **kwargs):
+            return None
+
+        if isinstance(result, str):
+            return result
+
+        try:
+            return cv.string(result)
+        except vol.Invalid:
+            log_validation_result_error(
+                entity,
+                attribute,
+                result,
+                "expected a string",
+            )
+            return None
+
+    return convert
