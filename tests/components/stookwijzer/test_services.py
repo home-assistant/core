@@ -48,7 +48,7 @@ async def test_service_entry_not_loaded(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -66,4 +66,4 @@ async def test_service_integration_not_found(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"

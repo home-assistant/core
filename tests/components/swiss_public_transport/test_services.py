@@ -210,7 +210,7 @@ async def test_service_call_load_unload(
                 blocking=True,
                 return_response=True,
             )
-        assert err.translation_key == "service_config_entry_not_loaded"
+        assert err.value.translation_key == "service_config_entry_not_loaded"
 
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
@@ -222,4 +222,4 @@ async def test_service_call_load_unload(
                 blocking=True,
                 return_response=True,
             )
-        assert err.translation_key == "service_config_entry_not_found"
+        assert err.value.translation_key == "service_config_entry_not_found"

@@ -109,7 +109,7 @@ async def test_upload_file_config_entry_not_found(
             },
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_upload_file_config_entry_not_loaded(
@@ -134,7 +134,7 @@ async def test_upload_file_config_entry_not_loaded(
             },
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_upload_file_only_local_media_supported(

@@ -145,7 +145,7 @@ async def test_services_invalid_entry(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 @pytest.mark.parametrize(
@@ -172,4 +172,4 @@ async def test_services_entry_not_loaded(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"

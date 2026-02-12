@@ -93,4 +93,4 @@ async def test_list_charge_slots_exception(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"

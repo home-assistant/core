@@ -379,7 +379,7 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)
@@ -397,7 +397,7 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_get_sheet_invalid_config_entry(
@@ -441,7 +441,7 @@ async def test_get_sheet_invalid_config_entry(
             blocking=True,
             return_response=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)

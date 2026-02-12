@@ -65,7 +65,7 @@ async def test_set_time_service_with_invalid_entry(
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_set_time_service_with_not_loaded_entry(
@@ -85,7 +85,7 @@ async def test_set_time_service_with_not_loaded_entry(
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_set_time_service_with_cloud_entry(
