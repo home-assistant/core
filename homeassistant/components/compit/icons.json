@@ -10,17 +10,17 @@
       "heating_target_temperature_const": {
         "default": "mdi:radiator"
       },
-      "mixer1_target_temperature": {
-        "default": "mdi:valve"
-      },
-      "mixer2_target_temperature": {
-        "default": "mdi:valve"
-      },
       "mixer_target_temperature": {
+        "default": "mdi:valve"
+      },
+      "mixer_target_temperature_zone": {
         "default": "mdi:valve"
       },
       "target_temperature_comfort": {
         "default": "mdi:thermometer"
+      },
+      "target_temperature_const": {
+        "default": "mdi:thermometer-lines"
       },
       "target_temperature_const": {
         "default": "mdi:thermometer-lines"
