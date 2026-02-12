@@ -112,10 +112,7 @@ async def test_send_reaction_config_entry_not_loaded(
 
     assert bring_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="The account associated with this Bring! list is either not loaded or disabled in Home Assistant",
-    ):
+    with pytest.raises(ServiceValidationError) as e:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
@@ -125,6 +122,7 @@ async def test_send_reaction_config_entry_not_loaded(
             },
             blocking=True,
         )
+    assert e.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.usefixtures("mock_bring_client")
