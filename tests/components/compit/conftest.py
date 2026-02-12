@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from compit_inext_api import CompitParameter
+from compit_inext_api.params_dictionary import PARAMS
 import pytest
 
 from homeassistant.components.compit.const import DOMAIN
@@ -53,6 +54,9 @@ def mock_connector():
         MagicMock(
             code="__trybpracy", value="de_icing"
         ),  # parameter not relevant for this device, should be ignored
+        MagicMock(code="__temp_zada_prac_cwu", value=55.0),  # DHW Target Temperature
+        MagicMock(code="__rr_temp_zmier_cwu", value=50.0),  # DHW Current Temperature
+        MagicMock(code="__tryb_cwu", value="on"),  # DHW On/Off
     ]
     mock_device_1.definition.code = 224  # R 900
 
@@ -72,31 +76,35 @@ def mock_connector():
     def mock_get_device(device_id: int):
         return all_devices.get(device_id)
 
-    def get_current_option(device_id: int, parameter_code: CompitParameter):
-        return next(
-            (
-                p
-                for p in all_devices[device_id].state.params
-                if p.code == parameter_code.value
-            ),
-            None,
-        ).value
+    def get_param(device_id: int, parameter_code: CompitParameter):
+        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
 
-    def select_device_option(
-        device_id: int, parameter_code: CompitParameter, value: str
+        return next(
+            (p for p in all_devices[device_id].state.params if p.code == code),
+            None,
+        )
+
+    def get_current_value(device_id: int, parameter_code: CompitParameter):
+        param = get_param(device_id, parameter_code)
+        return param.value if param else None
+
+    def set_device_parameter(
+        device_id: int, parameter_code: CompitParameter, value: float | str
     ):
-        next(
-            p
-            for p in all_devices[device_id].state.params
-            if p.code == parameter_code.value
-        ).value = value
+        param = get_param(device_id, parameter_code)
+        if not param:
+            return False
+
+        param.value = value
         return True
 
     mock_instance = MagicMock()
     mock_instance.init = AsyncMock(return_value=True)
     mock_instance.all_devices = all_devices
-    mock_instance.get_current_option = MagicMock(side_effect=get_current_option)
-    mock_instance.select_device_option = AsyncMock(side_effect=select_device_option)
+    mock_instance.get_current_option = MagicMock(side_effect=get_current_value)
+    mock_instance.select_device_option = AsyncMock(side_effect=set_device_parameter)
+    mock_instance.get_current_value = MagicMock(side_effect=get_current_value)
+    mock_instance.set_device_parameter = AsyncMock(side_effect=set_device_parameter)
     mock_instance.update_state = AsyncMock()
     mock_instance.get_device = MagicMock(side_effect=mock_get_device)
 
