@@ -1,5 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
+import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -8,7 +9,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import UserContent
+from homeassistant.components.conversation import (
+    AssistantContent,
+    ToolResultContent,
+    UserContent,
+)
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
     _escape_decode,
@@ -17,6 +22,7 @@ from homeassistant.components.google_generative_ai_conversation.entity import (
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.helpers.llm import ToolInput
 
 from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
 
@@ -86,6 +92,41 @@ async def test_function_call(
     """Test function calling."""
     agent_id = "conversation.google_ai_conversation"
     context = Context()
+
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(UserContent(content="What time is it?"))
+    mock_chat_log.async_add_assistant_content_without_tools(
+        AssistantContent(
+            agent_id=agent_id,
+            tool_calls=[
+                ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        ToolResultContent(
+            agent_id=agent_id,
+            tool_call_id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                "data": {"targets": [], "success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        AssistantContent(
+            agent_id=agent_id,
+            content="4:24 PM",
+        )
+    )
 
     messages = [
         # Function call stream

@@ -164,5 +164,5 @@ class ThermoworksSmokeSensor(SensorEntity):
                     self._attr_native_unit_of_measurement
                 )
 
-        except (RequestException, ValueError, KeyError):
+        except RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update status for %s", self.name)

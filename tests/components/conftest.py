@@ -108,17 +108,6 @@ def entity_registry_enabled_by_default() -> Generator[None]:
         yield
 
 
-# Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None]:
-    """Stub copying the blueprints to the config folder."""
-    from .blueprint.common import (  # noqa: PLC0415
-        stub_blueprint_populate_fixture_helper,
-    )
-
-    yield from stub_blueprint_populate_fixture_helper()
-
-
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
@@ -1131,3 +1120,13 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

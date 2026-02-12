@@ -28,18 +28,18 @@ async def test_valves(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.VALVE)
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
-    entity_id = "valve.valve"
+    entity_id = "valve.mock_valve"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "closed"
-    assert state.attributes["friendly_name"] == "Valve"
+    assert state.attributes["friendly_name"] == "Mock Valve"
 
     # test close_valve action
     await hass.services.async_call(

@@ -140,7 +140,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         return self._device.rgb_color
 
     @property
-    def color_mode(self) -> ColorMode | str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self._fixed_color_mode:
             # The light supports only a single color mode, return it
