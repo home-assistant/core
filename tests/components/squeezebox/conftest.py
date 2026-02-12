@@ -15,6 +15,7 @@ from homeassistant.components.squeezebox.browse_media import (
 )
 from homeassistant.components.squeezebox.const import (
     CONF_HTTPS,
+    CONF_VOLUME_STEP,
     DOMAIN,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
@@ -38,11 +39,10 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
-CONF_VOLUME_STEP = "volume_step"
-TEST_VOLUME_STEP = 10
+VOLUME_STEP = 10
+BROWSE_LIMIT = 10
 
-
-USE_HTTPS = False
+TEST_USE_HTTPS = False
 
 HOST = "1.1.1.1"
 PORT = 9000
@@ -198,10 +198,10 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_HOST: HOST,
             CONF_PORT: PORT,
-            const.CONF_HTTPS: USE_HTTPS,
+            const.CONF_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            CONF_VOLUME_STEP: TEST_VOLUME_STEP,
+            CONF_VOLUME_STEP: VOLUME_STEP,
         },
     )
     config_entry.add_to_hass(hass)

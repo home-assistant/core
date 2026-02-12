@@ -19,14 +19,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from .conftest import BROWSE_LIMIT, HOST, PORT, SERVER_UUIDS, VOLUME_STEP
+
 from tests.common import MockConfigEntry
-
-HOST = "1.1.1.1"
-PORT = 9000
-UUID = "12345678-1234-1234-1234-123456789012"
-
-BROWSE_LIMIT = 10
-VOLUME_STEP = 1
 
 USER_INPUT = {
     CONF_HOST: HOST,
@@ -52,7 +47,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
         },
-        unique_id=UUID,
+        unique_id=SERVER_UUIDS[0],
         domain=DOMAIN,
         options={CONF_BROWSE_LIMIT: 1000, CONF_VOLUME_STEP: 5},
     )
@@ -136,7 +131,9 @@ async def test_user_flow_discovery_variants(
         else mock_discover_failure
     )
 
-    mock_server.async_query.side_effect = lambda *args, **kwargs: {"uuid": UUID}
+    mock_server.async_query.side_effect = lambda *args, **kwargs: {
+        "uuid": SERVER_UUIDS[0]
+    }
     mock_server.http_status = HTTPStatus.OK
 
     with (
@@ -173,7 +170,7 @@ async def test_user_flow_discovery_variants(
 
 async def query_success(*args, **kwargs):
     """Simulate successful query returning UUID."""
-    return {"uuid": UUID}
+    return {"uuid": SERVER_UUIDS[0]}
 
 
 async def query_cannot_connect(*args, **kwargs):
@@ -199,7 +196,7 @@ async def query_exception(*args, **kwargs):
     ("discovery_data", "query_behavior", "http_status", "expect_error"),
     [
         (
-            {CONF_HOST: HOST, CONF_PORT: PORT, "uuid": UUID},
+            {CONF_HOST: HOST, CONF_PORT: PORT, "uuid": SERVER_UUIDS[0]},
             query_success,
             HTTPStatus.OK,
             None,
@@ -293,7 +290,7 @@ async def test_discovery_flow_variants(
         CONF_PASSWORD: "",
         CONF_HTTPS: False,
     }
-    assert result["context"]["unique_id"] == UUID
+    assert result["context"]["unique_id"] == SERVER_UUIDS[0]
 
 
 async def test_dhcp_discovery_flow_success(
@@ -401,7 +398,7 @@ async def test_flow_errors_and_recovery(
 
     # Recover
     mock_server.async_query.side_effect = None
-    mock_server.async_query.return_value = {"uuid": UUID}
+    mock_server.async_query.return_value = {"uuid": SERVER_UUIDS[0]}
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], EDIT_INPUT
@@ -442,7 +439,7 @@ async def test_form_missing_uuid(hass: HomeAssistant) -> None:
     # Second attempt: simulate a successful connection
     with patch(
         "pysqueezebox.Server.async_query",
-        return_value={"uuid": UUID},
+        return_value={"uuid": SERVER_UUIDS[0]},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -464,4 +461,4 @@ async def test_form_missing_uuid(hass: HomeAssistant) -> None:
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
         }
-        assert result["context"]["unique_id"] == UUID
+        assert result["context"]["unique_id"] == SERVER_UUIDS[0]
