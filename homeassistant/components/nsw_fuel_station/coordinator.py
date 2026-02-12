@@ -1,14 +1,11 @@
-"""DataUpdateCoordinator for nsw_fuel_ui."""
+"""DataUpdateCoordinator for NSW Fuel Check."""
 
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.nsw_fuel_station.const import DOMAIN
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from nsw_fuel import (
+from nsw_tas_fuel import (
     NSWFuelApiClient,
     NSWFuelApiClientAuthError,
     NSWFuelApiClientError,
@@ -16,9 +13,13 @@ from nsw_fuel import (
     StationPrice,
 )
 
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .const import (
     DEFAULT_FUEL_TYPE,
     DEFAULT_RADIUS_KM,
+    DOMAIN,
     E10_AVAILABLE_STATES,
     E10_CODE,
     E10_TRUNCATE_LIST,
@@ -36,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class NSWFuelCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Manages updates from NSW Fuel Check API."""
 
-    data: CoordinatorData | None
+    data: CoordinatorData
 
     def __init__(
         self,
@@ -85,8 +86,7 @@ class NSWFuelCoordinator(DataUpdateCoordinator[CoordinatorData]):
         }
 
     async def _update_favorite_stations(self) -> dict[StationKey, dict[str, Price]]:
-        """
-            Fetch prices for user's favorite stations.
+        """Fetch prices for user's favorite stations.
 
         Returns:
             Dict mapping station keys (station_code, au_state) to dictionaries
@@ -115,8 +115,7 @@ class NSWFuelCoordinator(DataUpdateCoordinator[CoordinatorData]):
         return favorites
 
     async def _update_cheapest_stations(self) -> dict[str, list[dict]]:
-        """
-        Fetch cheapest fuel prices per nickname.
+        """Fetch cheapest fuel prices per nickname.
 
         Currently NSW has E10 availability legislation, E10 rare in TAS.
 
@@ -193,8 +192,7 @@ class NSWFuelCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self,
         nicknames: dict[str, dict[str, Any]],
     ) -> dict[str, tuple[float, float]]:
-        """
-        Extract and validate latitude/longitude per nickname.
+        """Extract and validate latitude/longitude per nickname.
 
         API call requires lat/lon, retrieve for each nickname.
         """

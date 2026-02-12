@@ -15,7 +15,7 @@ from .coordinator import NSWFuelCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
     from .data import NSWFuelConfigEntry
 
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NSWFuelConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for NSW Fuel Check from a config entry."""
     coordinator: NSWFuelCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -54,7 +54,7 @@ class FuelPriceSensor(CoordinatorEntity[NSWFuelCoordinator], SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_has_entity_name = True
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         coordinator: NSWFuelCoordinator,
         nickname: str,
@@ -182,8 +182,7 @@ class CheapestFuelPriceSensor(CoordinatorEntity[NSWFuelCoordinator], SensorEntit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """
-        Add attributes for display in the user interface.
+        """Add attributes for display in the user interface.
 
         Station name and fuel type are dynamic (as well as sensor value/price).
         User needs a way of identifying which fuel station this sensor refers to.
@@ -251,8 +250,7 @@ def create_favorite_station_sensors(
 def create_cheapest_fuel_sensors(
     coordinator: NSWFuelCoordinator,
 ) -> list[CheapestFuelPriceSensor]:
-    """
-    Create CheapestFuelPriceSensor entities for all nicknames.
+    """Create CheapestFuelPriceSensor entities for all nicknames.
 
     Always create 2 sensors per nickname for rank 1 and 2.
     """

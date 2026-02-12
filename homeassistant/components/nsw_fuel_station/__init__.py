@@ -6,15 +6,12 @@ import datetime
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    Platform,
-)
+from nsw_tas_fuel import NSWFuelApiClient
+
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from nsw_fuel import NSWFuelApiClient
 
 from .const import DOMAIN
 from .coordinator import NSWFuelCoordinator
@@ -27,7 +24,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-# Stations apppear to update at random, it could be days between price changes
+# Stations appear to update at random, it could be days between price changes
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=720)
 
 

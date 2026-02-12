@@ -1,17 +1,9 @@
 {
   "domain": "nsw_fuel_station",
-  "name": "NSW Fuel Station Price",
-  "codeowners": [
-    "@bicycleboy"
-  ],
+  "name": "NSW Fuel Check",
+  "codeowners": ["@bicycleboy"],
   "config_flow": true,
-  "documentation": "git@github.com:bicycleboy/nsw_fuel_station.git",
+  "documentation": "https://www.home-assistant.io/integrations/nsw_fuel_station",
   "iot_class": "cloud_polling",
-  "issue_tracker": "git@github.com:bicycleboy/nsw_fuel_station.git/issues",
-  "version": "2.0.0b2",
-  "integration_type": "service",
-  "requirements": [
-    "aiohttp>=3.9.0"
-  ],
-  "dependencies": []
+  "requirements": ["nsw-tas-fuel-api-client==0.0.1"]
 }

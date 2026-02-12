@@ -5,31 +5,22 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-import pytest
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from nsw_fuel import (
+from nsw_tas_fuel import (
     NSWFuelApiClientAuthError,
     NSWFuelApiClientError,
     Price,
     Station,
     StationPrice,
 )
+import pytest
 
-from nsw_fuel.const import (
-    DEFAULT_FUEL_TYPE,
-)
-from nsw_fuel.coordinator import (
-    NSWFuelCoordinator,
-)
+from homeassistant.components.nsw_fuel_station.const import DEFAULT_FUEL_TYPE
+from homeassistant.components.nsw_fuel_station.coordinator import NSWFuelCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import (
-    HOBART_LAT,
-    HOBART_LNG,
-    HOME_LAT,
-    HOME_LNG,
-    STATION_NSW_A,
-)
+from .conftest import HOBART_LAT, HOBART_LNG, HOME_LAT, HOME_LNG, STATION_NSW_A
 
 
 @pytest.fixture
@@ -65,7 +56,9 @@ def nicknames_home_and_hobart() -> dict:
 
 
 @pytest.fixture
-def coordinator(hass, mock_api_client, nicknames_home_only) -> NSWFuelCoordinator:
+def coordinator(
+    hass: HomeAssistant, mock_api_client, nicknames_home_only
+) -> NSWFuelCoordinator:
     """Coordinator with a single NSW nickname."""
     return NSWFuelCoordinator(
         hass=hass,
@@ -99,7 +92,7 @@ async def test_update_favorite_stations(coordinator: NSWFuelCoordinator) -> None
 
 
 async def test_update_cheapest_stations_e10_u91(
-    hass, mock_api_client, nicknames_home_only
+    hass: HomeAssistant, mock_api_client, nicknames_home_only
 ) -> None:
     """E10 prices are merged, sorted with U91, and cheapest two returned."""
 
@@ -194,7 +187,7 @@ async def test_update_cheapest_stations_e10_u91(
 
 
 async def test_update_cheapest_stations_u91(
-    hass, mock_api_client, nicknames_home_and_hobart
+    hass: HomeAssistant, mock_api_client, nicknames_home_and_hobart
 ) -> None:
     """TAS nickname should only return default fuel type."""
     coordinator = NSWFuelCoordinator(
@@ -213,7 +206,7 @@ async def test_update_cheapest_stations_u91(
 
 
 async def test_async_update_auth_failure(
-    hass, mock_api_client, nicknames_home_only
+    hass: HomeAssistant, mock_api_client, nicknames_home_only
 ) -> None:
     """Auth error raises ConfigEntryAuthFailed."""
     mock_api_client.get_fuel_prices_for_station = AsyncMock(
@@ -232,7 +225,7 @@ async def test_async_update_auth_failure(
 
 
 async def test_async_update_api_failure(
-    hass, mock_api_client, nicknames_home_only
+    hass: HomeAssistant, mock_api_client, nicknames_home_only
 ) -> None:
     """API error raises UpdateFailed."""
     mock_api_client.get_fuel_prices_for_station = AsyncMock(
@@ -250,7 +243,7 @@ async def test_async_update_api_failure(
         await coordinator._async_update_data()
 
 
-def test_extract_locations_missing_block(hass, mock_api_client) -> None:
+def test_extract_locations_missing_block(hass: HomeAssistant, mock_api_client) -> None:
     """Nickname without location block raises TypeError."""
     nicknames = {"Home": {"stations": []}}
 
@@ -263,7 +256,9 @@ def test_extract_locations_missing_block(hass, mock_api_client) -> None:
         )
 
 
-def test_extract_locations_missing_lat_lon(hass, mock_api_client) -> None:
+def test_extract_locations_missing_lat_lon(
+    hass: HomeAssistant, mock_api_client
+) -> None:
     """Nickname without lat/lon raises ValueError."""
     nicknames = {"Home": {"location": {}, "stations": []}}
 
@@ -276,7 +271,7 @@ def test_extract_locations_missing_lat_lon(hass, mock_api_client) -> None:
         )
 
 
-def test_extract_locations_non_numeric(hass, mock_api_client) -> None:
+def test_extract_locations_non_numeric(hass: HomeAssistant, mock_api_client) -> None:
     """Non-numeric coordinates raise TypeError."""
     nicknames = {
         "Home": {
@@ -294,7 +289,7 @@ def test_extract_locations_non_numeric(hass, mock_api_client) -> None:
         )
 
 
-def test_extract_locations_empty(hass, mock_api_client) -> None:
+def test_extract_locations_empty(hass: HomeAssistant, mock_api_client) -> None:
     """At least one nickname is required."""
     with pytest.raises(ValueError):
         NSWFuelCoordinator(

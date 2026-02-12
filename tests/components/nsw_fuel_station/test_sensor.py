@@ -7,11 +7,10 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from nsw_fuel.const import DOMAIN
-from nsw_fuel.coordinator import NSWFuelCoordinator
-from nsw_fuel.sensor import (
+from homeassistant.components.nsw_fuel_station.const import DOMAIN
+from homeassistant.components.nsw_fuel_station.coordinator import NSWFuelCoordinator
+from homeassistant.components.nsw_fuel_station.sensor import (
     CheapestFuelPriceSensor,
     FuelPriceSensor,
     _attribution_for_state,
@@ -19,6 +18,8 @@ from nsw_fuel.sensor import (
     create_cheapest_fuel_sensors,
     create_favorite_station_sensors,
 )
+
+from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -63,7 +64,9 @@ async def coordinator(
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_creates_entities(hass, coordinator) -> None:
+async def test_async_setup_entry_creates_entities(
+    hass: HomeAssistant, coordinator
+) -> None:
     """Prepare a mock config entry with data including nicknames."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -162,7 +165,7 @@ async def test_favorite_sensor_native_value(coordinator, nicknames_home_only) ->
 
 
 async def test_favorite_sensor_no_data_returns_none(
-    hass,
+    hass: HomeAssistant,
     mock_api_client,
     nicknames_home_only,
 ) -> None:
