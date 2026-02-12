@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import OAUTH2_TOKEN
+from .const import OAUTH2_TOKEN_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +59,8 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
 
         data["client_id"] = self.client_id
 
-        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN)
-        resp = await session.post(OAUTH2_TOKEN, data=data)
+        _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN_URL)
+        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
