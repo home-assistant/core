@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -83,6 +84,44 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth on authentication failure."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation with new credentials."""
+        reauth_entry = self._get_reauth_entry()
+        host = reauth_entry.data[CONF_HOST]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            password = user_input[CONF_PASSWORD]
+            websession = async_get_clientsession(self.hass)
+            client = Homevolt(host, password, websession=websession)
+            errors = await self.check_status(client)
+
+            if not errors:
+                device_id = client.unique_id
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    unique_id=device_id,
+                    data_updates={CONF_HOST: host, CONF_PASSWORD: password},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"host": host},
         )
 
     async def async_step_credentials(

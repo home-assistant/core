@@ -1051,6 +1051,9 @@ hanna-cloud==0.0.7
 # homeassistant.components.cloud
 hass-nabucasa==1.13.0
 
+# homeassistant.components.splunk
+hass-splunk==0.1.1
+
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==3.5.0
@@ -1096,7 +1099,7 @@ homelink-integration-api==0.0.1
 homematicip==2.6.0
 
 # homeassistant.components.homevolt
-homevolt==0.4.3
+homevolt==0.4.4
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1700,7 +1703,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.17.1
+pydaikin==2.17.2
 
 # homeassistant.components.deako
 pydeako==0.6.0
@@ -2255,7 +2258,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.2.0
+pyuptimerobot==24.0.1
 
 # homeassistant.components.vera
 pyvera==0.3.16
@@ -2291,7 +2294,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.3.2
+pywmspro==0.3.3
 
 # homeassistant.components.ws66i
 pyws66i==1.1
