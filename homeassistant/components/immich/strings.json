@@ -79,8 +79,26 @@
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."
     },
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to your Immich instance."
+    },
+    "identifier_no_mime_type_unresolvable": {
+      "message": "Could not resolve identifier that has no mime-type: {identifier}"
+    },
+    "identifier_unresolvable": {
+      "message": "Could not parse identifier: {identifier}"
+    },
+    "not_configured": {
+      "message": "Immich is not configured."
+    },
     "only_local_media_supported": {
       "message": "Only local media files are currently supported."
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from your Immich instance: {error}"
     },
     "upload_failed": {
       "message": "Upload of file `{file}` failed ({error})."
