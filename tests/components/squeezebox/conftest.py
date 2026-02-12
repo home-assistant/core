@@ -41,10 +41,9 @@ from tests.common import MockConfigEntry
 CONF_VOLUME_STEP = "volume_step"
 TEST_VOLUME_STEP = 10
 
-TEST_HOST = "1.2.3.4"
-TEST_PORT = "9000"
-TEST_USE_HTTPS = False
-UUID = "test-uuid"
+
+USE_HTTPS = False
+
 HOST = "1.1.1.1"
 PORT = 9000
 SERVER_UUIDS = [
@@ -67,7 +66,7 @@ FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
 FAKE_IP = "42.42.42.42"
-FAKE_UUID = "deadbeefdeadbeefbeefdeafbddeef42"
+
 FAKE_PORT = 9000
 FAKE_VERSION = "42.0"
 
@@ -96,7 +95,7 @@ FAKE_QUERY_RESPONSE = {
             "modelname": "SqueezeLite-HA-Addon",
             "playerindex": "status",
             "model": "squeezelite",
-            "uuid": FAKE_UUID,
+            "uuid": SERVER_UUIDS[0],
             "canpoweroff": 1,
             "ip": "192.168.78.86:57700",
             "displaytype": "none",
@@ -125,7 +124,7 @@ def mock_config_entry():
     """Fixture that returns a mock config entry with UUID."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=UUID,
+        unique_id=SERVER_UUIDS[0],
         data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
     )
 
@@ -151,7 +150,7 @@ def mock_discover_success():
         class DummyServer:
             host = "1.1.1.1"
             port = 9000
-            uuid = UUID  # Ensure UUID is defined or imported
+            uuid = SERVER_UUIDS[0]  # Ensure UUID is defined or imported
 
         callback(DummyServer())
         return [DummyServer()]
@@ -197,9 +196,9 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=const.DOMAIN,
         unique_id=SERVER_UUIDS[0],
         data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            const.CONF_HTTPS: TEST_USE_HTTPS,
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            const.CONF_HTTPS: USE_HTTPS,
         },
         options={
             CONF_VOLUME_STEP: TEST_VOLUME_STEP,

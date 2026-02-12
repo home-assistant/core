@@ -22,10 +22,9 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from tests.common import MockConfigEntry
 
 HOST = "1.1.1.1"
-HOST2 = "2.2.2.2"
 PORT = 9000
-UUID = "test-uuid"
-UNKNOWN_ERROR = "1234"
+UUID = "12345678-1234-1234-1234-123456789012"
+
 BROWSE_LIMIT = 10
 VOLUME_STEP = 1
 
@@ -116,7 +115,7 @@ async def test_user_flow_duplicate_entry(
     ("discover_fixture", "expect_error", "expect_entry"),
     [
         ("mock_discover_success", None, True),
-        ("mock_failed_discover_fixture", "no_server_found", False),
+        ("mock_discover_failure", "no_server_found", False),
     ],
 )
 async def test_user_flow_discovery_variants(
@@ -323,16 +322,8 @@ async def test_dhcp_discovery_flow_success(
             data=dhcp_info,
         )
 
-    # Handle initial step
-    if result["step_id"] == "user":
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "edit"
-    else:
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "edit"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "edit"
 
     # Final configure step
     result2 = await hass.config_entries.flow.async_configure(
