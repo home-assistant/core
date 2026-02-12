@@ -8,6 +8,7 @@
     "abort": {
       "already_configured": "This user is already configured for this immich instance.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided API key does not match the configured user."
     },
     "error": {
@@ -25,6 +26,16 @@
           "api_key": "[%key:component::immich::common::data_desc_api_key%]"
         },
         "description": "Update the API key for {name}."
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::immich::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
+        }
       },
       "user": {
         "data": {
