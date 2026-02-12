@@ -291,6 +291,11 @@
       }
     }
   },
+  "exceptions": {
+    "get_lock_usercode_not_found": {
+      "message": "Code slot {code_slot} not found on lock {entity_id}"
+    }
+  },
   "issues": {
     "device_config_file_changed": {
       "fix_flow": {
@@ -375,6 +380,16 @@
         }
       },
       "name": "Clear lock user code"
+    },
+    "get_lock_usercode": {
+      "description": "Gets user codes from a lock.",
+      "fields": {
+        "code_slot": {
+          "description": "Code slot to get code from. If not specified, all code slots are returned.",
+          "name": "Code slot"
+        }
+      },
+      "name": "Get lock user code"
     },
     "invoke_cc_api": {
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
