@@ -6,7 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_VERIFY_SSL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -31,6 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: DEFAULT_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
     )
 
