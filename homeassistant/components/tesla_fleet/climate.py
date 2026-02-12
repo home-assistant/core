@@ -82,9 +82,9 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         scopes: list[Scope],
     ) -> None:
         """Initialize the climate."""
-        
+
         self.read_only = Scope.VEHICLE_CMDS not in scopes
-        
+
         if self.read_only:
             self._attr_hvac_modes = []
 
@@ -92,9 +92,9 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             data,
             side,
         )
-        
-        model = data.vin[3]     # S, 3, X, or Y
-        year_code = data.vin[9] # K=2019, L=2020, M=2021, N=2022
+
+        model = data.vin[3]  # S, 3, X, or Y
+        year_code = data.vin[9]  # K=2019, L=2020, M=2021, N=2022
 
         # Model S/X 2019 (K) or newer
         is_bio_s_x = model in ("S", "X") and year_code >= "K"
@@ -108,13 +108,16 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         """Return supported features dynamically."""
         if self.read_only:
             return ClimateEntityFeature(0)
-        
+
         features = self._attr_supported_features
-        
+
         # Dual detection logic
         # Fan mode will not populate if car is asleep when integration is reloaded
         # VIN provides a persistent value to check vs a live value that depends on car being awake
-        if self._bioweapon_vin_support or self.get("climate_state_bioweapon_mode") is not None:
+        if (
+            self._bioweapon_vin_support
+            or self.get("climate_state_bioweapon_mode") is not None
+        ):
             features |= ClimateEntityFeature.FAN_MODE
 
         return features
@@ -122,7 +125,10 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes dynamically."""
-        if not self.read_only and (self._bioweapon_vin_support or self.get("climate_state_bioweapon_mode") is not None):
+        if not self.read_only and (
+            self._bioweapon_vin_support
+            or self.get("climate_state_bioweapon_mode") is not None
+        ):
             return ["off", "bioweapon"]
         return None
 
@@ -143,12 +149,12 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
         self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
-        
+
         if self.get("climate_state_bioweapon_mode"):
             self._attr_fan_mode = "bioweapon"
         else:
             self._attr_fan_mode = "off"
-            
+
         self._attr_min_temp = cast(
             float, self.get("climate_state_min_avail_temp", DEFAULT_MIN_TEMP)
         )
@@ -223,7 +229,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Bioweapon defense mode."""
         await self.wake_up_if_asleep()
-        
+
         await handle_vehicle_command(
             self.api.set_bioweapon_mode(
                 on=(fan_mode != "off"),
@@ -231,12 +237,13 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             )
         )
         self._attr_fan_mode = fan_mode
-        
+
         # Bioweapon mode forces HVAC on
-        if fan_mode == "bioweapon": 
+        if fan_mode == "bioweapon":
             self._attr_hvac_mode = HVACMode.HEAT_COOL
-            
+
         self.async_write_ha_state()
+
 
 COP_MODES = {
     "Off": HVACMode.OFF,

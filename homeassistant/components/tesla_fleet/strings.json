@@ -176,17 +176,17 @@
       "driver_temp": {
         "name": "[%key:component::climate::title%]",
         "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "bioweapon": "Bioweapon mode",
+              "off": "[%key:common::state::normal%]"
+            }
+          },
           "preset_mode": {
             "state": {
               "camp": "Camp mode",
               "dog": "Dog mode",
               "keep": "Keep mode",
-              "off": "[%key:common::state::normal%]"
-            }
-          },
-          "fan_mode": {
-            "state": {
-              "bioweapon": "Bioweapon mode",
               "off": "[%key:common::state::normal%]"
             }
           }
