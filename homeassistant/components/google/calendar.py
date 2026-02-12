@@ -161,6 +161,7 @@ def _get_entity_descriptions(
             local_sync=local_sync,
             entity_registry_enabled_default=entity_enabled,
             device_id=data[CONF_DEVICE_ID],
+            initial_color=calendar_item.background_color,
         )
         entity_descriptions.append(entity_description)
         _LOGGER.debug(

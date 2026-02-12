@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.transmission.const import (
     ATTR_DELETE_DATA,
     ATTR_DOWNLOAD_PATH,
+    ATTR_LABELS,
     ATTR_TORRENT,
     ATTR_TORRENT_FILTER,
     ATTR_TORRENTS,
@@ -58,9 +59,7 @@ async def test_service_integration_not_found(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with pytest.raises(
-        ServiceValidationError, match='Integration "transmission" not found'
-    ):
+    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_TORRENT,
@@ -76,32 +75,48 @@ async def test_service_integration_not_found(
     ("payload", "expected_torrent", "kwargs"),
     [
         (
-            {ATTR_TORRENT: "magnet:?xt=urn:btih:test"},
+            {ATTR_TORRENT: "magnet:?xt=urn:btih:test", ATTR_LABELS: "Notify"},
             "magnet:?xt=urn:btih:test",
-            {},
+            {
+                "labels": ["Notify"],
+                "download_dir": None,
+            },
         ),
         (
             {
                 ATTR_TORRENT: "magnet:?xt=urn:btih:test",
+                ATTR_LABELS: "Movies,Notify",
                 ATTR_DOWNLOAD_PATH: "/custom/path",
             },
             "magnet:?xt=urn:btih:test",
-            {"download_dir": "/custom/path"},
+            {
+                "labels": ["Movies", "Notify"],
+                "download_dir": "/custom/path",
+            },
         ),
         (
             {ATTR_TORRENT: "http://example.com/test.torrent"},
             "http://example.com/test.torrent",
-            {},
+            {
+                "labels": None,
+                "download_dir": None,
+            },
         ),
         (
             {ATTR_TORRENT: "ftp://example.com/test.torrent"},
             "ftp://example.com/test.torrent",
-            {},
+            {
+                "labels": None,
+                "download_dir": None,
+            },
         ),
         (
             {ATTR_TORRENT: "/config/test.torrent"},
             "/config/test.torrent",
-            {},
+            {
+                "labels": None,
+                "download_dir": None,
+            },
         ),
     ],
 )

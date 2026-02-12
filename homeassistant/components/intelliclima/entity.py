@@ -2,6 +2,7 @@
 
 from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_MODEL, ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -17,20 +18,21 @@ from .coordinator import IntelliClimaCoordinator
 class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     """Define a generic class for IntelliClima entities."""
 
-    _attr_attribution = "Data provided by unpublished IntelliClima API"
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO | IntelliClimaC800,
-        description: EntityDescription,
+        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
 
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        if description is not None:
+            self.entity_description = description
+
+        self._attr_unique_id = device.id
 
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
@@ -51,25 +53,28 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO,
-        description: EntityDescription,
+        description: EntityDescription | None = None,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device, description)
 
-        self._attr_device_info = self._build_device_info(device)
+        self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
 
-    def _build_device_info(self, device: IntelliClimaECO) -> DeviceInfo:
-        info: DeviceInfo = self.device_info or DeviceInfo()
-
-        info["model"] = "ECOCOMFORT 2.0"
-        info["sw_version"] = device.fw
-        info["connections"] = {
+        self._attr_device_info[ATTR_MODEL] = "ECOCOMFORT 2.0"
+        self._attr_device_info[ATTR_SW_VERSION] = device.fw
+        self._attr_device_info[ATTR_CONNECTIONS] = {
             (CONNECTION_BLUETOOTH, device.mac),
             (CONNECTION_NETWORK_MAC, device.macwifi),
         }
 
-        return info
-
     @property
     def _device_data(self) -> IntelliClimaECO:
         return self.coordinator.data.ecocomfort2_devices[self._device_id]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and self._device_id in self.coordinator.data.ecocomfort2_devices
+        )

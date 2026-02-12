@@ -24,10 +24,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -36,6 +35,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HikvisionConfigEntry
 from .const import DEFAULT_PORT, DOMAIN
+from .entity import HikvisionEntity
 
 CONF_IGNORED = "ignored"
 
@@ -150,7 +150,12 @@ async def async_setup_entry(
 
     sensors = camera.current_event_states
     if sensors is None or not sensors:
-        _LOGGER.warning("Hikvision device has no sensors available")
+        _LOGGER.warning(
+            "Hikvision %s %s has no sensors available. "
+            "Ensure event detection is enabled and configured on the device",
+            data.device_type,
+            data.device_name,
+        )
         return
 
     async_add_entities(
@@ -164,10 +169,9 @@ async def async_setup_entry(
     )
 
 
-class HikvisionBinarySensor(BinarySensorEntity):
+class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
-    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -177,29 +181,14 @@ class HikvisionBinarySensor(BinarySensorEntity):
         channel: int,
     ) -> None:
         """Initialize the binary sensor."""
-        self._data = entry.runtime_data
-        self._camera = self._data.camera
+        super().__init__(entry, channel)
         self._sensor_type = sensor_type
-        self._channel = channel
 
-        # Build unique ID
+        # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Build entity name based on device type
-        if self._data.device_type == "NVR":
-            self._attr_name = f"{sensor_type} {channel}"
-        else:
-            self._attr_name = sensor_type
-
-        # Device info for device registry
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._data.device_id)},
-            name=self._data.device_name,
-            manufacturer="Hikvision",
-            model=self._data.device_type,
-        )
-
-        # Set device class
+        # Set entity name and device class
+        self._attr_name = sensor_type
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)
 
         # Callback ID for pyhik
@@ -227,7 +216,10 @@ class HikvisionBinarySensor(BinarySensorEntity):
         # Register callback with pyhik
         self._camera.add_update_callback(self._update_callback, self._callback_id)
 
-    @callback
     def _update_callback(self, msg: str) -> None:
-        """Update the sensor's state when callback is triggered."""
-        self.async_write_ha_state()
+        """Update the sensor's state when callback is triggered.
+
+        This is called from pyhik's event stream thread, so we use
+        schedule_update_ha_state which is thread-safe.
+        """
+        self.schedule_update_ha_state()

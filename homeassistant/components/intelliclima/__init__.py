@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import LOGGER
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SENSOR]
+PLATFORMS = [Platform.FAN]
 
 
 async def async_setup_entry(
@@ -30,7 +30,7 @@ async def async_setup_entry(
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
-    LOGGER.info(
+    LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
         len(coordinator.data.ecocomfort2_devices),
     )
