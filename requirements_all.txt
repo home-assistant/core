@@ -1236,6 +1236,9 @@ homelink-integration-api==0.0.1
 # homeassistant.components.homematicip_cloud
 homematicip==2.6.0
 
+# homeassistant.components.homevolt
+homevolt==0.4.3
+
 # homeassistant.components.horizon
 horimote==0.4.1
 
@@ -2648,7 +2651,7 @@ pytomorrowio==0.3.6
 pytouchline_extended==0.4.5
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.5.0
+pytouchlinesl==0.6.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2691,7 +2694,7 @@ pyvolumio==0.1.5
 pywaze==1.1.1
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.4.5
+pyweatherflowudp==1.5.0
 
 # homeassistant.components.html5
 pywebpush==1.14.1
@@ -2909,7 +2912,7 @@ skyboxremote==0.0.6
 slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
-slixmpp==1.12.0
+slixmpp==1.13.2
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
