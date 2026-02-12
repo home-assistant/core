@@ -82,7 +82,7 @@ async def test_operational_state_buttons(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
 async def test_smoke_detector_self_test(
     hass: HomeAssistant,
     matter_client: MagicMock,

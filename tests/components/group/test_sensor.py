@@ -12,6 +12,7 @@ import pytest
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.group.sensor import (
+    ATTR_FIRST_AVAILABLE_ENTITY_ID,
     ATTR_LAST_ENTITY_ID,
     ATTR_MAX_ENTITY_ID,
     ATTR_MIN_ENTITY_ID,
@@ -86,6 +87,11 @@ def set_or_remove_state(
         ("mean", MEAN, {}),
         ("median", MEDIAN, {}),
         ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
+        (
+            "first_available",
+            VALUES[0],
+            {ATTR_FIRST_AVAILABLE_ENTITY_ID: "sensor.test_1"},
+        ),
         ("range", RANGE, {}),
         ("stdev", STDEV, {}),
         ("sum", SUM_VALUE, {}),
@@ -206,7 +212,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -215,20 +221,20 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -281,14 +287,14 @@ async def test_reload(hass: HomeAssistant) -> None:
         (STATES_ONE_MISSING, "17.0"),
         (STATES_ONE_UNKNOWN, "17.0"),
         (STATES_ONE_UNAVAILABLE, "17.0"),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE),
+        (STATES_ALL_ERROR, STATE_UNKNOWN),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_sensor_incorrect_state_with_ignore_non_numeric(
@@ -339,17 +345,17 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     ("states_list", "expected_group_state", "error_count"),
     [
         (STATES_ONE_ERROR, STATE_UNKNOWN, 1),
-        (STATES_ONE_MISSING, "17.0", 0),
+        (STATES_ONE_MISSING, STATE_UNKNOWN, 0),
         (STATES_ONE_UNKNOWN, STATE_UNKNOWN, 1),
         (STATES_ONE_UNAVAILABLE, STATE_UNKNOWN, 1),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE, 3),
+        (STATES_ALL_ERROR, STATE_UNKNOWN, 3),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE, 0),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE, 3),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN, 3),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE, 3),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE, 2),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE, 3),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE, 2),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE, 2),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN, 2),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN, 3),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN, 2),
     ],
 )
 async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
@@ -402,17 +408,17 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     ("states_list", "expected_group_state"),
     [
         (STATES_ONE_ERROR, STATE_UNKNOWN),
-        (STATES_ONE_MISSING, "32.3"),
+        (STATES_ONE_MISSING, STATE_UNKNOWN),
         (STATES_ONE_UNKNOWN, STATE_UNKNOWN),
         (STATES_ONE_UNAVAILABLE, STATE_UNKNOWN),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE),
+        (STATES_ALL_ERROR, STATE_UNKNOWN),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_sensor_require_all_states(
@@ -740,7 +746,7 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
     assert state.attributes.get("unit_of_measurement") is None
@@ -847,12 +853,74 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entities"]
 
+    for entity_id in entity_ids[1:]:
+        hass.states.async_set(entity_id, "0.0")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_last")
+        assert state.state == STATE_UNKNOWN
+
     for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, str(value))
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
-        assert str(float(value)) == state.state
-        assert entity_id == state.attributes.get("last_entity_id")
+        assert state.state == str(float(value))
+        assert state.attributes.get("last_entity_id") == entity_id
+
+
+async def test_first_available_sensor(hass: HomeAssistant) -> None:
+    """Test the first available sensor."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_first_available",
+            "type": "first_available",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_first_available_sensor",
+            "ignore_non_numeric": True,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    # Ensure that while sensor states are being set
+    # the group will always point to the first available sensor.
+
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_first_available")
+        assert str(float(VALUES[0])) == state.state
+        assert entity_ids[0] == state.attributes.get("first_available_entity_id")
+
+    # If the second sensor of the group becomes unavailable
+    # then the first one should still be taken.
+
+    hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert str(float(VALUES[0])) == state.state
+    assert entity_ids[0] == state.attributes.get("first_available_entity_id")
+
+    # If the first sensor of the group becomes now unavailable
+    # then the third one should be taken.
+
+    hass.states.async_set(entity_ids[0], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert str(float(VALUES[2])) == state.state
+    assert entity_ids[2] == state.attributes.get("first_available_entity_id")
+
+    # If all sensors of the group become unavailable
+    # then the group should also be unavailable.
+
+    hass.states.async_set(entity_ids[2], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("first_available_entity_id") is None
 
 
 async def test_sensors_attributes_added_when_entity_info_available(

@@ -7,7 +7,6 @@ import PyTado
 import PyTado.exceptions
 from PyTado.interface import Tado
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     APPLICATION_NAME,
     CONF_PASSWORD,
@@ -34,8 +33,7 @@ from .const import (
     DOMAIN,
     TADO_BRIDGE_MODELS,
 )
-from .coordinator import TadoDataUpdateCoordinator
-from .models import TadoData
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -60,9 +58,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_setup_services(hass)
     return True
-
-
-type TadoConfigEntry = ConfigEntry[TadoData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -117,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
                 configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
             )
 
-    entry.runtime_data = TadoData(coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

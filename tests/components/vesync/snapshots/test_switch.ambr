@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -137,6 +138,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -170,6 +172,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -266,6 +269,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -299,6 +303,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -395,6 +400,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -428,6 +434,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -672,6 +679,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -705,6 +713,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -801,6 +810,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -834,6 +844,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -867,6 +878,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -878,6 +890,40 @@
       'supported_features': 0,
       'translation_key': 'auto_off_config',
       'unique_id': '6000s-auto_off_config',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Enable drying mode while power is off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Enable drying mode while power is off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'drying_mode_power_off',
+      'unique_id': '6000s-drying_mode_power_off',
       'unit_of_measurement': None,
     }),
   ])
@@ -919,6 +965,19 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_enable_drying_mode_while_power_is_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Enable drying mode while power is off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_enable_drying_mode_while_power_is_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_switch_state[Humidifier 600S][devices]
@@ -976,6 +1035,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1009,6 +1069,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1105,6 +1166,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -1189,6 +1251,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1309,6 +1372,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
