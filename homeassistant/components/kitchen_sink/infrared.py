@@ -53,6 +53,11 @@ class DemoInfrared(InfraredEntity):
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
+        timings = [
+            interval
+            for timing in command.get_raw_timings()
+            for interval in (timing.high_us, -timing.low_us)
+        ]
         persistent_notification.async_create(
-            self.hass, str(command.get_raw_timings()), title="Infrared Command"
+            self.hass, str(timings), title="Infrared Command"
         )
