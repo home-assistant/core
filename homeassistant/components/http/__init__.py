@@ -92,6 +92,7 @@ CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 CONF_NAMESERVERS: Final = "nameservers"
+CONF_CARES_INIT_FLAGS: Final = "cares_init_flags"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -142,6 +143,7 @@ HTTP_SCHEMA: Final = vol.All(
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
             vol.Optional(CONF_NAMESERVERS): vol.All(cv.ensure_list, [ip_address]),
+            vol.Optional(CONF_CARES_INIT_FLAGS): cv.positive_int,
         }
     ),
 )
@@ -181,6 +183,7 @@ class ConfData(TypedDict, total=False):
     ip_ban_enabled: bool
     ssl_profile: str
     nameservers: list[IPv4Address | IPv6Address]
+    cares_init_flags: int
 
 
 @bind_hass
