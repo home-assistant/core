@@ -79,9 +79,11 @@ async def test_percentage_to_ordered_list_item() -> None:
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 26) == SPEED_2
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 28) == SPEED_2
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 29) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 30) == SPEED_3
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 41) == SPEED_3
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 42) == SPEED_3
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 43) == SPEED_3
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 44) == SPEED_4
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 56) == SPEED_4
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 50) == SPEED_4
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 51) == SPEED_4
