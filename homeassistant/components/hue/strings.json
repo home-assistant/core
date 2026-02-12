@@ -1,76 +1,76 @@
 {
   "config": {
+    "abort": {
+      "all_configured": "All Philips Hue bridges are already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "discover_timeout": "Unable to discover Hue bridges",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "no_bridges": "No Philips Hue bridges discovered",
+      "not_hue_bridge": "Not a Hue bridge",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "linking": "[%key:common::config_flow::error::unknown%]",
+      "register_failed": "Failed to register, please try again"
+    },
     "step": {
       "init": {
-        "title": "Pick Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hue bridge."
-        }
+        },
+        "title": "Pick Hue bridge"
+      },
+      "link": {
+        "description": "Press the button on the bridge to register Philips Hue with Home Assistant.",
+        "title": "Link Hub"
       },
       "manual": {
-        "title": "Manually configure a Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "[%key:component::hue::config::step::init::data_description::host%]"
-        }
-      },
-      "link": {
-        "title": "Link Hub",
-        "description": "Press the button on the bridge to register Philips Hue with Home Assistant."
+        },
+        "title": "Manually configure a Hue bridge"
       }
-    },
-    "error": {
-      "register_failed": "Failed to register, please try again",
-      "linking": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "discover_timeout": "Unable to discover Hue bridges",
-      "no_bridges": "No Philips Hue bridges discovered",
-      "all_configured": "All Philips Hue bridges are already configured",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "not_hue_bridge": "Not a Hue bridge",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     }
   },
   "device_automation": {
     "trigger_subtype": {
-      "button_1": "First button",
-      "button_2": "Second button",
-      "button_3": "Third button",
-      "button_4": "Fourth button",
-      "double_buttons_1_3": "First and third button",
-      "double_buttons_2_4": "Second and fourth button",
-      "dim_down": "Dim down",
-      "dim_up": "Dim up",
-      "turn_off": "[%key:common::action::turn_off%]",
-      "turn_on": "[%key:common::action::turn_on%]",
       "1": "[%key:component::hue::device_automation::trigger_subtype::button_1%]",
       "2": "[%key:component::hue::device_automation::trigger_subtype::button_2%]",
       "3": "[%key:component::hue::device_automation::trigger_subtype::button_3%]",
       "4": "[%key:component::hue::device_automation::trigger_subtype::button_4%]",
+      "button_1": "First button",
+      "button_2": "Second button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
       "clock_wise": "Rotation clockwise",
-      "counter_clock_wise": "Rotation counterclockwise"
+      "counter_clock_wise": "Rotation counterclockwise",
+      "dim_down": "Dim down",
+      "dim_up": "Dim up",
+      "double_buttons_1_3": "First and third button",
+      "double_buttons_2_4": "Second and fourth button",
+      "turn_off": "[%key:common::action::turn_off%]",
+      "turn_on": "[%key:common::action::turn_on%]"
     },
     "trigger_type": {
+      "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
+      "initial_press": "\"{subtype}\" pressed initially",
+      "long_press": "\"{subtype}\" long pressed",
+      "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
       "remote_button_long_release": "\"{subtype}\" released after long press",
       "remote_button_short_press": "\"{subtype}\" pressed",
       "remote_button_short_release": "\"{subtype}\" released",
       "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
       "remote_double_button_short_press": "Both \"{subtype}\" released",
-      "initial_press": "\"{subtype}\" pressed initially",
       "repeat": "\"{subtype}\" held down",
       "short_release": "\"{subtype}\" released after short press",
-      "long_press": "\"{subtype}\" long pressed",
-      "long_release": "[%key:component::hue::device_automation::trigger_type::remote_button_long_release%]",
-      "double_short_release": "[%key:component::hue::device_automation::trigger_type::remote_double_button_short_press%]",
       "start": "[%key:component::hue::device_automation::trigger_type::initial_press%]"
     }
   },
@@ -81,12 +81,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "double_short_release": "Double press",
               "initial_press": "Initial press",
-              "repeat": "Repeat",
-              "short_release": "Short press",
               "long_press": "Long press",
               "long_release": "Long release",
-              "double_short_release": "Double press"
+              "repeat": "Repeat",
+              "short_release": "Short press"
             }
           }
         }
@@ -109,17 +109,17 @@
           "effect": {
             "state": {
               "candle": "Candle",
-              "sparkle": "Sparkle",
+              "cosmos": "Cosmos",
+              "enchant": "Enchant",
+              "fire": "Fire",
               "glisten": "Glisten",
+              "opal": "Opal",
+              "prism": "Prism",
+              "sparkle": "Sparkle",
+              "sunbeam": "Sunbeam",
               "sunrise": "Sunrise",
               "sunset": "Sunset",
-              "fire": "Fire",
-              "prism": "Prism",
-              "opal": "Opal",
-              "underwater": "Underwater",
-              "cosmos": "Cosmos",
-              "sunbeam": "Sunbeam",
-              "enchant": "Enchant"
+              "underwater": "Underwater"
             }
           }
         }
@@ -130,19 +130,25 @@
         "name": "Zigbee connectivity",
         "state": {
           "connected": "[%key:common::state::connected%]",
-          "disconnected": "[%key:common::state::disconnected%]",
           "connectivity_issue": "Connectivity issue",
+          "disconnected": "[%key:common::state::disconnected%]",
           "unidirectional_incoming": "Unidirectional incoming"
         }
       }
     },
     "switch": {
-      "motion_sensor_enabled": {
-        "name": "Motion sensor enabled"
-      },
       "light_sensor_enabled": {
         "name": "Light sensor enabled"
+      },
+      "motion_sensor_enabled": {
+        "name": "Motion sensor enabled"
       }
+    }
+  },
+  "issues": {
+    "deprecated_effect_none": {
+      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect.",
+      "title": "Light turned on with deprecated effect"
     }
   },
   "options": {
@@ -158,51 +164,45 @@
     }
   },
   "services": {
-    "hue_activate_scene": {
-      "name": "Activate scene",
-      "description": "Activates a Hue scene stored in the Hue hub.",
-      "fields": {
-        "group_name": {
-          "name": "Group",
-          "description": "Name of Hue group/room from the Hue app."
-        },
-        "scene_name": {
-          "name": "Scene",
-          "description": "Name of Hue scene from the Hue app."
-        },
-        "dynamic": {
-          "name": "Dynamic",
-          "description": "Enable dynamic mode of the scene (V2 bridges and supported scenes only)."
-        }
-      }
-    },
     "activate_scene": {
-      "name": "Activate Hue scene",
       "description": "Activates a Hue scene with more control over the options.",
       "fields": {
-        "transition": {
-          "name": "Transition",
-          "description": "Transition duration it takes to bring devices to the state defined in the scene."
+        "brightness": {
+          "description": "Set brightness for the scene.",
+          "name": "Brightness"
         },
         "dynamic": {
-          "name": "[%key:component::hue::services::hue_activate_scene::fields::dynamic::name%]",
-          "description": "Enable dynamic mode of the scene."
+          "description": "Enable dynamic mode of the scene.",
+          "name": "[%key:component::hue::services::hue_activate_scene::fields::dynamic::name%]"
         },
         "speed": {
-          "name": "Speed",
-          "description": "Speed of dynamic palette for this scene."
+          "description": "Speed of dynamic palette for this scene.",
+          "name": "Speed"
         },
-        "brightness": {
-          "name": "Brightness",
-          "description": "Set brightness for the scene."
+        "transition": {
+          "description": "Transition duration it takes to bring devices to the state defined in the scene.",
+          "name": "Transition"
         }
-      }
-    }
-  },
-  "issues": {
-    "deprecated_effect_none": {
-      "title": "Light turned on with deprecated effect",
-      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect."
+      },
+      "name": "Activate Hue scene"
+    },
+    "hue_activate_scene": {
+      "description": "Activates a Hue scene stored in the Hue hub.",
+      "fields": {
+        "dynamic": {
+          "description": "Enable dynamic mode of the scene (V2 bridges and supported scenes only).",
+          "name": "Dynamic"
+        },
+        "group_name": {
+          "description": "Name of Hue group/room from the Hue app.",
+          "name": "Group"
+        },
+        "scene_name": {
+          "description": "Name of Hue scene from the Hue app.",
+          "name": "Scene"
+        }
+      },
+      "name": "Activate scene"
     }
   }
 }

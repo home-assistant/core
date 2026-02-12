@@ -418,7 +418,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         await tts.async_init_cache()
-    except (HomeAssistantError, KeyError):
+    except HomeAssistantError, KeyError:
         _LOGGER.exception("Error on cache init")
         return False
 

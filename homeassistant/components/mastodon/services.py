@@ -2,19 +2,20 @@
 
 from enum import StrEnum
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from mastodon import Mastodon
 from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import service
 
 from .const import (
     ATTR_CONTENT_WARNING,
+    ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
@@ -42,6 +43,7 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
@@ -51,43 +53,36 @@ SERVICE_POST_SCHEMA = vol.Schema(
 )
 
 
-def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MastodonConfigEntry:
-    """Get the Mastodon config entry."""
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(MastodonConfigEntry, entry)
-
-
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
 
     async def async_post(call: ServiceCall) -> ServiceResponse:
         """Post a status."""
-        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        entry: MastodonConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        )
         client = entry.runtime_data.client
 
-        status = call.data[ATTR_STATUS]
+        status: str = call.data[ATTR_STATUS]
 
         visibility: str | None = (
             StatusVisibility(call.data[ATTR_VISIBILITY])
             if ATTR_VISIBILITY in call.data
             else None
         )
+        idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
         language: str | None = call.data.get(ATTR_LANGUAGE)
         media_path: str | None = call.data.get(ATTR_MEDIA)
         media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+
+        if idempotency_key and len(idempotency_key) < 4:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="idempotency_key_too_short",
+            )
 
         await hass.async_add_executor_job(
             partial(
@@ -95,6 +90,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 client=client,
                 status=status,
                 visibility=visibility,
+                idempotency_key=idempotency_key,
                 spoiler_text=spoiler_text,
                 language=language,
                 media_path=media_path,

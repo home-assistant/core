@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Output1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Output2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -139,6 +141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Relay1',
     'options': dict({
     }),
     'original_device_class': None,

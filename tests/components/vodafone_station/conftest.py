@@ -2,7 +2,8 @@
 
 from datetime import UTC, datetime
 
-from aiovodafone.api import VodafoneStationCommonApi, VodafoneStationDevice
+from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.const import WIFI_DATA
 import pytest
 from yarl import URL
 
@@ -23,6 +24,7 @@ from .const import (
     TEST_TYPE,
     TEST_URL,
     TEST_USERNAME,
+    TEST_WIFI_DATA,
 )
 
 from tests.common import (
@@ -49,16 +51,19 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
     """Mock a Vodafone Station router."""
     with (
         patch(
-            "homeassistant.components.vodafone_station.coordinator.init_api_class",
+            "homeassistant.components.vodafone_station.coordinator.init_device_class",
             autospec=True,
         ) as mock_router,
         patch(
-            "homeassistant.components.vodafone_station.config_flow.init_api_class",
+            "homeassistant.components.vodafone_station.config_flow.init_device_class",
             new=mock_router,
         ),
-        patch.object(
-            VodafoneStationCommonApi,
-            "get_device_type",
+        patch(
+            "homeassistant.components.vodafone_station.config_flow.get_device_type",
+            new=AsyncMock(return_value=(TEST_TYPE, URL(TEST_URL))),
+        ),
+        patch(
+            "homeassistant.components.vodafone_station.get_device_type",
             new=AsyncMock(return_value=(TEST_TYPE, URL(TEST_URL))),
         ),
     ):
@@ -90,12 +95,14 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
         router.get_sensor_data = AsyncMock(
             return_value=load_json_object_fixture("get_sensor_data.json", DOMAIN)
         )
+        router.get_wifi_data = AsyncMock(return_value={WIFI_DATA: TEST_WIFI_DATA})
         router.convert_uptime.return_value = datetime(
             2024, 11, 19, 20, 19, 0, tzinfo=UTC
         )
         router.base_url = URL(TEST_URL)
         router.restart_connection = AsyncMock(return_value=True)
         router.restart_router = AsyncMock(return_value=True)
+        router.set_wifi_status = AsyncMock(return_value=True)
 
         yield router
 
@@ -117,3 +124,13 @@ def mock_config_entry() -> MockConfigEntry:
         version=1,
         minor_version=2,
     )
+
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield

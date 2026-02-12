@@ -93,7 +93,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    if issue_id.split(".")[0] == "integration_not_found":
+    if issue_id.split(".", maxsplit=1)[0] == "integration_not_found":
         assert data
         return IntegrationNotFoundFlow(data)
     if issue_id.split(".")[0] == "orphaned_ignored_entry":

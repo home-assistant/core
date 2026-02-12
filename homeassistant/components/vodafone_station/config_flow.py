@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiovodafone import exceptions as aiovodafone_exceptions
-from aiovodafone.api import VodafoneStationCommonApi, init_api_class
+from aiovodafone.models import get_device_type, init_device_class
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -54,12 +54,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     session = await async_client_session(hass)
 
-    device_type, url = await VodafoneStationCommonApi.get_device_type(
+    device_type, url = await get_device_type(
         data[CONF_HOST],
         session,
     )
 
-    api = init_api_class(url, device_type, data, session)
+    api = init_device_class(url, device_type, data, session)
 
     try:
         await api.login()
@@ -69,7 +69,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {
         "title": data[CONF_HOST],
         CONF_DEVICE_DETAILS: {
-            DEVICE_TYPE: device_type,
+            DEVICE_TYPE: device_type.value,
             DEVICE_URL: str(url),
         },
     }

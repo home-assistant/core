@@ -7,7 +7,6 @@ import PyTado
 import PyTado.exceptions
 from PyTado.interface import Tado
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     APPLICATION_NAME,
     CONF_PASSWORD,
@@ -21,7 +20,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -32,9 +31,14 @@ from .const import (
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
+    TADO_BRIDGE_MODELS,
 )
-from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
-from .models import TadoData
+from .coordinator import (
+    TadoConfigEntry,
+    TadoData,
+    TadoDataUpdateCoordinator,
+    TadoMobileDeviceUpdateCoordinator,
+)
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -60,9 +64,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_setup_services(hass)
     return True
-
-
-type TadoConfigEntry = ConfigEntry[TadoData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -104,6 +105,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
     await mobile_coordinator.async_config_entry_first_refresh()
+
+    # Pre-register the bridge device to ensure it exists before other devices reference it
+    device_registry = dr.async_get(hass)
+    for device in coordinator.data["device"].values():
+        if device["deviceType"] in TADO_BRIDGE_MODELS:
+            _LOGGER.debug("Pre-registering Tado bridge: %s", device["shortSerialNo"])
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, device["shortSerialNo"])},
+                manufacturer="Tado",
+                model=device["deviceType"],
+                name=device["serialNo"],
+                sw_version=device["currentFwVersion"],
+                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
+            )
 
     entry.runtime_data = TadoData(coordinator, mobile_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

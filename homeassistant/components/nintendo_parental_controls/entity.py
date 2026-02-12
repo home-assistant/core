@@ -30,6 +30,7 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
             sw_version=device.extra["firmwareVersion"]["displayedVersion"],
             model=device.model,
             model_id=device.generation,
+            serial_number=device.extra["serialNumber"],
         )
 
     async def async_added_to_hass(self) -> None:

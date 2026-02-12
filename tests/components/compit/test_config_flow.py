@@ -35,7 +35,7 @@ async def test_async_step_user_success(
         result["flow_id"], CONFIG_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -70,14 +70,14 @@ async def test_async_step_user_failed_auth(
         result["flow_id"], CONFIG_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
     # Test success after error is cleared
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
     assert len(mock_setup_entry.mock_calls) == 1

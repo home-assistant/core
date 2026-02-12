@@ -35,6 +35,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -52,7 +53,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     ShellySleepingRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
     get_entity_rpc_device_info,
@@ -108,6 +109,9 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
                 self._attr_options = list(self.option_map.values())
             else:
                 self._attr_options = list(self.option_map)
+
+        if not description.role:
+            self.configure_translation_attributes()
 
     @property
     def native_value(self) -> StateType:
@@ -194,10 +198,9 @@ class RpcBluTrvSensor(RpcSensor):
         )
 
 
-SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
+BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("device", "battery"): BlockSensorDescription(
         key="device|battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -207,7 +210,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
-        name="Device temperature",
+        translation_key="device_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -217,14 +220,13 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "current"): BlockSensorDescription(
         key="emeter|current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("device", "neutralCurrent"): BlockSensorDescription(
         key="device|neutralCurrent",
-        name="Neutral current",
+        translation_key="neutral_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -232,7 +234,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("light", "power"): BlockSensorDescription(
         key="light|power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
@@ -241,7 +242,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "power"): BlockSensorDescription(
         key="device|power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
@@ -249,7 +249,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "power"): BlockSensorDescription(
         key="emeter|power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
@@ -257,7 +256,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "voltage"): BlockSensorDescription(
         key="device|voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -266,7 +264,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "voltage"): BlockSensorDescription(
         key="emeter|voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -274,14 +271,12 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "powerFactor"): BlockSensorDescription(
         key="emeter|powerFactor",
-        name="Power factor",
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "power"): BlockSensorDescription(
         key="relay|power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
@@ -289,7 +284,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("roller", "rollerPower"): BlockSensorDescription(
         key="roller|rollerPower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
@@ -297,7 +291,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("device", "energy"): BlockSensorDescription(
         key="device|energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
@@ -307,7 +300,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "energy"): BlockSensorDescription(
         key="emeter|energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
@@ -317,7 +309,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
@@ -327,7 +319,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("light", "energy"): BlockSensorDescription(
         key="light|energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
@@ -338,7 +329,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("relay", "energy"): BlockSensorDescription(
         key="relay|energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
@@ -348,7 +338,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("roller", "rollerEnergy"): BlockSensorDescription(
         key="roller|rollerEnergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
@@ -358,14 +347,12 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "concentration"): BlockSensorDescription(
         key="sensor|concentration",
-        name="Gas concentration",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         translation_key="gas_concentration",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
         key="sensor|temp",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -374,27 +361,27 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.extTemp) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.extTemp) != 999 and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "humidity"): BlockSensorDescription(
         key="sensor|humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda block: cast(int, block.humidity) != 999
-        and not getattr(block, "sensorError", False),
+        available=lambda block: (
+            cast(int, block.humidity) != 999
+            and not getattr(block, "sensorError", False)
+        ),
     ),
     ("sensor", "luminosity"): BlockSensorDescription(
         key="sensor|luminosity",
-        name="Illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -402,23 +389,21 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "tilt"): BlockSensorDescription(
         key="sensor|tilt",
-        name="Tilt",
-        native_unit_of_measurement=DEGREE,
         translation_key="tilt",
+        native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
-        name="Lamp life",
-        native_unit_of_measurement=PERCENTAGE,
         translation_key="lamp_life",
+        native_unit_of_measurement=PERCENTAGE,
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockSensorDescription(
         key="adc|adc",
-        name="ADC",
+        translation_key="adc",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -426,15 +411,13 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "sensorOp"): BlockSensorDescription(
         key="sensor|sensorOp",
-        name="Operation",
+        translation_key="operation",
         device_class=SensorDeviceClass.ENUM,
         options=["warmup", "normal", "fault"],
-        translation_key="operation",
         value=lambda value: None if value == "unknown" else value,
     ),
     ("valve", "valve"): BlockSensorDescription(
         key="valve|valve",
-        name="Valve status",
         translation_key="valve_status",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -451,7 +434,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "gas"): BlockSensorDescription(
         key="sensor|gas",
-        name="Gas detected",
         translation_key="gas_detected",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -465,7 +447,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "selfTest"): BlockSensorDescription(
         key="sensor|selfTest",
-        name="Self test",
         translation_key="self_test",
         device_class=SensorDeviceClass.ENUM,
         options=["not_completed", "completed", "running", "pending"],
@@ -476,7 +457,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
 REST_SENSORS: Final = {
     "rssi": RestSensorDescription(
         key="rssi",
-        name="Signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -486,7 +466,7 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        name="Last restart",
+        translation_key="last_restart",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -499,7 +479,6 @@ RPC_SENSORS: Final = {
     "power": RpcSensorDescription(
         key="switch",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -507,7 +486,6 @@ RPC_SENSORS: Final = {
     "power_em1": RpcSensorDescription(
         key="em1",
         sub_key="act_power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -515,7 +493,6 @@ RPC_SENSORS: Final = {
     "power_light": RpcSensorDescription(
         key="light",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -523,7 +500,6 @@ RPC_SENSORS: Final = {
     "power_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -531,7 +507,6 @@ RPC_SENSORS: Final = {
     "power_cct": RpcSensorDescription(
         key="cct",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -539,7 +514,6 @@ RPC_SENSORS: Final = {
     "power_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="apower",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -547,7 +521,13 @@ RPC_SENSORS: Final = {
     "power_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="apower",
-        name="Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "power_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="apower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -555,7 +535,6 @@ RPC_SENSORS: Final = {
     "a_act_power": RpcSensorDescription(
         key="em",
         sub_key="a_act_power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -565,7 +544,6 @@ RPC_SENSORS: Final = {
     "b_act_power": RpcSensorDescription(
         key="em",
         sub_key="b_act_power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -575,7 +553,6 @@ RPC_SENSORS: Final = {
     "c_act_power": RpcSensorDescription(
         key="em",
         sub_key="c_act_power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -585,7 +562,6 @@ RPC_SENSORS: Final = {
     "total_act_power": RpcSensorDescription(
         key="em",
         sub_key="total_act_power",
-        name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -593,7 +569,6 @@ RPC_SENSORS: Final = {
     "a_aprt_power": RpcSensorDescription(
         key="em",
         sub_key="a_aprt_power",
-        name="Apparent power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -603,7 +578,6 @@ RPC_SENSORS: Final = {
     "b_aprt_power": RpcSensorDescription(
         key="em",
         sub_key="b_aprt_power",
-        name="Apparent power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -613,7 +587,6 @@ RPC_SENSORS: Final = {
     "c_aprt_power": RpcSensorDescription(
         key="em",
         sub_key="c_aprt_power",
-        name="Apparent power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -623,7 +596,6 @@ RPC_SENSORS: Final = {
     "aprt_power_em1": RpcSensorDescription(
         key="em1",
         sub_key="aprt_power",
-        name="Apparent power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -631,7 +603,6 @@ RPC_SENSORS: Final = {
     "total_aprt_power": RpcSensorDescription(
         key="em",
         sub_key="total_aprt_power",
-        name="Apparent power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -639,14 +610,12 @@ RPC_SENSORS: Final = {
     "pf_em1": RpcSensorDescription(
         key="em1",
         sub_key="pf",
-        name="Power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "a_pf": RpcSensorDescription(
         key="em",
         sub_key="a_pf",
-        name="Power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         emeter_phase="A",
@@ -655,7 +624,6 @@ RPC_SENSORS: Final = {
     "b_pf": RpcSensorDescription(
         key="em",
         sub_key="b_pf",
-        name="Power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         emeter_phase="B",
@@ -664,7 +632,6 @@ RPC_SENSORS: Final = {
     "c_pf": RpcSensorDescription(
         key="em",
         sub_key="c_pf",
-        name="Power factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         emeter_phase="C",
@@ -673,7 +640,6 @@ RPC_SENSORS: Final = {
     "voltage": RpcSensorDescription(
         key="switch",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -684,7 +650,6 @@ RPC_SENSORS: Final = {
     "voltage_em1": RpcSensorDescription(
         key="em1",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -695,7 +660,6 @@ RPC_SENSORS: Final = {
     "voltage_light": RpcSensorDescription(
         key="light",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -706,7 +670,6 @@ RPC_SENSORS: Final = {
     "voltage_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -717,7 +680,6 @@ RPC_SENSORS: Final = {
     "voltage_cct": RpcSensorDescription(
         key="cct",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -728,7 +690,6 @@ RPC_SENSORS: Final = {
     "voltage_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -739,7 +700,6 @@ RPC_SENSORS: Final = {
     "voltage_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=1,
@@ -750,7 +710,6 @@ RPC_SENSORS: Final = {
     "a_voltage": RpcSensorDescription(
         key="em",
         sub_key="a_voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -761,7 +720,6 @@ RPC_SENSORS: Final = {
     "b_voltage": RpcSensorDescription(
         key="em",
         sub_key="b_voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -772,7 +730,6 @@ RPC_SENSORS: Final = {
     "c_voltage": RpcSensorDescription(
         key="em",
         sub_key="c_voltage",
-        name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -783,7 +740,6 @@ RPC_SENSORS: Final = {
     "current": RpcSensorDescription(
         key="switch",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -793,7 +749,6 @@ RPC_SENSORS: Final = {
     "current_em1": RpcSensorDescription(
         key="em1",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -803,7 +758,6 @@ RPC_SENSORS: Final = {
     "current_light": RpcSensorDescription(
         key="light",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -813,7 +767,6 @@ RPC_SENSORS: Final = {
     "current_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -823,7 +776,6 @@ RPC_SENSORS: Final = {
     "current_cct": RpcSensorDescription(
         key="cct",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -833,7 +785,6 @@ RPC_SENSORS: Final = {
     "current_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -843,7 +794,6 @@ RPC_SENSORS: Final = {
     "current_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda status, _: None if status is None else float(status),
         device_class=SensorDeviceClass.CURRENT,
@@ -853,7 +803,6 @@ RPC_SENSORS: Final = {
     "a_current": RpcSensorDescription(
         key="em",
         sub_key="a_current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -864,7 +813,6 @@ RPC_SENSORS: Final = {
     "b_current": RpcSensorDescription(
         key="em",
         sub_key="b_current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -875,7 +823,6 @@ RPC_SENSORS: Final = {
     "c_current": RpcSensorDescription(
         key="em",
         sub_key="c_current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -886,7 +833,7 @@ RPC_SENSORS: Final = {
     "n_current": RpcSensorDescription(
         key="em",
         sub_key="n_current",
-        name="Neutral current",
+        translation_key="neutral_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -896,7 +843,6 @@ RPC_SENSORS: Final = {
     "total_current": RpcSensorDescription(
         key="em",
         sub_key="total_current",
-        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -905,7 +851,6 @@ RPC_SENSORS: Final = {
     "energy": RpcSensorDescription(
         key="switch",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -916,21 +861,19 @@ RPC_SENSORS: Final = {
     "ret_energy": RpcSensorDescription(
         key="switch",
         sub_key="ret_aenergy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "consumed_energy_switch": RpcSensorDescription(
         key="switch",
         sub_key="ret_aenergy",
-        name="Energy consumed",
+        translation_key="energy_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -939,14 +882,11 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         entity_class=RpcEnergyConsumedSensor,
-        removal_condition=lambda _, status, key: (
-            status[key].get("ret_aenergy") is None
-        ),
+        removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
     "energy_light": RpcSensorDescription(
         key="light",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -957,7 +897,6 @@ RPC_SENSORS: Final = {
     "energy_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -968,7 +907,7 @@ RPC_SENSORS: Final = {
     "ret_energy_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="ret_aenergy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -979,7 +918,7 @@ RPC_SENSORS: Final = {
     "consumed_energy_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="ret_aenergy",
-        name="Energy consumed",
+        translation_key="energy_consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -992,7 +931,6 @@ RPC_SENSORS: Final = {
     "energy_cct": RpcSensorDescription(
         key="cct",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -1003,7 +941,6 @@ RPC_SENSORS: Final = {
     "energy_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="aenergy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -1014,7 +951,16 @@ RPC_SENSORS: Final = {
     "energy_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="aenergy",
-        name="Energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "energy_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="aenergy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -1025,7 +971,6 @@ RPC_SENSORS: Final = {
     "total_act": RpcSensorDescription(
         key="emdata",
         sub_key="total_act",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1036,7 +981,6 @@ RPC_SENSORS: Final = {
     "total_act_energy": RpcSensorDescription(
         key="em1data",
         sub_key="total_act_energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1048,7 +992,6 @@ RPC_SENSORS: Final = {
     "a_total_act_energy": RpcSensorDescription(
         key="emdata",
         sub_key="a_total_act_energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1062,7 +1005,6 @@ RPC_SENSORS: Final = {
     "b_total_act_energy": RpcSensorDescription(
         key="emdata",
         sub_key="b_total_act_energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1076,7 +1018,6 @@ RPC_SENSORS: Final = {
     "c_total_act_energy": RpcSensorDescription(
         key="emdata",
         sub_key="c_total_act_energy",
-        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1090,7 +1031,7 @@ RPC_SENSORS: Final = {
     "total_act_ret": RpcSensorDescription(
         key="emdata",
         sub_key="total_act_ret",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1101,7 +1042,7 @@ RPC_SENSORS: Final = {
     "total_act_ret_energy": RpcSensorDescription(
         key="em1data",
         sub_key="total_act_ret_energy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1113,7 +1054,7 @@ RPC_SENSORS: Final = {
     "a_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="a_total_act_ret_energy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1127,7 +1068,7 @@ RPC_SENSORS: Final = {
     "b_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="b_total_act_ret_energy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1141,7 +1082,7 @@ RPC_SENSORS: Final = {
     "c_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="c_total_act_ret_energy",
-        name="Energy returned",
+        translation_key="energy_returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1155,7 +1096,6 @@ RPC_SENSORS: Final = {
     "freq": RpcSensorDescription(
         key="switch",
         sub_key="freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1165,7 +1105,6 @@ RPC_SENSORS: Final = {
     "freq_em1": RpcSensorDescription(
         key="em1",
         sub_key="freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1175,7 +1114,6 @@ RPC_SENSORS: Final = {
     "freq_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1185,7 +1123,6 @@ RPC_SENSORS: Final = {
     "a_freq": RpcSensorDescription(
         key="em",
         sub_key="a_freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1197,7 +1134,6 @@ RPC_SENSORS: Final = {
     "b_freq": RpcSensorDescription(
         key="em",
         sub_key="b_freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1209,7 +1145,6 @@ RPC_SENSORS: Final = {
     "c_freq": RpcSensorDescription(
         key="em",
         sub_key="c_freq",
-        name="Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -1221,7 +1156,6 @@ RPC_SENSORS: Final = {
     "illuminance": RpcSensorDescription(
         key="illuminance",
         sub_key="lux",
-        name="Illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1229,7 +1163,6 @@ RPC_SENSORS: Final = {
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1242,7 +1175,6 @@ RPC_SENSORS: Final = {
     "temperature_light": RpcSensorDescription(
         key="light",
         sub_key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1255,7 +1187,6 @@ RPC_SENSORS: Final = {
     "temperature_cct": RpcSensorDescription(
         key="cct",
         sub_key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1268,7 +1199,6 @@ RPC_SENSORS: Final = {
     "temperature_rgb": RpcSensorDescription(
         key="rgb",
         sub_key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1281,7 +1211,6 @@ RPC_SENSORS: Final = {
     "temperature_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
         suggested_display_precision=1,
@@ -1294,7 +1223,6 @@ RPC_SENSORS: Final = {
     "temperature_0": RpcSensorDescription(
         key="temperature",
         sub_key="tC",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1303,7 +1231,6 @@ RPC_SENSORS: Final = {
     "rssi": RpcSensorDescription(
         key="wifi",
         sub_key="rssi",
-        name="Signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1315,7 +1242,7 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        name="Last restart",
+        translation_key="last_restart",
         value=get_device_uptime,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
@@ -1325,7 +1252,6 @@ RPC_SENSORS: Final = {
     "humidity_0": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -1334,18 +1260,17 @@ RPC_SENSORS: Final = {
     "battery": RpcSensorDescription(
         key="devicepower",
         sub_key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda _, status, key: (status[key]["battery"] is None),
+        removal_condition=lambda _, status, key: status[key]["battery"] is None,
     ),
     "voltmeter": RpcSensorDescription(
         key="voltmeter",
         sub_key="voltage",
-        name="Voltmeter",
+        translation_key="voltmeter",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: float(status),
         suggested_display_precision=2,
@@ -1356,14 +1281,15 @@ RPC_SENSORS: Final = {
     "voltmeter_value": RpcSensorDescription(
         key="voltmeter",
         sub_key="xvoltage",
-        name="Voltmeter value",
-        removal_condition=lambda _, status, key: (status[key].get("xvoltage") is None),
+        translation_key="voltmeter_value",
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: status[key].get("xvoltage") is None,
         unit=lambda config: config["xvoltage"]["unit"] or None,
     ),
     "analoginput": RpcSensorDescription(
         key="input",
         sub_key="percent",
-        name="analog",
+        translation_key="analog",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
@@ -1373,7 +1299,8 @@ RPC_SENSORS: Final = {
     "analoginput_xpercent": RpcSensorDescription(
         key="input",
         sub_key="xpercent",
-        name="analog value",
+        translation_key="analog_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "analog"
             or config[key]["enable"] is False
@@ -1384,7 +1311,7 @@ RPC_SENSORS: Final = {
     "pulse_counter": RpcSensorDescription(
         key="input",
         sub_key="counts",
-        name="pulse counter",
+        translation_key="pulse_counter",
         native_unit_of_measurement="pulse",
         state_class=SensorStateClass.TOTAL,
         value=lambda status, _: status["total"],
@@ -1395,7 +1322,7 @@ RPC_SENSORS: Final = {
     "counter_value": RpcSensorDescription(
         key="input",
         sub_key="counts",
-        name="pulse counter value",
+        translation_key="pulse_counter_value",
         value=lambda status, _: status["xtotal"],
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
@@ -1407,7 +1334,7 @@ RPC_SENSORS: Final = {
     "counter_frequency": RpcSensorDescription(
         key="input",
         sub_key="freq",
-        name="pulse counter frequency",
+        translation_key="pulse_counter_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
@@ -1417,7 +1344,8 @@ RPC_SENSORS: Final = {
     "counter_frequency_value": RpcSensorDescription(
         key="input",
         sub_key="xfreq",
-        name="pulse counter frequency value",
+        translation_key="pulse_counter_frequency_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
@@ -1428,16 +1356,16 @@ RPC_SENSORS: Final = {
     "text_generic": RpcSensorDescription(
         key="text",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_PLATFORM)
         ),
         role=ROLE_GENERIC,
     ),
     "number_generic": RpcSensorDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_PLATFORM)
         ),
         unit=get_virtual_component_unit,
         role=ROLE_GENERIC,
@@ -1445,8 +1373,8 @@ RPC_SENSORS: Final = {
     "enum_generic": RpcSensorDescription(
         key="enum",
         sub_key="value",
-        removal_condition=lambda config, _, key: not is_view_for_platform(
-            config, key, SENSOR_PLATFORM
+        removal_condition=lambda config, _, key: (
+            not is_view_for_platform(config, key, SENSOR_PLATFORM)
         ),
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
@@ -1454,19 +1382,18 @@ RPC_SENSORS: Final = {
     "valve_position": RpcSensorDescription(
         key="blutrv",
         sub_key="pos",
-        name="Valve position",
         translation_key="valve_position",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        removal_condition=lambda config, _, key: config[key].get("enable", False)
-        is False,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", False) is False
+        ),
         entity_class=RpcBluTrvSensor,
     ),
     "blutrv_battery": RpcSensorDescription(
         key="blutrv",
         sub_key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1476,7 +1403,6 @@ RPC_SENSORS: Final = {
     "blutrv_rssi": RpcSensorDescription(
         key="blutrv",
         sub_key="rssi",
-        name="Signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1486,15 +1412,36 @@ RPC_SENSORS: Final = {
     "illuminance_illumination": RpcSensorDescription(
         key="illuminance",
         sub_key="illumination",
-        name="Illuminance level",
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
     ),
+    "number_average_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        translation_key="average_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        role="average_temperature",
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
+        ),
+    ),
+    "number_last_precipitation": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        translation_key="rainfall",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        role="last_precipitation",
+        removal_condition=lambda config, _s, _k: (
+            not config.get("service:0", {}).get("weather_api", False)
+        ),
+    ),
     "number_current_humidity": RpcSensorDescription(
         key="number",
         sub_key="value",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -1504,7 +1451,6 @@ RPC_SENSORS: Final = {
     "number_current_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1514,7 +1460,7 @@ RPC_SENSORS: Final = {
     "number_flow_rate": RpcSensorDescription(
         key="number",
         sub_key="value",
-        name="Water flow rate",
+        translation_key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1523,6 +1469,7 @@ RPC_SENSORS: Final = {
     "number_water_pressure": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="water_pressure",
         native_unit_of_measurement=UnitOfPressure.KPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1531,6 +1478,7 @@ RPC_SENSORS: Final = {
     "number_water_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1547,6 +1495,7 @@ RPC_SENSORS: Final = {
     "number_energy_charge": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="session_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
@@ -1556,6 +1505,7 @@ RPC_SENSORS: Final = {
     "number_time_charge": RpcSensorDescription(
         key="number",
         sub_key="value",
+        translation_key="session_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DURATION,
@@ -1565,7 +1515,6 @@ RPC_SENSORS: Final = {
         key="presence",
         sub_key="num_objects",
         translation_key="detected_objects",
-        name="Detected objects",
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
     ),
@@ -1573,13 +1522,13 @@ RPC_SENSORS: Final = {
         key="presencezone",
         sub_key="num_objects",
         translation_key="detected_objects",
-        name="Detected objects",
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
     ),
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="water_consumption",
         value=lambda status, _: float(status["counter"]["total"]),
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         suggested_display_precision=3,
@@ -1600,7 +1549,6 @@ RPC_SENSORS: Final = {
     "object_total_act_energy": RpcSensorDescription(
         key="object",
         sub_key="value",
-        name="Energy",
         value=lambda status, _: float(status["total_act_energy"]),
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
@@ -1611,7 +1559,6 @@ RPC_SENSORS: Final = {
     "object_total_power": RpcSensorDescription(
         key="object",
         sub_key="value",
-        name="Power",
         value=lambda status, _: float(status["total_power"]),
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
@@ -1622,7 +1569,8 @@ RPC_SENSORS: Final = {
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        name="Phase A voltage",
+        translation_key="voltage_with_phase_name",
+        translation_placeholders={"phase_name": "A"},
         value=lambda status, _: float(status["phase_a"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1633,7 +1581,8 @@ RPC_SENSORS: Final = {
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        name="Phase B voltage",
+        translation_key="voltage_with_phase_name",
+        translation_placeholders={"phase_name": "B"},
         value=lambda status, _: float(status["phase_b"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1644,7 +1593,8 @@ RPC_SENSORS: Final = {
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
-        name="Phase C voltage",
+        translation_key="voltage_with_phase_name",
+        translation_placeholders={"phase_name": "C"},
         value=lambda status, _: float(status["phase_c"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -1652,49 +1602,125 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         role="phase_info",
     ),
+    "object_phase_a_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "A"},
+        value=lambda status, _: float(status["phase_a"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_b_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "B"},
+        value=lambda status, _: float(status["phase_b"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_c_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "C"},
+        value=lambda status, _: float(status["phase_c"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_a_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "A"},
+        value=lambda status, _: float(status["phase_a"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_b_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "B"},
+        value=lambda status, _: float(status["phase_b"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_c_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "C"},
+        value=lambda status, _: float(status["phase_c"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
     "cury_left_level": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot level",
-        translation_key="vial_level",
+        translation_key="left_slot_level",
         value=lambda status, _: status["left"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_left_vial": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot vial",
-        translation_key="vial_name",
+        translation_key="left_slot_vial",
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (left := status["left"]) is not None
-        and left.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (left := status["left"]) is not None
+            and left.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_level": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot level",
-        translation_key="vial_level",
+        translation_key="right_slot_level",
         value=lambda status, _: status["right"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
     "cury_right_vial": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot vial",
-        translation_key="vial_name",
+        translation_key="right_slot_vial",
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: (right := status["right"]) is not None
-        and right.get("vial", {}).get("level", -1) != -1,
+        available=lambda status: (
+            (right := status["right"]) is not None
+            and right.get("vial", {}).get("level", -1) != -1
+        ),
     ),
 }
 
@@ -1719,19 +1745,19 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSleepingSensor,
         )
     else:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSensor,
         )
         async_setup_entry_rest(
@@ -1785,7 +1811,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, block, attribute, description)
-
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
@@ -1860,12 +1885,15 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcSensorDescription,
         entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, key, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
+
+        if coordinator.device.initialized:
+            self.configure_translation_attributes()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

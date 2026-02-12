@@ -8,7 +8,6 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
-from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 from zha.application.const import (
@@ -90,6 +89,21 @@ def required_platform_only():
             Platform.SENSOR,
             Platform.SWITCH,
         ),
+    ):
+        yield
+
+
+@pytest.fixture
+def speed_up_radio_mgr():
+    """Speed up the radio manager connection time by removing delays.
+
+    This fixture replaces the fixture in conftest.py by patching the connect
+    and shutdown delays to 0 to allow waiting for the patched delays when
+    running tests with time frozen, which otherwise blocks forever.
+    """
+    with (
+        patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0),
+        patch("zha.application.gateway.SHUT_DOWN_DELAY_S", 0),
     ):
         yield
 
@@ -217,7 +231,7 @@ async def test_device_cluster_commands(zha_client) -> None:
         assert command[TYPE] is not None
 
 
-@freeze_time("2023-09-23 20:16:00+00:00")
+@pytest.mark.freeze_time("2023-09-23 20:16:00+00:00")
 async def test_list_devices(zha_client) -> None:
     """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})

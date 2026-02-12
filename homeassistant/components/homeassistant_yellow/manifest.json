@@ -7,5 +7,12 @@
   "dependencies": ["hardware", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
   "integration_type": "hardware",
+  "loggers": [
+    "bellows",
+    "universal_silabs_flasher",
+    "zigpy.serial",
+    "serial_asyncio_fast",
+    "serialx"
+  ],
   "single_config_entry": true
 }

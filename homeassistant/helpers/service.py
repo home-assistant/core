@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     EntityServiceResponse,
     HassJob,
@@ -41,6 +43,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotSupported,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -58,7 +61,6 @@ from . import (
     selector,
     target as target_helpers,
     template,
-    translation,
 )
 from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
 from .selector import TargetSelector
@@ -224,10 +226,10 @@ class ServiceParams(TypedDict):
 
 
 @deprecated_class(
-    "homeassistant.helpers.target.TargetSelectorData",
+    "homeassistant.helpers.target.TargetSelection",
     breaks_in_ha_version="2026.8",
 )
-class ServiceTargetSelector(target_helpers.TargetSelectorData):
+class ServiceTargetSelector(target_helpers.TargetSelection):
     """Class to hold a target selector for a service."""
 
     def __init__(self, service_call: ServiceCall) -> None:
@@ -407,9 +409,9 @@ async def async_extract_entities[_EntityT: Entity](
     if data_ent_id == ENTITY_MATCH_ALL:
         return [entity for entity in entities if entity.available]
 
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     combined = referenced.referenced | referenced.indirectly_referenced
 
@@ -439,9 +441,9 @@ async def async_extract_entity_ids(
 
     Will convert group entity ids to the entity ids it represents.
     """
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
 
@@ -455,9 +457,9 @@ def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     selected = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        hass, target_selection, expand_group
     )
     return SelectedEntities(**dataclasses.asdict(selected))
 
@@ -467,9 +469,9 @@ async def async_extract_config_entry_ids(
     service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract referenced config entry ids from a service call."""
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     ent_reg = entity_registry.async_get(service_call.hass)
     dev_reg = device_registry.async_get(service_call.hass)
@@ -586,11 +588,6 @@ async def async_get_all_descriptions(
                 _load_services_files, integrations
             )
 
-    # Load translations for all service domains
-    translations = await translation.async_get_translations(
-        hass, "en", "services", services
-    )
-
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
     for domain, services_map in services.items():
@@ -617,40 +614,13 @@ async def async_get_all_descriptions(
 
             # Don't warn for missing services, because it triggers false
             # positives for things like scripts, that register as a service
-            #
-            # When name & description are in the translations use those;
-            # otherwise fallback to backwards compatible behavior from
-            # the time when we didn't have translations for descriptions yet.
-            # This mimics the behavior of the frontend.
-            description = {
-                "name": translations.get(
-                    f"component.{domain}.services.{service_name}.name",
-                    yaml_description.get("name", ""),
-                ),
-                "description": translations.get(
-                    f"component.{domain}.services.{service_name}.description",
-                    yaml_description.get("description", ""),
-                ),
-                "fields": dict(yaml_description.get("fields", {})),
-            }
+            description = {"fields": yaml_description.get("fields", {})}
+            if description_placeholders := service.description_placeholders:
+                description["description_placeholders"] = description_placeholders
 
-            # Translate fields names & descriptions as well
-            for field_name, field_schema in description["fields"].items():
-                if name := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
-                ):
-                    field_schema["name"] = name
-                if desc := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
-                ):
-                    field_schema["description"] = desc
-                if example := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
-                ):
-                    field_schema["example"] = example
-
-            if "target" in yaml_description:
-                description["target"] = yaml_description["target"]
+            for item in ("description", "name", "target"):
+                if item in yaml_description:
+                    description[item] = yaml_description[item]
 
             response = service.supports_response
             if response is not SupportsResponse.NONE:
@@ -785,9 +755,9 @@ async def entity_service_call(
         all_referenced: set[str] | None = None
     else:
         # A set of entities we're trying to target.
-        selector_data = target_helpers.TargetSelectorData(call.data)
+        target_selection = target_helpers.TargetSelection(call.data)
         referenced = target_helpers.async_extract_referenced_entity_ids(
-            hass, selector_data, True
+            hass, target_selection, True
         )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
@@ -990,6 +960,8 @@ def async_register_admin_service(
     ],
     schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
     supports_response: SupportsResponse = SupportsResponse.NONE,
+    *,
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1002,6 +974,7 @@ def async_register_admin_service(
         ),
         schema,
         supports_response,
+        description_placeholders=description_placeholders,
     )
 
 
@@ -1121,11 +1094,13 @@ class ReloadServiceHelper[_T]:
 
         if do_reload:
             # Reload, then notify other tasks
-            await self._service_func(service_call)
-            async with self._service_condition:
-                self._service_running = False
-                self._pending_reload_targets -= reload_targets
-                self._service_condition.notify_all()
+            try:
+                await self._service_func(service_call)
+            finally:
+                async with self._service_condition:
+                    self._service_running = False
+                    self._pending_reload_targets -= reload_targets
+                    self._service_condition.notify_all()
 
 
 def _validate_entity_service_schema(
@@ -1147,6 +1122,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entities: dict[str, Entity],
     func: str | Callable[..., Any],
@@ -1180,6 +1156,7 @@ def async_register_entity_service(
         schema,
         supports_response,
         job_type=job_type,
+        description_placeholders=description_placeholders,
     )
 
 
@@ -1189,6 +1166,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
     func: str | Callable[..., Any],
@@ -1226,4 +1204,41 @@ def async_register_platform_entity_service(
         schema,
         supports_response,
         job_type=HassJobType.Coroutinefunction,
+        description_placeholders=description_placeholders,
     )
+
+
+@callback
+def async_get_config_entry(
+    hass: HomeAssistant, domain: str, entry_id: str
+) -> ConfigEntry:
+    """Get and validate a service config entry."""
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if not config_entry:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_found",
+            translation_placeholders={
+                "domain": domain,
+                "entry_id": entry_id,
+            },
+        )
+    if config_entry.domain != domain:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_wrong_domain",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_loaded",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    return config_entry

@@ -21,8 +21,6 @@ UNSUPPORTED_DEVICES = [
     "Heatbox2_SRC",
     "E3_TCU10_x07",
     "E3_TCU41_x04",
-    "E3_FloorHeatingCircuitChannel",
-    "E3_FloorHeatingCircuitDistributorBox",
     "E3_RoomControl_One_522",
 ]
 
@@ -37,6 +35,7 @@ CONF_HEATING_TYPE = "heating_type"
 DEFAULT_CACHE_DURATION = 60
 
 VICARE_BAR = "bar"
+VICARE_CELSIUS = "celsius"
 VICARE_CUBIC_METER = "cubicMeter"
 VICARE_KW = "kilowatt"
 VICARE_KWH = "kilowattHour"

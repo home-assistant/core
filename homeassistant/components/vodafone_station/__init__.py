@@ -1,7 +1,7 @@
 """Vodafone Station integration."""
 
 from aiohttp import ClientSession, CookieJar
-from aiovodafone.api import VodafoneStationCommonApi
+from aiovodafone.models import get_device_type
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -10,7 +10,13 @@ from .const import _LOGGER, CONF_DEVICE_DETAILS, DEVICE_TYPE, DEVICE_URL
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 from .utils import async_client_session
 
-PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.IMAGE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
@@ -42,7 +48,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -
         session = ClientSession(cookie_jar=jar)
 
         try:
-            device_type, url = await VodafoneStationCommonApi.get_device_type(
+            device_type, url = await get_device_type(
                 entry.data[CONF_HOST],
                 session,
             )
@@ -54,7 +60,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -
         new_data.update(
             {
                 CONF_DEVICE_DETAILS: {
-                    DEVICE_TYPE: device_type,
+                    DEVICE_TYPE: device_type.value,
                     DEVICE_URL: str(url),
                 }
             },

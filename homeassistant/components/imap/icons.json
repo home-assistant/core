@@ -10,12 +10,6 @@
     }
   },
   "services": {
-    "seen": {
-      "service": "mdi:email-open-outline"
-    },
-    "move": {
-      "service": "mdi:email-arrow-right-outline"
-    },
     "delete": {
       "service": "mdi:trash-can-outline"
     },
@@ -24,6 +18,12 @@
     },
     "fetch_part": {
       "service": "mdi:email-sync-outline"
+    },
+    "move": {
+      "service": "mdi:email-arrow-right-outline"
+    },
+    "seen": {
+      "service": "mdi:email-open-outline"
     }
   }
 }
