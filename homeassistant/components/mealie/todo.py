@@ -29,18 +29,42 @@ TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
 
 def _convert_api_item(item: ShoppingItem) -> TodoItem:
-    """Convert Mealie shopping list items into a TodoItem."""
+    """Convert Mealie shopping list items into structured TodoItems."""
+
+    # Prefer structured food name as summary
+    summary = item.food.name if item.food else item.display
+
+    description_parts: list[str] = []
+
+    # Quantity and unit
+    if item.quantity:
+        description_parts.append(str(item.quantity))
+
+    if item.unit:
+        description_parts.append(item.unit.name)
+
+    # Notes and extras
+    if item.note:
+        description_parts.append(item.note)
+
+    if item.extras:
+        description_parts.extend(
+            extra.text for extra in item.extras if extra.text
+        )
+
+    description = " ".join(description_parts) or None
 
     return TodoItem(
-        summary=item.display,
+        summary=summary,
         uid=item.item_id,
         status=TODO_STATUS_MAP.get(
             item.checked,
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=None,
-        description=None,
+        description=description,
     )
+
 
 
 async def async_setup_entry(
