@@ -82,9 +82,9 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn on switch."""
+        """Turn off switch."""
         await self._async_edit_monitor(monitor_id=self.monitor.id, status=STATUS_DOWN)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn off switch."""
+        """Turn on switch."""
         await self._async_edit_monitor(monitor_id=self.monitor.id, status=STATUS_UP)

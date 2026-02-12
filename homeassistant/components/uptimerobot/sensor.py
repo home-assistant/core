@@ -41,7 +41,7 @@ async def async_setup_entry(
                     options=[
                         "down",
                         "not_checked_yet",
-                        "paused",
+                        "pause",
                         "seems_down",
                         "up",
                     ],
@@ -63,4 +63,7 @@ class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the status of the monitor."""
-        return self.monitor.status.lower()  # type: ignore[no-any-return]
+        status = self.monitor.status.lower()
+        # The API returns "paused"
+        # but the entity state will be "pause" to avoid a breaking change
+        return {"paused": "pause"}.get(status, status)  # type: ignore[no-any-return]
