@@ -193,14 +193,15 @@ def async_setup_services(hass: HomeAssistant, client: Client) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
     if DOMAIN in config:
-        # YAML configuration exists - trigger import flow
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "import"},
-                data=config[DOMAIN],
+        # Only import if no config entries exist yet
+        if not hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": "import"},
+                    data=config[DOMAIN],
+                )
             )
-        )
 
         # Notify user that YAML config is deprecated
         async_create_issue(

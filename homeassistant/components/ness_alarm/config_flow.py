@@ -97,8 +97,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
 
             # Check if already configured
-            await self.async_set_unique_id(f"{host}:{port}")
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_HOST: host})
 
             # Test connection to the alarm panel
             client = Client(host=host, port=port)
@@ -132,8 +131,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         port = import_data[CONF_PORT]
 
         # Check if already configured
-        await self.async_set_unique_id(f"{host}:{port}")
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match({CONF_HOST: host})
 
         # Create main config entry
         _LOGGER.info("Importing Ness Alarm YAML configuration for %s:%s", host, port)
