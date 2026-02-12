@@ -10,6 +10,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
 ]
 LOGGER = getLogger(__package__)

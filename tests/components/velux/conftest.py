@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx import Blind, Light, OnOffLight, Scene, Window
+from pyvlx import Blind, ExteriorHeating, Light, OnOffLight, Scene, Window
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
@@ -114,6 +114,18 @@ def mock_onoff_light() -> AsyncMock:
     return light
 
 
+# an exterior heating device
+@pytest.fixture
+def mock_exterior_heating() -> AsyncMock:
+    """Create a mock Velux exterior heating device."""
+    exterior_heating = AsyncMock(spec=ExteriorHeating, autospec=True)
+    exterior_heating.name = "Test Exterior Heating"
+    exterior_heating.serial_number = "1984"
+    exterior_heating.intensity = MagicMock(intensity_percent=33)
+    exterior_heating.pyvlx = MagicMock()
+    return exterior_heating
+
+
 # fixture to create all other cover types via parameterization
 @pytest.fixture
 def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
@@ -135,6 +147,7 @@ def mock_pyvlx(
     mock_onoff_light: AsyncMock,
     mock_window: AsyncMock,
     mock_blind: AsyncMock,
+    mock_exterior_heating: AsyncMock,
     request: pytest.FixtureRequest,
 ) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
@@ -154,6 +167,7 @@ def mock_pyvlx(
             mock_onoff_light,
             mock_blind,
             mock_window,
+            mock_exterior_heating,
             mock_cover_type,
         ]
 
