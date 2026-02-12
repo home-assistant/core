@@ -6,12 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
     EVENT_OBSERVATION,
     EVENT_STATUS_UPDATE,
     WeatherFlowDevice,
+    WeatherFlowSensorDevice,
 )
 
 from homeassistant.components.sensor import (
@@ -58,7 +60,7 @@ def precipitation_raw_conversion_fn(raw_data: Enum):
 class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes WeatherFlow sensor entity."""
 
-    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
+    raw_data_conv_fn: Callable[[Any], datetime | StateType]
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: str | None = None
@@ -291,7 +293,7 @@ async def async_setup_entry(
     """Set up WeatherFlow sensors using config entry."""
 
     @callback
-    def async_add_sensor(device: WeatherFlowDevice) -> None:
+    def async_add_sensor(device: WeatherFlowSensorDevice) -> None:
         """Add WeatherFlow sensor."""
         LOGGER.debug("Adding sensors for %s", device)
 
@@ -325,7 +327,7 @@ class WeatherFlowSensorEntity(SensorEntity):
 
     def __init__(
         self,
-        device: WeatherFlowDevice,
+        device: WeatherFlowSensorDevice,
         description: WeatherFlowSensorEntityDescription,
         is_metric: bool = True,
     ) -> None:
