@@ -311,10 +311,7 @@ async def test_service_entry_availability(
 
     payload = {"status": "test toot"}
 
-    with pytest.raises(
-        ServiceValidationError,
-        check=lambda e: e.translation_key == "service_config_entry_not_loaded",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
@@ -322,11 +319,9 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=False,
         )
+    assert err.translation_key == "service_config_entry_not_loaded"
 
-    with pytest.raises(
-        ServiceValidationError,
-        check=lambda e: e.translation_key == "service_config_entry_not_found",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
@@ -334,3 +329,4 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=False,
         )
+    assert err.translation_key == "service_config_entry_not_found"
