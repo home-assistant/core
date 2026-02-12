@@ -35,13 +35,6 @@ GREENCELL_DISC_TOPIC = "/greencell/broadcast/device"
 GREENCELL_HABU_DEN = "Habu Den"
 GREENCELL_OTHER_DEVICE = "Greencell Device"
 
-# Runtime data keys
-GREENCELL_ACCESS_KEY = "access"
-GREENCELL_CURRENT_DATA_KEY = "current_data"
-GREENCELL_VOLTAGE_DATA_KEY = "voltage_data"
-GREENCELL_POWER_DATA_KEY = "power_data"
-GREENCELL_STATE_DATA_KEY = "state_data"
-
 # Other constants
 
 DISCOVERY_MIN_TIMEOUT = 5.0

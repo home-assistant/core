@@ -28,7 +28,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -41,16 +40,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
-from .const import (
-    GREENCELL_ACCESS_KEY,
-    GREENCELL_CURRENT_DATA_KEY,
-    GREENCELL_HABU_DEN,
-    GREENCELL_OTHER_DEVICE,
-    GREENCELL_POWER_DATA_KEY,
-    GREENCELL_STATE_DATA_KEY,
-    GREENCELL_VOLTAGE_DATA_KEY,
-    MANUFACTURER,
-)
+from .const import GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE, MANUFACTURER
+from .models import GreencellConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,9 +129,8 @@ SENSOR_DESCRIPTIONS = (
             "finished",
             "error_car",
             "error_evse",
-            "unknown",
         ],
-        value_fn=lambda data: str(data).lower() if isinstance(data, str) else None,
+        value_fn=lambda data: str(data).lower() if isinstance(data, str) else "idle",
     ),
 )
 
@@ -148,7 +138,7 @@ SENSOR_DESCRIPTIONS = (
 # --- Config Flow Setup ---
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GreencellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
@@ -320,7 +310,7 @@ async def setup_sensors(
     hass: HomeAssistant,
     serial_number: str,
     async_add_entities: AddConfigEntryEntitiesCallback | AddEntitiesCallback,
-    entry: ConfigEntry | None = None,
+    entry: GreencellConfigEntry | None = None,
 ):
     """Set up Greencell EVSE sensors based on serial number and config entry.
 
@@ -343,11 +333,11 @@ async def setup_sensors(
     power_desc = next(desc for desc in SENSOR_DESCRIPTIONS if desc.key == "power")
 
     runtime = entry.runtime_data
-    access = runtime[GREENCELL_ACCESS_KEY]
-    current_data_obj = runtime[GREENCELL_CURRENT_DATA_KEY]
-    voltage_data_obj = runtime[GREENCELL_VOLTAGE_DATA_KEY]
-    power_data_obj = runtime[GREENCELL_POWER_DATA_KEY]
-    state_data_obj = runtime[GREENCELL_STATE_DATA_KEY]
+    access = runtime.access
+    current_data_obj = runtime.current_data
+    voltage_data_obj = runtime.voltage_data
+    power_data_obj = runtime.power_data
+    state_data_obj = runtime.state_data
 
     current_sensors: list[Habu3PhaseSensor] = [
         Habu3PhaseSensor(
@@ -411,7 +401,7 @@ async def setup_sensors(
         """Handle the status message. If the device is unavailable, disable the entity."""
         try:
             str_payload = msg.payload.decode("utf-8", errors="ignore")
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             str_payload = str(msg.payload)
 
         if "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload:

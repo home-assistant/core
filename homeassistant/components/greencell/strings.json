@@ -10,6 +10,10 @@
       "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
     },
     "step": {
+      "confirm": {
+        "description": "A Greencell device with serial number {serial} was discovered. Do you want to add it?",
+        "title": "Greencell device discovered"
+      },
       "select": {
         "data": {
           "serial_number": "Device serial number"

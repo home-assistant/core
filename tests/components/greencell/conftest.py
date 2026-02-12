@@ -1,5 +1,6 @@
 """Shared test fixtures and constants for Greencell integration tests."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.mqtt import MqttData
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -101,3 +103,20 @@ def mock_config_entry_2():
         data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER_2},
         title=f"Greencell {TEST_SERIAL_NUMBER_2}",
     )
+
+
+@pytest.fixture
+def mqtt_service_info():
+    """Create a factory for MqttServiceInfo objects."""
+
+    def _make(payload: str) -> MqttServiceInfo:
+        return MqttServiceInfo(
+            topic="greencell/broadcast/device",
+            payload=payload,
+            qos=0,
+            retain=False,
+            subscribed_topic="greencell/broadcast/device",
+            timestamp=datetime.now(),
+        )
+
+    return _make

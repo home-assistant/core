@@ -28,22 +28,12 @@ from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import async_subscribe
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
-from .const import (
-    CONF_SERIAL_NUMBER,
-    DISCOVERY_TIMEOUT,
-    DOMAIN,
-    GREENCELL_ACCESS_KEY,
-    GREENCELL_CURRENT_DATA_KEY,
-    GREENCELL_DISC_TOPIC,
-    GREENCELL_POWER_DATA_KEY,
-    GREENCELL_STATE_DATA_KEY,
-    GREENCELL_VOLTAGE_DATA_KEY,
-)
+from .const import CONF_SERIAL_NUMBER, DISCOVERY_TIMEOUT, GREENCELL_DISC_TOPIC
+from .models import GreencellConfigEntry, GreencellRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +82,7 @@ def wait_for_device_ready(
     return _unsubscribe_all, event
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> bool:
     """Set up Greencell from a config entry with test-before-setup and runtime_data."""
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
@@ -110,27 +100,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"No initial data from device {serial} within {DISCOVERY_TIMEOUT}s"
         ) from err
     finally:
-        # Ensure we always unsubscribe, even if an unexpected error occurs
         unsub_ready()
 
-    runtime = {
-        GREENCELL_ACCESS_KEY: GreencellAccess(GreencellHaAccessLevel.EXECUTE),
-        GREENCELL_CURRENT_DATA_KEY: ElecData3Phase(),
-        GREENCELL_VOLTAGE_DATA_KEY: ElecData3Phase(),
-        GREENCELL_POWER_DATA_KEY: ElecDataSinglePhase(),
-        GREENCELL_STATE_DATA_KEY: ElecDataSinglePhase(),
-    }
-
-    entry.runtime_data = runtime
+    entry.runtime_data = GreencellRuntimeData(
+        access=GreencellAccess(GreencellHaAccessLevel.EXECUTE),
+        current_data=ElecData3Phase(),
+        voltage_data=ElecData3Phase(),
+        power_data=ElecDataSinglePhase(),
+        state_data=ElecDataSinglePhase(),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry and clean up resources."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

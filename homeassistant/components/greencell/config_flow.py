@@ -13,9 +13,10 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
+from . import const
 from .const import (
-    DISCOVERY_TIMEOUT,
     DOMAIN,
     GREENCELL_BROADCAST_TOPIC,
     GREENCELL_DISC_TOPIC,
@@ -35,6 +36,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered: dict[str, dict[str, Any]] = {}
+        self._discovered_serial: str | None = None
         self._discovery_event: asyncio.Event | None = None
         self._remove_listener: Callable | None = None
 
@@ -59,10 +61,49 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except json.JSONDecodeError:
             _LOGGER.debug("Invalid JSON in discovery payload: %s", msg.payload)
 
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by MQTT discovery."""
+        try:
+            payload = json.loads(discovery_info.payload)
+            serial = payload.get("id")
+        except json.JSONDecodeError, AttributeError:
+            return self.async_abort(reason="invalid_discovery_info")
+
+        if not isinstance(serial, str) or not serial.strip():
+            return self.async_abort(reason="invalid_discovery_info")
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured()
+
+        self._discovered_serial = serial
+        device_name = self._get_device_name(serial)
+        self.context.update({"title_placeholders": {"name": f"{device_name} {serial}"}})
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Confirm addition of a discovered device."""
+        assert self._discovered_serial is not None
+        serial = self._discovered_serial
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"{self._get_device_name(serial)} {serial}",
+                data={"serial_number": serial},
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={"serial": serial},
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Initial step: start discovery process."""
+        """Manual step: start active discovery process."""
         try:
             if not mqtt.is_connected(self.hass):
                 return self.async_abort(reason="mqtt_not_connected")
@@ -91,8 +132,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await asyncio.wait_for(
-                    self._discovery_event.wait(),
-                    timeout=DISCOVERY_TIMEOUT,
+                    self._discovery_event.wait(), timeout=const.DISCOVERY_TIMEOUT
                 )
                 # Grace period for additional devices
                 await asyncio.sleep(0.5)
