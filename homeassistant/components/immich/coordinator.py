@@ -80,7 +80,10 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 else None
             )
         except ImmichUnauthorizedError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
         except CONNECT_ERRORS as err:
             raise UpdateFailed from err
 

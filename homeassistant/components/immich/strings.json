@@ -79,6 +79,9 @@
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."
     },
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
     "cannot_connect": {
       "message": "Cannot connect to your Immich instance."
     },
