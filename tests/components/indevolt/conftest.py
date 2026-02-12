@@ -115,7 +115,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-async def setup_integration(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
