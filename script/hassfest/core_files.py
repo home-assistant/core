@@ -22,7 +22,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
     base_platform_entries = {
         match.group(1)
-        for entry in core_files.get("base_platforms", [])
+        for entry in core_files["base_platforms"]
         if (match := _COMPONENT_RE.match(entry))
     }
 
