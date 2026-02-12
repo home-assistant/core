@@ -177,15 +177,15 @@ class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
 
     not_running = 0, 512, 535, 536, 537, 65535
     program_running = 513
-    drying = 514
+    drying = 514, 11018
     machine_iron = 515
     hand_iron_2 = 516
     normal = 517
     normal_plus = 518
     cooling_down = 519
     hand_iron_1 = 520
-    anti_crease = 521
-    finished = 522
+    anti_crease = 521, 11029
+    finished = 522, 11012
     extra_dry = 523
     hand_iron = 524
     moisten = 526
@@ -193,12 +193,14 @@ class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
     timed_drying = 528
     warm_air = 529
     steam_smoothing = 530
-    comfort_cooling = 531
+    comfort_cooling = 531, 11055
     rinse_out_lint = 532
     rinses = 533
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
+    automatic_start = 11044
+    perfect_dry_active = 11054
 
 
 class ProgramPhaseWasherDryer(MieleEnum, missing_to_none=True):
