@@ -43,7 +43,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Handle initial setup
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"INDEVOLT {device_data['device_model']} ({user_input[CONF_HOST]})",
+                    title=f"INDEVOLT {device_data['device_model']}",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         **device_data,
@@ -88,7 +88,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         # Attempt to setup from user input
         if user_input is not None:
             return self.async_create_entry(
-                title=f"INDEVOLT {self._discovered_device_data['device_model']} ({self._discovered_host})",
+                title=f"INDEVOLT {self._discovered_device_data['device_model']}",
                 data={
                     CONF_HOST: self._discovered_host,
                     **self._discovered_device_data,

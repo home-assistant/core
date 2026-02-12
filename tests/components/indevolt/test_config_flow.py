@@ -1,33 +1,36 @@
 """Tests the Indevolt config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 import pytest
 
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_USER
 from homeassistant.components.indevolt.const import DOMAIN
+from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, mock_indevolt
+from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST
 
 from tests.common import MockConfigEntry
-
 
 pytestmark = pytest.mark.usefixtures("socket_enabled")
 
 
 async def test_user_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) -> None:
     """Test successful user-initiated config flow."""
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": TEST_HOST})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": TEST_HOST}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"INDEVOLT CMS-SF2000 ({TEST_HOST})"
+    assert result["title"] == "INDEVOLT CMS-SF2000"
     assert result["data"]["host"] == TEST_HOST
     assert result["data"]["sn"] == TEST_DEVICE_SN_GEN2
     assert result["data"]["device_model"] == "CMS-SF2000"
@@ -45,7 +48,10 @@ async def test_user_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) 
     ],
 )
 async def test_user_flow_error(
-    hass: HomeAssistant, mock_indevolt: AsyncMock, exception: Exception, expected_error: str
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
     """Test connection errors in user flow."""
 
@@ -74,7 +80,7 @@ async def test_user_flow_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"INDEVOLT CMS-SF2000 ({TEST_HOST})"
+    assert result["title"] == "INDEVOLT CMS-SF2000"
     assert result["data"]["host"] == TEST_HOST
     assert result["data"]["sn"] == TEST_DEVICE_SN_GEN2
 
@@ -85,7 +91,9 @@ async def test_user_flow_duplicate_entry(
     """Test duplicate entry aborts the flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     # Test duplicate entry creation
     result = await hass.config_entries.flow.async_configure(
@@ -97,7 +105,9 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) -> None:
+async def test_discovery_flow_success(
+    hass: HomeAssistant, mock_indevolt: AsyncMock
+) -> None:
     """Test successful discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -116,7 +126,7 @@ async def test_discovery_flow_success(hass: HomeAssistant, mock_indevolt: AsyncM
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"INDEVOLT CMS-SF2000 ({TEST_HOST})"
+    assert result["title"] == "INDEVOLT CMS-SF2000"
     assert result["data"]["host"] == TEST_HOST
     assert result["data"]["sn"] == TEST_DEVICE_SN_GEN2
 
