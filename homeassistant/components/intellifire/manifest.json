@@ -12,5 +12,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["intellifire4py"],
-  "requirements": ["intellifire4py==4.2.1"]
+  "requirements": ["intellifire4py==4.3.1"]
 }

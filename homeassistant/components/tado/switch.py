@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TadoConfigEntry
+from .coordinator import TadoConfigEntry
 from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)

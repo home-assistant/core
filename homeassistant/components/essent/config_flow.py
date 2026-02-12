@@ -33,7 +33,7 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await client.async_get_prices()
-        except (EssentConnectionError, EssentResponseError):
+        except EssentConnectionError, EssentResponseError:
             return self.async_abort(reason="cannot_connect")
         except EssentDataError:
             return self.async_abort(reason="invalid_data")
