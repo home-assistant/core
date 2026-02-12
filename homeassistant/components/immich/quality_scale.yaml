@@ -46,13 +46,13 @@ rules:
   discovery:
     status: exempt
     comment: Service can't be discovered
-  docs-data-update: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Only one device entry per config entry
