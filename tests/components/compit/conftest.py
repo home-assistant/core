@@ -90,7 +90,11 @@ def mock_connector():
         )
 
     def get_current_value(device_id: int, parameter_code: CompitParameter):
-        param = get_param(device_id, parameter_code)
+        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
+        param = next(
+            (p for p in all_devices[device_id].state.params if p.code == code),
+            None,
+        )
         return param.value if param else None
 
     def set_device_parameter(

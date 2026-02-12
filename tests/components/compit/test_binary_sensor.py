@@ -50,11 +50,11 @@ async def test_binary_sensor_return_value(
     expected_state: str,
 ) -> None:
     """Test that binary sensor entity shows correct state for various values."""
-    mock_connector.get_current_value.side_effect = (
-        lambda device_id, parameter_code: mock_return_value
+    mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
+        mock_return_value
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("binary_sensor.nano_color_2_airing")
+    state = hass.states.get("binary_sensor.nano_color_2_window")
     assert state.state == expected_state
 
 
@@ -65,11 +65,11 @@ async def test_binary_sensor_no_sensor(
     mock_connector: MagicMock,
 ) -> None:
     """Test that binary sensor entities with NO_SENSOR value are not created."""
-    mock_connector.get_current_value.side_effect = (
-        lambda device_id, parameter_code: "no_sensor"
+    mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
+        "no_sensor"
     )
     await setup_integration(hass, mock_config_entry)
 
     # Check that airing sensor is not created
-    airing_entity = entity_registry.async_get("binary_sensor.nano_color_2_airing")
+    airing_entity = entity_registry.async_get("binary_sensor.nano_color_2_window")
     assert airing_entity is None
