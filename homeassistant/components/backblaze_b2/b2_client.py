@@ -16,12 +16,18 @@ CONNECTION_TIMEOUT = 120  # 2 minutes
 # Default TIMEOUT_FOR_UPLOAD is 128 seconds, which is too short for large backups
 TIMEOUT_FOR_UPLOAD = 43200  # 12 hours
 
+# Reduced retry count for download operations
+# Default is 20 retries with exponential backoff, which can hang for 30+ minutes
+# when there are persistent connection errors (e.g., SSL failures)
+TRY_COUNT_DOWNLOAD = 3
+
 
 class B2Http(BaseB2Http):  # type: ignore[misc]
     """B2Http with extended timeouts for backup operations."""
 
     CONNECTION_TIMEOUT = CONNECTION_TIMEOUT
     TIMEOUT_FOR_UPLOAD = TIMEOUT_FOR_UPLOAD
+    TRY_COUNT_DOWNLOAD = TRY_COUNT_DOWNLOAD
 
 
 class B2Session(BaseB2Session):  # type: ignore[misc]
