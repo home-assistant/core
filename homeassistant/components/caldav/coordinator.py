@@ -56,12 +56,26 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
+        # Convert query range to local dates for all-day event filtering.
+        # All-day events are compared by date only, so we need to ensure they
+        # overlap with the local date range, not the UTC-converted range.
+        start_date_local = dt_util.as_local(start_date).date()
+        end_date_local = dt_util.as_local(end_date).date()
+
+        # Expand the server query window by 1 day on each side to account for
+        # timezone differences. CalDAV servers may interpret all-day events
+        # (DATE values) in UTC, which can cause events near date boundaries to
+        # be missed or incorrectly included. We fetch a wider range and filter
+        # on the client side for accuracy.
+        server_start = start_date - timedelta(days=1)
+        server_end = end_date + timedelta(days=1)
+
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
             partial(
                 self.calendar.search,
-                start=start_date,
-                end=end_date,
+                start=server_start,
+                end=server_end,
                 event=True,
                 expand=True,
             )
@@ -74,6 +88,24 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             vevent = event.instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
+            # For all-day events, verify the event actually overlaps with the
+            # requested local date range. The CalDAV server may return all-day
+            # events based on UTC comparison which can include events from
+            # adjacent days in different timezones.
+            if self.is_all_day(vevent):
+                event_start = vevent.dtstart.value
+                event_end = self.get_end_date(vevent)
+                # All-day event range is [start, end) - end date is exclusive
+                # Check if there's any overlap with the requested date range
+                if event_end <= start_date_local or event_start > end_date_local:
+                    continue
+            else:
+                # For timed events, filter based on the original datetime range
+                event_start_dt = self.to_local(vevent.dtstart.value)
+                event_end_dt = self.to_local(self.get_end_date(vevent))
+                # Check if there's any overlap with the requested datetime range
+                if event_end_dt <= start_date or event_start_dt >= end_date:
+                    continue
             event_list.append(
                 CalendarEvent(
                     summary=get_attr_value(vevent, "summary") or "",
