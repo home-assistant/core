@@ -105,7 +105,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado climate platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     entities = await _generate_entities(tado)
 
     platform = entity_platform.async_get_current_platform()
