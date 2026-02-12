@@ -104,12 +104,12 @@ async def test_turn_on_with_timer_service_token_needed(
             blocking=True,
         )
 
-        assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(
-            Command.ON, int(DUMMY_TIMER_MINUTES_SET)
-        )
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(
+        Command.ON, int(DUMMY_TIMER_MINUTES_SET)
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
