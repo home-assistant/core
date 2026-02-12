@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -220,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -270,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -320,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -370,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -420,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -470,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -520,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -570,6 +581,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -620,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -670,6 +683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -720,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,

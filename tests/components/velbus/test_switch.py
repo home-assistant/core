@@ -32,6 +32,23 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+async def test_switch_disabled(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_relay: AsyncMock,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled switch entity."""
+    # make sure the valbuasio channel is_connected method returns false
+    mock_relay.is_connected.return_value = False
+
+    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SWITCH]):
+        await init_integration(hass, config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
 async def test_switch_on_off(
     hass: HomeAssistant,
     mock_relay: AsyncMock,
