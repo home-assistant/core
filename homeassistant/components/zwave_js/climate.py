@@ -135,7 +135,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(config_entry, driver, info)
         self._hvac_modes: dict[HVACMode, int | None] = {}
         self._hvac_presets: dict[str, int | None] = {}
-        self._previous_hvac_mode: HVACMode | None = None
         self._unit_value: ZwaveValue | None = None
         self._last_hvac_mode_id_before_off: int | None = None
 
@@ -286,8 +285,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        if self._previous_hvac_mode is not None:
-            return self._previous_hvac_mode
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting
             # a mode is considered heating-only
@@ -295,7 +292,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode.value is None:
             # guard missing value
             return HVACMode.HEAT
-        return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value))
+        mode = ZW_HVAC_MODE_MAP.get(int(self._current_mode.value))
+        if mode is not None and mode not in self._hvac_modes:
+            return None
+        return mode
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -549,27 +549,21 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        current_mode = self._current_mode
-        assert current_mode is not None
+        assert self._current_mode is not None
         if preset_mode == PRESET_NONE:
-            previous_hvac_mode = self._previous_hvac_mode
-            if previous_hvac_mode is None:
-                if current_mode.value in THERMOSTAT_MODES:
-                    # If the current mode is an HVAC mode,
-                    # we do not need to do anything.
-                    return
-                # If there is no previous HVAC mode,
-                # and the current mode is not an HVAC mode,
-                # we default to heat.
-                previous_hvac_mode = HVACMode.HEAT
-            # Restore the HVAC mode.
-            await self.async_set_hvac_mode(previous_hvac_mode)
-            self._previous_hvac_mode = None
+            # Try to restore to the (translated) main hvac mode.
+            if (hvac_mode := self.hvac_mode) is None:
+                # Current preset mode doesn't map to a supported HVAC mode.
+                # Pick the first supported non-off mode.
+                hvac_mode = next(
+                    mode for mode in self._hvac_modes if mode != HVACMode.OFF
+                )
+            await self.async_set_hvac_mode(hvac_mode)
             return
-        self._previous_hvac_mode = self.hvac_mode
 
         preset_mode_value = self._hvac_presets[preset_mode]
-        await self._async_set_value(current_mode, preset_mode_value)
+
+        await self._async_set_value(self._current_mode, preset_mode_value)
 
 
 class DynamicCurrentTempClimate(ZWaveClimate):
