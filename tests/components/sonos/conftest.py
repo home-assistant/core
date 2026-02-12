@@ -295,7 +295,7 @@ class SoCoMockFactory:
         # Generate a different MAC for the non-default speakers.
         # otherwise new devices will not be created.
         if ip_address != "192.168.42.2":
-            last_octet = ip_address.split(".")[-1]
+            last_octet = ip_address.rsplit(".", maxsplit=1)[-1]
             my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)

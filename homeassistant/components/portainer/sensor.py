@@ -28,6 +28,8 @@ from .entity import (
     PortainerEndpointEntity,
 )
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
@@ -224,6 +226,56 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_reclaimable",
+        translation_key="container_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_total_size",
+        translation_key="container_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_reclaimable",
+        translation_key="image_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_total_size",
+        translation_key="image_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="volume_disk_usage_total",
+        translation_key="volume_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.volume_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
@@ -301,15 +353,6 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self.endpoint_id in self.coordinator.data
-            and self.device_name in self.coordinator.data[self.endpoint_id].containers
-        )
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -331,11 +374,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         super().__init__(device_info, coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
 
     @property
     def native_value(self) -> StateType:
