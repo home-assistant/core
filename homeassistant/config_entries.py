@@ -395,7 +395,6 @@ class ConfigEntry[_DataT = Any]:
     domain: str
     title: str
     data: MappingProxyType[str, Any]
-
     runtime_data: _DataT
     options: MappingProxyType[str, Any]
     subentries: MappingProxyType[str, ConfigSubentry]
