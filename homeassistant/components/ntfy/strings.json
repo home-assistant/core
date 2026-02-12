@@ -302,9 +302,6 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
-    },
-    "too_many_actions": {
-      "message": "Too many actions defined. A maximum of 3 is supported"
     }
   },
   "issues": {
