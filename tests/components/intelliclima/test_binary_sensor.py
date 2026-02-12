@@ -13,10 +13,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_all_sensor_entities(
+async def test_all_binary_sensor_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_config_entry_current: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_cloud_interface: AsyncMock,
 ) -> None:
@@ -27,7 +27,7 @@ async def test_all_sensor_entities(
             "homeassistant.components.intelliclima.PLATFORMS", [Platform.BINARY_SENSOR]
         ),
     ):
-        await setup_integration(hass, mock_config_entry_current)
+        await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry_current.entry_id
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
