@@ -85,7 +85,7 @@ async def test_list_charge_slots_exception(
     await setup_integration(hass, mock_config_entry)
 
     # Test error
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_LIST_CHARGE_SLOTS,
@@ -93,3 +93,4 @@ async def test_list_charge_slots_exception(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
