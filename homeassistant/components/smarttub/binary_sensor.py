@@ -98,6 +98,7 @@ class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     # This seems to be very noisy and not generally useful, so disable by default.
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "online"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -115,6 +116,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "reminder"
 
     def __init__(
         self,
@@ -130,6 +132,9 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         )
         self.reminder_id = reminder.id
         self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
+        self._attr_translation_placeholders = {
+            "reminder_name": reminder.name.title(),
+        }
 
     @property
     def reminder(self) -> SpaReminder:
@@ -167,6 +172,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     """
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "error"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -211,6 +217,7 @@ class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     """Wireless magnetic cover sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
+    _attr_translation_key = "cover_sensor"
 
     @property
     def is_on(self) -> bool:

@@ -44,8 +44,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         self.pump_id = pump.id
         self.pump_type = pump.type
         self._attr_unique_id = f"{super().unique_id}-{pump.id}"
-        # Remove _attr_name set by base class so translation_key takes effect
-        del self._attr_name
         if pump.type == SpaPump.PumpType.CIRCULATION:
             self._attr_translation_key = "circulation_pump"
         elif pump.type == SpaPump.PumpType.JET:

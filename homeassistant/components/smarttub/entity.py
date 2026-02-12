@@ -40,7 +40,6 @@ class SmartTubEntity(CoordinatorEntity):
             model=spa.model,
             name=get_spa_name(spa),
         )
-        self._attr_name = entity_name
 
     @property
     def spa_status(self) -> SpaState:
@@ -72,6 +71,8 @@ class SmartTubOnboardSensorBase(SmartTubEntity):
 class SmartTubExternalSensorBase(SmartTubEntity):
     """Class for additional BLE wireless sensors sold separately."""
 
+    _attr_translation_key = "external_sensor"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, Any]],
@@ -79,9 +80,17 @@ class SmartTubExternalSensorBase(SmartTubEntity):
         sensor: SpaSensor,
     ) -> None:
         """Initialize the external sensor entity."""
-        super().__init__(coordinator, spa, self._human_readable_name(sensor))
+        super().__init__(coordinator, spa, self._sensor_key(sensor))
         self.sensor_address = sensor.address
         self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
+        self._attr_translation_placeholders = {
+            "sensor_name": self._human_readable_name(sensor),
+        }
+
+    @staticmethod
+    def _sensor_key(sensor: SpaSensor) -> str:
+        """Return a key for the sensor suitable for unique_id generation."""
+        return sensor.name.strip("{}").replace("-", "_")
 
     @staticmethod
     def _human_readable_name(sensor: SpaSensor) -> str:
