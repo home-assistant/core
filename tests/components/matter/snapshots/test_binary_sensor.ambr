@@ -1126,7 +1126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1225,7 +1225,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -2370,7 +2370,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
