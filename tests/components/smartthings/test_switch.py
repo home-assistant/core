@@ -465,3 +465,95 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("switch.2nd_floor_hallway").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+async def test_execute_workaround_switch_entity_created(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test display lighting switch created via execute workaround for heat pump lacking native lighting capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.heat_pump_display_lighting") is not None
+
+    entity_entry = entity_registry.async_get("switch.heat_pump_display_lighting")
+    assert entity_entry is not None
+    assert (
+        entity_entry.unique_id
+        == "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.airConditionerLighting"
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_ehs_01001"])
+@pytest.mark.parametrize(
+    ("action", "expected_argument"),
+    [
+        (SERVICE_TURN_ON, ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}]),
+        (
+            SERVICE_TURN_OFF,
+            ["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
+        ),
+    ],
+)
+async def test_execute_workaround_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    expected_argument: list[str],
+) -> None:
+    """Test execute workaround switch uses reversed API arguments (Light_Off=on, Light_On=off)."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.heat_pump_display_lighting"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4165c51e-bf6b-c5b6-fd53-127d6248754b",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        expected_argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_01001"])
+async def test_execute_workaround_switch_not_created_when_capability_exists(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test display lighting uses native lighting capability when available, not execute workaround."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("switch.aire_dormitorio_principal_display_lighting") is not None
+    )
+
+    entity_entry = entity_registry.async_get(
+        "switch.aire_dormitorio_principal_display_lighting"
+    )
+    assert entity_entry is not None
+    assert not entity_entry.unique_id.endswith("_main_samsungce.airConditionerLighting")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
+async def test_execute_workaround_switch_not_created_without_required_capability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test display lighting not created for washer lacking AIR_CONDITIONER_MODE capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not any(
+        "display_lighting" in entity_id for entity_id in entity_registry.entities
+    )
