@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -23,10 +23,6 @@ DUMMY_CMD_POWER_OFF = 0x02
 DUMMY_CMD_SPEED_LOW = 0x03
 DUMMY_CMD_SPEED_MEDIUM = 0x04
 DUMMY_CMD_SPEED_HIGH = 0x05
-DUMMY_CMD_OSCILLATE_ON = 0x06
-DUMMY_CMD_OSCILLATE_OFF = 0x07
-
-CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 
 
 async def async_setup_entry(

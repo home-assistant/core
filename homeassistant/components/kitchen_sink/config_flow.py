@@ -24,11 +24,10 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from . import DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
 CONF_BOOLEAN = "bool"
 CONF_INT = "int"
-CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 
 
 class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
