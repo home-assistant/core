@@ -96,7 +96,7 @@ async def async_create_fix_flow(
     if issue_id.split(".", maxsplit=1)[0] == "integration_not_found":
         assert data
         return IntegrationNotFoundFlow(data)
-    if issue_id.split(".")[0] == "orphaned_ignored_entry":
+    if issue_id.split(".", maxsplit=1)[0] == "orphaned_ignored_entry":
         assert data
         return OrphanedConfigEntryFlow(data)
     return ConfirmRepairFlow()
