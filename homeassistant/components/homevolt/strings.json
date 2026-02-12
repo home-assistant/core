@@ -70,12 +70,6 @@
       "energy_imported": {
         "name": "Energy imported"
       },
-      "exported_energy": {
-        "name": "Exported energy"
-      },
-      "imported_energy": {
-        "name": "Imported energy"
-      },
       "l1_current": {
         "name": "L1 current"
       },

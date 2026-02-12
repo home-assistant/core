@@ -2031,7 +2031,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velux",
     "venstar",
     "vera",
     "verisure",

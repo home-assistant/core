@@ -368,7 +368,7 @@ async def test_append_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -379,13 +379,14 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -396,6 +397,7 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_get_sheet_invalid_config_entry(
@@ -427,7 +429,7 @@ async def test_get_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHEET,
@@ -439,6 +441,7 @@ async def test_get_sheet_invalid_config_entry(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)
