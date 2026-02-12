@@ -595,7 +595,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'frequency',
+    'translation_key': None,
     'unique_id': '40580137858664_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
