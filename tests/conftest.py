@@ -1260,11 +1260,44 @@ def translations_once() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="module")
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
+    real_async_load = translation_helper._TranslationCache._async_load
+    real_get_cached = translation_helper._TranslationCache.get_cached
     real_component_strings = translation_helper._async_get_component_strings
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        wraps=real_component_strings,
-    ) as mock_component_strings:
+
+    # Translations for "homeassistant" should always be loaded
+    async def _async_load(self, _language, _components) -> None:
+        if "homeassistant" not in _components:
+            _components.add("homeassistant")
+        return await real_async_load(self, _language, _components)
+
+    def _get_cached(self, _language, _category, _components) -> dict[str, str]:
+        if "homeassistant" not in _components:
+            _components.add("homeassistant")
+        return real_get_cached(self, _language, _category, _components)
+
+    async def _async_get_component_strings(
+        _hass, _languages, _components, _integrations
+    ) -> None:
+        if "homeassistant" not in _components:
+            _components.add("homeassistant")
+        return await real_component_strings(
+            _hass, _languages, _components, _integrations
+        )
+
+    with (
+        patch(
+            "homeassistant.helpers.translation._TranslationCache._async_load",
+            _async_load,
+        ),
+        patch(
+            "homeassistant.helpers.translation._TranslationCache.get_cached",
+            _get_cached,
+        ),
+        patch(
+            "homeassistant.helpers.translation._async_get_component_strings",
+            wraps=_async_get_component_strings,
+        ) as mock_component_strings,
+    ):
         yield
     cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
     component_paths = components.__path__
