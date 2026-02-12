@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "accessory_disconnected_error": "A connectivity error occurred while attempting to pair with this device.\n\n{error}",
       "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
       "already_configured": "Accessory is already configured with this controller.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
