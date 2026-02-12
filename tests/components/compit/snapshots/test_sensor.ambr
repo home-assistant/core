@@ -285,7 +285,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_sensor_entities_snapshot[sensor.r_900_actual_heating_circuit_1_temperature-entry]
