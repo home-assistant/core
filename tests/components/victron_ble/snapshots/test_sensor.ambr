@@ -1153,6 +1153,95 @@
     'state': '13.88',
   })
 # ---
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low_power',
+        'fault',
+        'bulk',
+        'absorption',
+        'float',
+        'storage',
+        'equalize_manual',
+        'inverting',
+        'power_supply',
+        'starting_up',
+        'repeated_absorption',
+        'recondition',
+        'battery_safe',
+        'active',
+        'external_control',
+        'not_available',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_charge_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charge state',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state',
+    'unique_id': '01:02:03:04:05:11-charge_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Solar Charger Charge state',
+      'options': list([
+        'off',
+        'low_power',
+        'fault',
+        'bulk',
+        'absorption',
+        'float',
+        'storage',
+        'equalize_manual',
+        'inverting',
+        'power_supply',
+        'starting_up',
+        'repeated_absorption',
+        'recondition',
+        'battery_safe',
+        'active',
+        'external_control',
+        'not_available',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_charge_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'absorption',
+  })
+# ---
 # name: test_sensors[solar_charger][sensor.solar_charger_external_device_load-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

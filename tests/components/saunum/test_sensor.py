@@ -52,7 +52,7 @@ async def test_sensor_not_created_when_value_is_none(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.saunum_leil_temperature") is None
+    assert hass.states.get("sensor.saunum_leil_current_temperature") is None
     assert hass.states.get("sensor.saunum_leil_heater_elements_active") is None
     assert hass.states.get("sensor.saunum_leil_on_time") is None
 

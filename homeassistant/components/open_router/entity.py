@@ -34,6 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OpenRouterConfigEntry
 from .const import DOMAIN, LOGGER
@@ -109,7 +110,7 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json.dumps(content.tool_result),
+            content=json_dumps(content.tool_result),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -130,7 +131,7 @@ def _convert_content_to_chat_message(
                     type="function",
                     id=tool_call.id,
                     function=Function(
-                        arguments=json.dumps(tool_call.tool_args),
+                        arguments=json_dumps(tool_call.tool_args),
                         name=tool_call.tool_name,
                     ),
                 )
