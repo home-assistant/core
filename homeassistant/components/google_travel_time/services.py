@@ -6,7 +6,7 @@ from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import RoutesAsyncClient
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_API_KEY,
@@ -20,7 +20,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import async_get_config_entry
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -44,23 +45,6 @@ from .schemas import SERVICE_GET_TRANSIT_TIMES_SCHEMA, SERVICE_GET_TRAVEL_TIMES_
 
 SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
 SERVICE_GET_TRANSIT_TIMES = "get_transit_times"
-
-
-def _async_get_entry(hass: HomeAssistant, config_entry_id: str) -> ConfigEntry:
-    """Get the config entry or raise if not found or not loaded."""
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": config_entry_id},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return entry
 
 
 def _build_routes_response(response) -> list[dict]:
@@ -104,7 +88,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
         """Handle the service call to get travel times (non-transit modes)."""
-        entry = _async_get_entry(hass, service.data[ATTR_CONFIG_ENTRY_ID])
+        entry = async_get_config_entry(
+            service.hass, DOMAIN, service.data[ATTR_CONFIG_ENTRY_ID]
+        )
         api_key = entry.data[CONF_API_KEY]
 
         travel_mode = TRAVEL_MODES_TO_GOOGLE_SDK_ENUM[service.data[CONF_MODE]]
@@ -133,7 +119,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_get_transit_times_service(service: ServiceCall) -> ServiceResponse:
         """Handle the service call to get transit times."""
-        entry = _async_get_entry(hass, service.data[ATTR_CONFIG_ENTRY_ID])
+        entry = async_get_config_entry(
+            service.hass, DOMAIN, service.data[ATTR_CONFIG_ENTRY_ID]
+        )
         api_key = entry.data[CONF_API_KEY]
 
         client_options = ClientOptions(api_key=api_key)

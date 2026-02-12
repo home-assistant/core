@@ -34,12 +34,6 @@
     "api_error": {
       "message": "Google API error: {error}"
     },
-    "integration_not_found": {
-      "message": "Integration not found: {target}"
-    },
-    "not_loaded": {
-      "message": "Integration {target} is not loaded"
-    },
     "permission_denied": {
       "message": "[%key:component::google_travel_time::config::error::permission_denied%]"
     }
