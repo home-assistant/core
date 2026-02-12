@@ -64,7 +64,9 @@ class ImmichMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
-            raise BrowseError("Immich is not configured")
+            raise BrowseError(
+                translation_domain=DOMAIN, translation_key="not_configured"
+            )
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,

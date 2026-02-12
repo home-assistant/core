@@ -102,7 +102,7 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
     item = MediaSourceItem(
         hass, DOMAIN, "unique_id/albums/album_id/asset_id/filename.png", None
     )
-    with pytest.raises(BrowseError, match="Immich is not configured"):
+    with pytest.raises(BrowseError, match="not_configured"):
         await source.async_browse_media(item)
 
 

@@ -79,6 +79,12 @@
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."
     },
+    "cannot_connect": {
+      "message": "Cannot connect to your Immich instance."
+    },
+    "not_configured": {
+      "message": "Immich is not configured."
+    },
     "only_local_media_supported": {
       "message": "Only local media files are currently supported."
     },
