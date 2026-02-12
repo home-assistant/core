@@ -1,12 +1,13 @@
 """Common fixtures for the Hypontech Cloud tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -29,8 +30,32 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
-        unique_id="test@example.com",
+        unique_id="mock_account_id_123",
     )
+
+
+@pytest.fixture
+def create_entry(hass: HomeAssistant) -> Callable[..., MockConfigEntry]:
+    """Return a factory for creating config entries."""
+
+    def _create_entry(
+        username: str = "test@example.com",
+        password: str = "test-password",
+        unique_id: str = "mock_account_id_123",
+    ) -> MockConfigEntry:
+        """Create a config entry with custom parameters."""
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            },
+            unique_id=unique_id,
+        )
+        entry.add_to_hass(hass)
+        return entry
+
+    return _create_entry
 
 
 @pytest.fixture
@@ -42,12 +67,18 @@ def mock_hyponcloud() -> Generator[AsyncMock]:
             return_value=True,
         ),
         patch(
+            "homeassistant.components.hypontech.HyponCloud.get_admin_info",
+        ) as mock_get_admin_info,
+        patch(
             "homeassistant.components.hypontech.coordinator.HyponCloud.get_overview",
         ) as mock_get_overview,
         patch(
             "homeassistant.components.hypontech.coordinator.HyponCloud.get_list",
         ) as mock_get_list,
     ):
+        mock_admin_info = AsyncMock()
+        mock_admin_info.id = "mock_account_id_123"
+        mock_get_admin_info.return_value = mock_admin_info
         mock_get_overview.return_value = AsyncMock()
         mock_get_list.return_value = []
         yield mock_get_overview
