@@ -44,14 +44,14 @@ async def test_fans(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.FAN)
 
 
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_fan_base(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test Fan platform."""
-    entity_id = "fan.air_purifier"
+    entity_id = "fan.mock_air_purifier"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_modes"] == [
@@ -112,14 +112,14 @@ async def test_fan_base(
 
 
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_fan_turn_on_with_percentage(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test turning on the fan with a specific percentage."""
-    entity_id = "fan.air_purifier"
+    entity_id = "fan.mock_air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
@@ -150,7 +150,7 @@ async def test_fan_turn_on_with_percentage(
 
 
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize("node_fixture", ["fan"])
+@pytest.mark.parametrize("node_fixture", ["mock_fan"])
 async def test_fan_turn_on_with_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -226,14 +226,14 @@ async def test_fan_turn_on_with_preset_mode(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_fan_turn_off(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test turning off the fan."""
-    entity_id = "fan.air_purifier"
+    entity_id = "fan.mock_air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_OFF,
@@ -269,14 +269,14 @@ async def test_fan_turn_off(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_fan_oscillate(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test oscillating the fan."""
-    entity_id = "fan.air_purifier"
+    entity_id = "fan.mock_air_purifier"
     for oscillating, value in ((True, 1), (False, 0)):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -293,14 +293,14 @@ async def test_fan_oscillate(
         matter_client.write_attribute.reset_mock()
 
 
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_fan_set_direction(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test oscillating the fan."""
-    entity_id = "fan.air_purifier"
+    entity_id = "fan.mock_air_purifier"
     for direction, value in ((DIRECTION_FORWARD, 0), (DIRECTION_REVERSE, 1)):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -322,7 +322,7 @@ async def test_fan_set_direction(
     ("node_fixture", "entity_id", "attributes", "features"),
     [
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 0,
@@ -330,7 +330,7 @@ async def test_fan_set_direction(
             (FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 1,
@@ -342,7 +342,7 @@ async def test_fan_set_direction(
             ),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 4,
@@ -354,7 +354,7 @@ async def test_fan_set_direction(
             ),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 36,
@@ -386,7 +386,7 @@ async def test_fan_supported_features(
     ("node_fixture", "entity_id", "attributes", "preset_modes"),
     [
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 0, "1/514/65532": 0},
             [
@@ -396,7 +396,7 @@ async def test_fan_supported_features(
             ],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 1, "1/514/65532": 0},
             [
@@ -405,25 +405,25 @@ async def test_fan_supported_features(
             ],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 2, "1/514/65532": 0},
             ["low", "medium", "high", "auto"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 4, "1/514/65532": 0},
             ["high", "auto"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 0},
             ["high"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 8, "1/514/9": 3},
             ["high", "natural_wind", "sleep_wind"],

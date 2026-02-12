@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
