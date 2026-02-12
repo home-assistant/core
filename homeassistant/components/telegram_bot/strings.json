@@ -87,7 +87,8 @@
   "config_subentries": {
     "allowed_chat_ids": {
       "abort": {
-        "already_configured": "Chat already configured"
+        "already_configured": "Chat already configured",
+        "entry_not_loaded": "[%key:component::telegram_bot::exceptions::entry_not_loaded::message%]"
       },
       "entry_type": "Allowed chat ID",
       "error": {
@@ -186,6 +187,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "entry_not_loaded": {
+      "message": "{telegram_bot} is not loaded"
+    },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
     },
@@ -203,9 +207,6 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
-    },
-    "missing_config_entry": {
-      "message": "No config entries found or setup failed. Please set up the Telegram Bot first."
     },
     "missing_input": {
       "message": "{field} is required."
