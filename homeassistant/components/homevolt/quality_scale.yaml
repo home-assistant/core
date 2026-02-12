@@ -54,9 +54,9 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: done
+  entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
   icon-translations: todo

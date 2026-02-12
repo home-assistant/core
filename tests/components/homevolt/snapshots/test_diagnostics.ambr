@@ -12,12 +12,6 @@
     'device': dict({
       'unique_id': '40580137858664',
     }),
-    'device_metadata': dict({
-      'ems_40580137858664': dict({
-        'model': 'EMS-1000',
-        'name': 'Homevolt EMS',
-      }),
-    }),
     'ems': dict({
       'ems_40580137858664': dict({
         'model': 'EMS-1000',

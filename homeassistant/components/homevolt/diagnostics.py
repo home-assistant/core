@@ -39,13 +39,6 @@ async def async_get_config_entry_diagnostics(
         key: {"value": sensor.value, "type": sensor.type}
         for key, sensor in client.sensors.items()
     }
-    result["device_metadata"] = {
-        key: {
-            "name": metadata.name,
-            "model": metadata.model,
-        }
-        for key, metadata in client.device_metadata.items()
-    }
     result["ems"] = {
         device_id: {
             "name": metadata.name,
