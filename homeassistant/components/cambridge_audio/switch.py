@@ -28,7 +28,8 @@ class CambridgeAudioSwitchEntityDescription(SwitchEntityDescription):
 
 def room_correction_enabled(client: StreamMagicClient) -> bool:
     """Check if room correction is enabled."""
-    assert client.audio.tilt_eq is not None
+    if TYPE_CHECKING:
+        assert client.audio.tilt_eq is not None
     return client.audio.tilt_eq.enabled
 
 
