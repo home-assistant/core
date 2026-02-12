@@ -1,17 +1,29 @@
 """Entity base class for the Miele integration."""
 
-from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
+from pymiele import (
+    MieleAction,
+    MieleAPI,
+    MieleDevice,
+    MieleFailureData,
+    MieleFillingLevel,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
-from .coordinator import MieleAuxDataUpdateCoordinator, MieleDataUpdateCoordinator
+from .coordinator import (
+    MieleAuxDataUpdateCoordinator,
+    MieleDataUpdateCoordinator,
+    MieleFailureDataUpdateCoordinator,
+)
 
 
 class MieleBaseEntity[
-    _MieleCoordinatorT: MieleDataUpdateCoordinator | MieleAuxDataUpdateCoordinator
+    _MieleCoordinatorT: MieleDataUpdateCoordinator
+    | MieleAuxDataUpdateCoordinator
+    | MieleFailureDataUpdateCoordinator
 ](CoordinatorEntity[_MieleCoordinatorT]):
     """Base class for Miele entities."""
 
@@ -100,3 +112,12 @@ class MieleAuxEntity(MieleBaseEntity[MieleAuxDataUpdateCoordinator]):
     def levels(self) -> MieleFillingLevel:
         """Return the filling levels object."""
         return self.coordinator.data.filling_levels[self._device_id]
+
+
+class MieleFailureEntity(MieleBaseEntity[MieleFailureDataUpdateCoordinator]):
+    """Base class for Miele entities that use the failure data coordinator."""
+
+    @property
+    def failure(self) -> MieleFailureData | None:
+        """Return the failure data object."""
+        return self.coordinator.data.get(self._device_id)

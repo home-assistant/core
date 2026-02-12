@@ -41,6 +41,12 @@
       "energy_forecast": {
         "default": "mdi:lightning-bolt-outline"
       },
+      "fault_code": {
+        "default": "mdi:alert"
+      },
+      "fault_message": {
+        "default": "mdi:message-alert"
+      },
       "finish": {
         "default": "mdi:clock-end"
       },

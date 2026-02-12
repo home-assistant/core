@@ -23,6 +23,7 @@ from .coordinator import (
     MieleAuxDataUpdateCoordinator,
     MieleConfigEntry,
     MieleDataUpdateCoordinator,
+    MieleFailureDataUpdateCoordinator,
     MieleRuntimeData,
 )
 from .services import async_setup_services
@@ -85,8 +86,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
     await _coordinator.async_config_entry_first_refresh()
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
     await _aux_coordinator.async_config_entry_first_refresh()
+    _failure_coordinator = MieleFailureDataUpdateCoordinator(hass, entry, _api)
+    await _failure_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
+    entry.runtime_data = MieleRuntimeData(
+        _api, _coordinator, _aux_coordinator, _failure_coordinator
+    )
 
     entry.async_create_background_task(
         hass,

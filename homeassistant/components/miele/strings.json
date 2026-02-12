@@ -228,6 +228,12 @@
       "energy_forecast": {
         "name": "Energy forecast"
       },
+      "fault_code": {
+        "name": "Fault code"
+      },
+      "fault_message": {
+        "name": "Fault message"
+      },
       "finish": {
         "name": "Finish"
       },
