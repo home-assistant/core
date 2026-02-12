@@ -1,5 +1,6 @@
 {
   "tilt_eq": {
-    "enabled": true
+    "enabled": true,
+    "intensity": 100
   }
 }

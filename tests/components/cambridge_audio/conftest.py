@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiostreammagic.models import (
+    Audio,
     AudioOutput,
     Display,
     Info,
