@@ -22,6 +22,7 @@ base_platforms: &base_platforms
   - homeassistant/components/calendar/**
   - homeassistant/components/camera/**
   - homeassistant/components/climate/**
+  - homeassistant/components/conversation/**
   - homeassistant/components/cover/**
   - homeassistant/components/date/**
   - homeassistant/components/datetime/**
@@ -53,6 +54,7 @@ base_platforms: &base_platforms
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
   - homeassistant/components/valve/**
+  - homeassistant/components/wake_word/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
 
@@ -70,7 +72,6 @@ components: &components
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
-  - homeassistant/components/conversation/**
   - homeassistant/components/demo/**
   - homeassistant/components/device_automation/**
   - homeassistant/components/dhcp/**
