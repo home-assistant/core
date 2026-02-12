@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from syrupy.assertion import SnapshotAssertion  # noqa: F401
-
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .conftest import DEVICE_IDENTIFIER
@@ -27,6 +27,9 @@ async def test_config_entry_diagnostics(
 
     assert "config" in diagnostics
     assert isinstance(diagnostics["config"], dict)
+    config = diagnostics["config"]
+    assert config[CONF_HOST] == REDACTED
+    assert config[CONF_PASSWORD] == REDACTED
 
     assert "coordinator" in diagnostics
     assert "device" in diagnostics
