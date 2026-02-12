@@ -30,6 +30,46 @@
     }
   },
   "entity": {
+    "number": {
+      "grid_export_limit": {
+        "name": "Grid export limit"
+      },
+      "grid_import_limit": {
+        "name": "Grid import limit"
+      },
+      "max_charge": {
+        "name": "Max charge power"
+      },
+      "max_discharge": {
+        "name": "Max discharge power"
+      },
+      "max_soc": {
+        "name": "Maximum state of charge"
+      },
+      "min_soc": {
+        "name": "Minimum state of charge"
+      },
+      "setpoint": {
+        "name": "Power setpoint"
+      }
+    },
+    "select": {
+      "battery_mode": {
+        "name": "Battery mode",
+        "state": {
+          "frequency_reserve": "Frequency reserve",
+          "full_solar_export": "Full solar export",
+          "grid_charge": "Grid charge",
+          "grid_charge_discharge": "Grid charge/discharge",
+          "grid_discharge": "Grid discharge",
+          "idle": "Idle",
+          "inverter_charge": "Inverter charge",
+          "inverter_discharge": "Inverter discharge",
+          "solar_charge": "Solar charge",
+          "solar_charge_discharge": "Solar charge/discharge"
+        }
+      }
+    },
     "sensor": {
       "available_charging_energy": {
         "name": "Available charging energy"
@@ -142,6 +182,19 @@
       "tmin": {
         "name": "Minimum temperature"
       }
+    },
+    "switch": {
+      "local_mode": {
+        "name": "Local mode"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with Homevolt: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred: {error}"
     }
   }
 }

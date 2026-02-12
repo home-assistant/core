@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
 from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
-from .coordinator import TibberDataAPICoordinator
+from .coordinator import TibberDataAPICoordinator, TibberDataCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
@@ -39,6 +39,7 @@ class TibberRuntimeData:
 
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
+    data_coordinator: TibberDataCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
 
     async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
@@ -124,9 +125,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     except tibber.FatalHttpExceptionError as err:
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
 
-    coordinator = TibberDataAPICoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data.data_api_coordinator = coordinator
+    data_api_coordinator = TibberDataAPICoordinator(hass, entry)
+    await data_api_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data.data_api_coordinator = data_api_coordinator
+
+    data_coordinator = TibberDataCoordinator(hass, entry, entry.runtime_data)
+    await data_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data.data_coordinator = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

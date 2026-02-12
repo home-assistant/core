@@ -10,7 +10,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:

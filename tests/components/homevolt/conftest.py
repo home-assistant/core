@@ -83,6 +83,34 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         # Load schedule data from fixture
         client.current_schedule = json.loads(load_fixture("schedule.json", DOMAIN))
 
+        # Add convenience properties for new client interface
+        schedule_data = client.current_schedule
+        schedule = (
+            schedule_data.get("schedule", [{}])[0]
+            if schedule_data.get("schedule")
+            else {}
+        )
+        params = schedule.get("params", {})
+
+        client.schedule_mode = schedule.get("type", 0)
+        client.local_mode_enabled = schedule_data.get("local_mode", False)
+        client.schedule_setpoint = params.get("setpoint")
+        client.schedule_max_charge = schedule.get("max_charge")
+        client.schedule_max_discharge = schedule.get("max_discharge")
+        client.schedule_min_soc = params.get("min_soc") or params.get("min")
+        client.schedule_max_soc = params.get("max_soc") or params.get("max")
+        client.schedule_grid_import_limit = params.get("grid_import_limit")
+        client.schedule_grid_export_limit = params.get("grid_export_limit")
+        client.schedule_threshold_high = params.get("threshold_high")
+        client.schedule_threshold_low = params.get("threshold_low")
+        client.schedule_freq_reg_droop_up = params.get("freq_reg_droop_up")
+        client.schedule_freq_reg_droop_down = params.get("freq_reg_droop_down")
+
+        # Add methods
+        client.set_battery_mode = AsyncMock()
+        client.enable_local_mode = AsyncMock()
+        client.disable_local_mode = AsyncMock()
+
         yield client
 
 
