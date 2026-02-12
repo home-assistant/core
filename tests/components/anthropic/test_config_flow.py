@@ -296,7 +296,8 @@ async def test_subentry_web_search_user_location(
             usage=types.Usage(input_tokens=100, output_tokens=100),
             content=[
                 types.TextBlock(
-                    type="text", text='"city": "San Francisco", "region": "California"}'
+                    type="text",
+                    text='{"city": "San Francisco", "region": "California"}',
                 )
             ],
         ),
@@ -313,12 +314,7 @@ async def test_subentry_web_search_user_location(
 
     assert (
         mock_create.call_args.kwargs["messages"][0]["content"] == "Where are the "
-        "following coordinates located: (37.7749, -122.4194)? Please respond only "
-        "with a JSON object using the following schema:\n"
-        "{'type': 'object', 'properties': {'city': {'type': 'string', 'description': "
-        "'Free text input for the city, e.g. `San Francisco`'}, 'region': {'type': "
-        "'string', 'description': 'Free text input for the region, e.g. `California`'"
-        "}}, 'required': []}"
+        "following coordinates located: (37.7749, -122.4194)?"
     )
     assert options["type"] is FlowResultType.ABORT
     assert options["reason"] == "reconfigure_successful"

@@ -67,6 +67,17 @@ publish:
           type: url
           autocomplete: url
       example: https://example.org/download.zip
+    attach_file:
+      required: false
+      selector:
+        media:
+          accept:
+            - "*"
+    filename:
+      required: false
+      selector:
+        text:
+      example: attachment.jpg
     email:
       required: false
       selector:
