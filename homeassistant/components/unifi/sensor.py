@@ -486,7 +486,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         value_fn=lambda hub, port: port.tx_bytes_r,
     ),
     UnifiSensorEntityDescription[Ports, Port](
-        key="Port link speed",
+        key="Port speed",
+        translation_key="port_link_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -496,7 +497,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda port: f"{port.name} Link Speed",
+        name_fn=lambda port: f"{port.name} Link speed",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].raw.get("speed", 0) > 0,
         unique_id_fn=lambda hub, obj_id: f"port_link_speed-{obj_id}",
