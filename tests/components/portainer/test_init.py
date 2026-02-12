@@ -71,6 +71,8 @@ async def test_migrations(hass: HomeAssistant) -> None:
     assert entry.data[CONF_URL] == "http://test_host"
     assert entry.data[CONF_API_TOKEN] == "test_key"
     assert entry.data[CONF_VERIFY_SSL] is True
+    # Confirm we went through all current migrations
+    assert entry.version == 4
 
 
 @pytest.mark.parametrize(
@@ -164,5 +166,3 @@ async def test_migration_v3_to_v4(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
-    # Confirm we went through all current migrations
-    assert entry.version == 4
