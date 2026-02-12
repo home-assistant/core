@@ -46,6 +46,8 @@ async def async_setup_entry(
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
     """Describe Matter Switch entities."""
 
+    inverted: bool = False
+
 
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
@@ -56,11 +58,9 @@ class MatterSwitch(MatterEntity, SwitchEntity):
     def _get_command_for_value(self, value: bool) -> ClusterCommand:
         """Get the appropriate command for the desired value.
 
-        Applies ha_to_device conversion if needed (e.g., for inverted logic like mute).
+        Applies inversion if needed (e.g., for inverted logic like mute).
         """
-        send_value = value
-        if value_convert := self.entity_description.ha_to_device:
-            send_value = value_convert(value)
+        send_value = not value if self.entity_description.inverted else value
         return (
             clusters.OnOff.Commands.On()
             if send_value
@@ -79,8 +79,8 @@ class MatterSwitch(MatterEntity, SwitchEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.device_to_ha:
-            value = value_convert(value)
+        if self.entity_description.inverted:
+            value = not value
         self._attr_is_on = value
 
 
@@ -258,14 +258,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSwitchEntityDescription(
             key="MatterMuteToggle",
             translation_key="speaker_mute",
-            device_to_ha={
-                True: False,  # True means volume is on, so HA should show mute as off
-                False: True,  # False means volume is off (muted), so HA should show mute as on
-            }.get,
-            ha_to_device={
-                False: True,  # HA showing mute as off means volume is on, so send True
-                True: False,  # HA showing mute as on means volume is off (muted), so send False
-            }.get,
+            inverted=True,
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
