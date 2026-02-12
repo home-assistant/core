@@ -334,7 +334,7 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_found"
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -350,7 +350,7 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
-    assert err.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize(
