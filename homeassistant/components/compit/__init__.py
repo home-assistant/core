@@ -9,7 +9,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.WATER_HEATER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:
