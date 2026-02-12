@@ -34,6 +34,7 @@ PAIRING_START_FORM_ERRORS = [
 ]
 
 PAIRING_START_ABORT_ERRORS = [
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
     (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
     (aiohomekit.UnavailableError, "already_paired"),
 ]
