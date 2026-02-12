@@ -60,8 +60,9 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.power_timer,
-        availability_checker=lambda settings, status: status.power_on
-        and settings.power_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.power_on and settings.power_timer is not None
+        ),
     ),
     ToloSensorEntityDescription(
         key="salt_bath_timer_remaining",
@@ -69,8 +70,9 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.salt_bath_timer,
-        availability_checker=lambda settings, status: status.salt_bath_on
-        and settings.salt_bath_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.salt_bath_on and settings.salt_bath_timer is not None
+        ),
     ),
     ToloSensorEntityDescription(
         key="fan_timer_remaining",
@@ -78,8 +80,9 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.fan_timer,
-        availability_checker=lambda settings, status: status.fan_on
-        and settings.fan_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.fan_on and settings.fan_timer is not None
+        ),
     ),
 )
 
