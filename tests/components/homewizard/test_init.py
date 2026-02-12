@@ -265,9 +265,40 @@ async def test_disablederror_reloads_integration(
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
 @pytest.mark.parametrize(
-    ("mock_config_entry", "enabled", "disabled"),
+    ("device_fixture", "mock_config_entry", "enabled", "disabled"),
     [
         (
+            "HWE-SKT-21-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            ("sensor.device_power",),
+            ("sensor.device_production_power",),
+        ),
+        (
+            "HWE-SKT-21-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-SKT_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+        (
+            "HWE-SKT-21",
             MockConfigEntry(
                 title="Device",
                 domain=DOMAIN,
@@ -285,6 +316,7 @@ async def test_disablederror_reloads_integration(
             (),
         ),
         (
+            "HWE-SKT-21",
             MockConfigEntry(
                 title="Device",
                 domain=DOMAIN,
@@ -300,9 +332,13 @@ async def test_disablederror_reloads_integration(
             ("sensor.device_power",),
         ),
     ],
-    ids=["consumption", "generation"],
+    ids=[
+        "consumption_intital",
+        "generation_initial",
+        "consumption_used",
+        "generation_used",
+    ],
 )
-@pytest.mark.parametrize(("device_fixture"), ["HWE-SKT-21"])
 async def test_setup_device_energy_monitoring_v1(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -327,9 +363,40 @@ async def test_setup_device_energy_monitoring_v1(
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
 @pytest.mark.parametrize(
-    ("mock_config_entry", "enabled", "disabled"),
+    ("device_fixture", "mock_config_entry", "enabled", "disabled"),
     [
         (
+            "HWE-KWH1-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "consumption",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            ("sensor.device_power",),
+            ("sensor.device_production_power",),
+        ),
+        (
+            "HWE-KWH1-initial",
+            MockConfigEntry(
+                title="Device",
+                domain=DOMAIN,
+                data={
+                    CONF_IP_ADDRESS: "127.0.0.1",
+                    "usage": "generation",
+                },
+                unique_id="HWE-KWH1_5c2fafabcdef",
+            ),
+            # we explicitly indicated that the device was monitoring
+            # generated energy, so we ignore power sensor to avoid confusion
+            ("sensor.device_production_power",),
+            ("sensor.device_power",),
+        ),
+        (
+            "HWE-KWH1",
             MockConfigEntry(
                 title="Device",
                 domain=DOMAIN,
@@ -347,6 +414,7 @@ async def test_setup_device_energy_monitoring_v1(
             (),
         ),
         (
+            "HWE-KWH1",
             MockConfigEntry(
                 title="Device",
                 domain=DOMAIN,
@@ -362,9 +430,13 @@ async def test_setup_device_energy_monitoring_v1(
             ("sensor.device_power",),
         ),
     ],
-    ids=["consumption", "generation"],
+    ids=[
+        "consumption_intital",
+        "generation_initial",
+        "consumption_used",
+        "generation_used",
+    ],
 )
-@pytest.mark.parametrize(("device_fixture"), ["HWE-KWH1"])
 async def test_setup_device_energy_monitoring_v2(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
