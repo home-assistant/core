@@ -639,6 +639,15 @@ SENSORS: Final = (
     ),
 )
 
+# Sensors per battery pack (SN, SOC, Temperature, Voltage, Current)
+BATTERY_PACK_SENSOR_KEYS = [
+    ("9032", "9016", "9030", "9020", "19173"),  # Battery Pack 1
+    ("9051", "9035", "9049", "9039", "19174"),  # Battery Pack 2
+    ("9070", "9054", "9068", "9058", "19175"),  # Battery Pack 3
+    ("9165", "9149", "9163", "9153", "19176"),  # Battery Pack 4
+    ("9218", "9202", "9216", "9206", "19177"),  # Battery Pack 5
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -649,11 +658,23 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device_gen = coordinator.generation
 
+    # Sensorwaarden ophalen (via coordinator)
+    battery_pack_keys = [keys[0] for keys in BATTERY_PACK_SENSOR_KEYS]
+    battery_pack_data = await coordinator.async_fetch_sensors(battery_pack_keys)
+
+    # Build set of sensor keys that should be excluded (battery packs without SN)
+    excluded_keys: set[str] = set()
+    for pack_keys in BATTERY_PACK_SENSOR_KEYS:
+        sn_key = pack_keys[0]
+
+        if not battery_pack_data.get(sn_key):
+            excluded_keys.update(pack_keys)
+
     # Sensor initialization
     async_add_entities(
         IndevoltSensorEntity(coordinator=coordinator, description=description)
         for description in SENSORS
-        if device_gen in description.generation
+        if device_gen in description.generation and description.key not in excluded_keys
     )
 
 

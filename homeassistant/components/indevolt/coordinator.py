@@ -11,7 +11,7 @@ from indevolt_api import IndevoltAPI, TimeOutException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -80,3 +80,17 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Device update timed out: {err}") from err
         except Exception as err:
             raise UpdateFailed(f"Device update failed: {err}") from err
+
+    async def async_fetch_sensors(self, sensor_keys: list[str]) -> dict[str, Any]:
+        """Fetch specific sensors from the device by keys."""
+        if not sensor_keys:
+            return {}
+
+        try:
+            return await self.api.fetch_data(sensor_keys)
+        except TimeOutException as err:
+            raise HomeAssistantError(
+                f"Device timed out fetching sensors: {err}"
+            ) from err
+        except Exception as err:
+            raise HomeAssistantError(f"Failed to fetch sensors: {err}") from err
