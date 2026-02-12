@@ -179,7 +179,7 @@
         "name": "E-Shift"
       },
       "low_latency_mode": {
-        "name": "Low Latency Mode"
+        "name": "Low latency mode"
       }
     }
   }
