@@ -7,6 +7,12 @@
       "architecture": {
         "default": "mdi:cpu-64-bit"
       },
+      "container_disk_usage_reclaimable": {
+        "default": "mdi:file-restore"
+      },
+      "container_disk_usage_total_size": {
+        "default": "mdi:harddisk"
+      },
       "container_state": {
         "default": "mdi:state-machine"
       },
@@ -34,6 +40,12 @@
       "image": {
         "default": "mdi:docker"
       },
+      "image_disk_usage_reclaimable": {
+        "default": "mdi:file-restore"
+      },
+      "image_disk_usage_total_size": {
+        "default": "mdi:harddisk"
+      },
       "images_count": {
         "default": "mdi:image-multiple"
       },
@@ -57,6 +69,9 @@
       },
       "operating_system_version": {
         "default": "mdi:alpha-v-box"
+      },
+      "volume_disk_usage_total_size": {
+        "default": "mdi:harddisk"
       }
     },
     "switch": {

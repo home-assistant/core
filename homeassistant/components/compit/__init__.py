@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.SELECT,
+    Platform.WATER_HEATER,
 ]
 
 

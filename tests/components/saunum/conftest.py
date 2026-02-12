@@ -42,7 +42,31 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_saunum_client_class() -> Generator[MagicMock]:
+def mock_saunum_data() -> SaunumData:
+    """Return default mock Saunum data."""
+    return SaunumData(
+        session_active=False,
+        sauna_type=0,
+        sauna_duration=120,
+        fan_duration=10,
+        target_temperature=80,
+        fan_speed=2,
+        light_on=False,
+        current_temperature=75.0,
+        on_time=3600,
+        heater_elements_active=0,
+        door_open=False,
+        alarm_door_open=False,
+        alarm_door_sensor=False,
+        alarm_thermal_cutoff=False,
+        alarm_internal_temp=False,
+        alarm_temp_sensor_short=False,
+        alarm_temp_sensor_open=False,
+    )
+
+
+@pytest.fixture
+def mock_saunum_client_class(mock_saunum_data: SaunumData) -> Generator[MagicMock]:
     """Return a mocked Saunum client class for config flow and integration tests."""
     with (
         patch(
@@ -54,29 +78,7 @@ def mock_saunum_client_class() -> Generator[MagicMock]:
         mock_client.is_connected = True
 
         mock_client_class.create = AsyncMock(return_value=mock_client)
-
-        # Create mock data for async_get_data
-        mock_data = SaunumData(
-            session_active=False,
-            sauna_type=0,
-            sauna_duration=120,
-            fan_duration=10,
-            target_temperature=80,
-            fan_speed=2,
-            light_on=False,
-            current_temperature=75.0,
-            on_time=3600,
-            heater_elements_active=0,
-            door_open=False,
-            alarm_door_open=False,
-            alarm_door_sensor=False,
-            alarm_thermal_cutoff=False,
-            alarm_internal_temp=False,
-            alarm_temp_sensor_short=False,
-            alarm_temp_sensor_open=False,
-        )
-
-        mock_client.async_get_data.return_value = mock_data
+        mock_client.async_get_data.return_value = mock_saunum_data
 
         yield mock_client_class
 

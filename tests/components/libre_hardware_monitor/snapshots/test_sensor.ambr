@@ -439,7 +439,7 @@
     'state': '5.030',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan-entry]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -454,7 +454,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -462,12 +462,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CPU Fan Fan',
+    'object_id_base': 'CPU Fan Speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU Fan Fan',
+    'original_name': 'CPU Fan Speed',
     'platform': 'libre_hardware_monitor',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -477,17 +477,17 @@
     'unit_of_measurement': 'RPM',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan-state]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Fan',
+      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Speed',
       'max_value': '0',
       'min_value': '0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -549,7 +549,7 @@
     'state': '55.0',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan-entry]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -564,7 +564,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -572,12 +572,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Pump Fan Fan',
+    'object_id_base': 'Pump Fan Speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pump Fan Fan',
+    'original_name': 'Pump Fan Speed',
     'platform': 'libre_hardware_monitor',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -587,24 +587,24 @@
     'unit_of_measurement': 'RPM',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan-state]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Fan',
+      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Speed',
       'max_value': '0',
       'min_value': '0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan-entry]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -619,7 +619,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -627,12 +627,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'System Fan #1 Fan',
+    'object_id_base': 'System Fan #1 Speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'System Fan #1 Fan',
+    'original_name': 'System Fan #1 Speed',
     'platform': 'libre_hardware_monitor',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -642,16 +642,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan-state]
+# name: test_sensors_are_created[sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
+      'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Speed',
       'max_value': None,
       'min_value': None,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
+    'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -933,7 +933,7 @@
     'state': '36.0',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan-entry]
+# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -948,7 +948,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan',
+    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -956,12 +956,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'GPU Fan 1 Fan',
+    'object_id_base': 'GPU Fan 1 Speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GPU Fan 1 Fan',
+    'original_name': 'GPU Fan 1 Speed',
     'platform': 'libre_hardware_monitor',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -971,24 +971,24 @@
     'unit_of_measurement': 'RPM',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan-state]
+# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Fan',
+      'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Speed',
       'max_value': '0',
       'min_value': '0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan',
+    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan-entry]
+# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1003,7 +1003,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan',
+    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1011,12 +1011,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'GPU Fan 2 Fan',
+    'object_id_base': 'GPU Fan 2 Speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'GPU Fan 2 Fan',
+    'original_name': 'GPU Fan 2 Speed',
     'platform': 'libre_hardware_monitor',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1026,17 +1026,17 @@
     'unit_of_measurement': 'RPM',
   })
 # ---
-# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan-state]
+# name: test_sensors_are_created[sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Fan',
+      'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Speed',
       'max_value': '0',
       'min_value': '0',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'RPM',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan',
+    'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1452,14 +1452,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1467,14 +1467,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1482,13 +1482,13 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Speed',
         'max_value': None,
         'min_value': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1706,14 +1706,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Fan',
+        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan',
+      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1721,14 +1721,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Fan',
+        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan',
+      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1830,14 +1830,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) CPU Fan Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_cpu_fan_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1845,14 +1845,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) Pump Fan Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_pump_fan_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -1860,13 +1860,13 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
+        'friendly_name': '[GAMING-PC] MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Speed',
         'max_value': None,
         'min_value': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan',
+      'entity_id': 'sensor.gaming_pc_msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -2084,14 +2084,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Fan',
+        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 1 Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_fan',
+      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_1_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
@@ -2099,14 +2099,14 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Fan',
+        'friendly_name': '[GAMING-PC] NVIDIA GeForce RTX 4080 SUPER GPU Fan 2 Speed',
         'max_value': '0',
         'min_value': '0',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'RPM',
       }),
       'context': <ANY>,
-      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_fan',
+      'entity_id': 'sensor.gaming_pc_nvidia_geforce_rtx_4080_super_gpu_fan_2_speed',
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
