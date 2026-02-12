@@ -148,11 +148,11 @@ async def _async_import_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Splunk from a config entry."""
-    host = entry.data.get(CONF_HOST, DEFAULT_HOST)
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
     token = entry.data[CONF_TOKEN]
-    use_ssl = entry.data.get(CONF_SSL, DEFAULT_SSL)
-    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
+    use_ssl = entry.data[CONF_SSL]
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
     name = entry.data.get(CONF_NAME) or hass.config.location_name
 
     # Get the entity filter from hass.data (set by async_setup or empty if no YAML)
