@@ -7,12 +7,15 @@ import asyncio
 from homeassistant.config_entries import ConfigType
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 UDP_DISCOVERY_PORT = 8099
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
