@@ -30,7 +30,7 @@ cached-ipaddress==1.0.1
 certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
-cryptography==46.0.2
+cryptography==46.0.5
 dbus-fast==3.1.2
 file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0

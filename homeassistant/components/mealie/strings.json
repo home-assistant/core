@@ -132,9 +132,6 @@
     "end_date_before_start_date": {
       "message": "End date must be after start date."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
     "invalid_mealplan_entry_type": {
       "message": "Entry type {mealplan_type} is not valid for this Mealie version."
     },
@@ -143,9 +140,6 @@
     },
     "no_recipes_found": {
       "message": "No recipes found matching your search."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
     },
     "recipe_not_found": {
       "message": "Recipe with ID or slug `{recipe_id}` not found."
