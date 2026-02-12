@@ -44,8 +44,8 @@ async def test_number_unknown_device_parameters(
 ) -> None:
     """Test that number entity shows unknown when get_parameter_value returns invalid values."""
 
-    mock_connector.get_current_value.side_effect = (
-        lambda device_id, parameter_code: mock_return_value
+    mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
+        mock_return_value
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -61,9 +61,10 @@ async def test_number_get_value(
     mock_connector: MagicMock,
 ) -> None:
     """Test getting a number value."""
-    mock_connector.get_current_value.side_effect = (
-        lambda device_id, parameter_code: 22.0
+    mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
+        22.0
     )
+
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("number.nano_color_2_target_comfort_temperature")
