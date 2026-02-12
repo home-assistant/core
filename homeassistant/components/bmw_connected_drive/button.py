@@ -40,7 +40,9 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="light_flash",
         translation_key="light_flash",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
+        remote_function=lambda vehicle: (
+            vehicle.remote_services.trigger_remote_light_flash()
+        ),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
@@ -50,18 +52,24 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         translation_key="activate_air_conditioning",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
+        remote_function=lambda vehicle: (
+            vehicle.remote_services.trigger_remote_air_conditioning()
+        ),
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
         translation_key="deactivate_air_conditioning",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
+        remote_function=lambda vehicle: (
+            vehicle.remote_services.trigger_remote_air_conditioning_stop()
+        ),
         is_available=lambda vehicle: vehicle.is_remote_climate_stop_enabled,
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
         translation_key="find_vehicle",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
+        remote_function=lambda vehicle: (
+            vehicle.remote_services.trigger_remote_vehicle_finder()
+        ),
     ),
 )
 

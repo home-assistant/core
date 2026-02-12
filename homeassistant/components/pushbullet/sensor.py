@@ -123,7 +123,7 @@ class PushBulletNotificationSensor(SensorEntity):
             else:
                 self._attr_native_value = value
             self._attr_extra_state_attributes = self.pb_provider.data
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             pass
         self.async_write_ha_state()
 

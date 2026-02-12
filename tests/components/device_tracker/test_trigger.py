@@ -24,11 +24,6 @@ from tests.components import (
 STATE_WORK_ZONE = "work"
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 async def target_device_trackers(hass: HomeAssistant) -> list[str]:
     """Create multiple device_trackers entities associated with different targets."""
