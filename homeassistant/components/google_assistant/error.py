@@ -1,6 +1,6 @@
 """Errors for Google Assistant."""
 
-from .const import ERR_CHALLENGE_NEEDED
+from .const import CHALLENGE_ACK_NEEDED, CHALLENGE_PIN_NEEDED, ERR_CHALLENGE_NEEDED
 
 
 class SmartHomeError(Exception):
@@ -27,6 +27,12 @@ class ChallengeNeeded(SmartHomeError):
         super().__init__(ERR_CHALLENGE_NEEDED, "Challenge needed")
         self.ack_needed = ack_needed
         self.pin_needed = pin_needed
+        # Auto-set challenge_type based on flags if not explicitly provided
+        if challenge_type is None:
+            if pin_needed:
+                challenge_type = CHALLENGE_PIN_NEEDED
+            elif ack_needed:
+                challenge_type = CHALLENGE_ACK_NEEDED
         self.challenge_type = challenge_type
 
     def to_response(self):
@@ -36,9 +42,9 @@ class ChallengeNeeded(SmartHomeError):
 
         # L'objet de défi doit être 'challengeNeeded' (majuscule au N)
         # et le type doit être 'ackNeeded' pour la voix
-        if self.ack_needed or self.challenge_type == "ackNeeded":
-            response["challengeNeeded"] = {"type": "ackNeeded"}
-        elif self.pin_needed or self.challenge_type == "pinNeeded":
-            response["challengeNeeded"] = {"type": "pinNeeded"}
+        if self.ack_needed or self.challenge_type == CHALLENGE_ACK_NEEDED:
+            response["challengeNeeded"] = {"type": CHALLENGE_ACK_NEEDED}
+        elif self.pin_needed or self.challenge_type == CHALLENGE_PIN_NEEDED:
+            response["challengeNeeded"] = {"type": CHALLENGE_PIN_NEEDED}
 
         return response
