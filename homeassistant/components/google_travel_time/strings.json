@@ -30,6 +30,14 @@
       }
     }
   },
+  "exceptions": {
+    "api_error": {
+      "message": "Google API error: {error}"
+    },
+    "permission_denied": {
+      "message": "[%key:component::google_travel_time::config::error::permission_denied%]"
+    }
+  },
   "issues": {
     "routes_api_disabled": {
       "description": "Your Google Travel Time integration `{entry_title}` uses an API key which does not have the Routes API enabled.\n\n Please follow the instructions to [enable the API for your project]({enable_api_url}) and make sure your [API key restrictions]({api_key_restrictions_url}) allow access to the Routes API.\n\n After enabling the API this issue will be resolved automatically.",
@@ -105,6 +113,92 @@
         "imperial": "Imperial system",
         "metric": "Metric system"
       }
+    }
+  },
+  "services": {
+    "get_transit_times": {
+      "description": "Retrieves route alternatives and travel times between two locations using public transit.",
+      "fields": {
+        "arrival_time": {
+          "description": "The desired arrival time.",
+          "name": "Arrival time"
+        },
+        "config_entry_id": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::config_entry_id::description%]",
+          "name": "[%key:component::google_travel_time::services::get_travel_times::fields::config_entry_id::name%]"
+        },
+        "departure_time": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::departure_time::description%]",
+          "name": "[%key:component::google_travel_time::services::get_travel_times::fields::departure_time::name%]"
+        },
+        "destination": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::destination::description%]",
+          "name": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        },
+        "language": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::language::description%]",
+          "name": "[%key:common::config_flow::data::language%]"
+        },
+        "origin": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::origin::description%]",
+          "name": "[%key:component::google_travel_time::config::step::user::data::origin%]"
+        },
+        "transit_mode": {
+          "description": "The preferred transit mode.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::transit_mode%]"
+        },
+        "transit_routing_preference": {
+          "description": "The transit routing preference.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::transit_routing_preference%]"
+        },
+        "units": {
+          "description": "[%key:component::google_travel_time::services::get_travel_times::fields::units::description%]",
+          "name": "[%key:component::google_travel_time::options::step::init::data::units%]"
+        }
+      },
+      "name": "Get transit times"
+    },
+    "get_travel_times": {
+      "description": "Retrieves route alternatives and travel times between two locations.",
+      "fields": {
+        "avoid": {
+          "description": "Features to avoid when calculating the route.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::avoid%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry to use for the service call.",
+          "name": "Config entry"
+        },
+        "departure_time": {
+          "description": "The desired departure time.",
+          "name": "Departure time"
+        },
+        "destination": {
+          "description": "The destination of the route.",
+          "name": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        },
+        "language": {
+          "description": "The language to use for the response.",
+          "name": "[%key:common::config_flow::data::language%]"
+        },
+        "mode": {
+          "description": "The mode of transportation.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::mode%]"
+        },
+        "origin": {
+          "description": "The origin of the route.",
+          "name": "[%key:component::google_travel_time::config::step::user::data::origin%]"
+        },
+        "traffic_model": {
+          "description": "The traffic model to use when calculating driving routes.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::traffic_model%]"
+        },
+        "units": {
+          "description": "Which unit system to use.",
+          "name": "[%key:component::google_travel_time::options::step::init::data::units%]"
+        }
+      },
+      "name": "Get travel times"
     }
   },
   "title": "Google Maps Travel Time"
