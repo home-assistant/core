@@ -234,17 +234,17 @@
       "monthly_rain": {
         "name": "Monthly rain"
       },
-      "pm10_aqi_aqin": {
-        "name": "PM10 Indoor AQI AQIN"
-      },
       "pm10_aqi_24h_aqin": {
         "name": "PM10 Indoor AQI 24h Average AQIN"
       },
-      "pm10_indoor_aqin": {
-        "name": "PM10 Indoor AQIN"
+      "pm10_aqi_aqin": {
+        "name": "PM10 Indoor AQI AQIN"
       },
       "pm10_indoor_24h_aqin": {
         "name": "PM10 Indoor 24h Average AQIN"
+      },
+      "pm10_indoor_aqin": {
+        "name": "PM10 Indoor AQIN"
       },
       "pm25_24h_average": {
         "name": "PM2.5 24 hour average"
@@ -252,17 +252,20 @@
       "pm25_aqi": {
         "name": "PM2.5 AQI"
       },
+      "pm25_aqi_24h_aqin": {
+        "name": "PM2.5 Indoor AQI 24h Average AQIN"
+      },
       "pm25_aqi_24h_average": {
         "name": "PM2.5 AQI 24 hour average"
       },
       "pm25_aqi_aqin": {
         "name": "PM2.5 Indoor AQI AQIN"
       },
-      "pm25_aqi_24h_aqin": {
-        "name": "PM2.5 Indoor AQI 24h Average AQIN"
-      },
       "pm25_indoor": {
         "name": "PM2.5 indoor"
+      },
+      "pm25_indoor_24h_aqin": {
+        "name": "PM2.5 Indoor 24h AQIN"
       },
       "pm25_indoor_24h_average": {
         "name": "PM2.5 indoor 24 hour average"
@@ -275,9 +278,6 @@
       },
       "pm25_indoor_aqin": {
         "name": "PM2.5 Indoor AQIN"
-      },
-      "pm25_indoor_24h_aqin": {
-        "name": "PM2.5 Indoor 24h AQIN"
       },
       "pm_indoor_humidity_aqin": {
         "name": "Indoor Humidity AQIN"
