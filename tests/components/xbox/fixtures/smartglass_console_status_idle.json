@@ -1,0 +1,14 @@
+{
+  "status": {
+    "errorCode": "OK",
+    "errorMessage": null
+  },
+  "powerState": "On",
+  "playbackState": "Stopped",
+  "loginState": null,
+  "focusAppAumid": "",
+  "isTvConfigured": true,
+  "digitalAssistantRemoteControlEnabled": true,
+  "consoleStreamingEnabled": false,
+  "remoteManagementEnabled": true
+}

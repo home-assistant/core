@@ -1,7 +1,7 @@
 """Tests for the Xbox integration."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from httpx import ConnectTimeout, HTTPStatusError, ProtocolError
@@ -42,7 +42,11 @@ async def test_entry_setup_unload(
 
 @pytest.mark.parametrize(
     "exception",
-    [ConnectTimeout, HTTPStatusError, ProtocolError],
+    [
+        ConnectTimeout(""),
+        HTTPStatusError("", request=Mock(), response=Mock()),
+        ProtocolError(""),
+    ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -78,7 +82,14 @@ async def test_config_implementation_not_available(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("exception", [ConnectTimeout, HTTPStatusError, ProtocolError])
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ConnectTimeout(""),
+        HTTPStatusError("", request=Mock(), response=Mock()),
+        ProtocolError(""),
+    ],
+)
 @pytest.mark.parametrize(
     ("provider", "method"),
     [

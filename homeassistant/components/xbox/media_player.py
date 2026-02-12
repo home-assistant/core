@@ -148,10 +148,12 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType:
         """Media content type."""
-        app_details = self.data.app_details
-        if app_details and app_details.product_family == "Games":
-            return MediaType.GAME
-        return MediaType.APP
+
+        return (
+            MediaType.GAME
+            if self.data.app_details and self.data.app_details.product_family == "Games"
+            else MediaType.APP
+        )
 
     @property
     def media_content_id(self) -> str | None:
@@ -161,11 +163,13 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if not (app_details := self.data.app_details):
-            return None
         return (
-            app_details.localized_properties[0].product_title
-            or app_details.localized_properties[0].short_title
+            (
+                app_details.localized_properties[0].product_title
+                or app_details.localized_properties[0].short_title
+            )
+            if (app_details := self.data.app_details)
+            else None
         )
 
     @property

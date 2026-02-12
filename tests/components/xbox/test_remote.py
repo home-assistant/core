@@ -248,9 +248,7 @@ async def test_send_command_exceptions(
     assert config_entry.state is ConfigEntryState.LOADED
 
     getattr(xbox_live_client.smartglass, call_method).side_effect = exception
-    with pytest.raises(
-        HomeAssistantError, check=lambda e: e.translation_key == translation_key
-    ):
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
@@ -258,6 +256,7 @@ async def test_send_command_exceptions(
             target={ATTR_ENTITY_ID: "remote.xone"},
             blocking=True,
         )
+    assert e.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize(
@@ -290,15 +289,14 @@ async def test_turn_on_exceptions(
     assert config_entry.state is ConfigEntryState.LOADED
 
     xbox_live_client.smartglass.wake_up.side_effect = exception
-    with pytest.raises(
-        HomeAssistantError, check=lambda e: e.translation_key == translation_key
-    ):
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_ON,
             target={ATTR_ENTITY_ID: "remote.xone"},
             blocking=True,
         )
+    assert e.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize(
@@ -325,12 +323,11 @@ async def test_turn_off_exceptions(
     assert config_entry.state is ConfigEntryState.LOADED
 
     xbox_live_client.smartglass.turn_off.side_effect = exception
-    with pytest.raises(
-        HomeAssistantError, check=lambda e: e.translation_key == translation_key
-    ):
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_OFF,
             target={ATTR_ENTITY_ID: "remote.xone"},
             blocking=True,
         )
+    assert e.value.translation_key == translation_key
