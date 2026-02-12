@@ -19,9 +19,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -104,8 +103,6 @@ async def test_remove_config_entry_device(
         device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"] == expected_result
-    # Confirm we went through all current migrations
-    assert entry.version == 4
 
 
 async def test_migration_v3_to_v4(
@@ -167,3 +164,5 @@ async def test_migration_v3_to_v4(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+    # Confirm we went through all current migrations
+    assert entry.version == 4
