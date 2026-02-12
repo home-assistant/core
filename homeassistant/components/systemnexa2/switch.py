@@ -75,7 +75,7 @@ async def async_setup_entry(
 class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
     """Configuration switch entity for SystemNexa2 devices."""
 
-    _attr_device_class: SwitchDeviceClass = SwitchDeviceClass.SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: SystemNexa2SwitchEntityDescription
 
     def __init__(
