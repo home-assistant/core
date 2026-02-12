@@ -53,6 +53,14 @@
           "warming": "mdi:heat-wave"
         }
       }
+    },
+    "switch": {
+      "eshift": {
+        "default": "mdi:blur-linear"
+      },
+      "low_latency_mode": {
+        "default": "mdi:gamepad-round-outline"
+      }
     }
   }
 }

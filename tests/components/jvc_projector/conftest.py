@@ -26,6 +26,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Source: JvcProjectorTimeoutError,
         cmd.Hdr: JvcProjectorTimeoutError,
         cmd.HdrProcessing: JvcProjectorTimeoutError,
+        cmd.EShift: JvcProjectorTimeoutError,
     },
     "on": {
         cmd.MacAddress: MOCK_MAC,
@@ -37,6 +38,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Source: "4k",
         cmd.Hdr: "hdr",
         cmd.HdrProcessing: "static",
+        cmd.EShift: "on",
     },
 }
 
@@ -68,6 +70,10 @@ CAPABILITIES = {
     cmd.LightTime.name: {
         "name": cmd.LightTime.name,
         "parameter": "empty",
+    },
+    cmd.EShift.name: {
+        "name": cmd.EShift.name,
+        "parameter": {"read": {"0": "off", "1": "on"}},
     },
 }
 
