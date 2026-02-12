@@ -131,7 +131,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         # aiohomekit does not keep track of the light's color mode, report
         # hs for light supporting both hs and ct

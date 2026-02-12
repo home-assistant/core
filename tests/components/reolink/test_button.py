@@ -6,8 +6,8 @@ import pytest
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.reolink.button import ATTR_SPEED, SERVICE_PTZ_MOVE
 from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.services import ATTR_SPEED, SERVICE_PTZ_MOVE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant

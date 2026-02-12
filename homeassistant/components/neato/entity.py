@@ -7,7 +7,7 @@ from pybotvac import Robot
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import NEATO_DOMAIN
+from .const import DOMAIN
 
 
 class NeatoEntity(Entity):
@@ -19,6 +19,6 @@ class NeatoEntity(Entity):
         """Initialize Neato entity."""
         self.robot = robot
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(NEATO_DOMAIN, self.robot.serial)},
+            identifiers={(DOMAIN, self.robot.serial)},
             name=self.robot.name,
         )
