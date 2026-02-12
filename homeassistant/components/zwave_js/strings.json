@@ -292,7 +292,7 @@
     }
   },
   "exceptions": {
-    "get_lock_usercode_failed": {
+    "get_lock_usercode_not_found": {
       "message": "Code slot {code_slot} not found on lock {entity_id}"
     }
   },

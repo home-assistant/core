@@ -191,7 +191,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         except NotFoundError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="get_lock_usercode_failed",
+                translation_key="get_lock_usercode_not_found",
                 translation_placeholders={
                     "code_slot": str(code_slot),
                     "entity_id": self.entity_id,
