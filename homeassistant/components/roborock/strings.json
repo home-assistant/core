@@ -9,6 +9,7 @@
       "invalid_code": "The code you entered was incorrect, please check it and try again.",
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+      "invalid_email_or_region": "Either there is no account associated with the email you entered, or there is no account in the selected region.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
@@ -30,9 +31,11 @@
       },
       "user": {
         "data": {
+          "region": "Roborock server region",
           "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
+          "region": "The server region your Roborock account is registered in when setting up the app. Auto is recommended unless you are having issues.",
           "username": "The email address used to sign in to the Roborock app."
         },
         "description": "Enter your Roborock email address."
@@ -41,6 +44,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_box_empty": {
+        "name": "Clean water box"
+      },
+      "clean_fluid_empty": {
+        "name": "Cleaning fluid"
+      },
+      "dirty_box_full": {
+        "name": "Dirty water box"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
@@ -77,6 +89,14 @@
       }
     },
     "select": {
+      "cleaning_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "mop": "Mop only",
+          "vac_and_mop": "Vacuum and mop",
+          "vacuum": "Vacuum only"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {
@@ -117,6 +137,14 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "water_flow": {
+        "name": "Water flow",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       }
     },
     "sensor": {
@@ -212,6 +240,25 @@
       },
       "mop_drying_remaining_time": {
         "name": "Mop drying remaining time"
+      },
+      "mop_life_time_left": {
+        "name": "Mop life time left"
+      },
+      "q7_status": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "docking": "[%key:component::roborock::entity::sensor::status::state::docking%]",
+          "mop_airdrying": "Mop air drying",
+          "mop_cleaning": "Mop cleaning",
+          "moping": "Mopping",
+          "paused": "[%key:common::state::paused%]",
+          "sleeping": "Sleeping",
+          "sweep_moping": "Sweep mopping",
+          "sweep_moping_2": "Sweep mopping",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "waiting_for_orders": "Waiting for orders"
+        }
       },
       "sensor_time_left": {
         "name": "Sensor time left"
@@ -345,6 +392,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
+          "aftercare": "Aftercare",
           "cooling": "Cooling",
           "done": "Done",
           "drying": "Drying",
@@ -353,6 +401,7 @@
           "spinning": "Spinning",
           "standby": "[%key:common::state::standby%]",
           "under_delay_start": "Delayed start",
+          "waiting_for_aftercare": "Waiting for aftercare",
           "washing": "Washing",
           "weighing": "Weighing"
         }
@@ -426,6 +475,9 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "mqtt_unauthorized": {
+      "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
@@ -493,6 +545,17 @@
           "zones": "Show zones on the map."
         },
         "description": "Specify which features to draw on the map."
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "auto": "Auto",
+        "cn": "CN",
+        "eu": "EU",
+        "ru": "RU",
+        "us": "US"
       }
     }
   },

@@ -23,8 +23,14 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
-from .util import get_dpcode
+from .models import (
+    DeviceWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from .type_information import IntegerTypeInformation
+from .util import RemapHelper, get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
 _MODE_DPCODES = (DPCode.FAN_MODE, DPCode.MODE)
@@ -76,37 +82,34 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
 class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
     """Wrapper for fan speed DP code (from an enum)."""
 
-    def get_speed_count(self) -> int:
-        """Get the number of speeds supported by the fan."""
-        return len(self.type_information.range)
-
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
-        return ordered_list_item_to_percentage(self.type_information.range, value)
+        return ordered_list_item_to_percentage(self.options, value)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
-        return percentage_to_ordered_list_item(self.type_information.range, value)
+        return percentage_to_ordered_list_item(self.options, value)
 
 
 class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
     """Wrapper for fan speed DP code (from an integer)."""
 
-    def get_speed_count(self) -> int:
-        """Get the number of speeds supported by the fan."""
-        return 100
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
-        return round(self.type_information.remap_value_to(value, 1, 100))
+        return round(self._remap_helper.remap_value_to(value))
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
-        return round(self.type_information.remap_value_from(value, 1, 100))
+        return round(self._remap_helper.remap_value_from(value))
 
 
 def _get_speed_wrapper(
@@ -175,11 +178,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        direction_wrapper: _DirectionEnumWrapper | None,
-        mode_wrapper: DPCodeEnumWrapper | None,
-        oscillate_wrapper: DPCodeBooleanWrapper | None,
-        speed_wrapper: _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
+        direction_wrapper: DeviceWrapper[str] | None,
+        mode_wrapper: DeviceWrapper[str] | None,
+        oscillate_wrapper: DeviceWrapper[bool] | None,
+        speed_wrapper: DeviceWrapper[int] | None,
+        switch_wrapper: DeviceWrapper[bool] | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
@@ -191,11 +194,14 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         if mode_wrapper:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-            self._attr_preset_modes = mode_wrapper.type_information.range
+            self._attr_preset_modes = mode_wrapper.options
 
         if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            self._attr_speed_count = speed_wrapper.get_speed_count()
+            # if speed is from an enum, set speed count from options
+            # else keep entity default 100
+            if hasattr(speed_wrapper, "options"):
+                self._attr_speed_count = len(speed_wrapper.options)
 
         if oscillate_wrapper:
             self._attr_supported_features |= FanEntityFeature.OSCILLATE

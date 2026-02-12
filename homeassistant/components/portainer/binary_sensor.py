@@ -15,12 +15,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
+from .const import CONTAINER_STATE_RUNNING
 from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
     PortainerEndpointEntity,
 )
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,7 +44,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
     PortainerContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.container.state == "running",
+        state_fn=lambda data: data.container.state == CONTAINER_STATE_RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -132,11 +135,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.coordinator.data[self.device_id])
@@ -159,11 +157,6 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         super().__init__(device_info, coordinator, via_device)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
 
     @property
     def is_on(self) -> bool | None:
