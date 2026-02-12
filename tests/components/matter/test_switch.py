@@ -234,7 +234,7 @@ async def test_evse_sensor(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["speaker"])
+@pytest.mark.parametrize("node_fixture", ["mock_speaker"])
 async def test_speaker_mute_uses_onoff_commands(
     hass: HomeAssistant,
     matter_client: MagicMock,
