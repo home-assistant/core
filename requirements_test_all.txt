@@ -2251,7 +2251,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.2.0
+pyuptimerobot==24.0.1
 
 # homeassistant.components.vera
 pyvera==0.3.16
