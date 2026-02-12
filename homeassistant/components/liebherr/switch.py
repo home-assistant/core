@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -14,10 +15,9 @@ from pyliebherrhomeapi import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
@@ -143,7 +143,6 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     """Representation of a device-wide Liebherr switch."""
 
     entity_description: LiebherrSwitchEntityDescription
-    _cancel_refresh: CALLBACK_TYPE | None = None
     _zone_id: int | None = None
 
     def __init__(
@@ -211,21 +210,8 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
             control.value = value
         self.async_write_ha_state()
 
-        # Cancel any pending refresh and schedule a new one
-        if self._cancel_refresh:
-            self._cancel_refresh()
-        self._cancel_refresh = async_call_later(
-            self.hass, REFRESH_DELAY, self._async_refresh_callback
-        )
-
-    @callback
-    def _async_refresh_callback(self, _now: Any) -> None:
-        """Request a coordinator refresh after a delay."""
-        self._cancel_refresh = None
-        self.hass.async_create_task(
-            self.coordinator.async_request_refresh(),
-            eager_start=False,
-        )
+        await asyncio.sleep(REFRESH_DELAY)
+        await self.coordinator.async_request_refresh()
 
 
 class LiebherrZoneSwitch(LiebherrDeviceSwitch):

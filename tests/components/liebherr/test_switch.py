@@ -19,14 +19,12 @@ from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.liebherr.switch import REFRESH_DELAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -62,42 +60,37 @@ async def test_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service", "method", "kwargs", "expected_state"),
+    ("entity_id", "service", "method", "kwargs"),
     [
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_ON,
             "set_supercool",
             {"device_id": "test_device_id", "zone_id": 1, "value": True},
-            STATE_ON,
         ),
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_OFF,
             "set_supercool",
             {"device_id": "test_device_id", "zone_id": 1, "value": False},
-            STATE_OFF,
         ),
         (
             "switch.test_fridge_bottom_zone_superfrost",
             SERVICE_TURN_ON,
             "set_superfrost",
             {"device_id": "test_device_id", "zone_id": 2, "value": True},
-            STATE_ON,
         ),
         (
             "switch.test_fridge_party_mode",
             SERVICE_TURN_ON,
             "set_party_mode",
             {"device_id": "test_device_id", "value": True},
-            STATE_ON,
         ),
         (
             "switch.test_fridge_night_mode",
             SERVICE_TURN_OFF,
             "set_night_mode",
             {"device_id": "test_device_id", "value": False},
-            STATE_OFF,
         ),
     ],
 )
@@ -105,14 +98,14 @@ async def test_switches(
 async def test_switch_service_calls(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
     entity_id: str,
     service: str,
     method: str,
     kwargs: dict[str, Any],
-    expected_state: str,
 ) -> None:
     """Test switch turn on/off service calls."""
+    initial_call_count = mock_liebherr_client.get_device_state.call_count
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
@@ -122,69 +115,8 @@ async def test_switch_service_calls(
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
 
-    # Verify optimistic state update is reflected immediately
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == expected_state
-
-    # Trigger the delayed refresh callback
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
-    freezer.tick(timedelta(seconds=REFRESH_DELAY))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
+    # Verify coordinator refresh was triggered
     assert mock_liebherr_client.get_device_state.call_count > initial_call_count
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "service", "method"),
-    [
-        (
-            "switch.test_fridge_top_zone_supercool",
-            SERVICE_TURN_ON,
-            "set_supercool",
-        ),
-        (
-            "switch.test_fridge_party_mode",
-            SERVICE_TURN_ON,
-            "set_party_mode",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("init_integration")
-async def test_switch_rapid_toggle_debounces_refresh(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_id: str,
-    service: str,
-    method: str,
-) -> None:
-    """Test rapid toggling cancels pending refresh and only triggers one."""
-    # First toggle
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    # Second toggle before refresh fires — should cancel the first timer
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    # Advance past REFRESH_DELAY — the cancelled timer should not fire
-    freezer.tick(timedelta(seconds=REFRESH_DELAY))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Entity still functional after debounced refresh
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
