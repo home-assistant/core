@@ -29,6 +29,9 @@
         "state": {
           "off": "mdi:volume-low"
         }
+      },
+      "room_correction": {
+        "default": "mdi:arrow-oscillating"
       }
     }
   }
