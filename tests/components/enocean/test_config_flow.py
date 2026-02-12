@@ -217,7 +217,9 @@ async def test_usb_discovery(
 
     # test invalid device path
     with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: usb_discovery_info.device}
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
@@ -228,7 +230,9 @@ async def test_usb_discovery(
         patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
         patch(SETUP_ENTRY_METHOD, AsyncMock(return_value=True)),
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: usb_discovery_info.device}
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
