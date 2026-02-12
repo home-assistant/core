@@ -81,18 +81,14 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
         return data
 
     @property
-    def device_id(self) -> str:
+    def device_id(self) -> str | None:
         """Return device ID."""
-        if (device_id := self.device.device_id) is None:
-            raise ValueError("MELCloud device ID is missing")
-        return str(device_id)
+        return self.device.device_id
 
     @property
-    def building_id(self) -> str:
+    def building_id(self) -> str | None:
         """Return building ID of the device."""
-        if (building_id := self.device.building_id) is None:
-            raise ValueError("MELCloud building ID is missing")
-        return str(building_id)
+        return self.device.building_id
 
     @property
     def device_info(self) -> DeviceInfo:
