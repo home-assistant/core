@@ -11,7 +11,6 @@ DOMAIN = "ness_alarm"
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
 # Configuration constants
-CONF_DEVICE_PORT = "port"
 CONF_INFER_ARMING_STATE = "infer_arming_state"
 CONF_ZONES = "zones"
 CONF_ZONE_NAME = "name"
@@ -21,7 +20,6 @@ CONF_ZONE_NUMBER = "zone_number"
 CONF_SHOW_HOME_MODE = "show_home_mode"
 
 # Subentry types
-SUBENTRY_TYPE_ALARM = "alarm"
 SUBENTRY_TYPE_ZONE = "zone"
 
 # Defaults
@@ -29,9 +27,6 @@ DEFAULT_PORT = 4999
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_INFER_ARMING_STATE = False
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
-
-# Options flow keys (deprecated - kept for backward compatibility during migration)
-OPTIONS_ZONES = "zone_options"
 
 # Signals
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"

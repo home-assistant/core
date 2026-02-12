@@ -25,17 +25,6 @@
     }
   },
   "config_subentries": {
-    "alarm": {
-      "entry_type": "Alarm",
-      "initiate_flow": {
-        "user": "Add alarm panel"
-      },
-      "step": {
-        "user": {
-          "title": "Configure alarm panel"
-        }
-      }
-    },
     "zone": {
       "entry_type": "Zone",
       "error": {

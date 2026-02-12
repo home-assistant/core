@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from types import MappingProxyType
 from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
@@ -12,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_STATE,
@@ -30,7 +29,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_OUTPUT_ID,
@@ -47,12 +45,9 @@ from .const import (
     SERVICE_PANIC,
     SIGNAL_ARMING_STATE_CHANGED,
     SIGNAL_ZONE_CHANGED,
-    SUBENTRY_TYPE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_NESS: HassKey[Client] = HassKey(DOMAIN)
 
 type NessAlarmConfigEntry = ConfigEntry[Client]
 
@@ -147,20 +142,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
         hass.async_create_task(client.update())
 
     async_at_started(hass, _started)
-
-    # Auto-create alarm subentry if it doesn't exist
-    has_alarm_subentry = any(
-        subentry.subentry_type == SUBENTRY_TYPE_ALARM
-        for subentry in entry.subentries.values()
-    )
-    if not has_alarm_subentry:
-        alarm_subentry = ConfigSubentry(
-            data=MappingProxyType({}),
-            subentry_type=SUBENTRY_TYPE_ALARM,
-            title="Alarm Panel",
-            unique_id=SUBENTRY_TYPE_ALARM,
-        )
-        hass.config_entries.async_add_subentry(entry, alarm_subentry)
 
     # Forward to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

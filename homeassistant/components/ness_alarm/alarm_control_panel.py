@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_ARMING_STATE_CHANGED, NessAlarmConfigEntry
-from .const import CONF_SHOW_HOME_MODE, DOMAIN, SUBENTRY_TYPE_ALARM
+from .const import CONF_SHOW_HOME_MODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,19 +39,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ness Alarm alarm control panel from config entry."""
     client = entry.runtime_data
-
-    # Find the alarm subentry for device grouping
-    alarm_subentry = next(
-        subentry
-        for subentry in entry.subentries.values()
-        if subentry.subentry_type == SUBENTRY_TYPE_ALARM
-    )
-
     show_home_mode = entry.options.get(CONF_SHOW_HOME_MODE, True)
 
     async_add_entities(
         [NessAlarmPanel(client, entry.entry_id, show_home_mode)],
-        config_subentry_id=alarm_subentry.subentry_id,
     )
 
 
@@ -65,10 +56,10 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         """Initialize the alarm panel."""
         self._client = client
         self._attr_name = "Alarm Panel"
-        self._attr_unique_id = entry_id
+        self._attr_unique_id = f"{entry_id}_alarm_panel"
         self._attr_device_info = DeviceInfo(
             name="Alarm Panel",
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, f"{entry_id}_alarm_panel")},
         )
         features = (
             AlarmControlPanelEntityFeature.ARM_AWAY
