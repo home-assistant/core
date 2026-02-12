@@ -1,9 +1,8 @@
 """Test the Homeassistant repairs module."""
 
-from unittest.mock import AsyncMock, patch
-
-from homeassistant import config_entries, loader
+from homeassistant import config_entries
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -132,23 +131,21 @@ async def test_orphaned_config_entry_confirm_step(
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
+
+    await async_process_repairs_platforms(hass)
+    http_client = await hass_client()
+
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)
     entry.add_to_hass(hass)
     entry_valid = MockConfigEntry(domain="test_valid")
     entry_valid.add_to_hass(hass)
     issue_id = f"orphaned_ignored_entry.{entry.entry_id}"
 
-    await async_process_repairs_platforms(hass)
-    http_client = await hass_client()
-
-    # Not sure if this is overkill, but I need to trigger the issue creation
-    async def _raise(hass_param: HomeAssistant, domain: str) -> None:
-        raise loader.IntegrationNotFound(domain)
-
-    with patch(
-        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
-    ):
-        await hass.config_entries._async_scan_orphan_ignored_entries(None)
+    # Note: hard nutt to crack for testing, but the they need be in the storage before the async_initialize
+    await hass.config_entries._store.async_save(hass.config_entries._data_to_save())
+    await hass.config_entries.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue is not None
@@ -192,22 +189,20 @@ async def test_orphaned_config_entry_ignore_step(
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
+
+    await async_process_repairs_platforms(hass)
+    http_client = await hass_client()
+
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)
     entry.add_to_hass(hass)
     entry_valid = MockConfigEntry(domain="test_valid")
     entry_valid.add_to_hass(hass)
     issue_id = f"orphaned_ignored_entry.{entry.entry_id}"
 
-    await async_process_repairs_platforms(hass)
-    http_client = await hass_client()
-
-    async def _raise(hass_param: HomeAssistant, domain: str) -> None:
-        raise loader.IntegrationNotFound(domain)
-
-    with patch(
-        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
-    ):
-        await hass.config_entries._async_scan_orphan_ignored_entries(None)
+    await hass.config_entries._store.async_save(hass.config_entries._data_to_save())
+    await hass.config_entries.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue is not None
