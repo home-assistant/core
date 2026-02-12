@@ -2651,7 +2651,7 @@ pytomorrowio==0.3.6
 pytouchline_extended==0.4.5
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.5.0
+pytouchlinesl==0.6.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
