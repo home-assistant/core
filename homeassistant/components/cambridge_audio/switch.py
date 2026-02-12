@@ -53,7 +53,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         load_fn=lambda client: client.audio.tilt_eq is not None,
         value_fn=room_correction_enabled,
-        set_value_fn=lambda client, value: client.set_equalizer_mode(value),
+        set_value_fn=lambda client, value: client.set_room_correction_mode(value),
     ),
 )
 
