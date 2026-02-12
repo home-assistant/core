@@ -246,10 +246,15 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             "homeassistant.components.homematicip_cloud.async_setup_entry",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homematicip_cloud.async_unload_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -316,10 +321,15 @@ async def test_reauth_flow_register_failure(hass: HomeAssistant) -> None:
             "homeassistant.components.homematicip_cloud.async_setup_entry",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homematicip_cloud.async_unload_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -369,10 +379,15 @@ async def test_reauth_flow_connection_error(hass: HomeAssistant) -> None:
             "homeassistant.components.homematicip_cloud.async_setup_entry",
             return_value=True,
         ),
+        patch(
+            "homeassistant.components.homematicip_cloud.async_unload_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
