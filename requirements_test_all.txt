@@ -1050,6 +1050,9 @@ hanna-cloud==0.0.7
 # homeassistant.components.cloud
 hass-nabucasa==1.13.0
 
+# homeassistant.components.splunk
+hass-splunk==0.1.1
+
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==3.5.0

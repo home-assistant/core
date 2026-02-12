@@ -29,6 +29,7 @@ from .coordinator import (
     TessieStateUpdateCoordinator,
 )
 from .models import TessieData, TessieEnergyData, TessieVehicleData
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -173,6 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         )
 
     entry.runtime_data = TessieData(vehicles, energysites)
+    async_setup_services(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
