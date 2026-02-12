@@ -322,7 +322,10 @@ async def test_get_config_entry(
 ) -> None:
     """Test Habitica config entry exceptions."""
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(  
+        ServiceValidationError,  
+        check=lambda e: e.translation_key == "service_config_entry_not_found",  
+    ):  
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
@@ -337,7 +340,10 @@ async def test_get_config_entry(
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: e.translation_key == "service_config_entry_not_loaded",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
