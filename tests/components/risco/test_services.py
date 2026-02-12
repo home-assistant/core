@@ -61,7 +61,10 @@ async def test_set_time_service_with_invalid_entry(
         ATTR_CONFIG_ENTRY_ID: "invalid_entry_id",
     }
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_found"):
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: e.translation_key == "service_config_entry_not_found",
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
@@ -80,7 +83,10 @@ async def test_set_time_service_with_not_loaded_entry(
         ATTR_CONFIG_ENTRY_ID: local_config_entry.entry_id,
     }
 
-    with pytest.raises(ServiceValidationError, match="service_config_entry_not_loaded"):
+    with pytest.raises(
+        ServiceValidationError,
+        check=lambda e: e.translation_key == "service_config_entry_not_loaded",
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )

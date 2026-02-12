@@ -201,7 +201,8 @@ async def test_service_call_load_unload(
         await hass.async_block_till_done()
 
         with pytest.raises(
-            ServiceValidationError, match="service_config_entry_not_loaded"
+            ServiceValidationError,
+            check=lambda e: e.translation_key == "service_config_entry_not_loaded",
         ):
             await hass.services.async_call(
                 domain=DOMAIN,
@@ -215,7 +216,7 @@ async def test_service_call_load_unload(
 
         with pytest.raises(
             ServiceValidationError,
-            match="service_config_entry_not_found",
+            check=lambda e: e.translation_key == "service_config_entry_not_found",
         ):
             await hass.services.async_call(
                 domain=DOMAIN,
