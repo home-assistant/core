@@ -53,6 +53,9 @@ def mock_connector():
         MagicMock(
             code="__trybpracy", value="de_icing"
         ),  # parameter not relevant for this device, should be ignored
+        MagicMock(code="__temp_zada_prac_cwu", value=55.0),  # DHW Target Temperature
+        MagicMock(code="__rr_temp_zmier_cwu", value=50.0),  # DHW Current Temperature
+        MagicMock(code="__tryb_cwu", value="on"),  # DHW On/Off
     ]
     mock_device_1.definition.code = 224  # R 900
 

@@ -11,6 +11,7 @@ from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -495,11 +496,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
                 assert isinstance(service_responses, list)
                 service_responses.extend(formatted_responses)
         except HomeAssistantError as ex:
-            target = (
-                target_notify_entity_id
-                if target_notify_entity_id
-                else str(target_chat_id)
-            )
+            target = target_notify_entity_id or str(target_chat_id)
             errors.append((ex, target))
 
     if len(errors) == 1:
@@ -743,10 +740,11 @@ def _build_targets(
         for chat_id in chat_ids:
             # map chat_id to notify entity ID
 
-            if not hasattr(config_entry, "runtime_data"):
+            if config_entry.state is not ConfigEntryState.LOADED:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="missing_config_entry",
+                    translation_key="entry_not_loaded",
+                    translation_placeholders={"telegram_bot": config_entry.title},
                 )
 
             entity_id = entity_registry.async_get_entity_id(

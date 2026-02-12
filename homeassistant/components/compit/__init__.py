@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.WATER_HEATER,
 ]
 
 
