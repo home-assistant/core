@@ -140,7 +140,8 @@ async def async_setup_entry(
     name = config_entry.title
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
-    tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
+    entry_meter_info = hass.data[DATA_UTILITY][entry_id]
+    tariff_entity = entry_meter_info[CONF_TARIFF_ENTITY]
     sensor_always_available = config_entry.options.get(
         CONF_SENSOR_ALWAYS_AVAILABLE, False
     )
@@ -167,7 +168,7 @@ async def async_setup_entry(
             sensor_always_available=sensor_always_available,
         )
         meters.append(meter_sensor)
-        hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+        entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
     else:
         # Add sensors for each tariff
         for tariff in tariffs:
@@ -188,7 +189,7 @@ async def async_setup_entry(
                 sensor_always_available=sensor_always_available,
             )
             meters.append(meter_sensor)
-            hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+            entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -217,16 +218,17 @@ async def async_setup_platform(
 
     meters = []
     for conf in discovery_info.values():
-        meter = conf[CONF_METER]
-        conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
-        conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
+        meter: str = conf[CONF_METER]
+        meter_info = hass.data[DATA_UTILITY][meter]
+        conf_meter_source = meter_info[CONF_SOURCE_SENSOR]
+        conf_meter_unique_id = meter_info.get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
         conf_sensor_unique_id = (
             f"{conf_meter_unique_id}_{conf_sensor_tariff}"
             if conf_meter_unique_id
             else None
         )
-        conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+        conf_meter_name = meter_info.get(CONF_NAME, meter)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
 
         suggested_entity_id = None
@@ -237,24 +239,16 @@ async def async_setup_platform(
         else:
             conf_sensor_name = conf_meter_name
 
-        conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
-        conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
-        conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
-            CONF_METER_DELTA_VALUES
-        ]
-        conf_meter_net_consumption = hass.data[DATA_UTILITY][meter][
-            CONF_METER_NET_CONSUMPTION
-        ]
-        conf_meter_periodically_resetting = hass.data[DATA_UTILITY][meter][
+        conf_meter_type = meter_info.get(CONF_METER_TYPE)
+        conf_meter_offset = meter_info[CONF_METER_OFFSET]
+        conf_meter_delta_values = meter_info[CONF_METER_DELTA_VALUES]
+        conf_meter_net_consumption = meter_info[CONF_METER_NET_CONSUMPTION]
+        conf_meter_periodically_resetting = meter_info[
             CONF_METER_PERIODICALLY_RESETTING
         ]
-        conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
-            CONF_TARIFF_ENTITY
-        )
-        conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
-        conf_sensor_always_available = hass.data[DATA_UTILITY][meter][
-            CONF_SENSOR_ALWAYS_AVAILABLE
-        ]
+        conf_meter_tariff_entity = meter_info.get(CONF_TARIFF_ENTITY)
+        conf_cron_pattern = meter_info.get(CONF_CRON_PATTERN)
+        conf_sensor_always_available = meter_info[CONF_SENSOR_ALWAYS_AVAILABLE]
         meter_sensor = UtilityMeterSensor(
             hass,
             cron_pattern=conf_cron_pattern,
@@ -274,7 +268,7 @@ async def async_setup_platform(
         )
         meters.append(meter_sensor)
 
-        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS].append(meter_sensor)
+        meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -504,9 +498,8 @@ class UtilityMeterSensor(RestoreSensor):
 
         if self.native_value is None:
             # First state update initializes the utility_meter sensors
-            for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
-                DATA_TARIFF_SENSORS
-            ]:
+            parent_meter_info = self.hass.data[DATA_UTILITY][self._parent_meter]
+            for sensor in parent_meter_info[DATA_TARIFF_SENSORS]:
                 sensor.start(new_state_attributes)
                 if self.native_unit_of_measurement is None:
                     _LOGGER.warning(
