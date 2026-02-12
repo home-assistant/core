@@ -802,6 +802,48 @@
             }
           }
         },
+        "number": {
+          "description": "Entity for numeric datapoints. Temperature, percent, etc.",
+          "knx": {
+            "device_class": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::label%]"
+            },
+            "ga_sensor": {
+              "description": "Group address representing value.",
+              "label": "Value"
+            },
+            "max": {
+              "description": "Override the DPT's maximum value allowed to be set.",
+              "label": "Maximum value"
+            },
+            "min": {
+              "description": "Override the DPT's minimum value allowed to be set.",
+              "label": "Minimum value"
+            },
+            "mode": {
+              "description": "[%key:component::knx::config_panel::entities::create::text::knx::mode::description%]",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "auto": "[%key:component::number::entity_component::_::state_attributes::mode::state::auto%]",
+                "box": "[%key:component::number::entity_component::_::state_attributes::mode::state::box%]",
+                "slider": "[%key:component::number::entity_component::_::state_attributes::mode::state::slider%]"
+              }
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT-based entity attributes.",
+              "title": "[%key:component::knx::config_panel::entities::create::sensor::knx::section_advanced_options::title%]"
+            },
+            "step": {
+              "description": "Override the DPT's smallest step size to change the value.",
+              "label": "Step size"
+            },
+            "unit_of_measurement": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::label%]"
+            }
+          }
+        },
         "scene": {
           "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
           "knx": {
@@ -823,7 +865,7 @@
               "label": "Force update"
             },
             "device_class": {
-              "description": "Override the DPTs default device class.",
+              "description": "Override the DPT's default device class.",
               "label": "Device class"
             },
             "ga_sensor": {
@@ -835,11 +877,11 @@
               "title": "Overrides"
             },
             "state_class": {
-              "description": "Override the DPTs default state class.",
+              "description": "Override the DPT's default state class.",
               "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
             },
             "unit_of_measurement": {
-              "description": "Override the DPTs default unit of measurement.",
+              "description": "Override the DPT's default unit of measurement.",
               "label": "Unit of measurement"
             }
           }
