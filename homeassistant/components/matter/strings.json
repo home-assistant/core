@@ -47,6 +47,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "actuator": {
+        "name": "Actuator"
+      },
       "alarm_door": {
         "name": "Door alarm"
       },
@@ -55,6 +58,9 @@
       },
       "boost_state": {
         "name": "Boost state"
+      },
+      "config_status_operational": {
+        "name": "Configuration status"
       },
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
@@ -217,6 +223,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "occupied_setback": {
+        "name": "Occupied setback"
+      },
       "off_transition_time": {
         "name": "Off transition time"
       },
@@ -231,6 +240,9 @@
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "speaker_setpoint": {
+        "name": "Volume"
       },
       "temperature_offset": {
         "name": "Temperature offset"

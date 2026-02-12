@@ -1,0 +1,2044 @@
+{
+  "nodeId": 5,
+  "index": 0,
+  "installerIcon": 6144,
+  "userIcon": 6144,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 1120,
+  "productId": 131,
+  "productType": 3,
+  "firmwareVersion": "14.2.0",
+  "name": "shelly fw 14 2 0 test cover",
+  "zwavePlusVersion": 2,
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": true,
+  "individualEndpointCount": 2,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 1,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 6,
+      "label": "Motor Control Class B"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0460:0x0003:0x0083:14.2.0",
+  "statistics": {
+    "commandsTX": 11256,
+    "commandsRX": 11776,
+    "commandsDroppedRX": 1098,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 12,
+    "rtt": 24.4,
+    "lastSeen": "2025-12-25T19:43:41.938Z",
+    "rssi": -93,
+    "lwr": {
+      "protocolDataRate": 3,
+      "repeaters": [],
+      "rssi": -93,
+      "repeaterRSSI": []
+    },
+    "nlwr": {
+      "protocolDataRate": 3,
+      "repeaters": [9],
+      "rssi": -94,
+      "repeaterRSSI": [-54]
+    }
+  },
+  "highestSecurityClass": 1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2025-12-25T19:43:41.938Z",
+  "protocol": 0,
+  "sdkVersion": "7.23.4",
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "001",
+      "propertyName": "scene",
+      "propertyKeyName": "001",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 001",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x"
+        },
+        "stateful": false,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "002",
+      "propertyName": "scene",
+      "propertyKeyName": "002",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 002",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x"
+        },
+        "stateful": false,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "slowRefresh",
+      "propertyName": "slowRefresh",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
+        "label": "Send held down notifications at a slow rate",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "Switch type",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 push, 1 switch, 2 single push",
+        "label": "Switch type",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyName": "Input orientation",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 normal, 1 reverse",
+        "label": "Input orientation",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyName": "SW1 Detached mode",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 not detached, 1 detached",
+        "label": "SW1 Detached mode",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyName": "SW2 Detached mode",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 not detached, 1 detached",
+        "label": "SW2 Detached mode",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyName": "Ouput orientation",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 normal, 1 reverse",
+        "label": "Ouput orientation",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyName": "Power report threshold",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0-100 percentage",
+        "label": "Power report threshold",
+        "default": 50,
+        "min": 0,
+        "max": 100,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Minimum time between reports",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0-120s - min report interval",
+        "label": "Minimum time between reports",
+        "default": 30,
+        "min": 0,
+        "max": 120,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 71,
+      "propertyName": "Operating mode",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 Shutter, 1 Venetian",
+        "label": "Operating mode",
+        "default": 0,
+        "min": 0,
+        "max": 2,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": true,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 72,
+      "propertyName": "Slats tilting time",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 65535, 0.01 s units",
+        "label": "Slats tilting time",
+        "default": 150,
+        "min": 0,
+        "max": 65535,
+        "valueSize": 2,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 150
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 73,
+      "propertyName": "Slats position",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 disable, 1 previous",
+        "label": "Slats position",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 74,
+      "propertyName": "Up time",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 65535, 0.1 s units",
+        "label": "Up time",
+        "default": 6000,
+        "min": 0,
+        "max": 65535,
+        "valueSize": 2,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 5270
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 75,
+      "propertyName": "Down time",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 65535, 0.1 s units",
+        "label": "Down time",
+        "default": 6000,
+        "min": 0,
+        "max": 65535,
+        "valueSize": 2,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 5324
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 76,
+      "propertyName": "Endswitch hit - power",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 disable, 1 auto, 2 - 255 W",
+        "label": "Endswitch hit - power",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 77,
+      "propertyName": "Delay next motor move",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 255, 0.1s - 25.5s",
+        "label": "Delay next motor move",
+        "default": 5,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 78,
+      "propertyName": "Calibration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "1 Start, 2 Cal, 3 Uncal, 4 Error",
+        "label": "Calibration",
+        "default": 3,
+        "min": 1,
+        "max": 4,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 79,
+      "propertyName": "t",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 = auto, 3-50 = 0.3s-5s",
+        "label": "t",
+        "default": 30,
+        "min": 0,
+        "max": 50,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 30
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 80,
+      "propertyName": "Delay stop at endpoint",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 255, 0.1 s units",
+        "label": "Delay stop at endpoint",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 81,
+      "propertyName": "Max motor move time",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "0 - 32000s, 32001 = unlimited",
+        "label": "Max motor move time",
+        "default": 120,
+        "min": 0,
+        "max": 32001,
+        "valueSize": 2,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 120
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 105,
+      "propertyName": "LED Intensity",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "LED Intensity",
+        "label": "LED Intensity",
+        "default": 100,
+        "min": 0,
+        "max": 100,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 117,
+      "propertyName": "Reboot device",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Reboot device",
+        "label": "Reboot device",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 118,
+      "propertyName": "Enable SW for exclusion",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "1 Enabled, 0 Disabled",
+        "label": "Enable SW for exclusion",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 120,
+      "propertyName": "Factory reset",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Factory reset",
+        "label": "Factory reset",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "valueSize": 1,
+        "format": 1,
+        "isAdvanced": false,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 201,
+      "propertyName": "Serial Number 1",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Serial Number 1",
+        "label": "Serial Number 1",
+        "default": 0,
+        "min": 0,
+        "max": 4294967295,
+        "valueSize": 4,
+        "format": 1,
+        "isAdvanced": true,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 202,
+      "propertyName": "Serial Number 2",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Serial Number 2",
+        "label": "Serial Number 2",
+        "default": 0,
+        "min": 0,
+        "max": 4294967295,
+        "valueSize": 4,
+        "format": 1,
+        "isAdvanced": true,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 203,
+      "propertyName": "Serial Number 3",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "description": "Serial Number 3",
+        "label": "Serial Number 3",
+        "default": 0,
+        "min": 0,
+        "max": 4294967295,
+        "valueSize": 4,
+        "format": 1,
+        "isAdvanced": true,
+        "requiresReInclusion": false,
+        "allowManualEntry": true,
+        "isFromConfig": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 131
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1120
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["14.2", "3.0"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.23"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationBuildNumber",
+      "propertyName": "applicationBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 43981
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationVersion",
+      "propertyName": "applicationVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Application version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "14.2.0"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolBuildNumber",
+      "propertyName": "zWaveProtocolBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 562
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "zWaveProtocolVersion",
+      "propertyName": "zWaveProtocolVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.23.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceBuildNumber",
+      "propertyName": "hostInterfaceBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hostInterfaceVersion",
+      "propertyName": "hostInterfaceVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Serial API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "unused"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkBuildNumber",
+      "propertyName": "applicationFrameworkBuildNumber",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API build number",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 43981
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "applicationFrameworkAPIVersion",
+      "propertyName": "applicationFrameworkAPIVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave application framework API version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "10.23.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "sdkVersion",
+      "propertyName": "sdkVersion",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "SDK version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "7.23.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "value",
+      "propertyName": "value",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Indicator value",
+        "ccSpecific": {
+          "indicatorId": 0
+        },
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "identify",
+      "propertyName": "identify",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Identify",
+        "states": {
+          "true": "Identify"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value",
+        "states": {
+          "true": "Restore"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_kWh_Consumed",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 0,
+          "rateType": 1
+        },
+        "unit": "kWh",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "Electric_W_Consumed",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Electric Consumption [W]",
+        "ccSpecific": {
+          "meterType": 1,
+          "scale": 2,
+          "rateType": 1
+        },
+        "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "reset",
+      "propertyKey": 65537,
+      "propertyName": "reset",
+      "propertyKeyName": "UNKNOWN (0x010001)",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset Electric Consumption [kWh]",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        },
+        "states": {
+          "true": "Reset"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 50,
+      "commandClassName": "Meter",
+      "property": "reset",
+      "propertyName": "reset",
+      "ccVersion": 6,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset accumulated values",
+        "states": {
+          "true": "Reset"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-current status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-current status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-current status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "6": "Over-current detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-voltage status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-voltage status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-voltage status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "7": "Over-voltage detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-load status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-load status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-load status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "8": "Over-load detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Mains status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Mains status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Mains status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "2": "AC mains disconnected"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration",
+        "stateful": true,
+        "secret": false
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Up",
+      "propertyName": "Up",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Up)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Down",
+      "propertyName": "Down",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Perform a level change (Down)",
+        "ccSpecific": {
+          "switchType": 2
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "restorePrevious",
+      "propertyName": "restorePrevious",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Restore previous value",
+        "states": {
+          "true": "Restore"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-current status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-current status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-current status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "6": "Over-current detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-voltage status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-voltage status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-voltage status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "7": "Over-voltage detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Over-load status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Over-load status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Over-load status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "8": "Over-load detected"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Mains status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Mains status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Mains status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "2": "AC mains disconnected"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 5,
+      "index": 0,
+      "installerIcon": 6144,
+      "userIcon": 6144,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 6,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 5,
+          "isSecure": true
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 106,
+          "name": "Window Covering",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
+    },
+    {
+      "nodeId": 5,
+      "index": 1,
+      "installerIcon": 6144,
+      "userIcon": 6144,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 6,
+          "isSecure": true
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        }
+      ]
+    },
+    {
+      "nodeId": 5,
+      "index": 2,
+      "installerIcon": 6144,
+      "userIcon": 6144,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        }
+      ]
+    }
+  ]
+}

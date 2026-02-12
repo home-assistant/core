@@ -88,7 +88,7 @@
     },
     "number": {
       "bbw_dose": {
-        "name": "Brew by weight {dose}"
+        "name": "Brew by weight dose {dose}"
       },
       "coffee_temp": {
         "name": "Coffee target temperature"

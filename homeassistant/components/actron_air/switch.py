@@ -7,12 +7,10 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
+from .entity import ActronAirAcEntity
 
 PARALLEL_UPDATES = 0
 
@@ -31,30 +29,42 @@ SWITCHES: tuple[ActronAirSwitchEntityDescription, ...] = (
         key="away_mode",
         translation_key="away_mode",
         is_on_fn=lambda coordinator: coordinator.data.user_aircon_settings.away_mode,
-        set_fn=lambda coordinator,
-        enabled: coordinator.data.user_aircon_settings.set_away_mode(enabled),
+        set_fn=lambda coordinator, enabled: (
+            coordinator.data.user_aircon_settings.set_away_mode(enabled)
+        ),
     ),
     ActronAirSwitchEntityDescription(
         key="continuous_fan",
         translation_key="continuous_fan",
-        is_on_fn=lambda coordinator: coordinator.data.user_aircon_settings.continuous_fan_enabled,
-        set_fn=lambda coordinator,
-        enabled: coordinator.data.user_aircon_settings.set_continuous_mode(enabled),
+        is_on_fn=lambda coordinator: (
+            coordinator.data.user_aircon_settings.continuous_fan_enabled
+        ),
+        set_fn=lambda coordinator, enabled: (
+            coordinator.data.user_aircon_settings.set_continuous_mode(enabled)
+        ),
     ),
     ActronAirSwitchEntityDescription(
         key="quiet_mode",
         translation_key="quiet_mode",
-        is_on_fn=lambda coordinator: coordinator.data.user_aircon_settings.quiet_mode_enabled,
-        set_fn=lambda coordinator,
-        enabled: coordinator.data.user_aircon_settings.set_quiet_mode(enabled),
+        is_on_fn=lambda coordinator: (
+            coordinator.data.user_aircon_settings.quiet_mode_enabled
+        ),
+        set_fn=lambda coordinator, enabled: (
+            coordinator.data.user_aircon_settings.set_quiet_mode(enabled)
+        ),
     ),
     ActronAirSwitchEntityDescription(
         key="turbo_mode",
         translation_key="turbo_mode",
-        is_on_fn=lambda coordinator: coordinator.data.user_aircon_settings.turbo_enabled,
-        set_fn=lambda coordinator,
-        enabled: coordinator.data.user_aircon_settings.set_turbo_mode(enabled),
-        is_supported_fn=lambda coordinator: coordinator.data.user_aircon_settings.turbo_supported,
+        is_on_fn=lambda coordinator: (
+            coordinator.data.user_aircon_settings.turbo_enabled
+        ),
+        set_fn=lambda coordinator, enabled: (
+            coordinator.data.user_aircon_settings.set_turbo_mode(enabled)
+        ),
+        is_supported_fn=lambda coordinator: (
+            coordinator.data.user_aircon_settings.turbo_supported
+        ),
     ),
 )
 
@@ -74,10 +84,9 @@ async def async_setup_entry(
     )
 
 
-class ActronAirSwitch(CoordinatorEntity[ActronAirSystemCoordinator], SwitchEntity):
+class ActronAirSwitch(ActronAirAcEntity, SwitchEntity):
     """Actron Air switch."""
 
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: ActronAirSwitchEntityDescription
 
@@ -90,11 +99,6 @@ class ActronAirSwitch(CoordinatorEntity[ActronAirSystemCoordinator], SwitchEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-            manufacturer="Actron Air",
-            name=coordinator.data.ac_system.system_name,
-        )
 
     @property
     def is_on(self) -> bool:

@@ -11,7 +11,8 @@
     "bellows",
     "universal_silabs_flasher",
     "zigpy.serial",
-    "serial_asyncio_fast"
+    "serial_asyncio_fast",
+    "serialx"
   ],
   "single_config_entry": true
 }

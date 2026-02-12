@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 # Apply setup_integration fixture to all tests in this module
 pytestmark = pytest.mark.usefixtures("setup_integration")
@@ -28,20 +28,33 @@ def platform() -> Platform:
     return Platform.LIGHT
 
 
+@pytest.mark.parametrize(
+    "mock_pyvlx", ["mock_light", "mock_onoff_light"], indirect=True
+)
 async def test_light_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the entity and validate registry metadata for light entities."""
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
+
+
+async def test_light_device_association(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_light: AsyncMock,
 ) -> None:
-    """Test light entity setup and device association."""
+    """Test light device association."""
 
     test_entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
-
-    # Check that the entity exists and its name matches the node name (the light is the main feature).
-    state = hass.states.get(test_entity_id)
-    assert state is not None
-    assert state.attributes.get("friendly_name") == mock_light.name
 
     # Get entity + device entry
     entity_entry = entity_registry.async_get(test_entity_id)
@@ -81,6 +94,54 @@ async def test_entity_callbacks(
     assert mock_light.unregister_device_updated_cb.call_args[0][0] is cb
 
 
+# Test availability functionality by using the light platform
+async def test_entity_availability(
+    hass: HomeAssistant, mock_light: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that entity availability updates based on device connection status."""
+
+    entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
+
+    # Initially connected
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    # Simulate disconnection
+    mock_light.pyvlx.get_connected.return_value = False
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
+
+    # Simulate disconnection, check we don't log again
+    mock_light.pyvlx.get_connected.return_value = False
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is unavailable") == 1
+
+    # Simulate reconnection
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is back online") == 1
+
+    # Simulate reconnection, check we don't log again
+    mock_light.pyvlx.get_connected.return_value = True
+    await update_callback_entity(hass, mock_light)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert caplog.text.count(f"Entity {entity_id} is back online") == 1
+
+
 async def test_light_brightness_and_is_on(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
@@ -89,7 +150,7 @@ async def test_light_brightness_and_is_on(
     entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
 
     # Set initial intensity values
-    mock_light.intensity.intensity_percent = 20  # 20% "intensity" -> 80% brightness
+    mock_light.intensity.intensity_percent = 20  # 20% "intensity" -> 20% brightness
     mock_light.intensity.off = False
     mock_light.intensity.known = True
 
@@ -98,8 +159,8 @@ async def test_light_brightness_and_is_on(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    # brightness = int((100 - 20) * 255 / 100) = int(204)
-    assert state.attributes.get("brightness") == 204
+    # brightness = int(20 * 255 / 100) = int(51)
+    assert state.attributes.get("brightness") == 51
     assert state.state == "on"
 
     # Mark as off
@@ -113,7 +174,7 @@ async def test_light_brightness_and_is_on(
 async def test_light_turn_on_with_brightness_uses_set_intensity(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
-    """Turning on with brightness calls set_intensity with inverted percent."""
+    """Turning on with brightness calls set_intensity with percent."""
 
     entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
 
@@ -132,8 +193,8 @@ async def test_light_turn_on_with_brightness_uses_set_intensity(
     # Inspect the intensity argument (first positional)
     args, kwargs = mock_light.set_intensity.await_args
     intensity_obj = args[0]
-    # brightness 51 -> 20% normalized -> intensity_percent = 80
-    assert intensity_obj.intensity_percent == 80
+    # brightness 51 -> 20% normalized -> intensity_percent = 20
+    assert intensity_obj.intensity_percent == 20
     assert kwargs.get("wait_for_completion") is True
 
 

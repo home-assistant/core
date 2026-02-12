@@ -381,7 +381,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             parts = str(time_raw).split(":")
             hour = int(parts[0])
             minute = int(parts[1])
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return "00:00"
         else:
             return f"{hour:02d}:{minute:02d}"
