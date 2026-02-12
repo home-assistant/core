@@ -200,7 +200,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     "device": self.config_entry.title,
                 },
             ) from err
-        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+        except BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff:
             self.is_on = False
             self.connected = False
             _LOGGER.debug(

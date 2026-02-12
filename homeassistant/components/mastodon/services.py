@@ -2,16 +2,16 @@
 
 from enum import StrEnum
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from mastodon import Mastodon
 from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import service
 
 from .const import (
     ATTR_CONTENT_WARNING,
@@ -53,30 +53,15 @@ SERVICE_POST_SCHEMA = vol.Schema(
 )
 
 
-def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MastodonConfigEntry:
-    """Get the Mastodon config entry."""
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(MastodonConfigEntry, entry)
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
 
     async def async_post(call: ServiceCall) -> ServiceResponse:
         """Post a status."""
-        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        entry: MastodonConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        )
         client = entry.runtime_data.client
 
         status: str = call.data[ATTR_STATUS]

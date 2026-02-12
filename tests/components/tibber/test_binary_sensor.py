@@ -37,6 +37,7 @@ async def test_binary_sensor_snapshot(
         connector_status="connected",
         charging_status="charging",
         device_status="on",
+        is_online="true",
     )
     data_api_client_mock.get_all_devices = AsyncMock(return_value={"device-id": device})
     data_api_client_mock.update_devices = AsyncMock(return_value={"device-id": device})
@@ -53,15 +54,20 @@ async def test_binary_sensor_snapshot(
         "connector_status",
         "charging_status",
         "device_status",
+        "is_online",
         "expected_state",
     ),
     [
-        ("plug", "connected", None, None, STATE_ON),
-        ("plug", "disconnected", None, None, STATE_OFF),
-        ("charging", None, "charging", None, STATE_ON),
-        ("charging", None, "idle", None, STATE_OFF),
-        ("power", None, None, "on", STATE_ON),
-        ("power", None, None, "off", STATE_OFF),
+        ("plug", "connected", None, None, None, STATE_ON),
+        ("plug", "disconnected", None, None, None, STATE_OFF),
+        ("charging", None, "charging", None, None, STATE_ON),
+        ("charging", None, "idle", None, None, STATE_OFF),
+        ("power", None, None, "on", None, STATE_ON),
+        ("power", None, None, "off", None, STATE_OFF),
+        ("connectivity", None, None, None, "true", STATE_ON),
+        ("connectivity", None, None, None, "True", STATE_ON),
+        ("connectivity", None, None, None, "false", STATE_OFF),
+        ("connectivity", None, None, None, "False", STATE_OFF),
     ],
 )
 async def test_binary_sensor_states(
@@ -74,6 +80,7 @@ async def test_binary_sensor_states(
     connector_status: str | None,
     charging_status: str | None,
     device_status: str | None,
+    is_online: str | None,
     expected_state: str,
 ) -> None:
     """Test binary sensor state values."""
@@ -81,6 +88,7 @@ async def test_binary_sensor_states(
         connector_status=connector_status,
         charging_status=charging_status,
         device_status=device_status,
+        is_online=is_online,
     )
     data_api_client_mock.get_all_devices = AsyncMock(return_value={"device-id": device})
     data_api_client_mock.update_devices = AsyncMock(return_value={"device-id": device})
