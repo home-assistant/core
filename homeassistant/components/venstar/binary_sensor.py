@@ -43,6 +43,8 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
+        if self._client.alerts is None:
+            return None
         for alert in self._client.alerts:
             if alert["name"] == self.alert:
                 return alert["active"]
