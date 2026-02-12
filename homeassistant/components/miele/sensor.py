@@ -704,7 +704,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
 
 POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]] = (
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_1_level",
             translation_key="twin_dos_1_level",
@@ -714,7 +717,10 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
         ),
     ),
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_2_level",
             translation_key="twin_dos_2_level",
