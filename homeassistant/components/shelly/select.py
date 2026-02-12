@@ -116,8 +116,8 @@ RPC_SELECT_ENTITIES: Final = {
     "enum_generic": RpcSelectDescription(
         key="enum",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
-            config, key, SELECT_PLATFORM
+        removal_condition=lambda config, _status, key: (
+            not is_view_for_platform(config, key, SELECT_PLATFORM)
         ),
         method="enum_set",
         role=ROLE_GENERIC,
