@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(info_api.serial_number))},
         name=info_api.name,
-        manufacturer="Lunatone",
+        manufacturer="Lunatone Industrielle Elektronik GmbH",
         sw_version=info_api.version,
         hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
