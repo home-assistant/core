@@ -51,13 +51,13 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
-async def test_generate_structured_data(
+async def test_generate_structured_data_legacy(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_no_structured_output: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task structured data generation."""
+    """Test AI Task structured data generation with legacy method."""
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -88,13 +88,13 @@ async def test_generate_structured_data(
     assert result.data == {"characters": ["Mario", "Luigi"]}
 
 
-async def test_generate_invalid_structured_data(
+async def test_generate_invalid_structured_data_legacy(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_no_structured_output: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test AI Task with invalid JSON response."""
+    """Test AI Task with invalid JSON response with legacy method."""
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -124,6 +124,38 @@ async def test_generate_invalid_structured_data(
                 },
             ),
         )
+
+
+async def test_generate_structured_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test AI Task structured data generation."""
+    mock_create_stream.return_value = [
+        create_content_block(0, ['{"charac', 'ters": ["Mario', '", "Luigi"]}'])
+    ]
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
 
 
 async def test_generate_data_with_attachments(
@@ -190,22 +222,23 @@ async def test_generate_data_with_attachments(
     assert user_message_with_attachments is not None
     assert isinstance(user_message_with_attachments["content"], list)
     assert len(user_message_with_attachments["content"]) == 3  # Text + attachments
-    assert user_message_with_attachments["content"] == [
-        {"type": "text", "text": "Test prompt"},
-        {
-            "type": "image",
-            "source": {
-                "data": "ZmFrZV9pbWFnZV9kYXRh",
-                "media_type": "image/jpeg",
-                "type": "base64",
-            },
-        },
-        {
-            "type": "document",
-            "source": {
-                "data": "ZmFrZV9pbWFnZV9kYXRh",
-                "media_type": "application/pdf",
-                "type": "base64",
-            },
-        },
-    ]
+
+    text_block, image_block, document_block = user_message_with_attachments["content"]
+
+    # Text block
+    assert text_block["type"] == "text"
+    assert text_block["text"] == "Test prompt"
+
+    # Image attachment
+    assert image_block["type"] == "image"
+    assert image_block["source"] == {
+        "data": "ZmFrZV9pbWFnZV9kYXRh",
+        "media_type": "image/jpeg",
+        "type": "base64",
+    }
+
+    # Document attachment (ignore extra metadata like cache_control)
+    assert document_block["type"] == "document"
+    assert document_block["source"]["data"] == "ZmFrZV9pbWFnZV9kYXRh"
+    assert document_block["source"]["media_type"] == "application/pdf"
+    assert document_block["source"]["type"] == "base64"
