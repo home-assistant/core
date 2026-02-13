@@ -33,10 +33,15 @@ class HassEnforceConstantsChecker(BaseChecker):
 
         if isinstance(node.func, nodes.Name):
             if node.func.name == "async_setup_component":
-                self._ensure_domain_argument(node, node.args[1])
+                if len(node.args) >= 2:
+                    self._ensure_domain_argument(node, node.args[1])
+                else:
+                    for keyword in node.keywords:
+                        if keyword.arg == "domain":
+                            self._ensure_domain_argument(node, keyword.value)
 
     def _ensure_domain_argument(
-        self, call_node: nodes.Call, arg_node: nodes.Argument
+        self, call_node: nodes.Call, arg_node: nodes.Argument | nodes.Keyword
     ) -> None:
         if isinstance(arg_node, nodes.Attribute) and arg_node.attrname.endswith(
             "DOMAIN"
