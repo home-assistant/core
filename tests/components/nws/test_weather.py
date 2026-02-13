@@ -9,6 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import nws
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.nws.const import (
     DEFAULT_SCAN_INTERVAL,
     OBSERVATION_VALID_TIME,
@@ -267,7 +271,7 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     """Test manual refresh."""
     instance = mock_simple_nws.return_value
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     entry = MockConfigEntry(
         domain=nws.DOMAIN,
@@ -281,8 +285,8 @@ async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -
     instance.update_forecast_hourly.assert_called_once()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": "weather.abc"},
         blocking=True,
     )
