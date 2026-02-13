@@ -1260,7 +1260,7 @@ def translations_once() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="module")
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
-    real_async_load = translation_helper._TranslationCache._async_load
+    real_async_load = translation_helper._TranslationCache.async_load
     real_get_cached = translation_helper._TranslationCache.get_cached
     real_component_strings = translation_helper._async_get_component_strings
 
@@ -1275,18 +1275,9 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
             _components.add(ha.DOMAIN)
         return real_get_cached(self, _language, _category, _components)
 
-    async def _async_get_component_strings(
-        _hass, _languages, _components, _integrations
-    ) -> None:
-        if ha.DOMAIN not in _components:
-            _components.add(ha.DOMAIN)
-        return await real_component_strings(
-            _hass, _languages, _components, _integrations
-        )
-
     with (
         patch(
-            "homeassistant.helpers.translation._TranslationCache._async_load",
+            "homeassistant.helpers.translation._TranslationCache.async_load",
             _async_load,
         ),
         patch(
@@ -1295,7 +1286,7 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
         ),
         patch(
             "homeassistant.helpers.translation._async_get_component_strings",
-            wraps=_async_get_component_strings,
+            wraps=real_component_strings,
         ) as mock_component_strings,
     ):
         yield
