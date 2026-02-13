@@ -103,25 +103,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     SensorEntityDescription(
-        key="exported_energy",
-        translation_key="exported_energy",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    ),
-    SensorEntityDescription(
         key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="imported_energy",
-        translation_key="imported_energy",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     SensorEntityDescription(
         key="l1_current",

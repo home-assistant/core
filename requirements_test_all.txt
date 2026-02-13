@@ -211,6 +211,7 @@ aiobafi6==0.9.0
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
+# homeassistant.components.idrive_e2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -1050,6 +1051,9 @@ hanna-cloud==0.0.7
 # homeassistant.components.cloud
 hass-nabucasa==1.13.0
 
+# homeassistant.components.splunk
+hass-splunk==0.1.1
+
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==3.5.0
@@ -1095,7 +1099,7 @@ homelink-integration-api==0.0.1
 homematicip==2.6.0
 
 # homeassistant.components.homevolt
-homevolt==0.4.3
+homevolt==0.4.4
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1129,6 +1133,9 @@ icmplib==3.0
 
 # homeassistant.components.idasen_desk
 idasen-ha==2.6.3
+
+# homeassistant.components.idrive_e2
+idrive-e2-client==0.1.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -2251,7 +2258,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.2.0
+pyuptimerobot==24.0.1
 
 # homeassistant.components.vera
 pyvera==0.3.16
@@ -2781,7 +2788,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.89
+zha==0.0.90
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.68.0
