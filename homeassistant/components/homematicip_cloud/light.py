@@ -55,7 +55,7 @@ async def async_setup_entry(
     entities: list[HomematicipGenericEntity] = []
 
     entities.extend(
-        HomematicipLightHS(hap, d, ch.index)
+        HomematicipColorLight(hap, d, ch.index)
         for d in hap.home.devices
         for ch in d.functionalChannels
         if ch.functionalChannelType == FunctionalChannelType.UNIVERSAL_LIGHT_CHANNEL
@@ -136,8 +136,8 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
         await self._device.turn_off_async()
 
 
-class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
-    """Representation of the HomematicIP light with HS color mode."""
+class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
+    """Representation of the HomematicIP color light."""
 
     def __init__(self, hap: HomematicipHAP, device: Device, channel_index: int) -> None:
         """Initialize the light entity."""
