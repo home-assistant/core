@@ -3,7 +3,6 @@
 from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import _LOGGER, CONF_LOGIN_DATA, CONF_SITE, COUNTRY_DOMAINS, DOMAIN
@@ -31,10 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     session = aiohttp_client.async_create_clientsession(hass)
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
-    client = get_async_client(hass)
 
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.api.start_http2_thread(client)
+    await coordinator.api.start_http2_thread()
 
     entry.runtime_data = coordinator
 
