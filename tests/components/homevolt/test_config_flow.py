@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -36,16 +35,10 @@ async def test_zeroconf_already_in_progress_aborts(
 ) -> None:
     """Test zeroconf flow aborts when already in progress for the same host."""
 
-    discovery_info = dataclasses.replace(
-        DISCOVERY_INFO,
-        ip_address=IPv4Address("192.168.1.125"),
-        ip_addresses=[IPv4Address("192.168.1.125")],
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -53,7 +46,7 @@ async def test_zeroconf_already_in_progress_aborts(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result2["type"] is FlowResultType.ABORT
@@ -75,16 +68,10 @@ async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
 
     mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
 
-    discovery_info = dataclasses.replace(
-        DISCOVERY_INFO,
-        ip_address=IPv4Address("192.168.1.126"),
-        ip_addresses=[IPv4Address("192.168.1.126")],
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -97,7 +84,7 @@ async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
-    assert result2["description_placeholders"] == {"host": "192.168.1.126"}
+    assert result2["description_placeholders"] == {"host": "192.168.1.123"}
 
 
 async def test_zeroconf_confirm_onboarded_errors_abort(
@@ -115,12 +102,10 @@ async def test_zeroconf_confirm_onboarded_errors_abort(
 
     mock_homevolt_client.update_info.side_effect = HomevoltConnectionError
 
-    discovery_info = DISCOVERY_INFO
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -167,12 +152,10 @@ async def test_zeroconf_confirm_flow_success(
 ) -> None:
     """Test zeroconf flow shows confirm step before creating entry."""
 
-    discovery_info = DISCOVERY_INFO
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -197,12 +180,10 @@ async def test_zeroconf_duplicate_aborts(
     """Test zeroconf flow aborts when unique id is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    discovery_info = DISCOVERY_INFO
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
