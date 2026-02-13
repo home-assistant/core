@@ -220,6 +220,7 @@ aiobafi6==0.9.0
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
+# homeassistant.components.idrive_e2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -1237,7 +1238,7 @@ homelink-integration-api==0.0.1
 homematicip==2.6.0
 
 # homeassistant.components.homevolt
-homevolt==0.4.3
+homevolt==0.4.4
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1277,6 +1278,9 @@ icmplib==3.0
 
 # homeassistant.components.idasen_desk
 idasen-ha==2.6.3
+
+# homeassistant.components.idrive_e2
+idrive-e2-client==0.1.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1983,7 +1987,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.17.1
+pydaikin==2.17.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2670,7 +2674,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.2.0
+pyuptimerobot==24.0.1
 
 # homeassistant.components.vera
 pyvera==0.3.16
@@ -2709,7 +2713,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.3.2
+pywmspro==0.3.3
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -3317,7 +3321,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.89
+zha==0.0.90
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
