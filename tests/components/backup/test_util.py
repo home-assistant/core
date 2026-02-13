@@ -157,7 +157,7 @@ def test_validate_password(
 @pytest.mark.parametrize("password", [None, "hunter2"])
 @pytest.mark.parametrize("secure_tar_side_effect", [tarfile.ReadError, Exception])
 def test_validate_password_with_error(
-    password: str | None, secure_tar_side_effect: Exception
+    password: str | None, secure_tar_side_effect: type[Exception]
 ) -> None:
     """Test validating a password."""
     mock_path = Mock()

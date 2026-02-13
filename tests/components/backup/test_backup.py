@@ -118,7 +118,7 @@ async def test_upload(
             1,
             TEST_BACKUP_PATH_DEF456,
         ),
-        (([], TEST_BACKUP_ABC123.backup_id, 0, None)),
+        ([], TEST_BACKUP_ABC123.backup_id, 0, None),
     ],
 )
 async def test_delete_backup(
