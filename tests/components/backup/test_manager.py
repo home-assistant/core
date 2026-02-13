@@ -71,6 +71,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 _EXPECTED_FILES = [
     "test.txt",
     ".storage",
+    ".storage/hacs.hacs",
     "another_subdir",
     "another_subdir/backups",
     "another_subdir/backups/backup.tar",
