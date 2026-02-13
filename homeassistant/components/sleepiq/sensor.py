@@ -1,4 +1,4 @@
-"""Support for SleepIQ Sensor - Enhanced with Sleep Health Metrics."""
+"""Support for SleepIQ sensors."""
 
 from __future__ import annotations
 
@@ -17,9 +17,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PRESSURE, SLEEP_NUMBER
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator, SleepIQSleepDataCoordinator
+from .coordinator import (
+    SleepIQData,
+    SleepIQDataUpdateCoordinator,
+    SleepIQSleepDataCoordinator,
+)
 from .entity import SleepIQSleeperEntity
 
 
@@ -30,7 +35,6 @@ class SleepIQSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[SleepIQSleeper], float | int | None]
 
 
-# Real-time bed sensors (existing)
 BED_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
     SleepIQSensorEntityDescription(
         key=PRESSURE,
@@ -46,7 +50,6 @@ BED_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
     ),
 )
 
-# Sleep health metrics sensors (NEW!)
 SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
     SleepIQSensorEntityDescription(
         key="sleep_score",
@@ -62,7 +65,11 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=1,
-        value_fn=lambda sleeper: round(getattr(sleeper, "sleep_duration", 0) / 3600, 1) if getattr(sleeper, "sleep_duration", 0) else None,
+        value_fn=lambda sleeper: (
+            round(getattr(sleeper, "sleep_duration", 0) / 3600, 1)
+            if getattr(sleeper, "sleep_duration", 0)
+            else None
+        ),
     ),
     SleepIQSensorEntityDescription(
         key="heart_rate",
@@ -91,17 +98,19 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
-    # Add real-time bed sensors
     entities.extend(
-        SleepIQSensorEntity(data.data_coordinator, bed, sleeper, description)
+        SleepIQSensorEntity(
+            data.data_coordinator, bed, sleeper, description, "mdi:bed"
+        )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
         for description in BED_SENSORS
     )
 
-    # Add sleep health metric sensors
     entities.extend(
-        SleepIQSleepDataSensorEntity(data.sleep_data_coordinator, bed, sleeper, description)
+        SleepIQSensorEntity(
+            data.sleep_data_coordinator, bed, sleeper, description, "mdi:sleep"
+        )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
         for description in SLEEP_HEALTH_SENSORS
@@ -110,49 +119,23 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepIQSensorEntity(
-    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], SensorEntity
-):
-    """Representation of a SleepIQ bed sensor (real-time)."""
+class SleepIQSensorEntity(SleepIQSleeperEntity[DataUpdateCoordinator], SensorEntity):
+    """Representation of a SleepIQ sensor."""
 
     entity_description: SleepIQSensorEntityDescription
-    _attr_icon = "mdi:bed"
 
     def __init__(
         self,
-        coordinator: SleepIQDataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator,
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
         description: SleepIQSensorEntityDescription,
+        icon: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, bed, sleeper, description.key)
         self.entity_description = description
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update sensor attributes."""
-        self._attr_native_value = self.entity_description.value_fn(self.sleeper)
-
-
-class SleepIQSleepDataSensorEntity(
-    SleepIQSleeperEntity[SleepIQSleepDataCoordinator], SensorEntity
-):
-    """Representation of a SleepIQ sleep health metric sensor."""
-
-    entity_description: SleepIQSensorEntityDescription
-    _attr_icon = "mdi:sleep"
-
-    def __init__(
-        self,
-        coordinator: SleepIQSleepDataCoordinator,
-        bed: SleepIQBed,
-        sleeper: SleepIQSleeper,
-        description: SleepIQSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, bed, sleeper, description.key)
-        self.entity_description = description
+        self._attr_icon = icon
 
     @callback
     def _async_update_attrs(self) -> None:

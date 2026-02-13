@@ -1,4 +1,4 @@
-"""Coordinator for SleepIQ - Enhanced with Sleep Data."""
+"""Coordinator for SleepIQ."""
 
 import asyncio
 from dataclasses import dataclass
