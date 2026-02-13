@@ -819,3 +819,243 @@ async def test_auth_error_maps_to_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
         assert result3["errors"]["base"] == "cannot_connect"
+
+
+async def test_discover_rescan(hass: HomeAssistant) -> None:
+    """Test rescan resets discovered panels and re-scans."""
+    panel1 = SimpleNamespace(
+        panel_host="192.168.1.50",
+        port=DEFAULT_PORT,
+        panel_name="Panel A",
+        panel_mac="aa:bb:cc:dd:ee:01",
+        panel_model="E27",
+    )
+    panel2 = SimpleNamespace(
+        panel_host="192.168.1.51",
+        port=DEFAULT_PORT,
+        panel_name="Panel B",
+        panel_mac="aa:bb:cc:dd:ee:02",
+        panel_model="E27",
+    )
+
+    scan_mock = AsyncMock(return_value=[panel1, panel2])
+
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        scan_mock,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "discover"
+        assert scan_mock.call_count == 1
+
+        # Select rescan
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "__rescan__", "access_code": "1234", "passphrase": "test-pass"},
+        )
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["step_id"] == "discover"
+        assert scan_mock.call_count == 2
+
+
+async def test_discover_multi_panel_creates_entry(hass: HomeAssistant) -> None:
+    """Test discovery with multiple panels allows selection and creates entry."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel_info=FakePanelInfo(
+            panel_name="Panel A",
+            mac="aa:bb:cc:dd:ee:01",
+            panel_serial="1234",
+        ),
+        table_info=FakeTableInfo(areas=8, zones=16),
+    )
+
+    panel1 = SimpleNamespace(
+        panel_host="192.168.1.50",
+        port=DEFAULT_PORT,
+        panel_name="Panel A",
+        panel_mac="aa:bb:cc:dd:ee:01",
+        panel_model="E27",
+    )
+    panel2 = SimpleNamespace(
+        panel_host="192.168.1.51",
+        port=DEFAULT_PORT,
+        panel_name="Panel B",
+        panel_mac="aa:bb:cc:dd:ee:02",
+        panel_model="E27",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.elke27.config_flow._create_client",
+            side_effect=_client_factory([client]),
+        ),
+        patch(
+            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+            AsyncMock(return_value="112233445566"),
+        ),
+        patch(
+            "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+            AsyncMock(return_value=[panel1, panel2]),
+        ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "discover"
+
+        # Select first panel (index "0")
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "0", "access_code": "1234", "passphrase": "test-pass"},
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["data"][CONF_HOST] == "192.168.1.50"
+        assert result3["data"][CONF_PORT] == DEFAULT_PORT
+
+
+async def test_discover_multi_panel_missing_host(hass: HomeAssistant) -> None:
+    """Test discovery with multi-panel where selected panel has no host."""
+    panel1 = SimpleNamespace(
+        panel_host=None,
+        host=None,
+        port=DEFAULT_PORT,
+        panel_name="Panel A",
+        panel_mac="aa:bb:cc:dd:ee:01",
+        panel_model="E27",
+    )
+    panel2 = SimpleNamespace(
+        panel_host="192.168.1.51",
+        port=DEFAULT_PORT,
+        panel_name="Panel B",
+        panel_mac="aa:bb:cc:dd:ee:02",
+        panel_model="E27",
+    )
+
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[panel1, panel2]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        # Select first panel (no host)
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "0", "access_code": "1234", "passphrase": "test-pass"},
+        )
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"]["base"] == "no_panels_found"
+
+
+async def test_discover_no_panel_selected_no_panel_input(
+    hass: HomeAssistant,
+) -> None:
+    """Test discover returns error when no panel selected and no panel in input."""
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    flow._discovered_panels = []
+    flow._selected_panel = None
+    result = await flow.async_step_discover(
+        {"access_code": "1", "passphrase": "2"}
+    )
+    assert result["errors"]["base"] == "no_panels_found"
+
+
+async def test_discover_multi_panel_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery aborts if selected panel is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.50", CONF_PORT: DEFAULT_PORT},
+    )
+    entry.add_to_hass(hass)
+
+    panel1 = SimpleNamespace(
+        panel_host="192.168.1.50",
+        port=DEFAULT_PORT,
+        panel_name="Panel A",
+        panel_mac="aa:bb:cc:dd:ee:01",
+        panel_model="E27",
+    )
+    panel2 = SimpleNamespace(
+        panel_host="192.168.1.51",
+        port=DEFAULT_PORT,
+        panel_name="Panel B",
+        panel_mac="aa:bb:cc:dd:ee:02",
+        panel_model="E27",
+    )
+
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[panel1, panel2]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        # Select first panel which is already configured
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "0", "access_code": "1234", "passphrase": "test-pass"},
+        )
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "already_configured"
+
+
+def test_dedupe_panels_removes_duplicates() -> None:
+    """Test _dedupe_panels removes duplicate panels."""
+    flow = config_flow.Elke27ConfigFlow()
+    panel1 = SimpleNamespace(panel_mac="aa:bb", panel_host="1.2.3.4", port=2101)
+    panel2 = SimpleNamespace(panel_mac="aa:bb", panel_host="1.2.3.5", port=2101)
+    panel3 = SimpleNamespace(panel_mac="cc:dd", panel_host="1.2.3.6", port=2101)
+    result = flow._dedupe_panels([panel1, panel2, panel3])
+    assert len(result) == 2
+    assert result[0] is panel1
+    assert result[1] is panel3
+
+
+def test_panel_key_serial_branch() -> None:
+    """Test _panel_key returns serial-based key when no mac."""
+    flow = config_flow.Elke27ConfigFlow()
+    panel = SimpleNamespace(panel_serial="SN123", panel_host="1.2.3.4", port=2101)
+    key = flow._panel_key(panel)
+    assert key == ("serial", "SN123")
+
+
+def test_panel_label_already_configured() -> None:
+    """Test _panel_label includes already configured suffix."""
+    panel = FakePanel(
+        panel_host="1.2.3.4",
+        panel_port=2101,
+        panel_name="Panel",
+        panel_mac="aa:bb",
+        panel_model="E27",
+    )
+    label = config_flow._panel_label(panel, already_configured=True)
+    assert label.endswith("(already configured)")
