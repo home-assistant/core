@@ -67,7 +67,7 @@ TEST_AGENT_ID = ulid()
 
 @pytest.fixture
 def hass_config_dir(hass_tmp_config_dir: str) -> str:
-    """Use temporary config directory for this test/module."""
+    """Use temporary config directory for this integration."""
     return hass_tmp_config_dir
 
 
@@ -106,7 +106,6 @@ async def mock_setup_integration(
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
 
-    # pylint: disable-next=contextmanager-generator-missing-cleanup
     private_key = create_private_key_file(hass)
     config_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -575,6 +575,7 @@ def hass_tmp_config_dir(tmp_path: pathlib.Path) -> Generator[str]:
         symlinks=True,
         dirs_exist_ok=True,
     )
+    return str(tmp_path)
 
 
 @pytest.fixture
