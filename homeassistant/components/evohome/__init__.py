@@ -38,7 +38,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_DURATION,
@@ -47,6 +46,7 @@ from .const import (
     ATTR_SETPOINT,
     CONF_LOCATION_IDX,
     DOMAIN,
+    EVOHOME_DATA,
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
     EvoService,
@@ -90,8 +90,6 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     }
 )
 
-EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
-
 
 @dataclass
 class EvoData:
@@ -130,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     assert coordinator.tcs is not None  # mypy
 
-    hass.data[EVOHOME_KEY] = EvoData(
+    hass.data[EVOHOME_DATA] = EvoData(
         coordinator=coordinator,
         loc_idx=coordinator.loc_idx,
         tcs=coordinator.tcs,
