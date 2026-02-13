@@ -358,13 +358,9 @@ async def test_zeroconf_duplicate_aborts(
         data=DISCOVERY_INFO,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.123"
 
 
 async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(

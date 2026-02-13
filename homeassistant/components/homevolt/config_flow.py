@@ -142,7 +142,9 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 device_id = client.unique_id
                 await self.async_set_unique_id(device_id)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: self._host},
+                )
 
                 return self.async_create_entry(
                     title="Homevolt",
@@ -177,6 +179,9 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not self._need_password:
             await self.async_set_unique_id(client.unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._host},
+            )
 
         return await self.async_step_zeroconf_confirm()
 
@@ -189,10 +194,6 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if self._need_password:
                 return await self.async_step_credentials()
-
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: self._host},
-            )
 
             return self.async_create_entry(
                 title="Homevolt",
