@@ -736,33 +736,24 @@ async def setup_light_with_transition_template(
         )
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("supported_features", "supported_color_modes"),
-    [(0, [ColorMode.BRIGHTNESS])],
+    ("count", "state_template"), [(1, "{{states.test['big.fat...']}}")]
 )
 @pytest.mark.parametrize(
-    ("style", "expected_state"),
-    [
-        (ConfigurationStyle.LEGACY, STATE_OFF),
-        (ConfigurationStyle.MODERN, STATE_OFF),
-        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
-    ],
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize("state_template", ["{{states.test['big.fat...']}}"])
-async def test_template_state_invalid(
-    hass: HomeAssistant,
-    supported_features,
-    supported_color_modes,
-    expected_state,
-    setup_state_light,
-) -> None:
+@pytest.mark.usefixtures("setup_state_light")
+async def test_template_state_invalid(hass: HomeAssistant) -> None:
     """Test template state with render error."""
+    # Trigger
+    hass.states.async_set("light.test_state", None)
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
-    assert state.state == expected_state
-    assert state.attributes["color_mode"] is None
-    assert state.attributes["supported_color_modes"] == supported_color_modes
-    assert state.attributes["supported_features"] == supported_features
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
 
 
 @pytest.mark.parametrize("count", [1])
@@ -1021,7 +1012,7 @@ async def test_on_action_with_transition(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("light_config", "style", "initial_state"),
+    ("light_config", "style"),
     [
         (
             {
@@ -1030,7 +1021,6 @@ async def test_on_action_with_transition(
                 }
             },
             ConfigurationStyle.LEGACY,
-            STATE_OFF,
         ),
         (
             {
@@ -1038,7 +1028,6 @@ async def test_on_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.MODERN,
-            STATE_OFF,
         ),
         (
             {
@@ -1046,22 +1035,19 @@ async def test_on_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.TRIGGER,
-            STATE_UNKNOWN,
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_on_action_optimistic(
-    hass: HomeAssistant,
-    initial_state: str,
-    setup_light,
-    calls: list[ServiceCall],
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test on action with optimistic state."""
     hass.states.async_set("light.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
-    assert state.state == initial_state
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
@@ -1203,7 +1189,7 @@ async def test_off_action_with_transition(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("light_config", "style", "initial_state"),
+    ("light_config", "style"),
     [
         (
             {
@@ -1212,7 +1198,6 @@ async def test_off_action_with_transition(
                 }
             },
             ConfigurationStyle.LEGACY,
-            STATE_OFF,
         ),
         (
             {
@@ -1220,7 +1205,6 @@ async def test_off_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.MODERN,
-            STATE_OFF,
         ),
         (
             {
@@ -1228,16 +1212,19 @@ async def test_off_action_with_transition(
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             },
             ConfigurationStyle.TRIGGER,
-            STATE_UNKNOWN,
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_light")
 async def test_off_action_optimistic(
-    hass: HomeAssistant, initial_state, setup_light, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test off action with optimistic state."""
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
-    assert state.state == initial_state
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
@@ -1260,11 +1247,7 @@ async def test_off_action_optimistic(
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [
-        ConfigurationStyle.LEGACY,
-        ConfigurationStyle.MODERN,
-        ConfigurationStyle.TRIGGER,
-    ],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize("state_template", ["{{1 == 1}}"])
 async def test_level_action_no_template(
