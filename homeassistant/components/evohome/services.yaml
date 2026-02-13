@@ -4,6 +4,10 @@
 # Domain-level services (controller/TCS)
 
 set_system_mode:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
   fields:
     mode:
       required: true
@@ -28,8 +32,16 @@ set_system_mode:
         object:
 
 reset_system:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
 
 refresh_system:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
 
 # Entity services (zones)
 

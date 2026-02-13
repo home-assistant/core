@@ -17,10 +17,10 @@ from homeassistant.components.evohome.const import (
     DOMAIN,
     EvoService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_TARGET
 from homeassistant.core import HomeAssistant
 import homeassistant.exceptions
-
+from homeassistant.helpers import issue_registry as ir
 
 # Domain-level service call tests (controller/TCS)
 
@@ -145,13 +145,14 @@ async def test_set_system_mode_invalid_mode(
     """Test set_system_mode rejects a mode not in the allowed system modes."""
 
     # "Off" is not in the default fixture's allowed system modes
-    with pytest.raises(MultipleInvalid):
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {ATTR_MODE: "Off"},
             blocking=True,
         )
+    assert excinfo.value.translation_key == "invalid_system_mode"
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -215,6 +216,132 @@ async def test_set_system_mode_period_with_duration(
             blocking=True,
         )
     assert excinfo.value.translation_key == "mode_does_not_support_duration"
+
+
+# Domain-level service deprecation tests (calling without target)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "svc",
+    [
+        EvoService.REFRESH_SYSTEM,
+        EvoService.RESET_SYSTEM,
+    ],
+)
+async def test_tcs_service_without_target_creates_issue(
+    hass: HomeAssistant,
+    svc: EvoService,
+    ctl_id: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that calling a TCS service without a target creates a deprecation issue."""
+
+    issue_id = f"deprecated_service_without_target_{svc}"
+
+    with (
+        patch("evohomeasync2.location.Location.update"),
+        patch("evohomeasync2.control_system.ControlSystem.reset"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            svc,
+            {},
+            blocking=True,
+        )
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_service_without_target"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_without_target_creates_issue(
+    hass: HomeAssistant,
+    ctl_id: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that calling set_system_mode without a target creates a deprecation issue."""
+
+    issue_id = f"deprecated_service_without_target_{EvoService.SET_SYSTEM_MODE}"
+
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode"):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Auto"},
+            blocking=True,
+        )
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_service_without_target"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_tcs_service_with_target_no_issue(
+    hass: HomeAssistant,
+    ctl_id: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that calling a TCS service with a target does not create an issue."""
+
+    with patch("evohomeasync2.location.Location.update"):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.REFRESH_SYSTEM,
+            {CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]}},
+            blocking=True,
+        )
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_service_without_target_{EvoService.REFRESH_SYSTEM}"
+    )
+    assert issue is None
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "svc",
+    [
+        EvoService.REFRESH_SYSTEM,
+        EvoService.RESET_SYSTEM,
+    ],
+)
+async def test_tcs_service_with_wrong_entity_id(
+    hass: HomeAssistant,
+    svc: EvoService,
+    zone_id: str,
+) -> None:
+    """Test that calling a TCS service with a non-controller entity_id raises."""
+
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            svc,
+            {CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]}},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "controller_only_service"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_with_wrong_entity_id(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test that calling set_system_mode with a non-controller entity_id raises."""
+
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Auto", CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]}},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "controller_only_service"
 
 
 # Entity-level service call tests (zone services)

@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "controller_only_service": {
+      "message": "Only controllers support the `{service}` service"
+    },
     "invalid_system_mode": {
       "message": "The mode `{mode}` is not supported by this controller"
     },
@@ -12,11 +15,14 @@
     "mode_does_not_support_temporary": {
       "message": "The mode `{mode}` can only be set permanently"
     },
-    "controller_only_service": {
-      "message": "Only controllers support the `{service}` service"
-    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` service"
+    }
+  },
+  "issues": {
+    "deprecated_service_without_target": {
+      "description": "Calling the `evohome.{service}` service without specifying the controller as a target is deprecated and will stop working in a future version. Update your automations and scripts to include the controller entity as a target.",
+      "title": "Calling `{service}` without a target is deprecated"
     }
   },
   "services": {
