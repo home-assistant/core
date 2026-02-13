@@ -50,6 +50,32 @@ async def test_connection_failure(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_battery_auth_failure(hass: HomeAssistant, mock_get_battery) -> None:
+    """Test init with a battery API authentication error."""
+
+    mock_get_battery.side_effect = ERROR_AUTH
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_battery_unknown_failure(hass: HomeAssistant, mock_get_battery) -> None:
+    """Test init with a battery API client response error."""
+
+    mock_get_battery.side_effect = ERROR_UNKNOWN
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_battery_connection_failure(
+    hass: HomeAssistant, mock_get_battery
+) -> None:
+    """Test init with a battery API network connection error."""
+
+    mock_get_battery.side_effect = ERROR_CONNECTION
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_products_error(hass: HomeAssistant) -> None:
     """Test init with a fleet error on products."""
 

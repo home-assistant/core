@@ -52,7 +52,7 @@ def mock_get_battery():
         ) as mock_get_battery,
         patch(
             "homeassistant.components.tessie.coordinator.get_battery",
-            return_value=TEST_VEHICLE_BATTERY,
+            new=mock_get_battery,
         ),
     ):
         yield mock_get_battery
