@@ -1225,7 +1225,7 @@ async def test_tts_subentry_not_loaded(
 async def test_tts_reconfigure(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the tts subentry reconfigure flow with."""
+    """Test the tts subentry reconfigure flow."""
     subentry = [
         s for s in mock_config_entry.subentries.values() if s.subentry_type == "tts"
     ][0]
