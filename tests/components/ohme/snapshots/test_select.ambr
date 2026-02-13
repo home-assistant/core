@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle',
     'options': dict({
     }),
     'original_device_class': None,

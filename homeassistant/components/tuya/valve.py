@@ -137,6 +137,18 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
             return None
         return not is_open
 
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ):
+            return
+        self.async_write_ha_state()
+
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -360,6 +367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -409,6 +417,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -457,6 +466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -506,6 +516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -555,6 +566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -603,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -652,6 +665,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -701,6 +715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -749,6 +764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -798,6 +814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -847,6 +864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC',
     'options': dict({
     }),
     'original_device_class': None,
@@ -895,6 +913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,

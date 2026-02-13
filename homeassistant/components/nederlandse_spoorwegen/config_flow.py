@@ -60,7 +60,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(client.get_stations)
         except HTTPError:
             errors["base"] = "invalid_auth"
-        except (RequestsConnectionError, Timeout):
+        except RequestsConnectionError, Timeout:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
@@ -142,7 +142,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             stations = await self.hass.async_add_executor_job(client.get_stations)
         except HTTPError:
             return self.async_abort(reason="invalid_auth")
-        except (RequestsConnectionError, Timeout):
+        except RequestsConnectionError, Timeout:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
@@ -205,7 +205,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                         client.get_stations
                     )
                 }
-            except (RequestsConnectionError, Timeout, HTTPError, ValueError):
+            except RequestsConnectionError, Timeout, HTTPError, ValueError:
                 return self.async_abort(reason="cannot_connect")
 
         options = [

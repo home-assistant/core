@@ -56,13 +56,13 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Only one device entry per config entry
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair issues needed
