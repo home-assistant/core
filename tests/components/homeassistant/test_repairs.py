@@ -1,5 +1,7 @@
 """Test the Homeassistant repairs module."""
 
+from typing import Any
+
 from homeassistant import config_entries
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -124,6 +126,7 @@ async def test_integration_not_found_ignore_step(
 async def test_orphaned_config_entry_confirm_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the orphaned_config_entry issue confirm step."""
@@ -136,13 +139,54 @@ async def test_orphaned_config_entry_confirm_step(
     http_client = await hass_client()
 
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)
-    entry.add_to_hass(hass)
     entry_valid = MockConfigEntry(domain="test_valid")
-    entry_valid.add_to_hass(hass)
     issue_id = f"orphaned_ignored_entry.{entry.entry_id}"
 
-    # Note: hard nutt to crack for testing, but the they need be in the storage before the async_initialize
-    await hass.config_entries._store.async_save(hass.config_entries._data_to_save())
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 5,
+        "data": {
+            "entries": [
+                {
+                    "created_at": entry.created_at.isoformat(),
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test_issued",
+                    "entry_id": entry.entry_id,
+                    "minor_version": 1,
+                    "modified_at": entry.modified_at.isoformat(),
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "ignore",
+                    "subentries": [],
+                    "title": "Title probably no-one will read",
+                    "unique_id": None,
+                    "version": 1,
+                },
+                {
+                    "created_at": entry_valid.created_at.isoformat(),
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test_valid",
+                    "entry_id": entry_valid.entry_id,
+                    "minor_version": 1,
+                    "modified_at": entry_valid.modified_at.isoformat(),
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Title probably no-one will read",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
     await hass.config_entries.async_initialize()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -182,6 +226,7 @@ async def test_orphaned_config_entry_confirm_step(
 async def test_orphaned_config_entry_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the orphaned_config_entry issue ignore step."""
@@ -194,12 +239,54 @@ async def test_orphaned_config_entry_ignore_step(
     http_client = await hass_client()
 
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)
-    entry.add_to_hass(hass)
     entry_valid = MockConfigEntry(domain="test_valid")
-    entry_valid.add_to_hass(hass)
     issue_id = f"orphaned_ignored_entry.{entry.entry_id}"
 
-    await hass.config_entries._store.async_save(hass.config_entries._data_to_save())
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 5,
+        "data": {
+            "entries": [
+                {
+                    "created_at": entry.created_at.isoformat(),
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test_issued",
+                    "entry_id": entry.entry_id,
+                    "minor_version": 1,
+                    "modified_at": entry.modified_at.isoformat(),
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "ignore",
+                    "subentries": [],
+                    "title": "Title probably no-one will read",
+                    "unique_id": None,
+                    "version": 1,
+                },
+                {
+                    "created_at": entry_valid.created_at.isoformat(),
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test_valid",
+                    "entry_id": entry_valid.entry_id,
+                    "minor_version": 1,
+                    "modified_at": entry_valid.modified_at.isoformat(),
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Title probably no-one will read",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
     await hass.config_entries.async_initialize()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
