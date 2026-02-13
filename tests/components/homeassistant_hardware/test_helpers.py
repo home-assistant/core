@@ -20,7 +20,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -305,7 +305,7 @@ async def test_firmware_callback_no_usb_device(
 ) -> None:
     """Test firmware notification when usb_device_from_path returns None."""
     await async_setup_component(hass, DOMAIN, {})
-    await async_setup_component(hass, "usb", {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     with (
         patch(
@@ -336,7 +336,7 @@ async def test_firmware_callback_no_hardware_domain(
 ) -> None:
     """Test firmware notification when no hardware domain is found for device."""
     await async_setup_component(hass, DOMAIN, {})
-    await async_setup_component(hass, "usb", {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     # Create a USB device that doesn't match any hardware integration
     usb_device = USBDevice(
