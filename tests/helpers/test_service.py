@@ -1511,7 +1511,6 @@ async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
     # Set up homeassistant component to fetch the translations
-    await async_setup_component(hass, "homeassistant", {})
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
@@ -1618,8 +1617,6 @@ async def test_call_with_device_class(
     unsupported_entity: str,
 ) -> None:
     """Test service calls invoked only if entity has required features."""
-    # Set up homeassistant component to fetch the translations
-    await async_setup_component(hass, "homeassistant", {})
     test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
