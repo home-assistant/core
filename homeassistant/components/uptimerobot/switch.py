@@ -63,7 +63,7 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self.monitor.status == STATUS_UP)
+        return bool(self._monitor.status == STATUS_UP)
 
     async def _async_edit_monitor(self, **kwargs: Any) -> None:
         """Edit monitor status."""
@@ -83,8 +83,8 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self._async_edit_monitor(monitor_id=self.monitor.id, status=STATUS_DOWN)
+        await self._async_edit_monitor(monitor_id=self._monitor.id, status=STATUS_DOWN)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self._async_edit_monitor(monitor_id=self.monitor.id, status=STATUS_UP)
+        await self._async_edit_monitor(monitor_id=self._monitor.id, status=STATUS_UP)
