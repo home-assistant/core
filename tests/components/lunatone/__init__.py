@@ -18,7 +18,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BASE_URL: Final = "http://10.0.0.131"
+BASE_IP: Final = "10.0.0.131"
+BASE_URL: Final = f"http://{BASE_IP}"
+MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
 UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"

@@ -11,9 +11,10 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -27,6 +28,10 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,13 +69,46 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(title=url, data=data)
         return self.async_show_form(
-            step_id="user",
-            data_schema=DATA_SCHEMA,
-            errors=errors,
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by zeroconf discovery."""
+        url = f"http://{discovery_info.host}"
+        uid: str = discovery_info.properties["uid"]
+        await self.async_set_unique_id(uid.replace("-", ""))
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+
+        self._data[CONF_URL] = url
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the discovered device."""
+        data = {CONF_URL: self._data[CONF_URL]}
+        if user_input is not None:
+            return await self.async_step_user(data)
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=data,
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_user(user_input)
+        if user_input is not None:
+            return await self.async_step_user(user_input)
+
+        entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
+            ),
+            description_placeholders={CONF_NAME: entry.title},
+        )

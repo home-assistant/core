@@ -616,6 +616,27 @@ ZEROCONF = {
             "name": "loqed*",
         },
         {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-display",
+            },
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-iot",
+            },
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-iot4",
+            },
+        },
+        {
             "domain": "nam",
             "name": "nam-*",
         },
