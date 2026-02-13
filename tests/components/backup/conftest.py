@@ -80,7 +80,11 @@ def mock_create_backup() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="mock_ha_version")
 def mock_ha_version_fixture(hass: HomeAssistant) -> Generator[None]:
-    """Mock HA version."""
+    """Mock HA version.
+
+    The HA version is included in backup metadata. We mock it for the benefit
+    of tests that check the exact content of the metadata.
+    """
 
     with patch("homeassistant.components.backup.manager.HAVERSION", "2025.1.0"):
         yield

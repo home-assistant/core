@@ -133,14 +133,19 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
 @pytest.mark.parametrize(
     ("backup", "password", "validation_result"),
     [
+        # Backup not protected, no password provided -> validation passes
         (Path("backup_v2_compressed.tar"), None, True),
         (Path("backup_v2_uncompressed.tar"), None, True),
+        # Backup not protected, password provided -> validation fails
         (Path("backup_v2_compressed.tar"), "hunter2", False),
         (Path("backup_v2_uncompressed.tar"), "hunter2", False),
+        # Backup protected, correct password provided -> validation passes
         (Path("backup_v2_compressed_protected.tar"), "hunter2", True),
         (Path("backup_v2_uncompressed_protected.tar"), "hunter2", True),
+        # Backup protected, no password provided -> validation fails
         (Path("backup_v2_compressed_protected.tar"), None, False),
         (Path("backup_v2_uncompressed_protected.tar"), None, False),
+        # Backup protected, wrong password provided -> validation fails
         (Path("backup_v2_compressed_protected.tar"), "wrong_password", False),
         (Path("backup_v2_uncompressed_protected.tar"), "wrong_password", False),
     ],
