@@ -1140,7 +1140,7 @@ async def test_stt_subentry_not_loaded(
 async def test_stt_reconfigure(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the stt subentry reconfigure flow with."""
+    """Test reconfiguring the STT subentry updates prompt and chat model."""
     subentry = [
         s for s in mock_config_entry.subentries.values() if s.subentry_type == "stt"
     ][0]
