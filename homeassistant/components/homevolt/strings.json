@@ -42,6 +42,12 @@
         "description": "Connect Home Assistant to your Homevolt battery over the local network."
       },
       "zeroconf_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::homevolt::config::step::credentials::data_description::password%]"
+        },
         "description": "Do you want to set up the Homevolt battery at {host}?"
       }
     }

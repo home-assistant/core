@@ -176,8 +176,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             self._need_password = True
         elif errors:
             return self.async_abort(reason=errors["base"])
-
-        if not self._need_password:
+        else:
             await self.async_set_unique_id(client.unique_id)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host},
@@ -190,17 +189,44 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         assert self._host is not None
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if self._need_password:
-                return await self.async_step_credentials()
+                password = user_input[CONF_PASSWORD]
+                websession = async_get_clientsession(self.hass)
+                client = Homevolt(self._host, password, websession=websession)
+                errors = await self.check_status(client)
 
-            return self.async_create_entry(
-                title="Homevolt",
-                data={
-                    CONF_HOST: self._host,
-                    CONF_PASSWORD: None,
-                },
+                if not errors:
+                    device_id = client.unique_id
+                    await self.async_set_unique_id(device_id)
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: self._host},
+                    )
+
+                    return self.async_create_entry(
+                        title="Homevolt",
+                        data={
+                            CONF_HOST: self._host,
+                            CONF_PASSWORD: password,
+                        },
+                    )
+            else:
+                return self.async_create_entry(
+                    title="Homevolt",
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_PASSWORD: None,
+                    },
+                )
+
+        if self._need_password:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                errors=errors,
+                description_placeholders={"host": self._host},
             )
 
         self._set_confirm_only()
