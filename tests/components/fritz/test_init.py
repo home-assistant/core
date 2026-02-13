@@ -75,7 +75,7 @@ async def test_setup_auth_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -95,7 +95,7 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

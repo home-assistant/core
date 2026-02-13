@@ -58,6 +58,10 @@ class FritzConnectionMock:
         """Overrire services data."""
         self._services = services
 
+    def clear_cache(self) -> None:
+        """Mock clear_cache method."""
+        return
+
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
@@ -89,7 +93,8 @@ def fc_data_mock():
 def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection", autospec=True
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
+        autospec=True,
     ) as result:
         result.return_value = FritzConnectionMock(fc_data)
         yield result
