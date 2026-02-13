@@ -23,7 +23,7 @@ from peblar import (
 )
 
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -95,7 +95,7 @@ def _coordinator_exception_handler[
                     if callable(after):
                         await after()
 
-                    # 1 retry after succesfull login
+                    # 1 retry after successful login
                     return await func(self, *args, **kwargs)
                 finally:
                     self._reauth_lock = False
@@ -168,7 +168,7 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
         )
 
     async def _async_after_reauth(self) -> None:
-        # After relogin: rebuild API object
+        """Rebuild the API object after reauthentication."""
         self.api = await self.peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
 
     @_coordinator_exception_handler
