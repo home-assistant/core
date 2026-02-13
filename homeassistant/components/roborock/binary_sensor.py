@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.data import RoborockStateCode
+from roborock.data import CleanFluidStatus, RoborockStateCode
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -65,6 +65,34 @@ BINARY_SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.water_shortage_status,
     ),
     RoborockBinarySensorDescription(
+        key="dirty_box_full",
+        translation_key="dirty_box_full",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.dirty_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
+        key="clean_box_empty",
+        translation_key="clean_box_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.clear_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
+        key="clean_fluid_empty",
+        translation_key="clean_fluid_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            data.status.clean_fluid_status == CleanFluidStatus.empty_not_installed
+            if data.status.clean_fluid_status is not None
+            else None
+        ),
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
         key="in_cleaning",
         translation_key="in_cleaning",
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -75,8 +103,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
         key=ATTR_BATTERY_CHARGING,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.status.state
-        in (RoborockStateCode.charging, RoborockStateCode.charging_complete),
+        value_fn=lambda data: (
+            data.status.state
+            in (RoborockStateCode.charging, RoborockStateCode.charging_complete)
+        ),
     ),
 ]
 

@@ -42,8 +42,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"battery_percentage": 80}, "off", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"battery_percentage": 80}, "off", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"doorcontact_state": True}, "on", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change
