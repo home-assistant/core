@@ -26,7 +26,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -2047,6 +2047,7 @@ async def test_remove_entity_on_value_removed(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_value_removed_and_readded(
     hass: HomeAssistant,
     zp3111: Node,
@@ -2058,7 +2059,7 @@ async def test_value_removed_and_readded(
 
     state = hass.states.get(battery_level_entity)
     assert state
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "0.0"
 
     # Remove the battery level value
     event = Event(
@@ -2120,6 +2121,7 @@ async def test_value_removed_and_readded(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_value_never_populated_then_added(
     hass: HomeAssistant,
     zp3111_state: NodeDataType,
@@ -2150,7 +2152,7 @@ async def test_value_never_populated_then_added(
     battery_level_entity = "sensor.4_in_1_sensor_battery_level"
     state = hass.states.get(battery_level_entity)
     assert state
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
     node = client.driver.controller.nodes[node_state["nodeId"]]
 
