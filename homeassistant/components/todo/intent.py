@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import datetime
+from enum import StrEnum
+from typing import Any
+from zoneinfo import ZoneInfo
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import TodoItem, TodoItemStatus, TodoListEntity
 from .const import DATA_COMPONENT, DOMAIN
@@ -22,6 +27,31 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(hass, ListRemoveItemIntentHandler())
 
 
+class TodoItemDueDay(StrEnum):
+    """Day value for list add item intent."""
+
+    TODAY = "today"
+    TOMORROW = "tomorrow"
+    MONDAY = "mon"
+    TUESDAY = "tue"
+    WEDNESDAY = "wed"
+    THURSDAY = "thu"
+    FRIDAY = "fri"
+    SATURDAY = "sat"
+    SUNDAY = "sun"
+
+
+ENUM_TO_WEEKDAY = {
+    TodoItemDueDay.MONDAY: 0,
+    TodoItemDueDay.TUESDAY: 1,
+    TodoItemDueDay.WEDNESDAY: 2,
+    TodoItemDueDay.THURSDAY: 3,
+    TodoItemDueDay.FRIDAY: 4,
+    TodoItemDueDay.SATURDAY: 5,
+    TodoItemDueDay.SUNDAY: 6,
+}
+
+
 class ListBaseIntentHandler(intent.IntentHandler):
     """Base class for toto intent handlers."""
 
@@ -31,7 +61,12 @@ class ListBaseIntentHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
-    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+    async def _async_do_handle(
+        self,
+        target_list: TodoListEntity,
+        slots: dict[str, Any],
+        intent_obj: intent.Intent,
+    ) -> None:
         """Execute action specific to this intent handler."""
         raise NotImplementedError
 
@@ -40,7 +75,6 @@ class ListBaseIntentHandler(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None
@@ -64,7 +98,7 @@ class ListBaseIntentHandler(intent.IntentHandler):
             )
 
         # Execute specific action
-        await self._async_do_handle(target_list, item)
+        await self._async_do_handle(target_list, slots, intent_obj)
 
         # Build intent response
         response: intent.IntentResponse = intent_obj.create_response()
@@ -86,13 +120,146 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
 
-    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+    slot_schema = ListBaseIntentHandler.slot_schema | {
+        # absolute due datetime
+        vol.Optional("due_day"): vol.In([d.value for d in TodoItemDueDay]),
+        vol.Optional("due_hour"): cv.positive_int,
+        vol.Optional("due_minute"): cv.positive_int,
+        # relative due datetime
+        vol.Optional("due_day_offset"): cv.positive_int,
+        vol.Optional("due_hour_offset"): cv.positive_int,
+        vol.Optional("due_minute_offset"): cv.positive_int,
+    }
+
+    async def _async_do_handle(
+        self,
+        target_list: TodoListEntity,
+        slots: dict[str, Any],
+        intent_obj: intent.Intent,
+    ) -> None:
         """Execute action specific to this intent handler."""
+        hass = intent_obj.hass
+
+        item = slots["item"]["value"].strip()
+
+        due_day: TodoItemDueDay | None = None
+        if "due_day" in slots:
+            due_day = slots["due_day"]["value"]
+        due_hour: int | None = None
+        if "due_hour" in slots:
+            due_hour = slots["due_hour"]["value"]
+        due_minute: int | None = None
+        if "due_minute" in slots:
+            due_minute = slots["due_minute"]["value"]
+        due_day_offset: int | None = None
+        if "due_day_offset" in slots:
+            due_day_offset = slots["due_day_offset"]["value"]
+        due_hour_offset: int | None = None
+        if "due_hour_offset" in slots:
+            due_hour_offset = slots["due_hour_offset"]["value"]
+        due_minute_offset: int | None = None
+        if "due_minute_offset" in slots:
+            due_minute_offset = slots["due_minute_offset"]["value"]
+
+        # Compute due date
+        due: datetime.date | datetime.datetime | None = None
+        if due_day is not None or due_hour is not None:
+            due = self.__get_absolute_due_date(
+                hass.config.time_zone, due_day, due_hour, due_minute
+            )
+        elif (
+            due_day_offset is not None
+            or due_hour_offset is not None
+            or due_minute_offset is not None
+        ):
+            due = self.__get_relative_due_date(
+                hass.config.time_zone,
+                due_day_offset,
+                due_hour_offset,
+                due_minute_offset,
+            )
 
         # Add to list
         await target_list.async_create_todo_item(
-            TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION)
+            TodoItem(summary=item, status=TodoItemStatus.NEEDS_ACTION, due=due)
         )
+
+    def __get_absolute_due_date(
+        self,
+        time_zone: str,
+        day: TodoItemDueDay | None,
+        hour: int | None,
+        minute: int | None,
+    ) -> datetime.date | datetime.datetime:
+        """Gets the due date from the requested day + hour + minute."""
+        now = datetime.datetime.now(ZoneInfo(time_zone))
+        due = now
+
+        # apply time
+        if hour is not None:
+            due = due.replace(hour=hour, minute=minute or 0, second=0, microsecond=0)
+
+        # default day is today
+        if day is None:
+            day = TodoItemDueDay.TODAY
+
+        # apply date
+        match day:
+            case TodoItemDueDay.TODAY:
+                # no time provided: return only the date part
+                if hour is None:
+                    return due.date()
+                # the time is passed: due is tomorrow
+                if now > due:
+                    due += datetime.timedelta(days=1)
+                return due
+
+            case TodoItemDueDay.TOMORROW:
+                due += datetime.timedelta(days=1)
+                # no time provided: return only the date part
+                if hour is None:
+                    return due.date()
+                return due
+
+            case _:
+                # add the corresponding number of days
+                due += datetime.timedelta(
+                    days=(ENUM_TO_WEEKDAY[day] - due.weekday() + 7) % 7
+                )
+                # no time provided: return only the date part
+                if hour is None:
+                    # if same day: due is next week
+                    if due.date() == now.date():
+                        due += datetime.timedelta(weeks=1)
+                    return due.date()
+                # the time is passed: due is next week
+                if now > due:
+                    due += datetime.timedelta(weeks=1)
+                return due
+
+    def __get_relative_due_date(
+        self,
+        time_zone: str,
+        day_offset: int | None,
+        hour_offset: int | None,
+        minute_offset: int | None,
+    ) -> datetime.date | datetime.datetime:
+        """Gets the due date from the requested offsets."""
+        now = datetime.datetime.now(ZoneInfo(time_zone))
+        due = now.replace(second=0, microsecond=0)
+
+        # apply offsets
+        if day_offset is not None:
+            due += datetime.timedelta(days=day_offset)
+        if hour_offset is not None:
+            due += datetime.timedelta(hours=hour_offset)
+        if minute_offset is not None:
+            due += datetime.timedelta(minutes=minute_offset)
+
+        # no time provided: return only the date part
+        if day_offset is not None and hour_offset is None and minute_offset is None:
+            return due.date()
+        return due
 
 
 class ListCompleteItemIntentHandler(ListBaseIntentHandler):
@@ -101,8 +268,15 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_COMPLETE_ITEM
     description = "Complete item on a todo list"
 
-    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+    async def _async_do_handle(
+        self,
+        target_list: TodoListEntity,
+        slots: dict[str, Any],
+        intent_obj: intent.Intent,
+    ) -> None:
         """Execute action specific to this intent handler."""
+
+        item = slots["item"]["value"].strip()
 
         # Find item in list
         matching_item = None
@@ -134,8 +308,15 @@ class ListRemoveItemIntentHandler(ListBaseIntentHandler):
     intent_type = INTENT_LIST_REMOVE_ITEM
     description = "Remove one or more items from a todo list"
 
-    async def _async_do_handle(self, target_list: TodoListEntity, item: str) -> None:
+    async def _async_do_handle(
+        self,
+        target_list: TodoListEntity,
+        slots: dict[str, Any],
+        intent_obj: intent.Intent,
+    ) -> None:
         """Execute action specific to this intent handler."""
+
+        item = slots["item"]["value"].strip()
 
         # Find item in list
         matching_item = None
