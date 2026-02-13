@@ -334,12 +334,12 @@ async def test_zeroconf_confirm_flow_success(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"host": "192.168.1.123"}
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Homevolt"
-    assert result2["data"] == {CONF_HOST: "192.168.1.123", CONF_PASSWORD: None}
-    assert result2["result"].unique_id == "40580137858664"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Homevolt"
+    assert result["data"] == {CONF_HOST: "192.168.1.123", CONF_PASSWORD: None}
+    assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -361,10 +361,10 @@ async def test_zeroconf_duplicate_aborts(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
@@ -391,14 +391,14 @@ async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "credentials"
-    assert result2["description_placeholders"] == {"host": "192.168.1.123"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert result["description_placeholders"] == {"host": "192.168.1.123"}
 
 
 async def test_zeroconf_connection_error_aborts(
@@ -417,3 +417,21 @@ async def test_zeroconf_connection_error_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_unknown_error_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test zeroconf flow aborts on unknown error during discovery."""
+    mock_homevolt_client.update_info.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
