@@ -13,7 +13,7 @@ import logging
 import os
 import pathlib
 import reprlib
-from shutil import rmtree
+from shutil import copytree, rmtree
 import sqlite3
 import ssl
 import sys
@@ -137,6 +137,7 @@ from .common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_config_dir,
     mock_storage,
     patch_yaml_files,
     extract_stack_to_frame,
@@ -557,9 +558,41 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
+def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
+    """Fixture to provide a temporary config directory.
+
+    Use this fixture in a fixture overriding hass_config_dir to provide
+    a temporary config directory which does not need to be cleaned up:
+
+    @pytest.fixture
+    def hass_config_dir(hass_tmp_config_dir: str) -> str:
+        # Use temporary config directory for this test/module.
+        return hass_tmp_config_dir
+    """
+    copytree(
+        get_test_config_dir(),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+    return str(tmp_path)
+
+
+@pytest.fixture
+def hass_config_dir() -> str:
+    """Fixture to provide a test config directory.
+
+    Override this fixture to provide a custom config directory,
+    for example with pre-populated config files.
+    """
+    return get_test_config_dir()
+
+
+@pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
+    hass_config_dir: str | None,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
@@ -586,7 +619,9 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    async with async_test_home_assistant(loop, load_registries) as hass:
+    async with async_test_home_assistant(
+        loop, load_registries, config_dir=hass_config_dir
+    ) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)

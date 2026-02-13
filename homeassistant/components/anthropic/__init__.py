@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
-
 import anthropic
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -16,6 +14,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -42,8 +41,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     try:
         await client.models.list(timeout=10.0)
