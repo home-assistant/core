@@ -35,7 +35,7 @@ class EnOceanDongle:
         self._communicator = None
 
         # For network URLs, use the netloc (host:port) as identifier
-        # For local paths, use basename as before
+        # For local paths, use basename
         if _is_serial_url(serial_path):
             parsed = urlparse(serial_path)
             self.identifier = f"{parsed.scheme}_{parsed.netloc.replace(':', '_')}"
