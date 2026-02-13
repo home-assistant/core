@@ -7,6 +7,7 @@ import datetime
 import logging
 
 import httpx
+from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
@@ -63,10 +64,15 @@ async def mcp_client(
         # Method not Allowed likely means this is not a streamable HTTP server,
         # but it may be an SSE server. This is part of the MCP Transport
         # backwards compatibility specification.
+        # We also handle other generic McpErrors since proxies may not respond
+        # consistently with a 405.
         if (
             isinstance(main_error, httpx.HTTPStatusError)
             and main_error.response.status_code == 405
-        ):
+        ) or isinstance(main_error, McpError):
+            _LOGGER.debug(
+                "Streamable HTTP client failed, attempting SSE client: %s", main_error
+            )
             try:
                 async with (
                     sse_client(url=url, headers=headers) as streams,
