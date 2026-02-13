@@ -26,6 +26,7 @@ async def test_async_get_integration_serial_uses_mac(
 ) -> None:
     """Verify MAC-based serial is used when available."""
     monkeypatch.setattr(identity_module, "_resolve_host", lambda host: "1.2.3.4")
+
     async def _get_source_ip(*_args, **_kwargs):
         return "1.2.3.4"
 
@@ -67,6 +68,7 @@ async def test_async_get_integration_serial_falls_back(
 
 def test_resolve_host_handles_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify host resolution returns host on error."""
+
     def _raise(*_args, **_kwargs):
         raise OSError
 
@@ -93,35 +95,42 @@ async def test_get_mac_for_source_ip_handles_errors(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Verify MAC lookup handles psutil errors and missing MACs."""
+
     class FakePsutil:
         def __init__(self, exc: Exception | None = None) -> None:
             self._exc = exc
+
         def net_if_addrs(self):  # type: ignore[no-untyped-def]
             if self._exc:
                 raise self._exc
             return {
-                "eth0": [
-                    type("Addr", (), {"address": "1.2.3.4", "family": object()})()
-                ]
+                "eth0": [type("Addr", (), {"address": "1.2.3.4", "family": object()})()]
             }
 
     class FakeWrapper:
         def __init__(self, exc: Exception | None = None) -> None:
             self.psutil = FakePsutil(exc)
 
-    monkeypatch.setattr(identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(OSError()))
+    monkeypatch.setattr(
+        identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(OSError())
+    )
     assert identity_module._get_mac_for_source_ip("1.2.3.4") is None
 
-    monkeypatch.setattr(identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(None))
+    monkeypatch.setattr(
+        identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(None)
+    )
     assert identity_module._get_mac_for_source_ip("1.2.3.4") is None
 
 
 def test_get_mac_for_source_ip_matches_mac(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify MAC lookup returns when address matches."""
+
     class Addr:
         def __init__(self) -> None:
             self.address = "1.2.3.4"
-            self.family = getattr(socket, "AF_PACKET", None) or getattr(socket, "AF_LINK", None)
+            self.family = getattr(socket, "AF_PACKET", None) or getattr(
+                socket, "AF_LINK", None
+            )
 
     class FakePsutil:
         def net_if_addrs(self):  # type: ignore[no-untyped-def]
@@ -137,10 +146,13 @@ def test_get_mac_for_source_ip_matches_mac(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_get_mac_for_source_ip_no_match(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify MAC lookup returns None when no addresses match."""
+
     class Addr:
         def __init__(self) -> None:
             self.address = "9.9.9.9"
-            self.family = getattr(socket, "AF_PACKET", None) or getattr(socket, "AF_LINK", None)
+            self.family = getattr(socket, "AF_PACKET", None) or getattr(
+                socket, "AF_LINK", None
+            )
 
     class FakePsutil:
         def net_if_addrs(self):  # type: ignore[no-untyped-def]
@@ -158,6 +170,7 @@ async def test_integration_serial_no_source_ip(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Verify serial generation when source IP is missing."""
+
     async def _get_source_ip(*_args, **_kwargs):
         return None
 

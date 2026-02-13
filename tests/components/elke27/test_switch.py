@@ -165,7 +165,9 @@ async def test_switch_turn_off_pin_required(hass: HomeAssistant) -> None:
     hub = _Hub()
     hub.async_set_output.side_effect = switch_module.Elke27PinRequiredError
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
-    coordinator.async_set_updated_data(SimpleNamespace(outputs=[SimpleNamespace(output_id=1, state=True)]))
+    coordinator.async_set_updated_data(
+        SimpleNamespace(outputs=[SimpleNamespace(output_id=1, state=True)])
+    )
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     output = switch_module.Elke27OutputSwitch(
         coordinator, hub, entry, 1, SimpleNamespace(output_id=1)

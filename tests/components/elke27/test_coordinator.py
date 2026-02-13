@@ -201,6 +201,7 @@ async def test_async_refresh_now_updates_snapshot(hass: HomeAssistant) -> None:
 
 async def test_queue_domain_refresh_handles_exception(hass: HomeAssistant) -> None:
     """Verify exceptions in refresh domain are handled."""
+
     class ErrorHub(_FakeHub):
         async def refresh_domain_config(self, domain: str) -> None:
             raise RuntimeError("boom")

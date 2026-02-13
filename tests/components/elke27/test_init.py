@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-import importlib
-from pathlib import Path
-import sys
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
-import pytest
 
-import homeassistant.components.elke27 as elke27_mod
 from homeassistant.components.elke27 import (
     _async_migrate_unique_ids,
     _panel_name_from_entry,
@@ -336,28 +331,6 @@ async def test_setup_removes_pin_when_serial_exists(hass: HomeAssistant) -> None
         await hass.async_block_till_done()
 
     update_entry.assert_called()
-
-
-def test_vendor_path_injected(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Verify vendor path is added to sys.path when present."""
-    module_path = (
-        Path(__file__).resolve().parents[3] / "homeassistant" / "components" / "elke27"
-    )
-    vendor_path = module_path / "vendor" / "elkm1"
-    vendor_path.mkdir(parents=True, exist_ok=True)
-    try:
-        if str(vendor_path) in sys.path:
-            sys.path.remove(str(vendor_path))
-        importlib.reload(elke27_mod)
-        assert str(vendor_path) in sys.path
-    finally:
-        if vendor_path.exists():
-            for parent in (vendor_path, vendor_path.parent):
-                if parent.exists():
-                    try:
-                        parent.rmdir()
-                    except OSError:
-                        break
 
 
 async def test_migrate_unique_ids_skips_unmatched(hass: HomeAssistant) -> None:

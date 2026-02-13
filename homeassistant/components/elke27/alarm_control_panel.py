@@ -114,8 +114,8 @@ class Elke27AreaAlarmControlPanel(
         self._missing_logged = False
 
     @property
-    def state(self) -> AlarmControlPanelState | None:
-        """Return the current state."""
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        """Return the current alarm state."""
         area = _get_area(self.coordinator.data, self._area_id)
         if area is None:
             self._log_missing()
@@ -138,7 +138,7 @@ class Elke27AreaAlarmControlPanel(
         faulted_zones = _faulted_zones(self.coordinator.data)
         ready_status_display = (
             _ready_status_display(area)
-            if self.state == AlarmControlPanelState.DISARMED
+            if self.alarm_state == AlarmControlPanelState.DISARMED
             else None
         )
         return {

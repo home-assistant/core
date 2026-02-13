@@ -251,8 +251,13 @@ def test_area_state_and_ready_status_helpers() -> None:
         alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT"))
         == "Not ready"
     )
-    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="OTHER")) is None
-    assert alarm_module._ready_status_display(SimpleNamespace(ready_status=None)) is None
+    assert (
+        alarm_module._ready_status_display(SimpleNamespace(ready_status="OTHER"))
+        is None
+    )
+    assert (
+        alarm_module._ready_status_display(SimpleNamespace(ready_status=None)) is None
+    )
 
 
 async def test_area_setup_skips_when_runtime_missing(hass: HomeAssistant) -> None:
@@ -294,7 +299,9 @@ async def test_area_setup_invalid_area_id(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     hub = _Hub()
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
-    coordinator.async_set_updated_data(SimpleNamespace(areas=[SimpleNamespace(area_id="x")]))
+    coordinator.async_set_updated_data(
+        SimpleNamespace(areas=[SimpleNamespace(area_id="x")])
+    )
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
@@ -323,8 +330,14 @@ def test_faulted_zones_helpers() -> None:
         alarm_module._zone_display_name(SimpleNamespace(zone_id=4, name=None), {})
         == "Zone 4"
     )
-    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {}) == "Zone"
-    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {}) == "Zone"
+    assert (
+        alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {})
+        == "Zone"
+    )
+    assert (
+        alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {})
+        == "Zone"
+    )
 
 
 def test_normalize_code() -> None:
@@ -372,17 +385,32 @@ async def test_area_setup_edge_cases(hass: HomeAssistant) -> None:
 
 def test_area_state_string_modes() -> None:
     """Verify area state mapping for string values."""
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarm")) == "disarmed"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="stay")) == "armed_home"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="night")) == "armed_night"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="away")) == "armed_away"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass")) == "armed_custom_bypass"
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarm")) == "disarmed"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="stay")) == "armed_home"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="night"))
+        == "armed_night"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="away")) == "armed_away"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass"))
+        == "armed_custom_bypass"
+    )
 
 
 def test_faulted_zones_edge_cases() -> None:
     """Verify faulted zones handles mappings and bypassed/closed zones."""
     snapshot = SimpleNamespace(
-        zones={1: SimpleNamespace(zone_id=1, open=False), 2: SimpleNamespace(zone_id=2, open=True, bypassed=True)},
+        zones={
+            1: SimpleNamespace(zone_id=1, open=False),
+            2: SimpleNamespace(zone_id=2, open=True, bypassed=True),
+        },
         zone_definitions={},
     )
     assert alarm_module._faulted_zones(snapshot) == []
@@ -446,7 +474,10 @@ def test_area_custom_bypass_mode(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_area_state_unknown_string() -> None:
     """Verify unknown string defaults to armed_away."""
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="unknown")) == "armed_away"
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="unknown"))
+        == "armed_away"
+    )
 
 
 def test_faulted_zones_none_and_non_int() -> None:

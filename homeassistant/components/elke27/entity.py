@@ -70,7 +70,7 @@ def device_info_for_entry(
     )
     identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else None,
+        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
         identifiers=identifiers,
         name=panel_name,
         model=model,

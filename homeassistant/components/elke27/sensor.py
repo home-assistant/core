@@ -72,6 +72,7 @@ async def async_setup_entry(
 class Elke27Sensor(CoordinatorEntity[Elke27DataUpdateCoordinator], SensorEntity):
     """Representation of an Elke27 sensor."""
 
+    entity_description: Elke27SensorDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 

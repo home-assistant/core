@@ -8,7 +8,9 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: todo
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom service actions.
   docs-high-level-description:
     status: done
   docs-installation-instructions:

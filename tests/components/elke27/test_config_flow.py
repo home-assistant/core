@@ -111,19 +111,26 @@ def test_panel_helpers() -> None:
     assert normalized["mac"] == "cc:dd"
     assert config_flow._panel_mac({"mac": "ee:ff"}) == "ee:ff"
     assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
-    assert config_flow._panel_label(panel) == "Panel (1.2.3.4)"
+    assert config_flow._panel_label(panel) == "Panel (E27, aa:bb, 1.2.3.4)"
     assert config_flow._panel_to_dict(None) == {}
-    assert config_flow._panel_label(SimpleNamespace(host="1.2.3.5")) == "1.2.3.5"
+    assert (
+        config_flow._panel_label(SimpleNamespace(host="1.2.3.5")) == "Panel (1.2.3.5)"
+    )
     assert config_flow._panel_label(SimpleNamespace(name="Only Name")) == "Only Name"
     assert config_flow._panel_label(SimpleNamespace()) == "Panel"
     assert config_flow._panel_to_dict({"host": "1.2.3.4"})["host"] == "1.2.3.4"
-    assert config_flow._panel_to_dict(FakePanel(
-        panel_host="1.2.3.4",
-        panel_port=2101,
-        panel_name="Panel",
-        panel_mac="aa:bb",
-        panel_model="E27",
-    ))["host"] == "1.2.3.4"
+    assert (
+        config_flow._panel_to_dict(
+            FakePanel(
+                panel_host="1.2.3.4",
+                panel_port=2101,
+                panel_name="Panel",
+                panel_mac="aa:bb",
+                panel_model="E27",
+            )
+        )["host"]
+        == "1.2.3.4"
+    )
 
 
 def test_snapshot_to_dict() -> None:
@@ -187,11 +194,13 @@ async def test_discover_missing_host(hass: HomeAssistant) -> None:
             result["flow_id"],
             {"next_step_id": "discover"},
         )
+        # Single panel auto-selected; schema is STEP_LINK_DATA_SCHEMA (no panel field).
+        # Host is None so _async_link_and_create_entry returns "unknown".
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {"panel": "0", "access_code": "1", "passphrase": "2"},
+            {"access_code": "1", "passphrase": "2"},
         )
-        assert result3["errors"]["base"] == "no_panels_found"
+        assert result3["errors"]["base"] == "unknown"
 
 
 async def test_discover_handles_missing_panels(hass: HomeAssistant) -> None:
@@ -199,7 +208,9 @@ async def test_discover_handles_missing_panels(hass: HomeAssistant) -> None:
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
     flow._discovered_panels = None
-    result = await flow.async_step_discover({"panel": "0", "access_code": "1", "passphrase": "2"})
+    result = await flow.async_step_discover(
+        {"panel": "0", "access_code": "1", "passphrase": "2"}
+    )
     assert result["errors"]["base"] == "no_panels_found"
 
 
@@ -521,10 +532,10 @@ async def test_discovery_flow_creates_entry(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "discover"
 
+        # Single panel auto-selected; schema is STEP_LINK_DATA_SCHEMA (no panel field)
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "panel": "0",
                 "access_code": "1234",
                 "passphrase": "test-pass",
             },

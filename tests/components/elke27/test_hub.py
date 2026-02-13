@@ -282,7 +282,9 @@ async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
         async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
     )
     assert await hub.async_set_zone_bypass(1, True, pin="1234") is False
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=True)))
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
+    )
     assert await hub.async_set_zone_bypass(1, True, pin="1234") is True
 
 
@@ -309,7 +311,9 @@ async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="nope"):
         await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
 
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None)))
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
+    )
     assert await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234") is False
 
 
@@ -353,7 +357,9 @@ async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="Code must be numeric"):
         await hub.async_disarm_area(1, "aa")
     assert await hub.async_disarm_area(1, "1234") is False
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=True)))
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
+    )
     assert await hub.async_disarm_area(1, "1234") is True
 
 
