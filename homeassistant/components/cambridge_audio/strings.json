@@ -59,20 +59,24 @@
         "name": "Equalizer preset",
         "state": {
           "bass_boost": "Bass boost",
-          "classical": "Classical",
+          "bass_reduction": "Bass reduction",
           "custom": "Custom",
           "flat": "Flat",
-          "jazz": "Jazz",
-          "pop": "Pop",
-          "rock": "Rock",
+          "gaming": "Gaming",
+          "movie": "Movie",
           "treble_boost": "Treble boost",
-          "vocal": "Vocal"
+          "treble_reduction": "Treble reduction",
+          "tv": "TV",
+          "voice_clarity": "Voice clarity"
         }
       }
     },
     "switch": {
       "early_update": {
         "name": "Early update"
+      },
+      "equalizer": {
+        "name": "Equalizer"
       },
       "pre_amp": {
         "name": "Pre-Amp"
