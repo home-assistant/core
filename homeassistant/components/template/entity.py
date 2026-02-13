@@ -104,7 +104,7 @@ class AbstractTemplateEntity(Entity):
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
         render_complex: bool = False,
-        **kwargs,
+        none_on_template_error: bool = True,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
@@ -124,6 +124,9 @@ class AbstractTemplateEntity(Entity):
             This signals trigger based template entities to render the template
             as a complex result. State based template entities always render
             complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
         """
 
     def add_template(
