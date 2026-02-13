@@ -1,7 +1,8 @@
 """Test config flow for Swing2Sleep Smarla integration."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
+from pysmarlaapi.connection.exceptions import AuthenticationException
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -63,14 +64,15 @@ async def test_malformed_token(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_invalid_auth(hass: HomeAssistant, mock_connection: MagicMock) -> None:
     """Test we show user form on invalid auth."""
-    with patch.object(
-        mock_connection, "refresh_token", new=AsyncMock(return_value=False)
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=MOCK_USER_INPUT,
-        )
+    mock_connection.refresh_token.side_effect = AuthenticationException
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=MOCK_USER_INPUT,
+    )
+
+    mock_connection.refresh_token.side_effect = None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

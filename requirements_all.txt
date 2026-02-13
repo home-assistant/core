@@ -2451,7 +2451,7 @@ pysma==1.1.0
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.13.0
+pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
 pysmartthings==3.5.2

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from pysmarlaapi.classes import AuthToken
-from pysmarlaapi.federwiege.classes import Property, Service
+from pysmarlaapi import AuthToken
+from pysmarlaapi.federwiege.services.classes import Property, Service
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -49,7 +49,6 @@ def mock_connection() -> Generator[MagicMock]:
     ):
         connection = mock_connection.return_value
         connection.token = AuthToken.from_json(MOCK_ACCESS_TOKEN_JSON)
-        connection.refresh_token.return_value = True
         yield connection
 
 

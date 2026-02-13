@@ -1,6 +1,10 @@
 """The Swing2Sleep Smarla integration."""
 
 from pysmarlaapi import Connection, Federwiege
+from pysmarlaapi.connection.exceptions import (
+    AuthenticationException,
+    ConnectionException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -17,8 +21,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -
     connection = Connection(HOST, token_b64=entry.data[CONF_ACCESS_TOKEN])
 
     # Check if token still has access
-    if not await connection.refresh_token():
-        raise ConfigEntryError("Invalid authentication")
+    try:
+        await connection.refresh_token()
+    except (ConnectionException, AuthenticationException) as e:
+        raise ConfigEntryError("Invalid authentication") from e
 
     federwiege = Federwiege(hass.loop, connection)
     federwiege.register()
