@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from lunatone_rest_api_client import Device, Devices, Info
+from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
 from lunatone_rest_api_client.models import InfoData
 import pytest
 
@@ -11,7 +11,7 @@ from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, INFO_DATA, PRODUCT_NAME, UUID, build_devices_data
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SENSORS_DATA, UUID, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -95,6 +95,10 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
             "homeassistant.components.lunatone.config_flow.Info",
             new=mock_info,
         ),
+        patch(
+            "homeassistant.components.lunatone.coordinator.Info",
+            new=mock_info,
+        ),
     ):
         info = mock_info.return_value
 
@@ -122,6 +126,34 @@ def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
         dali_broadcast = mock_dali_broadcast.return_value
         dali_broadcast.line = 0
         yield dali_broadcast
+
+
+@pytest.fixture
+def mock_lunatone_sensors() -> Generator[AsyncMock]:
+    """Mock a Lunatone sensors object."""
+
+    def build_sensors_mock(sensors: Sensors):
+        sensor_list = []
+        if sensors.data is None:
+            return sensor_list
+        for sensor_data in sensors.data.sensors:
+            sensor = AsyncMock(spec=Sensor)
+            sensor.data = sensor_data
+            sensor.id = sensor.data.id
+            sensor.name = sensor.data.name
+            sensor_list.append(sensor)
+        return sensor_list
+
+    with patch(
+        "homeassistant.components.lunatone.Sensors",
+        autospec=True,
+    ) as mock_info:
+        sensors = mock_info.return_value
+        sensors.data = SENSORS_DATA
+        type(sensors).sensors = PropertyMock(
+            side_effect=lambda s=sensors: build_sensors_mock(s)
+        )
+        yield sensors
 
 
 @pytest.fixture
