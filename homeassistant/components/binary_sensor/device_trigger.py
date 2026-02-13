@@ -59,6 +59,8 @@ CONF_UNSAFE = "unsafe"
 CONF_NOT_UNSAFE = "not_unsafe"
 CONF_SMOKE = "smoke"
 CONF_NO_SMOKE = "no_smoke"
+CONF_IS_SLEEPING = "is_sleeping"
+CONF_IS_NOT_SLEEPING = "is_awake"
 CONF_SOUND = "sound"
 CONF_NO_SOUND = "no_sound"
 CONF_TAMPERED = "tampered"
@@ -163,6 +165,10 @@ ENTITY_TRIGGERS = {
     BinarySensorDeviceClass.SMOKE: [
         {CONF_TYPE: CONF_SMOKE},
         {CONF_TYPE: CONF_NO_SMOKE},
+    ],
+    BinarySensorDeviceClass.SLEEPING: [
+        {CONF_TYPE: CONF_IS_SLEEPING},
+        {CONF_TYPE: CONF_IS_NOT_SLEEPING},
     ],
     BinarySensorDeviceClass.SOUND: [
         {CONF_TYPE: CONF_SOUND},

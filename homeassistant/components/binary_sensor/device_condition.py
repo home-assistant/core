@@ -67,6 +67,8 @@ CONF_IS_UNSAFE = "is_unsafe"
 CONF_IS_NOT_UNSAFE = "is_not_unsafe"
 CONF_IS_SMOKE = "is_smoke"
 CONF_IS_NO_SMOKE = "is_no_smoke"
+CONF_IS_SLEEPING = "is_sleeping"
+CONF_IS_NOT_SLEEPING = "is_not_sleeping"
 CONF_IS_SOUND = "is_sound"
 CONF_IS_NO_SOUND = "is_no_sound"
 CONF_IS_TAMPERED = "is_tampered"
@@ -99,6 +101,7 @@ IS_ON = [
     CONF_IS_PROBLEM,
     CONF_IS_RUNNING,
     CONF_IS_SMOKE,
+    CONF_IS_SLEEPING,
     CONF_IS_SOUND,
     CONF_IS_TAMPERED,
     CONF_IS_UPDATE,
@@ -130,6 +133,7 @@ IS_OFF = [
     CONF_IS_NO_PROBLEM,
     CONF_IS_NOT_RUNNING,
     CONF_IS_NO_SMOKE,
+    CONF_IS_NOT_SLEEPING,
     CONF_IS_NO_SOUND,
     CONF_IS_NO_UPDATE,
     CONF_IS_NO_VIBRATION,
@@ -224,6 +228,10 @@ ENTITY_CONDITIONS = {
     BinarySensorDeviceClass.SAFETY: [
         {CONF_TYPE: CONF_IS_UNSAFE},
         {CONF_TYPE: CONF_IS_NOT_UNSAFE},
+    ],
+    BinarySensorDeviceClass.SLEEPING: [
+        {CONF_TYPE: CONF_IS_SLEEPING},
+        {CONF_TYPE: CONF_IS_NOT_SLEEPING},
     ],
     BinarySensorDeviceClass.SMOKE: [
         {CONF_TYPE: CONF_IS_SMOKE},

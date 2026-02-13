@@ -52,6 +52,8 @@
       "is_problem": "{entity_name} is detecting problem",
       "is_running": "{entity_name} is running",
       "is_smoke": "{entity_name} is detecting smoke",
+      "is_sleeping": "{entity_name} is sleeping",
+      "is_not_sleeping": "{entity_name} is awake",
       "is_sound": "{entity_name} is detecting sound",
       "is_tampered": "{entity_name} is detecting tampering",
       "is_unsafe": "{entity_name} is unsafe",
@@ -283,6 +285,13 @@
       "state": {
         "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
         "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
+    },
+    "sleeping": {
+      "name": "Sleeping",
+      "state": {
+        "off": "Awake",
+        "on": "Asleep"
       }
     },
     "sound": {
