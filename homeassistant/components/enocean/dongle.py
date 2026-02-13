@@ -149,7 +149,7 @@ def validate_path(path: str) -> bool:
             return False
         return True
 
-    # Local device path validation (existing behavior)
+    # Local device path validation
     try:
         # Creating the serial communicator will raise an exception
         # if it cannot connect
