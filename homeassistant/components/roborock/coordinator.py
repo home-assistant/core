@@ -435,6 +435,8 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.TIMES_AFTER_CLEAN,
             RoborockZeoProtocol.DETERGENT_EMPTY,
             RoborockZeoProtocol.SOFTENER_EMPTY,
+            RoborockZeoProtocol.DETERGENT_TYPE,
+            RoborockZeoProtocol.SOFTENER_TYPE,
             RoborockZeoProtocol.MODE,
             RoborockZeoProtocol.PROGRAM,
             RoborockZeoProtocol.TEMP,

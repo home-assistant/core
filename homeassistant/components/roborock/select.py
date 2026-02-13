@@ -39,7 +39,11 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01,
+    RoborockCoordinatedEntityV1,
+)
 
 PARALLEL_UPDATES = 0
 
