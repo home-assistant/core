@@ -28,98 +28,6 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 )
 
 
-async def test_zeroconf_already_in_progress_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_homevolt_client: MagicMock,
-) -> None:
-    """Test zeroconf flow aborts when already in progress for the same host."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_in_progress"
-
-
-async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_homevolt_client: MagicMock,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test zeroconf confirm goes to credentials step when auth is required."""
-
-    monkeypatch.setattr(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        lambda hass: True,
-    )
-
-    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "credentials"
-    assert result2["description_placeholders"] == {"host": "192.168.1.123"}
-
-
-async def test_zeroconf_confirm_onboarded_errors_abort(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_homevolt_client: MagicMock,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test zeroconf confirm aborts on non-auth errors when onboarded."""
-
-    monkeypatch.setattr(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        lambda hass: True,
-    )
-
-    mock_homevolt_client.update_info.side_effect = HomevoltConnectionError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
-
-
 async def test_full_flow_success(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
 ) -> None:
@@ -145,54 +53,6 @@ async def test_full_flow_success(
     assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PASSWORD: None}
     assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_zeroconf_confirm_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
-) -> None:
-    """Test zeroconf flow shows confirm step before creating entry."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["description_placeholders"] == {"host": "192.168.1.123"}
-
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Homevolt"
-    assert result2["data"] == {CONF_HOST: "192.168.1.123", CONF_PASSWORD: None}
-    assert result2["result"].unique_id == "40580137858664"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_zeroconf_duplicate_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_homevolt_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test zeroconf flow aborts when unique id is already configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
-
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
 
 
 async def test_flow_auth_error_then_password_success(
@@ -237,6 +97,60 @@ async def test_flow_auth_error_then_password_success(
     assert result["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == "40580137858664"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_credentials_step_invalid_password(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
+) -> None:
+    """Test invalid password in credentials step shows error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    user_input = {
+        CONF_HOST: "192.168.1.100",
+    }
+
+    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+
+    # Provide wrong password - should show error
+    password_input = {
+        CONF_PASSWORD: "wrong-password",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], password_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_homevolt_client.update_info.side_effect = None
+
+    password_input = {
+        CONF_PASSWORD: "correct-password",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], password_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Homevolt"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PASSWORD: "correct-password",
     }
     assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -323,60 +237,6 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_credentials_step_invalid_password(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
-) -> None:
-    """Test invalid password in credentials step shows error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    user_input = {
-        CONF_HOST: "192.168.1.100",
-    }
-
-    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "credentials"
-
-    # Provide wrong password - should show error
-    password_input = {
-        CONF_PASSWORD: "wrong-password",
-    }
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], password_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "credentials"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    mock_homevolt_client.update_info.side_effect = None
-
-    password_input = {
-        CONF_PASSWORD: "correct-password",
-    }
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], password_input
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Homevolt"
-    assert result["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_PASSWORD: "correct-password",
-    }
-    assert result["result"].unique_id == "40580137858664"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -457,3 +317,103 @@ async def test_reauth_flow_errors(
         CONF_HOST: "127.0.0.1",
         CONF_PASSWORD: "correct-password",
     }
+
+
+async def test_zeroconf_confirm_flow_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
+) -> None:
+    """Test zeroconf flow shows confirm step before creating entry."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"] == {"host": "192.168.1.123"}
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Homevolt"
+    assert result2["data"] == {CONF_HOST: "192.168.1.123", CONF_PASSWORD: None}
+    assert result2["result"].unique_id == "40580137858664"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_duplicate_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf flow aborts when unique id is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
+async def test_zeroconf_confirm_onboarded_invalid_auth_shows_credentials(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test zeroconf confirm goes to credentials step when auth is required."""
+
+    monkeypatch.setattr(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        lambda hass: True,
+    )
+
+    mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "credentials"
+    assert result2["description_placeholders"] == {"host": "192.168.1.123"}
+
+
+async def test_zeroconf_connection_error_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
+) -> None:
+    """Test zeroconf flow aborts on connection error during discovery."""
+    mock_homevolt_client.update_info.side_effect = HomevoltConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

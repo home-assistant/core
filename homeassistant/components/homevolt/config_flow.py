@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homevolt import Homevolt, HomevoltAuthenticationError, HomevoltConnectionError
 import voluptuous as vol
 
-from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,6 +40,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._host: str | None = None
+        self._need_password: bool = False
 
     async def check_status(self, client: Homevolt) -> dict[str, str]:
         """Check connection status and return errors if any."""
@@ -164,16 +164,20 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        host = discovery_info.host
-        cast(dict[str, Any], self.context)[CONF_HOST] = host
-        if self._async_in_progress(
-            include_uninitialized=True, match_context={CONF_HOST: host}
-        ):
-            return self.async_abort(reason="already_in_progress")
+        self._host = discovery_info.host
+        self._async_abort_entries_match({CONF_HOST: self._host})
 
-        self._async_abort_entries_match({CONF_HOST: host})
+        websession = async_get_clientsession(self.hass)
+        client = Homevolt(self._host, None, websession=websession)
+        errors = await self.check_status(client)
+        if errors.get("base") == "invalid_auth":
+            self._need_password = True
+        elif errors:
+            return self.async_abort(reason=errors["base"])
 
-        self._host = host
+        if not self._need_password:
+            await self.async_set_unique_id(client.unique_id)
+
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -182,20 +186,12 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm zeroconf discovery."""
         assert self._host is not None
 
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            websession = async_get_clientsession(self.hass)
-            client = Homevolt(self._host, None, websession=websession)
-            errors = await self.check_status(client)
-            if errors.get("base") == "invalid_auth":
+        if user_input is not None:
+            if self._need_password:
                 return await self.async_step_credentials()
 
-            if errors:
-                return self.async_abort(reason=errors["base"])
-
-            await self.async_set_unique_id(client.unique_id)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host},
-                reload_on_update=True,
             )
 
             return self.async_create_entry(
