@@ -22,6 +22,8 @@ from peblar import (
     PeblarVersions,
 )
 
+import asyncio
+
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -86,24 +88,18 @@ def _coordinator_exception_handler[
             entry = getattr(self, "config_entry", None)
             peblar_obj = getattr(self, "peblar", None)
 
-            if entry and peblar_obj and not getattr(self, "_reauth_lock", False):
-                try:
-                    self._reauth_lock = True
-                    await peblar_obj.login(password=entry.data[CONF_PASSWORD])
+            if not entry or not peblar_obj:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_error",
+                ) from error
 
-                    after = getattr(self, "_async_after_reauth", None)
-                    if callable(after):
-                        await after()
+            async with self._reauth_lock:
+                await peblar_obj.login(password=entry.data[CONF_PASSWORD])
+                await self._async_after_reauth()
 
-                    # 1 retry after successful login
-                    return await func(self, *args, **kwargs)
-                finally:
-                    self._reauth_lock = False
-
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_error",
-            ) from error
+                # 1 retry after successful login
+                return await func(self, *args, **kwargs)
         except PeblarConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -158,7 +154,7 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
         """Initialize the coordinator."""
         self.peblar = peblar
         self.api = api
-        self._reauth_lock = False
+        self._reauth_lock = asyncio.Lock()
         super().__init__(
             hass,
             LOGGER,
