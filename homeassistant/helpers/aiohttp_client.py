@@ -54,6 +54,7 @@ SERVER_SOFTWARE = (
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 _LOCALHOST = "localhost"
+_TRAILING_LOCAL_HOST = f".{_LOCALHOST}"
 
 
 class SSRFRedirectError(aiohttp.ClientError):
@@ -108,7 +109,7 @@ def _is_ssrf_address(address: str) -> bool:
 
 
 async def _async_is_blocked_host(
-    host: str | None, connector: aiohttp.BaseConnector
+    host: str | None, connector: aiohttp.BaseConnector | None
 ) -> bool:
     """Check if a host is blocked by hostname or by resolved IP.
 
@@ -120,7 +121,8 @@ async def _async_is_blocked_host(
 
     # Strip FQDN trailing dot (RFC 1035) since yarl preserves it,
     # preventing an attacker from bypassing the check with "localhost."
-    if host.removesuffix(".").endswith(_LOCALHOST):
+    stripped_host = host.strip().removesuffix(".")
+    if stripped_host == _LOCALHOST or stripped_host.endswith(_TRAILING_LOCAL_HOST):
         return True
 
     with suppress(ValueError):
@@ -279,9 +281,10 @@ def _async_create_clientsession(
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
-    middlewares: Sequence[ClientMiddlewareType] = [_ssrf_redirect_middleware]
-    if (passed_middlewares := kwargs.pop("middlewares", None)) is not None:
-        middlewares.extend(passed_middlewares)
+    middlewares: Sequence[ClientMiddlewareType] = (
+        _ssrf_redirect_middleware,
+        *kwargs.pop("middlewares", ()),
+    )
 
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),

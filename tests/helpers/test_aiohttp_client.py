@@ -517,11 +517,33 @@ async def test_redirect_loopback_to_loopback_allowed(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_redirect_relative_url_allowed(
+    hass: HomeAssistant, redirect_server: TestServer
+) -> None:
+    """Test that relative redirects are allowed (they stay on the same host)."""
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    # Redirect from an external origin to a relative path
+    redirect_url = f"http://external.example.com:{server_port}/redirect?to=/ok"
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Return public IPs for all hosts."""
+        return _resolve_result(host, "93.184.216.34")
+
+    connector = session.connector
+    with patch.object(connector, "async_resolve_host", mock_async_resolve_host):
+        resp = await session.get(redirect_url)
+        assert resp.status == 200
+
+
+@pytest.mark.usefixtures("socket_enabled")
 @pytest.mark.parametrize(
     "target",
     [
         "http://other.example.com:{port}/ok",
         "http://safe.example.com:{port}/ok",
+        "http://notlocalhost:{port}/ok",
     ],
 )
 async def test_redirect_to_non_loopback_allowed(
