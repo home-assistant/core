@@ -1062,7 +1062,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.4.2
+hdfury==1.5.0
 
 # homeassistant.components.hegel
 hegel-ip-client==0.1.4
