@@ -115,7 +115,6 @@ async def _handle_item_operation[T](func: Callable[[], Awaitable[T]], folder: st
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
     except (OneDriveException, TimeoutError) as err:
-        _LOGGER.debug("Failed to get backup folder", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",

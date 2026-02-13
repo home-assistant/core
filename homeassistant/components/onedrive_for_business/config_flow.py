@@ -86,10 +86,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         with tenant_id_context(self._data[CONF_TENANT_ID]):
             return await super().async_step_pick_implementation(user_input)
 
-    async def async_oauth_create_entry(
-        self,
-        data: dict[str, Any],
-    ) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle the initial step."""
 
         async def get_access_token() -> str:

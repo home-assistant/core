@@ -85,7 +85,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 @pytest.fixture
 def mock_onedrive_client_init() -> Generator[MagicMock]:
-    """Return a mocked GraphServiceClient."""
+    """Return a mocked OneDrive client."""
     with (
         patch(
             "homeassistant.components.onedrive_for_business.config_flow.OneDriveClient",
