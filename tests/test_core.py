@@ -1352,7 +1352,11 @@ async def test_eventbus_max_length_exceeded(hass: HomeAssistant) -> None:
     with pytest.raises(MaxLengthExceeded) as exc_info:
         hass.bus.async_fire(long_evt_name)
 
-    assert str(exc_info.value) == "max_length_exceeded"
+    assert (
+        str(exc_info.value) == f"Value {long_evt_name} for property event_type"
+        " has a maximum length of 64 characters"
+    )
+    assert exc_info.value.translation_key == "max_length_exceeded"
     assert exc_info.value.property_name == "event_type"
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name

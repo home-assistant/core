@@ -450,10 +450,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=translation.build_resources,
     ) as mock_build_resources:
         load1 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 9
+        assert len(mock_build_resources.mock_calls) == 12
 
         load2 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_build_resources.mock_calls) == 9
+        assert len(mock_build_resources.mock_calls) == 12
 
         assert load1 == load2
 
@@ -490,8 +490,10 @@ async def test_caching(hass: HomeAssistant) -> None:
             hass, "en", "title", integrations={"sensor"}
         )
         assert load_sensor_only
-        for key in load_sensor_only:
-            assert key == "component.sensor.title"
+        assert sorted(load_sensor_only.keys()) == [
+            "component.homeassistant.title",
+            "component.sensor.title",
+        ]
         assert len(mock_build.mock_calls) == 0
 
         assert await translation.async_get_translations(
@@ -499,12 +501,14 @@ async def test_caching(hass: HomeAssistant) -> None:
         )
         assert len(mock_build.mock_calls) == 0
 
-        load_light_only = await translation.async_get_translations(
+        load_media_player_only = await translation.async_get_translations(
             hass, "en", "title", integrations={"media_player"}
         )
-        assert load_light_only
-        for key in load_light_only:
-            assert key == "component.media_player.title"
+        assert load_media_player_only
+        assert sorted(load_media_player_only.keys()) == [
+            "component.homeassistant.title",
+            "component.media_player.title",
+        ]
         assert len(mock_build.mock_calls) > 1
 
 
