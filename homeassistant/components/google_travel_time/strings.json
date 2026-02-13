@@ -166,7 +166,7 @@
           "name": "[%key:component::google_travel_time::options::step::init::data::avoid%]"
         },
         "config_entry_id": {
-          "description": "The config entry to use for the service call.",
+          "description": "The config entry to use for this action.",
           "name": "Config entry"
         },
         "departure_time": {
