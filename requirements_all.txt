@@ -413,7 +413,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.12.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.0.0
+aioswitcher==6.1.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -1193,7 +1193,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.4.2
+hdfury==1.5.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.4
@@ -2455,7 +2455,7 @@ pysma==1.1.0
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.13.0
+pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
 pysmartthings==3.5.2
