@@ -2,11 +2,8 @@
 # name: test_setup[botched]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -14,11 +11,8 @@
 # name: test_setup[default]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -26,11 +20,8 @@
 # name: test_setup[h032585]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -38,11 +29,8 @@
 # name: test_setup[h099625]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -50,11 +38,8 @@
 # name: test_setup[h139906]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -62,11 +47,8 @@
 # name: test_setup[h157546]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -74,11 +56,8 @@
 # name: test_setup[minimal]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])
@@ -86,11 +65,8 @@
 # name: test_setup[sys_004]
   list([
     'clear_zone_override',
-    'refresh_controller',
     'refresh_system',
-    'reset_controller',
     'reset_system',
-    'set_controller_mode',
     'set_system_mode',
     'set_zone_override',
   ])

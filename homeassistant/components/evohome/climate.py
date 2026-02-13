@@ -136,35 +136,6 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    async def async_refresh_system(self) -> None:
-        """Refresh the system; only supported by controller entities."""
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="controller_only_service",
-            translation_placeholders={"service": EvoService.REFRESH_CONTROLLER},
-        )
-
-    async def async_reset_system(self) -> None:
-        """Reset the system; only supported by controller entities."""
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="controller_only_service",
-            translation_placeholders={"service": EvoService.RESET_CONTROLLER},
-        )
-
-    async def async_set_system_mode(
-        self,
-        mode: str,
-        period: timedelta | None = None,
-        duration: timedelta | None = None,
-    ) -> None:
-        """Set the system mode; only supported by controller entities."""
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="controller_only_service",
-            translation_placeholders={"service": EvoService.SET_CONTROLLER_MODE},
-        )
-
     async def async_clear_zone_override(self) -> None:
         """Clear the zone override; only supported by zones."""
         raise ServiceValidationError(

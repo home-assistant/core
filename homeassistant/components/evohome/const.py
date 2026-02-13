@@ -33,14 +33,11 @@ ATTR_SETPOINT: Final = "setpoint"
 class EvoService(StrEnum):
     """The Evohome services."""
 
-    # New entity services (target a controller or zone entity)
-    REFRESH_CONTROLLER = "refresh_controller"
-    RESET_CONTROLLER = "reset_controller"
-    SET_CONTROLLER_MODE = "set_controller_mode"
-    CLEAR_ZONE_OVERRIDE = "clear_zone_override"
-    SET_ZONE_OVERRIDE = "set_zone_override"
-
-    # Legacy domain-level services (deprecated, to be removed)
+    # Domain-level services (controller/TCS)
     REFRESH_SYSTEM = "refresh_system"
     SET_SYSTEM_MODE = "set_system_mode"
     RESET_SYSTEM = "reset_system"
+
+    # Entity services (zones)
+    CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_ZONE_OVERRIDE = "set_zone_override"

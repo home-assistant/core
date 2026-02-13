@@ -20,24 +20,18 @@ from homeassistant.components.evohome.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 import homeassistant.exceptions
-from homeassistant.helpers import issue_registry as ir
 
-# Legacy domain-level service call tests (deprecated, to be removed)
+
+# Domain-level service call tests (controller/TCS)
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_service_refresh_system_legacy(
+async def test_service_refresh_system(
     hass: HomeAssistant,
     evohome: EvohomeClient,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test legacy domain-level refresh_system call (no target entity)."""
+    """Test domain-level refresh_system call."""
 
-    assert not issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.REFRESH_SYSTEM}"
-    )
-
-    # EvoService.REFRESH_SYSTEM
     with patch("evohomeasync2.location.Location.update") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
@@ -48,26 +42,14 @@ async def test_service_refresh_system_legacy(
 
         mock_fcn.assert_awaited_once_with()
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.REFRESH_SYSTEM}"
-    )
-    assert issue
-    assert issue.severity == ir.IssueSeverity.WARNING
-
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_service_reset_system_legacy(
+async def test_service_reset_system(
     hass: HomeAssistant,
     ctl_id: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test legacy domain-level reset_system call (no target entity)."""
+    """Test domain-level reset_system call."""
 
-    assert not issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.RESET_SYSTEM}"
-    )
-
-    # EvoService.RESET_SYSTEM
     with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
@@ -78,25 +60,14 @@ async def test_service_reset_system_legacy(
 
         mock_fcn.assert_awaited_once_with()
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.RESET_SYSTEM}"
-    )
-    assert issue
-    assert issue.severity == ir.IssueSeverity.WARNING
-
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_system_mode_legacy(
+async def test_set_system_mode(
     hass: HomeAssistant,
     ctl_id: str,
     freezer: FrozenDateTimeFactory,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test legacy domain-level set_system_mode call (no target entity)."""
-
-    assert not issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.SET_SYSTEM_MODE}"
-    )
+    """Test domain-level set_system_mode call."""
 
     # EvoService.SET_SYSTEM_MODE: Auto
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -110,12 +81,6 @@ async def test_ctl_set_system_mode_legacy(
         )
 
         mock_fcn.assert_awaited_once_with("Auto", until=None)
-
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_service_{EvoService.SET_SYSTEM_MODE}"
-    )
-    assert issue
-    assert issue.severity == ir.IssueSeverity.WARNING
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
@@ -152,147 +117,107 @@ async def test_ctl_set_system_mode_legacy(
         )
 
 
-# Entity-level service call tests (new services with target entity)
-
-
 @pytest.mark.parametrize("install", ["default"])
-async def test_service_refresh_controller(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-    ctl_id: str,
-) -> None:
-    """Test Evohome's refresh_controller service (for a controller)."""
-
-    with patch("evohomeasync2.location.Location.update") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.REFRESH_CONTROLLER,
-            {},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_service_reset_controller(
+async def test_set_system_mode_both_duration_and_period(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test Evohome's reset_controller service (for a controller)."""
+    """Test set_system_mode rejects both duration and period."""
 
-    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.RESET_CONTROLLER,
-            {},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_controller_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Evohome's set_controller_mode service (for a controller)."""
-
-    # Auto
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {
-                ATTR_MODE: "Auto",
-            },
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with("Auto", until=None)
-
-    freezer.move_to("2024-07-10T12:00:00+00:00")
-
-    # AutoWithEco, hours=12
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {
-                ATTR_MODE: "AutoWithEco",
-                ATTR_DURATION: {"hours": 12},
-            },
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with(
-            "AutoWithEco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
-        )
-
-    # Away, days=7
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {
-                ATTR_MODE: "Away",
-                ATTR_PERIOD: {"days": 7},
-            },
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with(
-            "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
-        )
-
-    # Both duration and period is rejected
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
+            EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_MODE: "Away",
                 ATTR_DURATION: {"hours": 12},
                 ATTR_PERIOD: {"days": 7},
             },
-            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
 
 @pytest.mark.parametrize("install", ["default"])
-@pytest.mark.parametrize(
-    ("svc", "service_data"),
-    [
-        (EvoService.REFRESH_CONTROLLER, {}),
-        (EvoService.RESET_CONTROLLER, {}),
-        (EvoService.SET_CONTROLLER_MODE, {ATTR_MODE: "Auto"}),
-    ],
-)
-async def test_ctl_services_with_zone_id(
+async def test_set_system_mode_invalid_mode(
     hass: HomeAssistant,
-    svc: EvoService,
-    service_data: dict,
-    zone_id: str,
+    ctl_id: str,
 ) -> None:
-    """Test that calling controller services on a zone raises ServiceValidationError."""
+    """Test set_system_mode rejects a mode not in the allowed system modes."""
+
+    # "Off" is not in the default fixture's allowed system modes
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Off"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_permanent_with_duration(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test set_system_mode rejects duration/period for permanent-only modes."""
+
+    # "Auto" is canBeTemporary=False in the default fixture
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
+            blocking=True,
+        )
+    assert excinfo.value.translation_key == "mode_does_not_support_temporary"
 
     with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            svc,
-            service_data,
-            target={ATTR_ENTITY_ID: zone_id},
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Auto", ATTR_PERIOD: {"days": 1}},
             blocking=True,
         )
-    assert excinfo.value.translation_key == "controller_only_service"
+    assert excinfo.value.translation_key == "mode_does_not_support_temporary"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_duration_with_period(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test set_system_mode rejects period for a Duration-type mode."""
+
+    # "AutoWithEco" has timingMode="Duration" — only duration is valid, not period
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
+            blocking=True,
+        )
+    assert excinfo.value.translation_key == "mode_does_not_support_period"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_period_with_duration(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test set_system_mode rejects duration for a Period-type mode."""
+
+    # "Away" has timingMode="Period" — only period is valid, not duration
+    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {ATTR_MODE: "Away", ATTR_DURATION: {"hours": 1}},
+            blocking=True,
+        )
+    assert excinfo.value.translation_key == "mode_does_not_support_duration"
+
+
+# Entity-level service call tests (zone services)
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -381,89 +306,3 @@ async def test_zone_services_with_ctl_id(
             blocking=True,
         )
     assert excinfo.value.translation_key == "zone_only_service"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_controller_mode_invalid_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test set_controller_mode rejects a mode not supported by this controller."""
-
-    # "Off" is a valid EvoSystemMode but not in the default fixture's allowed modes
-    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {ATTR_MODE: "Off"},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-    assert excinfo.value.translation_key == "invalid_system_mode"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_controller_mode_permanent_with_duration(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test set_controller_mode rejects duration/period for permanent-only modes."""
-
-    # "Auto" is canBeTemporary=False in the default fixture
-    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-    assert excinfo.value.translation_key == "mode_does_not_support_temporary"
-
-    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {ATTR_MODE: "Auto", ATTR_PERIOD: {"days": 1}},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-    assert excinfo.value.translation_key == "mode_does_not_support_temporary"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_controller_mode_duration_with_period(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test set_controller_mode rejects period for a Duration-type mode."""
-
-    # "AutoWithEco" has timingMode="Duration" — only duration is valid, not period
-    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-    assert excinfo.value.translation_key == "mode_does_not_support_period"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_ctl_set_controller_mode_period_with_duration(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test set_controller_mode rejects duration for a Period-type mode."""
-
-    # "Away" has timingMode="Period" — only period is valid, not duration
-    with pytest.raises(homeassistant.exceptions.ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_CONTROLLER_MODE,
-            {ATTR_MODE: "Away", ATTR_DURATION: {"hours": 1}},
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-    assert excinfo.value.translation_key == "mode_does_not_support_duration"
