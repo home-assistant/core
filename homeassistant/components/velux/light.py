@@ -23,16 +23,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up light(s) for Velux platform."""
     pyvlx = config_entry.runtime_data
-    async_add_entities(
-        VeluxDimmableLight(node, config_entry.entry_id)
-        for node in pyvlx.nodes
-        if isinstance(node, Light)
-    )
-    async_add_entities(
-        VeluxOnOffLight(node, config_entry.entry_id)
-        for node in pyvlx.nodes
-        if isinstance(node, OnOffLight)
-    )
+    entities: list = []
+    for node in pyvlx.nodes:
+        if isinstance(node, Light):
+            entities.append(VeluxDimmableLight(node, config_entry.entry_id))
+        elif isinstance(node, OnOffLight):
+            entities.append(VeluxOnOffLight(node, config_entry.entry_id))
+    async_add_entities(entities)
 
 
 class VeluxOnOffLight(VeluxEntity, LightEntity):
