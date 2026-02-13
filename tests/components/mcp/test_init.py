@@ -147,7 +147,7 @@ async def test_mcp_server_sse_transport_failure(
                 [
                     httpx.HTTPStatusError(
                         "Method not allowed",
-                        request=None,  # type: ignore[arg-type]
+                        request=None,
                         response=httpx.Response(405),
                     )
                 ],
