@@ -18,7 +18,7 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
-_BREAKS_IN_HA_VERSION = "2026.9.0"
+_BREAKS_IN_HA_VERSION = "2026.5.0"
 
 # Schema for the optional (until fully deprecated) target in evohome's domain services
 _TCS_TARGET_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
