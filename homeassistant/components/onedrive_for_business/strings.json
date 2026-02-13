@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "connection_error": "[%key:component::onedrive::config::abort::connection_error%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "folder_creation_error": "[%key:component::onedrive::config::error::folder_creation_error%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "pick_tenant": {
+        "data": {
+          "tenant_id": "Tenant ID"
+        },
+        "data_description": {
+          "tenant_id": "The tenant ID of your OneDrive for Business account's tenant."
+        },
+        "description": "To set up Onedrive for Business you need to create an app registration in the [Microsoft Entra admin center]({entra_url}) and set the redirect URI to `{redirect_url}`. In this step enter the tenant ID of the tenant where you created the app registration. In the next step you will be asked to provide the client ID and client secret of the app registration.",
+        "title": "Select tenant"
+      },
+      "select_folder": {
+        "data": {
+          "folder_path": "Folder path"
+        },
+        "data_description": {
+          "folder_path": "Path to the backup folder"
+        },
+        "description": "Path of folder which will be used to create a folder to store backups. If the folder does not exist, it will be created inside your OneDrive root directory.",
+        "title": "Define backup location"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "[%key:component::onedrive::exceptions::authentication_failed::message%]"
+    },
+    "failed_to_get_folder": {
+      "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
+    }
+  }
+}
