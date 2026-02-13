@@ -22,13 +22,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
+from .const import (
+    DOMAIN,
+    EVENT_VALUE_ADDED,
+    EVENT_VALUE_REMOVED,
+    EVENT_VALUE_UPDATED,
+    LOGGER,
+)
 from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
 from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
-
-EVENT_VALUE_ADDED = "value added"
-EVENT_VALUE_REMOVED = "value removed"
 
 
 @dataclass(kw_only=True)
