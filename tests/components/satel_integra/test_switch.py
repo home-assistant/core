@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
+from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -98,8 +98,7 @@ async def test_switch_callback(
 
     assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
-    monitor_status_call = mock_satel.monitor_status.call_args_list[0][0]
-    output_update_method = monitor_status_call[2]
+    _, _, output_update_method = get_monitor_callbacks(mock_satel)
 
     # Should do nothing, only react to it's own number
     output_update_method({"outputs": {2: 1}})

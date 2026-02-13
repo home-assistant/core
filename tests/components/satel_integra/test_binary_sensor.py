@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import setup_integration
+from . import get_monitor_callbacks, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -100,9 +100,7 @@ async def test_binary_sensor_callback(
     assert hass.states.get("binary_sensor.zone").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.output").state == STATE_UNKNOWN
 
-    monitor_status_call = mock_satel.monitor_status.call_args_list[0][0]
-    output_update_method = monitor_status_call[2]
-    zone_update_method = monitor_status_call[1]
+    _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
 
     # Should do nothing, only react to it's own number
     output_update_method({"outputs": {2: 1}})
