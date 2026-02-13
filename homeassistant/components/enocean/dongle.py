@@ -32,7 +32,7 @@ class EnOceanDongle:
         self.serial_path = serial_path
         self.hass = hass
         self.dispatcher_disconnect_handle = None
-        self._communicator = None
+        self._communicator: Communicator | None = None
 
         # For network URLs, use the netloc (host:port) as identifier
         # For local paths, use basename
