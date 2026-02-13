@@ -1266,20 +1266,20 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
 
     # Translations for "homeassistant" should always be loaded
     async def _async_load(self, _language, _components) -> None:
-        if "homeassistant" not in _components:
-            _components.add("homeassistant")
+        if ha.DOMAIN not in _components:
+            _components.add(ha.DOMAIN)
         return await real_async_load(self, _language, _components)
 
     def _get_cached(self, _language, _category, _components) -> dict[str, str]:
-        if "homeassistant" not in _components:
-            _components.add("homeassistant")
+        if ha.DOMAIN not in _components:
+            _components.add(ha.DOMAIN)
         return real_get_cached(self, _language, _category, _components)
 
     async def _async_get_component_strings(
         _hass, _languages, _components, _integrations
     ) -> None:
-        if "homeassistant" not in _components:
-            _components.add("homeassistant")
+        if ha.DOMAIN not in _components:
+            _components.add(ha.DOMAIN)
         return await real_component_strings(
             _hass, _languages, _components, _integrations
         )
