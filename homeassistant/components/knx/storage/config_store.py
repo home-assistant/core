@@ -12,13 +12,14 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
 from ..const import DOMAIN
+from . import migration
 from .const import CONF_DATA
-from .migration import migrate_1_to_2, migrate_2_1_to_2_2
+from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 2
-STORAGE_VERSION_MINOR: Final = 2
+STORAGE_VERSION_MINOR: Final = 3
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
@@ -31,6 +32,7 @@ class KNXConfigStoreModel(TypedDict):
     """Represent KNX configuration store data."""
 
     entities: KNXEntityStoreModel
+    time_server: KNXTimeServerStoreModel
 
 
 class PlatformControllerBase(ABC):
@@ -56,11 +58,15 @@ class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
         """Migrate to the new version."""
         if old_major_version == 1:
             # version 2.1 introduced in 2025.8
-            migrate_1_to_2(old_data)
+            migration.migrate_1_to_2(old_data)
 
         if old_major_version <= 2 and old_minor_version < 2:
             # version 2.2 introduced in 2025.9.2
-            migrate_2_1_to_2_2(old_data)
+            migration.migrate_2_1_to_2_2(old_data)
+
+        if old_major_version <= 2 and old_minor_version < 3:
+            # version 2.3 introduced in 2026.3
+            migration.migrate_2_2_to_2_3(old_data)
 
         return old_data
 
@@ -79,7 +85,10 @@ class KNXConfigStore:
         self._store = _KNXConfigStoreStorage(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         )
-        self.data = KNXConfigStoreModel(entities={})
+        self.data = KNXConfigStoreModel(  # initialize with default structure
+            entities={},
+            time_server={},
+        )
         self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
     async def load_data(self) -> None:
@@ -173,6 +182,19 @@ class KNXConfigStore:
             )
             if registry_entry.unique_id in unique_ids
         ]
+
+    @callback
+    def get_time_server_config(self) -> KNXTimeServerStoreModel:
+        """Return KNX time server configuration."""
+        return self.data["time_server"]
+
+    async def update_time_server_config(self, config: KNXTimeServerStoreModel) -> None:
+        """Update time server configuration."""
+        self.data["time_server"] = config
+        knx_module = self.hass.data.get(DOMAIN)
+        if knx_module:
+            knx_module.ui_time_server_controller.start(knx_module.xknx, config)
+        await self._store.async_save(self.data)
 
 
 class ConfigStoreException(Exception):
