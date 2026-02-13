@@ -322,6 +322,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

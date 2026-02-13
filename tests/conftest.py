@@ -626,6 +626,9 @@ async def hass(
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
 
+        # Ensure translations for "homeassistant" are always pre-loaded
+        await translation_helper.async_load_integrations(hass, {ha.DOMAIN})
+
         yield hass
 
         # Config entries are not normally unloaded on HA shutdown. They are unloaded here
@@ -1296,10 +1299,33 @@ def translations_once() -> Generator[_patch]:
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        wraps=real_component_strings,
-    ) as mock_component_strings:
+
+    def _async_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        _category: str,
+        _integration: str | None = None,
+    ) -> dict[str, str]:
+        # Override default implementation to ensure "homeassistant"
+        # is always considered when getting "global" cached translations
+        cache = translation_helper._async_get_translations_cache(_hass)
+        _components = (
+            {_integration}
+            if _integration
+            else _hass.config.top_level_components | {ha.DOMAIN}
+        )
+        return cache.get_cached(_language, _category, _components)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation.async_get_cached_translations",
+            _async_get_cached_translations,
+        ),
+        patch(
+            "homeassistant.helpers.translation._async_get_component_strings",
+            wraps=real_component_strings,
+        ) as mock_component_strings,
+    ):
         yield
     cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
     component_paths = components.__path__
