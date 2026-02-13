@@ -680,6 +680,26 @@
       },
       "title": "{device_name} is running unsupported firmware"
     },
+    "coiot_unconfigured": {
+      "fix_flow": {
+        "abort": {
+          "cannot_configure": "Failed to configure CoIoT on the device. Ensure the device is powered on and reachable.",
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has CoIoT disabled or wrongly configured. To enable push updates, CoIoT must be enabled with Home Assistant's IP address and CoIoT port.",
+            "menu_options": {
+              "confirm": "Configure CoIoT",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::coiot_unconfigured::title%]"
+          }
+        }
+      },
+      "title": "CoIoT is disabled or wrongly configured on {device_name}"
+    },
     "deprecated_firmware": {
       "fix_flow": {
         "abort": {

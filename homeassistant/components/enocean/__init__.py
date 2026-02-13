@@ -8,8 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
+from .const import DOMAIN
 from .dongle import EnOceanDongle
+
+type EnOceanConfigEntry = ConfigEntry[EnOceanDongle]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -36,9 +38,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: EnOceanConfigEntry
+) -> bool:
     """Set up an EnOcean dongle for the given entry."""
-    enocean_data = hass.data.setdefault(DATA_ENOCEAN, {})
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
     # Create communicator in executor to avoid blocking the event loop
     usb_dongle._communicator = await hass.async_add_executor_job(  # noqa: SLF001
@@ -46,16 +49,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry.data[CONF_DEVICE],
     )
     await usb_dongle.async_setup()
-    enocean_data[ENOCEAN_DONGLE] = usb_dongle
+    config_entry.runtime_data = usb_dongle
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: EnOceanConfigEntry
+) -> bool:
     """Unload EnOcean config entry."""
 
-    enocean_dongle = hass.data[DATA_ENOCEAN][ENOCEAN_DONGLE]
+    enocean_dongle = config_entry.runtime_data
     enocean_dongle.unload()
-    hass.data.pop(DATA_ENOCEAN)
 
     return True
