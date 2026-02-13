@@ -126,6 +126,19 @@ def build_device_data_list() -> list[DeviceData]:
             address=1,
             line=0,
         ),
+        DeviceData(
+            id=3,
+            name="Device 3",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
+                colorKelvin=Status[int](status=1000),
+            ),
+            address=2,
+            line=0,
+        ),
     ]
 
 

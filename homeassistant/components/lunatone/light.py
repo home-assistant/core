@@ -10,6 +10,7 @@ from lunatone_rest_api_client.models import LineStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -74,6 +75,8 @@ class LunatoneLight(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_min_color_temp_kelvin = 1000
+    _attr_max_color_temp_kelvin = 10000
 
     def __init__(
         self,
@@ -123,7 +126,9 @@ class LunatoneLight(
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.brightness is not None:
+        if self._device.color_temperature is not None:
+            return ColorMode.COLOR_TEMP
+        if self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
@@ -131,6 +136,12 @@ class LunatoneLight(
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {self.color_mode}
+
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the color temp of this light in kelvin."""
+        assert self._device.color_temperature
+        return self._device.color_temperature
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -140,17 +151,25 @@ class LunatoneLight(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
+        status_update_delay = STATUS_UPDATE_DELAY
+
         if brightness_supported(self.supported_color_modes):
-            await self._device.fade_to_brightness(
-                brightness_to_value(
-                    self.BRIGHTNESS_SCALE,
-                    kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                status_update_delay *= 3.5
+                await self._device.fade_to_color_temperature(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
-            )
+            if ATTR_BRIGHTNESS in kwargs or not self.is_on:
+                await self._device.fade_to_brightness(
+                    brightness_to_value(
+                        self.BRIGHTNESS_SCALE,
+                        kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+                    )
+                )
         else:
             await self._device.switch_on()
 
-        await asyncio.sleep(STATUS_UPDATE_DELAY)
+        await asyncio.sleep(status_update_delay)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

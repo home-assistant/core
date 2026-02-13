@@ -45,6 +45,11 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
                 if device.data.features.dimmable
                 else None
             )
+            device.color_temperature = (
+                device.data.features.color_kelvin.status
+                if device.data.features.color_kelvin
+                else None
+            )
             device_list.append(device)
         return device_list
 

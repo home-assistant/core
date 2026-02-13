@@ -4,9 +4,14 @@ import copy
 from unittest.mock import AsyncMock
 
 from lunatone_rest_api_client.models import LineStatus
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -230,3 +235,42 @@ async def test_line_broadcast_line_present(
     await setup_integration(hass, mock_config_entry)
 
     assert not hass.states.async_entity_ids("light")
+
+
+@pytest.mark.parametrize(
+    ("color_temp_kelvin"),
+    [10000, 5000, 1000],
+)
+async def test_turn_on_with_color_temperature(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    color_temp_kelvin: int,
+) -> None:
+    """Test the color temperature of the light can be set."""
+    device_id = 3
+    entity_id = f"light.device_{device_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        device = mock_lunatone_devices.data.devices[device_id - 1]
+        device.features.switchable.status = True
+        device.features.color_kelvin.status = float(color_temp_kelvin)
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_COLOR_TEMP_KELVIN: color_temp_kelvin,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == color_temp_kelvin
