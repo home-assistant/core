@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
+    TessieBatteryHealthCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -22,6 +23,7 @@ from .models import TessieEnergyData, TessieVehicleData
 class TessieBaseEntity(
     CoordinatorEntity[
         TessieStateUpdateCoordinator
+        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator
     ]
@@ -33,6 +35,7 @@ class TessieBaseEntity(
     def __init__(
         self,
         coordinator: TessieStateUpdateCoordinator
+        | TessieBatteryHealthCoordinator
         | TessieEnergySiteInfoCoordinator
         | TessieEnergySiteLiveCoordinator,
         key: str,
@@ -134,6 +137,25 @@ class TessieEnergyEntity(TessieBaseEntity):
         self._attr_device_info = data.device
 
         super().__init__(coordinator, key)
+
+
+class TessieBatteryEntity(TessieBaseEntity):
+    """Parent class for Tessie battery health entities."""
+
+    def __init__(
+        self,
+        vehicle: TessieVehicleData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Tessie battery health entity."""
+        self.vin = vehicle.vin
+        self._attr_unique_id = f"{vehicle.vin}-{key}"
+        self._attr_device_info = vehicle.device
+
+        super().__init__(vehicle.battery_coordinator, key)
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the entity."""
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):

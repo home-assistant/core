@@ -13,7 +13,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tessie import Tessie
-from tessie_api import get_state_of_all_vehicles
+from tessie_api import get_battery, get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -24,6 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    TessieBatteryHealthCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -69,6 +70,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
+    try:
+        batteries = await asyncio.gather(
+            *(
+                get_battery(
+                    session=session,
+                    api_key=api_key,
+                    vin=vehicle["vin"],
+                )
+                for vehicle in state_of_all_vehicles["results"]
+                if vehicle["last_state"] is not None
+            )
+        )
+    except ClientResponseError as e:
+        if e.status == HTTPStatus.UNAUTHORIZED:
+            raise ConfigEntryAuthFailed from e
+        _LOGGER.error("Setup failed, unable to get battery data: %s", e)
+        return False
+    except ClientError as e:
+        raise ConfigEntryNotReady from e
+
     vehicles = [
         TessieVehicleData(
             vin=vehicle["vin"],
@@ -78,6 +99,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
+            ),
+            battery_coordinator=TessieBatteryHealthCoordinator(
+                hass,
+                entry,
+                api_key=api_key,
+                vin=vehicle["vin"],
+                data=battery,
             ),
             device=DeviceInfo(
                 identifiers={(DOMAIN, vehicle["vin"])},
@@ -95,8 +123,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 serial_number=vehicle["vin"],
             ),
         )
-        for vehicle in state_of_all_vehicles["results"]
-        if vehicle["last_state"] is not None
+        for vehicle, battery in zip(
+            (
+                v
+                for v in state_of_all_vehicles["results"]
+                if v["last_state"] is not None
+            ),
+            batteries,
+            strict=True,
+        )
     ]
 
     # Energy Sites
