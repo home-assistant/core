@@ -131,7 +131,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors=errors,
                     )
                 panel = self._discovered_panels[panel_idx]
-                host = getattr(panel, "panel_host", None) or getattr(panel, "host", None)
+                host = getattr(panel, "panel_host", None) or getattr(
+                    panel, "host", None
+                )
                 port = getattr(panel, "port", None) or DEFAULT_PORT
                 if not host:
                     errors["base"] = "no_panels_found"
@@ -164,9 +166,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovered_panels is None:
             discovery = AIOELKDiscovery()
-            self._discovered_panels = self._dedupe_panels(
-                await discovery.async_scan()
-            )
+            self._discovered_panels = self._dedupe_panels(await discovery.async_scan())
         if not self._discovered_panels:
             errors["base"] = "no_panels_found"
         if self._discovered_panels and len(self._discovered_panels) == 1:

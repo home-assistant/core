@@ -39,7 +39,9 @@ async def async_setup_entry(
     """Set up Elke27 area alarm control panels from a config entry."""
     data: Elke27RuntimeData | None = entry.runtime_data
     if data is None:
-        _LOGGER.debug("Skipping alarm control panel setup because runtime data is missing")
+        _LOGGER.debug(
+            "Skipping alarm control panel setup because runtime data is missing"
+        )
         return
     hub = data.hub
     coordinator = data.coordinator
@@ -175,7 +177,9 @@ class Elke27AreaAlarmControlPanel(
             try:
                 await self._hub.async_set_zone_bypass(zone_id, True, pin=code)
             except Elke27PinRequiredError as err:
-                raise HomeAssistantError("PIN required to perform this action.") from err
+                raise HomeAssistantError(
+                    "PIN required to perform this action."
+                ) from err
         await self._async_arm(ArmMode.ARMED_AWAY, code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
@@ -275,8 +279,6 @@ def _ready_status_display(area: Any) -> str | None:
     if status == "RDY_NOT":
         return "Not ready"
     return None
-
-
 
 
 def _faulted_zones(snapshot: Any) -> list[tuple[int, str]]:
