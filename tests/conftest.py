@@ -591,6 +591,7 @@ async def hass(
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
 
+        # Ensure translations for "homeassistant" are always pre-loaded
         await translation_helper.async_load_integrations(hass, {ha.DOMAIN})
 
         yield hass
@@ -1270,11 +1271,12 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
         _category: str,
         _integration: str | None = None,
     ) -> dict[str, str]:
+        # Override default implementation to ensure "homeassistant"
+        # is always considered when getting "global" cached translations
         cache = translation_helper._async_get_translations_cache(_hass)
         _components = (
             {_integration}
             if _integration
-            # Ensure "homeassistant" is always considered when getting cached translations
             else _hass.config.top_level_components | {ha.DOMAIN}
         )
         return cache.get_cached(_language, _category, _components)
