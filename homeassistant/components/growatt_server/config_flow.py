@@ -40,6 +40,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow class."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     api: growattServer.GrowattApi
 
