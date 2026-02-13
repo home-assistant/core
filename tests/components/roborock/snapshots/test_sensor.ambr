@@ -3523,7 +3523,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'low',
+    'state': 'medium',
   })
 # ---
 # name: test_sensors[sensor.zeo_one_state-entry]
