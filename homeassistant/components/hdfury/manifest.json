@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "gold",
-  "requirements": ["hdfury==1.4.2"],
+  "requirements": ["hdfury==1.5.0"],
   "zeroconf": [
     { "name": "diva-*", "type": "_http._tcp.local." },
     { "name": "vertex2-*", "type": "_http._tcp.local." },
