@@ -10,6 +10,10 @@ from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -136,11 +140,14 @@ async def test_switch(
         assert state
         assert state.state == STATE_OFF
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     cluster.read_attributes.reset_mock()
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {"entity_id": entity_id},
+        blocking=True,
     )
     assert len(cluster.read_attributes.mock_calls) == 1
     assert cluster.read_attributes.call_args == call(
