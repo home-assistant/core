@@ -1090,7 +1090,7 @@ holidays==0.84
 home-assistant-frontend==20260128.6
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.28
+home-assistant-intents==2026.2.13
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
