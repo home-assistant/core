@@ -455,13 +455,23 @@ async def test_zeroconf_confirm_with_password_invalid_then_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_connection_error_aborts(
+@pytest.mark.parametrize(
+    ("exception", "expected_reason"),
+    [
+        (HomevoltConnectionError, "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+    ids=["connection_error", "unknown_error"],
+)
+async def test_zeroconf_error_aborts(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_homevolt_client: MagicMock,
+    exception: Exception,
+    expected_reason: str,
 ) -> None:
-    """Test zeroconf flow aborts on connection error during discovery."""
-    mock_homevolt_client.update_info.side_effect = HomevoltConnectionError
+    """Test zeroconf flow aborts on error during discovery."""
+    mock_homevolt_client.update_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -470,22 +480,4 @@ async def test_zeroconf_connection_error_aborts(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_unknown_error_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_homevolt_client: MagicMock,
-) -> None:
-    """Test zeroconf flow aborts on unknown error during discovery."""
-    mock_homevolt_client.update_info.side_effect = Exception("Unexpected error")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    assert result["reason"] == expected_reason
