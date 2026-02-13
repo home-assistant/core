@@ -204,10 +204,13 @@ async def test_set_auto_off_service_fail_token_needed(
     device = DUMMY_HEATER_DEVICE
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
-    with patch(
-        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown",
-        return_value=None,
-    ) as mock_set_auto_shutdown, pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown",
+            return_value=None,
+        ) as mock_set_auto_shutdown,
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_AUTO_OFF_NAME,
