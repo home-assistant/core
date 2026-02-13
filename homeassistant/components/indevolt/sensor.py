@@ -1,7 +1,6 @@
 """Sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-import logging
 from typing import Final
 
 from homeassistant.components.sensor import (
@@ -26,8 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import IndevoltConfigEntry
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -354,7 +351,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="9008",
         generation=[2],
-        translation_key="master_serial_number",
+        translation_key="main_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -397,7 +394,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="9000",
         generation=[2],
-        translation_key="master_soc",
+        translation_key="main_soc",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -458,7 +455,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="9012",
         generation=[2],
-        translation_key="master_temperature",
+        translation_key="main_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -519,7 +516,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="9004",
         generation=[2],
-        translation_key="master_voltage",
+        translation_key="main_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -580,7 +577,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="9013",
         generation=[2],
-        translation_key="master_current",
+        translation_key="main_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,

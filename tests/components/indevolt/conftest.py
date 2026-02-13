@@ -61,7 +61,7 @@ def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfig
     device_info = DEVICE_MAPPING[generation]
     return MockConfigEntry(
         domain=DOMAIN,
-        title=f"{device_info['device']} ({TEST_HOST})",
+        title=device_info["device"],
         version=1,
         entry_id=f"{DOMAIN}_{device_info['device'].lower()}_gen{generation}",
         data=entry_data,

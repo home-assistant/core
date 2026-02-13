@@ -201,20 +201,20 @@
       "grid_voltage": {
         "name": "Grid voltage"
       },
-      "master_current": {
-        "name": "Master current"
+      "main_current": {
+        "name": "Main current"
       },
-      "master_serial_number": {
-        "name": "Master serial number"
+      "main_serial_number": {
+        "name": "Main serial number"
       },
-      "master_soc": {
-        "name": "Master SOC"
+      "main_soc": {
+        "name": "Main SOC"
       },
-      "master_temperature": {
-        "name": "Master temperature"
+      "main_temperature": {
+        "name": "Main temperature"
       },
-      "master_voltage": {
-        "name": "Master voltage"
+      "main_voltage": {
+        "name": "Main voltage"
       },
       "meter_power": {
         "name": "Meter power"
@@ -222,9 +222,9 @@
       "mode": {
         "name": "Device mode",
         "state": {
-          "master": "Cluster (main)",
-          "slave": "Cluster (sub)",
-          "standalone": "Standalone"
+          "main": "Cluster (main)",
+          "standalone": "Standalone",
+          "sub": "Cluster (sub)"
         }
       },
       "off_grid_output_energy": {

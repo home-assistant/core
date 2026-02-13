@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_ac_input_power-entry]
+# name: test_sensor[1][sensor.bk1600_ac_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_ac_input_power',
+    'entity_id': 'sensor.bk1600_ac_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,23 +40,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_ac_input_power-state]
+# name: test_sensor[1][sensor.bk1600_ac_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) AC input power',
+      'friendly_name': 'BK1600 AC input power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_ac_input_power',
+    'entity_id': 'sensor.bk1600_ac_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_ac_output_power-entry]
+# name: test_sensor[1][sensor.bk1600_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +71,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_ac_output_power',
+    'entity_id': 'sensor.bk1600_ac_output_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,23 +97,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_ac_output_power-state]
+# name: test_sensor[1][sensor.bk1600_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) AC output power',
+      'friendly_name': 'BK1600 AC output power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_ac_output_power',
+    'entity_id': 'sensor.bk1600_ac_output_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_charge_discharge_state-entry]
+# name: test_sensor[1][sensor.bk1600_battery_charge_discharge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -132,7 +132,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_charge_discharge_state',
+    'entity_id': 'sensor.bk1600_battery_charge_discharge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -155,11 +155,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_charge_discharge_state-state]
+# name: test_sensor[1][sensor.bk1600_battery_charge_discharge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'BK1600 (192.168.1.100) Battery charge/discharge state',
+      'friendly_name': 'BK1600 Battery charge/discharge state',
       'options': list([
         'charging',
         'discharging',
@@ -167,14 +167,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_charge_discharge_state',
+    'entity_id': 'sensor.bk1600_battery_charge_discharge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'static',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_power-entry]
+# name: test_sensor[1][sensor.bk1600_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_power',
+    'entity_id': 'sensor.bk1600_battery_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,23 +215,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_power-state]
+# name: test_sensor[1][sensor.bk1600_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) Battery power',
+      'friendly_name': 'BK1600 Battery power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_power',
+    'entity_id': 'sensor.bk1600_battery_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_soc-entry]
+# name: test_sensor[1][sensor.bk1600_battery_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -246,7 +246,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_soc',
+    'entity_id': 'sensor.bk1600_battery_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -269,23 +269,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_battery_soc-state]
+# name: test_sensor[1][sensor.bk1600_battery_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'BK1600 (192.168.1.100) Battery SOC',
+      'friendly_name': 'BK1600 Battery SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_battery_soc',
+    'entity_id': 'sensor.bk1600_battery_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_cumulative_production-entry]
+# name: test_sensor[1][sensor.bk1600_cumulative_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -300,7 +300,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_cumulative_production',
+    'entity_id': 'sensor.bk1600_cumulative_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -329,23 +329,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_cumulative_production-state]
+# name: test_sensor[1][sensor.bk1600_cumulative_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'BK1600 (192.168.1.100) Cumulative production',
+      'friendly_name': 'BK1600 Cumulative production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_cumulative_production',
+    'entity_id': 'sensor.bk1600_cumulative_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '553.673',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_daily_production-entry]
+# name: test_sensor[1][sensor.bk1600_daily_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -360,7 +360,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_daily_production',
+    'entity_id': 'sensor.bk1600_daily_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -386,23 +386,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_daily_production-state]
+# name: test_sensor[1][sensor.bk1600_daily_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'BK1600 (192.168.1.100) Daily production',
+      'friendly_name': 'BK1600 Daily production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_daily_production',
+    'entity_id': 'sensor.bk1600_daily_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_input_power_1-entry]
+# name: test_sensor[1][sensor.bk1600_dc_input_power_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -417,7 +417,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_input_power_1',
+    'entity_id': 'sensor.bk1600_dc_input_power_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -443,23 +443,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_input_power_1-state]
+# name: test_sensor[1][sensor.bk1600_dc_input_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) DC input power 1',
+      'friendly_name': 'BK1600 DC input power 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_input_power_1',
+    'entity_id': 'sensor.bk1600_dc_input_power_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_input_power_2-entry]
+# name: test_sensor[1][sensor.bk1600_dc_input_power_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -474,7 +474,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_input_power_2',
+    'entity_id': 'sensor.bk1600_dc_input_power_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -500,23 +500,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_input_power_2-state]
+# name: test_sensor[1][sensor.bk1600_dc_input_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) DC input power 2',
+      'friendly_name': 'BK1600 DC input power 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_input_power_2',
+    'entity_id': 'sensor.bk1600_dc_input_power_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_output_power-entry]
+# name: test_sensor[1][sensor.bk1600_dc_output_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -531,7 +531,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_output_power',
+    'entity_id': 'sensor.bk1600_dc_output_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -557,23 +557,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_dc_output_power-state]
+# name: test_sensor[1][sensor.bk1600_dc_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) DC output power',
+      'friendly_name': 'BK1600 DC output power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_dc_output_power',
+    'entity_id': 'sensor.bk1600_dc_output_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_device_mode-entry]
+# name: test_sensor[1][sensor.bk1600_device_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -592,7 +592,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_device_mode',
+    'entity_id': 'sensor.bk1600_device_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -615,11 +615,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_device_mode-state]
+# name: test_sensor[1][sensor.bk1600_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'BK1600 (192.168.1.100) Device mode',
+      'friendly_name': 'BK1600 Device mode',
       'options': list([
         'master',
         'slave',
@@ -627,14 +627,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_device_mode',
+    'entity_id': 'sensor.bk1600_device_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'master',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_energy_mode-entry]
+# name: test_sensor[1][sensor.bk1600_energy_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -654,7 +654,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_energy_mode',
+    'entity_id': 'sensor.bk1600_energy_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -677,11 +677,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_energy_mode-state]
+# name: test_sensor[1][sensor.bk1600_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'BK1600 (192.168.1.100) Energy mode',
+      'friendly_name': 'BK1600 Energy mode',
       'options': list([
         'charge_discharge_schedule',
         'outdoor_portable',
@@ -690,14 +690,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_energy_mode',
+    'entity_id': 'sensor.bk1600_energy_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'charge_discharge_schedule',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_meter_power-entry]
+# name: test_sensor[1][sensor.bk1600_meter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -712,7 +712,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_meter_power',
+    'entity_id': 'sensor.bk1600_meter_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -738,23 +738,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_meter_power-state]
+# name: test_sensor[1][sensor.bk1600_meter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'BK1600 (192.168.1.100) Meter power',
+      'friendly_name': 'BK1600 Meter power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_meter_power',
+    'entity_id': 'sensor.bk1600_meter_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_rated_capacity-entry]
+# name: test_sensor[1][sensor.bk1600_rated_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -769,7 +769,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_rated_capacity',
+    'entity_id': 'sensor.bk1600_rated_capacity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -795,23 +795,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_rated_capacity-state]
+# name: test_sensor[1][sensor.bk1600_rated_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'BK1600 (192.168.1.100) Rated capacity',
+      'friendly_name': 'BK1600 Rated capacity',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_rated_capacity',
+    'entity_id': 'sensor.bk1600_rated_capacity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_total_ac_input_energy-entry]
+# name: test_sensor[1][sensor.bk1600_total_ac_input_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -826,7 +826,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bk1600_192_168_1_100_total_ac_input_energy',
+    'entity_id': 'sensor.bk1600_total_ac_input_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -852,23 +852,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[1][sensor.bk1600_192_168_1_100_total_ac_input_energy-state]
+# name: test_sensor[1][sensor.bk1600_total_ac_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'BK1600 (192.168.1.100) Total AC input energy',
+      'friendly_name': 'BK1600 Total AC input energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bk1600_192_168_1_100_total_ac_input_energy',
+    'entity_id': 'sensor.bk1600_total_ac_input_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '58.1',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_ac_input_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_ac_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -883,7 +883,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_ac_input_power',
+    'entity_id': 'sensor.cms_sf2000_ac_input_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -909,23 +909,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_ac_input_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_ac_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) AC input power',
+      'friendly_name': 'CMS-SF2000 AC input power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_ac_input_power',
+    'entity_id': 'sensor.cms_sf2000_ac_input_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_ac_output_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -940,7 +940,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_ac_output_power',
+    'entity_id': 'sensor.cms_sf2000_ac_output_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -966,23 +966,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_ac_output_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) AC output power',
+      'friendly_name': 'CMS-SF2000 AC output power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_ac_output_power',
+    'entity_id': 'sensor.cms_sf2000_ac_output_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_charge_discharge_state-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_charge_discharge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1001,7 +1001,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_charge_discharge_state',
+    'entity_id': 'sensor.cms_sf2000_battery_charge_discharge_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1024,11 +1024,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_charge_discharge_state-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_charge_discharge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery charge/discharge state',
+      'friendly_name': 'CMS-SF2000 Battery charge/discharge state',
       'options': list([
         'charging',
         'discharging',
@@ -1036,14 +1036,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_charge_discharge_state',
+    'entity_id': 'sensor.cms_sf2000_battery_charge_discharge_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'static',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_daily_charging_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_daily_charging_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1058,7 +1058,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_daily_charging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_daily_charging_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1084,23 +1084,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_daily_charging_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_daily_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery daily charging energy',
+      'friendly_name': 'CMS-SF2000 Battery daily charging energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_daily_charging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_daily_charging_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.07',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_daily_discharging_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_daily_discharging_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1115,7 +1115,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_daily_discharging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_daily_discharging_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1141,23 +1141,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_daily_discharging_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_daily_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery daily discharging energy',
+      'friendly_name': 'CMS-SF2000 Battery daily discharging energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_daily_discharging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_daily_discharging_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1172,7 +1172,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1198,23 +1198,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 1 current',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.8',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_sn-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_sn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1227,7 +1227,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_sn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1250,20 +1250,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_sn-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 1 SN',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 SN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_sn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PACK1-11111111',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1278,7 +1278,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1301,23 +1301,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 1 SOC',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '91',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1332,7 +1332,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1358,23 +1358,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 1 temperature',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.8',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1389,7 +1389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1415,23 +1415,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_1_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 1 voltage',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_1_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1446,7 +1446,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1472,23 +1472,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 2 current',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_sn-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_sn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1501,7 +1501,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_sn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1524,20 +1524,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_sn-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 2 SN',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 SN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_sn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PACK2-22222222',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1552,7 +1552,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1575,23 +1575,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 2 SOC',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '93',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1606,7 +1606,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1632,23 +1632,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 2 temperature',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.2',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1663,7 +1663,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1689,23 +1689,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_2_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 2 voltage',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_2_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.3',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1720,7 +1720,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1746,23 +1746,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 3 current',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.1',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_sn-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_sn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1775,7 +1775,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_sn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1798,20 +1798,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_sn-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 3 SN',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 SN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_sn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PACK3-33333333',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1826,7 +1826,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1849,23 +1849,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 3 SOC',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1880,7 +1880,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1906,23 +1906,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 3 temperature',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1937,7 +1937,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1963,23 +1963,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_3_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 3 voltage',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_3_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.1',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1994,7 +1994,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2020,23 +2020,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 4 current',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.3',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_sn-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_sn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2049,7 +2049,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_sn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2072,20 +2072,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_sn-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 4 SN',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 SN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_sn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PACK4-44444444',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2100,7 +2100,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2123,23 +2123,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 4 SOC',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '94',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2154,7 +2154,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2180,23 +2180,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 4 temperature',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.7',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2211,7 +2211,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2237,23 +2237,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_4_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 4 voltage',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_4_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.4',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2268,7 +2268,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2294,23 +2294,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 5 current',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_current',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.9',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_sn-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_sn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2323,7 +2323,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_sn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2346,20 +2346,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_sn-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 5 SN',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 SN',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_sn',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_sn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'PACK5-55555555',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2374,7 +2374,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2397,23 +2397,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 5 SOC',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2428,7 +2428,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2454,23 +2454,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 5 temperature',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_temperature',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.9',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2485,7 +2485,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2511,23 +2511,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_pack_5_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery pack 5 voltage',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_pack_5_voltage',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.9',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2542,7 +2542,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_power',
+    'entity_id': 'sensor.cms_sf2000_battery_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2568,23 +2568,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery power',
+      'friendly_name': 'CMS-SF2000 Battery power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_power',
+    'entity_id': 'sensor.cms_sf2000_battery_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2599,7 +2599,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2622,23 +2622,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery SOC',
+      'friendly_name': 'CMS-SF2000 Battery SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_soc',
+    'entity_id': 'sensor.cms_sf2000_battery_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_total_charging_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_total_charging_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2653,7 +2653,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_total_charging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_total_charging_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2679,23 +2679,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_total_charging_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_total_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery total charging energy',
+      'friendly_name': 'CMS-SF2000 Battery total charging energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_total_charging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_total_charging_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '380.58',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_total_discharging_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_total_discharging_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2710,7 +2710,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_total_discharging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_total_discharging_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2736,23 +2736,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_battery_total_discharging_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_total_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Battery total discharging energy',
+      'friendly_name': 'CMS-SF2000 Battery total discharging energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_battery_total_discharging_energy',
+    'entity_id': 'sensor.cms_sf2000_battery_total_discharging_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '338.07',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_bypass_input_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_bypass_input_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2767,7 +2767,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_bypass_input_energy',
+    'entity_id': 'sensor.cms_sf2000_bypass_input_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2793,23 +2793,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_bypass_input_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_bypass_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Bypass input energy',
+      'friendly_name': 'CMS-SF2000 Bypass input energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_bypass_input_energy',
+    'entity_id': 'sensor.cms_sf2000_bypass_input_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_bypass_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_bypass_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2824,7 +2824,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_bypass_power',
+    'entity_id': 'sensor.cms_sf2000_bypass_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2850,23 +2850,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_bypass_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_bypass_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Bypass power',
+      'friendly_name': 'CMS-SF2000 Bypass power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_bypass_power',
+    'entity_id': 'sensor.cms_sf2000_bypass_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_daily_production-entry]
+# name: test_sensor[2][sensor.cms_sf2000_daily_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2881,7 +2881,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_daily_production',
+    'entity_id': 'sensor.cms_sf2000_daily_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2907,23 +2907,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_daily_production-state]
+# name: test_sensor[2][sensor.cms_sf2000_daily_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Daily production',
+      'friendly_name': 'CMS-SF2000 Daily production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_daily_production',
+    'entity_id': 'sensor.cms_sf2000_daily_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_1-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2938,7 +2938,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2964,23 +2964,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_1-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input current 1',
+      'friendly_name': 'CMS-SF2000 DC input current 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.2',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_2-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2995,7 +2995,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3021,23 +3021,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_2-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input current 2',
+      'friendly_name': 'CMS-SF2000 DC input current 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.1',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_3-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3052,7 +3052,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3078,23 +3078,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_3-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input current 3',
+      'friendly_name': 'CMS-SF2000 DC input current 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.8',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_4-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3109,7 +3109,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3135,23 +3135,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_current_4-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_current_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input current 4',
+      'friendly_name': 'CMS-SF2000 DC input current 4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_current_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_current_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.9',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_1-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3166,7 +3166,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3192,23 +3192,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_1-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input power 1',
+      'friendly_name': 'CMS-SF2000 DC input power 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_2-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3223,7 +3223,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3249,23 +3249,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_2-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input power 2',
+      'friendly_name': 'CMS-SF2000 DC input power 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_3-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3280,7 +3280,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3306,23 +3306,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_3-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input power 3',
+      'friendly_name': 'CMS-SF2000 DC input power 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_4-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3337,7 +3337,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3363,23 +3363,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_power_4-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_power_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input power 4',
+      'friendly_name': 'CMS-SF2000 DC input power 4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_power_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_power_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_1-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3394,7 +3394,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3420,23 +3420,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_1-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input voltage 1',
+      'friendly_name': 'CMS-SF2000 DC input voltage 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_1',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.5',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_2-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3451,7 +3451,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3477,23 +3477,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_2-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input voltage 2',
+      'friendly_name': 'CMS-SF2000 DC input voltage 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_2',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.3',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_3-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3508,7 +3508,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3534,23 +3534,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_3-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input voltage 3',
+      'friendly_name': 'CMS-SF2000 DC input voltage 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_3',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.7',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_4-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3565,7 +3565,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3591,23 +3591,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_input_voltage_4-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC input voltage 4',
+      'friendly_name': 'CMS-SF2000 DC input voltage 4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_input_voltage_4',
+    'entity_id': 'sensor.cms_sf2000_dc_input_voltage_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.6',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_output_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_dc_output_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3622,7 +3622,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_output_power',
+    'entity_id': 'sensor.cms_sf2000_dc_output_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3648,23 +3648,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_dc_output_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_dc_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) DC output power',
+      'friendly_name': 'CMS-SF2000 DC output power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_dc_output_power',
+    'entity_id': 'sensor.cms_sf2000_dc_output_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_device_mode-entry]
+# name: test_sensor[2][sensor.cms_sf2000_device_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3683,7 +3683,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_device_mode',
+    'entity_id': 'sensor.cms_sf2000_device_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3706,11 +3706,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_device_mode-state]
+# name: test_sensor[2][sensor.cms_sf2000_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Device mode',
+      'friendly_name': 'CMS-SF2000 Device mode',
       'options': list([
         'master',
         'slave',
@@ -3718,14 +3718,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_device_mode',
+    'entity_id': 'sensor.cms_sf2000_device_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'slave',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_energy_mode-entry]
+# name: test_sensor[2][sensor.cms_sf2000_energy_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3745,7 +3745,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_energy_mode',
+    'entity_id': 'sensor.cms_sf2000_energy_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3768,11 +3768,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_energy_mode-state]
+# name: test_sensor[2][sensor.cms_sf2000_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Energy mode',
+      'friendly_name': 'CMS-SF2000 Energy mode',
       'options': list([
         'charge_discharge_schedule',
         'outdoor_portable',
@@ -3781,14 +3781,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_energy_mode',
+    'entity_id': 'sensor.cms_sf2000_energy_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'self_consumed_prioritized',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_grid_frequency-entry]
+# name: test_sensor[2][sensor.cms_sf2000_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3803,7 +3803,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_grid_frequency',
+    'entity_id': 'sensor.cms_sf2000_grid_frequency',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3829,23 +3829,23 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_grid_frequency-state]
+# name: test_sensor[2][sensor.cms_sf2000_grid_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Grid frequency',
+      'friendly_name': 'CMS-SF2000 Grid frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_grid_frequency',
+    'entity_id': 'sensor.cms_sf2000_grid_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_grid_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_grid_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3860,7 +3860,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_grid_voltage',
+    'entity_id': 'sensor.cms_sf2000_grid_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3886,23 +3886,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_grid_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_grid_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Grid voltage',
+      'friendly_name': 'CMS-SF2000 Grid voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_grid_voltage',
+    'entity_id': 'sensor.cms_sf2000_grid_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1200',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_current-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3917,7 +3917,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_current',
+    'entity_id': 'sensor.cms_sf2000_main_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3925,7 +3925,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Master current',
+    'object_id_base': 'Main current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3933,33 +3933,33 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Master current',
+    'original_name': 'Main current',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'master_current',
+    'translation_key': 'main_current',
     'unique_id': 'SolidFlex2000-87654321_9013',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_current-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Master current',
+      'friendly_name': 'CMS-SF2000 Main current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_current',
+    'entity_id': 'sensor.cms_sf2000_main_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.2',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_serial_number-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_serial_number-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3972,7 +3972,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_serial_number',
+    'entity_id': 'sensor.cms_sf2000_main_serial_number',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3980,35 +3980,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Master serial number',
+    'object_id_base': 'Main serial number',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Master serial number',
+    'original_name': 'Main serial number',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'master_serial_number',
+    'translation_key': 'main_serial_number',
     'unique_id': 'SolidFlex2000-87654321_9008',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_serial_number-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_serial_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Master serial number',
+      'friendly_name': 'CMS-SF2000 Main serial number',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_serial_number',
+    'entity_id': 'sensor.cms_sf2000_main_serial_number',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MASTER-12345678',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_soc-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_soc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4023,7 +4023,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_soc',
+    'entity_id': 'sensor.cms_sf2000_main_soc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4031,38 +4031,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Master SOC',
+    'object_id_base': 'Main SOC',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Master SOC',
+    'original_name': 'Main SOC',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'master_soc',
+    'translation_key': 'main_soc',
     'unique_id': 'SolidFlex2000-87654321_9000',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_soc-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Master SOC',
+      'friendly_name': 'CMS-SF2000 Main SOC',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_soc',
+    'entity_id': 'sensor.cms_sf2000_main_soc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '92',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_temperature-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4077,7 +4077,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_temperature',
+    'entity_id': 'sensor.cms_sf2000_main_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4085,7 +4085,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Master temperature',
+    'object_id_base': 'Main temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4093,33 +4093,33 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Master temperature',
+    'original_name': 'Main temperature',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'master_temperature',
+    'translation_key': 'main_temperature',
     'unique_id': 'SolidFlex2000-87654321_9012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_temperature-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Master temperature',
+      'friendly_name': 'CMS-SF2000 Main temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_temperature',
+    'entity_id': 'sensor.cms_sf2000_main_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.5',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_voltage-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4134,7 +4134,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_voltage',
+    'entity_id': 'sensor.cms_sf2000_main_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4142,7 +4142,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Master voltage',
+    'object_id_base': 'Main voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4150,33 +4150,33 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Master voltage',
+    'original_name': 'Main voltage',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'master_voltage',
+    'translation_key': 'main_voltage',
     'unique_id': 'SolidFlex2000-87654321_9004',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_master_voltage-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Master voltage',
+      'friendly_name': 'CMS-SF2000 Main voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_master_voltage',
+    'entity_id': 'sensor.cms_sf2000_main_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.2',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_meter_power-entry]
+# name: test_sensor[2][sensor.cms_sf2000_meter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4191,7 +4191,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_meter_power',
+    'entity_id': 'sensor.cms_sf2000_meter_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4217,23 +4217,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_meter_power-state]
+# name: test_sensor[2][sensor.cms_sf2000_meter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Meter power',
+      'friendly_name': 'CMS-SF2000 Meter power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_meter_power',
+    'entity_id': 'sensor.cms_sf2000_meter_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_off_grid_output_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_off_grid_output_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4248,7 +4248,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_off_grid_output_energy',
+    'entity_id': 'sensor.cms_sf2000_off_grid_output_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4274,23 +4274,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_off_grid_output_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_off_grid_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Off-grid output energy',
+      'friendly_name': 'CMS-SF2000 Off-grid output energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_off_grid_output_energy',
+    'entity_id': 'sensor.cms_sf2000_off_grid_output_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2000',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_rated_capacity-entry]
+# name: test_sensor[2][sensor.cms_sf2000_rated_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4305,7 +4305,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_rated_capacity',
+    'entity_id': 'sensor.cms_sf2000_rated_capacity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4331,23 +4331,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_rated_capacity-state]
+# name: test_sensor[2][sensor.cms_sf2000_rated_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Rated capacity',
+      'friendly_name': 'CMS-SF2000 Rated capacity',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_rated_capacity',
+    'entity_id': 'sensor.cms_sf2000_rated_capacity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.79',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_total_ac_input_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_total_ac_input_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4362,7 +4362,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_total_ac_input_energy',
+    'entity_id': 'sensor.cms_sf2000_total_ac_input_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4388,23 +4388,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_total_ac_input_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_total_ac_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Total AC input energy',
+      'friendly_name': 'CMS-SF2000 Total AC input energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_total_ac_input_energy',
+    'entity_id': 'sensor.cms_sf2000_total_ac_input_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '289.97',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_total_ac_output_energy-entry]
+# name: test_sensor[2][sensor.cms_sf2000_total_ac_output_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4419,7 +4419,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_total_ac_output_energy',
+    'entity_id': 'sensor.cms_sf2000_total_ac_output_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4445,16 +4445,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_192_168_1_100_total_ac_output_energy-state]
+# name: test_sensor[2][sensor.cms_sf2000_total_ac_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 (192.168.1.100) Total AC output energy',
+      'friendly_name': 'CMS-SF2000 Total AC output energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_192_168_1_100_total_ac_output_energy',
+    'entity_id': 'sensor.cms_sf2000_total_ac_output_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

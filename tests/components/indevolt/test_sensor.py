@@ -46,7 +46,7 @@ async def test_sensor_availability(
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get("sensor.cms_sf2000_192_168_1_100_battery_soc"))
+    assert (state := hass.states.get("sensor.cms_sf2000_battery_soc"))
     assert state.state == "92"
 
     mock_indevolt.fetch_data.side_effect = ConnectionError
@@ -54,7 +54,7 @@ async def test_sensor_availability(
     async_fire_time_changed(hass, utcnow())
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.cms_sf2000_192_168_1_100_battery_soc"))
+    assert (state := hass.states.get("sensor.cms_sf2000_battery_soc"))
     assert state.state == STATE_UNAVAILABLE
 
 
