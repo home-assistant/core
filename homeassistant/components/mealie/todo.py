@@ -194,8 +194,11 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             unit_id=list_item.unit_id,
         )
 
+        # Only sync summary (semantic item name) back to Mealie.
+        # Description is intentionally ignored, as Mealie does not provide a
+        # structured target field for it and re-parsing would be ambiguous.
         stripped_item_summary = item.summary.strip() if item.summary else item.summary
-
+        
         if list_item.display.strip() != stripped_item_summary:
             update_shopping_item.note = stripped_item_summary
             update_shopping_item.position = position
