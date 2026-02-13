@@ -6,7 +6,7 @@ from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -28,11 +28,15 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from .climate import EvoController
+
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
 
     # These will not be None after _async_setup())
+    controller_entity: EvoController
     loc: ec2.Location
     tcs: ec2.ControlSystem
 

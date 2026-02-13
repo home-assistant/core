@@ -183,4 +183,4 @@ async def test_setup(
     Registered services vary by the type of system.
     """
 
-    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+    assert sorted(hass.services.async_services_for_domain(DOMAIN)) == snapshot

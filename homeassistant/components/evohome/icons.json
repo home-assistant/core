@@ -3,11 +3,20 @@
     "clear_zone_override": {
       "service": "mdi:motion-sensor-off"
     },
+    "refresh_controller": {
+      "service": "mdi:refresh"
+    },
     "refresh_system": {
+      "service": "mdi:refresh"
+    },
+    "reset_controller": {
       "service": "mdi:refresh"
     },
     "reset_system": {
       "service": "mdi:refresh"
+    },
+    "set_controller_mode": {
+      "service": "mdi:pencil"
     },
     "set_system_mode": {
       "service": "mdi:pencil"

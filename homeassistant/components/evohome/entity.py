@@ -9,10 +9,8 @@ import evohomeasync2 as evo
 from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,39 +38,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
         self._device_state_attrs: dict[str, Any] = {}
 
-    async def process_signal(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-
-        if payload is None:
-            raise NotImplementedError
-        if payload["unique_id"] != self._attr_unique_id:
-            return
-        if payload["service"] in (
-            EvoService.SET_ZONE_OVERRIDE,
-            EvoService.RESET_ZONE_OVERRIDE,
-        ):
-            await self.async_zone_svc_request(payload["service"], payload["data"])
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
-
-    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller."""
-        raise NotImplementedError
-
-    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (setpoint override) for a zone."""
-        raise NotImplementedError
-
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-
-        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
 
     @callback
     def _handle_coordinator_update(self) -> None:

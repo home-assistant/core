@@ -1,10 +1,80 @@
 # Support for (EMEA/EU-based) Honeywell TCC climate systems.
 # Describes the format for available services
 
+# New entity services (require a target entity)
+
+set_controller_mode:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+  fields:
+    mode:
+      required: true
+      example: Away
+      default: Auto
+      selector:
+        select:
+          options:
+            - "Auto"
+            - "AutoWithEco"
+            - "Away"
+            - "Custom"
+            - "DayOff"
+            - "HeatingOff"
+    period:
+      example: '{"days": 28}'
+      selector:
+        object:
+    duration:
+      example: '{"hours": 18}'
+      selector:
+        object:
+
+reset_controller:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+
+refresh_controller:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+
+set_zone_override:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+  fields:
+    setpoint:
+      required: true
+      selector:
+        number:
+          min: 4.0
+          max: 35.0
+          step: 0.1
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:
+
+clear_zone_override:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
+
+# Legacy services (deprecated, no target entity)
+
 set_system_mode:
   fields:
     mode:
+      required: true
       example: Away
+      default: Auto
       selector:
         select:
           options:
@@ -26,33 +96,3 @@ set_system_mode:
 reset_system:
 
 refresh_system:
-
-set_zone_override:
-  fields:
-    entity_id:
-      required: true
-      example: climate.bathroom
-      selector:
-        entity:
-          integration: evohome
-          domain: climate
-    setpoint:
-      required: true
-      selector:
-        number:
-          min: 4.0
-          max: 35.0
-          step: 0.1
-    duration:
-      example: '{"minutes": 135}'
-      selector:
-        object:
-
-clear_zone_override:
-  fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: evohome
-          domain: climate

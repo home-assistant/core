@@ -24,19 +24,23 @@ USER_DATA: Final = "user_data"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
-
+ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
-ATTR_DURATION_UNTIL: Final = "duration"
 
 
 @unique
 class EvoService(StrEnum):
     """The Evohome services."""
 
+    # New entity services (target a controller or zone entity)
+    REFRESH_CONTROLLER = "refresh_controller"
+    RESET_CONTROLLER = "reset_controller"
+    SET_CONTROLLER_MODE = "set_controller_mode"
+    CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_ZONE_OVERRIDE = "set_zone_override"
+
+    # Legacy domain-level services (deprecated, to be removed)
     REFRESH_SYSTEM = "refresh_system"
     SET_SYSTEM_MODE = "set_system_mode"
     RESET_SYSTEM = "reset_system"
-    SET_ZONE_OVERRIDE = "set_zone_override"
-    RESET_ZONE_OVERRIDE = "clear_zone_override"

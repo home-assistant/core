@@ -1,25 +1,71 @@
 {
+  "exceptions": {
+    "controller_only_service": {
+      "message": "Only controllers support the `{service}` service"
+    },
+    "invalid_system_mode": {
+      "message": "The mode `{mode}` is not supported by this controller"
+    },
+    "mode_does_not_support_duration": {
+      "message": "The mode `{mode}` does not support `duration`; use `{attribute}` instead"
+    },
+    "mode_does_not_support_period": {
+      "message": "The mode `{mode}` does not support `period`; use `{attribute}` instead"
+    },
+    "mode_does_not_support_temporary": {
+      "message": "The mode `{mode}` can only be set permanently"
+    },
+    "zone_only_service": {
+      "message": "Only zones support the `{service}` service"
+    }
+  },
+  "issues": {
+    "deprecated_service": {
+      "description": "The `{service}` service is deprecated and will stop working in a future version of Home Assistant. Update your automations and scripts to use the equivalent entity service instead.",
+      "title": "Evohome service call is deprecated"
+    }
+  },
   "services": {
     "clear_zone_override": {
       "description": "Sets a zone to follow its schedule.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]",
-          "name": "[%key:component::evohome::services::set_zone_override::fields::entity_id::name%]"
-        }
-      },
       "name": "Clear zone override"
     },
-    "refresh_system": {
+    "refresh_controller": {
       "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update.",
-      "name": "Refresh system"
+      "name": "Refresh controller"
+    },
+    "refresh_system": {
+      "description": "Deprecated: use refresh_controller instead. Pulls the latest data from the vendor's servers.",
+      "name": "Refresh system (deprecated)"
+    },
+    "reset_controller": {
+      "description": "Sets the controller to Auto mode and resets all the zones to follow their schedules.",
+      "name": "Reset controller"
     },
     "reset_system": {
-      "description": "Sets the system to Auto mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode).",
-      "name": "Reset system"
+      "description": "Deprecated: use reset_controller instead. Sets the system to Auto mode and resets all the zones to follow their schedules.",
+      "name": "Reset system (deprecated)"
+    },
+    "set_controller_mode": {
+      "description": "Sets the controller mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
+      "fields": {
+        "duration": {
+          "description": "The duration in hours; used only with AutoWithEco mode (up to 24 hours).",
+          "name": "Duration"
+        },
+        "mode": {
+          "description": "Mode to set the controller to.",
+          "name": "[%key:common::config_flow::data::mode%]"
+        },
+        "period": {
+          "description": "A period of time in days; used only with Away, DayOff, or Custom mode. The controller will revert to Auto mode at midnight (up to 99 days, today is day 1).",
+          "name": "Period"
+        }
+      },
+      "name": "Set controller mode"
     },
     "set_system_mode": {
-      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
+      "description": "Deprecated: use set_controller_mode instead. Sets the system mode.",
       "fields": {
         "duration": {
           "description": "The duration in hours; used only with AutoWithEco mode (up to 24 hours).",
@@ -34,7 +80,7 @@
           "name": "Period"
         }
       },
-      "name": "Set system mode"
+      "name": "Set system mode (deprecated)"
     },
     "set_zone_override": {
       "description": "Overrides a zone's setpoint, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
@@ -42,10 +88,6 @@
         "duration": {
           "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
           "name": "Duration"
-        },
-        "entity_id": {
-          "description": "The entity ID of the Evohome zone.",
-          "name": "Entity"
         },
         "setpoint": {
           "description": "The temperature to be used instead of the scheduled setpoint.",

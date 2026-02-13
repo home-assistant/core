@@ -9,6 +9,7 @@ Note that the API used by this integration's client does not support cooling.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -17,6 +18,7 @@ import evohomeasync2 as ec2
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -29,6 +31,8 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_DURATION,
+    ATTR_SETPOINT,
     CONF_LOCATION_IDX,
     DOMAIN,
     EVOHOME_DATA,
@@ -55,6 +59,24 @@ CONFIG_SCHEMA: Final = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
+)
+
+# system mode schemas are built dynamically when the services are registered
+# because supported modes can vary for edge-case systems
+
+RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+)
+SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_SETPOINT): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+        ),
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+        ),
+    }
 )
 
 
