@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from .coordinator import (
+    SleepIQSleepDataCoordinator,
     SleepIQData,
     SleepIQDataUpdateCoordinator,
     SleepIQPauseUpdateCoordinator,
