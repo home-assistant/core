@@ -141,9 +141,7 @@ def _system_target_temperature(device: Appliance) -> float | None:
         return None
     try:
         return float(target)
-    except TypeError:
-        return None
-    except ValueError:
+    except TypeError, ValueError:
         return None
 
 
@@ -153,9 +151,7 @@ def _zone_temperature_from_list(values: list[str], zone_id: int) -> float | None
         return None
     try:
         return float(values[zone_id])
-    except TypeError:
-        return None
-    except ValueError:
+    except TypeError, ValueError:
         return None
 
 
@@ -475,17 +471,6 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         target = _system_target_temperature(self.device)
         if target is None:
             raise _zone_error("zone_parameters_unavailable")
-        min_temp = target - ZONE_TEMPERATURE_WINDOW
-        max_temp = target + ZONE_TEMPERATURE_WINDOW
-        if not (min_temp <= temperature_value <= max_temp):
-            raise _zone_error(
-                "temperature_out_of_range",
-                {
-                    "temperature": f"{temperature_value:g}",
-                    "min_temp": f"{min_temp:g}",
-                    "max_temp": f"{max_temp:g}",
-                },
-            )
 
         mode = self.hvac_mode
         if mode == HVACMode.HEAT:

@@ -59,9 +59,6 @@
     }
   },
   "exceptions": {
-    "temperature_out_of_range": {
-      "message": "Temperature {temperature}°C is outside the supported range ({min_temp}°C - {max_temp}°C)."
-    },
     "zone_hvac_mode_unsupported": {
       "message": "Zone temperature can only be changed when the main climate mode is heat or cool."
     },
