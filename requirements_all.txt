@@ -413,7 +413,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.12.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.0.0
+aioswitcher==6.1.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
