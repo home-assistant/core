@@ -11,7 +11,9 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -102,6 +104,47 @@ async def test_migration_to_unique_ids(
         legacy_config_entry_v1.entry_id
     )
     assert updated_config_entry.version == 2
+
+
+@pytest.mark.usefixtures("mock_lhm_client", "recorder_mock")
+async def test_migration_to_sensor_device_classes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    recorder_mock: Recorder,
+) -> None:
+    """Test that throughput sensor units are updated."""
+    legacy_config_entry_v2_1 = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=2,
+        minor_version=1,
+    )
+    legacy_config_entry_v2_1.add_to_hass(hass)
+
+    # Set up throughput sensor with old unit
+    object_id = "nvidia_geforce_rtx_4080_gpu_pcie_tx_throughput"
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{legacy_config_entry_v2_1.entry_id}_gpu-nvidia-0-throughput-1",
+        suggested_object_id=object_id,
+        config_entry=legacy_config_entry_v2_1,
+        unit_of_measurement="KB/s",
+    )
+
+    await init_integration(hass, legacy_config_entry_v2_1)
+
+    entity_entry = entity_registry.async_get(f"sensor.{object_id}")
+
+    assert entity_entry.unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND
+
+    updated_config_entry = hass.config_entries.async_get_entry(
+        legacy_config_entry_v2_1.entry_id
+    )
+    assert updated_config_entry.version == 2
+    assert updated_config_entry.minor_version == 2
 
 
 @pytest.mark.usefixtures("mock_deprecated_lhm_client")
