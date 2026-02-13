@@ -591,6 +591,8 @@ async def hass(
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
 
+        await translation_helper.async_load_integrations(hass, {ha.DOMAIN})
+
         yield hass
 
         # Config entries are not normally unloaded on HA shutdown. They are unloaded here
@@ -1260,15 +1262,7 @@ def translations_once() -> Generator[_patch]:
 @pytest.fixture(autouse=True, scope="module")
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
-    real_async_load = translation_helper._TranslationCache.async_load
     real_component_strings = translation_helper._async_get_component_strings
-    real_get_cached_translations = translation_helper.async_get_cached_translations
-
-    async def _async_load(self, _language: str, _components: set[str]) -> None:
-        # Translations for "homeassistant" should always be loaded
-        if ha.DOMAIN not in _components:
-            _components.add(ha.DOMAIN)
-        return await real_async_load(self, _language, _components)
 
     def _async_get_cached_translations(
         _hass: HomeAssistant,
@@ -1276,24 +1270,16 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
         _category: str,
         _integration: str | None = None,
     ) -> dict[str, str]:
-        # Ensure "homeassistant" is always considered when getting cached translations
-        pop_ha_domain = False
-        if ha.DOMAIN not in _hass.config.top_level_components:
-            _hass.config.top_level_components.add(ha.DOMAIN)
-            pop_ha_domain = True
-
-        result = real_get_cached_translations(_hass, _language, _category, _integration)
-
-        if pop_ha_domain:
-            _hass.config.top_level_components.remove(ha.DOMAIN)
-
-        return result
+        cache = translation_helper._async_get_translations_cache(_hass)
+        _components = (
+            {_integration}
+            if _integration
+            # Ensure "homeassistant" is always considered when getting cached translations
+            else _hass.config.top_level_components | {ha.DOMAIN}
+        )
+        return cache.get_cached(_language, _category, _components)
 
     with (
-        patch(
-            "homeassistant.helpers.translation._TranslationCache.async_load",
-            _async_load,
-        ),
         patch(
             "homeassistant.helpers.translation.async_get_cached_translations",
             _async_get_cached_translations,
