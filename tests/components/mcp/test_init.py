@@ -169,7 +169,7 @@ async def test_mcp_client_fallback_to_sse_success(
     mock_mcp_client: Mock,
     side_effect: Exception,
 ) -> None:
-    """Test mcp_client falls back to SSE on method not allowed error.
+    """Test mcp_client falls back to SSE on some errors.
 
     This exercises the backwards compatibility part of the MCP Transport
     specification.
