@@ -1277,14 +1277,16 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
         _integration: str | None = None,
     ) -> dict[str, str]:
         # Ensure "homeassistant" is always considered when getting cached translations
-        if _integration or ha.DOMAIN in _hass.config.top_level_components:
-            return real_get_cached_translations(
-                _hass, _language, _category, _integration
-            )
+        pop_ha_domain = False
+        if ha.DOMAIN not in _hass.config.top_level_components:
+            _hass.config.top_level_components.add(ha.DOMAIN)
+            pop_ha_domain = True
 
-        _hass.config.top_level_components.add(ha.DOMAIN)
         result = real_get_cached_translations(_hass, _language, _category, _integration)
-        _hass.config.top_level_components.remove(ha.DOMAIN)
+
+        if pop_ha_domain:
+            _hass.config.top_level_components.remove(ha.DOMAIN)
+
         return result
 
     with (
