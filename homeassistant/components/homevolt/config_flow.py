@@ -189,46 +189,37 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input is None:
             if self._need_password:
-                password = user_input[CONF_PASSWORD]
-                websession = async_get_clientsession(self.hass)
-                client = Homevolt(self._host, password, websession=websession)
-                errors = await self.check_status(client)
-
-                if not errors:
-                    device_id = client.unique_id
-                    await self.async_set_unique_id(device_id)
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: self._host},
-                    )
-
-                    return self.async_create_entry(
-                        title="Homevolt",
-                        data={
-                            CONF_HOST: self._host,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-            else:
-                return self.async_create_entry(
-                    title="Homevolt",
-                    data={
-                        CONF_HOST: self._host,
-                        CONF_PASSWORD: None,
-                    },
+                return self.async_show_form(
+                    step_id="zeroconf_confirm",
+                    data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                    errors=errors,
+                    description_placeholders={"host": self._host},
                 )
-
-        if self._need_password:
+            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
-                errors=errors,
                 description_placeholders={"host": self._host},
             )
 
-        self._set_confirm_only()
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"host": self._host},
+        password: str | None = None
+        if self._need_password:
+            password = user_input[CONF_PASSWORD]
+            websession = async_get_clientsession(self.hass)
+            client = Homevolt(self._host, password, websession=websession)
+            errors = await self.check_status(client)
+            if errors:
+                return self.async_show_form(
+                    step_id="zeroconf_confirm",
+                    data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                    errors=errors,
+                    description_placeholders={"host": self._host},
+                )
+            await self.async_set_unique_id(client.unique_id)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+        return self.async_create_entry(
+            title="Homevolt",
+            data={CONF_HOST: self._host, CONF_PASSWORD: password},
         )
