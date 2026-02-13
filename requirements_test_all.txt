@@ -200,7 +200,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.1
+aioautomower==2.7.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -281,7 +281,7 @@ aiohue==4.8.0
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.11.1
+aioimmich==0.12.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -817,7 +817,7 @@ eq3btsmart==2.3.0
 esphome-dashboard-api==1.3.0
 
 # homeassistant.components.essent
-essent-dynamic-pricing==0.2.7
+essent-dynamic-pricing==0.3.1
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.18
@@ -1149,7 +1149,7 @@ inkbird-ble==1.1.1
 insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
-intellifire4py==4.2.1
+intellifire4py==4.3.1
 
 # homeassistant.components.iometer
 iometer==0.3.0
@@ -1436,7 +1436,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.1.1
+onedrive-personal-sdk==0.1.2
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1687,7 +1687,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.17.1
+pydaikin==2.17.2
 
 # homeassistant.components.deako
 pydeako==0.6.0
@@ -2060,7 +2060,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.3
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.1
+pysmartthings==3.5.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2217,7 +2217,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.5.0
+pytouchlinesl==0.6.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2320,7 +2320,7 @@ renault-api==0.5.3
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.18.2
+reolink-aio==0.19.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2763,7 +2763,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.89
+zha==0.0.90
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.68.0

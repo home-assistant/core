@@ -29,7 +29,7 @@ cached-ipaddress==1.0.1
 certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
-cryptography==46.0.2
+cryptography==46.0.5
 dbus-fast==3.1.2
 file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0
@@ -89,9 +89,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.75.1
-grpcio-status==1.75.1
-grpcio-reflection==1.75.1
+grpcio==1.78.0
+grpcio-status==1.78.0
+grpcio-reflection==1.78.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -235,3 +235,6 @@ aiomqtt>=2.5.0
 # used by sharkiq==1.5.0
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
+
+# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
+setuptools<82.0.0

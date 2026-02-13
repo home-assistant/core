@@ -7,14 +7,14 @@
       'type': 'message',
     }),
     dict({
-      'arguments': '{"code": "import math\\nmath.sqrt(55555)", "container": "cntr_A"}',
+      'arguments': '{"code":"import math\\nmath.sqrt(55555)","container":"cntr_A"}',
       'call_id': 'ci_A',
       'name': 'code_interpreter',
       'type': 'function_call',
     }),
     dict({
       'call_id': 'ci_A',
-      'output': '{"output": [{"logs": "235.70108188126758\\n", "type": "logs"}]}',
+      'output': '{"output":[{"logs":"235.70108188126758\\n","type":"logs"}]}',
       'type': 'function_call_output',
     }),
     dict({
@@ -36,6 +36,65 @@
 # ---
 # name: test_function_call
   list([
+    dict({
+      'attachments': None,
+      'content': 'What time is it?',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+          }),
+          'tool_name': 'HassGetCurrentTime',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'HassGetCurrentTime',
+      'tool_result': dict({
+        'data': dict({
+          'failed': list([
+          ]),
+          'success': list([
+          ]),
+          'targets': list([
+          ]),
+        }),
+        'response_type': 'action_done',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': '12:00 PM',
+          }),
+        }),
+        'speech_slots': dict({
+          'time': datetime.time(12, 0),
+        }),
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': '12:00 PM',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
     dict({
       'attachments': None,
       'content': 'Please call the test function',
@@ -126,6 +185,27 @@
 # name: test_function_call.1
   list([
     dict({
+      'content': 'What time is it?',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'arguments': '{}',
+      'call_id': 'mock-tool-call-id',
+      'name': 'HassGetCurrentTime',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'mock-tool-call-id',
+      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"targets":[],"success":[],"failed":[]}}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'content': '12:00 PM',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
       'content': 'Please call the test function',
       'role': 'user',
       'type': 'message',
@@ -146,7 +226,7 @@
       'type': 'reasoning',
     }),
     dict({
-      'arguments': '{"param1": "call1"}',
+      'arguments': '{"param1":"call1"}',
       'call_id': 'call_call_1',
       'name': 'test_tool',
       'type': 'function_call',
@@ -157,7 +237,7 @@
       'type': 'function_call_output',
     }),
     dict({
-      'arguments': '{"param1": "call2"}',
+      'arguments': '{"param1":"call2"}',
       'call_id': 'call_call_2',
       'name': 'test_tool',
       'type': 'function_call',

@@ -36,7 +36,7 @@ class InvalidVlpFile(HomeAssistantError):
 class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
     MINOR_VERSION = 2
 
     def __init__(self) -> None:

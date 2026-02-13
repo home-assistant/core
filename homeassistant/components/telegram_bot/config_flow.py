@@ -237,9 +237,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        user_input[CONF_API_ENDPOINT] = (
-            user_input[SECTION_ADVANCED_SETTINGS][CONF_API_ENDPOINT],
-        )
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )

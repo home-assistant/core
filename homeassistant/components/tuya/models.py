@@ -51,9 +51,14 @@ class DeviceWrapper[T]:
     ) -> bool:
         """Determine if the wrapper should skip an update.
 
-        The default is to always skip, unless overridden in subclasses.
+        The default is to always skip if updated properties is given,
+        unless overridden in subclasses.
         """
-        return True
+        # If updated_status_properties is None, we should not skip,
+        # as we don't have information on what was updated
+        # This happens for example on online/offline updates, where
+        # we still want to update the entity state
+        return updated_status_properties is not None
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
@@ -88,9 +93,13 @@ class DPCodeWrapper(DeviceWrapper):
         By default, skip if updated_status_properties is given and
         does not include this dpcode.
         """
+        # If updated_status_properties is None, we should not skip,
+        # as we don't have information on what was updated
+        # This happens for example on online/offline updates, where
+        # we still want to update the entity state
         return (
-            updated_status_properties is None
-            or self.dpcode not in updated_status_properties
+            updated_status_properties is not None
+            and self.dpcode not in updated_status_properties
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
@@ -250,6 +259,13 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
 
         Processes delta accumulation before determining if update should be skipped.
         """
+        # If updated_status_properties is None, we should not skip,
+        # as we don't have information on what was updated
+        # This happens for example on online/offline updates, where
+        # we still want to update the entity state but we have nothing
+        # to accumulate, so we return False to not skip the update
+        if updated_status_properties is None:
+            return False
         if (
             super().skip_update(device, updated_status_properties, dp_timestamps)
             or dp_timestamps is None
