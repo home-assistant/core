@@ -98,7 +98,8 @@ async def async_setup_entry(
 ) -> None:
     """Add button entities for a config entry."""
     entry_data = entry.runtime_data
-    async_add_entities(
+    entities: list[SmartThingsEntity] = []
+    entities.extend(
         SmartThingsButtonEntity(
             entry_data.client,
             device,
@@ -109,7 +110,7 @@ async def async_setup_entry(
         for capability in device.status[MAIN]
         if capability in CAPABILITIES_TO_BUTTONS
     )
-    async_add_entities(
+    entities.extend(
         SmartThingsButtonEntity(
             entry_data.client,
             device,
@@ -120,7 +121,7 @@ async def async_setup_entry(
         if Capability.SAMSUNG_CE_DISHWASHER_OPERATION in device.status[MAIN]
         for description in DISHWASHER_OPERATION_COMMANDS_TO_BUTTONS.values()
     )
-    async_add_entities(
+    entities.extend(
         SmartThingsButtonEntity(
             entry_data.client,
             device,
@@ -133,6 +134,7 @@ async def async_setup_entry(
             and Capability.CUSTOM_SUPPORTED_OPTIONS in device.status[MAIN]
         )
     )
+    async_add_entities(entities)
 
 
 class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
