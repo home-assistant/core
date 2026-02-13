@@ -158,10 +158,8 @@ async def test_set_auto_off_service_token_needed(
             blocking=True,
         )
 
-        assert mock_api.call_count == 2
-        mock_set_auto_shutdown.assert_called_once_with(
-            time_period_str(DUMMY_AUTO_OFF_SET)
-        )
+    assert mock_api.call_count == 2
+    mock_set_auto_shutdown.assert_called_once_with(time_period_str(DUMMY_AUTO_OFF_SET))
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
@@ -209,21 +207,18 @@ async def test_set_auto_off_service_fail_token_needed(
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown",
         return_value=None,
-    ) as mock_set_auto_shutdown:
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_SET_AUTO_OFF_NAME,
-                {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-                blocking=True,
-            )
-
-        assert mock_api.call_count == 2
-        mock_set_auto_shutdown.assert_called_once_with(
-            time_period_str(DUMMY_AUTO_OFF_SET)
+    ) as mock_set_auto_shutdown, pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUTO_OFF_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True,
         )
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+
+    assert mock_api.call_count == 2
+    mock_set_auto_shutdown.assert_called_once_with(time_period_str(DUMMY_AUTO_OFF_SET))
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)

@@ -119,10 +119,10 @@ async def test_switch_token_needed(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
-        assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(Command.ON)
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(Command.ON)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
     # Test turning off
     with patch(
@@ -132,10 +132,10 @@ async def test_switch_token_needed(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
-        assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(Command.OFF)
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
+    assert mock_api.call_count == 4
+    mock_control_device.assert_called_once_with(Command.OFF)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
