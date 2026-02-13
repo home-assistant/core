@@ -1063,20 +1063,19 @@ async def test_update_core_sets_progress_immediately(
     state = hass.states.get("update.home_assistant_core_update")
     assert state.attributes.get("in_progress") is False
 
-    update_called = False
-
-    async def mock_update_core(hass_obj, version, backup):
-        nonlocal update_called
-        state = hass.states.get("update.home_assistant_core_update")
-        assert state.attributes.get("in_progress") is True, (
-            "in_progress should be True before update_core runs"
+    # Mock update_core to verify in_progress is set before it's called
+    def check_progress(*args, **kwargs):
+        assert (
+            hass.states.get("update.home_assistant_core_update").attributes.get(
+                "in_progress"
+            )
+            is True
         )
-        update_called = True
 
     with patch(
         "homeassistant.components.hassio.update.update_core",
-        side_effect=mock_update_core,
-    ):
+        side_effect=check_progress,
+    ) as mock_update:
         await hass.services.async_call(
             "update",
             "install",
@@ -1084,7 +1083,7 @@ async def test_update_core_sets_progress_immediately(
             blocking=True,
         )
 
-    assert update_called, "update_core should have been called"
+    mock_update.assert_called_once()
 
 
 async def test_update_core_resets_progress_on_error(
@@ -1145,20 +1144,16 @@ async def test_update_addon_sets_progress_immediately(
     state = hass.states.get("update.test_update")
     assert state.attributes.get("in_progress") is False
 
-    update_called = False
-
-    async def mock_update_addon(hass_obj, addon, backup, title, version):
-        nonlocal update_called
-        state = hass.states.get("update.test_update")
-        assert state.attributes.get("in_progress") is True, (
-            "in_progress should be True before update_addon runs"
+    # Mock update_addon to verify in_progress is set before it's called
+    def check_progress(*args, **kwargs):
+        assert (
+            hass.states.get("update.test_update").attributes.get("in_progress") is True
         )
-        update_called = True
 
     with patch(
         "homeassistant.components.hassio.update.update_addon",
-        side_effect=mock_update_addon,
-    ):
+        side_effect=check_progress,
+    ) as mock_update:
         await hass.services.async_call(
             "update",
             "install",
@@ -1166,7 +1161,7 @@ async def test_update_addon_sets_progress_immediately(
             blocking=True,
         )
 
-    assert update_called, "update_addon should have been called"
+    mock_update.assert_called_once()
 
 
 async def test_update_addon_resets_progress_on_error(
