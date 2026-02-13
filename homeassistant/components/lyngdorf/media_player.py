@@ -20,6 +20,10 @@ from .models import LyngdorfConfigEntry
 
 PARALLEL_UPDATES = 1
 
+MAX_VOLUME_DB = 18.0
+MIN_VOLUME_DB = -80.0
+VOLUME_RANGE = MAX_VOLUME_DB - MIN_VOLUME_DB
+
 FEATURES_ZONE_B = (
     MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.VOLUME_SET
@@ -51,13 +55,24 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MP60MainDevice(client, config_entry, device_info),
-            MP60ZoneBDevice(client, config_entry, device_info),
+            LyngdorfMainDevice(client, config_entry, device_info),
+            LyngdorfZoneBDevice(client, config_entry, device_info),
         ]
     )
 
 
-class MP60Device(LyngdorfEntity, MediaPlayerEntity):
+def _to_ha_volume(volume_db: float) -> float:
+    """Convert Lyngdorf dB volume to HA 0..1 scale."""
+    return (volume_db - MIN_VOLUME_DB) / VOLUME_RANGE
+
+
+def _to_lyngdorf_volume(volume: float) -> float:
+    """Convert HA 0..1 volume to Lyngdorf dB scale, clamped to max."""
+    volume_db = volume * VOLUME_RANGE + MIN_VOLUME_DB
+    return min(volume_db, MAX_VOLUME_DB)
+
+
+class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
     """Base Lyngdorf media player entity."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
@@ -67,7 +82,7 @@ class MP60Device(LyngdorfEntity, MediaPlayerEntity):
         receiver: Receiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
-        name: str,
+        translation_key: str,
         entity_id_suffix: str,
         features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0),
     ) -> None:
@@ -76,12 +91,12 @@ class MP60Device(LyngdorfEntity, MediaPlayerEntity):
         assert config_entry.unique_id
         self._attr_device_info = device_info
         self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
-        self._attr_name = name
+        self._attr_translation_key = translation_key
         self._attr_supported_features = features
 
 
-class MP60ZoneBDevice(MP60Device):
-    """MP60 Zone B."""
+class LyngdorfZoneBDevice(LyngdorfDevice):
+    """Lyngdorf Zone B device."""
 
     def __init__(
         self,
@@ -94,7 +109,7 @@ class MP60ZoneBDevice(MP60Device):
             receiver,
             config_entry,
             device_info,
-            "Zone B",
+            "zone_b",
             "zone_b",
             FEATURES_ZONE_B,
         )
@@ -116,7 +131,7 @@ class MP60ZoneBDevice(MP60Device):
         """Volume level of the media player (0..1)."""
         if not isinstance(self._receiver.zone_b_volume, float):
             return None
-        return (self._receiver.zone_b_volume + 80) / 100
+        return _to_ha_volume(self._receiver.zone_b_volume)
 
     def turn_on(self) -> None:
         """Turn on media player."""
@@ -136,10 +151,7 @@ class MP60ZoneBDevice(MP60Device):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_lyngdorf = float((volume * 100) - 80)
-        if volume_lyngdorf > 18:
-            volume_lyngdorf = float(18)
-        self._receiver.zone_b_volume = volume_lyngdorf
+        self._receiver.zone_b_volume = _to_lyngdorf_volume(volume)
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
@@ -160,8 +172,8 @@ class MP60ZoneBDevice(MP60Device):
         self._receiver.zone_b_source = source
 
 
-class MP60MainDevice(MP60Device):
-    """MP60 Main Device."""
+class LyngdorfMainDevice(LyngdorfDevice):
+    """Lyngdorf main zone device."""
 
     def __init__(
         self,
@@ -174,7 +186,7 @@ class MP60MainDevice(MP60Device):
             receiver,
             config_entry,
             device_info,
-            "Main Zone",
+            "main_zone",
             "main_zone",
             FEATURES_MAIN,
         )
@@ -245,7 +257,7 @@ class MP60MainDevice(MP60Device):
         """Volume level of the media player (0..1)."""
         if not isinstance(self._receiver.volume, float):
             return None
-        return (self._receiver.volume + 80) / 100
+        return _to_ha_volume(self._receiver.volume)
 
     @property
     def source(self) -> str | None:
@@ -275,10 +287,7 @@ class MP60MainDevice(MP60Device):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_lyngdorf = float((volume * 100) - 80)
-        if volume_lyngdorf > 18:
-            volume_lyngdorf = float(18)
-        self._receiver.volume = volume_lyngdorf
+        self._receiver.volume = _to_lyngdorf_volume(volume)
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""

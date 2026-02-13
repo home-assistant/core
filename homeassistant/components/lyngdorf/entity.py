@@ -40,28 +40,16 @@ class LyngdorfEntity(Entity):
         self._update_availability()
         self.async_write_ha_state()
 
-    def _get_is_connected(self) -> bool | None:
-        """Return receiver connection status if available."""
-        for attribute in ("connected", "is_connected"):
-            if (value := getattr(self._receiver, attribute, None)) is not None:
-                return bool(value)
-        return None
-
     @callback
     def _update_availability(self) -> None:
-        """Update availability and log transition events."""
-        is_connected = self._get_is_connected()
-        if is_connected is None or is_connected == self._attr_available:
-            return
+        """Update availability from receiver connection status."""
+        connected = self._receiver.connected
+        self._attr_available = connected
 
-        self._attr_available = is_connected
-
-        if not is_connected:
+        if not connected:
             if not self._unavailable_logged:
                 _LOGGER.info("Device is unavailable: %s", self.name)
                 self._unavailable_logged = True
-            return
-
-        if self._unavailable_logged:
+        elif self._unavailable_logged:
             _LOGGER.info("Device is back online: %s", self.name)
             self._unavailable_logged = False

@@ -36,6 +36,9 @@ from .const import (
 class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Lyngdorf config flow."""
 
+    VERSION = 1
+    MINOR_VERSION = 1
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._location: str | None = None

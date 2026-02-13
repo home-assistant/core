@@ -25,6 +25,16 @@
       }
     }
   },
+  "entity": {
+    "media_player": {
+      "main_zone": {
+        "name": "Main zone"
+      },
+      "zone_b": {
+        "name": "Zone B"
+      }
+    }
+  },
   "exceptions": {
     "setup_connection_error": {
       "message": "Failed to connect to {host}"

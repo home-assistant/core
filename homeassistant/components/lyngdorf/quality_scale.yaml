@@ -65,9 +65,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: All entities are useful by default.
-  entity-translations:
-    status: exempt
-    comment: Media player entities use name attribute directly.
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt

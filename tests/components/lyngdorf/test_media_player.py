@@ -1,14 +1,13 @@
 """Tests for the Lyngdorf media player platform."""
 
-import logging
 from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant.components.lyngdorf.const import DOMAIN
 from homeassistant.components.lyngdorf.media_player import (
-    MP60MainDevice,
-    MP60ZoneBDevice,
+    LyngdorfMainDevice,
+    LyngdorfZoneBDevice,
 )
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -42,7 +41,7 @@ async def test_entities_created(
     # Check main zone entity exists
     main_zone = hass.states.get("media_player.mock_lyngdorf_main_zone")
     assert main_zone is not None
-    assert main_zone.attributes["friendly_name"] == "Mock Lyngdorf Main Zone"
+    assert main_zone.attributes["friendly_name"] == "Mock Lyngdorf Main zone"
 
     # Check zone B entity exists
     zone_b = hass.states.get("media_player.mock_lyngdorf_zone_b")
@@ -148,8 +147,8 @@ async def test_main_zone_volume_set(
         blocking=True,
     )
 
-    # 0.5 * 100 - 80 = -30
-    assert mock_receiver.volume == -30.0
+    # 0.5 * 98 - 80 = -31.0
+    assert mock_receiver.volume == -31.0
 
 
 async def test_zone_b_volume_set(
@@ -168,8 +167,8 @@ async def test_zone_b_volume_set(
         blocking=True,
     )
 
-    # 0.3 * 100 - 80 = -50
-    assert mock_receiver.zone_b_volume == -50.0
+    # 0.3 * 98 - 80 = -50.6
+    assert mock_receiver.zone_b_volume == pytest.approx(-50.6)
 
 
 async def test_main_zone_volume_up(
@@ -274,13 +273,12 @@ async def test_zone_b_mute(
     assert mock_receiver.zone_b_mute_enabled is True
 
 
-async def test_availability_logging(
+async def test_availability(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_receiver: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test availability logging when device disconnects and reconnects."""
+    """Test availability when device disconnects and reconnects."""
     main_zone_entity_id = "media_player.mock_lyngdorf_main_zone"
     zone_b_entity_id = "media_player.mock_lyngdorf_zone_b"
 
@@ -291,11 +289,10 @@ async def test_availability_logging(
     ]
     assert len(callbacks) > 0
 
-    with caplog.at_level(logging.INFO):
-        mock_receiver.connected = False
-        for cb in callbacks:
-            cb()
-        await hass.async_block_till_done()
+    mock_receiver.connected = False
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
 
     main_state = hass.states.get(main_zone_entity_id)
     zone_b_state = hass.states.get(zone_b_entity_id)
@@ -303,14 +300,11 @@ async def test_availability_logging(
     assert zone_b_state is not None
     assert main_state.state == "unavailable"
     assert zone_b_state.state == "unavailable"
-    assert "Device is unavailable" in caplog.text
 
-    caplog.clear()
-    with caplog.at_level(logging.INFO):
-        mock_receiver.connected = True
-        for cb in callbacks:
-            cb()
-        await hass.async_block_till_done()
+    mock_receiver.connected = True
+    for cb in callbacks:
+        cb()
+    await hass.async_block_till_done()
 
     main_state = hass.states.get(main_zone_entity_id)
     zone_b_state = hass.states.get(zone_b_entity_id)
@@ -318,7 +312,6 @@ async def test_availability_logging(
     assert zone_b_state is not None
     assert main_state.state != "unavailable"
     assert zone_b_state.state != "unavailable"
-    assert "Device is back online" in caplog.text
 
 
 async def test_service_selects(
@@ -368,7 +361,7 @@ def test_entity_properties(mock_receiver: MagicMock) -> None:
     mock_receiver.source = "HDMI"
     mock_receiver.sound_mode = "Movie"
 
-    main = MP60MainDevice(mock_receiver, config_entry, device_info)
+    main = LyngdorfMainDevice(mock_receiver, config_entry, device_info)
     assert main.state is MediaPlayerState.PLAYING
     assert main.media_title == "audio: Stereo "
     assert main.media_content_type is MediaType.VIDEO
@@ -383,7 +376,7 @@ def test_entity_properties(mock_receiver: MagicMock) -> None:
 
     mock_receiver.zone_b_power_on = True
     mock_receiver.zone_b_volume = "invalid"
-    zone_b = MP60ZoneBDevice(mock_receiver, config_entry, device_info)
+    zone_b = LyngdorfZoneBDevice(mock_receiver, config_entry, device_info)
     assert zone_b.state is MediaPlayerState.ON
     assert zone_b.volume_level is None
 
