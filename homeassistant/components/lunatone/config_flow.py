@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .util import resolve_uid
 
 DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
@@ -49,17 +50,17 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if info_api.serial_number is None:
+                if info_api.data is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    await self.async_set_unique_id(str(info_api.serial_number))
+                    await self.async_set_unique_id(resolve_uid(info_api.data))
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(), data_updates=data, title=url
                         )
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(title=url, data={CONF_URL: url})
+                    return self.async_create_entry(title=url, data=data)
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,

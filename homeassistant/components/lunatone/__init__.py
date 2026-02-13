@@ -17,6 +17,7 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
+from .util import resolve_uid
 
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(info_api.serial_number))},
+        identifiers={(DOMAIN, resolve_uid(coordinator_info.data))},
         name=info_api.name,
         manufacturer=MANUFACTURER,
         sw_version=info_api.version,
