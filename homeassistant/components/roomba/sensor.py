@@ -59,8 +59,9 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: self.battery_stats.get("nLithChrg")
-        or self.battery_stats.get("nNimhChrg"),
+        value_fn=lambda self: (
+            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
+        ),
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
