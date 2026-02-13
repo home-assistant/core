@@ -413,7 +413,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
-    "gios",
     "github",
     "gitlab_ci",
     "gitter",
