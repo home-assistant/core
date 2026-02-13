@@ -16,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmarlaSensorEntityDescription(SmarlaEntityDescription, SensorEntityDescription):
