@@ -13,7 +13,7 @@ import logging
 import os
 import pathlib
 import reprlib
-from shutil import rmtree
+from shutil import copytree, rmtree
 import sqlite3
 import ssl
 import sys
@@ -137,6 +137,7 @@ from .common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_config_dir,
     mock_storage,
     patch_yaml_files,
     extract_stack_to_frame,
@@ -556,10 +557,51 @@ def hass_fixture_setup() -> list[bool]:
     return []
 
 
+@pytest.fixture(scope="session")  # pylint: disable=hass-pytest-fixture-decorator
+def hass_config_dir(tmp_path_factory: pytest.TempPathFactory) -> Generator[str]:
+    """Fixture to provide a test config directory.
+
+    Override this fixture to provide a custom config directory,
+    for example with pre-populated config files.
+    """
+    # Copy the test config directory to a temporary location to avoid
+    # tests interfering with each other when running multiple sessions
+    # in parallel with 'pytest -n'.
+    tmp_path = tmp_path_factory.mktemp("testing_config")
+    copytree(
+        get_test_config_dir(),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+
+    def get_files(path: pathlib.Path) -> set[pathlib.Path]:
+        """Get all files under path, excluding __pycache__ directories."""
+        return {
+            f for f in path.rglob("*") if f.is_file() and "__pycache__" not in f.parts
+        }
+
+    files_before = get_files(tmp_path)
+
+    yield tmp_path.as_posix()
+
+    files_after = get_files(tmp_path)
+    new_files = files_after - files_before
+
+    if new_files:
+        new_files_list = "\n".join(
+            str(f.relative_to(tmp_path)) for f in sorted(new_files)
+        )
+        pytest.fail(
+            f"Test session left files behind in config directory:\n{new_files_list}"
+        )
+
+
 @pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
+    hass_config_dir: str | None,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
@@ -586,7 +628,9 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    async with async_test_home_assistant(loop, load_registries) as hass:
+    async with async_test_home_assistant(
+        loop, load_registries, config_dir=hass_config_dir
+    ) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
