@@ -96,19 +96,19 @@ async def test_switch_callback(
     """Test switch correctly changes state after a callback from the panel."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
+    assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
     _, _, output_update_method = get_monitor_callbacks(mock_satel)
-
-    # Should do nothing, only react to it's own number
-    output_update_method({"outputs": {2: 1}})
-    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
     output_update_method({"outputs": {1: 1}})
     assert hass.states.get("switch.switchable_output").state == STATE_ON
 
     output_update_method({"outputs": {1: 0}})
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
+
+    # The client library should always report all entries, but test that we set the status correctly if it doesn't
+    output_update_method({"outputs": {2: 1}})
+    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
 
 async def test_switch_change_state(
@@ -119,7 +119,7 @@ async def test_switch_change_state(
     """Test switch correctly changes state after a callback from the panel."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
+    assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
     # Test turn on
     await hass.services.async_call(
