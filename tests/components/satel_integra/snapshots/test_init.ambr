@@ -70,7 +70,7 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Satel',
+    'manufacturer': 'SATEL sp. z o.o.',
     'model': None,
     'model_id': None,
     'name': '192.168.0.2',
