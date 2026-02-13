@@ -163,8 +163,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_person",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "crossline", loc, "people")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "crossline", loc, "people"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_crossline")
@@ -176,8 +176,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_vehicle",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "crossline", loc, "vehicle")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "crossline", loc, "vehicle"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_crossline")
@@ -189,8 +189,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_dog_cat",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "crossline", loc, "dog_cat")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "crossline", loc, "dog_cat"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_crossline")
@@ -202,8 +202,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_person",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "intrusion", loc, "people")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "intrusion", loc, "people"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_intrusion")
@@ -215,8 +215,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_vehicle",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "intrusion", loc, "vehicle")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "intrusion", loc, "vehicle"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_intrusion")
@@ -228,8 +228,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_dog_cat",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "intrusion", loc, "dog_cat")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "intrusion", loc, "dog_cat"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_intrusion")
@@ -241,8 +241,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="loitering",
         cmd_id=33,
         translation_key="linger_person",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "loitering", loc, "people")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "loitering", loc, "people"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
@@ -254,8 +254,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="loitering",
         cmd_id=33,
         translation_key="linger_vehicle",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "loitering", loc, "vehicle")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "loitering", loc, "vehicle"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
@@ -267,8 +267,8 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="loitering",
         cmd_id=33,
         translation_key="linger_dog_cat",
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "loitering", loc, "dog_cat")
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(
+            ch, "loitering", loc, "dog_cat"
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
@@ -280,7 +280,7 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="legacy",
         cmd_id=33,
         translation_key="forgotten_item",
-        value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "legacy", loc)),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(ch, "legacy", loc),
         supported=lambda api, ch, loc: api.supported(ch, "ai_forgotten_item"),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
@@ -288,7 +288,7 @@ BINARY_SMART_AI_SENSORS = (
         smart_type="loss",
         cmd_id=33,
         translation_key="taken_item",
-        value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "loss", loc)),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_state(ch, "loss", loc),
         supported=lambda api, ch, loc: api.supported(ch, "ai_taken_item"),
     ),
 )

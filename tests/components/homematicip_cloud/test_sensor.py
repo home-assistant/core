@@ -2,6 +2,7 @@
 
 from homematicip.base.enums import ValveState
 
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -39,6 +40,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
@@ -860,4 +862,112 @@ async def test_hmip_water_valve_water_volume_since_open(
 
     assert ha_state.state == "67.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.LITERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_hmip_smoke_detector_dirt_level(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipSmokeDetectorDirtLevel."""
+    entity_id = "sensor.rauchwarnmelder_dirt_level"
+    entity_name = "Rauchwarnmelder dirt_level"
+    device_model = "HmIP-SWSD"
+
+    # Pre-register the entity as enabled before platform loads
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "3014F7110000000000000018_dirt_level",
+        suggested_object_id="rauchwarnmelder_dirt_level",
+        disabled_by=None,
+    )
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Rauchwarnmelder"]
+    )
+
+    # Need to wait for entity to be added after enabling
+    await hass.async_block_till_done()
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "15.0"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await async_manipulate_test_data(hass, hmip_device, "dirtLevel", 0.25)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "25.0"
+
+
+async def test_hmip_smoke_detector_alarm_counter(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HomematicipSmokeDetectorAlarmCounter."""
+    entity_id = "sensor.rauchwarnmelder_smoke_alarm_counter"
+    entity_name = "Rauchwarnmelder smoke_alarm_counter"
+    device_model = "HmIP-SWSD"
+
+    # Pre-register the entity as enabled before platform loads
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "3014F7110000000000000018_smoke_alarm_counter",
+        suggested_object_id="rauchwarnmelder_smoke_alarm_counter",
+        disabled_by=None,
+    )
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Rauchwarnmelder"]
+    )
+
+    await hass.async_block_till_done()
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "2"
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+    await async_manipulate_test_data(hass, hmip_device, "smokeAlarmCounter", 3)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "3"
+
+
+async def test_hmip_smoke_detector_test_counter(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HomematicipSmokeDetectorTestCounter."""
+    entity_id = "sensor.rauchwarnmelder_smoke_test_counter"
+    entity_name = "Rauchwarnmelder smoke_test_counter"
+    device_model = "HmIP-SWSD"
+
+    # Pre-register the entity as enabled before platform loads
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "3014F7110000000000000018_smoke_test_counter",
+        suggested_object_id="rauchwarnmelder_smoke_test_counter",
+        disabled_by=None,
+    )
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Rauchwarnmelder"]
+    )
+
+    await hass.async_block_till_done()
+
+    ha_state, _hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "5"
     assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING

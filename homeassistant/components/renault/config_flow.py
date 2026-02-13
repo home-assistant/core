@@ -60,7 +60,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 login_success = await self.renault_hub.attempt_login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
-            except (aiohttp.ClientConnectionError, GigyaException):
+            except aiohttp.ClientConnectionError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

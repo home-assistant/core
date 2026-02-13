@@ -75,7 +75,7 @@ async def test_setup_auth_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -95,10 +95,35 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection",
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
         side_effect=error,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_upnp_missing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fc_class_mock, fh_class_mock
+) -> None:
+    """Test UPNP configuration is missing."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper.async_get_upnp_configuration",
+            return_value={"NewEnable": False},
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state.recoverable is True
+    assert (
+        "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
+        in caplog.text
+    )
