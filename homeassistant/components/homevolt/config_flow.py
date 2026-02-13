@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homevolt import Homevolt, HomevoltAuthenticationError, HomevoltConnectionError
 import voluptuous as vol
 
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -154,5 +156,58 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="credentials",
             data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
             errors=errors,
+            description_placeholders={"host": self._host},
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+
+        host = discovery_info.host
+        cast(dict[str, Any], self.context)[CONF_HOST] = host
+        if self._async_in_progress(
+            include_uninitialized=True, match_context={CONF_HOST: host}
+        ):
+            return self.async_abort(reason="already_in_progress")
+
+        self._async_abort_entries_match({CONF_HOST: host})
+
+        self._host = host
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm zeroconf discovery."""
+        assert self._host is not None
+
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            websession = async_get_clientsession(self.hass)
+            client = Homevolt(self._host, None, websession=websession)
+            errors = await self.check_status(client)
+            if errors.get("base") == "invalid_auth":
+                return await self.async_step_credentials()
+
+            if errors:
+                return self.async_abort(reason=errors["base"])
+
+            await self.async_set_unique_id(client.unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._host},
+                reload_on_update=True,
+            )
+
+            return self.async_create_entry(
+                title="Homevolt",
+                data={
+                    CONF_HOST: self._host,
+                    CONF_PASSWORD: None,
+                },
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
             description_placeholders={"host": self._host},
         )

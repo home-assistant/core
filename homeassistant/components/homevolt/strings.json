@@ -38,6 +38,9 @@
           "host": "The IP address or hostname of your Homevolt battery on your local network."
         },
         "description": "Connect Home Assistant to your Homevolt battery over the local network."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Homevolt battery at {host}?"
       }
     }
   },

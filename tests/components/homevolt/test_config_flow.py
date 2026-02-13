@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError
@@ -12,6 +13,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -41,6 +43,74 @@ async def test_full_flow_success(
     assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PASSWORD: None}
     assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_confirm_flow_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
+) -> None:
+    """Test zeroconf flow shows confirm step before creating entry."""
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=IPv4Address("192.168.1.123"),
+        ip_addresses=[IPv4Address("192.168.1.123")],
+        port=80,
+        hostname="homevolt.local.",
+        type="_http._tcp.local.",
+        name="homevolt._http._tcp.local.",
+        properties={},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "zeroconf"},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["description_placeholders"] == {"host": "192.168.1.123"}
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Homevolt"
+    assert result2["data"] == {CONF_HOST: "192.168.1.123", CONF_PASSWORD: None}
+    assert result2["result"].unique_id == "40580137858664"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_duplicate_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf flow aborts when unique id is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=IPv4Address("192.168.1.124"),
+        ip_addresses=[IPv4Address("192.168.1.124")],
+        port=80,
+        hostname="homevolt.local.",
+        type="_http._tcp.local.",
+        name="homevolt._http._tcp.local.",
+        properties={},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "zeroconf"},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_flow_auth_error_then_password_success(
