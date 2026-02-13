@@ -42,8 +42,3 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
         }
         self._attr_unique_id = str(self._monitor.id)
         self.api = coordinator.api
-
-    # @property
-    # def monitor(self) -> UptimeRobotMonitor:
-    #     """Return the monitor for this entity."""
-    #     return self.coordinator.data.get(self._monitor.id, self._monitor)
