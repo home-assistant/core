@@ -1261,19 +1261,31 @@ def translations_once() -> Generator[_patch]:
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_async_load = translation_helper._TranslationCache.async_load
-    real_get_cached = translation_helper._TranslationCache.get_cached
     real_component_strings = translation_helper._async_get_component_strings
+    real_get_cached_translations = translation_helper.async_get_cached_translations
 
-    # Translations for "homeassistant" should always be loaded
-    async def _async_load(self, _language, _components) -> None:
+    async def _async_load(self, _language: str, _components: set[str]) -> None:
+        # Translations for "homeassistant" should always be loaded
         if ha.DOMAIN not in _components:
             _components.add(ha.DOMAIN)
         return await real_async_load(self, _language, _components)
 
-    def _get_cached(self, _language, _category, _components) -> dict[str, str]:
-        if ha.DOMAIN not in _components:
-            _components.add(ha.DOMAIN)
-        return real_get_cached(self, _language, _category, _components)
+    def _async_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        _category: str,
+        _integration: str | None = None,
+    ) -> dict[str, str]:
+        # Ensure "homeassistant" is always considered when getting cached translations
+        if _integration or ha.DOMAIN in _hass.config.top_level_components:
+            return real_get_cached_translations(
+                _hass, _language, _category, _integration
+            )
+
+        _hass.config.top_level_components.add(ha.DOMAIN)
+        result = real_get_cached_translations(_hass, _language, _category, _integration)
+        _hass.config.top_level_components.remove(ha.DOMAIN)
+        return result
 
     with (
         patch(
@@ -1281,8 +1293,8 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
             _async_load,
         ),
         patch(
-            "homeassistant.helpers.translation._TranslationCache.get_cached",
-            _get_cached,
+            "homeassistant.helpers.translation.async_get_cached_translations",
+            _async_get_cached_translations,
         ),
         patch(
             "homeassistant.helpers.translation._async_get_component_strings",
