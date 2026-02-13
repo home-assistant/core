@@ -13,7 +13,7 @@ import logging
 import os
 import pathlib
 import reprlib
-from shutil import rmtree
+from shutil import copytree, rmtree
 import sqlite3
 import ssl
 import sys
@@ -555,6 +555,27 @@ def aiohttp_client() -> Generator[ClientSessionGenerator]:
 def hass_fixture_setup() -> list[bool]:
     """Fixture which is truthy if the hass fixture has been setup."""
     return []
+
+
+@pytest.fixture
+def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
+    """Fixture to provide a temporary config directory.
+
+    Use this fixture in a fixture overriding hass_config_dir to provide
+    a temporary config directory which does not need to be cleaned up:
+
+    @pytest.fixture
+    def hass_config_dir(hass_tmp_config_dir: str) -> str:
+        # Use temporary config directory for this test/module.
+        return hass_tmp_config_dir
+    """
+    copytree(
+        get_test_config_dir(),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+    return str(tmp_path)
 
 
 @pytest.fixture

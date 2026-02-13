@@ -643,23 +643,41 @@ class TelegramNotificationService:
 
         media: InputMedia
         if media_type == InputMediaType.ANIMATION:
-            media = InputMediaAnimation(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAnimation(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.AUDIO:
-            media = InputMediaAudio(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAudio(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.DOCUMENT:
-            media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaDocument(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.PHOTO:
-            media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaPhoto(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         else:
-            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaVideo(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
 
         return await self._send_msg(
             self.bot.edit_message_media,
             "Error editing message media",
             params[ATTR_MESSAGE_TAG],
             media=media,
-            caption=kwargs.get(ATTR_CAPTION),
-            parse_mode=params[ATTR_PARSER],
             chat_id=chat_id,
             message_id=message_id,
             inline_message_id=inline_message_id,

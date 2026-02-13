@@ -15,7 +15,7 @@ from yarl import URL
 from homeassistant.components import camera, image, media_source
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.components.ntfy.const import DOMAIN
-from homeassistant.components.ntfy.notify import (
+from homeassistant.components.ntfy.services import (
     ATTR_ATTACH,
     ATTR_ATTACH_FILE,
     ATTR_CALL,
