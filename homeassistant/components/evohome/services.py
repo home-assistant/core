@@ -79,7 +79,7 @@ def _register_tcs_legacy_services(
     """
 
     def emulate_entity_service(call: ServiceCall) -> None:
-        """Emulate the behaviour of the future entity-level services.
+        """Emulate the behaviour of an entity-level services.
 
         Create a deprecation issue if the call has no target entity.
         """
