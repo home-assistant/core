@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import Any, Concatenate
 
 from peblar import (
+    AccessMode,
     Peblar,
     PeblarApi,
     PeblarAuthenticationError,
@@ -21,6 +22,7 @@ from peblar import (
     PeblarVersions,
 )
 
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -81,13 +83,23 @@ def _coordinator_exception_handler[
         try:
             return await func(self, *args, **kwargs)
         except PeblarAuthenticationError as error:
-            if self.config_entry and self.config_entry.state is ConfigEntryState.LOADED:
-                # This is not the first refresh, so let's reload
-                # the config entry to ensure we trigger a re-authentication
-                # flow (or recover in case of API token changes).
-                self.hass.config_entries.async_schedule_reload(
-                    self.config_entry.entry_id
-                )
+            entry = getattr(self, "config_entry", None)
+            peblar_obj = getattr(self, "peblar", None)
+
+            if entry and peblar_obj and not getattr(self, "_reauth_lock", False):
+                try:
+                    self._reauth_lock = True
+                    await peblar_obj.login(password=entry.data[CONF_PASSWORD])
+
+                    after = getattr(self, "_async_after_reauth", None)
+                    if callable(after):
+                        await after()
+
+                    # 1 retry after succesfull login
+                    return await func(self, *args, **kwargs)
+                finally:
+                    self._reauth_lock = False
+
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
@@ -141,10 +153,12 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
     config_entry: PeblarConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: PeblarConfigEntry, api: PeblarApi
+        self, hass: HomeAssistant, entry: PeblarConfigEntry, peblar: Peblar, api: PeblarApi
     ) -> None:
         """Initialize the coordinator."""
+        self.peblar = peblar
         self.api = api
+        self._reauth_lock = False
         super().__init__(
             hass,
             LOGGER,
@@ -152,6 +166,10 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
             name=f"Peblar {entry.title} meter",
             update_interval=timedelta(seconds=10),
         )
+
+    async def _async_after_reauth(self) -> None:
+        # After relogin: rebuild API object
+        self.api = await self.peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
 
     @_coordinator_exception_handler
     async def _async_update_data(self) -> PeblarData:

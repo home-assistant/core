@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         ) from err
 
     # Setup the data coordinators
-    meter_coordinator = PeblarDataUpdateCoordinator(hass, entry, api)
+    meter_coordinator = PeblarDataUpdateCoordinator(hass, entry, peblar, api)
     user_configuration_coordinator = PeblarUserConfigurationDataUpdateCoordinator(
         hass, entry, peblar
     )
