@@ -35,5 +35,10 @@
         "name": "Level"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed. Please check your credentials and try again."
+    }
   }
 }

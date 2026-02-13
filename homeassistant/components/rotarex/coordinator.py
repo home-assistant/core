@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .models import RotarexTank
@@ -47,7 +47,8 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
             await self.api.login(self._email, self._password)
         except InvalidAuth as err:
             raise ConfigEntryError(
-                f"Authentication failed: {err}"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
             ) from err
 
     async def _async_update_data(self) -> dict[str, RotarexTank]:
@@ -55,20 +56,10 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         try:
             tanks_data = await self.api.fetch_tanks()
         except InvalidAuth as err:
-            _LOGGER.warning("Token expired, attempting to re-login: %s", err)
-            try:
-                await self.api.login(self._email, self._password)
-            except InvalidAuth as login_err:
-                raise ConfigEntryError(
-                    f"Re-authentication failed: {login_err}"
-                ) from login_err
-            # If re-login succeeds, try fetch_tanks again
-            try:
-                tanks_data = await self.api.fetch_tanks()
-            except InvalidAuth as fetch_err:
-                raise ConfigEntryError(
-                    f"Authentication failed after re-login: {fetch_err}"
-                ) from fetch_err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
 
         # Convert to typed dataclasses and index by GUID
         return {

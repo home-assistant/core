@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RotarexSyncData:
     """Represent a synchronization data entry."""
 
@@ -14,7 +14,7 @@ class RotarexSyncData:
     battery: float | None
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RotarexTank:
     """Represent a Rotarex tank."""
 
@@ -24,14 +24,19 @@ class RotarexTank:
 
     @classmethod
     def from_dict(cls, data: dict) -> RotarexTank:
-        """Create a RotarexTank from API dictionary data."""
+        """Create a RotarexTank from API dictionary data.
+
+        This method transforms raw API responses into typed dataclass instances,
+        handling nested SynchDatas conversion and providing a clean interface
+        for the coordinator.
+        """
         synch_datas = [
             RotarexSyncData(
-                synch_date=sync.get("SynchDate", ""),
+                synch_date=sync["SynchDate"],
                 level=sync.get("Level"),
                 battery=sync.get("Battery"),
             )
-            for sync in data.get("SynchDatas", [])
+            for sync in data["SynchDatas"]
         ]
         return cls(
             guid=data["Guid"],

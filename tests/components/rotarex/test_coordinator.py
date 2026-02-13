@@ -57,51 +57,12 @@ async def test_coordinator_auth_failure_on_setup(
     assert mock_config_entry.state.recoverable
 
 
-async def test_coordinator_reauth_on_update(
+async def test_coordinator_auth_failure_on_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test coordinator re-authenticates when token expires."""
-    mock_config_entry.add_to_hass(hass)
-    
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    
-    coordinator = mock_config_entry.runtime_data
-
-    # Simulate token expiration on fetch
-    mock_rotarex_api.fetch_tanks.side_effect = [
-        InvalidAuth("Token expired"),
-        [  # After re-login, successful fetch
-            {
-                "Guid": "tank1-guid",
-                "Name": "Tank 1",
-                "SynchDatas": [
-                    {
-                        "SynchDate": "2024-01-03T12:00:00Z",
-                        "Level": 65.0,
-                        "Battery": 75.0,
-                    }
-                ],
-            }
-        ],
-    ]
-
-    mock_rotarex_api.login.reset_mock()
-    await coordinator.async_refresh()
-
-    # Verify login was called for re-auth
-    assert mock_rotarex_api.login.call_count == 1
-    assert coordinator.data["tank1-guid"].synch_datas[0].level == 65.0
-
-
-async def test_coordinator_reauth_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_rotarex_api: AsyncMock,
-) -> None:
-    """Test coordinator handles failed re-authentication."""
+    """Test coordinator handles auth failure during data update."""
     mock_config_entry.add_to_hass(hass)
     
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -112,11 +73,11 @@ async def test_coordinator_reauth_fails(
     # Initial state should be successful
     assert coordinator.last_update_success is True
 
-    # Simulate token expiration and failed re-login
+    # Simulate auth failure on fetch
     mock_rotarex_api.fetch_tanks.side_effect = InvalidAuth("Token expired")
-    mock_rotarex_api.login.side_effect = InvalidAuth("Invalid credentials")
 
     await coordinator.async_refresh()
     
-    # Coordinator should mark update as failed but not raise exception
+    # Coordinator should mark update as failed
     assert coordinator.last_update_success is False
+
