@@ -157,9 +157,10 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:
         """Process an audio stream to STT service."""
-        audio_data = b""
+        audio_bytes = bytearray()
         async for chunk in stream:
-            audio_data += chunk
+            audio_bytes.extend(chunk)
+        audio_data = bytes(audio_bytes)
         if metadata.format == stt.AudioFormats.WAV:
             # Add missing wav header
             wav_buffer = io.BytesIO()
