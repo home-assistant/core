@@ -403,6 +403,7 @@ async def test_agent_delete_backup(
     assert mock_agents["test.remote"].async_delete_backup.call_args == call("abc123")
 
 
+@pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
     "data",
     [
@@ -411,7 +412,6 @@ async def test_agent_delete_backup(
         {"password": "abc123"},
     ],
 )
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_generate(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -478,7 +478,6 @@ async def test_generate_wrong_parameters(
     }
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("params", "expected_extra_call_params"),
     [
