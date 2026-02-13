@@ -69,7 +69,13 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations:
+    status: todo
+    comment: |
+      Most user-facing exceptions have translations (HomeAssistantError and
+      ServiceValidationError use translation keys from strings.json). Remaining:
+      entity.py raises bare HomeAssistantError for ClientResponseError, and
+      coordinators raise UpdateFailed with untranslated messages.
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
