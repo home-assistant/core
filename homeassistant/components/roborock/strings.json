@@ -238,7 +238,7 @@
           "40": "40°C",
           "60": "60°C",
           "90": "90°C",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "cold": "Cold"
         }
       },
