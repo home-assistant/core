@@ -12,6 +12,9 @@
     "mode_does_not_support_temporary": {
       "message": "The mode `{mode}` can only be set permanently"
     },
+    "controller_only_service": {
+      "message": "Only controllers support the `{service}` service"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` service"
     }

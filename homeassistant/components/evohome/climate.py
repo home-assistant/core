@@ -154,6 +154,35 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
             translation_placeholders={"service": EvoService.SET_ZONE_OVERRIDE},
         )
 
+    async def async_refresh_system(self) -> None:
+        """Refresh the system; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.REFRESH_SYSTEM},
+        )
+
+    async def async_reset_system(self) -> None:
+        """Reset the system; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.RESET_SYSTEM},
+        )
+
+    async def async_set_system_mode(
+        self,
+        mode: str,
+        period: timedelta | None = None,
+        duration: timedelta | None = None,
+    ) -> None:
+        """Set the system mode; only supported by controllers."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="controller_only_service",
+            translation_placeholders={"service": EvoService.SET_SYSTEM_MODE},
+        )
+
 
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for any evohome-compatible heating zone."""
@@ -352,12 +381,12 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_mode_info: dict[str, EvoAllowedSystemModesResponseT] = {
+        self._evo_modes: dict[str, EvoAllowedSystemModesResponseT] = {
             m[SZ_SYSTEM_MODE]: m for m in evo_device.allowed_system_modes
         }
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[EvoSystemMode(m)]
-            for m in self._evo_mode_info
+            for m in self._evo_modes
             if m in TCS_PRESET_TO_HA
         ]
         if self._attr_preset_modes:
@@ -386,7 +415,7 @@ class EvoController(EvoClimateEntity):
         """Set the system mode."""
 
         # Validate duration/period against mode capabilities
-        if (mode_info := self._evo_mode_info.get(mode)) is None:
+        if (mode_info := self._evo_modes.get(mode)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_system_mode",
@@ -475,13 +504,13 @@ class EvoController(EvoClimateEntity):
         if hvac_mode == HVACMode.HEAT:
             evo_mode = (
                 EvoSystemMode.AUTO
-                if EvoSystemMode.AUTO in self._evo_mode_info
+                if EvoSystemMode.AUTO in self._evo_modes
                 else EvoSystemMode.HEAT
             )
         elif hvac_mode == HVACMode.OFF:
             evo_mode = (
                 EvoSystemMode.HEATING_OFF
-                if EvoSystemMode.HEATING_OFF in self._evo_mode_info
+                if EvoSystemMode.HEATING_OFF in self._evo_modes
                 else EvoSystemMode.OFF
             )
         else:
