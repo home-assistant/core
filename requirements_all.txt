@@ -1670,6 +1670,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
+# homeassistant.components.onedrive_for_business
 onedrive-personal-sdk==0.1.2
 
 # homeassistant.components.onvif
@@ -3322,7 +3323,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.89
+zha==0.0.90
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

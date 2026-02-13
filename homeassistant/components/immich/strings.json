@@ -1,12 +1,12 @@
 {
   "common": {
-    "data_desc_api_key": "API key to connect to your immich instance.",
-    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your immich instance.",
-    "data_desc_url": "The full URL of your immich instance."
+    "data_desc_api_key": "API key to connect to your Immich instance.",
+    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your Immich instance.",
+    "data_desc_url": "The full URL of your Immich instance."
   },
   "config": {
     "abort": {
-      "already_configured": "This user is already configured for this immich instance.",
+      "already_configured": "This user is already configured for this Immich instance.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The provided API key does not match the configured user."
@@ -97,7 +97,7 @@
       "message": "Cannot connect to your Immich instance."
     },
     "identifier_no_mime_type_unresolvable": {
-      "message": "Could not resolve identifier that has no mime-type: {identifier}"
+      "message": "Could not resolve identifier that has no MIME type: {identifier}"
     },
     "identifier_unresolvable": {
       "message": "Could not parse identifier: {identifier}"

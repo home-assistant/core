@@ -30,32 +30,15 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
         self.entity_description = description
         self._monitor = monitor
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self.monitor.id))},
-            name=self.monitor.friendlyName,
+            identifiers={(DOMAIN, str(self._monitor.id))},
+            name=self._monitor.friendlyName,
             manufacturer="UptimeRobot Team",
             entry_type=DeviceEntryType.SERVICE,
-            model=self.monitor.type,
-            configuration_url=f"https://uptimerobot.com/dashboard#{self.monitor.id}",
+            model=self._monitor.type,
+            configuration_url=f"https://uptimerobot.com/dashboard#{self._monitor.id}",
         )
         self._attr_extra_state_attributes = {
-            ATTR_TARGET: self.monitor.url,
+            ATTR_TARGET: self._monitor.url,
         }
-        self._attr_unique_id = str(self.monitor.id)
+        self._attr_unique_id = str(self._monitor.id)
         self.api = coordinator.api
-
-    @property
-    def _monitors(self) -> list[UptimeRobotMonitor]:
-        """Return all monitors."""
-        return self.coordinator.data or []
-
-    @property
-    def monitor(self) -> UptimeRobotMonitor:
-        """Return the monitor for this entity."""
-        return next(
-            (
-                monitor
-                for monitor in self._monitors
-                if str(monitor.id) == self.entity_description.key
-            ),
-            self._monitor,
-        )
