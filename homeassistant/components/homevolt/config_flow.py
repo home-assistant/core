@@ -142,9 +142,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 device_id = client.unique_id
                 await self.async_set_unique_id(device_id)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: self._host},
-                )
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title="Homevolt",
