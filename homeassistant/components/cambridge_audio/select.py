@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import ControlBusMode, DisplayBrightness
+from aiostreammagic.models import ControlBusMode, DisplayBrightness, UserEQ
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CambridgeAudioConfigEntry
+from .const import EQ_PRESET_CUSTOM, EQ_PRESETS
 from .entity import CambridgeAudioEntity, command
 
 PARALLEL_UPDATES = 0
@@ -47,6 +48,55 @@ def _audio_output_value_fn(client: StreamMagicClient) -> str | None:
         ),
         None,
     )
+
+
+def _eq_bands_match(bands1: list, bands2: list) -> bool:
+    """Check if two EQ band configurations match."""
+    if len(bands1) != len(bands2):
+        return False
+    return all(
+        b1.filter == b2.filter
+        and b1.freq == b2.freq
+        and b1.gain == b2.gain
+        and b1.q == b2.q
+        for b1, b2 in zip(bands1, bands2, strict=False)
+    )
+
+
+def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
+    """Detect the current EQ preset based on band settings."""
+    if client.audio.user_eq is None:
+        return None
+
+    current_bands = client.audio.user_eq.bands
+    if not current_bands:
+        return None
+
+    # Check if current settings match any preset
+    for preset_name, preset_bands in EQ_PRESETS.items():
+        if _eq_bands_match(current_bands, preset_bands):
+            return preset_name
+
+    # If no preset matches, return custom
+    return EQ_PRESET_CUSTOM
+
+
+async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None:
+    """Apply an EQ preset to the device."""
+    if client.audio.user_eq is None:
+        return
+
+    # Don't apply custom preset - it's read-only
+    if value == EQ_PRESET_CUSTOM:
+        return
+
+    preset_bands = EQ_PRESETS.get(value)
+    if preset_bands is None:
+        return
+
+    # Create UserEQ with current enabled state and new bands
+    user_eq = UserEQ(enabled=client.audio.user_eq.enabled, bands=preset_bands)
+    await client.set_equalizer_params(user_eq)
 
 
 CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
@@ -89,6 +139,15 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
         set_value_fn=lambda client, value: client.set_control_bus_mode(
             ControlBusMode(value)
         ),
+    ),
+    CambridgeAudioSelectEntityDescription(
+        key="equalizer_preset",
+        translation_key="equalizer_preset",
+        options=[*EQ_PRESETS.keys(), EQ_PRESET_CUSTOM],
+        entity_category=EntityCategory.CONFIG,
+        load_fn=lambda client: client.audio.user_eq is not None,
+        value_fn=_eq_preset_value_fn,
+        set_value_fn=_eq_preset_set_value_fn,
     ),
 )
 
