@@ -323,8 +323,10 @@ async def test_remove_item_intent(
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
 
-    assert len(entity1.items) == 1
+    # only the first matching item has been removed
+    assert len(entity1.items) == 2
     assert entity1.items[0].uid == "2"
+    assert entity1.items[1].uid == "3"
 
 
 async def test_remove_item_intent_errors(
