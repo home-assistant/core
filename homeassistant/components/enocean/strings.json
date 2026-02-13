@@ -24,7 +24,7 @@
         "data_description": {
           "device": "Path to your EnOcean dongle.\n\nExamples:\n• Local USB: `/dev/ttyUSB0` or `/dev/serial/by-id/usb-EnOcean_...`\n• Network (RFC2217): `rfc2217://hostname:port`\n• Network (raw socket): `socket://hostname:port`"
         },
-        "description": "Enter the path to your EnOcean dongle or network URL for remote access."
+        "description": "Enter the serial path or network address to your EnOcean dongle."
       }
     }
   },
