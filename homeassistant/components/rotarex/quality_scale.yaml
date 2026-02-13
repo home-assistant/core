@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
   appropriate-polling: done
   brands: done
   common-modules: done

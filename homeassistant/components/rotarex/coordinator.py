@@ -2,21 +2,24 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .models import RotarexTank
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=15)
 
-class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+
+class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]):
     """Class to manage fetching Rotarex data."""
 
     def __init__(
@@ -24,19 +27,17 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         api: RotarexApi,
-        email: str,
-        password: str,
     ) -> None:
         """Initialize the data update coordinator."""
         self.api = api
-        self._email = email
-        self._password = password
-        self.api.set_credentials(email, password)
+        self._email = config_entry.data[CONF_EMAIL]
+        self._password = config_entry.data[CONF_PASSWORD]
+        self.api.set_credentials(self._email, self._password)
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=15),
+            update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
 
@@ -45,32 +46,33 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         try:
             await self.api.login(self._email, self._password)
         except InvalidAuth as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 f"Authentication failed: {err}"
             ) from err
-        except Exception as err:
-            raise ConfigEntryNotReady(
-                f"Error connecting to Rotarex API: {err}"
-            ) from err
 
-    async def _async_update_data(self) -> list[dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, RotarexTank]:
         """Fetch data from API endpoint."""
         try:
-            return await self.api.fetch_tanks()
+            tanks_data = await self.api.fetch_tanks()
         except InvalidAuth as err:
             _LOGGER.warning("Token expired, attempting to re-login: %s", err)
             try:
                 await self.api.login(self._email, self._password)
             except InvalidAuth as login_err:
-                raise ConfigEntryAuthFailed(
+                raise ConfigEntryError(
                     f"Re-authentication failed: {login_err}"
                 ) from login_err
             # If re-login succeeds, try fetch_tanks again
             try:
-                return await self.api.fetch_tanks()
+                tanks_data = await self.api.fetch_tanks()
             except InvalidAuth as fetch_err:
-                raise ConfigEntryAuthFailed(
+                raise ConfigEntryError(
                     f"Authentication failed after re-login: {fetch_err}"
                 ) from fetch_err
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        # Convert to typed dataclasses and index by GUID
+        return {
+            tank_dict["Guid"]: RotarexTank.from_dict(tank_dict)
+            for tank_dict in tanks_data
+            if "Guid" in tank_dict
+        }

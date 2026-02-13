@@ -21,11 +21,9 @@ type RotarexConfigEntry = ConfigEntry[RotarexDataUpdateCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: RotarexConfigEntry) -> bool:
     """Set up Rotarex from a config entry."""
     session = async_get_clientsession(hass)
-    email = entry.data[CONF_EMAIL]
-    password = entry.data[CONF_PASSWORD]
 
     api = RotarexApi(session)
-    coordinator = RotarexDataUpdateCoordinator(hass, entry, api, email, password)
+    coordinator = RotarexDataUpdateCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -36,7 +34,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: RotarexConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: RotarexConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        entry.runtime_data = cast(RotarexDataUpdateCoordinator, None)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

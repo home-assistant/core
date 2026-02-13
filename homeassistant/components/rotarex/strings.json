@@ -26,26 +26,13 @@
   "entity": {
     "sensor": {
       "battery": {
-        "name": "Battery",
-        "state_attributes": {
-          "last_sync": {
-            "name": "Last synchronization"
-          }
-        }
+        "name": "Battery"
       },
       "last_sync": {
         "name": "Last synchronization"
       },
       "level": {
-        "name": "Level",
-        "state_attributes": {
-          "last_sync": {
-            "name": "Last synchronization"
-          },
-          "temperature": {
-            "name": "Temperature"
-          }
-        }
+        "name": "Level"
       }
     }
   }
