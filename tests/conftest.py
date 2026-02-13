@@ -558,7 +558,7 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
-def hass_tmp_config_dir(tmp_path: pathlib.Path) -> Generator[str]:
+def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
     """Fixture to provide a temporary config directory.
 
     Use this fixture in a fixture overriding hass_config_dir to provide
