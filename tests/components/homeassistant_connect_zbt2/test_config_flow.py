@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -442,7 +445,7 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
     """Test that firmware notification triggers import flow that auto-creates config entry."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
     await async_setup_component(hass, "usb", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -499,7 +502,7 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> None:
     """Test that firmware notification updates existing config entry device path."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
     await async_setup_component(hass, "usb", {})
 
     # Create existing config entry with old device path

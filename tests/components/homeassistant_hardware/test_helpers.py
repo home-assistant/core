@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 
-from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT
+from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT, DOMAIN
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_firmware_update_context,
     async_is_firmware_update_in_progress,
@@ -47,7 +47,7 @@ FIRMWARE_INFO_SPINEL = FirmwareInfo(
 async def test_dispatcher_registration(hass: HomeAssistant) -> None:
     """Test HardwareInfoDispatcher registration."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     # Mock provider 1 with a synchronous method to pull firmware info
     provider1_config_entry = MockConfigEntry(
@@ -123,7 +123,7 @@ async def test_dispatcher_iter_error_handling(
 ) -> None:
     """Test HardwareInfoDispatcher ignoring errors from firmware info providers."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     provider1_config_entry = MockConfigEntry(
         domain="zha",
@@ -163,7 +163,7 @@ async def test_dispatcher_callback_error_handling(
 ) -> None:
     """Test HardwareInfoDispatcher ignoring errors from firmware info callbacks."""
 
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
     provider1_config_entry = MockConfigEntry(
         domain="zha",
         unique_id="some_unique_id1",
@@ -193,7 +193,7 @@ async def test_dispatcher_callback_error_handling(
 
 async def test_firmware_update_tracking(hass: HomeAssistant) -> None:
     """Test firmware update tracking API."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     device_path = "/dev/ttyUSB0"
 
@@ -225,7 +225,7 @@ async def test_firmware_update_tracking(hass: HomeAssistant) -> None:
 
 async def test_firmware_update_context_manager(hass: HomeAssistant) -> None:
     """Test firmware update progress context manager."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     device_path = "/dev/ttyUSB0"
 
@@ -263,7 +263,7 @@ async def test_firmware_update_context_manager(hass: HomeAssistant) -> None:
 
 async def test_dispatcher_callback_self_unregister(hass: HomeAssistant) -> None:
     """Test callbacks can unregister themselves during notification."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     called_callbacks = []
     unregister_funcs = {}
@@ -304,7 +304,7 @@ async def test_firmware_callback_no_usb_device(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test firmware notification when usb_device_from_path returns None."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "usb", {})
 
     with (
@@ -335,7 +335,7 @@ async def test_firmware_callback_no_hardware_domain(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test firmware notification when no hardware domain is found for device."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "usb", {})
 
     # Create a USB device that doesn't match any hardware integration

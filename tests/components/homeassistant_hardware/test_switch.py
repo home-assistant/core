@@ -7,6 +7,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -123,7 +124,7 @@ async def mock_switch_config_entry(
 ) -> AsyncGenerator[ConfigEntry]:
     """Set up a mock config entry for testing."""
     await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     mock_integration(
         hass,
