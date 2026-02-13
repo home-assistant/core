@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
+    MANUFACTURER,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_PANEL_MESSAGE,
     SIGNAL_ZONES_UPDATED,
@@ -209,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer="Satel",
+        manufacturer=MANUFACTURER,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -9,6 +9,7 @@ DEFAULT_PORT = 7094
 DEFAULT_ZONE_TYPE = "motion"
 
 DOMAIN = "satel_integra"
+MANUFACTURER = "SATEL sp. z o.o."
 
 SUBENTRY_TYPE_PARTITION = "partition"
 SUBENTRY_TYPE_ZONE = "zone"
