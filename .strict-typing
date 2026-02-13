@@ -287,6 +287,7 @@ homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
+homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
@@ -363,7 +364,6 @@ homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
-homeassistant.components.nanoleaf.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*

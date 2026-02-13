@@ -1,6 +1,6 @@
 """Constants for the Watts Vision+ integration."""
 
-from visionpluspython.models import ThermostatMode
+from visionpluspython.models import SwitchDevice, ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import HVACMode
 
@@ -35,3 +35,5 @@ HVAC_MODE_TO_THERMOSTAT = {
     HVACMode.OFF: ThermostatMode.OFF,
     HVACMode.AUTO: ThermostatMode.PROGRAM,
 }
+
+SUPPORTED_DEVICE_TYPES = (ThermostatDevice, SwitchDevice)

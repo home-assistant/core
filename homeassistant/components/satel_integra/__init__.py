@@ -8,7 +8,11 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
@@ -167,6 +171,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_partitions=coordinator_partitions,
     )
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Satel",
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

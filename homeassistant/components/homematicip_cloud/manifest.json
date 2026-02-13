@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["homematicip"],
-  "requirements": ["homematicip==2.5.0"]
+  "requirements": ["homematicip==2.6.0"]
 }
