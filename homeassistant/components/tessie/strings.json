@@ -420,6 +420,9 @@
       "energy_left": {
         "name": "Energy left"
       },
+      "energy_remaining": {
+        "name": "Energy remaining"
+      },
       "generator_power": {
         "name": "Generator power"
       },
