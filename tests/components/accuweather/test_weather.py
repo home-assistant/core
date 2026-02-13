@@ -8,6 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import UPDATE_INTERVAL_DAILY_FORECAST
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     DOMAIN as WEATHER_DOMAIN,
@@ -78,13 +82,13 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     assert mock_accuweather_client.async_get_current_conditions.call_count == 1
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["weather.home"]},
         blocking=True,
     )

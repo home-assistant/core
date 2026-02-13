@@ -13,5 +13,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyvlx"],
+  "quality_scale": "silver",
   "requirements": ["pyvlx==0.2.29"]
 }

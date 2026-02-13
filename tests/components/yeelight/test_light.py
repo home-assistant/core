@@ -21,6 +21,10 @@ from yeelight import (
 from yeelight.flow import Action, Flow
 from yeelight.main import _MODEL_SPECS
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -139,7 +143,7 @@ SUPPORT_YEELIGHT = (
 
 async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Yeelight services."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -487,8 +491,8 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     mocked_bulb.last_properties["power"] = "off"
     mocked_bulb.available = True
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
