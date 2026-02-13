@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.client_exceptions import ClientError
 import tibber
@@ -21,8 +23,9 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
-from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfEnergy
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -31,6 +34,9 @@ from homeassistant.util.unit_conversion import EnergyConverter
 from .const import DOMAIN
 
 if TYPE_CHECKING:
+    from tibber import TibberHome
+
+    from . import TibberRuntimeData
     from .const import TibberConfigEntry
 
 FIVE_YEARS = 5 * 365 * 24
@@ -38,8 +44,52 @@ FIVE_YEARS = 5 * 365 * 24
 _LOGGER = logging.getLogger(__name__)
 
 
-class TibberDataCoordinator(DataUpdateCoordinator[None]):
-    """Handle Tibber data and insert statistics."""
+@dataclass
+class TibberHomeData:
+    """Structured data per Tibber home from GraphQL and price API."""
+
+    currency: str
+    price_unit: str
+    current_price: float | None
+    current_price_time: datetime | None
+    intraday_price_ranking: float | None
+    max_price: float
+    avg_price: float
+    min_price: float
+    off_peak_1: float
+    peak: float
+    off_peak_2: float
+    month_cost: float | None
+    peak_hour: float | None
+    peak_hour_time: datetime | None
+    month_cons: float | None
+
+
+def _build_home_data(home: TibberHome) -> TibberHomeData:
+    """Build TibberHomeData from a TibberHome after price info has been fetched."""
+    price_value, price_time, price_rank = home.current_price_data()
+    attrs = home.current_attributes()
+    return TibberHomeData(
+        currency=home.currency,
+        price_unit=home.price_unit,
+        current_price=price_value,
+        current_price_time=price_time,
+        intraday_price_ranking=price_rank,
+        max_price=attrs.get("max_price", 0.0),
+        avg_price=attrs.get("avg_price", 0.0),
+        min_price=attrs.get("min_price", 0.0),
+        off_peak_1=attrs.get("off_peak_1", 0.0),
+        peak=attrs.get("peak", 0.0),
+        off_peak_2=attrs.get("off_peak_2", 0.0),
+        month_cost=getattr(home, "month_cost", None),
+        peak_hour=getattr(home, "peak_hour", None),
+        peak_hour_time=getattr(home, "peak_hour_time", None),
+        month_cons=getattr(home, "month_cons", None),
+    )
+
+
+class TibberDataCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
+    """Handle Tibber data, insert statistics, and expose per-home data for sensors."""
 
     config_entry: TibberConfigEntry
 
@@ -47,24 +97,39 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         config_entry: TibberConfigEntry,
-        tibber_connection: tibber.Tibber,
+        runtime_data: TibberRuntimeData,
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"Tibber {tibber_connection.name}",
+            name="Tibber",
             update_interval=timedelta(minutes=20),
         )
-        self._tibber_connection = tibber_connection
+        self._runtime_data = runtime_data
 
-    async def _async_update_data(self) -> None:
-        """Update data via API."""
+    async def _async_update_data(self) -> dict[str, TibberHomeData]:
+        """Update data via API and return per-home data for sensors."""
+        tibber_connection = await self._runtime_data.async_get_client(self.hass)
         try:
-            await self._tibber_connection.fetch_consumption_data_active_homes()
-            await self._tibber_connection.fetch_production_data_active_homes()
-            await self._insert_statistics()
+            await tibber_connection.fetch_consumption_data_active_homes()
+            await tibber_connection.fetch_production_data_active_homes()
+            now = dt_util.now()
+            for home in tibber_connection.get_homes(only_active=True):
+                update_needed = False
+                last_data_timestamp = home.last_data_timestamp
+
+                if last_data_timestamp is None:
+                    update_needed = True
+                else:
+                    remaining_seconds = (last_data_timestamp - now).total_seconds()
+                    if remaining_seconds < 11 * 3600:
+                        update_needed = True
+
+                if update_needed:
+                    await home.update_info_and_price_info()
+            await self._insert_statistics(tibber_connection)
         except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
         except tibber.FatalHttpExceptionError:
@@ -72,10 +137,16 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
+            return self.data if self.data is not None else {}
 
-    async def _insert_statistics(self) -> None:
+        result: dict[str, TibberHomeData] = {}
+        for home in tibber_connection.get_homes(only_active=True):
+            result[home.home_id] = _build_home_data(home)
+        return result
+
+    async def _insert_statistics(self, tibber_connection: tibber.Tibber) -> None:
         """Insert Tibber statistics."""
-        for home in self._tibber_connection.get_homes():
+        for home in tibber_connection.get_homes():
             sensors: list[tuple[str, bool, str | None, str]] = []
             if home.hourly_consumption_data:
                 sensors.append(
@@ -257,3 +328,48 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             ) from err
         self._build_sensor_lookup(devices)
         return devices
+
+
+class TibberRtDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Handle Tibber realtime data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
+        tibber_home: TibberHome,
+    ) -> None:
+        """Initialize the data handler."""
+        self._add_sensor_callback = add_sensor_callback
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=tibber_home.info["viewer"]["home"]["address"].get(
+                "address1", "Tibber"
+            ),
+        )
+
+        self._async_remove_device_updates_handler = self.async_add_listener(
+            self._data_updated
+        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+
+    @callback
+    def _handle_ha_stop(self, _event: Event) -> None:
+        """Handle Home Assistant stopping."""
+        self._async_remove_device_updates_handler()
+
+    @callback
+    def _data_updated(self) -> None:
+        """Triggered when data is updated."""
+        if live_measurement := self.get_live_measurement():
+            self._add_sensor_callback(self, live_measurement)
+
+    def get_live_measurement(self) -> Any:
+        """Get live measurement data."""
+        if errors := self.data.get("errors"):
+            _LOGGER.error(errors[0])
+            return None
+        return self.data.get("data", {}).get("liveMeasurement")

@@ -43,6 +43,9 @@
       "average_power": {
         "name": "Average power"
       },
+      "avg_price": {
+        "name": "Average price today"
+      },
       "cellular_rssi": {
         "name": "Cellular signal strength"
       },
@@ -136,6 +139,9 @@
       "grid_phase_count": {
         "name": "Number of grid phases"
       },
+      "intraday_price_ranking": {
+        "name": "Intraday price ranking"
+      },
       "last_meter_consumption": {
         "name": "Last meter consumption"
       },
@@ -145,14 +151,29 @@
       "max_power": {
         "name": "Max power"
       },
+      "max_price": {
+        "name": "Max price today"
+      },
       "min_power": {
         "name": "Min power"
+      },
+      "min_price": {
+        "name": "Min price today"
       },
       "month_cons": {
         "name": "Monthly net consumption"
       },
       "month_cost": {
         "name": "Monthly cost"
+      },
+      "off_peak_1": {
+        "name": "Off-peak 1 average"
+      },
+      "off_peak_2": {
+        "name": "Off-peak 2 average"
+      },
+      "peak": {
+        "name": "Peak average"
       },
       "peak_hour": {
         "name": "Monthly peak hour consumption"
