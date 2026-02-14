@@ -13,7 +13,7 @@ import logging
 import os
 import pathlib
 import reprlib
-from shutil import rmtree
+from shutil import copytree, rmtree
 import sqlite3
 import ssl
 import sys
@@ -137,6 +137,7 @@ from .common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_config_dir,
     mock_storage,
     patch_yaml_files,
     extract_stack_to_frame,
@@ -557,9 +558,41 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
+def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
+    """Fixture to provide a temporary config directory.
+
+    Use this fixture in a fixture overriding hass_config_dir to provide
+    a temporary config directory which does not need to be cleaned up:
+
+    @pytest.fixture
+    def hass_config_dir(hass_tmp_config_dir: str) -> str:
+        # Use temporary config directory for this test/module.
+        return hass_tmp_config_dir
+    """
+    copytree(
+        get_test_config_dir(),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+    return str(tmp_path)
+
+
+@pytest.fixture
+def hass_config_dir() -> str:
+    """Fixture to provide a test config directory.
+
+    Override this fixture to provide a custom config directory,
+    for example with pre-populated config files.
+    """
+    return get_test_config_dir()
+
+
+@pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
+    hass_config_dir: str | None,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
@@ -586,10 +619,15 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    async with async_test_home_assistant(loop, load_registries) as hass:
+    async with async_test_home_assistant(
+        loop, load_registries, config_dir=hass_config_dir
+    ) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
+
+        # Ensure translations for "homeassistant" are always pre-loaded
+        await translation_helper.async_load_integrations(hass, {ha.DOMAIN})
 
         yield hass
 
@@ -1261,10 +1299,33 @@ def translations_once() -> Generator[_patch]:
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        wraps=real_component_strings,
-    ) as mock_component_strings:
+
+    def _async_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        _category: str,
+        _integration: str | None = None,
+    ) -> dict[str, str]:
+        # Override default implementation to ensure "homeassistant"
+        # is always considered when getting "global" cached translations
+        cache = translation_helper._async_get_translations_cache(_hass)
+        _components = (
+            {_integration}
+            if _integration
+            else _hass.config.top_level_components | {ha.DOMAIN}
+        )
+        return cache.get_cached(_language, _category, _components)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation.async_get_cached_translations",
+            _async_get_cached_translations,
+        ),
+        patch(
+            "homeassistant.helpers.translation._async_get_component_strings",
+            wraps=real_component_strings,
+        ) as mock_component_strings,
+    ):
         yield
     cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
     component_paths = components.__path__

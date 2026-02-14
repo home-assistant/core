@@ -1306,7 +1306,7 @@ async def test_config_flow_preview_template_error(
     [
         (
             "sensor",
-            "{{ states('sensor.one') }}",
+            "{{ 1.0 / states('sensor.one') | float(0.0) }}",
             {"unit_of_measurement": "°C"},
         ),
     ],
@@ -1350,14 +1350,7 @@ async def test_config_flow_preview_bad_state(
     assert msg["result"] is None
 
     msg = await client.receive_json()
-    assert msg["event"] == {
-        "error": (
-            "Sensor None has device class 'None', state class 'None' unit '°C' "
-            "and suggested precision 'None' thus indicating it has a numeric "
-            "value; however, it has the non-numeric value: 'unknown' (<class "
-            "'str'>)"
-        ),
-    }
+    assert msg["event"] == {"error": "ZeroDivisionError: division by zero"}
 
 
 @pytest.mark.parametrize(

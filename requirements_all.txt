@@ -220,6 +220,7 @@ aiobafi6==0.9.0
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
 # homeassistant.components.cloudflare_r2
+# homeassistant.components.idrive_e2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -412,7 +413,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.12.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.0.0
+aioswitcher==6.1.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -1191,7 +1192,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.4.2
+hdfury==1.5.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.4
@@ -1228,7 +1229,7 @@ holidays==0.84
 home-assistant-frontend==20260128.6
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.28
+home-assistant-intents==2026.2.13
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -1237,7 +1238,7 @@ homelink-integration-api==0.0.1
 homematicip==2.6.0
 
 # homeassistant.components.homevolt
-homevolt==0.4.3
+homevolt==0.4.4
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1277,6 +1278,9 @@ icmplib==3.0
 
 # homeassistant.components.idasen_desk
 idasen-ha==2.6.3
+
+# homeassistant.components.idrive_e2
+idrive-e2-client==0.1.1
 
 # homeassistant.components.network
 ifaddr==0.2.0
@@ -1364,7 +1368,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.1.28.162006
+knx-frontend==2026.2.13.222258
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1662,6 +1666,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
+# homeassistant.components.onedrive_for_business
 onedrive-personal-sdk==0.1.2
 
 # homeassistant.components.onvif
@@ -2446,7 +2451,7 @@ pysma==1.1.0
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.13.0
+pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
 pysmartthings==3.5.2
@@ -2670,7 +2675,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.2.0
+pyuptimerobot==24.0.1
 
 # homeassistant.components.vera
 pyvera==0.3.16
@@ -3019,7 +3024,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.2
+tesla-fleet-api==1.4.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -3314,7 +3319,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.89
+zha==0.0.90
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
