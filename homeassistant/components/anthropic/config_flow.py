@@ -184,7 +184,12 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors or None,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
+            },
         )
 
     @classmethod

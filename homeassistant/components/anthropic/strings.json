@@ -13,7 +13,11 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
+        },
+        "data_description": {
+          "api_key": "Your Anthropic API key."
+        },
+        "description": "Set up Anthropic integration by providing your Anthropic API key. Instructions to obtain an API key can be found in [the documentation]({instructions_url})."
       }
     }
   },
@@ -35,12 +39,21 @@
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::max_tokens%]",
             "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
           },
+          "data_description": {
+            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
+            "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::max_tokens%]",
+            "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::temperature%]"
+          },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
         },
         "init": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data::recommended%]"
+          },
+          "data_description": {
+            "name": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::name%]",
+            "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::recommended%]"
           },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
         },
@@ -80,6 +93,11 @@
             "max_tokens": "Maximum tokens to return in response",
             "temperature": "Temperature"
           },
+          "data_description": {
+            "chat_model": "The model to serve the responses.",
+            "max_tokens": "Limit the number of response tokens.",
+            "temperature": "Control the randomness of the response, trading off between creativity and coherence."
+          },
           "title": "Advanced settings"
         },
         "init": {
@@ -90,7 +108,10 @@
             "recommended": "Recommended model settings"
           },
           "data_description": {
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "llm_hass_api": "Allow the LLM to control Home Assistant.",
+            "name": "The name of this configuration",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "recommended": "Use default configuration"
           },
           "title": "Basic settings"
         },
@@ -121,6 +142,9 @@
           "init": {
             "data": {
               "chat_model": "[%key:common::generic::model%]"
+            },
+            "data_description": {
+              "chat_model": "Select the new model to use."
             },
             "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated. Select a supported model to continue.",
             "title": "Update model"
