@@ -741,7 +741,6 @@ UNITS_PRECISION = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         0,
     ),
-    SensorDeviceClass.NITROGEN_DIOXIDE: (CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, 0),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.PA, 0),
     SensorDeviceClass.REACTIVE_POWER: (UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
     SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
