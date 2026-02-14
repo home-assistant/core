@@ -58,3 +58,35 @@ async def test_setting_value(
         blocking=True,
     )
     mock_stream_magic_client.set_early_update.assert_called_once_with(False)
+
+
+async def test_equalizer_switch(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test equalizer switch."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test turning equalizer on
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+        },
+        blocking=True,
+    )
+    mock_stream_magic_client.set_equalizer_mode.assert_called_once_with(True)
+    mock_stream_magic_client.set_equalizer_mode.reset_mock()
+
+    # Test turning equalizer off
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+        },
+        blocking=True,
+    )
+    mock_stream_magic_client.set_equalizer_mode.assert_called_once_with(False)
