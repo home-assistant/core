@@ -463,7 +463,7 @@ def async_setup_entity_entry_helper(
 
 
 class MqttAttributesMixin(Entity):
-    """Mixin used for platforms that support JSON attributes."""
+    """Mixin used for platforms that support JSON attributes and group entities."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
@@ -471,9 +471,10 @@ class MqttAttributesMixin(Entity):
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
+    group: IntegrationSpecificGroup
 
     def __init__(self, config: ConfigType) -> None:
-        """Initialize the JSON attributes mixin."""
+        """Initialize the JSON attributes and handle group entities."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         if CONF_GROUP in config:
             self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
@@ -487,6 +488,8 @@ class MqttAttributesMixin(Entity):
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
+        if self.group is not None and CONF_GROUP in config:
+            self.group.included_unique_ids = config[CONF_GROUP]
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 
