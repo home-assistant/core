@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
+from functools import lru_cache
+from ipaddress import ip_address
 import socket
 from ssl import SSLContext
 import sys
@@ -12,10 +14,11 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
-from aiohttp import web
+from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -25,6 +28,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
+from homeassistant.util.network import is_loopback
 
 from .frame import warn_use
 from .json import json_dumps
@@ -48,6 +52,92 @@ SERVER_SOFTWARE = (
 )
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+_LOCALHOST = "localhost"
+_TRAILING_LOCAL_HOST = f".{_LOCALHOST}"
+
+
+class SSRFRedirectError(aiohttp.ClientError):
+    """SSRF redirect protection.
+
+    Raised when a redirect targets a blocked address (loopback or unspecified).
+    """
+
+
+async def _ssrf_redirect_middleware(
+    request: aiohttp.ClientRequest,
+    handler: aiohttp.ClientHandlerType,
+) -> aiohttp.ClientResponse:
+    """Block redirects from non-loopback origins to loopback targets."""
+    resp = await handler(request)
+
+    # Return early if not a redirect or already loopback to allow loopback origins
+    connector = request.session.connector
+    if not (300 <= resp.status < 400) or await _async_is_blocked_host(
+        request.url.host, connector
+    ):
+        return resp
+
+    location = resp.headers.get(hdrs.LOCATION, "")
+    if not location:
+        return resp
+
+    redirect_url = URL(location)
+    if not redirect_url.is_absolute():
+        # Relative redirects stay on the same host - always safe
+        return resp
+
+    host = redirect_url.host
+    if await _async_is_blocked_host(host, connector):
+        resp.close()
+        raise SSRFRedirectError(
+            f"Redirect from {request.url.host} to a blocked address"
+            f" is not allowed: {host}"
+        )
+
+    return resp
+
+
+@lru_cache
+def _is_ssrf_address(address: str) -> bool:
+    """Check if an IP address is a potential SSRF target.
+
+    Returns True for loopback and unspecified addresses.
+    """
+    ip = ip_address(address)
+    return is_loopback(ip) or ip.is_unspecified
+
+
+async def _async_is_blocked_host(
+    host: str | None, connector: aiohttp.BaseConnector | None
+) -> bool:
+    """Check if a host is blocked by hostname or by resolved IP.
+
+    First does a fast sync check on the hostname string, then resolves
+    the hostname via the connector and checks each resolved IP address.
+    """
+    if not host:
+        return False
+
+    # Strip FQDN trailing dot (RFC 1035) since yarl preserves it,
+    # preventing an attacker from bypassing the check with "localhost."
+    stripped_host = host.strip().removesuffix(".")
+    if stripped_host == _LOCALHOST or stripped_host.endswith(_TRAILING_LOCAL_HOST):
+        return True
+
+    with suppress(ValueError):
+        return _is_ssrf_address(host)
+
+    if not isinstance(connector, HomeAssistantTCPConnector):
+        return False
+
+    try:
+        results = await connector.async_resolve_host(host)
+    except Exception:  # noqa: BLE001
+        return False
+
+    return any(_is_ssrf_address(result["host"]) for result in results)
+
 
 #
 # The default connection limit of 100 meant that you could only have
@@ -191,10 +281,16 @@ def _async_create_clientsession(
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
+    middlewares: Sequence[ClientMiddlewareType] = (
+        _ssrf_redirect_middleware,
+        *kwargs.pop("middlewares", ()),
+    )
+
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
         json_serialize=json_dumps,
         response_class=HassClientResponse,
+        middlewares=middlewares,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers
@@ -342,6 +438,10 @@ class HomeAssistantTCPConnector(aiohttp.TCPConnector):
 
     # abort transport after 60 seconds (cleanup broken connections)
     _cleanup_closed_period = 60.0
+
+    async def async_resolve_host(self, host: str) -> list[aiohttp.abc.ResolveResult]:
+        """Resolve a host to a list of addresses."""
+        return await self._resolve_host(host, 0)
 
 
 @callback
