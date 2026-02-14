@@ -382,7 +382,7 @@
       "fields": {
         "code_slot": {
           "description": "Code slot to clear code from.",
-          "name": "Code slot"
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
         }
       },
       "name": "Clear lock user code"
@@ -392,7 +392,7 @@
       "fields": {
         "code_slot": {
           "description": "Code slot to get code from. If not specified, all code slots are returned.",
-          "name": "Code slot"
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
         }
       },
       "name": "Get lock user code"
@@ -638,7 +638,7 @@
       "fields": {
         "code_slot": {
           "description": "Code slot to set the code.",
-          "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]"
+          "name": "[%key:component::zwave_js::device_automation::extra_fields::code_slot%]"
         },
         "usercode": {
           "description": "Lock code to set.",
