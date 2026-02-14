@@ -52,9 +52,6 @@ class RejseplanenSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[
         [list[Departure], zoneinfo.ZoneInfo], StateType | datetime | None
     ]
-    attr_fn: Callable[[list[Departure], zoneinfo.ZoneInfo], dict[str, Any]] | None = (
-        None
-    )
 
 
 def cph_to_tz(dt_date: Date, dt_time: Time, target_tz: zoneinfo.ZoneInfo) -> datetime:
