@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import anthropic
 import voluptuous as vol
@@ -13,7 +13,6 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -64,6 +63,9 @@ from .const import (
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
+
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,7 +190,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
