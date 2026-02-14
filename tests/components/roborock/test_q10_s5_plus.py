@@ -39,6 +39,12 @@ async def test_q10_status_data_shape() -> None:
     assert Q10_STATUS_DATA[B01_Q10_DP.SIDE_BRUSH_LIFE] == 3000
     assert Q10_STATUS_DATA[B01_Q10_DP.FILTER_LIFE] == 1500
     assert Q10_STATUS_DATA[B01_Q10_DP.CLEAN_TIME] == 15
+    assert Q10_STATUS_DATA[B01_Q10_DP.CLEAN_AREA] == 12
+    assert Q10_STATUS_DATA[B01_Q10_DP.TOTAL_CLEAN_TIME] == 3600
+    assert Q10_STATUS_DATA[B01_Q10_DP.TOTAL_CLEAN_COUNT] == 42
+    assert Q10_STATUS_DATA[B01_Q10_DP.TOTAL_CLEAN_AREA] == 840
+    assert Q10_STATUS_DATA[B01_Q10_DP.CLEAN_PROGRESS] == 50
+    assert Q10_STATUS_DATA[B01_Q10_DP.FAULT] == 0
 
 
 async def test_q10_status_trait_refresh(q10_status_trait: AsyncMock) -> None:

@@ -1502,6 +1502,15 @@ Q7_B01_PROPS = B01Props(
     real_clean_time=3000,
 )
 
+Q10_B01_PROPS = B01Props(
+    status=WorkStatusMapping.WAITING_FOR_ORDERS,
+    main_brush=5000,
+    side_brush=3000,
+    hypa=1500,
+    main_sensor=500,
+    cleaning_time=15,
+)
+
 # Q10 S5+ mock device data
 Q10_DEVICE_PRODUCT = {
     "id": "q10_product_id",
@@ -1634,6 +1643,12 @@ Q10_STATUS_DATA = {
     B01_Q10_DP.SIDE_BRUSH_LIFE: 3000,
     B01_Q10_DP.FILTER_LIFE: 1500,
     B01_Q10_DP.CLEAN_TIME: 15,
+    B01_Q10_DP.CLEAN_AREA: 12,
+    B01_Q10_DP.TOTAL_CLEAN_TIME: 3600,
+    B01_Q10_DP.TOTAL_CLEAN_COUNT: 42,
+    B01_Q10_DP.TOTAL_CLEAN_AREA: 840,
+    B01_Q10_DP.CLEAN_PROGRESS: 50,
+    B01_Q10_DP.FAULT: 0,
 }
 
 Q10_HOME_DATA_DEVICE = {

@@ -12,7 +12,6 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 import pytest
 from roborock import HomeDataRoom, MultiMapsListMapInfo, RoborockCategory
 from roborock.data import (
-    B01Props,
     CombinedMapInfo,
     DnDTimer,
     DyadError,
@@ -69,7 +68,9 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
     Q7_B01_PROPS,
+    Q10_B01_PROPS,
     Q10_HOME_DATA_DEVICE,
+    Q10_STATUS_DATA,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -148,16 +149,7 @@ def create_b01_q7_trait() -> Mock:
 def create_b01_q10_trait() -> Mock:
     """Create B01 Q10 trait for Q10 devices."""
     q10_trait = AsyncMock()
-    q10_trait._props_data = B01Props(
-        status=WorkStatusMapping.WAITING_FOR_ORDERS,
-        battery=100,
-        fan_level=2,  # Standard fan level (new in 4.10.0)
-        main_brush=5000,
-        side_brush=3000,
-        hypa=1500,
-        main_sensor=500,
-        cleaning_time=15,
-    )
+    q10_trait._props_data = deepcopy(Q10_B01_PROPS)
 
     async def query_values_side_effect(protocols):
         return q10_trait._props_data
@@ -184,6 +176,17 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.find_me = AsyncMock()
     q10_trait.set_fan_speed = AsyncMock()
     q10_trait.send = AsyncMock()
+
+    # Add StatusTrait for sensor testing
+    status_trait = AsyncMock()
+    status_trait.data = deepcopy(Q10_STATUS_DATA)
+
+    async def status_refresh_side_effect():
+        return status_trait.data
+
+    status_trait.refresh = AsyncMock(side_effect=status_refresh_side_effect)
+    q10_trait.status = status_trait
+
     return q10_trait
 
 
