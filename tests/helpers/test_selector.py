@@ -124,6 +124,18 @@ def _test_selector(
             (None,),
         ),
         (
+            {
+                "entity": {
+                    "domain": "binary_sensor",
+                    "manufacturer": "mock-manuf",
+                    "model": "mock-model",
+                    "model_id": "mock-model_id",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
             {"multiple": True},
             (["abc123", "def456"],),
             ("abc123", None, ["abc123", None]),
@@ -297,6 +309,39 @@ def test_device_selector_schema_error(schema) -> None:
             ("light.abc123", "blah.blah", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {
+                        "manufacturer": "mock-manuf",
+                        "model": "mock-model",
+                        "model_id": "mock-model_id",
+                    }
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "integration": "zha",
+                        "manufacturer": "mock-manuf",
+                        "model": "mock-model",
+                        "model_id": "mock-model_id",
+                    },
+                    {
+                        "integration": "matter",
+                        "manufacturer": "other-mock-manuf",
+                        "model": "other-mock-model",
+                        "model_id": "other-mock-model_id",
+                    },
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ],
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -344,6 +389,18 @@ def test_entity_selector_schema_error(schema) -> None:
                     "domain": "binary_sensor",
                     "device_class": "motion",
                     "integration": "demo",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": {
+                    "domain": "binary_sensor",
+                    "manufacturer": "mock-manuf",
+                    "model": "mock-model",
+                    "model_id": "mock-model_id",
                 }
             },
             ("abc123",),
