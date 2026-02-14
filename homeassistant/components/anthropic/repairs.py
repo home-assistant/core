@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -22,6 +22,9 @@ from .const import (
     DEPRECATED_MODELS,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
 
 
 class ModelDeprecatedRepairFlow(RepairsFlow):
@@ -110,7 +113,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
 
     async def _async_next_target(
         self,
-    ) -> tuple[ConfigEntry, ConfigSubentry, str] | None:
+    ) -> tuple[AnthropicConfigEntry, ConfigSubentry, str] | None:
         """Return the next deprecated subentry target."""
         if self._subentry_iter is None:
             self._subentry_iter = self._iter_deprecated_subentries()
