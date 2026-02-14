@@ -850,7 +850,7 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data.coordinator
     aux_coordinator = config_entry.runtime_data.aux_coordinator
-    failure_coordinator = config_entry.runtime_data.failure_coordinator  # noqa:F841
+    failure_coordinator = config_entry.runtime_data.failure_coordinator
     added_devices: set[str] = set()  # device_id
     added_entities: set[str] = set()  # unique_id
 
@@ -964,6 +964,19 @@ async def async_setup_entry(
                     entity_class = _get_entity_class(definition)
                     entities.append(
                         entity_class(coordinator, device_id, definition.description)
+                    )
+            for failure_definition in FAILURE_SENSOR_TYPES:
+                unique_id = _get_unique_id(device_id, failure_definition)
+                if _should_add_entity(
+                    device, device_id, failure_definition, unique_id, new_devices_set
+                ):
+                    added_entities.add(unique_id)
+                    entities.append(
+                        MieleFailureSensor(
+                            failure_coordinator,
+                            device_id,
+                            failure_definition.description,
+                        )
                     )
         async_add_entities(entities)
 
