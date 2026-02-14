@@ -68,17 +68,17 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
-        # Window is the default device class for covers
-        if isinstance(node, Window):
-            self._attr_device_class = CoverDeviceClass.WINDOW
-        elif isinstance(node, Awning):
-            self._attr_device_class = CoverDeviceClass.AWNING
-        elif isinstance(node, GarageDoor):
-            self._attr_device_class = CoverDeviceClass.GARAGE
-        elif isinstance(node, Gate):
-            self._attr_device_class = CoverDeviceClass.GATE
-        elif isinstance(node, RollerShutter):
-            self._attr_device_class = CoverDeviceClass.SHUTTER
+        match node:
+            case Window():
+                self._attr_device_class = CoverDeviceClass.WINDOW
+            case Awning():
+                self._attr_device_class = CoverDeviceClass.AWNING
+            case GarageDoor():
+                self._attr_device_class = CoverDeviceClass.GARAGE
+            case Gate():
+                self._attr_device_class = CoverDeviceClass.GATE
+            case RollerShutter():
+                self._attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int:
