@@ -108,9 +108,9 @@ def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
         # Q7 data - B01Props object
         return data.wind_name
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
-    fan_level = data.get(B01_Q10_DP.FUN_LEVEL)
+    fan_level = data.get(B01_Q10_DP.FAN_LEVEL)
     if fan_level is not None:
-        # Map YXFanLevel code to value (e.g., "quite", "normal", "strong", "max")
+        # Map YXFanLevel code to value (e.g., "quiet", "normal", "strong", "max")
         for yx_fan in YXFanLevel:
             if yx_fan.code == fan_level:
                 return yx_fan.value
@@ -480,9 +480,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
-    # Q10 uses YXFanLevel: quite, normal, strong, max (not super - returns code 8)
+    # Q10 uses YXFanLevel: quiet, normal, strong, max (not super - returns code 8)
     _attr_fan_speed_list = [
-        YXFanLevel.QUITE.value,
+        YXFanLevel.QUIET.value,
         YXFanLevel.NORMAL.value,
         YXFanLevel.STRONG.value,
         YXFanLevel.MAX.value,
@@ -583,7 +583,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         try:
             fan_level = YXFanLevel.from_value(fan_speed)
             await self.coordinator.api.command.send(
-                command=B01_Q10_DP.FUN_LEVEL,
+                command=B01_Q10_DP.FAN_LEVEL,
                 params=fan_level.code,
             )
         except RoborockException as err:
