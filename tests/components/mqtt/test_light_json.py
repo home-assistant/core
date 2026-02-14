@@ -173,6 +173,7 @@ COLOR_MODES_CONFIG = {
 
 GROUP_MEMBER_1_TOPIC = "homeassistant/light/member_1/config"
 GROUP_MEMBER_2_TOPIC = "homeassistant/light/member_2/config"
+GROUP_MEMBER_3_TOPIC = "homeassistant/light/member_3/config"
 GROUP_TOPIC = "homeassistant/light/group/config"
 GROUP_DISCOVERY_MEMBER_1_CONFIG = json.dumps(
     {
@@ -192,6 +193,15 @@ GROUP_DISCOVERY_MEMBER_2_CONFIG = json.dumps(
         "default_entity_id": "light.member2",
     }
 )
+GROUP_DISCOVERY_MEMBER_3_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member3",
+        "unique_id": "very_unique_member3",
+        "name": "member3",
+        "default_entity_id": "light.member3",
+    }
+)
 GROUP_DISCOVERY_LIGHT_GROUP_CONFIG = json.dumps(
     {
         "schema": "json",
@@ -201,6 +211,17 @@ GROUP_DISCOVERY_LIGHT_GROUP_CONFIG = json.dumps(
         "name": "group",
         "default_entity_id": "light.group",
         "group": ["very_unique_member1", "very_unique_member2"],
+    }
+)
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_EXPANDED = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+        "group": ["very_unique_member1", "very_unique_member2", "very_unique_member3"],
     }
 )
 
@@ -1919,6 +1940,28 @@ async def test_light_group_discovery_members_before_group(
     assert group_state.attributes.get("group_entities") == [
         "light.member1",
         "light.member2",
+    ]
+
+    # Now create and discover a new member
+    async_fire_mqtt_message(hass, GROUP_MEMBER_3_TOPIC, GROUP_DISCOVERY_MEMBER_3_CONFIG)
+    await hass.async_block_till_done()
+
+    # Update the group discovery
+    async_fire_mqtt_message(
+        hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_EXPANDED
+    )
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    assert hass.states.get("light.member3") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+        "light.member3",
     ]
 
 
