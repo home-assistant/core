@@ -144,6 +144,7 @@ async def test_set_system_mode_invalid_mode(  # ServiceValidationError
             },
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "invalid_system_mode"
 
     issue = issue_registry.async_get_issue(
@@ -172,6 +173,7 @@ async def test_set_system_mode_permanent_with_duration(  # ServiceValidationErro
             },
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "mode_does_not_support_temporary"
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -185,6 +187,7 @@ async def test_set_system_mode_permanent_with_duration(  # ServiceValidationErro
             },
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "mode_does_not_support_temporary"
 
     issue = issue_registry.async_get_issue(
@@ -213,6 +216,7 @@ async def test_set_system_mode_duration_with_period(  # ServiceValidationError
             },
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "mode_does_not_support_period"
 
     issue = issue_registry.async_get_issue(
@@ -241,6 +245,7 @@ async def test_set_system_mode_period_with_duration(  # ServiceValidationError
             },
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "mode_does_not_support_duration"
 
     issue = issue_registry.async_get_issue(
