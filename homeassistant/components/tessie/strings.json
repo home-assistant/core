@@ -81,6 +81,9 @@
       "grid_services_active": {
         "name": "Grid services active"
       },
+      "grid_status": {
+        "name": "Grid status"
+      },
       "state": {
         "name": "Status"
       },
@@ -428,6 +431,16 @@
       },
       "grid_services_power": {
         "name": "Grid services power"
+      },
+      "island_status": {
+        "name": "Island status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "off_grid": "Off-grid",
+          "off_grid_intentional": "Off-grid intentional",
+          "off_grid_unintentional": "Off-grid unintentional",
+          "on_grid": "On-grid"
+        }
       },
       "load_power": {
         "name": "Load power"
