@@ -45,7 +45,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5G N3',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_connection_type-entry]
@@ -94,7 +94,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5G (NSA)',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_operator-entry]
@@ -143,7 +143,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'test.operator',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_rsrp-entry]
@@ -200,7 +200,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-93',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_rsrq-entry]
@@ -257,7 +257,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-10',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_rssi-entry]
@@ -314,7 +314,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-63',
   })
 # ---
 # name: test_sensors[sensor.test_device_internal_modem_sinr-entry]
@@ -371,7 +371,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15',
   })
 # ---
 # name: test_sensors[sensor.test_device_temperature-entry]
@@ -428,6 +428,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '42',
   })
 # ---
