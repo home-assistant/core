@@ -46,7 +46,7 @@ async def async_setup_entry(
         if isinstance(node, Blind):
             entities.append(VeluxBlind(node, config_entry.entry_id))
         elif isinstance(node, DualRollerShutter):
-            # add three entities, one for each part and and the "dual" control
+            # add three entities, one for each part and the "dual" control
             entities.append(
                 VeluxDualRollerShutter(
                     node, config_entry.entry_id, VeluxDualRollerPart.dual
