@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import (
     LunatoneConfigEntry,
     LunatoneData,
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(info_api.serial_number))},
         name=info_api.name,
-        manufacturer="Lunatone",
+        manufacturer=MANUFACTURER,
         sw_version=info_api.version,
         hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
