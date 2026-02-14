@@ -60,7 +60,7 @@
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
       }),
-      'tell_joke',
+      'Alexa.Joke.Play',
     ),
     dict({
     }),
