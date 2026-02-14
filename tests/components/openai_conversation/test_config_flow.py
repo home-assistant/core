@@ -68,6 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
         ),
         patch(
             "homeassistant.components.openai_conversation.async_setup_entry",
@@ -125,6 +126,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -178,6 +180,7 @@ async def test_creating_conversation_subentry_not_loaded(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         return_value=[],
     ):
         result = await hass.config_entries.subentries.async_init(
@@ -384,6 +387,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
 
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -1170,6 +1174,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
         ),
         patch(
             "homeassistant.components.openai_conversation.async_setup_entry",
