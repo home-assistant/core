@@ -488,7 +488,7 @@ class MqttAttributesMixin(Entity):
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        if self.group is not None and CONF_GROUP in config:
+        if hasattr(self, "group") and CONF_GROUP in config:
             self.group.included_unique_ids = config[CONF_GROUP]
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
