@@ -129,6 +129,7 @@ def _register_tcs_legacy_services(
         """
 
         emulate_entity_service(call)
+
         await coordinator.async_refresh()
 
     @verify_domain_control(DOMAIN)
@@ -136,6 +137,8 @@ def _register_tcs_legacy_services(
         """Reset the controller to Auto and all its zones to FollowSchedule."""
 
         emulate_entity_service(call)
+        assert coordinator.controller_entity is not None  # mypy
+
         await coordinator.controller_entity.async_reset_system()
 
     @verify_domain_control(DOMAIN)
@@ -143,6 +146,8 @@ def _register_tcs_legacy_services(
         """Set the controller to a given mode."""
 
         emulate_entity_service(call)
+        assert coordinator.controller_entity is not None  # mypy
+
         await coordinator.controller_entity.async_set_system_mode(
             call.data[CONF_MODE],
             period=call.data.get(ATTR_PERIOD),

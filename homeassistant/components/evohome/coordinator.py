@@ -36,7 +36,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
 
     # These will not be None after _async_setup())
-    controller_entity: EvoController
     loc: ec2.Location
     tcs: ec2.ControlSystem
 
@@ -65,6 +64,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.client_v1 = client_v1
 
         self.loc_idx = location_idx
+        self.controller_entity: EvoController | None = None
 
         self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
