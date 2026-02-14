@@ -154,10 +154,6 @@ class TessieBatteryEntity(TessieBaseEntity):
 
         super().__init__(vehicle.battery_coordinator, key)
 
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-
-
 class TessieWallConnectorEntity(TessieBaseEntity):
     """Parent class for Tessie wall connector entities."""
 
