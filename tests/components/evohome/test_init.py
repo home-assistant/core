@@ -178,9 +178,6 @@ async def test_setup(
     evohome: EvohomeClient,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test services after setup of evohome.
-
-    Registered services vary by the type of system.
-    """
+    """Test services after setup of evohome."""
 
     assert sorted(hass.services.async_services_for_domain(DOMAIN)) == snapshot
