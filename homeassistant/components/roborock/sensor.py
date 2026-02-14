@@ -229,7 +229,7 @@ def _get_q10_clean_percent(
         # Not directly available in Q7 B01Props
         return None
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
-    return data.get(B01_Q10_DP.CLEAN_PROGESS)
+    return data.get(B01_Q10_DP.CLEAN_PROGRESS)
 
 
 def _get_q10_vacuum_error(
