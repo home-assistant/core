@@ -36,9 +36,6 @@ from .const import (
 class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Lyngdorf config flow."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
-
     def __init__(self) -> None:
         """Initialize flow."""
         self._location: str | None = None
@@ -105,14 +102,14 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return await self._create_entry()
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-            }
-        )
-
         return self.async_show_form(
-            step_id="manual", data_schema=data_schema, errors=errors
+            step_id="manual",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_ssdp(
@@ -125,7 +122,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         display_name = (
             f"{self._device_model} ({self._name})"
             if self._device_model and self._device_model != self._name
-            else self._name or "Lyngdorf"
+            else self._name or DEFAULT_DEVICE_NAME
         )
         self.context["title_placeholders"] = {"name": display_name}
 
@@ -141,7 +138,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         display_name = (
             f"{self._device_model} ({self._name})"
             if self._device_model and self._device_model != self._name
-            else self._name or "Lyngdorf"
+            else self._name or DEFAULT_DEVICE_NAME
         )
         self._set_confirm_only()
         return self.async_show_form(

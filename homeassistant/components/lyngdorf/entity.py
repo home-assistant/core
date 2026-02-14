@@ -46,10 +46,9 @@ class LyngdorfEntity(Entity):
         connected = self._receiver.connected
         self._attr_available = connected
 
-        if not connected:
-            if not self._unavailable_logged:
+        if connected == self._unavailable_logged:
+            self._unavailable_logged = not connected
+            if connected:
+                _LOGGER.info("Device is back online: %s", self.name)
+            else:
                 _LOGGER.info("Device is unavailable: %s", self.name)
-                self._unavailable_logged = True
-        elif self._unavailable_logged:
-            _LOGGER.info("Device is back online: %s", self.name)
-            self._unavailable_logged = False
