@@ -84,6 +84,16 @@ def _register_tcs_legacy_services(
         Create a deprecation issue if the call has no target entity.
         """
 
+        # handle the edge case where services are registered & invoked before
+        # async_setup_platform completes
+
+        if coordinator.controller_entity is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_controller_entity",
+                translation_placeholders={"service": call.service},
+            )
+
         # if any target entity_id is provided, it must be a controller's; otherwise,
         # issue a warning identical to those in the EvoClimateEntity stub service
         # functions (which are entity-level) that the wrong target type was provided

@@ -15,13 +15,16 @@
     "mode_does_not_support_temporary": {
       "message": "The mode `{mode}` can only be set permanently"
     },
+    "no_controller_entity": {
+      "message": "The controller entity is not available for the `{service}` service"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` service"
     }
   },
   "issues": {
     "deprecated_service_without_target": {
-      "description": "Calling the `evohome.{service}` service without specifying the controller as a target is deprecated and will stop working in a future version. Update your automations and scripts to include the controller entity as a target.",
+      "description": "Calling the `evohome.{service}` service without specifying controller as a target is deprecated and will stop working in a future version. Update your automations and scripts to include the controller entity as a target.",
       "title": "Calling `{service}` without a target is deprecated"
     }
   },
