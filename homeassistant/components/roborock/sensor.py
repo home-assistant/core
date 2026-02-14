@@ -16,9 +16,7 @@ from roborock.data import (
     RoborockErrorCode,
     RoborockStateCode,
     WorkStatusMapping,
-    ZeoDetergentType,
     ZeoError,
-    ZeoSoftenerType,
     ZeoState,
 )
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -366,24 +364,6 @@ ZEO_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         options=["empty", "available"],
         value_fn=lambda x: "empty" if x else "available",
-    ),
-    RoborockSensorDescriptionA01(
-        key="detergent_type",
-        data_protocol=RoborockZeoProtocol.DETERGENT_TYPE,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="detergent_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=ZeoDetergentType.keys(),
-        value_fn=lambda x: ZeoDetergentType(int(x)).name,  # type: ignore[arg-type]
-    ),
-    RoborockSensorDescriptionA01(
-        key="softener_type",
-        data_protocol=RoborockZeoProtocol.SOFTENER_TYPE,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="softener_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=ZeoSoftenerType.keys(),
-        value_fn=lambda x: ZeoSoftenerType(int(x)).name,  # type: ignore[arg-type]
     ),
 ]
 

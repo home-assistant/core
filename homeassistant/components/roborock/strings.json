@@ -106,6 +106,15 @@
           "vacuum": "Vacuum only"
         }
       },
+      "detergent_type": {
+        "name": "Detergent type",
+        "state": {
+          "empty": "Empty",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "drying_mode": {
         "name": "Drying mode",
         "state": {
@@ -220,6 +229,15 @@
       "selected_map": {
         "name": "Selected map"
       },
+      "softener_type": {
+        "name": "Softener type",
+        "state": {
+          "empty": "Empty",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
       "spin_level": {
         "name": "Spin level",
         "state": {
@@ -325,14 +343,6 @@
           "empty": "Empty"
         }
       },
-      "detergent_type": {
-        "name": "Detergent type",
-        "state": {
-          "liquid": "Liquid",
-          "none": "None",
-          "powder": "Powder"
-        }
-      },
       "dock_error": {
         "name": "Dock error",
         "state": {
@@ -413,13 +423,6 @@
         "state": {
           "available": "Available",
           "empty": "Empty"
-        }
-      },
-      "softener_type": {
-        "name": "Softener type",
-        "state": {
-          "liquid": "Liquid",
-          "none": "None"
         }
       },
       "state": {

@@ -11,10 +11,12 @@ from roborock.data import (
     RoborockDockDustCollectionModeCode,
     RoborockEnum,
     WaterLevelMapping,
+    ZeoDetergentType,
     ZeoDryingMode,
     ZeoMode,
     ZeoProgram,
     ZeoRinse,
+    ZeoSoftenerType,
     ZeoSpin,
     ZeoTemperature,
 )
@@ -204,6 +206,20 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="rinse_times",
         entity_category=EntityCategory.CONFIG,
         enum_class=ZeoRinse,
+    ),
+    RoborockSelectDescriptionA01(
+        key="detergent_type",
+        data_protocol=RoborockZeoProtocol.DETERGENT_TYPE,
+        translation_key="detergent_type",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoDetergentType,
+    ),
+    RoborockSelectDescriptionA01(
+        key="softener_type",
+        data_protocol=RoborockZeoProtocol.SOFTENER_TYPE,
+        translation_key="softener_type",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoSoftenerType,
     ),
 ]
 
