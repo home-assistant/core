@@ -1,0 +1,15 @@
+{
+  "config": {
+    "error": {
+      "invalid_config": "Invalid configuration"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "Access Token",
+          "username": "Username"
+        }
+      }
+    }
+  }
+}
