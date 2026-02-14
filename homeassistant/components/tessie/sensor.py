@@ -555,4 +555,4 @@ class TessieEnergyHistorySensorEntity(TessieEnergyHistoryEntity, SensorEntity):
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_native_value = self._value
-        self._attr_last_reset = self.coordinator.data.get("_period_start")
+        self._attr_last_reset = self.coordinator.data["_period_start"]

@@ -221,7 +221,6 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="invalid_energy_history_data",
             )
 
-        # Add all time periods together
         time_series = data["time_series"]
         output: dict[str, Any] = {}
         for key in ENERGY_HISTORY_FIELDS:
