@@ -78,6 +78,7 @@ async def test_sensor_uptime_spike(
     freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test handling of uptime spikes in Fritz!Tools sensors."""
 
@@ -94,10 +95,11 @@ async def test_sensor_uptime_spike(
 
     # Simulate uptime spike by setting uptime to a value between
     # the previous one and a delta smaller than UPTIME_DEVIATION
+    base_uptime = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"]["NewUpTime"]
     update_uptime = {
         "DeviceInfo1": {
             "GetInfo": {
-                "NewUpTime": 2518179 + SCAN_INTERVAL - UPTIME_DEVIATION + 1,
+                "NewUpTime": base_uptime + SCAN_INTERVAL - UPTIME_DEVIATION + 1,
             },
         },
     }
@@ -107,4 +109,5 @@ async def test_sensor_uptime_spike(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert state.state == "2026-01-16T06:00:21+00:00"
+    assert (new_state := hass.states.get(entity_id))
+    assert new_state.state == "2026-01-16T06:00:21+00:00"
