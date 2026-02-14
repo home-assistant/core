@@ -286,7 +286,7 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -639,6 +639,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     SensorDeviceClass.NITROGEN_MONOXIDE: {
@@ -740,6 +741,7 @@ UNITS_PRECISION = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         0,
     ),
+    SensorDeviceClass.NITROGEN_DIOXIDE: (CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, 0),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.PA, 0),
     SensorDeviceClass.REACTIVE_POWER: (UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
     SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
