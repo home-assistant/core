@@ -594,8 +594,16 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
+        },
+        {
+            "domain": "liebherr",
+            "name": "liebherr*",
         },
         {
             "domain": "loqed",
@@ -782,6 +790,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
@@ -825,6 +838,11 @@ ZEROCONF = {
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
+        },
+    ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
         },
     ],
     "_printer._tcp.local.": [

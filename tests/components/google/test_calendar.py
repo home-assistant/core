@@ -1562,3 +1562,43 @@ async def test_birthday_entity(
     assert state
     assert state.name == "Birthdays"
     assert state.attributes.get("message") == expected_event_message
+
+
+@pytest.mark.parametrize(
+    ("background_color", "expected_color"),
+    [
+        ("#16a765", "#16a765"),  # Valid color
+        ("not-a-color", None),  # Invalid color
+        (None, None),  # Missing color
+    ],
+)
+async def test_calendar_background_color(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_calendars_list: ApiResult,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+    entity_registry: er.EntityRegistry,
+    background_color: str | None,
+    expected_color: str | None,
+) -> None:
+    """Test backgroundColor from API is stored in entity options only if valid."""
+    aioclient_mock.clear_requests()
+    calendar_item: dict[str, Any] = {
+        "id": CALENDAR_ID,
+        "etag": '"3584134138943410"',
+        "timeZone": "UTC",
+        "accessRole": "owner",
+        "summary": "Test Calendar",
+    }
+    if background_color is not None:
+        calendar_item["backgroundColor"] = background_color
+    mock_calendars_list({"items": [calendar_item]})
+    mock_events_list_items([])
+
+    assert await component_setup()
+
+    # Verify the main calendar entity has the color set
+    entity = entity_registry.async_get("calendar.test_calendar")
+    assert entity is not None
+    assert entity.options.get("calendar", {}).get("color") == expected_color

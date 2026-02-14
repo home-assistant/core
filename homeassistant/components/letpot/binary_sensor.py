@@ -57,10 +57,12 @@ BINARY_SENSORS: tuple[LetPotBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda status: status.pump_status == 1,
         device_class=BinarySensorDeviceClass.RUNNING,
         supported_fn=(
-            lambda coordinator: DeviceFeature.PUMP_STATUS
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.PUMP_STATUS
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
     ),
     LetPotBinarySensorEntityDescription(
