@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/hdfury",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "gold",
+  "quality_scale": "platinum",
   "requirements": ["hdfury==1.5.0"],
   "zeroconf": [
     { "name": "diva-*", "type": "_http._tcp.local." },
