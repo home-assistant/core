@@ -243,9 +243,16 @@ class TessieEnergyLiveBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity)
         assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._attr_available
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        self._attr_is_on = self.entity_description.is_on(self._value)
+        self._attr_available = self._value is not None
+        if self._attr_available:
+            self._attr_is_on = self.entity_description.is_on(self._value)
 
 
 class TessieEnergyInfoBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity):
