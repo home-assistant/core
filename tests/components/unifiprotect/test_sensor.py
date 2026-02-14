@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from uiprotect.data import NVR, Camera, Event, EventType, ModelType, Sensor
+from uiprotect.data import NVR, AiPort, Camera, Event, EventType, ModelType, Sensor
 from uiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -542,3 +542,24 @@ async def test_sensor_precision(
     )
 
     assert hass.states.get(entity_id).state == "17.49"
+
+
+async def test_aiport_no_camera_sensor_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that AI Port devices do not create camera-specific sensor entities."""
+    await init_entry(hass, ufp, [aiport])
+
+    # AI Port should only create base device sensors, not camera-specific sensors
+    # The exact count may vary, but camera motion/detection sensors should not exist
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+
+    # Check no camera-specific sensors like motion detection exist
+    for entity in entities:
+        if entity.domain == Platform.SENSOR:
+            # Camera-specific sensors should not exist for AI Port
+            assert "detected_object" not in entity.unique_id
+            assert "last_motion" not in entity.unique_id

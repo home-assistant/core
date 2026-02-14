@@ -23,12 +23,6 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_get_device_automations, async_mock_service
 
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
 COMMAND_SINGLE = "single"
