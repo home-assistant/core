@@ -45,8 +45,8 @@ rules:
     status: exempt
     comment: |
       The API does not limit parallel updates.
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: todo
@@ -108,4 +108,4 @@ rules:
     status: done
     comment: |
       Uses `httpx` session.
-  strict-typing: todo
+  strict-typing: done
