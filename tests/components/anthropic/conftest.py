@@ -21,16 +21,6 @@ from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
 from homeassistant.components.anthropic.const import (
-    CONF_CHAT_MODEL,
-    CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
-    CONF_WEB_SEARCH,
-    CONF_WEB_SEARCH_CITY,
-    CONF_WEB_SEARCH_COUNTRY,
-    CONF_WEB_SEARCH_MAX_USES,
-    CONF_WEB_SEARCH_REGION,
-    CONF_WEB_SEARCH_TIMEZONE,
-    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
 )
@@ -81,79 +71,6 @@ def mock_config_entry_with_assist(
         next(iter(mock_config_entry.subentries.values())),
         data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
     )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_extended_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with extended thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
-            CONF_THINKING_BUDGET: 1500,
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_adaptive_thinking(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with adaptive thinking."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
-            CONF_THINKING_EFFORT: "medium",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_web_search(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with server tools enabled."""
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_MAX_USES: 5,
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-    return mock_config_entry
-
-
-@pytest.fixture
-def mock_config_entry_with_no_structured_output(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Mock a config entry with a model without structured outputs support."""
-    for subentry in mock_config_entry.subentries.values():
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            subentry,
-            data={
-                CONF_CHAT_MODEL: "claude-sonnet-4-0",
-            },
-        )
     return mock_config_entry
 
 

@@ -1,4 +1,118 @@
 # serializer version: 1
+# name: test_disabled_thinking
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Answer in plain text. Keep it simple and to the point.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Hello, how can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_disabled_thinking.1
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': 'Hello, how can I help you today?',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-opus-4-6',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Answer in plain text. Keep it simple and to the point.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'temperature': 1.0,
+    'thinking': dict({
+      'type': 'disabled',
+    }),
+  })
+# ---
+# name: test_extended_thinking
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'The user has just greeted me with "Hi". This is a simple greeting and doesn\'t require any Home Assistant function calls. I should respond with a friendly greeting and let them know I\'m available to help with their smart home.',
+            'type': 'thinking',
+          }),
+          dict({
+            'text': 'Hello, how can I help you today?',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-3-7-sonnet-latest',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Answer in plain text. Keep it simple and to the point.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1500,
+      'type': 'enabled',
+    }),
+  })
+# ---
 # name: test_extended_thinking_tool_call
   list([
     dict({
