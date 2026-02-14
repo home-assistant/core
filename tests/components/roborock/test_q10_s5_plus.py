@@ -33,7 +33,7 @@ async def test_q10_status_data_shape() -> None:
     """Validate Q10 status fixture data keys and values."""
     assert Q10_STATUS_DATA[B01_Q10_DP.STATUS] == YXDeviceState.STANDBY_STATE.code
     assert Q10_STATUS_DATA[B01_Q10_DP.BATTERY] == 100
-    assert Q10_STATUS_DATA[B01_Q10_DP.FUN_LEVEL] == YXFanLevel.NORMAL.code
+    assert Q10_STATUS_DATA[B01_Q10_DP.FAN_LEVEL] == YXFanLevel.NORMAL.code
     assert Q10_STATUS_DATA[B01_Q10_DP.WATER_LEVEL] == YXWaterLevel.MIDDLE.code
     assert Q10_STATUS_DATA[B01_Q10_DP.MAIN_BRUSH_LIFE] == 5000
     assert Q10_STATUS_DATA[B01_Q10_DP.SIDE_BRUSH_LIFE] == 3000
