@@ -9,11 +9,16 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
 )
+import httpx
 from httpx import URL, Request, Response
 import pytest
 
 from homeassistant.components.anthropic.const import DATA_REPAIR_DEFER_RELOAD, DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
@@ -40,17 +45,6 @@ from tests.common import MockConfigEntry
             ),
             "anthropic integration not ready yet: Your credit balance is too low to access the Claude API",
         ),
-        (
-            AuthenticationError(
-                message="invalid x-api-key",
-                response=Response(
-                    status_code=401,
-                    request=Request(method="POST", url=URL()),
-                ),
-                body={"type": "error", "error": {"type": "authentication_error"}},
-            ),
-            "Invalid API key",
-        ),
     ],
 )
 async def test_init_error(
@@ -68,6 +62,26 @@ async def test_init_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "anthropic.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, "anthropic", {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_deferred_update(

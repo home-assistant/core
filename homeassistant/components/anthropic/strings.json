@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "authentication_error": "[%key:common::config_flow::error::invalid_auth%]",
@@ -10,6 +11,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::anthropic::config::step::user::data_description::api_key%]"
+        },
+        "description": "Reauthentication required. Please enter your updated API key."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
