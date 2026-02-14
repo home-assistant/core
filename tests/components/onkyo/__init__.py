@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 from aioonkyo import ReceiverInfo
 
-from homeassistant.components.onkyo.services import DATA_MP_ENTITIES
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
