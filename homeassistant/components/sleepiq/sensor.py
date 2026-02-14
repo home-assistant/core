@@ -100,7 +100,7 @@ async def async_setup_entry(
 
     entities.extend(
         SleepIQSensorEntity(
-            data.data_coordinator, bed, sleeper, description, "mdi:bed"
+            data.data_coordinator, bed, sleeper, description
         )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
@@ -109,7 +109,7 @@ async def async_setup_entry(
 
     entities.extend(
         SleepIQSensorEntity(
-            data.sleep_data_coordinator, bed, sleeper, description, "mdi:sleep"
+            data.sleep_data_coordinator, bed, sleeper, description
         )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
@@ -130,12 +130,10 @@ class SleepIQSensorEntity(SleepIQSleeperEntity[DataUpdateCoordinator], SensorEnt
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
         description: SleepIQSensorEntityDescription,
-        icon: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, bed, sleeper, description.key)
         self.entity_description = description
-        self._attr_icon = icon
 
     @callback
     def _async_update_attrs(self) -> None:

@@ -76,11 +76,7 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
 
 
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ sleep health data coordinator.
-
-    Fetches sleep metrics like sleep score, duration, heart rate, and respiratory rate.
-    Updates less frequently since sleep data doesn't change in real-time.
-    """
+    """SleepIQ sleep health data coordinator."""
 
     config_entry: ConfigEntry
 
@@ -101,57 +97,52 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         self.client = client
 
     async def _async_update_data(self) -> None:
-        """Fetch sleep health data from API.
-
-        Gets yesterday's sleep data for each sleeper and updates their attributes.
-        """
-        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')
+        """Fetch sleep health data from API."""
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
 
         tasks = []
         for bed in self.client.beds.values():
             for sleeper in bed.sleepers:
                 tasks.append(self._fetch_sleeper_data(sleeper, yesterday))
 
-        await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks)
 
     async def _fetch_sleeper_data(self, sleeper, date_str: str) -> None:
-        """Fetch and update sleep data for a single sleeper."""
+        params = {
+            "date": date_str,
+            "interval": "D1",
+            "sleeper": sleeper.sleeper_id,
+            "includeSlices": "false"
+        }
+        param_str = "&".join(f"{k}={v}" for k, v in params.items())
+        endpoint = f"sleepData?{param_str}"
+
         try:
-            params = {
-                'date': date_str,
-                'interval': 'D1',
-                'sleeper': sleeper.sleeper_id,
-                'includeSlices': 'false'
-            }
-            param_str = '&'.join(f"{k}={v}" for k, v in params.items())
-            endpoint = f"sleepData?{param_str}"
-
             data = await self.client.get(endpoint)
-
-            if data:
-                # Update sleeper attributes with sleep health metrics
-                # NOTE: totalSleepSessionTime is always 0, use inBed instead for duration
-                sleeper.sleep_duration = data.get('inBed', 0)  # seconds
-                sleeper.sleep_score = data.get('avgSleepIQ')
-                sleeper.heart_rate = data.get('avgHeartRate')
-                sleeper.respiratory_rate = data.get('avgRespirationRate')
-
-                _LOGGER.debug(
-                    "Updated sleep data for %s: score=%s, duration=%sh, hr=%s, rr=%s",
-                    sleeper.name,
-                    sleeper.sleep_score,
-                    round(sleeper.sleep_duration / 3600, 1) if sleeper.sleep_duration else None,
-                    sleeper.heart_rate,
-                    sleeper.respiratory_rate,
-                )
         except Exception as err:
             _LOGGER.debug(
                 "Error fetching sleep data for %s: %s",
                 sleeper.name,
                 err,
             )
-            # Don't fail the entire update if one sleeper fails
-            # Just leave previous values
+            return
+
+        if data:
+            # Update sleeper attributes with sleep health metrics
+            # NOTE: totalSleepSessionTime is always 0, use inBed instead for duration
+            sleeper.sleep_duration = data["inBed"]  # seconds
+            sleeper.sleep_score = data["avgSleepIQ"]
+            sleeper.heart_rate = data["avgHeartRate"]
+            sleeper.respiratory_rate = data["avgRespirationRate"]
+
+            _LOGGER.debug(
+                "Updated sleep data for %s: score=%s, duration=%sh, hr=%s, rr=%s",
+                sleeper.name,
+                sleeper.sleep_score,
+                round(sleeper.sleep_duration / 3600, 1) if sleeper.sleep_duration else None,
+                sleeper.heart_rate,
+                sleeper.respiratory_rate,
+            )
 
 
 @dataclass

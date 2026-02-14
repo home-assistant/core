@@ -25,6 +25,10 @@ ENTITY_TYPES = {
     SLEEP_NUMBER: "SleepNumber",
     FOOT_WARMING_TIMER: "Foot Warming Timer",
     FOOT_WARMER: "Foot Warmer",
+    "sleep_score": "Sleep Score",
+    "sleep_duration": "Sleep Duration",
+    "heart_rate": "Heart Rate Average",
+    "respiratory_rate": "Respiratory Rate Average",
 }
 
 LEFT = "left"
