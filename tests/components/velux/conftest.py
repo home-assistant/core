@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx import Blind, Light, OnOffLight, Scene, Window
+from pyvlx import Blind, Light, OnOffLight, OnOffSwitch, Scene, Window
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
@@ -114,6 +114,19 @@ def mock_onoff_light() -> AsyncMock:
     return light
 
 
+# an on/off switch
+@pytest.fixture
+def mock_onoff_switch() -> AsyncMock:
+    """Create a mock Velux on/off switch."""
+    switch = AsyncMock(spec=OnOffSwitch, autospec=True)
+    switch.name = "Test On Off Switch"
+    switch.serial_number = "0817"
+    switch.is_on.return_value = False
+    switch.is_off.return_value = True
+    switch.pyvlx = MagicMock()
+    return switch
+
+
 # fixture to create all other cover types via parameterization
 @pytest.fixture
 def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
@@ -133,6 +146,7 @@ def mock_pyvlx(
     mock_scene: AsyncMock,
     mock_light: AsyncMock,
     mock_onoff_light: AsyncMock,
+    mock_onoff_switch: AsyncMock,
     mock_window: AsyncMock,
     mock_blind: AsyncMock,
     request: pytest.FixtureRequest,
@@ -152,6 +166,7 @@ def mock_pyvlx(
         pyvlx.nodes = [
             mock_light,
             mock_onoff_light,
+            mock_onoff_switch,
             mock_blind,
             mock_window,
             mock_cover_type,

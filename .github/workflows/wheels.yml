@@ -29,8 +29,7 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      - &checkout
-        name: Checkout the repository
+      - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -74,7 +73,7 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: env_file
           path: ./.env_file
@@ -82,7 +81,7 @@ jobs:
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: *actions-upload-artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -94,7 +93,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: *actions-upload-artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -106,7 +105,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: &matrix-build
+      matrix:
         abi: ["cp313", "cp314"]
         arch: ["amd64", "aarch64"]
         include:
@@ -115,17 +114,16 @@ jobs:
           - arch: aarch64
             os: ubuntu-24.04-arm
     steps:
-      - *checkout
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - &download-env-file
-        name: Download env_file
-        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - name: Download env_file
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: env_file
 
-      - &download-requirements-diff
-        name: Download requirements_diff
-        uses: *actions-download-artifact
+      - name: Download requirements_diff
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: requirements_diff
 
@@ -136,7 +134,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -156,16 +154,30 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: *matrix-build
+      matrix:
+        abi: ["cp313", "cp314"]
+        arch: ["amd64", "aarch64"]
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
     steps:
-      - *checkout
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - *download-env-file
+      - name: Download env_file
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: env_file
 
-      - *download-requirements-diff
+      - name: Download requirements_diff
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: requirements_diff
 
       - name: Download requirements_all_wheels
-        uses: *actions-download-artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: requirements_all_wheels
 
@@ -178,7 +190,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: *home-assistant-wheels
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
