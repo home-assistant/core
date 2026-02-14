@@ -1,5 +1,5 @@
 rules:
-  # Bronze
+  # Bronze tier
   action-setup: done
   appropriate-polling: done
   brands: done
@@ -68,7 +68,7 @@ rules:
     status: exempt
     comment: Integration controls a single device; no dynamic device discovery needed.
 
-  # Platinum
+  # Platinum tier
   async-dependency: done
   inject-websession:
     status: exempt
