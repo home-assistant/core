@@ -138,7 +138,10 @@ async def test_switch_failure(
         "Connection failed"
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to set switch"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the device: Connection failed",
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,

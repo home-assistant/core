@@ -199,7 +199,10 @@ async def test_set_temperature_failure(
         "Connection failed"
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the device: Connection failed",
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

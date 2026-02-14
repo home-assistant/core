@@ -92,11 +92,8 @@
     }
   },
   "exceptions": {
-    "set_switch_failed": {
-      "message": "Failed to set switch"
-    },
-    "set_temperature_failed": {
-      "message": "Failed to set temperature"
+    "communication_error": {
+      "message": "An error occurred while communicating with the device: {error}"
     }
   }
 }
