@@ -16,7 +16,7 @@ from homeassistant.components.evohome.const import (
     DOMAIN,
     EvoService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_TARGET
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -46,9 +46,8 @@ async def test_tcs_services(
         await hass.services.async_call(
             DOMAIN,
             svc,
-            {
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
-            },
+            {},
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -76,8 +75,8 @@ async def test_set_system_mode(
             EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_MODE: "Auto",
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -93,8 +92,8 @@ async def test_set_system_mode(
             {
                 ATTR_MODE: "AutoWithEco",
                 ATTR_DURATION: {"hours": 12},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -110,8 +109,8 @@ async def test_set_system_mode(
             {
                 ATTR_MODE: "Away",
                 ATTR_PERIOD: {"days": 7},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -140,8 +139,8 @@ async def test_set_system_mode_invalid_mode(  # ServiceValidationError
             EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_MODE: "Off",
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -169,8 +168,8 @@ async def test_set_system_mode_permanent_with_duration(  # ServiceValidationErro
             {
                 ATTR_MODE: "Auto",
                 ATTR_DURATION: {"hours": 1},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -183,7 +182,6 @@ async def test_set_system_mode_permanent_with_duration(  # ServiceValidationErro
             {
                 ATTR_MODE: "Auto",
                 ATTR_PERIOD: {"days": 1},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
             blocking=True,
         )
@@ -212,7 +210,6 @@ async def test_set_system_mode_duration_with_period(  # ServiceValidationError
             {
                 ATTR_MODE: "AutoWithEco",
                 ATTR_PERIOD: {"days": 1},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
             blocking=True,
         )
@@ -241,8 +238,8 @@ async def test_set_system_mode_period_with_duration(  # ServiceValidationError
             {
                 ATTR_MODE: "Away",
                 ATTR_DURATION: {"hours": 1},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -270,8 +267,8 @@ async def test_set_system_mode_both_duration_and_period(  # vol.MultipleInvalid
                 ATTR_MODE: "Away",
                 ATTR_DURATION: {"hours": 12},
                 ATTR_PERIOD: {"days": 7},
-                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -297,9 +294,8 @@ async def test_tcs_services_with_wrong_entity_id(  # ServiceValidationError
         await hass.services.async_call(
             DOMAIN,
             svc,
-            {
-                CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]},
-            },
+            {},
+            target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
         )
 
@@ -319,8 +315,8 @@ async def test_set_system_mode_with_wrong_entity_id(  # ServiceValidationError
             EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_MODE: "Auto",
-                CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]},
             },
+            target={ATTR_ENTITY_ID: zone_id},
             blocking=True,
         )
 

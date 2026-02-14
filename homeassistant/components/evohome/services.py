@@ -9,7 +9,7 @@ from evohomeasync2.schemas.const import SystemMode as EvoSystemMode
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_TARGET
+from homeassistant.const import CONF_ENTITY_ID, CONF_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir, service
@@ -22,7 +22,7 @@ _BREAKS_IN_HA_VERSION = "2026.5.0"
 
 # Schema for the optional (until fully deprecated) target in evohome's domain services
 _TCS_TARGET_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Optional(CONF_TARGET): {CONF_ENTITY_ID: [cv.entity_id]},
+    vol.Optional(CONF_ENTITY_ID): vol.All(cv.ensure_list, [cv.entity_id]),
 }
 
 # Base schema for set_system_mode (registered as a domain service)
@@ -88,8 +88,8 @@ def _register_tcs_legacy_services(
         # issue a warning identical to those in the EvoClimateEntity stub service
         # functions (which are entity-level) that the wrong target type was provided
 
-        if target := call.data.get(CONF_TARGET):
-            for eid in target[CONF_ENTITY_ID]:
+        if entity_ids := call.data.get(CONF_ENTITY_ID):
+            for eid in entity_ids:
                 if eid != coordinator.controller_entity.entity_id:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
