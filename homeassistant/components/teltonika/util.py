@@ -17,11 +17,11 @@ def normalize_url(host: str) -> str:
     if host_input.startswith(("http://", "https://")):
         url = URL(host_input)
     else:
-        # Default to HTTPS if no scheme provided
-        url = URL(f"https://{host_input}")
+        # handle as scheme-relative URL and add HTTPS scheme by default
+        url = URL(f"//{host_input}").with_scheme("https")
 
-    # Return base URL without path (scheme + netloc only)
-    return f"{url.scheme}://{url.host}"
+    # Return base URL without path, only including scheme, host and port
+    return str(url.origin())
 
 
 def get_url_variants(host: str) -> list[str]:
