@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from aiostreammagic import StreamMagicClient
 from aiostreammagic.models import ControlBusMode, DisplayBrightness, EQBand, UserEQ
@@ -62,8 +63,8 @@ def _eq_gains_match(current_bands: list, preset_gains: list[float]) -> bool:
 
 def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
     """Detect the current EQ preset based on band gain settings."""
-    if client.audio.user_eq is None:
-        return None
+    if TYPE_CHECKING:
+        assert client.audio.user_eq is not None
 
     current_bands = client.audio.user_eq.bands
     if not current_bands:
@@ -80,8 +81,8 @@ def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
 
 async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None:
     """Apply an EQ preset to the device."""
-    if client.audio.user_eq is None:
-        return
+    if TYPE_CHECKING:
+        assert client.audio.user_eq is not None
 
     # Don't apply custom preset - it's read-only
     if value == EQ_PRESET_CUSTOM:

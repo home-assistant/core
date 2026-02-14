@@ -143,3 +143,75 @@ async def test_equalizer_preset_custom_ignored(
 
     # Verify set_equalizer_params was NOT called (custom is read-only)
     mock_stream_magic_client.set_equalizer_params.assert_not_called()
+
+
+async def test_equalizer_preset_without_user_eq(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that equalizer preset entity is not created when user_eq is None."""
+    # Set user_eq to None to simulate a device without EQ support
+    mock_stream_magic_client.audio.user_eq = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify the equalizer preset entity was not created
+    assert (
+        entity_registry.async_get("select.cambridge_audio_cxnv2_equalizer_preset")
+        is None
+    )
+
+    # Verify other select entities still exist
+    assert (
+        entity_registry.async_get("select.cambridge_audio_cxnv2_display_brightness")
+        is not None
+    )
+    assert (
+        entity_registry.async_get("select.cambridge_audio_cxnv2_audio_output")
+        is not None
+    )
+
+
+async def test_equalizer_preset_custom_detection(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test detection of custom EQ settings that don't match any preset."""
+    # Modify the bands to have custom gains that don't match any preset
+    custom_bands = [
+        EQBand(index=0, gain=1.5),
+        EQBand(index=1, gain=2.0),
+        EQBand(index=2, gain=-1.5),
+        EQBand(index=3, gain=0.5),
+        EQBand(index=4, gain=-0.5),
+        EQBand(index=5, gain=1.0),
+        EQBand(index=6, gain=-1.0),
+    ]
+    mock_stream_magic_client.audio.user_eq.bands = custom_bands
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify the entity shows "custom" since gains don't match any preset
+    state = hass.states.get("select.cambridge_audio_cxnv2_equalizer_preset")
+    assert state is not None
+    assert state.state == "custom"
+
+
+async def test_equalizer_preset_empty_bands(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling of empty bands list."""
+    # Set bands to empty list
+    mock_stream_magic_client.audio.user_eq.bands = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify the entity exists but has no state (or unknown state)
+    state = hass.states.get("select.cambridge_audio_cxnv2_equalizer_preset")
+    assert state is not None
+    assert state.state == "unknown"
