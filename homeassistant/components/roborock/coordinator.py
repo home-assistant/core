@@ -598,6 +598,7 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         self,
     ) -> B01Props | dict[B01_Q10_DP, Any]:
         try:
+            # Use StatusTrait to refresh Q10 device data
             data = await self.api.status.refresh()
         except RoborockException as ex:
             _LOGGER.debug("Failed to update Q10 data: %s", ex)
