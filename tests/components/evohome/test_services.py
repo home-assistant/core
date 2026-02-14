@@ -28,6 +28,7 @@ TCS_SERVICES_WITH_MOCKS = [
 
 
 # Domain-level service call tests (for a controller/TCS)
+# these service calls use {"target": ...}
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -39,13 +40,15 @@ async def test_tcs_services(
     mock_path: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test calling a TCS service without a target (creates an issue)."""
+    """Test calling TCS services with a target."""
 
     with patch(mock_path) as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             svc,
-            {CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]}},
+            {
+                CONF_TARGET: {ATTR_ENTITY_ID: [ctl_id]},
+            },
             blocking=True,
         )
 
@@ -64,7 +67,7 @@ async def test_set_system_mode(
     freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test domain-level set_system_mode call."""
+    """Test calling set_system_mode call with a target."""
 
     # EvoService.SET_SYSTEM_MODE: Auto
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -196,7 +199,7 @@ async def test_set_system_mode_duration_with_period(  # ServiceValidationError
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test set_system_mode rejects period for a Duration-type mode."""
+    """Test set_system_mode rejects period for a duration-type mode."""
 
     # "AutoWithEco" has timingMode="Duration" — only duration is valid, not period
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -224,7 +227,7 @@ async def test_set_system_mode_period_with_duration(  # ServiceValidationError
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test set_system_mode rejects duration for a Period-type mode."""
+    """Test set_system_mode rejects duration for a period-type mode."""
 
     # "Away" has timingMode="Period" — only period is valid, not duration
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -273,6 +276,52 @@ async def test_set_system_mode_both_duration_and_period(  # vol.MultipleInvalid
     assert issue is None
 
 
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "svc",
+    [t[0] for t in TCS_SERVICES_WITH_MOCKS],
+)
+async def test_tcs_services_with_wrong_entity_id(  # ServiceValidationError
+    hass: HomeAssistant,
+    svc: EvoService,
+    zone_id: str,
+) -> None:
+    """Test calling a TCS services with a non-TCS entity_id fails."""
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            svc,
+            {
+                CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]},
+            },
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "controller_only_service"
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_system_mode_with_wrong_entity_id(  # ServiceValidationError
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test calling set_system_mode with a non-TCS entity_id fails."""
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {
+                ATTR_MODE: "Auto",
+                CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]},
+            },
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "controller_only_service"
+
+
 # Domain-level service deprecation tests (calling without target)
 
 
@@ -285,7 +334,7 @@ async def test_tcs_services_deprecated(
     mock_path: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test calling a TCS service without a target."""
+    """Test calling TCS services without a target creates an issue."""
 
     with patch(mock_path) as mock_fcn:
         await hass.services.async_call(
@@ -311,7 +360,7 @@ async def test_set_system_mode_deprecated(
     freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test calling set_system_mode without a target (creates an issue)."""
+    """Test calling set_system_mode without a target creates an issue."""
 
     # EvoService.SET_SYSTEM_MODE: Auto
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -388,6 +437,7 @@ async def test_set_system_mode_both_duration_and_period_deprecated(  # vol.Multi
 
 
 # Entity-level service call tests (for a zone)
+# these service calls use target=...
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -452,74 +502,19 @@ async def test_zone_set_zone_override(
 
 
 @pytest.mark.parametrize("install", ["default"])
-@pytest.mark.parametrize(
-    ("svc", "service_data"),
-    [
-        (EvoService.CLEAR_ZONE_OVERRIDE, {}),
-        (EvoService.SET_ZONE_OVERRIDE, {ATTR_SETPOINT: 20.0}),
-    ],
-)
-async def test_zone_services_with_ctl_id(
+async def test_zone_clear_zone_override_with_ctl_id(  # ServiceValidationError
     hass: HomeAssistant,
-    svc: EvoService,
-    service_data: dict,
     ctl_id: str,
 ) -> None:
-    """Test that calling zone services on a controller raises ServiceValidationError."""
+    """Test calling a zone service with a non-zone entity_id fails."""
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            svc,
-            service_data,
+            EvoService.CLEAR_ZONE_OVERRIDE,
+            {},
             target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
+
     assert excinfo.value.translation_key == "zone_only_service"
-
-
-# Climate service call tests with wrong entity type (controller/TCS vs zone)
-
-
-@pytest.mark.parametrize("install", ["default"])
-@pytest.mark.parametrize(
-    "svc",
-    [
-        EvoService.REFRESH_SYSTEM,
-        EvoService.RESET_SYSTEM,
-    ],
-)
-async def test_tcs_service_with_wrong_entity_id(  # ServiceValidationError
-    hass: HomeAssistant,
-    svc: EvoService,
-    zone_id: str,
-) -> None:
-    """Test that calling a TCS service with a non-controller entity_id raises."""
-
-    with pytest.raises(ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            svc,
-            {CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]}},
-            blocking=True,
-        )
-
-    assert excinfo.value.translation_key == "controller_only_service"
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_with_wrong_entity_id(  # ServiceValidationError
-    hass: HomeAssistant,
-    zone_id: str,
-) -> None:
-    """Test that calling set_system_mode with a non-controller entity_id raises."""
-
-    with pytest.raises(ServiceValidationError) as excinfo:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.SET_SYSTEM_MODE,
-            {ATTR_MODE: "Auto", CONF_TARGET: {ATTR_ENTITY_ID: [zone_id]}},
-            blocking=True,
-        )
-
-    assert excinfo.value.translation_key == "controller_only_service"
