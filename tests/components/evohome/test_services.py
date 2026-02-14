@@ -123,7 +123,7 @@ async def test_set_system_mode(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_invalid_mode(
+async def test_set_system_mode_invalid_mode(  # ServiceValidationError
     hass: HomeAssistant,
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
@@ -150,7 +150,7 @@ async def test_set_system_mode_invalid_mode(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_permanent_with_duration(
+async def test_set_system_mode_permanent_with_duration(  # ServiceValidationError
     hass: HomeAssistant,
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
@@ -191,7 +191,7 @@ async def test_set_system_mode_permanent_with_duration(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_duration_with_period(
+async def test_set_system_mode_duration_with_period(  # ServiceValidationError
     hass: HomeAssistant,
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
@@ -219,7 +219,7 @@ async def test_set_system_mode_duration_with_period(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_period_with_duration(
+async def test_set_system_mode_period_with_duration(  # ServiceValidationError
     hass: HomeAssistant,
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
@@ -246,9 +246,8 @@ async def test_set_system_mode_period_with_duration(
     assert issue is None
 
 
-# This test is different: it raises vol.MultipleInvalid
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_both_duration_and_period(
+async def test_set_system_mode_both_duration_and_period(  # vol.MultipleInvalid
     hass: HomeAssistant,
     ctl_id: str,
     issue_registry: ir.IssueRegistry,
@@ -368,9 +367,8 @@ async def test_set_system_mode_deprecated(
     assert issue.translation_key == "deprecated_service_without_target"
 
 
-# This test is different: it raises vol.MultipleInvalid
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_both_duration_and_period_deprecated(
+async def test_set_system_mode_both_duration_and_period_deprecated(  # vol.MultipleInvalid
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
@@ -491,7 +489,7 @@ async def test_zone_services_with_ctl_id(
         EvoService.RESET_SYSTEM,
     ],
 )
-async def test_tcs_service_with_wrong_entity_id(
+async def test_tcs_service_with_wrong_entity_id(  # ServiceValidationError
     hass: HomeAssistant,
     svc: EvoService,
     zone_id: str,
@@ -510,7 +508,7 @@ async def test_tcs_service_with_wrong_entity_id(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_with_wrong_entity_id(
+async def test_set_system_mode_with_wrong_entity_id(  # ServiceValidationError
     hass: HomeAssistant,
     zone_id: str,
 ) -> None:
