@@ -85,10 +85,7 @@ def _coordinator_exception_handler[
         try:
             return await func(self, *args, **kwargs)
         except PeblarAuthenticationError as error:
-            entry = getattr(self, "config_entry", None)
-            peblar_obj = getattr(self, "peblar", None)
-
-            if not entry or not peblar_obj:
+            if not self.config_entry or not self.peblar:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_error",
