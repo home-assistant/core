@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import TessieConfigEntry
@@ -211,13 +212,16 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed("Invalid energy history data")
 
         # Add all time periods together
-        output: dict[str, float | None] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data["time_series"]:
+        time_series = data["time_series"]
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in time_series:
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
                     if output[key] is None:
                         output[key] = period[key]
                     else:
                         output[key] += period[key]
+
+        output["_period_start"] = dt_util.parse_datetime(time_series[0]["timestamp"])
 
         return output

@@ -5,7 +5,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -48,7 +48,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery charged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -65,7 +66,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -108,7 +109,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery discharged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -125,7 +127,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,7 +170,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -185,7 +188,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -228,7 +231,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -245,7 +249,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -288,7 +292,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -305,7 +310,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -348,7 +353,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -425,7 +431,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -468,7 +474,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -485,7 +492,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -528,7 +535,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -545,7 +553,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -588,7 +596,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -605,7 +614,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -648,7 +657,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -725,7 +735,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -768,7 +778,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Generator exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -845,7 +856,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -888,7 +899,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -905,7 +917,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -948,7 +960,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -965,7 +978,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1008,7 +1021,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1025,7 +1039,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1068,7 +1082,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1085,7 +1100,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1128,7 +1143,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1205,7 +1221,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1248,7 +1264,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1265,7 +1282,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1308,7 +1325,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1385,7 +1403,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1428,7 +1446,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Home usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1562,7 +1581,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1605,7 +1624,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1622,7 +1642,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1665,7 +1685,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar generated',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'last_reset': '2024-09-18T00:00:00+10:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
