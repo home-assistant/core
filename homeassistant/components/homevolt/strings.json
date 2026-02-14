@@ -5,6 +5,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::abort::unknown%]",
       "wrong_account": "The device you authenticated with is different from the one configured. Re-authenticate with the same Homevolt battery."
     },
     "error": {
