@@ -70,6 +70,16 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
+CONCENTRATION_LEVEL_MAP = {
+    # enum with known Concentration Level values which we can translate
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kUnknown: None,
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kLow: "low",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kMedium: "medium",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kHigh: "high",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kCritical: "critical",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kUnknownEnumValue: None,
+}
+
 EVE_CLUSTER_WEATHER_MAP = {
     # enum with known Weather state values which we can translate
     1: "sunny",
@@ -626,6 +636,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TotalVolatileOrganicCompoundsSensorLevel",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="tvoc_level",
+            options=[x for x in CONCENTRATION_LEVEL_MAP.values() if x is not None],
+            device_to_ha=CONCENTRATION_LEVEL_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.LevelValue,
+        ),
+        featuremap_contains=clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Bitmaps.Feature.kLevelIndication,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
