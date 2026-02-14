@@ -17,7 +17,7 @@
         "data_description": {
           "api_key": "Your Anthropic API key."
         },
-        "description": "Set up Anthropic integration by providing your Anthropic API key. Instructions to obtain an API key can be found [here]({instructions_url})."
+        "description": "Set up Anthropic integration by providing your Anthropic API key. Instructions to obtain an API key can be found in [the documentation]({instructions_url})."
       }
     }
   },
