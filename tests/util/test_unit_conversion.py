@@ -413,6 +413,18 @@ _CONVERTED_VALUE: dict[
             62.744976,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1912.503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.062744976,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
     ],
     NitrogenMonoxideConcentrationConverter: [
         (
