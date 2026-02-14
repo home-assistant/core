@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 import requests.exceptions
@@ -31,6 +31,7 @@ from .common import (
     ProxmoxClient,
     ResourceException,
     call_api_container_vm,
+    get_node_storages,
     parse_api_container_vm,
 )
 from .const import (
@@ -43,15 +44,26 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    NODE_STORAGE_KEY,
     TYPE_CONTAINER,
     TYPE_VM,
     UPDATE_INTERVAL,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+type ProxmoxCoordinator = DataUpdateCoordinator[
+    dict[str, Any] | list[dict[str, Any]] | None
+]
 
 type ProxmoxConfigEntry = ConfigEntry[
-    dict[str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]]
+    dict[
+        str,
+        dict[
+            str,
+            dict[int | str, ProxmoxCoordinator],
+        ],
+    ]
 ]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -179,7 +191,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
     proxmox_client = await hass.async_add_executor_job(build_client)
 
     coordinators: dict[
-        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+        str,
+        dict[
+            str,
+            dict[
+                int | str,
+                DataUpdateCoordinator[dict[str, Any] | list[dict[str, Any]] | None],
+            ],
+        ],
     ] = {}
     entry.runtime_data = coordinators
 
@@ -206,7 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
             )
             await coordinator.async_config_entry_first_refresh()
 
-            node_coordinators[vm["vmid"]] = coordinator
+            node_coordinators[vm["vmid"]] = cast(ProxmoxCoordinator, coordinator)
 
         for container in containers:
             coordinator = _create_coordinator_container_vm(
@@ -220,7 +239,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
             )
             await coordinator.async_config_entry_first_refresh()
 
-            node_coordinators[container["vmid"]] = coordinator
+            node_coordinators[container["vmid"]] = cast(ProxmoxCoordinator, coordinator)
+
+        storage_coordinator = _create_storage_coordinator(
+            hass, entry, proxmox, host_name, node_name
+        )
+        await storage_coordinator.async_config_entry_first_refresh()
+        node_coordinators[NODE_STORAGE_KEY] = cast(
+            ProxmoxCoordinator, storage_coordinator
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -271,6 +298,34 @@ def _create_coordinator_container_vm(
         LOGGER,
         config_entry=entry,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+    )
+
+
+def _create_storage_coordinator(
+    hass: HomeAssistant,
+    entry: ProxmoxConfigEntry,
+    proxmox: ProxmoxAPI,
+    host_name: str,
+    node_name: str,
+) -> DataUpdateCoordinator[list[dict[str, Any]] | None]:
+    """Create and return a DataUpdateCoordinator for node storage list."""
+
+    async def async_update_data() -> list[dict[str, Any]] | None:
+        """Fetch storage list for the node."""
+
+        def poll_storages() -> list[dict[str, Any]]:
+            """Call the api."""
+            return get_node_storages(proxmox, node_name)
+
+        return await hass.async_add_executor_job(poll_storages)
+
+    return DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        config_entry=entry,
+        name=f"proxmox_storage_{host_name}_{node_name}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )

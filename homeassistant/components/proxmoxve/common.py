@@ -86,3 +86,47 @@ def call_api_container_vm(
         return None
 
     return status
+
+
+def get_node_storages(
+    proxmox: ProxmoxAPI,
+    node_name: str,
+) -> list[dict[str, Any]]:
+    """Get storage list with total, used and avail space for a node.
+
+    Returns a list of dicts with keys: storage, type, total, used, avail (bytes).
+    On API errors, skips failing storages and returns the rest; on total failure
+    returns an empty list.
+    """
+    result: list[dict[str, Any]] = []
+    try:
+        storages = proxmox.nodes(node_name).storage.get()
+    except ResourceException, requests.exceptions.ConnectionError:
+        return result
+    if not storages:
+        return result
+    for storage_info in storages:
+        storage_id = storage_info.get("storage")
+        if not storage_id:
+            continue
+        try:
+            status = proxmox.nodes(node_name).storage(storage_id).status.get()
+        except ResourceException, requests.exceptions.ConnectionError:
+            continue
+        total = status.get("total") or 0
+        used = status.get("used") or 0
+        avail = status.get("avail")
+        if avail is None and total is not None and used is not None:
+            avail = max(0, total - used)
+        elif avail is None:
+            avail = 0
+        result.append(
+            {
+                "storage": storage_id,
+                "type": storage_info.get("type", ""),
+                "total": total,
+                "used": used,
+                "avail": avail,
+            }
+        )
+    return result
