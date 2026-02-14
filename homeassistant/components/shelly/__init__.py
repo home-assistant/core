@@ -175,6 +175,7 @@ async def _async_setup_block_entry(
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
@@ -288,6 +289,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)

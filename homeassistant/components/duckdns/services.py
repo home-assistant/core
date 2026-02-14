@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import ConfigEntrySelector
 
@@ -47,13 +47,9 @@ def get_config_entry(
                 translation_domain=DOMAIN,
                 translation_key="entry_not_selected",
             )
-        return entries[0]
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    return entry
+        entry_id = entries[0].entry_id
+
+    return service.async_get_config_entry(hass, DOMAIN, entry_id)
 
 
 async def update_domain_service(call: ServiceCall) -> None:

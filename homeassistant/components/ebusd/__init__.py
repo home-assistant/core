@@ -68,7 +68,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         ebusdpy.init(server_address)
-    except (TimeoutError, OSError):
+    except TimeoutError, OSError:
         return False
     hass.data[EBUSD_DATA] = EbusdData(server_address, circuit)
     sensor_config = {

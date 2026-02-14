@@ -15,7 +15,7 @@
 .yamllint @home-assistant/core
 pyproject.toml @home-assistant/core
 requirements_test.txt @home-assistant/core
-/.devcontainer/ @home-assistant/core
+/.devcontainer/ @home-assistant/core @edenhaus
 /.github/ @home-assistant/core
 /.vscode/ @home-assistant/core
 /homeassistant/*.py @home-assistant/core
@@ -597,6 +597,8 @@ build.json @home-assistant/supervisor
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/ghost/ @johnonolan
+/tests/components/ghost/ @johnonolan
 /homeassistant/components/gios/ @bieniu
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
@@ -672,6 +674,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
+/homeassistant/components/hegel/ @boazca
+/tests/components/hegel/ @boazca
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
@@ -715,8 +719,10 @@ build.json @home-assistant/supervisor
 /tests/components/homekit_controller/ @Jc2k @bdraco
 /homeassistant/components/homematic/ @pvizeli
 /tests/components/homematic/ @pvizeli
-/homeassistant/components/homematicip_cloud/ @hahn-th
-/tests/components/homematicip_cloud/ @hahn-th
+/homeassistant/components/homematicip_cloud/ @hahn-th @lackas
+/tests/components/homematicip_cloud/ @hahn-th @lackas
+/homeassistant/components/homevolt/ @danielhiversen
+/tests/components/homevolt/ @danielhiversen
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
@@ -758,6 +764,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
+/homeassistant/components/idrive_e2/ @patrickvorgers
+/tests/components/idrive_e2/ @patrickvorgers
 /homeassistant/components/igloohome/ @keithle888
 /tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
@@ -802,6 +810,8 @@ build.json @home-assistant/supervisor
 /tests/components/insteon/ @teharris1
 /homeassistant/components/integration/ @dgomes
 /tests/components/integration/ @dgomes
+/homeassistant/components/intelliclima/ @dvdinth
+/tests/components/intelliclima/ @dvdinth
 /homeassistant/components/intellifire/ @jeeftor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
@@ -1078,8 +1088,8 @@ build.json @home-assistant/supervisor
 /tests/components/nam/ @bieniu
 /homeassistant/components/namecheapdns/ @tr4nt0r
 /tests/components/namecheapdns/ @tr4nt0r
-/homeassistant/components/nanoleaf/ @milanmeu @joostlek
-/tests/components/nanoleaf/ @milanmeu @joostlek
+/homeassistant/components/nanoleaf/ @milanmeu @joostlek @loebi-ch @JaspervRijbroek @jonathanrobichaud4
+/tests/components/nanoleaf/ @milanmeu @joostlek @loebi-ch @JaspervRijbroek @jonathanrobichaud4
 /homeassistant/components/nasweb/ @nasWebio
 /tests/components/nasweb/ @nasWebio
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
@@ -1172,6 +1182,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
 /tests/components/onedrive/ @zweckj
+/homeassistant/components/onedrive_for_business/ @zweckj
+/tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
@@ -1357,6 +1369,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/redgtech/ @jonhsady @luan-nvg
+/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
@@ -1563,6 +1577,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /homeassistant/components/splunk/ @Bre77
+/tests/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck @joostlek
 /tests/components/spotify/ @frenck @joostlek
 /homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
