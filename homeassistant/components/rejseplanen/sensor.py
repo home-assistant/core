@@ -334,20 +334,6 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         )
         return self.entity_description.value_fn(departures, tz)
 
-    # @property
-    # def extra_state_attributes(self) -> dict[str, Any]:
-    #     """Return the state attributes."""
-    #     base_attributes = {ATTR_STOP_ID: self._stop_id}
-
-    #     if self.entity_description.attr_fn:
-    #         departures = self._get_filtered_departures()
-    #         tz = dt_util.get_time_zone(self.hass.config.time_zone) or zoneinfo.ZoneInfo(
-    #             "UTC"
-    #         )
-    #         additional_attrs = self.entity_description.attr_fn(departures, tz)
-    #         base_attributes.update(additional_attrs)
-
-    #     return base_attributes
 
     def _get_filtered_departures(self) -> list[Departure]:
         """Get filtered departures based on the configured parameters."""
