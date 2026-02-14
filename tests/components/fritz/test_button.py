@@ -1,19 +1,18 @@
 """Tests for Fritz!Tools button platform."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.fritz.const import DOMAIN, MeshRoles
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL, MeshRoles
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
@@ -123,6 +122,7 @@ async def test_wol_button(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wol_button_new_device(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -141,7 +141,8 @@ async def test_wol_button_new_device(
     mesh_data["nodes"].append(MOCK_NEW_DEVICE_NODE)
     fh_class_mock.get_mesh_topology.return_value = mesh_data
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("button.printer_wake_on_lan")

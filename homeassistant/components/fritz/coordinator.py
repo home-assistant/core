@@ -48,6 +48,7 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
+    SCAN_INTERVAL,
     MeshRoles,
 )
 from .helpers import _ha_is_stopping
@@ -159,7 +160,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
         self._devices: dict[str, FritzDevice] = {}
