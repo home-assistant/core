@@ -12,7 +12,6 @@ set_system_mode:
     mode:
       required: true
       example: Away
-      default: Auto
       selector:
         select:
           options:
