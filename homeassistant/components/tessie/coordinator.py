@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
+from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
 from tesla_fleet_api.tessie import EnergySite
 from tessie_api import get_state, get_status
@@ -20,11 +21,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 if TYPE_CHECKING:
     from . import TessieConfigEntry
 
-from .const import TessieStatus
+from .const import ENERGY_HISTORY_FIELDS, TessieStatus
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
 TESSIE_FLEET_API_SYNC_INTERVAL = timedelta(seconds=30)
+TESSIE_ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,3 +173,51 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         return flatten(data)
+
+
+class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy history from the Tessie API."""
+
+    config_entry: TessieConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TessieConfigEntry,
+        api: EnergySite,
+    ) -> None:
+        """Initialize Tessie Energy History coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Tessie Energy History",
+            update_interval=TESSIE_ENERGY_HISTORY_INTERVAL,
+        )
+        self.api = api
+        self.data = {}
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy history data using Tessie API."""
+
+        try:
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+        except (InvalidToken, MissingToken) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+
+        if not data or not isinstance(data.get("time_series"), list):
+            raise UpdateFailed("Invalid energy history data")
+
+        # Add all time periods together
+        output: dict[str, float | None] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in data["time_series"]:
+            for key in ENERGY_HISTORY_FIELDS:
+                if key in period:
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
+
+        return output
