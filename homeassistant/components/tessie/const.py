@@ -116,7 +116,7 @@ class TessieWallConnectorStates(IntEnum):
     CHARGING_REDUCED = 10
 
 
-ENERGY_HISTORY_FIELDS = [
+ENERGY_HISTORY_FIELDS = (
     "solar_energy_exported",
     "generator_energy_exported",
     "grid_energy_imported",
@@ -138,4 +138,4 @@ ENERGY_HISTORY_FIELDS = [
     "total_battery_discharge",
     "total_solar_generation",
     "total_grid_energy_exported",
-]
+)
