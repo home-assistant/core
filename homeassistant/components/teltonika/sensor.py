@@ -181,19 +181,7 @@ class TeltonikaSensorEntity(
         """Return if entity is available."""
         return super().available and self._modem_id in self.coordinator.data
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
+    @property
+    def native_value(self) -> StateType:
         """Handle updated data from the coordinator."""
-        if self._modem_id not in self.coordinator.data:
-            super()._handle_coordinator_update()
-            return
-
-        modem = self.coordinator.data[self._modem_id]
-
-        value = self.entity_description.value_fn(modem)
-
-        # Ensure value is a valid state type
-        if isinstance(value, (str, int, float)):
-            self._attr_native_value = value
-
-        super()._handle_coordinator_update()
+        return self.entity_description.value_fn(self.coordinator.data[self._modem_id])
