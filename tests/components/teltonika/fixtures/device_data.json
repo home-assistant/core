@@ -2,7 +2,7 @@
   "device_info": {
     "lang": "en",
     "filename": null,
-    "device_name": "Test Device",
+    "device_name": "RUTX50 Test",
     "device_model": "RUTX50",
     "api_version": "1.9.2",
     "device_identifier": "abcd1234567890ef1234567890abcdef",
@@ -23,7 +23,7 @@
       "fw_version": "RUTX_R_00.07.17.3",
       "kernel": "6.6.96",
       "system": "ARMv7 Processor rev 5 (v7l)",
-      "device_name": "Test Device",
+      "device_name": "RUTX50 Test",
       "hostname": "RUTX50",
       "cpu_count": 4,
       "model": "RUTX50"

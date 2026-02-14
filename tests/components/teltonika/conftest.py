@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -23,23 +24,52 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_teltasync() -> Generator[MagicMock]:
-    """Mock Teltasync client."""
-    with patch(
-        "homeassistant.components.teltonika.config_flow.Teltasync",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
+    """Mock Teltasync client for both config flow and init."""
+    # Load fixture device data
+    device_data = load_json_object_fixture("device_data.json", DOMAIN)
 
-        # Default device info
+    with (
+        patch(
+            "homeassistant.components.teltonika.config_flow.Teltasync",
+            autospec=True,
+        ) as mock_config_flow,
+        patch(
+            "homeassistant.components.teltonika.Teltasync",
+            autospec=True,
+        ) as mock_init,
+    ):
+        # Configure both mocks with the same client instance
+        shared_client = MagicMock()
+
+        # Mock device info
         device_info = MagicMock()
-        device_info.device_name = "RUTX50 Test"
-        device_info.device_identifier = "TEST1234567890"
+        device_info.device_name = device_data["system_info"]["static"]["device_name"]
+        device_info.device_identifier = device_data["system_info"]["mnf_info"]["serial"]
 
-        client.get_device_info = AsyncMock(return_value=device_info)
-        client.validate_credentials = AsyncMock(return_value=True)
-        client.close = AsyncMock()
+        # Mock system info
+        system_info = MagicMock()
+        system_info.mnf_info = MagicMock()
+        system_info.mnf_info.serial = device_data["system_info"]["mnf_info"]["serial"]
+        system_info.mnf_info.name = device_data["system_info"]["mnf_info"]["name"]
+        system_info.static = MagicMock()
+        system_info.static.device_name = device_data["system_info"]["static"][
+            "device_name"
+        ]
+        system_info.static.model = device_data["system_info"]["static"]["model"]
+        system_info.static.fw_version = device_data["system_info"]["static"][
+            "fw_version"
+        ]
 
-        yield mock_client
+        shared_client.get_device_info = AsyncMock(return_value=device_info)
+        shared_client.get_system_info = AsyncMock(return_value=system_info)
+        shared_client.validate_credentials = AsyncMock(return_value=True)
+        shared_client.close = AsyncMock()
+
+        # Both mocks return the same client instance
+        mock_config_flow.return_value = shared_client
+        mock_init.return_value = shared_client
+
+        yield mock_config_flow
 
 
 @pytest.fixture
@@ -55,7 +85,7 @@ def mock_config_entry() -> MockConfigEntry:
     device_data = load_json_object_fixture("device_data.json", DOMAIN)
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Test Device",
+        title="RUTX50 Test",
         data={
             CONF_HOST: "192.168.1.1",
             CONF_USERNAME: "admin",
@@ -109,38 +139,14 @@ def mock_modems() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_teltasync_init() -> Generator[MagicMock]:
-    """Mock Teltasync for init tests."""
-    with patch(
-        "homeassistant.components.teltonika.Teltasync",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-
-        # Load device data
-        device_data = load_json_object_fixture("device_data.json", DOMAIN)
-
-        # Mock device info
-        device_info = MagicMock()
-        device_info.device_name = device_data["system_info"]["static"]["device_name"]
-        device_info.device_identifier = device_data["system_info"]["mnf_info"]["serial"]
-
-        # Mock system info - create a proper object structure
-        system_info = MagicMock()
-        system_info.mnf_info = MagicMock()
-        system_info.mnf_info.serial = device_data["system_info"]["mnf_info"]["serial"]
-        system_info.mnf_info.name = device_data["system_info"]["mnf_info"]["name"]
-        system_info.static = MagicMock()
-        system_info.static.device_name = device_data["system_info"]["static"][
-            "device_name"
-        ]
-        system_info.static.model = device_data["system_info"]["static"]["model"]
-        system_info.static.fw_version = device_data["system_info"]["static"][
-            "fw_version"
-        ]
-
-        client.get_device_info = AsyncMock(return_value=device_info)
-        client.get_system_info = AsyncMock(return_value=system_info)
-        client.close = AsyncMock()
-
-        yield mock_client
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_teltasync: MagicMock,
+    mock_modems: MagicMock,
+) -> MockConfigEntry:
+    """Set up the Teltonika integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry

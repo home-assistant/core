@@ -9,13 +9,13 @@ from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnecti
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_VALIDATE_SSL, DOMAIN
+from .const import DOMAIN
 from .util import get_url_variants
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_VALIDATE_SSL, default=False): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -54,7 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             username=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
             session=session,
-            verify_ssl=data.get(CONF_VALIDATE_SSL, True),
+            verify_ssl=data.get(CONF_VERIFY_SSL, True),
         )
 
         try:
@@ -193,7 +193,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_VALIDATE_SSL: False,
+                    CONF_VERIFY_SSL: False,
                 }
                 info = await validate_input(self.hass, data)
 
@@ -209,7 +209,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: info["host"],
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_VALIDATE_SSL: False,
+                        CONF_VERIFY_SSL: False,
                     },
                 )
             except CannotConnect:

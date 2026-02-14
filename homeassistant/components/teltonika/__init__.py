@@ -8,13 +8,19 @@ import logging
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import CONF_VALIDATE_SSL, DOMAIN
+from .const import DOMAIN
 from .coordinator import TeltonikaDataUpdateCoordinator
 from .util import normalize_url
 
@@ -38,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     host = entry.data[CONF_HOST]
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    validate_ssl = entry.data.get(CONF_VALIDATE_SSL, False)
+    validate_ssl = entry.data.get(CONF_VERIFY_SSL, False)
     session = async_get_clientsession(hass)
 
     base_url = normalize_url(host)

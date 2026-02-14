@@ -28,13 +28,13 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "validate_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Teltonika device.",
           "password": "The password to authenticate with the device.",
           "username": "The username to authenticate with the device.",
-          "validate_ssl": "Whether to validate the SSL certificate when using HTTPS."
+          "verify_ssl": "Whether to validate the SSL certificate when using HTTPS."
         },
         "description": "Enter the connection details for your Teltonika device.",
         "title": "Set up Teltonika device"

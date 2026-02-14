@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.test_device_internal_modem_band-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_band-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_band',
+    'entity_id': 'sensor.rutx50_test_internal_modem_band',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,20 +35,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_band-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_band-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Internal modem Band',
+      'friendly_name': 'RUTX50 Test Internal modem Band',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_band',
+    'entity_id': 'sensor.rutx50_test_internal_modem_band',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5G N3',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_connection_type-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_connection_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_connection_type',
+    'entity_id': 'sensor.rutx50_test_internal_modem_connection_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,20 +84,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_connection_type-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_connection_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Internal modem Connection type',
+      'friendly_name': 'RUTX50 Test Internal modem Connection type',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_connection_type',
+    'entity_id': 'sensor.rutx50_test_internal_modem_connection_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5G (NSA)',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_operator-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_operator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_operator',
+    'entity_id': 'sensor.rutx50_test_internal_modem_operator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,20 +133,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_operator-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_operator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Device Internal modem Operator',
+      'friendly_name': 'RUTX50 Test Internal modem Operator',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_operator',
+    'entity_id': 'sensor.rutx50_test_internal_modem_operator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'test.operator',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rsrp-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rsrp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -161,7 +161,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_rsrp',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rsrp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -187,23 +187,23 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rsrp-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rsrp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Test Device Internal modem RSRP',
+      'friendly_name': 'RUTX50 Test Internal modem RSRP',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_rsrp',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rsrp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-93',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rsrq-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rsrq-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -218,7 +218,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_rsrq',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rsrq',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -244,23 +244,23 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rsrq-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rsrq-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Test Device Internal modem RSRQ',
+      'friendly_name': 'RUTX50 Test Internal modem RSRQ',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_rsrq',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rsrq',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-10',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rssi-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -275,7 +275,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_rssi',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -301,23 +301,23 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_rssi-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Test Device Internal modem RSSI',
+      'friendly_name': 'RUTX50 Test Internal modem RSSI',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_rssi',
+    'entity_id': 'sensor.rutx50_test_internal_modem_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-63',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_sinr-entry]
+# name: test_sensors[sensor.rutx50_test_internal_modem_sinr-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -332,7 +332,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_internal_modem_sinr',
+    'entity_id': 'sensor.rutx50_test_internal_modem_sinr',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -358,23 +358,23 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensors[sensor.test_device_internal_modem_sinr-state]
+# name: test_sensors[sensor.rutx50_test_internal_modem_sinr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Test Device Internal modem SINR',
+      'friendly_name': 'RUTX50 Test Internal modem SINR',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_internal_modem_sinr',
+    'entity_id': 'sensor.rutx50_test_internal_modem_sinr',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.test_device_temperature-entry]
+# name: test_sensors[sensor.rutx50_test_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -389,7 +389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_device_temperature',
+    'entity_id': 'sensor.rutx50_test_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -415,16 +415,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.test_device_temperature-state]
+# name: test_sensors[sensor.rutx50_test_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Test Device Temperature',
+      'friendly_name': 'RUTX50 Test Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_device_temperature',
+    'entity_id': 'sensor.rutx50_test_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
