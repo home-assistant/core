@@ -25,10 +25,10 @@
       },
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username",
-          "validate_ssl": "Validate SSL certificate"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "validate_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Teltonika device.",
