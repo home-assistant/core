@@ -290,7 +290,7 @@ async def test_agents_delete_not_throwing_on_not_found(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    assert mock_client.delete_object.call_count == 0
+    assert mock_client.delete_objects.call_count == 0
 
 
 async def test_agents_upload(
