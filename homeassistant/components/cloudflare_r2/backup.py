@@ -190,9 +190,10 @@ class R2BackupAgent(BackupAgent):
         :param open_stream: A function returning an async iterator that yields bytes.
         """
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
+        key = self._with_prefix(tar_filename)
         multipart_upload = await self._client.create_multipart_upload(
             Bucket=self._bucket,
-            Key=self._with_prefix(tar_filename),
+            Key=key,
         )
         upload_id = multipart_upload["UploadId"]
         try:
@@ -222,7 +223,7 @@ class R2BackupAgent(BackupAgent):
                         )
                         part = await cast(Any, self._client).upload_part(
                             Bucket=self._bucket,
-                            Key=tar_filename,
+                            Key=key,
                             PartNumber=part_number,
                             UploadId=upload_id,
                             Body=part_data.tobytes(),
@@ -250,7 +251,7 @@ class R2BackupAgent(BackupAgent):
                 )
                 part = await cast(Any, self._client).upload_part(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=key,
                     PartNumber=part_number,
                     UploadId=upload_id,
                     Body=remaining_data.tobytes(),
@@ -259,7 +260,7 @@ class R2BackupAgent(BackupAgent):
 
             await cast(Any, self._client).complete_multipart_upload(
                 Bucket=self._bucket,
-                Key=tar_filename,
+                Key=key,
                 UploadId=upload_id,
                 MultipartUpload={"Parts": parts},
             )
@@ -268,7 +269,7 @@ class R2BackupAgent(BackupAgent):
             try:
                 await self._client.abort_multipart_upload(
                     Bucket=self._bucket,
-                    Key=self._with_prefix(tar_filename),
+                    Key=key,
                     UploadId=upload_id,
                 )
             except BotoCoreError:
