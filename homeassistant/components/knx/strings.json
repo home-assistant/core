@@ -166,6 +166,10 @@
       "project_upload": {
         "description": "Import a KNX project file to help configure group addresses and datapoint types",
         "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      },
+      "time_server": {
+        "description": "Broadcast the current local time and date to the KNX bus",
+        "title": "[%key:component::knx::config_panel::dialogs::time_server::title%]"
       }
     },
     "dialogs": {
@@ -173,6 +177,19 @@
         "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
         "file_upload_label": "ETS project file",
         "title": "Import ETS project"
+      },
+      "time_server": {
+        "date": {
+          "label": "Date"
+        },
+        "datetime": {
+          "label": "Combined date and time"
+        },
+        "description": "Periodically sends the current local time and date to the KNX bus. Values are broadcast every hour to the configured group addresses.\n\nLeave an address field empty to disable sending for that format.",
+        "time": {
+          "label": "Time"
+        },
+        "title": "Time server"
       }
     },
     "dpt": {
