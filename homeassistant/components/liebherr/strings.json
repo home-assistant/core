@@ -57,11 +57,43 @@
       "top_zone": {
         "name": "Top zone"
       }
+    },
+    "switch": {
+      "night_mode": {
+        "name": "Night mode"
+      },
+      "party_mode": {
+        "name": "Party mode"
+      },
+      "supercool": {
+        "name": "SuperCool"
+      },
+      "supercool_bottom_zone": {
+        "name": "Bottom zone SuperCool"
+      },
+      "supercool_middle_zone": {
+        "name": "Middle zone SuperCool"
+      },
+      "supercool_top_zone": {
+        "name": "Top zone SuperCool"
+      },
+      "superfrost": {
+        "name": "SuperFrost"
+      },
+      "superfrost_bottom_zone": {
+        "name": "Bottom zone SuperFrost"
+      },
+      "superfrost_middle_zone": {
+        "name": "Middle zone SuperFrost"
+      },
+      "superfrost_top_zone": {
+        "name": "Top zone SuperFrost"
+      }
     }
   },
   "exceptions": {
-    "set_temperature_failed": {
-      "message": "Failed to set temperature"
+    "communication_error": {
+      "message": "An error occurred while communicating with the device: {error}"
     }
   }
 }

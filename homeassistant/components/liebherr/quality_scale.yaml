@@ -55,11 +55,13 @@ rules:
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not have any entities that should be disabled by default.
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: The only configuration option is the API key, which is handled by the reauthentication flow.

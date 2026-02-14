@@ -1,6 +1,7 @@
 """Common fixtures for the liebherr tests."""
 
 from collections.abc import Generator
+import copy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
@@ -9,6 +10,7 @@ from pyliebherrhomeapi import (
     DeviceType,
     TemperatureControl,
     TemperatureUnit,
+    ToggleControl,
     ZonePosition,
 )
 import pytest
@@ -52,6 +54,34 @@ MOCK_DEVICE_STATE = DeviceState(
             max=-16,
             unit=TemperatureUnit.CELSIUS,
         ),
+        ToggleControl(
+            name="supercool",
+            type="ToggleControl",
+            zone_id=1,
+            zone_position=ZonePosition.TOP,
+            value=False,
+        ),
+        ToggleControl(
+            name="superfrost",
+            type="ToggleControl",
+            zone_id=2,
+            zone_position=ZonePosition.BOTTOM,
+            value=True,
+        ),
+        ToggleControl(
+            name="partymode",
+            type="ToggleControl",
+            zone_id=None,
+            zone_position=None,
+            value=False,
+        ),
+        ToggleControl(
+            name="nightmode",
+            type="ToggleControl",
+            zone_id=None,
+            zone_position=None,
+            value=True,
+        ),
     ],
 )
 
@@ -90,8 +120,15 @@ def mock_liebherr_client() -> Generator[MagicMock]:
     ):
         client = mock_client.return_value
         client.get_devices.return_value = [MOCK_DEVICE]
-        client.get_device_state.return_value = MOCK_DEVICE_STATE
+        # Return a fresh copy each call so mutations don't leak between calls.
+        client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+            MOCK_DEVICE_STATE
+        )
         client.set_temperature = AsyncMock()
+        client.set_supercool = AsyncMock()
+        client.set_superfrost = AsyncMock()
+        client.set_party_mode = AsyncMock()
+        client.set_night_mode = AsyncMock()
         yield client
 
 
