@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.fritz.const import (
@@ -80,3 +82,28 @@ async def test_clear_connection_cache(
     fc_class_mock.clear_cache()
 
     assert "Cleared FritzConnection call action cache" in caplog.text
+
+
+async def test_no_connection(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test no connection established."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
+        return_value=None,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (
+            f"Unable to establish a connection with {MOCK_USER_DATA[CONF_HOST]}"
+            in caplog.text
+        )
