@@ -791,9 +791,13 @@ FAILURE_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFailureData], ...]]
         description=MieleSensorDescription[MieleFailureData](
             key="fault_code",
             translation_key="fault_code",
-            value_fn=lambda value: None
-            if not value or value.error_number() is None or value.error_number() == 0
-            else f"F{value.error_number()}",
+            value_fn=lambda value: (
+                None
+                if not value
+                or value.error_number() is None
+                or value.error_number() == 0
+                else f"F{value.error_number()}"
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -909,44 +913,58 @@ async def async_setup_entry(
             and definition.description.value_fn(level) is None
         )
 
+    def _should_add_entity(
+        device: MieleDevice,
+        device_id: str,
+        definition: MieleSensorDefinition,
+        unique_id: str,
+        new_devices_set: set[str],
+    ) -> bool:
+        nonlocal added_entities
+
+        # device is not supported, should not add entity
+        if device.device_type not in definition.types:
+            return False
+
+        # entity was already added, should not add entity
+        if device_id not in new_devices_set and unique_id in added_entities:
+            return False
+
+        # sensors is not enabled, should not add entity
+        if not _is_sensor_enabled(
+            definition,
+            device,
+            unique_id,
+        ):
+            return False
+
+        # entity must be added
+        return True
+
+    def _get_unique_id(device_id: str, definition: MieleSensorDefinition) -> str:
+        return (
+            definition.description.unique_id_fn(device_id, definition.description)
+            if definition.description.unique_id_fn is not None
+            else MieleEntity.get_unique_id(device_id, definition.description)
+        )
+
     def _async_add_devices() -> None:
         nonlocal added_devices, added_entities
         entities: list = []
-        entity_class: type[MieleSensor]
         new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
         added_devices = current_devices
 
         for device_id, device in coordinator.data.devices.items():
             for definition in SENSOR_TYPES:
-                # device is not supported, skip
-                if device.device_type not in definition.types:
-                    continue
-
-                entity_class = _get_entity_class(definition)
-                unique_id = (
-                    definition.description.unique_id_fn(
-                        device_id, definition.description
-                    )
-                    if definition.description.unique_id_fn is not None
-                    else MieleEntity.get_unique_id(device_id, definition.description)
-                )
-
-                # entity was already added, skip
-                if device_id not in new_devices_set and unique_id in added_entities:
-                    continue
-
-                # sensors is not enabled, skip
-                if not _is_sensor_enabled(
-                    definition,
-                    device,
-                    unique_id,
+                unique_id = _get_unique_id(device_id, definition)
+                if _should_add_entity(
+                    device, device_id, definition, unique_id, new_devices_set
                 ):
-                    continue
-
-                added_entities.add(unique_id)
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
+                    added_entities.add(unique_id)
+                    entity_class = _get_entity_class(definition)
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
         async_add_entities(entities)
 
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
