@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solaredge_web import EnergyData
@@ -38,6 +39,107 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.fixture
+def mock_solaredge_api() -> AsyncMock:
+    """Return a mocked SolarEdge API with common defaults."""
+    api = AsyncMock()
+    api.get_details = AsyncMock(return_value={"details": {"status": "active"}})
+    api.get_overview = AsyncMock(
+        return_value={
+            "overview": {
+                "lifeTimeData": {"energy": 100000},
+                "lastYearData": {"energy": 50000},
+                "lastMonthData": {"energy": 10000},
+                "lastDayData": {"energy": 0.0},
+                "currentPower": {"power": 0.0},
+            }
+        }
+    )
+    api.get_inventory = AsyncMock(
+        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}]}}
+    )
+    api.get_current_power_flow = AsyncMock(
+        return_value={
+            "siteCurrentPowerFlow": {
+                "unit": "W",
+                "connections": [],
+            }
+        }
+    )
+    api.get_energy_details = AsyncMock(return_value={"energyDetails": {"unit": "Wh"}})
+    return api
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a default mocked config entry for storage tests."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+    )
+
+
+STORAGE_DATA_SINGLE_BATTERY = {
+    "storageData": {
+        "batteries": [
+            {
+                "serialNumber": "BAT001",
+                "telemetries": [
+                    {
+                        "timeStamp": "2025-01-01 00:00:00",
+                        "lifeTimeEnergyCharged": 1000.0,
+                        "lifeTimeEnergyDischarged": 500.0,
+                    },
+                    {
+                        "timeStamp": "2025-01-01 12:00:00",
+                        "lifeTimeEnergyCharged": 1500.0,
+                        "lifeTimeEnergyDischarged": 800.0,
+                    },
+                ],
+            }
+        ]
+    }
+}
+
+STORAGE_DATA_MULTI_BATTERY = {
+    "storageData": {
+        "batteries": [
+            {
+                "serialNumber": "BAT001",
+                "telemetries": [
+                    {
+                        "timeStamp": "2025-01-01 00:00:00",
+                        "lifeTimeEnergyCharged": 1000.0,
+                        "lifeTimeEnergyDischarged": 500.0,
+                    },
+                    {
+                        "timeStamp": "2025-01-01 12:00:00",
+                        "lifeTimeEnergyCharged": 1500.0,
+                        "lifeTimeEnergyDischarged": 800.0,
+                    },
+                ],
+            },
+            {
+                "serialNumber": "BAT002",
+                "telemetries": [
+                    {
+                        "timeStamp": "2025-01-01 00:00:00",
+                        "lifeTimeEnergyCharged": 2000.0,
+                        "lifeTimeEnergyDischarged": 1000.0,
+                    },
+                    {
+                        "timeStamp": "2025-01-01 12:00:00",
+                        "lifeTimeEnergyCharged": 2700.0,
+                        "lifeTimeEnergyDischarged": 1400.0,
+                    },
+                ],
+            },
+        ]
+    }
+}
 
 
 @patch("homeassistant.components.solaredge.SolarEdge")
@@ -427,67 +529,15 @@ async def test_storage_data_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     aioclient_mock: AiohttpClientMocker,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test storage data service fetches battery charge/discharge energy."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_NAME,
-        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
-    )
-    mock_solaredge().get_details = AsyncMock(
-        return_value={"details": {"status": "active"}}
-    )
-    mock_solaredge().get_overview = AsyncMock(
-        return_value={
-            "overview": {
-                "lifeTimeData": {"energy": 100000},
-                "lastYearData": {"energy": 50000},
-                "lastMonthData": {"energy": 10000},
-                "lastDayData": {"energy": 0.0},
-                "currentPower": {"power": 0.0},
-            }
-        }
-    )
-    mock_solaredge().get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": []}}
-    )
-    mock_solaredge().get_current_power_flow = AsyncMock(
-        return_value={
-            "siteCurrentPowerFlow": {
-                "unit": "W",
-                "connections": [],
-            }
-        }
-    )
-    mock_solaredge().get_energy_details = AsyncMock(
-        return_value={"energyDetails": {"unit": "Wh"}}
-    )
+    mock_solaredge.return_value = mock_solaredge_api
 
-    # Mock the storage data API response
-    storage_data_response = {
-        "storageData": {
-            "batteries": [
-                {
-                    "serialNumber": "BAT001",
-                    "telemetries": [
-                        {
-                            "timeStamp": "2025-01-01 00:00:00",
-                            "lifeTimeEnergyCharged": 1000.0,
-                            "lifeTimeEnergyDischarged": 500.0,
-                        },
-                        {
-                            "timeStamp": "2025-01-01 12:00:00",
-                            "lifeTimeEnergyCharged": 1500.0,
-                            "lifeTimeEnergyDischarged": 800.0,
-                        },
-                    ],
-                }
-            ]
-        }
-    }
     aioclient_mock.get(
         f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
-        json=storage_data_response,
+        json=STORAGE_DATA_SINGLE_BATTERY,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -506,58 +556,96 @@ async def test_storage_data_service(
 
 
 @patch("homeassistant.components.solaredge.SolarEdge")
-async def test_storage_data_service_no_batteries(
+async def test_storage_data_service_multi_battery(
     mock_solaredge,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test storage data service handles empty battery data."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_NAME,
-        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+    """Test storage data service aggregates data across multiple batteries."""
+    mock_solaredge_api.get_inventory = AsyncMock(
+        return_value={"Inventory": {"batteries": [{"SN": "BAT001"}, {"SN": "BAT002"}]}}
     )
-    mock_solaredge().get_details = AsyncMock(
-        return_value={"details": {"status": "active"}}
-    )
-    mock_solaredge().get_overview = AsyncMock(
-        return_value={
-            "overview": {
-                "lifeTimeData": {"energy": 100000},
-                "lastYearData": {"energy": 50000},
-                "lastMonthData": {"energy": 10000},
-                "lastDayData": {"energy": 0.0},
-                "currentPower": {"power": 0.0},
-            }
-        }
-    )
-    mock_solaredge().get_inventory = AsyncMock(
-        return_value={"Inventory": {"batteries": []}}
-    )
-    mock_solaredge().get_current_power_flow = AsyncMock(
-        return_value={
-            "siteCurrentPowerFlow": {
-                "unit": "W",
-                "connections": [],
-            }
-        }
-    )
-    mock_solaredge().get_energy_details = AsyncMock(
-        return_value={"energyDetails": {"unit": "Wh"}}
-    )
+    mock_solaredge.return_value = mock_solaredge_api
 
-    # Mock the storage data API response with no batteries
-    storage_data_response = {"storageData": {"batteries": []}}
     aioclient_mock.get(
         f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
-        json=storage_data_response,
+        json=STORAGE_DATA_MULTI_BATTERY,
     )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "No battery data available from storageData endpoint" in caplog.text
+    # BAT001: charge=500 (1500-1000), discharge=300 (800-500)
+    # BAT002: charge=700 (2700-2000), discharge=400 (1400-1000)
+    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    assert state is not None
+    assert float(state.state) == 1200.0  # 500 + 700
+
+    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    assert state is not None
+    assert float(state.state) == 700.0  # 300 + 400
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_data_service_no_batteries(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    aioclient_mock: AiohttpClientMocker,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test storage service is not created when no batteries in inventory."""
+    mock_solaredge_api.get_inventory = AsyncMock(
+        return_value={"Inventory": {"batteries": []}}
+    )
+    mock_solaredge.return_value = mock_solaredge_api
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Sensors should not exist when inventory reports no batteries
+    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    assert state is None
+
+    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    assert state is None
+
+
+@patch("homeassistant.components.solaredge.SolarEdge")
+async def test_storage_data_service_api_error(
+    mock_solaredge,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    aioclient_mock: AiohttpClientMocker,
+    mock_solaredge_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test storage data service handles API errors gracefully."""
+    mock_solaredge.return_value = mock_solaredge_api
+
+    aioclient_mock.get(
+        f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
+        exc=ClientError("Connection refused"),
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Sensors should be unavailable when the API returns an error
+    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

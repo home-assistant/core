@@ -338,7 +338,13 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
 
 class SolarEdgeStorageDataService(SolarEdgeDataService):
-    """Get and update battery storage data including charge/discharge energy."""
+    """Get and update battery storage data including charge/discharge energy.
+
+    Uses a direct HTTP call to the /storageData endpoint because the
+    aiosolaredge library does not yet expose a get_storage_data() method.
+    A PR to add it upstream is pending; once merged and the dependency is
+    bumped, this service should be refactored to use the library client.
+    """
 
     def __init__(
         self,
@@ -359,8 +365,8 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
 
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API storageData endpoint."""
-        now = datetime.now()
-        today = date.today()
+        now = dt_util.now()
+        today = now.date()
         midnight = datetime.combine(today, datetime.min.time())
 
         # Format times for API call (YYYY-MM-DD HH:MM:SS)
@@ -400,7 +406,10 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             if not telemetries:
                 continue
 
-            # Get the first and last telemetry entries to calculate delta
+            # Get the first and last telemetry entries to calculate delta.
+            # If only one entry exists (e.g. right after midnight), first and
+            # last are the same object, so the delta will be 0. This is correct
+            # — there is not enough data yet to calculate a meaningful value.
             first_entry = telemetries[0]
             last_entry = telemetries[-1]
 

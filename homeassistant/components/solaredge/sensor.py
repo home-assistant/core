@@ -233,6 +233,12 @@ async def async_setup_entry(
         service.async_setup()
         await service.coordinator.async_refresh()
 
+    # After inventory is refreshed, conditionally set up the storage service
+    # only if the site has batteries, to avoid unnecessary API polling.
+    sensor_factory.setup_storage_service()
+    if sensor_factory.storage_service:
+        await sensor_factory.storage_service.coordinator.async_refresh()
+
     entities = []
     for sensor_type in SENSOR_TYPES:
         sensor = sensor_factory.create_sensor(sensor_type)
@@ -258,9 +264,14 @@ class SolarEdgeSensorFactory:
         inventory = SolarEdgeInventoryDataService(hass, config_entry, api, site_id)
         flow = SolarEdgePowerFlowDataService(hass, config_entry, api, site_id)
         energy = SolarEdgeEnergyDetailsService(hass, config_entry, api, site_id)
-        storage = SolarEdgeStorageDataService(hass, config_entry, api, site_id)
 
-        self.all_services = (details, overview, inventory, flow, energy, storage)
+        self.all_services: list[SolarEdgeDataService] = [
+            details,
+            overview,
+            inventory,
+            flow,
+            energy,
+        ]
 
         self.services: dict[
             str,
@@ -297,13 +308,35 @@ class SolarEdgeSensorFactory:
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
+        # Only create the storage data service if batteries are present,
+        # to avoid unnecessary API polling for sites without batteries.
+        self.storage_service: SolarEdgeStorageDataService | None = None
+        self._storage_args = (hass, config_entry, api, site_id)
+
+    def setup_storage_service(self) -> None:
+        """Initialize the storage data service if batteries are detected."""
+        hass, config_entry, api, site_id = self._storage_args
+        # Check the inventory service for battery count
+        inventory_svc = self.all_services[2]  # inventory is the 3rd service
+        battery_count = inventory_svc.data.get("batteries", 0)
+        if not battery_count:
+            return
+
+        storage = SolarEdgeStorageDataService(hass, config_entry, api, site_id)
+        self.storage_service = storage
+        self.all_services.append(storage)
+
         for key in ("battery_charge_today", "battery_discharge_today"):
             self.services[key] = (SolarEdgeStorageEnergySensor, storage)
 
+        storage.async_setup()
+
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
-    ) -> SolarEdgeSensorEntity:
+    ) -> SolarEdgeSensorEntity | None:
         """Create and return a sensor based on the sensor_key."""
+        if sensor_type.key not in self.services:
+            return None
         sensor_class, service = self.services[sensor_type.key]
 
         return sensor_class(sensor_type, service)
