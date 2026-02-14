@@ -428,7 +428,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -440,7 +440,7 @@
     'supported_features': 0,
     'translation_key': 'filter_time_left',
     'unique_id': 'filter_time_left_q7_duid',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_filter_time_left-state]
@@ -448,14 +448,14 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Roborock Q7 Filter time left',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.roborock_q7_filter_time_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '125.0',
+    'state': '312.5',
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_main_brush_time_left-entry]
@@ -485,7 +485,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -497,7 +497,7 @@
     'supported_features': 0,
     'translation_key': 'main_brush_time_left',
     'unique_id': 'main_brush_time_left_q7_duid',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_main_brush_time_left-state]
@@ -505,14 +505,14 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Roborock Q7 Main brush time left',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.roborock_q7_main_brush_time_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '216.666666666667',
+    'state': '541.666666666667',
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_mop_life_time_left-entry]
@@ -599,7 +599,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -611,7 +611,7 @@
     'supported_features': 0,
     'translation_key': 'sensor_time_left',
     'unique_id': 'sensor_time_left_q7_duid',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_sensor_time_left-state]
@@ -619,14 +619,14 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Roborock Q7 Sensor time left',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.roborock_q7_sensor_time_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.6666666666667',
+    'state': '54.1666666666667',
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_side_brush_time_left-entry]
@@ -656,7 +656,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -668,7 +668,7 @@
     'supported_features': 0,
     'translation_key': 'side_brush_time_left',
     'unique_id': 'side_brush_time_left_q7_duid',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_side_brush_time_left-state]
@@ -676,14 +676,14 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Roborock Q7 Side brush time left',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.roborock_q7_side_brush_time_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '150.0',
+    'state': '375.0',
   })
 # ---
 # name: test_sensors[sensor.roborock_q7_status-entry]
