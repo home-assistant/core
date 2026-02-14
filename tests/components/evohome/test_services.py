@@ -183,6 +183,7 @@ async def test_set_system_mode_permanent_with_duration(  # ServiceValidationErro
                 ATTR_MODE: "Auto",
                 ATTR_PERIOD: {"days": 1},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -211,6 +212,7 @@ async def test_set_system_mode_duration_with_period(  # ServiceValidationError
                 ATTR_MODE: "AutoWithEco",
                 ATTR_PERIOD: {"days": 1},
             },
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
