@@ -10,6 +10,7 @@
     }),
     'config': dict({
       'autosw': '1',
+      'cec': '1',
       'cec0en': '1',
       'cec1en': '1',
       'cec2en': '1',
@@ -24,6 +25,8 @@
       'mutetx1': '1',
       'oled': '1',
       'relay': '0',
+      'tx0plus5': '1',
+      'tx1plus5': '1',
     }),
     'info': dict({
       'AUD0': 'bitstream 48kHz',
