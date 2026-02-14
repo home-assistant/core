@@ -1916,7 +1916,10 @@ async def test_light_group_discovery_members_before_group(
     assert hass.states.get("light.member2") is not None
     group_state = hass.states.get("light.group")
     assert group_state is not None
-    assert group_state.attributes.get("entity_id") == ["light.member1", "light.member2"]
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+    ]
 
 
 async def test_light_group_discovery_group_before_members(
@@ -1948,7 +1951,10 @@ async def test_light_group_discovery_group_before_members(
 
     group_state = hass.states.get("light.group")
     assert group_state is not None
-    assert group_state.attributes.get("entity_id") == ["light.member1", "light.member2"]
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+    ]
 
     # Remove member 1
     async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, "")
@@ -1960,7 +1966,7 @@ async def test_light_group_discovery_group_before_members(
 
     group_state = hass.states.get("light.group")
     assert group_state is not None
-    assert group_state.attributes.get("entity_id") == ["light.member2"]
+    assert group_state.attributes.get("group_entities") == ["light.member2"]
 
     # Rename member 2
     entity_registry.async_update_entity(
@@ -1971,7 +1977,7 @@ async def test_light_group_discovery_group_before_members(
 
     group_state = hass.states.get("light.group")
     assert group_state is not None
-    assert group_state.attributes.get("entity_id") == ["light.member2_updated"]
+    assert group_state.attributes.get("group_entities") == ["light.member2_updated"]
 
 
 @pytest.mark.parametrize(
@@ -2206,7 +2212,10 @@ async def test_setting_attribute_via_mqtt_json_message_light_group(
     state = hass.states.get("light.my_group")
 
     assert state and state.attributes.get("val") == "100"
-    assert state.attributes.get("entity_id") == ["light.member_1", "light.member_2"]
+    assert state.attributes.get("group_entities") == [
+        "light.member_1",
+        "light.member_2",
+    ]
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(

@@ -48,6 +48,7 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
@@ -475,7 +476,7 @@ class MqttAttributesMixin(Entity):
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         if CONF_GROUP in config:
-            self._attr_included_unique_ids = config[CONF_GROUP]
+            self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
