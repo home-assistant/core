@@ -24,7 +24,7 @@
   },
   "issues": {
     "deprecated_service_without_target": {
-      "description": "Calling the `evohome.{service}` service without specifying controller as a target is deprecated and will stop working in a future version. Update your automations and scripts to include the controller entity as a target.",
+      "description": "Calling the `evohome.{service}` service without specifying a controller is deprecated and will stop working in future. Update your automations and scripts to include a target, for example: `target: {entity_id: 'climate.my_home'}`.",
       "title": "Calling `{service}` without a target is deprecated"
     }
   },
