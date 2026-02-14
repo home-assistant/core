@@ -265,6 +265,15 @@
         }
       }
     },
+    "select": {
+      "time_format": {
+        "name": "Time format",
+        "state": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour"
+        }
+      }
+    },
     "sensor": {
       "aqi_quality_level": {
         "name": "Air quality level",
