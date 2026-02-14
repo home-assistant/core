@@ -371,11 +371,6 @@ async def test_zeroconf_confirm_with_password_success(
 ) -> None:
     """Test zeroconf confirm collects password and creates entry when auth is required."""
 
-    monkeypatch.setattr(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        lambda hass: True,
-    )
-
     mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
 
     result = await hass.config_entries.flow.async_init(
@@ -412,11 +407,6 @@ async def test_zeroconf_confirm_with_password_invalid_then_success(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test zeroconf confirm shows error on invalid password, then succeeds."""
-
-    monkeypatch.setattr(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        lambda hass: True,
-    )
 
     mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
 
