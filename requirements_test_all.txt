@@ -1091,7 +1091,7 @@ holidays==0.84
 home-assistant-frontend==20260128.6
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.28
+home-assistant-intents==2026.2.13
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -1206,7 +1206,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.1.28.162006
+knx-frontend==2026.2.13.222258
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2540,7 +2540,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.4.2
+tesla-fleet-api==1.4.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
