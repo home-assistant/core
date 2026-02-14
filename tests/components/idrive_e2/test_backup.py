@@ -179,7 +179,6 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
-    mock_client.list_objects_v2.return_value = {"Contents": []}
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         {"Contents": []}
     ]
