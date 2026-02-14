@@ -12,11 +12,11 @@ from anthropic import (
 from httpx import URL, Request, Response
 import pytest
 
-from homeassistant.components.anthropic.const import DOMAIN
+from homeassistant.components.anthropic.const import DATA_REPAIR_DEFER_RELOAD, DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
@@ -68,6 +68,113 @@ async def test_init_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+async def test_deferred_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that update is deferred."""
+    for subentry in mock_config_entry.subentries.values():
+        if subentry.subentry_type == "conversation":
+            conversation_subentry = subentry
+        elif subentry.subentry_type == "ai_task_data":
+            ai_task_subentry = subentry
+
+    old_client = mock_config_entry.runtime_data
+
+    # Set deferred update
+    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
+        DATA_REPAIR_DEFER_RELOAD, set()
+    )
+    defer_reload_entries.add(mock_config_entry.entry_id)
+
+    # Update the conversation subentry
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        conversation_subentry,
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entry is not reloaded yet
+    assert mock_config_entry.runtime_data is old_client
+
+    # Clear deferred update
+    defer_reload_entries.discard(mock_config_entry.entry_id)
+
+    # Update the AI Task subentry
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_subentry,
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entry is reloaded
+    assert mock_config_entry.runtime_data is not old_client
+
+
+async def test_downgrade_from_v3_to_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that migration from future versions is skipped."""
+    # Create a v3 config entry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=3,
+        minor_version=0,
+        subentries_data=[
+            {
+                "data": {
+                    "recommended": True,
+                    "llm_hass_api": ["assist"],
+                    "prompt": "You are a helpful assistant",
+                    "chat_model": "claude-3-haiku-20240307",
+                },
+                "subentry_id": "mock_id",
+                "subentry_type": "conversation",
+                "title": "Claude haiku",
+                "unique_id": None,
+            },
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    conversation_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id="mock_id",
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Anthropic",
+        model="Claude",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        mock_config_entry.entry_id,
+        config_entry=mock_config_entry,
+        config_subentry_id="mock_id",
+        device_id=conversation_device.id,
+        suggested_object_id="claude",
+    )
+
+    # Run migration
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify migration was skipped and version was not updated
+    assert mock_config_entry.version == 3
+    assert mock_config_entry.minor_version == 0
 
 
 async def test_migration_from_v1_to_v2(
