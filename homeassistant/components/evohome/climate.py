@@ -172,7 +172,7 @@ class EvoClimateEntity(EvoEntity, ClimateEntity):
 
     async def async_set_system_mode(
         self,
-        mode: str,
+        mode: EvoSystemMode | str,
         period: timedelta | None = None,
         duration: timedelta | None = None,
     ) -> None:
@@ -408,7 +408,7 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_system_mode(
         self,
-        mode: str,
+        mode: EvoSystemMode | str,
         period: timedelta | None = None,
         duration: timedelta | None = None,
     ) -> None:
