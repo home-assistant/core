@@ -165,7 +165,7 @@ jobs:
             sed -i "s|home-assistant-intents==.*|home-assistant-intents==${BASH_REMATCH[1]}|" \
               homeassistant/package_constraints.txt
 
-            sed -i "s|home-assistant-intents==.*||" requirements_all.txt
+            sed -i "s|home-assistant-intents==.*||" requirements_all.txt requirements.txt
           fi
 
       - name: Download translations
