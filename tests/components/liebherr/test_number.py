@@ -1,5 +1,6 @@
 """Test the Liebherr number platform."""
 
+import copy
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -28,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -71,7 +72,7 @@ async def test_single_zone_number(
         device_name="K2601",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    single_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -86,6 +87,9 @@ async def test_single_zone_number(
                 unit=TemperatureUnit.CELSIUS,
             )
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        single_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -111,7 +115,7 @@ async def test_multi_zone_with_none_position(
         device_name="CBNes9999",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    multi_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -137,6 +141,9 @@ async def test_multi_zone_with_none_position(
                 unit=TemperatureUnit.CELSIUS,
             ),
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        multi_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -192,7 +199,10 @@ async def test_set_temperature_failure(
         "Connection failed"
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the device: Connection failed",
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -231,7 +241,9 @@ async def test_number_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = None
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        MOCK_DEVICE_STATE
+    )
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
@@ -261,7 +273,7 @@ async def test_number_when_control_missing(
     assert state.attributes["unit_of_measurement"] == "°C"
 
     # Device stops reporting controls
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
 
@@ -290,7 +302,7 @@ async def test_number_with_none_min_max(
         device_name="K2601",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    none_min_max_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -305,6 +317,9 @@ async def test_number_with_none_min_max(
                 unit=TemperatureUnit.CELSIUS,
             )
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        none_min_max_state
     )
 
     mock_config_entry.add_to_hass(hass)
