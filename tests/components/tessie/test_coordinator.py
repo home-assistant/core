@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from tesla_fleet_api.exceptions import Forbidden, InvalidToken
 
 from homeassistant.components.tessie import PLATFORMS
@@ -136,18 +137,17 @@ async def test_coordinator_info_error(
     )
 
 
-async def test_coordinator_live_reauth(hass: HomeAssistant, mock_live_status) -> None:
-    """Tests that the energy live coordinator handles auth errors."""
+@pytest.mark.parametrize(
+    "mock_fixture",
+    ["mock_live_status", "mock_site_info", "mock_energy_history"],
+)
+async def test_coordinator_reauth(
+    hass: HomeAssistant, mock_fixture: str, request: pytest.FixtureRequest
+) -> None:
+    """Tests that energy coordinators handle auth errors."""
 
-    mock_live_status.side_effect = InvalidToken
-    entry = await setup_platform(hass, [Platform.SENSOR])
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_coordinator_info_reauth(hass: HomeAssistant, mock_site_info) -> None:
-    """Tests that the energy info coordinator handles auth errors."""
-
-    mock_site_info.side_effect = InvalidToken
+    mock = request.getfixturevalue(mock_fixture)
+    mock.side_effect = InvalidToken
     entry = await setup_platform(hass, [Platform.SENSOR])
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -168,16 +168,6 @@ async def test_coordinator_energy_history_error(
     assert (
         hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNAVAILABLE
     )
-
-
-async def test_coordinator_energy_history_reauth(
-    hass: HomeAssistant, mock_energy_history
-) -> None:
-    """Tests that the energy history coordinator handles auth errors."""
-
-    mock_energy_history.side_effect = InvalidToken
-    entry = await setup_platform(hass, [Platform.SENSOR])
-    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_energy_history_invalid_data(

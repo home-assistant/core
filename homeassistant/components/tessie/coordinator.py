@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 if TYPE_CHECKING:
     from . import TessieConfigEntry
 
-from .const import ENERGY_HISTORY_FIELDS, TessieStatus
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, TessieStatus
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -204,23 +204,29 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed("Invalid energy history data")
+        if (
+            not data
+            or not isinstance(data.get("time_series"), list)
+            or not data["time_series"]
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_energy_history_data",
+            )
 
         # Add all time periods together
         time_series = data["time_series"]
-        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in time_series:
-            for key in ENERGY_HISTORY_FIELDS:
-                if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
+        output: dict[str, Any] = {}
+        for key in ENERGY_HISTORY_FIELDS:
+            values = [p[key] for p in time_series if key in p]
+            output[key] = sum(values) if values else None
 
         output["_period_start"] = dt_util.parse_datetime(time_series[0]["timestamp"])
 

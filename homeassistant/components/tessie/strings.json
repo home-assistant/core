@@ -329,16 +329,16 @@
     },
     "sensor": {
       "battery_energy_exported": {
-        "name": "Battery exported"
+        "name": "Battery discharged"
       },
       "battery_energy_imported_from_generator": {
-        "name": "Battery imported from generator"
+        "name": "Battery charged from generator"
       },
       "battery_energy_imported_from_grid": {
-        "name": "Battery imported from grid"
+        "name": "Battery charged from grid"
       },
       "battery_energy_imported_from_solar": {
-        "name": "Battery imported from solar"
+        "name": "Battery charged from solar"
       },
       "battery_power": {
         "name": "Battery power"
@@ -400,16 +400,16 @@
         "name": "Passenger temperature setting"
       },
       "consumer_energy_imported_from_battery": {
-        "name": "Consumer imported from battery"
+        "name": "Energy consumed from battery"
       },
       "consumer_energy_imported_from_generator": {
-        "name": "Consumer imported from generator"
+        "name": "Energy consumed from generator"
       },
       "consumer_energy_imported_from_grid": {
-        "name": "Consumer imported from grid"
+        "name": "Energy consumed from grid"
       },
       "consumer_energy_imported_from_solar": {
-        "name": "Consumer imported from solar"
+        "name": "Energy consumed from solar"
       },
       "drive_state_active_route_destination": {
         "name": "Destination"
@@ -487,22 +487,22 @@
         "name": "Solar power"
       },
       "total_battery_charge": {
-        "name": "Battery charged"
+        "name": "Total battery charged"
       },
       "total_battery_discharge": {
-        "name": "Battery discharged"
+        "name": "Total battery discharged"
       },
       "total_grid_energy_exported": {
-        "name": "Grid exported"
+        "name": "Total grid exported"
       },
       "total_home_usage": {
-        "name": "Home usage"
+        "name": "Total home usage"
       },
       "total_pack_energy": {
         "name": "Total pack energy"
       },
       "total_solar_generation": {
-        "name": "Solar generated"
+        "name": "Total solar generated"
       },
       "vehicle_state_odometer": {
         "name": "Odometer"
@@ -583,6 +583,9 @@
     "already_inactive": {
       "message": "{name} is already inactive."
     },
+    "auth_failed": {
+      "message": "Authentication failed."
+    },
     "cable_connected": {
       "message": "Charge cable is connected."
     },
@@ -594,6 +597,9 @@
     },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
+    },
+    "invalid_energy_history_data": {
+      "message": "Invalid energy history data."
     },
     "no_cable": {
       "message": "Insert cable to lock"

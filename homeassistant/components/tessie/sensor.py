@@ -384,6 +384,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
 ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
     SensorEntityDescription(
         key=key,
+        translation_key=key,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -552,5 +553,6 @@ class TessieEnergyHistorySensorEntity(TessieEnergyHistoryEntity, SensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
+        self._attr_available = self._value is not None
         self._attr_native_value = self._value
         self._attr_last_reset = self.coordinator.data.get("_period_start")
