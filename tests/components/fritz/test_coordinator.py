@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
         "mac",
     ],
 )
-async def test_fritxboxtools_class_no_setup(
+async def test_fritzboxtools_class_no_setup(
     hass: HomeAssistant,
     attr: str,
 ) -> None:
