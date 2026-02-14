@@ -34,6 +34,7 @@ from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVER
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -1842,6 +1843,11 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         (SensorDeviceClass.REACTIVE_POWER, UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
         (SensorDeviceClass.SOUND_PRESSURE, UnitOfSoundPressure.DECIBEL, 0),
         (SensorDeviceClass.SPEED, UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
+        (
+            SensorDeviceClass.NITROGEN_DIOXIDE,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0,
+        ),
         (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.KELVIN, 1),
         (SensorDeviceClass.TEMPERATURE_DELTA, UnitOfTemperature.KELVIN, 1),
         (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, 0),
