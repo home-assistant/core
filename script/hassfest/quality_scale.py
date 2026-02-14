@@ -892,7 +892,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "songpal",
     "sony_projector",
     "soundtouch",
-    "spaceapi",
     "spc",
     "speedtestdotnet",
     "spider",
