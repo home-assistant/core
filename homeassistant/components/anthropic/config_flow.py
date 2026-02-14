@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 import re
@@ -13,6 +14,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -164,6 +166,10 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title="Claude",
                     data=user_input,
@@ -191,6 +197,22 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
             },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        return await self.async_step_user(user_input)
 
     @classmethod
     @callback
