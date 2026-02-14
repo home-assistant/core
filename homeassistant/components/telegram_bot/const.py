@@ -24,6 +24,8 @@ BOT_NAME = "telegram_bot"
 ERROR_FIELD = "error_field"
 ERROR_MESSAGE = "error_message"
 
+
+DEFAULT_TIMEOUT_SECONDS = 1800  # 30 minutes
 DEFAULT_API_ENDPOINT = "https://api.telegram.org"
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
