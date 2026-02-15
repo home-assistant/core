@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -98,7 +97,6 @@ async def test_user(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
-    assert result["data"][CONF_PORT] == 80
     assert result["data"][CONF_VERIFY_SSL] is False
     assert not result["result"].unique_id
 
@@ -244,10 +242,9 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "https://new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
-    assert mock_config.data[CONF_PORT] == 8443
     assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
@@ -282,10 +279,9 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "https://new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
-    assert mock_config.data[CONF_PORT] == 8443
     assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
@@ -346,7 +342,6 @@ async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
-    assert result["data"][CONF_PORT] == 80
     assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 

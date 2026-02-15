@@ -5,7 +5,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -17,7 +16,6 @@ MOCK_CONFIG = {
                 CONF_HOST: "http://10.0.0.1",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 80,
                 CONF_VERIFY_SSL: False,
             }
         ]

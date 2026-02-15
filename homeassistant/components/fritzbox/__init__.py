@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 from yarl import URL
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     UnitOfTemperature,
@@ -98,18 +95,12 @@ async def async_migrate_entry(
                     scheme="http",
                     host=config_entry.data[CONF_HOST],
                 )
-                port = 80
             else:
                 host = config_entry.data[CONF_HOST]
-                url = URL(config_entry.data[CONF_HOST])
-                if TYPE_CHECKING:
-                    assert isinstance(url.port, int)
-                port = url.port
 
             new_data = {
                 **config_entry.data,
                 CONF_HOST: str(host),
-                CONF_PORT: port,
                 CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             }
 

@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
@@ -44,7 +43,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert entries[0].data[CONF_HOST] == "http://10.0.0.1"
     assert entries[0].data[CONF_PASSWORD] == "fake_pass"
     assert entries[0].data[CONF_USERNAME] == "fake_user"
-    assert entries[0].data[CONF_PORT] == 80
     assert entries[0].data[CONF_VERIFY_SSL] is False
     assert fritz.call_count == 1
     assert fritz.call_args_list == [
@@ -52,7 +50,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             host="http://10.0.0.1",
             password="fake_pass",
             user="fake_user",
-            port=80,
             ssl_verify=False,
         )
     ]
@@ -352,7 +349,6 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
                 CONF_HOST: "http://10.0.0.1",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 80,
                 CONF_VERIFY_SSL: True,
             },
         ),
@@ -366,7 +362,6 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
                 CONF_HOST: "https://10.0.0.1",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 443,
                 CONF_VERIFY_SSL: True,
             },
         ),
@@ -380,7 +375,6 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
                 CONF_HOST: "http://[1234::1]",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 80,
                 CONF_VERIFY_SSL: True,
             },
         ),
@@ -394,7 +388,6 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
                 CONF_HOST: "http://[1234::1]",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 80,
                 CONF_VERIFY_SSL: True,
             },
         ),
@@ -408,7 +401,6 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
                 CONF_HOST: "https://[1234::1]",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_PORT: 443,
                 CONF_VERIFY_SSL: True,
             },
         ),
