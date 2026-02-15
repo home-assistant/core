@@ -81,6 +81,7 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
+            self._entry.async_start_reauth(self._hass)
             raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
