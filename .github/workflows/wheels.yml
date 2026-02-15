@@ -53,7 +53,7 @@ jobs:
 
       - name: Create requirements_diff file
         run: |
-          if [[ ${{ github.event_name }} =~ (schedule|workflow_dispatch) ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" =~ (schedule|workflow_dispatch) ]]; then
             touch requirements_diff.txt
           else
             curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt

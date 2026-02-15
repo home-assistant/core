@@ -31,6 +31,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Upload Translations
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
         run: |
-          export LOKALISE_TOKEN="${{ secrets.LOKALISE_TOKEN }}"
           python3 -m script.translations upload
