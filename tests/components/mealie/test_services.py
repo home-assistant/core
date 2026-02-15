@@ -23,6 +23,7 @@ from homeassistant.components.mealie.const import (
     ATTR_RECIPE_ID,
     ATTR_RESULT_LIMIT,
     ATTR_SEARCH_TERMS,
+    ATTR_SHOPPING_LIST,
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
@@ -31,6 +32,7 @@ from homeassistant.components.mealie.services import (
     SERVICE_GET_MEALPLAN,
     SERVICE_GET_RECIPE,
     SERVICE_GET_RECIPES,
+    SERVICE_GET_SHOPPING_LIST_ITEMS,
     SERVICE_IMPORT_RECIPE,
     SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
@@ -395,6 +397,55 @@ async def test_service_set_mealplan_invalid_entry_type(
     mock_mealie_client.set_mealplan.assert_not_called()
 
 
+async def test_service_get_shopping_list_items(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get_shopping_list_items service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_SHOPPING_LIST: "Supermarket",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_service_get_shopping_list_items_not_found(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the get_shopping_list_items service with a shopping list that does not exist."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Reset mock to clear calls from setup
+    mock_mealie_client.get_shopping_items.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHOPPING_LIST_ITEMS,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_SHOPPING_LIST: "NOT_FOUND",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    mock_mealie_client.get_shopping_items.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
@@ -437,6 +488,14 @@ async def test_service_set_mealplan_invalid_entry_type(
             MealieNotFoundError,
             ServiceValidationError,
             "No recipes found matching your search",
+        ),
+        (
+            SERVICE_GET_SHOPPING_LIST_ITEMS,
+            {ATTR_SHOPPING_LIST: "Supermarket"},
+            "get_shopping_items",
+            MealieConnectionError,
+            HomeAssistantError,
+            "Error connecting to Mealie instance",
         ),
         (
             SERVICE_IMPORT_RECIPE,
@@ -513,6 +572,7 @@ async def test_services_connection_error(
             SERVICE_GET_RECIPES,
             {ATTR_SEARCH_TERMS: "pasta", ATTR_RESULT_LIMIT: 5},
         ),
+        (SERVICE_GET_SHOPPING_LIST_ITEMS, {ATTR_SHOPPING_LIST: "Supermarket"}),
         (SERVICE_IMPORT_RECIPE, {ATTR_URL: "http://example.com"}),
         (
             SERVICE_SET_RANDOM_MEALPLAN,

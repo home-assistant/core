@@ -32,6 +32,7 @@ from .const import (
     ATTR_RECIPE_ID,
     ATTR_RESULT_LIMIT,
     ATTR_SEARCH_TERMS,
+    ATTR_SHOPPING_LIST,
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
@@ -61,6 +62,14 @@ SERVICE_GET_RECIPES_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Optional(ATTR_SEARCH_TERMS): str,
         vol.Optional(ATTR_RESULT_LIMIT): int,
+    }
+)
+
+SERVICE_GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
+SERVICE_GET_SHOPPING_LIST_ITEMS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_SHOPPING_LIST): str,
     }
 )
 
@@ -198,6 +207,45 @@ async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     return {"recipes": asdict(recipes)}
 
 
+async def _async_get_shopping_list_items(call: ServiceCall) -> ServiceResponse:
+    """Get shopping list items."""
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    shopping_list_to_get = str(call.data[ATTR_SHOPPING_LIST])
+    client = entry.runtime_data.client
+    try:
+        shopping_lists = await client.get_shopping_lists()
+
+        shopping_list = (
+            next(
+                (
+                    x
+                    for x in shopping_lists.items
+                    if x.list_id == shopping_list_to_get
+                    or x.name.casefold() == shopping_list_to_get.casefold()
+                ),
+                None,
+            )
+            if shopping_lists
+            else None
+        )
+
+        if shopping_list is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="shopping_list_not_found",
+                translation_placeholders={"shopping_list": shopping_list_to_get},
+            )
+        shopping_items = await client.get_shopping_items(shopping_list.list_id)
+    except MealieConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from err
+    return {"shopping_list_items": asdict(shopping_items)}
+
+
 async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
     """Import a recipe."""
     entry: MealieConfigEntry = service.async_get_config_entry(
@@ -298,6 +346,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_RECIPES,
         _async_get_recipes,
         schema=SERVICE_GET_RECIPES_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "get_shopping_list_items",
+        _async_get_shopping_list_items,
+        schema=SERVICE_GET_SHOPPING_LIST_ITEMS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

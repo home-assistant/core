@@ -45,6 +45,18 @@ get_recipes:
           mode: box
           unit_of_measurement: recipes
 
+get_shopping_list_items:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    shopping_list:
+      required: true
+      selector:
+        text:
+
 import_recipe:
   fields:
     config_entry_id:
