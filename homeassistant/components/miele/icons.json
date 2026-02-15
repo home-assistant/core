@@ -36,7 +36,7 @@
         "default": "mdi:hydro-power"
       },
       "descaling_counter": {
-        "default": "mdi:chemical-weapon"
+        "default": "mdi:water-alert-outline"
       },
       "drying_step": {
         "default": "mdi:water-outline"
