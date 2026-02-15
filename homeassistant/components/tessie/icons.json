@@ -25,6 +25,12 @@
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },
+      "grid_status": {
+        "state": {
+          "off": "mdi:transmission-tower-off",
+          "on": "mdi:transmission-tower"
+        }
+      },
       "storm_mode_active": {
         "default": "mdi:weather-sunny",
         "state": {
