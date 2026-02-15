@@ -51,7 +51,7 @@ def _audio_output_value_fn(client: StreamMagicClient) -> str | None:
     )
 
 
-def _eq_gains_match(current_bands: list, preset_gains: list[float]) -> bool:
+def _eq_gains_match(current_bands: list[EQBand], preset_gains: list[float]) -> bool:
     """Check if current EQ band gains match preset gains."""
     if len(current_bands) != len(preset_gains):
         return False
@@ -66,8 +66,7 @@ def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
     if TYPE_CHECKING:
         assert client.audio.user_eq is not None
 
-    current_bands = client.audio.user_eq.bands
-    if not current_bands:
+    if not (current_bands := client.audio.user_eq.bands):
         return None
 
     # Check if current gain settings match any preset
@@ -88,8 +87,7 @@ async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None
     if value == EQ_PRESET_CUSTOM:
         return
 
-    preset_gains = EQ_PRESET_GAINS.get(value)
-    if preset_gains is None:
+    if (preset_gains := EQ_PRESET_GAINS.get(value)) is None:
         return
 
     # Build EQ bands using current device settings but with new gains
