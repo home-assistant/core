@@ -112,22 +112,24 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                     actions_json = {}
                 actions[device_id] = MieleAction(actions_json)
 
-                # failures are not fetched, but they trigger failure_coordinator to fetch details
-                has_failure = device.state_signal_failure
-                if has_failure and device_id not in self.failing_devices:
-                    self.failing_devices.add(device_id)
-                    self.hass.async_create_task(
-                        self.config_entry.runtime_data.failure_coordinator.async_fetch_failure(
-                            device_id
-                        )
-                    )
-                elif not has_failure and device_id in self.failing_devices:
-                    self.failing_devices.remove(device_id)
-                    self.config_entry.runtime_data.failure_coordinator.clear_failure(
-                        device_id
-                    )
+                # failures are fetched only if needed
+                self._handle_device_failure(device_id, device)
 
             return MieleCoordinatorData(devices=devices, actions=actions)
+
+    def _handle_device_failure(self, device_id: str, device: MieleDevice) -> None:
+        """Handle failures that are fetched from separate API only when needed."""
+        has_failure = device.state_signal_failure
+        if has_failure and device_id not in self.failing_devices:
+            self.failing_devices.add(device_id)
+            self.hass.async_create_task(
+                self.config_entry.runtime_data.failure_coordinator.async_fetch_failure(
+                    device_id
+                )
+            )
+        elif not has_failure and device_id in self.failing_devices:
+            self.failing_devices.remove(device_id)
+            self.config_entry.runtime_data.failure_coordinator.clear_failure(device_id)
 
     def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
         """Add devices."""
@@ -144,6 +146,9 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         self.async_set_updated_data(
             MieleCoordinatorData(devices=devices, actions=self.data.actions)
         )
+        for device_id, device in devices.items():
+            # failures are fetched only if needed
+            self._handle_device_failure(device_id, device)
 
     async def callback_update_actions(self, actions_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
