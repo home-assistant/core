@@ -644,8 +644,8 @@ async def test_storage_data_service_api_error(
     # Sensors should be unavailable when the API returns an error
     state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
 
     state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
