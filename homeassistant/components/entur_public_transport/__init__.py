@@ -60,9 +60,7 @@ type EnturConfigEntry = ConfigEntry[EnturRuntimeData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnturConfigEntry) -> bool:
     """Set up Entur public transport from a config entry."""
-    # Get configuration
-    config = {**entry.data, **entry.options}
-    stop_ids = config[CONF_STOP_IDS]
+    stop_ids = entry.data[CONF_STOP_IDS]
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
@@ -70,13 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnturConfigEntry) -> boo
         API_CLIENT_NAME.format(str(randint(100000, 999999))),
         stops=stops,
         quays=quays,
-        line_whitelist=config.get(CONF_WHITELIST_LINES) or [],
-        omit_non_boarding=config.get(CONF_OMIT_NON_BOARDING, True),
-        number_of_departures=config.get(CONF_NUMBER_OF_DEPARTURES, 2),
+        line_whitelist=entry.options.get(CONF_WHITELIST_LINES, []),
+        omit_non_boarding=entry.options.get(CONF_OMIT_NON_BOARDING, True),
+        number_of_departures=entry.options.get(CONF_NUMBER_OF_DEPARTURES, 2),
         web_session=async_get_clientsession(hass),
     )
 
-    if config.get(CONF_EXPAND_PLATFORMS, True):
+    if entry.options.get(CONF_EXPAND_PLATFORMS, True):
         await data.expand_all_quays()
     await data.update()
 
@@ -84,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnturConfigEntry) -> boo
     entry.runtime_data = EnturRuntimeData(
         data=data,
         proxy=proxy,
-        show_on_map=config.get(CONF_SHOW_ON_MAP, False),
+        show_on_map=entry.options.get(CONF_SHOW_ON_MAP, False),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

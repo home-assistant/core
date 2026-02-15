@@ -28,6 +28,8 @@ def mock_config_entry() -> MockConfigEntry:
         title="Entur NSR:StopPlace:548",
         data={
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
+        },
+        options={
             CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_WHITELIST_LINES: [],

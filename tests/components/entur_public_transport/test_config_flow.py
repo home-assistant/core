@@ -51,6 +51,8 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Entur NSR:StopPlace:548"
     assert result["data"] == {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
+    }
+    assert result["options"] == {
         CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
@@ -297,6 +299,8 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result["title"] == "My Bus Stop"
     assert result["data"] == {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
+    }
+    assert result["options"] == {
         CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],

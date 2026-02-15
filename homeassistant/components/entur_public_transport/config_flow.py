@@ -129,7 +129,25 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 title = f"Entur {stop_ids[0]}" if stop_ids else "Entur"
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(
+                    title=title,
+                    data={CONF_STOP_IDS: stop_ids},
+                    options={
+                        CONF_EXPAND_PLATFORMS: user_input.get(
+                            CONF_EXPAND_PLATFORMS, True
+                        ),
+                        CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
+                        CONF_WHITELIST_LINES: user_input.get(
+                            CONF_WHITELIST_LINES, []
+                        ),
+                        CONF_OMIT_NON_BOARDING: user_input.get(
+                            CONF_OMIT_NON_BOARDING, True
+                        ),
+                        CONF_NUMBER_OF_DEPARTURES: user_input.get(
+                            CONF_NUMBER_OF_DEPARTURES, 2
+                        ),
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -157,20 +175,23 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason=error)
 
-        entry_data = {
-            CONF_STOP_IDS: stop_ids,
-            CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
-            CONF_SHOW_ON_MAP: import_data.get(CONF_SHOW_ON_MAP, False),
-            CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
-            CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
-            CONF_NUMBER_OF_DEPARTURES: import_data.get(CONF_NUMBER_OF_DEPARTURES, 2),
-        }
-
         title = import_data.get(
             CONF_NAME, f"Entur {stop_ids[0]}" if stop_ids else "Entur"
         )
 
-        return self.async_create_entry(title=title, data=entry_data)
+        return self.async_create_entry(
+            title=title,
+            data={CONF_STOP_IDS: stop_ids},
+            options={
+                CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
+                CONF_SHOW_ON_MAP: import_data.get(CONF_SHOW_ON_MAP, False),
+                CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
+                CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
+                CONF_NUMBER_OF_DEPARTURES: import_data.get(
+                    CONF_NUMBER_OF_DEPARTURES, 2
+                ),
+            },
+        )
 
     @staticmethod
     @callback
@@ -186,8 +207,7 @@ class EnturOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        # Merge data and options for defaults
-        current = {**self.config_entry.data, **self.config_entry.options}
+        current = self.config_entry.options
 
         if user_input is not None:
             return self.async_create_entry(data=user_input)

@@ -133,7 +133,9 @@ async def test_setup_entry_no_expand_quays(
         title="Entur",
         data={
             "stop_ids": ["NSR:StopPlace:548"],
-            "expand_platforms": False,  # Disabled
+        },
+        options={
+            "expand_platforms": False,
             "show_on_map": False,
             "line_whitelist": [],
             "omit_non_boarding": True,
