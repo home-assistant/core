@@ -18,20 +18,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_full_flow(
-    hass: HomeAssistant,
-) -> None:
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Device (Test Model)"
@@ -59,82 +55,75 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_system_nexa_2_device_timeout")
-async def test_connection_timeout(hass: HomeAssistant) -> None:
+async def test_connection_timeout(
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+) -> None:
     """Test connection timeout handling."""
+    mock_system_nexa_2_device.return_value.get_info.side_effect = TimeoutError
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("mock_system_nexa_2_device_unknown_error")
-async def test_connection_unknown_error(hass: HomeAssistant) -> None:
+async def test_connection_unknown_error(
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+) -> None:
     """Test connection timeout handling."""
+    mock_system_nexa_2_device.return_value.get_info.side_effect = RuntimeError
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_empty_host(
-    hass: HomeAssistant,
-) -> None:
+async def test_empty_host(hass: HomeAssistant) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: ""},
+        result["flow_id"], {CONF_HOST: ""}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_invalid_hostname(
-    hass: HomeAssistant,
-) -> None:
+async def test_invalid_hostname(hass: HomeAssistant) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -146,8 +135,7 @@ async def test_invalid_hostname(
         side_effect=socket.gaierror(-2, "Name or service not known"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "invalid-hostname.local"},
+            result["flow_id"], {CONF_HOST: "invalid-hostname.local"}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
@@ -155,13 +143,10 @@ async def test_invalid_hostname(
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
 @pytest.mark.usefixtures("mock_patch_get_host")
-async def test_valid_hostname(
-    hass: HomeAssistant,
-) -> None:
+async def test_valid_hostname(hass: HomeAssistant) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -172,8 +157,7 @@ async def test_valid_hostname(
     #     "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
     # ):
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "valid-hostname.local"},
+        result["flow_id"], {CONF_HOST: "valid-hostname.local"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Device (Test Model)"
@@ -185,21 +169,20 @@ async def test_valid_hostname(
     }
 
 
-@pytest.mark.usefixtures("mock_system_nexa_2_device_unsupported")
 async def test_unsupported_device(
-    hass: HomeAssistant, mock_system_nexa_2_device_unsupported: MagicMock
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
 ) -> None:
     """Test unsupported device model handling."""
+    mock_system_nexa_2_device.is_device_supported.return_value = (False, "Err")
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
@@ -219,25 +202,18 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         name="systemnexa2_test._systemnexa2._tcp.local.",
         port=80,
         type="_systemnexa2._tcp.local.",
-        properties={
-            "id": "test_device_id",
-            "model": "Test Model",
-            "version": "1.0.0",
-        },
+        properties={"id": "test_device_id", "model": "Test Model", "version": "1.0.0"},
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
+        result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "systemnexa2_test (Test Model)"
@@ -250,8 +226,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
 
 
 async def test_device_with_none_values(
-    hass: HomeAssistant,
-    mock_system_nexa_2_device: MagicMock,
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
 ) -> None:
     """Test device with None values in info is rejected."""
 
@@ -270,20 +245,16 @@ async def test_device_with_none_values(
     device.get_info.return_value = InformationUpdate(information=device.info_data)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "10.0.0.131"},
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
 
 
-async def test_zeroconf_discovery_none_values(
-    hass: HomeAssistant,
-) -> None:
+async def test_zeroconf_discovery_none_values(hass: HomeAssistant) -> None:
     """Test zeroconf discovery with None property values is rejected."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("10.0.0.131"),
@@ -300,9 +271,7 @@ async def test_zeroconf_discovery_none_values(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
