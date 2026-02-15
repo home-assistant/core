@@ -266,6 +266,8 @@ async def test_update_entity_install_success(
     mock_api_client.disconnect = AsyncMock()
     mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
 
+    mock_zeroconf = MagicMock()
+
     with (
         patch(
             "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
@@ -279,6 +281,10 @@ async def test_update_entity_install_success(
             ESPHomeDashboardUpdateEntity,
             "_async_discover_device_port",
             mock_discover_port,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=mock_zeroconf,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -567,6 +573,10 @@ async def test_installed_version_fallback_to_dashboard(
             "_async_discover_device_port",
             mock_discover_port,
         ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=MagicMock(),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -644,6 +654,10 @@ async def test_installed_version_from_direct_api_query(
             ESPHomeDashboardUpdateEntity,
             "_async_discover_device_port",
             mock_discover_port,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=MagicMock(),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -732,6 +746,10 @@ async def test_post_ota_version_refresh(
             ESPHomeDashboardUpdateEntity,
             "_async_discover_device_port",
             mock_discover_port,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=MagicMock(),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -902,6 +920,7 @@ async def test_mdns_port_discovery_success(
     mock_service_info.async_request = AsyncMock(return_value=True)
 
     mock_aiozc = MagicMock()
+    mock_zeroconf = MagicMock()
 
     with (
         patch(
@@ -917,6 +936,10 @@ async def test_mdns_port_discovery_success(
             return_value=mock_aiozc,
         ),
         patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=mock_zeroconf,
+        ),
+        patch(
             "homeassistant.components.esphome_dashboard.update.AsyncServiceInfo",
             return_value=mock_service_info,
         ),
@@ -924,9 +947,12 @@ async def test_mdns_port_discovery_success(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # The API client should have been created with the discovered port
+    # The API client should have been created with the discovered port and shared zeroconf
     mock_api_client_class.assert_called_with(
-        "192.168.1.50", port=discovered_port, password=""
+        "192.168.1.50",
+        port=discovered_port,
+        password="",
+        zeroconf_instance=mock_zeroconf,
     )
 
     # Version should be from the direct query
@@ -982,6 +1008,8 @@ async def test_mdns_port_discovery_failure(
     mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
 
     # Mock mDNS discovery to raise TimeoutError
+    mock_zeroconf = MagicMock()
+
     with (
         patch(
             "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
@@ -995,12 +1023,18 @@ async def test_mdns_port_discovery_failure(
             "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_async_instance",
             side_effect=TimeoutError("mDNS timeout"),
         ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=mock_zeroconf,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # The API client should have been created with the default port (6053)
-    mock_api_client_class.assert_called_with("192.168.1.50", port=6053, password="")
+    # The API client should have been created with the default port and shared zeroconf
+    mock_api_client_class.assert_called_with(
+        "192.168.1.50", port=6053, password="", zeroconf_instance=mock_zeroconf
+    )
 
     # Version should still be from the direct query
     state = hass.states.get("update.test_device_firmware")
@@ -1255,6 +1289,10 @@ async def test_fetch_device_version_no_address(
             ESPHomeDashboardUpdateEntity,
             "_async_discover_device_port",
             mock_discover_port,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_instance",
+            return_value=MagicMock(),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

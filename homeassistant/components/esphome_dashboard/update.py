@@ -232,7 +232,10 @@ class ESPHomeDashboardUpdateEntity(
             "Querying %s directly for version via port %s", self._device_name, port
         )
 
-        client = APIClient(address, port=port, password="")
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        client = APIClient(
+            address, port=port, password="", zeroconf_instance=zeroconf_instance
+        )
         try:
             await client.connect(login=False)
             device_info = await client.device_info()
