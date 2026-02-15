@@ -7,7 +7,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["powerfox==2.0.0"],
+  "requirements": ["powerfox==2.1.0"],
   "zeroconf": [
     {
       "name": "powerfox*",
