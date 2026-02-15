@@ -27,10 +27,8 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -47,22 +45,11 @@ from .const import (
     DOMAIN,
     SERVICE_DISMISS,
 )
-from .issues import async_create_html5_issue
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
-
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional("gcm_sender_id"): cv.string,
-        vol.Optional("gcm_api_key"): cv.string,
-        vol.Required(ATTR_VAPID_PUB_KEY): cv.string,
-        vol.Required(ATTR_VAPID_PRV_KEY): cv.string,
-        vol.Required(ATTR_VAPID_EMAIL): cv.string,
-    }
-)
 
 ATTR_SUBSCRIPTION = "subscription"
 ATTR_BROWSER = "browser"
@@ -166,17 +153,7 @@ async def async_get_service(
 ) -> HTML5NotificationService | None:
     """Get the HTML5 push notification service."""
     if config:
-        existing_config_entry = hass.config_entries.async_entries(DOMAIN)
-        if existing_config_entry:
-            async_create_html5_issue(hass, True)
-            return None
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
         return None
-
     if discovery_info is None:
         return None
 

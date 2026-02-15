@@ -2,17 +2,18 @@
 
 from http import HTTPStatus
 import json
-from typing import Any
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp.hdrs import AUTHORIZATION
-from aiohttp.test_utils import TestClient
+import pytest
 
 from homeassistant.components.html5 import notify as html5
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
@@ -69,24 +70,6 @@ SUBSCRIPTION_5 = {
 
 REGISTER_URL = "/api/notify.html5"
 PUBLISH_URL = "/api/notify.html5/callback"
-
-
-async def mock_client(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    registrations: dict[str, Any] | None = None,
-) -> TestClient:
-    """Create a test client for HTML5 views."""
-    if registrations is None:
-        registrations = {}
-
-    with patch(
-        "homeassistant.components.html5.notify._load_config", return_value=registrations
-    ):
-        await async_setup_component(hass, "notify", {"notify": VAPID_CONF})
-        await hass.async_block_till_done()
-
-    return await hass_client()
 
 
 async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
@@ -259,11 +242,22 @@ async def test_fcm_additional_data(mock_wp, hass: HomeAssistant) -> None:
     assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_new_device_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that the HTML view works."""
-    client = await mock_client(hass, hass_client)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
@@ -273,11 +267,22 @@ async def test_registering_new_device_view(
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_1}
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_new_device_view_with_name(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that the HTML view works with name attribute."""
-    client = await mock_client(hass, hass_client)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME["name"] = "test device"
@@ -290,11 +295,22 @@ async def test_registering_new_device_view_with_name(
     assert mock_save.mock_calls[0][1][1] == {"test device": SUBSCRIPTION_1}
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_new_device_expiration_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that the HTML view works."""
-    client = await mock_client(hass, hass_client)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
@@ -303,13 +319,22 @@ async def test_registering_new_device_expiration_view(
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_new_device_fails_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test subs. are not altered when registering a new device fails."""
-    registrations = {}
-    client = await mock_client(hass, hass_client, registrations)
+    await async_setup_component(hass, "http", {})
 
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
     with patch(
         "homeassistant.components.html5.notify.save_json",
         side_effect=HomeAssistantError(),
@@ -317,31 +342,51 @@ async def test_registering_new_device_fails_view(
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert registrations == {}
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_existing_device_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test subscription is updated when registering existing device."""
-    registrations = {}
-    client = await mock_client(hass, hass_client, registrations)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.OK
-    assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
-    assert registrations == {"unnamed device": SUBSCRIPTION_4}
+    mock_save.assert_called_with(
+        hass.config.path(html5.REGISTRATIONS_FILE), {"unnamed device": SUBSCRIPTION_4}
+    )
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_existing_device_view_with_name(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test subscription is updated when reg'ing existing device with name."""
-    registrations = {}
-    client = await mock_client(hass, hass_client, registrations)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME["name"] = "test device"
@@ -351,16 +396,28 @@ async def test_registering_existing_device_view_with_name(
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.OK
-    assert mock_save.mock_calls[0][1][1] == {"test device": SUBSCRIPTION_4}
-    assert registrations == {"test device": SUBSCRIPTION_4}
+
+    mock_save.assert_called_with(
+        hass.config.path(html5.REGISTRATIONS_FILE), {"test device": SUBSCRIPTION_4}
+    )
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_existing_device_fails_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test sub. is not updated when registering existing device fails."""
-    registrations = {}
-    client = await mock_client(hass, hass_client, registrations)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
@@ -368,14 +425,24 @@ async def test_registering_existing_device_fails_view(
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert registrations == {"unnamed device": SUBSCRIPTION_1}
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_registering_new_device_validation(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test various errors when registering a new device."""
-    client = await mock_client(hass, hass_client)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     resp = await client.post(
         REGISTER_URL,
@@ -395,11 +462,25 @@ async def test_registering_new_device_validation(
 
 
 async def test_unregistering_device_view(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
 ) -> None:
     """Test that the HTML unregister view works."""
-    registrations = {"some device": SUBSCRIPTION_1, "other device": SUBSCRIPTION_2}
-    client = await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {
+        "some device": SUBSCRIPTION_1,
+        "other device": SUBSCRIPTION_2,
+    }
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.delete(
@@ -409,15 +490,27 @@ async def test_unregistering_device_view(
 
     assert resp.status == HTTPStatus.OK
     assert len(mock_save.mock_calls) == 1
-    assert registrations == {"other device": SUBSCRIPTION_2}
+    mock_save.assert_called_once_with(
+        hass.config.path(html5.REGISTRATIONS_FILE), {"other device": SUBSCRIPTION_2}
+    )
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_unregister_device_view_handle_unknown_subscription(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that the HTML unregister view handles unknown subscriptions."""
-    registrations = {}
-    client = await mock_client(hass, hass_client, registrations)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.save_json") as mock_save:
         resp = await client.delete(
@@ -426,16 +519,29 @@ async def test_unregister_device_view_handle_unknown_subscription(
         )
 
     assert resp.status == HTTPStatus.OK, resp.response
-    assert registrations == {}
     assert len(mock_save.mock_calls) == 0
 
 
 async def test_unregistering_device_view_handles_save_error(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
 ) -> None:
     """Test that the HTML unregister view handles save errors."""
-    registrations = {"some device": SUBSCRIPTION_1, "other device": SUBSCRIPTION_2}
-    client = await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {
+        "some device": SUBSCRIPTION_1,
+        "other device": SUBSCRIPTION_2,
+    }
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch(
         "homeassistant.components.html5.notify.save_json",
@@ -447,17 +553,24 @@ async def test_unregistering_device_view_handles_save_error(
         )
 
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR, resp.response
-    assert registrations == {
-        "some device": SUBSCRIPTION_1,
-        "other device": SUBSCRIPTION_2,
-    }
 
 
+@pytest.mark.usefixtures("load_config")
 async def test_callback_view_no_jwt(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test that the notification callback view works without JWT."""
-    client = await mock_client(hass, hass_client)
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
     resp = await client.post(
         PUBLISH_URL,
         data=json.dumps(
@@ -469,11 +582,22 @@ async def test_callback_view_no_jwt(
 
 
 async def test_callback_view_with_jwt(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
 ) -> None:
     """Test that the notification callback view works with JWT."""
-    registrations = {"device": SUBSCRIPTION_1}
-    client = await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {"device": SUBSCRIPTION_1}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
 
     with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
         mock_wp().send().status_code = 201
@@ -507,11 +631,20 @@ async def test_callback_view_with_jwt(
 
 
 async def test_send_fcm_without_targets(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
 ) -> None:
     """Test that the notification is send with FCM without targets."""
-    registrations = {"device": SUBSCRIPTION_5}
-    await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {"device": SUBSCRIPTION_5}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
     with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
         mock_wp().send().status_code = 201
         await hass.services.async_call(
@@ -528,15 +661,23 @@ async def test_send_fcm_without_targets(
 
 
 async def test_send_fcm_expired(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
 ) -> None:
     """Test that the FCM target is removed when expired."""
-    registrations = {"device": SUBSCRIPTION_5}
-    await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {"device": SUBSCRIPTION_5}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with (
         patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
-        patch("homeassistant.components.html5.notify.save_json"),
+        patch("homeassistant.components.html5.notify.save_json") as mock_save,
     ):
         mock_wp().send().status_code = 410
         await hass.services.async_call(
@@ -546,15 +687,24 @@ async def test_send_fcm_expired(
             blocking=True,
         )
     # "device" should be removed when expired.
-    assert "device" not in registrations
+    mock_save.assert_called_once_with(hass.config.path(html5.REGISTRATIONS_FILE), {})
 
 
 async def test_send_fcm_expired_save_fails(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the FCM target remains after expiry if save_json fails."""
-    registrations = {"device": SUBSCRIPTION_5}
-    await mock_client(hass, hass_client, registrations)
+    load_config.return_value = {"device": SUBSCRIPTION_5}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with (
         patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
@@ -564,6 +714,7 @@ async def test_send_fcm_expired_save_fails(
         ),
     ):
         mock_wp().send().status_code = 410
+
         await hass.services.async_call(
             "notify",
             "html5",
@@ -571,4 +722,4 @@ async def test_send_fcm_expired_save_fails(
             blocking=True,
         )
     # "device" should still exist if save fails.
-    assert "device" in registrations
+    assert "Error saving registration" in caplog.text
