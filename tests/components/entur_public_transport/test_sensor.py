@@ -1,7 +1,7 @@
 """Tests for the Entur public transport sensor platform."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -231,12 +231,8 @@ async def test_yaml_import_success_creates_deprecation_issue(
     mock_entur_client: MagicMock,
 ) -> None:
     """Test successful YAML import creates a deprecation issue."""
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData",
-        return_value=mock_entur_client,
-    ):
-        assert await async_setup_component(hass, "sensor", YAML_CONFIG)
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
@@ -265,14 +261,12 @@ async def test_yaml_import_invalid_stop_id_creates_issue(
 async def test_yaml_import_cannot_connect_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    mock_entur_client: MagicMock,
 ) -> None:
     """Test YAML import with connection failure creates specific issue."""
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData",
-    ) as mock_client_class:
-        mock_client_class.return_value.update = AsyncMock(side_effect=TimeoutError)
-        assert await async_setup_component(hass, "sensor", YAML_CONFIG)
-        await hass.async_block_till_done()
+    mock_entur_client.update = AsyncMock(side_effect=TimeoutError)
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
@@ -282,16 +276,14 @@ async def test_yaml_import_cannot_connect_creates_issue(
 async def test_yaml_import_unknown_error_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    mock_entur_client: MagicMock,
 ) -> None:
     """Test YAML import with unknown error creates specific issue."""
-    with patch(
-        "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData",
-    ) as mock_client_class:
-        mock_client_class.return_value.update = AsyncMock(
-            side_effect=RuntimeError("unexpected")
-        )
-        assert await async_setup_component(hass, "sensor", YAML_CONFIG)
-        await hass.async_block_till_done()
+    mock_entur_client.update = AsyncMock(
+        side_effect=RuntimeError("unexpected")
+    )
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_unknown"

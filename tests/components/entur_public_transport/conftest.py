@@ -64,11 +64,28 @@ def mock_place(mock_estimated_call: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.entur_public_transport.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_entur_client(mock_place: MagicMock) -> Generator[MagicMock]:
     """Return a mock Entur client."""
-    with patch(
-        "homeassistant.components.entur_public_transport.EnturPublicTransportData", autospec=True
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.entur_public_transport.EnturPublicTransportData",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.entur_public_transport.config_flow.EnturPublicTransportData",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
         client.update = AsyncMock()
         client.expand_all_quays = AsyncMock()
