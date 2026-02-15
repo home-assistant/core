@@ -47,6 +47,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "actuator": {
+        "name": "Actuator"
+      },
       "alarm_door": {
         "name": "Door alarm"
       },
@@ -560,6 +563,15 @@
       },
       "tank_volume": {
         "name": "Tank volume"
+      },
+      "tvoc_level": {
+        "name": "TVOC level",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       },
       "valve_position": {
         "name": "Valve position"

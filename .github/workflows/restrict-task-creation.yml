@@ -5,9 +5,14 @@ on:
   issues:
     types: [opened]
 
+permissions: {}
+
 jobs:
   check-authorization:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     # Only run if this is a Task issue type (from the issue form)
     if: github.event.issue.type.name == 'Task'
     steps:

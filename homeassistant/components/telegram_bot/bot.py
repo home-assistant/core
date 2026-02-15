@@ -97,6 +97,7 @@ from .const import (
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -288,7 +289,7 @@ class TelegramNotificationService:
     def __init__(
         self,
         hass: HomeAssistant,
-        app: BaseTelegramBot,
+        app: BaseTelegramBot | None,
         bot: Bot,
         config: TelegramBotConfigEntry,
         parser: str,
@@ -643,23 +644,41 @@ class TelegramNotificationService:
 
         media: InputMedia
         if media_type == InputMediaType.ANIMATION:
-            media = InputMediaAnimation(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAnimation(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.AUDIO:
-            media = InputMediaAudio(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAudio(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.DOCUMENT:
-            media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaDocument(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.PHOTO:
-            media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaPhoto(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         else:
-            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaVideo(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
 
         return await self._send_msg(
             self.bot.edit_message_media,
             "Error editing message media",
             params[ATTR_MESSAGE_TAG],
             media=media,
-            caption=kwargs.get(ATTR_CAPTION),
-            parse_mode=params[ATTR_PARSER],
             chat_id=chat_id,
             message_id=message_id,
             inline_message_id=inline_message_id,
@@ -1089,12 +1108,26 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     api_key: str = p_config[CONF_API_KEY]
 
+    # set up timeouts to handle large file downloads and uploads
+    # server-side file size limit is 2GB
+    read_timeout = DEFAULT_TIMEOUT_SECONDS
+    media_write_timeout = DEFAULT_TIMEOUT_SECONDS
+
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
-        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            proxy=proxy,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
     else:
-        request = HTTPXRequest(connection_pool_size=8)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1133,7 +1166,9 @@ async def load_data(
             params["verify"] = verify_ssl
 
         retry_num = 0
-        async with httpx.AsyncClient(timeout=15, headers=headers, **params) as client:
+        async with httpx.AsyncClient(
+            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
+        ) as client:
             while retry_num < num_retries:
                 try:
                     req = await client.get(url)
@@ -1157,6 +1192,7 @@ async def load_data(
                     if data.read():
                         data.seek(0)
                         data.name = url
+                        _LOGGER.debug("file downloaded: %s", url)
                         return data
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1

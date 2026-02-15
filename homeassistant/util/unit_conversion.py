@@ -160,10 +160,8 @@ class BaseUnitConverter:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         if cls._are_unit_inverses(from_unit, to_unit):
-            return (
-                lambda val: None
-                if val is None or val == 0
-                else to_ratio / (val / from_ratio)
+            return lambda val: (
+                None if val is None or val == 0 else to_ratio / (val / from_ratio)
             )
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
@@ -528,12 +526,14 @@ class OzoneConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "ozone"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_PARTS_PER_MILLION: 1e6,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
