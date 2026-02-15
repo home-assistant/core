@@ -143,14 +143,14 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         self._url = discovery_info.upnp[ATTR_UPNP_PRESENTATION_URL]
-        represenation_url = URL(self._url)
+        representation_url = URL(self._url)
 
         if TYPE_CHECKING:
-            assert isinstance(represenation_url.host, str)
+            assert isinstance(representation_url.host, str)
 
         if (
-            ipaddress.ip_address(represenation_url.host).version == 6
-            and ipaddress.ip_address(represenation_url.host).is_link_local
+            ipaddress.ip_address(representation_url.host).version == 6
+            and ipaddress.ip_address(representation_url.host).is_link_local
         ):
             return self.async_abort(reason="ignore_ip6_link_local")
 
