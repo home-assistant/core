@@ -595,12 +595,22 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         super().__init__(hass, config_entry, device)
         self.api = api
         self._started = False
+        self._last_mqtt_data: dict[B01_Q10_DP, Any] = {}
 
     async def _async_update_data(
         self,
     ) -> B01Props | dict[B01_Q10_DP, Any]:
         # Start the subscribe loop on first update
         if not self._started:
+            # Wrap status.update_from_dps to capture raw MQTT data
+            original_update = self.api.status.update_from_dps
+            
+            def update_wrapper(decoded_dps: dict) -> None:
+                """Capture MQTT data and call original."""
+                self._last_mqtt_data.update(decoded_dps)
+                original_update(decoded_dps)
+            
+            self.api.status.update_from_dps = update_wrapper
             await self.api.start()
             self._started = True
             
@@ -610,26 +620,11 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             # Give the device time to respond via MQTT
             await asyncio.sleep(1)
             
-            # Build dict with B01_Q10_DP enum keys from StatusTrait properties
-            # StatusTrait properties use camelCase names, but code expects enum keys
-            status = self.api.status
-            _LOGGER.debug(
-                "Q10 status properties: battery=%s, status=%s, fan_level=%s, water_level=%s, clean_mode=%s",
-                status.battery, status.status, status.fan_level, status.water_level, status.clean_mode
-            )
-            data = {
-                B01_Q10_DP.BATTERY: status.battery,
-                B01_Q10_DP.STATUS: status.status,
-                B01_Q10_DP.FAN_LEVEL: status.fan_level,
-                B01_Q10_DP.WATER_LEVEL: status.water_level,
-                B01_Q10_DP.CLEAN_MODE: status.clean_mode,
-                B01_Q10_DP.CLEAN_TIME: status.clean_time,
-                B01_Q10_DP.CLEAN_AREA: status.clean_area,
-                B01_Q10_DP.CLEAN_COUNT: status.clean_count,
-                B01_Q10_DP.CLEAN_TASK_TYPE: status.clean_task_type,
-                B01_Q10_DP.BACK_TYPE: status.back_type,
-                B01_Q10_DP.CLEAN_PROGRESS: status.cleaning_progress,
-            }
+            # Return the last MQTT data received (stored by the subscribe loop)
+            data = self._last_mqtt_data.copy() if self._last_mqtt_data else {}
+            
+            if not data:
+                _LOGGER.warning("No Q10 MQTT data received yet")
         except RoborockException as ex:
             _LOGGER.debug("Failed to update Q10 data: %s", ex)
             raise UpdateFailed(
