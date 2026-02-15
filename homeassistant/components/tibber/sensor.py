@@ -36,8 +36,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TibberConfigEntry
 from .coordinator import (
-    TibberCoordinator,
     TibberDataAPICoordinator,
+    TibberDataCoordinator,
     TibberRtDataCoordinator,
 )
 from .entity import TibberCoordinatorEntity, TibberRTCoordinatorEntity
@@ -745,7 +745,7 @@ class TibberSensor(TibberCoordinatorEntity, SensorEntity):
     def __init__(
         self,
         tibber_home: TibberHome,
-        coordinator: TibberCoordinator,
+        coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
         *,
         model: str | None = None,

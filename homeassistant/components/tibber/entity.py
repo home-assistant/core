@@ -12,20 +12,20 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import TibberCoordinator, TibberHomeData, TibberRtDataCoordinator
+from .coordinator import TibberDataCoordinator, TibberHomeData, TibberRtDataCoordinator
 
 if TYPE_CHECKING:
     from tibber import TibberHome
 
 
-class TibberCoordinatorEntity(CoordinatorEntity[TibberCoordinator]):
-    """Base entity for Tibber sensors using TibberCoordinator."""
+class TibberCoordinatorEntity(CoordinatorEntity[TibberDataCoordinator]):
+    """Base entity for Tibber sensors using TibberDataCoordinator."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TibberCoordinator,
+        coordinator: TibberDataCoordinator,
         tibber_home: TibberHome,
     ) -> None:
         """Initialize the entity."""
