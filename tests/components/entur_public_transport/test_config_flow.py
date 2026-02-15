@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
+import pytest
 
 from homeassistant.components.entur_public_transport.const import (
     CONF_NUMBER_OF_DEPARTURES,
@@ -121,13 +122,18 @@ async def test_user_flow_invalid_stop_id(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [ClientError("Connection error"), TimeoutError("Timeout")],
+)
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_entur_client: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test user flow when API connection fails and recovery."""
-    mock_entur_client.update = AsyncMock(side_effect=ClientError("Connection error"))
+    mock_entur_client.update = AsyncMock(side_effect=side_effect)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -147,47 +153,6 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Recover after connection is restored
-    mock_entur_client.update = AsyncMock()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_SHOW_ON_MAP: False,
-            CONF_OMIT_NON_BOARDING: True,
-            CONF_NUMBER_OF_DEPARTURES: 2,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_timeout(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_entur_client: MagicMock,
-) -> None:
-    """Test user flow when API times out and recovery."""
-    mock_entur_client.update = AsyncMock(side_effect=TimeoutError("Timeout"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_SHOW_ON_MAP: False,
-            CONF_OMIT_NON_BOARDING: True,
-            CONF_NUMBER_OF_DEPARTURES: 2,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Recover after timeout resolves
     mock_entur_client.update = AsyncMock()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
