@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
+from teltasync import Teltasync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,11 +16,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
 from .coordinator import TeltonikaDataUpdateCoordinator
 from .util import normalize_url
 
@@ -57,35 +55,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
         verify_ssl=validate_ssl,
     )
 
-    try:
-        await client.get_device_info()
-        system_info_response = await client.get_system_info()
-    except TeltonikaAuthenticationError as err:
-        await client.close()
-        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-    except TeltonikaConnectionError as err:
-        await client.close()
-        raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
-
-    # Create device info for device registry
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, system_info_response.mnf_info.serial)},
-        name=system_info_response.static.device_name,
-        manufacturer="Teltonika",
-        model=system_info_response.static.model,
-        sw_version=system_info_response.static.fw_version,
-        serial_number=system_info_response.mnf_info.serial,
-        configuration_url=base_url,
-    )
-
     # Create coordinator
-    coordinator = TeltonikaDataUpdateCoordinator(hass, client, entry)
+    coordinator = TeltonikaDataUpdateCoordinator(hass, client, entry, base_url)
 
-    # Fetch initial data to ensure device is reachable
+    # Fetch initial data and set up device info
     await coordinator.async_config_entry_first_refresh()
 
+    assert coordinator.device_info is not None
+
     # Store runtime data
-    entry.runtime_data = TeltonikaData(coordinator, device_info)
+    entry.runtime_data = TeltonikaData(coordinator, coordinator.device_info)
 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
