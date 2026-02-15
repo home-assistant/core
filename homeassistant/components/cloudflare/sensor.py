@@ -72,6 +72,7 @@ class CloudflareLastUpdateSensor(CloudflareBaseSensor):
 
     @property
     def native_value(self) -> datetime | None:
+        """Return the last update time."""
         data: dict[str, Any] | None = self.coordinator.data
         if not data:
             return None
@@ -93,6 +94,7 @@ class CloudflareExternalIpSensor(CloudflareBaseSensor):
 
     @property
     def native_value(self) -> str | None:
+        """Return the external IP."""
         data: dict[str, Any] | None = self.coordinator.data
         if not data:
             return None

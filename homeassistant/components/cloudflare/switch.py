@@ -89,6 +89,7 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
         await self._async_set_proxied(True)
 
     async def async_turn_off(self) -> None:
+        """Turn the proxy off."""
         await self._async_set_proxied(False)
 
     async def _async_set_proxied(self, desired: bool) -> None:
