@@ -96,13 +96,11 @@ async def async_migrate_entry(
                 host = f"http://{config_entry.data[CONF_HOST]}"
             else:
                 host = f"{url.scheme}://{url.host}"
-            port = url.port or 80
-            verify_ssl = DEFAULT_VERIFY_SSL
             new_data = {
                 **config_entry.data,
                 CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_VERIFY_SSL: verify_ssl,
+                CONF_PORT: url.port or 80,
+                CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             }
 
         hass.config_entries.async_update_entry(
