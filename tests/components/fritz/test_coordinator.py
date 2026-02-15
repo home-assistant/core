@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from copy import deepcopy
+from unittest.mock import MagicMock, patch
 
+from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
 from homeassistant.components.fritz.const import (
@@ -22,8 +24,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_MESH_MASTER_MAC, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -79,7 +82,8 @@ async def test_clear_connection_cache(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 
-    fc_class_mock.clear_cache()
+    caplog.clear()
+    fc_class_mock.return_value.clear_cache()
 
     assert "Cleared FritzConnection call action cache" in caplog.text
 
@@ -107,3 +111,33 @@ async def test_no_connection(
             f"Unable to establish a connection with {MOCK_USER_DATA[CONF_HOST]}"
             in caplog.text
         )
+
+
+async def test_no_software_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test software version non normalized."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    device_info = deepcopy(MOCK_STATUS_DEVICE_INFO_DATA)
+    device_info["NewSoftwareVersion"] = "string_version_not_number"
+    fs_class_mock.get_device_info = MagicMock(
+        return_value=ArgumentNamespace(device_info)
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_MESH_MASTER_MAC)}
+    )
+    assert device
+    assert device.sw_version == "string_version_not_number"
