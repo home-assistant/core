@@ -100,6 +100,7 @@ async def async_setup_entry(
             coordinator,
             B01_Q10_DP.CHILD_LOCK,
             "child_lock",
+            "mdi:lock-outline",
         )
         for coordinator in coordinators.b01
         if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
@@ -110,6 +111,7 @@ async def async_setup_entry(
             coordinator,
             B01_Q10_DP.NOT_DISTURB,
             "not_disturb",
+            "mdi:bell-off",
         )
         for coordinator in coordinators.b01
         if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
@@ -181,11 +183,14 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01, SwitchEntity):
         coordinator: RoborockB01Q10UpdateCoordinator,
         dp_code: B01_Q10_DP,
         translation_key: str,
+        icon: str | None = None,
     ) -> None:
         """Initialize the Q10 switch."""
         super().__init__(unique_id, coordinator)
         self._dp_code = dp_code
         self._attr_translation_key = translation_key
+        if icon:
+            self._attr_icon = icon
 
     @property
     def is_on(self) -> bool | None:
