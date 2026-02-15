@@ -11,5 +11,6 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SWITCH,
 ]
 LOGGER = getLogger(__package__)

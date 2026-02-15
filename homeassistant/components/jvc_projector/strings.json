@@ -173,6 +173,14 @@
           "warming": "Warming"
         }
       }
+    },
+    "switch": {
+      "eshift": {
+        "name": "E-Shift"
+      },
+      "low_latency_mode": {
+        "name": "Low latency mode"
+      }
     }
   }
 }
