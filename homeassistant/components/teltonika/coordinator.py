@@ -49,10 +49,14 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error communicating with device: {err}") from err
 
         # Return only modems which are online
-        modem_data = {}
+        modem_data: dict[str, Any] = {}
         if modems_response.data:
-            for modem in modems_response.data:
-                if Modems.is_online(modem):
-                    modem_data[modem.id] = modem
+            modem_data.update(
+                {
+                    modem.id: modem
+                    for modem in modems_response.data
+                    if Modems.is_online(modem)
+                }
+            )
 
         return modem_data
