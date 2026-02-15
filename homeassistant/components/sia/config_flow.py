@@ -222,7 +222,7 @@ class SIAOptionsFlowHandler(OptionsFlow):
                         ): bool,
                         vol.Optional(
                             CONF_IGNORE_BR,
-                            default=self.options[CONF_ACCOUNTS][account].get(CONF_IGNORE_BR, False),
+                            default=self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR],
                         ): bool,
                     }
                 ),
