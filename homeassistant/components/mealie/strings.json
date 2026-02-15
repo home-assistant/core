@@ -148,7 +148,7 @@
       "message": "Could not connect to the Mealie instance."
     },
     "shopping_list_not_found": {
-      "message": "Shopping list with name or id `{shopping_list}` not found."
+      "message": "Shopping list with name or ID `{shopping_list}` not found."
     },
     "update_failed_mealplan": {
       "message": "Could not fetch mealplan data."
@@ -238,7 +238,7 @@
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
         },
         "shopping_list": {
-          "description": "The name or id of the shopping list to get items from.",
+          "description": "The name or ID of the shopping list to get items from.",
           "name": "Shopping list"
         }
       },
