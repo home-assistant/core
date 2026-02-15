@@ -33,7 +33,7 @@ from homeassistant.components.onedrive_for_business.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET, IDENTITY_SET
+from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET, IDENTITY_SET, TENANT_ID
 
 from tests.common import MockConfigEntry
 
@@ -77,7 +77,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             },
             CONF_FOLDER_PATH: "backups/home_assistant",
             CONF_FOLDER_ID: "my_folder_id",
-            CONF_TENANT_ID: "mock-tenant-id",
+            CONF_TENANT_ID: TENANT_ID,
         },
         unique_id="mock_drive_id",
     )

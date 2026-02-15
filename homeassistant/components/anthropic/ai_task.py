@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from json import JSONDecodeError
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -14,12 +14,15 @@ from homeassistant.util.json import json_loads
 
 from .entity import AnthropicBaseLLMEntity
 
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AnthropicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""

@@ -309,7 +309,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.0
+aiomealie==1.2.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1467,7 +1467,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==2.15.0
+openai==2.21.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1986,7 +1986,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.9.10
+pypck==0.9.11
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2095,7 +2095,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.13
+pysmlight==0.2.14
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2283,7 +2283,7 @@ pywaze==1.1.1
 pyweatherflowudp==1.5.0
 
 # homeassistant.components.html5
-pywebpush==1.14.1
+pywebpush==2.3.0
 
 # homeassistant.components.wemo
 pywemo==1.4.0
@@ -2554,7 +2554,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==1.1.2
+thermopro-ble==1.1.3
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.9
