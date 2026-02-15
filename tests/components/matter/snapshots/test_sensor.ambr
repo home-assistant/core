@@ -7901,6 +7901,69 @@
     'state': '20.0',
   })
 # ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TVOC level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'TVOC level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tvoc_level',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensorLevel-1070-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Air Purifier TVOC level',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

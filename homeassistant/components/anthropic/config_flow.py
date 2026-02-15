@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import logging
 import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import anthropic
 import voluptuous as vol
@@ -13,7 +14,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
-    ConfigEntry,
+    SOURCE_REAUTH,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -64,6 +65,9 @@ from .const import (
     NON_THINKING_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
+
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,6 +166,10 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title="Claude",
                     data=user_input,
@@ -182,13 +190,34 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors or None,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
+            },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        return await self.async_step_user(user_input)
 
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {

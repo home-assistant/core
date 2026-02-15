@@ -121,26 +121,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
-        try:
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
-            if self.has_triggers:
-                self.fritz.update_triggers(ignore_removed=False)
-
-        except RequestConnectionError as ex:
-            raise UpdateFailed from ex
-        except HTTPError:
-            # If the device rebooted, login again
-            try:
-                self.fritz.login()
-            except LoginError as ex:
-                raise ConfigEntryAuthFailed from ex
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
-            if self.has_triggers:
-                self.fritz.update_triggers(ignore_removed=False)
+        self.fritz.update_devices(ignore_removed=False)
+        if self.has_templates:
+            self.fritz.update_templates(ignore_removed=False)
+        if self.has_triggers:
+            self.fritz.update_triggers(ignore_removed=False)
 
         devices = self.fritz.get_devices()
         device_data = {}
@@ -193,7 +178,18 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
-        new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
+        try:
+            new_data = await self.hass.async_add_executor_job(
+                self._update_fritz_devices
+            )
+        except (RequestConnectionError, HTTPError) as ex:
+            LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed from ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices

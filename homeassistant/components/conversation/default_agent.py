@@ -598,7 +598,7 @@ class DefaultAgent(ConversationEntity):
             error_response_type, error_response_args = _get_match_error_response(
                 self.hass, match_error
             )
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_VALID_TARGETS,
                 self._get_error_text(
@@ -609,7 +609,7 @@ class DefaultAgent(ConversationEntity):
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
             _LOGGER.exception("Intent handling error")
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
                 self._get_error_text(
@@ -618,7 +618,7 @@ class DefaultAgent(ConversationEntity):
             )
         except intent.IntentUnexpectedError:
             _LOGGER.exception("Unexpected intent error")
-            return _make_error_result(
+            intent_response = _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.UNKNOWN,
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
