@@ -291,6 +291,11 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert mock_config_entry.data[CONF_FOLDER_PATH] == "backups/home_assistant"
+    assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
+    assert mock_config_entry.data[CONF_TENANT_ID] == "mock-tenant-id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -321,3 +326,8 @@ async def test_reauth_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert mock_config_entry.data[CONF_FOLDER_PATH] == "backups/home_assistant"
+    assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
+    assert mock_config_entry.data[CONF_TENANT_ID] == "mock-tenant-id"
