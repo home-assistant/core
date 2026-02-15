@@ -18,6 +18,9 @@
           "dim": "mdi:brightness-6",
           "off": "mdi:brightness-3"
         }
+      },
+      "equalizer_preset": {
+        "default": "mdi:tune-vertical"
       }
     },
     "switch": {
@@ -25,7 +28,10 @@
         "default": "mdi:update"
       },
       "equalizer": {
-        "default": "mdi:equalizer"
+        "default": "mdi:equalizer",
+        "state": {
+          "off": "mdi:equalizer-outline"
+        }
       },
       "pre_amp": {
         "default": "mdi:volume-high",
