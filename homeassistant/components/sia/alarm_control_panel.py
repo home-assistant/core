@@ -18,7 +18,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, CONF_IGNORE_BR, KEY_ALARM, PREVIOUS_STATE
 from .entity import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,10 +57,12 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "OQ": AlarmControlPanelState.DISARMED,
         "OR": AlarmControlPanelState.DISARMED,
         "OS": AlarmControlPanelState.DISARMED,
+        "PH": AlarmControlPanelState.DISARMED,
         "NC": AlarmControlPanelState.ARMED_NIGHT,
         "NL": AlarmControlPanelState.ARMED_NIGHT,
         "NE": AlarmControlPanelState.ARMED_NIGHT,
         "NF": AlarmControlPanelState.ARMED_NIGHT,
+        "BR": PREVIOUS_STATE,
     },
 )
 
@@ -102,7 +104,13 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             zone,
             entity_description,
         )
-
+        # Read option to ignore BR restore (e.g. for Ajax systems)
+        self._ignore_br = (
+            entry.options
+            .get(CONF_ACCOUNTS, {})
+            .get(account, {})
+            .get(CONF_IGNORE_BR, False)
+        )
         self._attr_alarm_state: AlarmControlPanelState | None = None
         self._old_state: AlarmControlPanelState | None = None
 
@@ -129,6 +137,9 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             return False
         _LOGGER.debug("New state will be %s", new_state)
         if new_state == PREVIOUS_STATE:
+            if self._ignore_br:
+                _LOGGER.debug("Ignoring BR restore event (Ajax mode enabled)")
+                return False
             new_state = self._old_state
         if TYPE_CHECKING:
             assert isinstance(new_state, AlarmControlPanelState)
