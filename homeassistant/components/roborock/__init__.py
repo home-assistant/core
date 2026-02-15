@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
-import logging
 from typing import Any
 
 from roborock import (
@@ -13,6 +12,7 @@ from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
+    RoborockRateLimit,
 )
 from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
@@ -39,6 +39,7 @@ from .const import (
 )
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
@@ -52,8 +53,6 @@ from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SCAN_INTERVAL = timedelta(seconds=30)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -88,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
-            prefer_cache=False,
+            prefer_cache=True,
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
@@ -111,10 +110,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="mqtt_unauthorized",
         ) from err
+    except RoborockRateLimit as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="api_rate_limit",
+        ) from err
     except RoborockException as err:
-        _LOGGER.debug("Failed to get Roborock home data: %s", err)
+        # Check if the error is due to rate limiting
+        error_msg = str(err)
+        if (
+            "Rate limit" in error_msg
+            or "Bucket for item=home_data" in error_msg
+            or "result is None" in error_msg
+            or "no data returned" in error_msg
+            or "API returned no data" in error_msg
+        ):
+            raise ConfigEntryNotReady(
+                "API rate limit exceeded or no data returned",
+                translation_domain=DOMAIN,
+                translation_key="api_rate_limit",
+            ) from err
+        # Check if the error is due to None response (often caused by rate limiting)
+        if (
+            "unexpected type: None" in error_msg
+            or "result was an unexpected type" in error_msg
+        ):
+            raise ConfigEntryNotReady(
+                "API rate limit exceeded or no data returned",
+                translation_domain=DOMAIN,
+                translation_key="api_rate_limit",
+            ) from err
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
+            translation_domain=DOMAIN,
+            translation_key="home_data_fail",
+        ) from err
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Unexpected error: {err}",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -127,8 +160,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     )
     entry.async_on_unload(shutdown_roborock)
 
-    devices = await device_manager.get_devices()
-    _LOGGER.debug("Device manager found %d devices", len(devices))
+    try:
+        devices = await device_manager.get_devices()
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Failed to get devices: {err}",
+            translation_domain=DOMAIN,
+            translation_key="no_coordinators",
+        ) from err
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, devices, user_data),
@@ -182,10 +221,6 @@ def _remove_stale_devices(
         }
         if any(device_duid in device_map for device_duid in device_duids):
             continue
-        _LOGGER.info(
-            "Removing device: %s because it is no longer exists in your account",
-            device.name,
-        )
         device_registry.async_update_device(
             device_id=device.id,
             remove_config_entry_id=entry.entry_id,
@@ -194,11 +229,6 @@ def _remove_stale_devices(
 
 async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Migrate old configuration entries to the new format."""
-    _LOGGER.debug(
-        "Migrating configuration from version %s.%s",
-        entry.version,
-        entry.minor_version,
-    )
     if entry.version > 1:
         # Downgrade from future version
         return False
@@ -206,7 +236,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
     # 1->2: Migrate from unique id as email address to unique id as rruid
     if entry.minor_version == 1:
         user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-        _LOGGER.debug("Updating unique id to %s", user_data.rruid)
         hass.config_entries.async_update_entry(
             entry,
             unique_id=user_data.rruid,
@@ -239,7 +268,6 @@ def build_setup_functions(
         | RoborockDataUpdateCoordinatorB01
     ] = []
     for device in devices:
-        _LOGGER.debug("Creating device %s: %s", device.name, device)
         if device.v1_properties is not None:
             coordinators.append(
                 RoborockDataUpdateCoordinator(hass, entry, device, device.v1_properties)
@@ -258,13 +286,14 @@ def build_setup_functions(
                     hass, entry, device, device.b01_q7_properties
                 )
             )
-        else:
-            _LOGGER.warning(
-                "Not adding device %s because its protocol version %s or category %s is not supported",
-                device.duid,
-                device.device_info.pv,
-                device.product.category.name,
+        elif device.b01_q10_properties is not None:
+            coordinators.append(
+                RoborockB01Q10UpdateCoordinator(
+                    hass, entry, device, device.b01_q10_properties
+                )
             )
+        else:
+            pass
 
     return [setup_coordinator(coordinator) for coordinator in coordinators]
 
