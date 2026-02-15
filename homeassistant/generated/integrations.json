@@ -2176,7 +2176,7 @@
     "free_mobile": {
       "name": "Free Mobile",
       "integration_type": "hub",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "freebox": {
