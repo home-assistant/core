@@ -5,13 +5,14 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  issues: write
-  models: read
+permissions: {}
 
 jobs:
   detect-language:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      models: read
 
     steps:
       - name: Check issue language

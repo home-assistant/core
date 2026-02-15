@@ -9,6 +9,7 @@ import pytest
 
 from .common import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     PRODUCTS,
     SCOPES,
@@ -99,3 +100,13 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Tesla Fleet API EnergySite energy_history method."""
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.energy_history",
+        side_effect=lambda *a, **kw: deepcopy(ENERGY_HISTORY),
+    ) as mock_energy_history:
+        yield mock_energy_history
