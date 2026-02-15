@@ -106,19 +106,20 @@ jobs:
           persist-credentials: false
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
+        env:
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}
+          HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
+          HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
+          HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
+          HASH_GEN_REQUIREMENTS: ${{ hashFiles('script/gen_requirements_all.py') }}
         run: |
           # Include HA_SHORT_VERSION to force the immediate creation
           # of a new uv cache entry after a version bump.
-          echo "key=venv-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-${{
-            hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}-${{
-            hashFiles('script/gen_requirements_all.py') }}" >> $GITHUB_OUTPUT
+          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
       - name: Generate partial apt restore key
         id: generate_apt_cache_key
         run: |
-          echo "key=$(lsb_release -rs)-apt-${{ env.CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}" >> $GITHUB_OUTPUT
+          echo "key=$(lsb_release -rs)-apt-${CACHE_VERSION}-${HA_SHORT_VERSION}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: core
@@ -141,6 +142,18 @@ jobs:
           filters: .integration_paths.yaml
       - name: Collect additional information
         id: info
+        env:
+          INTEGRATION_CHANGES: ${{ steps.integrations.outputs.changes }}
+          CORE_ANY: ${{ steps.core.outputs.any }}
+          INPUT_FULL: ${{ github.event.inputs.full }}
+          HAS_CI_FULL_RUN_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}
+          INPUT_LINT_ONLY: ${{ github.event.inputs.lint-only }}
+          INPUT_PYLINT_ONLY: ${{ github.event.inputs.pylint-only }}
+          INPUT_MYPY_ONLY: ${{ github.event.inputs.mypy-only }}
+          INPUT_AUDIT_LICENSES_ONLY: ${{ github.event.inputs.audit-licenses-only }}
+          REPO_FULL_NAME: ${{ github.event.repository.full_name }}
+          INPUT_SKIP_COVERAGE: ${{ github.event.inputs.skip-coverage }}
+          HAS_CI_SKIP_COVERAGE_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}
         run: |
           # Defaults
           integrations_glob=""
@@ -154,14 +167,14 @@ jobs:
           lint_only=""
           skip_coverage=""
 
-          if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
+          if [[ "${INTEGRATION_CHANGES}" != "[]" ]];
           then
             # Create a file glob for the integrations
-            integrations_glob=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(",")')
+            integrations_glob=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '. | join(",")')
             [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
 
             # Create list of testable integrations
-            possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '.[]')
+            possible_integrations=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '.[]')
             tests=$(
               for integration in ${possible_integrations};
               do
@@ -188,12 +201,12 @@ jobs:
 
           # We need to run the full suite on certain branches.
           # Or, in case core files are touched, for the full suite as well.
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
-            || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
-            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
+          if [[ "${GITHUB_REF}" == "refs/heads/dev" ]] \
+            || [[ "${GITHUB_REF}" == "refs/heads/master" ]] \
+            || [[ "${GITHUB_REF}" == "refs/heads/rc" ]] \
+            || [[ "${CORE_ANY}" == "true" ]] \
+            || [[ "${INPUT_FULL}" == "true" ]] \
+            || [[ "${HAS_CI_FULL_RUN_LABEL}" == "true" ]];
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}
@@ -202,19 +215,19 @@ jobs:
             test_full_suite="true"
           fi
 
-          if [[ "${{ github.event.inputs.lint-only }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.pylint-only }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.mypy-only }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.audit-licenses-only }}" == "true" ]] \
-            || [[ "${{ github.event_name }}" == "push" \
-              && "${{ github.event.repository.full_name }}" != "home-assistant/core" ]];
+          if [[ "${INPUT_LINT_ONLY}" == "true" ]] \
+            || [[ "${INPUT_PYLINT_ONLY}" == "true" ]] \
+            || [[ "${INPUT_MYPY_ONLY}" == "true" ]] \
+            || [[ "${INPUT_AUDIT_LICENSES_ONLY}" == "true" ]] \
+            || [[ "${GITHUB_EVENT_NAME}" == "push" \
+              && "${REPO_FULL_NAME}" != "home-assistant/core" ]];
           then
             lint_only="true"
             skip_coverage="true"
           fi
 
-          if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
-            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
+          if [[ "${INPUT_SKIP_COVERAGE}" == "true" ]] \
+            || [[ "${HAS_CI_SKIP_COVERAGE_LABEL}" == "true" ]];
           then
             skip_coverage="true"
           fi
@@ -326,8 +339,7 @@ jobs:
         run: |
           uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
           echo "version=${uv_version}" >> $GITHUB_OUTPUT
-          echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+          echo "key=uv-${UV_CACHE_VERSION}-${uv_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -363,19 +375,21 @@ jobs:
           steps.cache-venv.outputs.cache-hit != 'true'
           || steps.cache-apt-check.outputs.cache-hit != 'true'
         timeout-minutes: 10
+        env:
+          APT_CACHE_HIT: ${{ steps.cache-apt-check.outputs.cache-hit }}
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
-          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
-            mkdir -p ${{ env.APT_CACHE_DIR }}
-            mkdir -p ${{ env.APT_LIST_CACHE_DIR }}
+          if [[ "${APT_CACHE_HIT}" != 'true' ]]; then
+            mkdir -p ${APT_CACHE_DIR}
+            mkdir -p ${APT_LIST_CACHE_DIR}
           fi
 
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -389,8 +403,8 @@ jobs:
             libswscale-dev \
             libudev-dev
 
-          if [[ "${{ steps.cache-apt-check.outputs.cache-hit }}" != 'true' ]]; then
-            sudo chmod -R 755 ${{ env.APT_CACHE_BASE }}
+          if [[ "${APT_CACHE_HIT}" != 'true' ]]; then
+            sudo chmod -R 755 ${APT_CACHE_BASE}
           fi
       - name: Save apt cache
         if: steps.cache-apt-check.outputs.cache-hit != 'true'
@@ -461,11 +475,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             libturbojpeg
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -615,18 +629,22 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Extract license data
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
-          python -m script.licenses extract --output-file=licenses-${{ matrix.python-version }}.json
+          python -m script.licenses extract --output-file=licenses-${PYTHON_VERSION}.json
       - name: Upload licenses
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
           path: licenses-${{ matrix.python-version }}.json
       - name: Check licenses
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
-          python -m script.licenses check licenses-${{ matrix.python-version }}.json
+          python -m script.licenses check licenses-${PYTHON_VERSION}.json
 
   pylint:
     name: Check pylint
@@ -673,10 +691,12 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${INTEGRATIONS_GLOB}
 
   pylint-tests:
     name: Check pylint on tests
@@ -724,10 +744,12 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          TESTS_GLOB: ${{ needs.info.outputs.tests_glob }}
         run: |
           . venv/bin/activate
           python --version
-          pylint tests/components/${{ needs.info.outputs.tests_glob }}
+          pylint tests/components/${TESTS_GLOB}
 
   mypy:
     name: Check mypy
@@ -756,9 +778,8 @@ jobs:
         id: generate-mypy-key
         run: |
           mypy_version=$(cat requirements_test.txt | grep 'mypy.*=' | cut -d '=' -f 3)
-          echo "version=$mypy_version" >> $GITHUB_OUTPUT
-          echo "key=mypy-${{ env.MYPY_CACHE_VERSION }}-$mypy_version-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+          echo "version=${mypy_version}" >> $GITHUB_OUTPUT
+          echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -791,10 +812,12 @@ jobs:
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
+          mypy homeassistant/components/${INTEGRATIONS_GLOB}
 
   prepare-pytest-full:
     name: Split tests for full run
@@ -826,11 +849,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg
@@ -854,9 +877,11 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Run split_tests.py
+        env:
+          TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
         run: |
           . venv/bin/activate
-          python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
+          python -m script.split_tests ${TEST_GROUP_COUNT} tests
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -900,11 +925,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -947,18 +972,21 @@ jobs:
         id: pytest-full
         env:
           PYTHONDONTWRITEBYTECODE: 1
+          SKIP_COVERAGE: ${{ needs.info.outputs.skip_coverage }}
+          TEST_GROUP: ${{ matrix.group }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
           cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+          if [[ "${SKIP_COVERAGE}" != "true" ]]; then
             cov_params+=(--cov="homeassistant")
             cov_params+=(--cov-report=xml)
             cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
-          echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
+          echo "Test group ${TEST_GROUP}: $(sed -n "${TEST_GROUP},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -970,8 +998,8 @@ jobs:
             -o console_output_style=count \
             -p no:sugar \
             --exclude-warning-annotations \
-            $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+            $(sed -n "${TEST_GROUP},1p" pytest_buckets.txt) \
+              2>&1 | tee pytest-${PYTHON_VERSION}-${TEST_GROUP}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -1047,11 +1075,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1096,14 +1124,17 @@ jobs:
         shell: bash
         env:
           PYTHONDONTWRITEBYTECODE: 1
+          MARIADB_GROUP: ${{ matrix.mariadb-group }}
+          SKIP_COVERAGE: ${{ needs.info.outputs.skip_coverage }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
-          mariadb=$(echo "${{ matrix.mariadb-group }}" | sed "s/:/-/g")
+          mariadb=$(echo "${MARIADB_GROUP}" | sed "s/:/-/g")
           echo "mariadb=${mariadb}" >> $GITHUB_OUTPUT
           cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+          if [[ "${SKIP_COVERAGE}" != "true" ]]; then
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
@@ -1125,7 +1156,7 @@ jobs:
             tests/components/logbook \
             tests/components/recorder \
             tests/components/sensor \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
+              2>&1 | tee pytest-${PYTHON_VERSION}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -1202,11 +1233,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1253,14 +1284,17 @@ jobs:
         shell: bash
         env:
           PYTHONDONTWRITEBYTECODE: 1
+          POSTGRESQL_GROUP: ${{ matrix.postgresql-group }}
+          SKIP_COVERAGE: ${{ needs.info.outputs.skip_coverage }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
-          postgresql=$(echo "${{ matrix.postgresql-group }}" | sed "s/:/-/g")
+          postgresql=$(echo "${POSTGRESQL_GROUP}" | sed "s/:/-/g")
           echo "postgresql=${postgresql}" >> $GITHUB_OUTPUT
           cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+          if [[ "${SKIP_COVERAGE}" != "true" ]]; then
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
@@ -1283,7 +1317,7 @@ jobs:
             tests/components/logbook \
             tests/components/recorder \
             tests/components/sensor \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
+              2>&1 | tee pytest-${PYTHON_VERSION}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -1382,11 +1416,11 @@ jobs:
         run: |
           sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt-get update \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }}
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR}
           sudo apt-get -y install \
-            -o Dir::Cache=${{ env.APT_CACHE_DIR }} \
-            -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
+            -o Dir::Cache=${APT_CACHE_DIR} \
+            -o Dir::State::Lists=${APT_LIST_CACHE_DIR} \
             bluez \
             ffmpeg \
             libturbojpeg \
@@ -1426,19 +1460,22 @@ jobs:
         shell: bash
         env:
           PYTHONDONTWRITEBYTECODE: 1
+          TEST_GROUP: ${{ matrix.group }}
+          SKIP_COVERAGE: ${{ needs.info.outputs.skip_coverage }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
 
-          if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
-            echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
+          if [[ ! -f "tests/components/${TEST_GROUP}/__init__.py" ]]; then
+            echo "::error:: missing file tests/components/${TEST_GROUP}/__init__.py"
             exit 1
           fi
 
           cov_params=()
-          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
+          if [[ "${SKIP_COVERAGE}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.${TEST_GROUP}")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
             cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
@@ -1455,8 +1492,8 @@ jobs:
             --durations-min=1 \
             -p no:sugar \
             --exclude-warning-annotations \
-            tests/components/${{ matrix.group }} \
-              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+            tests/components/${TEST_GROUP} \
+              2>&1 | tee pytest-${PYTHON_VERSION}-${TEST_GROUP}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
