@@ -596,6 +596,29 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
             translation_key="command_not_supported",
         )
 
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get vacuum current position (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def async_set_vacuum_goto_position(
+        self, x: int, y: int, **kwargs: Any
+    ) -> None:
+        """Set vacuum goto position (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
