@@ -2283,7 +2283,7 @@ pywaze==1.1.1
 pyweatherflowudp==1.5.0
 
 # homeassistant.components.html5
-pywebpush==1.14.1
+pywebpush==2.3.0
 
 # homeassistant.components.wemo
 pywemo==1.4.0
