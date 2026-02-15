@@ -536,9 +536,11 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         brightness = max(10, brightness)
         dim_level = round(brightness / 255.0, 2)
 
-        effect = self.effect or OpticalSignalBehaviour.ON
+        effect = self.effect
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
+        elif effect is None or effect == OpticalSignalBehaviour.OFF:
+            effect = OpticalSignalBehaviour.ON
 
         await self._device.set_optical_signal_async(
             channelIndex=self._channel,
