@@ -4,9 +4,8 @@
   "codeowners": ["@ludeeus", "@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
-  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["pycfdns"],
   "requirements": ["pycfdns==3.0.0"],
-  "single_config_entry": true
+  "version": "0.2.0"
 }

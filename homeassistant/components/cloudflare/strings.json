@@ -6,7 +6,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_domains": "You must select or enter at least one domain"
     },
     "flow_title": "{name}",
     "step": {
@@ -18,9 +19,10 @@
       },
       "records": {
         "data": {
-          "records": "Records"
+          "domains": "Select A records"
         },
-        "title": "Choose the records to update"
+        "title": "Select the A records to manage",
+        "description": "Tick the A records you want to update via DDNS."
       },
       "user": {
         "data": {

@@ -3,5 +3,17 @@
     "update_records": {
       "service": "mdi:dns"
     }
+  },
+  "entity": {
+    "switch": {
+      "cloudflare": {
+        "default": "mdi:cloud"
+      }
+    },
+    "sensor": {
+      "cloudflare": {
+        "default": "mdi:update"
+      }
+    }
   }
 }
