@@ -26,6 +26,8 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.b01_q10 import B01_Q10_DP
+from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.v1 import PropertiesApi
@@ -151,37 +153,15 @@ def create_b01_q10_trait() -> Mock:
     q10_trait = AsyncMock()
     q10_trait._props_data = deepcopy(Q10_B01_PROPS)
 
+    # Store current status that will be reflected in MQTT data
+    q10_trait._current_status = YXDeviceState.STANDBY_STATE.code
+
     async def query_values_side_effect(protocols):
         return q10_trait._props_data
 
     q10_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
 
-    # Add API methods for Q10
-    async def start_clean_side_effect():
-        q10_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
-
-    async def pause_clean_side_effect():
-        q10_trait._props_data.status = WorkStatusMapping.PAUSED
-
-    async def stop_clean_side_effect():
-        q10_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
-
-    async def return_to_dock_side_effect():
-        q10_trait._props_data.status = WorkStatusMapping.DOCKING
-
-    q10_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
-    q10_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
-    q10_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
-    q10_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
-    q10_trait.find_me = AsyncMock()
-    q10_trait.set_fan_speed = AsyncMock()
-    q10_trait.send = AsyncMock()
-
-    # Add command mock for Q10-specific commands (like fan speed)
-    q10_trait.command = AsyncMock()
-    q10_trait.command.send = AsyncMock()
-
-    # Add StatusTrait for sensor testing
+    # Add StatusTrait for sensor testing (moved before command definitions)
     status_trait = AsyncMock()
     status_trait.data = deepcopy(Q10_STATUS_DATA)
 
@@ -197,18 +177,67 @@ def create_b01_q10_trait() -> Mock:
     status_trait.update_from_dps = Mock(side_effect=update_from_dps_side_effect)
     q10_trait.status = status_trait
 
+    # Add API methods for Q10 that also trigger MQTT updates
+    async def start_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+        q10_trait._current_status = YXDeviceState.CLEANING_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def pause_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.PAUSED
+        q10_trait._current_status = YXDeviceState.PAUSE_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def stop_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+        q10_trait._current_status = YXDeviceState.STANDBY_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    async def return_to_dock_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.DOCKING
+        q10_trait._current_status = YXDeviceState.TO_CHARGE_STATE.code
+        # Simulate MQTT data update
+        status_trait.update_from_dps({B01_Q10_DP.STATUS: q10_trait._current_status})
+
+    q10_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    q10_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    q10_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    q10_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    q10_trait.find_me = AsyncMock()
+    q10_trait.set_fan_speed = AsyncMock()
+    q10_trait.send = AsyncMock()
+
+    # Add vacuum sub-object for Q10 vacuum operations
+    vacuum_api = AsyncMock()
+    vacuum_api.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    vacuum_api.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    vacuum_api.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    vacuum_api.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    q10_trait.vacuum = vacuum_api
+
+    # Add command mock for Q10-specific commands (like fan speed)
+    q10_trait.command = AsyncMock()
+    q10_trait.command.send = AsyncMock()
+
     # Mock start to simulate MQTT subscription initialization
     async def start_side_effect():
         """Simulate starting MQTT subscription by triggering update_from_dps."""
         # Simulate receiving initial MQTT data
-        status_trait.update_from_dps(deepcopy(Q10_STATUS_DATA))
+        initial_data = deepcopy(Q10_STATUS_DATA)
+        initial_data[B01_Q10_DP.STATUS] = q10_trait._current_status
+        status_trait.update_from_dps(initial_data)
 
     q10_trait.start = AsyncMock(side_effect=start_side_effect)
-    
-    # Mock refresh to also trigger data update
+
+    # Mock refresh to also trigger data update with current status
     async def refresh_side_effect():
-        """Simulate refreshing data via MQTT."""
-        status_trait.update_from_dps(deepcopy(Q10_STATUS_DATA))
+        """Simulate refreshing data via MQTT with current status."""
+        current_data = deepcopy(Q10_STATUS_DATA)
+        current_data[B01_Q10_DP.STATUS] = q10_trait._current_status
+        status_trait.update_from_dps(current_data)
 
     q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
 
