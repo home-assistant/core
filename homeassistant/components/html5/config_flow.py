@@ -56,7 +56,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         # we will always generate the corresponding public key
         try:
             data[ATTR_VAPID_PUB_KEY] = vapid_get_public_key(data[ATTR_VAPID_PRV_KEY])
-        except (ValueError, binascii.Error):
+        except ValueError, binascii.Error:
             errors[ATTR_VAPID_PRV_KEY] = "invalid_prv_key"
 
         if not errors:

@@ -121,6 +121,9 @@
       "autosw": {
         "name": "Auto switch inputs"
       },
+      "cec": {
+        "name": "CEC"
+      },
       "cec0en": {
         "name": "CEC RX0"
       },
@@ -159,6 +162,12 @@
       },
       "relay": {
         "name": "Relay"
+      },
+      "tx0plus5": {
+        "name": "TX0 force +5v"
+      },
+      "tx1plus5": {
+        "name": "TX1 force +5v"
       }
     }
   },
