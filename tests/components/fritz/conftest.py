@@ -9,6 +9,8 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
+from homeassistant.components.fritz.coordinator import FritzConnectionCached
+
 from .const import (
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
@@ -32,26 +34,6 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
-class FritzResponseMock:
-    """Response mocking."""
-
-    def json(self):
-        """Mock json method."""
-        return {"CPUTEMP": "69,68,67"}
-
-
-class FritzHttpMock:
-    """FritzHttp mocking."""
-
-    def __init__(self) -> None:
-        """Init Mocking class."""
-        self.router_url = "http://fritz.box"
-
-    def call_url(self, *args, **kwargs):
-        """Mock call_url method."""
-        return FritzResponseMock()
-
-
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
@@ -64,7 +46,6 @@ class FritzConnectionMock:
             srv: FritzServiceMock(serviceId=srv, actions=actions)
             for srv, actions in services.items()
         }
-        self.http_interface = FritzHttpMock()
         LOGGER.debug("-" * 80)
         LOGGER.debug("FritzConnectionMock - services: %s", self.services)
 
@@ -78,6 +59,10 @@ class FritzConnectionMock:
     def override_services(self, services) -> None:
         """Overrire services data."""
         self._services = services
+
+    def clear_cache(self) -> None:
+        """Mock clear_cache method."""
+        return FritzConnectionCached.clear_cache(self)
 
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
@@ -110,7 +95,8 @@ def fc_data_mock():
 def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzConnection", autospec=True
+        "homeassistant.components.fritz.coordinator.FritzConnectionCached",
+        autospec=True,
     ) as result:
         result.return_value = FritzConnectionMock(fc_data)
         yield result

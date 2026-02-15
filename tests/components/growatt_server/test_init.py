@@ -9,14 +9,24 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.growatt_server import async_migrate_entry
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
+    CACHED_API_KEY,
     CONF_AUTH_TYPE,
+    CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -126,64 +136,66 @@ async def test_classic_api_setup(
     assert device_entry == snapshot
 
 
-async def test_migrate_legacy_api_token_config(
+@pytest.mark.parametrize(
+    ("config_data", "expected_auth_type"),
+    [
+        (
+            {
+                CONF_TOKEN: "test_token_123",
+                CONF_URL: "https://openapi.growatt.com/",
+                "plant_id": "plant_123",
+            },
+            AUTH_API_TOKEN,
+        ),
+        (
+            {
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+                CONF_URL: "https://server.growatt.com/",
+                "plant_id": "plant_456",
+            },
+            AUTH_PASSWORD,
+        ),
+    ],
+)
+async def test_migrate_config_without_auth_type(
     hass: HomeAssistant,
-    mock_growatt_v1_api,
+    config_data: dict[str, str],
+    expected_auth_type: str,
 ) -> None:
-    """Test migration of legacy config entry with API token but no auth_type."""
-    # Create a legacy config entry without CONF_AUTH_TYPE
-    legacy_config = {
-        CONF_TOKEN: "test_token_123",
-        CONF_URL: "https://openapi.growatt.com/",
-        "plant_id": "plant_123",
-    }
+    """Test migration adds auth_type field to legacy configs and bumps version.
+
+    This test verifies that config entries created before auth_type was introduced
+    are properly migrated by:
+    - Adding CONF_AUTH_TYPE with the correct value (AUTH_API_TOKEN or AUTH_PASSWORD)
+    - Bumping version from 1.0 to 1.1
+    """
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=legacy_config,
-        unique_id="plant_123",
+        data=config_data,
+        unique_id=config_data["plant_id"],
+        version=1,
+        minor_version=0,
     )
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
 
-    # Verify migration occurred and auth_type was added
-    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_API_TOKEN
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Execute migration
+    migration_result = await async_migrate_entry(hass, mock_config_entry)
+    assert migration_result is True
 
+    # Verify version was updated to 1.1
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 1
 
-async def test_migrate_legacy_password_config(
-    hass: HomeAssistant,
-    mock_growatt_classic_api,
-) -> None:
-    """Test migration of legacy config entry with password auth but no auth_type."""
-    # Create a legacy config entry without CONF_AUTH_TYPE
-    legacy_config = {
-        CONF_USERNAME: "test_user",
-        CONF_PASSWORD: "test_password",
-        CONF_URL: "https://server.growatt.com/",
-        "plant_id": "plant_456",
-    }
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=legacy_config,
-        unique_id="plant_456",
-    )
-
-    # Classic API doesn't support MIN devices - use TLX device instead
-    mock_growatt_classic_api.device_list.return_value = [
-        {"deviceSn": "TLX123456", "deviceType": "tlx"}
-    ]
-
-    await setup_integration(hass, mock_config_entry)
-
-    # Verify migration occurred and auth_type was added
-    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_PASSWORD
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Verify auth_type field was added during migration
+    assert mock_config_entry.data[CONF_AUTH_TYPE] == expected_auth_type
 
 
 async def test_migrate_legacy_config_no_auth_fields(
     hass: HomeAssistant,
 ) -> None:
-    """Test that config entry with no recognizable auth fields raises error."""
+    """Test migration succeeds but setup fails for config without auth fields."""
     # Create a config entry without any auth fields
     invalid_config = {
         CONF_URL: "https://openapi.growatt.com/",
@@ -193,13 +205,21 @@ async def test_migrate_legacy_config_no_auth_fields(
         domain=DOMAIN,
         data=invalid_config,
         unique_id="plant_789",
+        version=1,
+        minor_version=0,
     )
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
 
-    # The ConfigEntryError is caught by the config entry system
-    # and the entry state is set to SETUP_ERROR
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Migration should succeed (only updates version)
+    migration_result = await async_migrate_entry(hass, mock_config_entry)
+    assert migration_result is True
+
+    # Verify version was updated
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 1
+
+    # Note: Setup will fail later due to missing auth fields in async_setup_entry
 
 
 @pytest.mark.parametrize(
@@ -254,45 +274,58 @@ async def test_classic_api_login_failures(
     ],
     ids=["network_error", "json_error"],
 )
-async def test_classic_api_plant_list_exceptions(
+async def test_classic_api_device_list_exceptions(
     hass: HomeAssistant,
     mock_growatt_classic_api,
-    mock_config_entry_classic_default_plant: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Test Classic API setup with plant list exceptions (default plant_id path)."""
-    # Login succeeds
-    mock_growatt_classic_api.login.return_value = {
-        "success": True,
-        "user": {"id": 123456},
-    }
+    """Test Classic API setup with device_list exceptions."""
+    # Create a config entry that won't trigger migration
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: "specific_plant_123",  # Specific ID to avoid migration
+        },
+        unique_id="plant_123",
+    )
 
-    # But plant_list raises exception
-    mock_growatt_classic_api.plant_list.side_effect = exception
+    # device_list raises exception during setup
+    mock_growatt_classic_api.device_list.side_effect = exception
 
-    await setup_integration(hass, mock_config_entry_classic_default_plant)
+    await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_classic_api_plant_list_no_plants(
+async def test_classic_api_device_list_no_devices(
     hass: HomeAssistant,
     mock_growatt_classic_api,
-    mock_config_entry_classic_default_plant: MockConfigEntry,
 ) -> None:
-    """Test Classic API setup when plant list returns no plants."""
-    # Login succeeds
-    mock_growatt_classic_api.login.return_value = {
-        "success": True,
-        "user": {"id": 123456},
-    }
+    """Test Classic API setup when device list returns no devices."""
+    # Create a config entry that won't trigger migration
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: "specific_plant_456",  # Specific ID to avoid migration
+        },
+        unique_id="plant_456",
+    )
 
-    # But plant_list returns empty list
-    mock_growatt_classic_api.plant_list.return_value = {"data": []}
+    # device_list returns empty list (no devices)
+    mock_growatt_classic_api.device_list.return_value = []
 
-    await setup_integration(hass, mock_config_entry_classic_default_plant)
+    await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.SETUP_ERROR
+    # Should still load successfully even with no devices
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -393,3 +426,232 @@ async def test_v1_api_unsupported_device_type(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Verify warning was logged for unsupported device
     assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text
+
+
+async def test_migrate_version_bump(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test migration from 1.0 to 1.1 resolves DEFAULT_PLANT_ID and bumps version.
+
+    This test verifies that:
+    - Migration successfully resolves DEFAULT_PLANT_ID ("0") to actual plant_id
+    - Config entry version is bumped from 1.0 to 1.1
+    - API instance is cached for setup to reuse (rate limit optimization)
+    """
+    # Create a version 1.0 config entry with DEFAULT_PLANT_ID
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+
+    # Mock successful API responses for migration
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
+    }
+
+    mock_config_entry.add_to_hass(hass)
+
+    # Execute migration
+    migration_result = await async_migrate_entry(hass, mock_config_entry)
+    assert migration_result is True
+
+    # Verify version was updated to 1.1
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 1
+
+    # Verify plant_id was resolved to actual plant_id (not DEFAULT_PLANT_ID)
+    assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
+
+    # Verify API instance was cached for setup to reuse
+    assert f"{CACHED_API_KEY}{mock_config_entry.entry_id}" in hass.data[DOMAIN]
+
+
+async def test_setup_reuses_cached_api_from_migration(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setup reuses cached API instance from migration.
+
+    This test verifies the rate limit optimization where:
+    1. Migration calls login() and caches the authenticated API instance
+    2. Setup retrieves and reuses the cached API (avoiding a second login())
+    3. The cached API is removed after use (one-time use pattern)
+
+    Without this caching, we would call login() twice within seconds:
+        Migration: login() → plant_list()
+        Setup:     login() → device_list()
+    This would trigger Growatt API rate limiting (5-minute window per endpoint).
+
+    With caching, we only call login() once:
+        Migration: login() → plant_list() → [cache API]
+        Setup:     [reuse API] → device_list()
+    """
+    # Create a version 1.0 config entry with DEFAULT_PLANT_ID
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+
+    # Mock successful API responses
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "RESOLVED_PLANT_789", "plantName": "My Plant"}]
+    }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    mock_growatt_classic_api.plant_info.return_value = {
+        "deviceList": [],
+        "totalEnergy": 1250.0,
+        "todayEnergy": 12.5,
+        "invTodayPpv": 2500,
+        "plantMoneyText": "123.45/USD",
+    }
+    mock_growatt_classic_api.tlx_detail.return_value = {
+        "data": {"deviceSn": "TLX123456"}
+    }
+
+    mock_config_entry.add_to_hass(hass)
+
+    # Run migration first (resolves plant_id and caches authenticated API)
+    await async_migrate_entry(hass, mock_config_entry)
+
+    # Verify migration successfully resolved plant_id
+    assert mock_config_entry.data[CONF_PLANT_ID] == "RESOLVED_PLANT_789"
+
+    # Now setup the integration (should reuse cached API from migration)
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify integration loaded successfully
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify log message confirms API reuse (rate limit optimization)
+    assert "Reusing logged-in session from migration" in caplog.text
+
+    # Verify login was called with correct credentials
+    # Note: Coordinators also call login() during refresh, so we verify
+    # the call was made but don't assert it was called exactly once
+    mock_growatt_classic_api.login.assert_called_with("test_user", "test_password")
+
+    # Verify plant_list was called only once (during migration, not during setup)
+    # This confirms setup did NOT resolve plant_id again (optimization working)
+    mock_growatt_classic_api.plant_list.assert_called_once_with(123456)
+
+    # Verify the cached API was removed after use (should not be in hass.data anymore)
+    assert f"{CACHED_API_KEY}{mock_config_entry.entry_id}" not in hass.data.get(
+        DOMAIN, {}
+    )
+
+
+async def test_migrate_failure_returns_false(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration returns False on API failure to allow retry.
+
+    When migration fails due to API errors (network issues, etc.),
+    it should return False and NOT bump the version. This allows Home Assistant
+    to retry the migration on the next restart.
+    """
+    # Create a version 1.0 config entry with DEFAULT_PLANT_ID
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+
+    # Mock API failure (e.g., network error during login)
+    mock_growatt_classic_api.login.side_effect = requests.exceptions.RequestException(
+        "Network error"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    # Execute migration (should fail gracefully)
+    migration_result = await async_migrate_entry(hass, mock_config_entry)
+
+    # Verify migration returned False (will retry on next restart)
+    assert migration_result is False
+
+    # Verify version was NOT bumped (remains 1.0)
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 0
+
+    # Verify plant_id was NOT changed (remains DEFAULT_PLANT_ID)
+    assert mock_config_entry.data[CONF_PLANT_ID] == DEFAULT_PLANT_ID
+
+    # Verify error was logged
+    assert "Failed to resolve plant_id during migration" in caplog.text
+    assert "Migration will retry on next restart" in caplog.text
+
+
+async def test_migrate_already_migrated(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration is skipped for already migrated entries."""
+    # Create a config entry already at version 1.1
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: "specific_plant_123",
+        },
+        unique_id="plant_specific",
+        version=1,
+        minor_version=1,
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    # Call migration function
+    migration_result = await async_migrate_entry(hass, mock_config_entry)
+    assert migration_result is True
+
+    # Verify version remains 1.1 (no change)
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 1
+
+    # Plant ID should remain unchanged
+    assert mock_config_entry.data[CONF_PLANT_ID] == "specific_plant_123"
