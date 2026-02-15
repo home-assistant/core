@@ -18,6 +18,5 @@ ATTR_NOTE_TITLE = "note_title"
 ATTR_NOTE_TEXT = "note_text"
 ATTR_SEARCH_TERMS = "search_terms"
 ATTR_RESULT_LIMIT = "result_limit"
-ATTR_SHOPPING_LIST = "shopping_list"
 
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v2.0.0")

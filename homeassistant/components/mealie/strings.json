@@ -232,16 +232,6 @@
     },
     "get_shopping_list_items": {
       "description": "Gets items from a shopping list in Mealie",
-      "fields": {
-        "config_entry_id": {
-          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
-          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
-        },
-        "shopping_list": {
-          "description": "The name or ID of the shopping list to get items from.",
-          "name": "Shopping list"
-        }
-      },
       "name": "Get shopping list items"
     },
     "import_recipe": {

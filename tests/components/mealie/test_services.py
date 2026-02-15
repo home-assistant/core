@@ -23,7 +23,6 @@ from homeassistant.components.mealie.const import (
     ATTR_RECIPE_ID,
     ATTR_RESULT_LIMIT,
     ATTR_SEARCH_TERMS,
-    ATTR_SHOPPING_LIST,
     ATTR_START_DATE,
     ATTR_URL,
     DOMAIN,
@@ -410,40 +409,32 @@ async def test_service_get_shopping_list_items(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_SHOPPING_LIST_ITEMS,
-        {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_SHOPPING_LIST: "Supermarket",
-        },
+        target={"entity_id": "todo.mealie_supermarket"},
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
 
 
-async def test_service_get_shopping_list_items_not_found(
+async def test_service_get_shopping_list_items_connection_error(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the get_shopping_list_items service with a shopping list that does not exist."""
+    """Test the get_shopping_list_items service with connection error."""
 
     await setup_integration(hass, mock_config_entry)
 
-    # Reset mock to clear calls from setup
-    mock_mealie_client.get_shopping_items.reset_mock()
+    mock_mealie_client.get_shopping_items.side_effect = MealieConnectionError
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError, match="Error connecting to Mealie instance"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHOPPING_LIST_ITEMS,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_SHOPPING_LIST: "NOT_FOUND",
-            },
+            target={"entity_id": "todo.mealie_supermarket"},
             blocking=True,
             return_response=True,
         )
-    mock_mealie_client.get_shopping_items.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -488,14 +479,6 @@ async def test_service_get_shopping_list_items_not_found(
             MealieNotFoundError,
             ServiceValidationError,
             "No recipes found matching your search",
-        ),
-        (
-            SERVICE_GET_SHOPPING_LIST_ITEMS,
-            {ATTR_SHOPPING_LIST: "Supermarket"},
-            "get_shopping_items",
-            MealieConnectionError,
-            HomeAssistantError,
-            "Error connecting to Mealie instance",
         ),
         (
             SERVICE_IMPORT_RECIPE,
@@ -572,7 +555,6 @@ async def test_services_connection_error(
             SERVICE_GET_RECIPES,
             {ATTR_SEARCH_TERMS: "pasta", ATTR_RESULT_LIMIT: 5},
         ),
-        (SERVICE_GET_SHOPPING_LIST_ITEMS, {ATTR_SHOPPING_LIST: "Supermarket"}),
         (SERVICE_IMPORT_RECIPE, {ATTR_URL: "http://example.com"}),
         (
             SERVICE_SET_RANDOM_MEALPLAN,
