@@ -325,12 +325,21 @@ async def test_import_flow_invalid_stop_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_stop_id"
 
 
-async def test_import_flow_cannot_connect(
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (ClientError("Connection error"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_import_flow_error(
     hass: HomeAssistant,
     mock_entur_client: MagicMock,
+    side_effect: Exception,
+    reason: str,
 ) -> None:
-    """Test import flow when API connection fails."""
-    mock_entur_client.update = AsyncMock(side_effect=ClientError("Connection error"))
+    """Test import flow aborts on API errors."""
+    mock_entur_client.update = AsyncMock(side_effect=side_effect)
 
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
@@ -348,33 +357,7 @@ async def test_import_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_flow_unknown_error(
-    hass: HomeAssistant,
-    mock_entur_client: MagicMock,
-) -> None:
-    """Test import flow when an unexpected error occurs."""
-    mock_entur_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
-
-    yaml_config = {
-        CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_NAME: "My Bus Stop",
-        "show_on_map": False,
-        CONF_WHITELIST_LINES: [],
-        CONF_OMIT_NON_BOARDING: True,
-        CONF_NUMBER_OF_DEPARTURES: 2,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=yaml_config,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    assert result["reason"] == reason
 
 
 async def test_import_flow_already_configured(
