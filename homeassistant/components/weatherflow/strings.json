@@ -33,9 +33,6 @@
       "air_density": {
         "name": "Air density"
       },
-      "battery_percent": {
-        "name": "Battery"
-      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
