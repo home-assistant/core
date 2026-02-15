@@ -102,10 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         raise ConfigEntryNotReady from err
 
     data_api_coordinator = TibberDataAPICoordinator(hass, entry)
-    await data_api_coordinator.async_config_entry_first_refresh()
-    data_coordinator = TibberDataCoordinator(hass, entry, entry.runtime_data)
-    await data_coordinator.async_config_entry_first_refresh()
-    await data_coordinator.update_listeners(dt_util.utcnow())
+    data_coordinator = TibberDataCoordinator(hass, entry)
     entry.runtime_data = TibberRuntimeData(
         session=session,
         data_api_coordinator=data_api_coordinator,
@@ -132,6 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     except tibber.FatalHttpExceptionError as err:
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
 
+    await data_api_coordinator.async_config_entry_first_refresh()
+    await data_coordinator.async_config_entry_first_refresh()
+    await data_coordinator.update_listeners(dt_util.utcnow())
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

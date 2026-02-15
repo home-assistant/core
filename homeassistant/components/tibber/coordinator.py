@@ -37,7 +37,6 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from tibber import TibberHome
 
-    from . import TibberRuntimeData
     from .const import TibberConfigEntry
 
 FIVE_YEARS = 5 * 365 * 24
@@ -101,17 +100,15 @@ class TibberDataCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: TibberConfigEntry,
-        runtime_data: TibberRuntimeData,
+        entry: TibberConfigEntry,
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=config_entry,
+            config_entry=entry,
             name="Tibber",
         )
-        self._runtime_data = runtime_data
         self._listener_unsub: Callable[[], None] | None = None
 
     def _get_next_15_interval(self, now: datetime) -> datetime:
@@ -140,7 +137,9 @@ class TibberDataCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
         """Update data via API and return per-home data for sensors."""
-        tibber_connection = await self._runtime_data.async_get_client(self.hass)
+        tibber_connection = await self.config_entry.runtime_data.async_get_client(
+            self.hass
+        )
         try:
             await tibber_connection.fetch_consumption_data_active_homes()
             await tibber_connection.fetch_production_data_active_homes()
@@ -308,7 +307,6 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             update_interval=timedelta(minutes=1),
             config_entry=entry,
         )
-        self._runtime_data = entry.runtime_data
         self.sensors_by_device: dict[str, dict[str, tibber.data_api.Sensor]] = {}
 
     def _build_sensor_lookup(self, devices: dict[str, TibberDevice]) -> None:
@@ -329,7 +327,7 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
     async def _async_get_client(self) -> tibber.Tibber:
         """Get the Tibber client with error handling."""
         try:
-            return await self._runtime_data.async_get_client(self.hass)
+            return await self.config_entry.runtime_data.async_get_client(self.hass)
         except ConfigEntryAuthFailed:
             raise
         except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
