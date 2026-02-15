@@ -202,7 +202,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery discharge SOC limit',
+    'object_id_base': 'Battery discharge SOC limit (off-grid)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -213,7 +213,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_discharge_soc_limit_off_grid',
-    'unique_id': 'MIN123456_battery_discharge_soc_limit_off_grid',
+    'unique_id': 'MIN123456_battery_discharge_soc_limit',
     'unit_of_measurement': '%',
   })
 # ---
@@ -261,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery discharge SOC limit (on-grid)',
     'options': dict({
     }),
     'original_device_class': None,
