@@ -622,6 +622,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
     _attr_native_unit_of_measurement = CONCENTRATION_GRAMS_PER_CUBIC_METER
+    _attr_suggested_display_precision = 1
     _attr_suggested_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -636,7 +637,7 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
         if value is None or value == "":
             return None
 
-        return round(value, 3)
+        return value
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
