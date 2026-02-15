@@ -3,22 +3,32 @@
 import logging
 from typing import Any
 
-from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.data import B01Props, RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    GET_MAPS_SERVICE_NAME,
+    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+)
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
@@ -68,7 +78,82 @@ Q7_STATE_CODE_TO_STATE = {
     WorkStatusMapping.MOP_AIRDRYING: VacuumActivity.DOCKED,
 }
 
+
+def _get_q10_status(data: dict[Any, Any] | B01Props) -> WorkStatusMapping | None:
+    """Get status from Q10 or Q7 data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        return data.status
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    status_code = data.get(B01_Q10_DP.STATUS)
+    if status_code is None:
+        return None
+
+    # Map YXDeviceState codes to WorkStatusMapping
+    # Status mapping from Q10 device codes to WorkStatusMapping
+    status_map = {
+        1: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEPING
+        2: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_MOPING
+        3: WorkStatusMapping.WAITING_FOR_ORDERS,  # STANDBY_STATE (idle)
+        4: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEP_AND_MOPING
+        5: WorkStatusMapping.SWEEP_MOPING,  # CLEANING_STATE
+        6: WorkStatusMapping.DOCKING,  # TO_CHARGE_STATE (returning to dock)
+        8: WorkStatusMapping.CHARGING,  # CHARGING_STATE
+        10: WorkStatusMapping.PAUSED,  # PAUSE_STATE
+    }
+
+    return status_map.get(status_code, WorkStatusMapping.WAITING_FOR_ORDERS)
+
+
+def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
+    """Get wind/fan speed name from Q10 or Q7 data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        return data.wind_name
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    fan_level = data.get(B01_Q10_DP.FAN_LEVEL)
+    if fan_level is not None:
+        # Map YXFanLevel code to value (e.g., "quiet", "normal", "strong", "max")
+        for yx_fan in YXFanLevel:
+            if yx_fan.code == fan_level:
+                return yx_fan.value
+    return None
+
+
 PARALLEL_UPDATES = 0
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Roborock vacuum platform."""
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        GET_MAPS_SERVICE_NAME,
+        None,
+        RoborockVacuum.get_maps.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        None,
+        RoborockVacuum.get_vacuum_current_position.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        cv.make_entity_service_schema(
+            {
+                vol.Required("x"): vol.Coerce(int),
+                vol.Required("y"): vol.Coerce(int),
+            },
+        ),
+        RoborockVacuum.async_set_vacuum_goto_position.__name__,
+        supports_response=SupportsResponse.NONE,
+    )
+
+    return True
 
 
 async def async_setup_entry(
@@ -84,6 +169,11 @@ async def async_setup_entry(
         RoborockQ7Vacuum(coordinator)
         for coordinator in config_entry.runtime_data.b01
         if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+    )
+    async_add_entities(
+        RoborockQ10Vacuum(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
 
 
@@ -233,7 +323,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
 
 class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
-    """General Representation of a Roborock vacuum."""
+    """Representation of a Roborock Q7/Q10 vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
@@ -270,14 +360,15 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        if self.coordinator.data.status is not None:
-            return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
+        status = _get_q10_status(self.coordinator.data)
+        if status is not None:
+            return Q7_STATE_CODE_TO_STATE.get(status)
         return None
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self.coordinator.data.wind_name
+        return _get_q10_wind_name(self.coordinator.data)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -291,6 +382,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -304,6 +396,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "pause_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
@@ -317,6 +410,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "stop_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
@@ -343,13 +437,13 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "find_me",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            fan_level = SCWindMapping.from_value(fan_speed)
+            await self.coordinator.api.set_fan_speed(fan_level)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -358,6 +452,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "set_fan_speed",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_send_command(
         self,
@@ -376,3 +471,210 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get vacuum current position (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def async_set_vacuum_goto_position(
+        self, x: int, y: int, **kwargs: Any
+    ) -> None:
+        """Set vacuum goto position (not available for Q7)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+
+class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+    """Representation of a Roborock Q10 vacuum."""
+
+    _attr_icon = "mdi:robot-vacuum"
+    _attr_supported_features = (
+        VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_SPOT
+    )
+    _attr_translation_key = DOMAIN
+    _attr_name = None
+    # Q10 uses YXFanLevel: quiet, normal, strong, max, super
+    _attr_fan_speed_list = [
+        YXFanLevel.QUIET.value,
+        YXFanLevel.NORMAL.value,
+        YXFanLevel.STRONG.value,
+        YXFanLevel.MAX.value,
+        YXFanLevel.SUPER.value,
+    ]
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Initialize a vacuum."""
+        StateVacuumEntity.__init__(self)
+        RoborockCoordinatedEntityB01.__init__(
+            self,
+            coordinator.duid_slug,
+            coordinator,
+        )
+
+    @property
+    def activity(self) -> VacuumActivity | None:
+        """Return the status of the vacuum cleaner."""
+        status = _get_q10_status(self.coordinator.data)
+        if status is not None:
+            return Q7_STATE_CODE_TO_STATE.get(status)
+        return None
+
+    @property
+    def fan_speed(self) -> str | None:
+        """Return the current fan speed."""
+        return _get_q10_wind_name(self.coordinator.data)
+
+    async def async_start(self) -> None:
+        """Start the vacuum."""
+        try:
+            await self.coordinator.api.vacuum.start_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "start_clean",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_pause(self) -> None:
+        """Pause the vacuum."""
+        try:
+            await self.coordinator.api.vacuum.pause_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "pause_clean",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum."""
+        try:
+            await self.coordinator.api.vacuum.stop_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "stop_clean",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Send vacuum back to base."""
+        try:
+            await self.coordinator.api.vacuum.return_to_dock()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "return_to_dock",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Clean a spot/zone."""
+        try:
+            # Start spot/zone cleaning using start_clean
+            await self.coordinator.api.vacuum.start_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "start_clean",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate vacuum (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get vacuum current position (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def async_set_vacuum_goto_position(
+        self, x: int, y: int, **kwargs: Any
+    ) -> None:
+        """Set vacuum goto position (not available for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set vacuum fan speed."""
+        try:
+            fan_level = YXFanLevel.from_value(fan_speed)
+            await self.coordinator.api.command.send(
+                command=B01_Q10_DP.FAN_LEVEL,
+                params=fan_level.code,
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "set_fan_speed",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a command to a vacuum cleaner (not supported for Q10)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+        )

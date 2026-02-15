@@ -1,10 +1,11 @@
 """Tests for Roborock vacuums."""
 
 from typing import Any
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from roborock import RoborockException
+from roborock import RoborockCategory, RoborockException
+from roborock.data import HomeDataDevice, HomeDataProduct
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -31,8 +32,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice, set_trait_attributes
-from .mock_data import STATUS
+from .conftest import FakeDevice, create_b01_q10_trait, set_trait_attributes
+from .mock_data import BASE_URL, Q10_HOME_DATA_DEVICE, ROBOROCK_RRUID, STATUS, USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -496,3 +497,331 @@ async def test_q7_activity_none_status(
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     assert vacuum.state == "unknown"
+
+
+# Tests for RoborockQ10Vacuum
+
+Q10_ENTITY_ID = "vacuum.roborock_q10_s5"
+Q10_DEVICE_ID = "q10_s5_plus_duid"
+
+
+@pytest.fixture
+def q10_platforms() -> list[Platform]:
+    """Fixture to set platforms used in Q10 tests."""
+    return [Platform.VACUUM]
+
+
+@pytest.fixture(name="q10_fake_device")
+def q10_fake_device_fixture() -> FakeDevice:
+    """Create a fake Q10 S5+ device for testing."""
+    device_data = HomeDataDevice.from_dict(Q10_HOME_DATA_DEVICE)
+    product_data = HomeDataProduct(
+        id="q10_product_id",
+        name="Roborock Q10 S5+",
+        code="ss07",
+        model="roborock.vacuum.ss07",
+        category=RoborockCategory.VACUUM,
+    )
+
+    fake_device = FakeDevice(
+        device_info=device_data,
+        product=product_data,
+    )
+    fake_device.is_connected = True
+    fake_device.is_local_connected = True
+    fake_device.b01_q10_properties = create_b01_q10_trait()
+
+    return fake_device
+
+
+@pytest.fixture(name="q10_device_manager")
+def q10_device_manager_fixture(q10_fake_device: FakeDevice) -> AsyncMock:
+    """Fixture to create a fake device manager with Q10 device."""
+    device_manager = AsyncMock()
+    device_manager.get_devices = AsyncMock(return_value=[q10_fake_device])
+    return device_manager
+
+
+@pytest.fixture(name="q10_config_entry")
+def q10_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a Q10 config entry."""
+    config_entry = MockConfigEntry(
+        domain="roborock",
+        title="user@domain.com",
+        data={
+            "username": "user@domain.com",
+            "user_data": USER_DATA.as_dict(),
+            "base_url": BASE_URL,
+        },
+        unique_id=ROBOROCK_RRUID,
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def test_q10_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Tests Q10 devices are registered in the entity registry."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(Q10_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == Q10_DEVICE_ID
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model == "roborock.vacuum.ss07"
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params", "expected_activity"),
+    [
+        (SERVICE_START, "start_clean", None, "cleaning"),
+        (SERVICE_PAUSE, "pause_clean", None, "paused"),
+        (SERVICE_STOP, "stop_clean", None, "idle"),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, "returning"),
+    ],
+)
+async def test_q10_state_changing_commands(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    expected_activity: str,
+) -> None:
+    """Test sending state-changing commands to the Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: Q10_ENTITY_ID, **(service_params or {})}
+    await hass.services.async_call(
+        Platform.VACUUM,
+        service,
+        data,
+        blocking=True,
+    )
+
+    api = q10_fake_device.b01_q10_properties
+    api_call = getattr(api.vacuum, api_method)
+    assert api_call.call_count == 1
+    assert api_call.call_args[0] == ()
+
+    # Force coordinator refresh to get updated state
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == expected_activity
+
+
+async def test_q10_locate_command_not_supported(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test that locate command is not supported for Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    with pytest.raises(HomeAssistantError, match="This command is not supported"):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_LOCATE,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            blocking=True,
+        )
+
+
+async def test_q10_set_fan_speed_command(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test sending set_fan_speed command to the Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_SET_FAN_SPEED,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "quiet"},
+        blocking=True,
+    )
+
+    # Q10 uses command.send with B01_Q10_DP.FAN_LEVEL
+    api = q10_fake_device.b01_q10_properties
+    assert api.command.send.call_count == 1
+
+
+async def test_q10_clean_spot_command(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test sending clean_spot command to the Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_CLEAN_SPOT,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+    )
+
+    # Q10 starts cleaning using vacuum.start_clean
+    api = q10_fake_device.b01_q10_properties
+    assert api.vacuum.start_clean.call_count == 1
+
+
+async def test_q10_send_command_not_supported(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test that send_command is not supported for Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    with pytest.raises(HomeAssistantError, match="This command is not supported"):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_SEND_COMMAND,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "test_command"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params"),
+    [
+        (SERVICE_START, "start_clean", None),
+        (SERVICE_PAUSE, "pause_clean", None),
+        (SERVICE_STOP, "stop_clean", None),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
+    ],
+)
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q10_failed_commands(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    send_message_exception: Exception,
+) -> None:
+    """Test that when Q10 commands fail, we raise HomeAssistantError."""
+    # Configure the API to raise exceptions
+    api = q10_fake_device.b01_q10_properties
+    api.vacuum.start_clean.side_effect = send_message_exception
+    api.vacuum.pause_clean.side_effect = send_message_exception
+    api.vacuum.stop_clean.side_effect = send_message_exception
+    api.vacuum.return_to_dock.side_effect = send_message_exception
+
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+    original_state = vacuum.state
+
+    data = {ATTR_ENTITY_ID: Q10_ENTITY_ID, **(service_params or {})}
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            service,
+            data,
+            blocking=True,
+        )
+
+    # Verify the entity state remains unchanged after failed command
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == original_state
