@@ -299,6 +299,71 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[sensor.energy_site_island_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_island_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Island status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Island status',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Island status',
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_island_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

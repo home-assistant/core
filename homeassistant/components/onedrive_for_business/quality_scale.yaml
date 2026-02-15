@@ -55,7 +55,7 @@ rules:
     status: exempt
     comment: |
       This integration does not create entities.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
