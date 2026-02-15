@@ -56,7 +56,7 @@ async def test_switch_turn_off(
     # The client method is update_dns_record
     assert client.update_dns_record.called
     # Check arguments: record_proxied=False
-    args, kwargs = client.update_dns_record.call_args
+    _args, kwargs = client.update_dns_record.call_args
     # In __init__.py it could be args or kwargs depending on call.
     # client.update_dns_record(..., record_proxied=False)
     assert kwargs.get("record_proxied") is False
@@ -82,13 +82,7 @@ async def test_switch_turn_on(
     unique_id = "mock-zone-id_ha.mock.com_proxied"
     entity_id = entity_registry.async_get_entity_id("switch", DOMAIN, unique_id)
     assert entity_id
-    
-    state = hass.states.get(entity_id)
-    # The state should be 'off' because we mocked proxied=False
-    # But wait, did we deep copy? MOCK_ZONE_RECORDS is global in __init__.py of tests.
-    # Modifying return_value in place is risky if tests run in parallel or sequence reuse.
-    # Better to assign new list.
-    
+
     # Turn on
     await hass.services.async_call(
         "switch",
@@ -98,5 +92,5 @@ async def test_switch_turn_on(
     )
     
     assert client.update_dns_record.called
-    args, kwargs = client.update_dns_record.call_args
+    _args, kwargs = client.update_dns_record.call_args
     assert kwargs.get("record_proxied") is True

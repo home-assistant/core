@@ -44,6 +44,7 @@ class CloudflareBaseSensor(CoordinatorEntity, SensorEntity):
     """Base sensor with common device info for zone."""
 
     def __init__(self, coordinator, entry: ConfigEntry, zone_id: str, zone_name: str) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self._entry = entry
         self._zone_id = zone_id
@@ -65,6 +66,7 @@ class CloudflareLastUpdateSensor(CloudflareBaseSensor):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, coordinator, entry: ConfigEntry, zone_id: str, zone_name: str) -> None:
+        """Initialize the Last Update sensor."""
         super().__init__(coordinator, entry, zone_id, zone_name)
         self._attr_unique_id = f"{zone_id}_last_update"
 
@@ -85,6 +87,7 @@ class CloudflareExternalIpSensor(CloudflareBaseSensor):
     _attr_device_class = None
 
     def __init__(self, coordinator, entry: ConfigEntry, zone_id: str, zone_name: str) -> None:
+        """Initialize the External IP sensor."""
         super().__init__(coordinator, entry, zone_id, zone_name)
         self._attr_unique_id = f"{zone_id}_external_ip"
 

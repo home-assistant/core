@@ -25,18 +25,17 @@ async def async_setup_entry(
     zone = runtime.dns_zone
     domains: list[str] = entry.data.get(CONF_DOMAINS, [])
 
-    entities: list[CloudflareProxySwitch] = []
-    for domain in domains:
-        entities.append(
-            CloudflareProxySwitch(
-                coordinator=coordinator,
-                entry=entry,
-                zone_id=zone["id"],
-                zone_name=zone["name"],
-                domain=domain,
-                api_token=runtime.api_token,
-            )
+    entities: list[CloudflareProxySwitch] = [
+        CloudflareProxySwitch(
+            coordinator=coordinator,
+            entry=entry,
+            zone_id=zone["id"],
+            zone_name=zone["name"],
+            domain=domain,
+            api_token=runtime.api_token,
         )
+        for domain in domains
+    ]
 
     async_add_entities(entities)
 
@@ -55,6 +54,7 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
         domain: str,
         api_token: str,
     ) -> None:
+        """Initialize the Cloudflare Proxy switch."""
         super().__init__(coordinator)
         self._entry = entry
         self._zone_id = zone_id
@@ -78,12 +78,14 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
+        """Return True if the proxy is on."""
         record = self._record
         if not record:
             return False
         return bool(record.get("proxied"))
 
     async def async_turn_on(self) -> None:
+        """Turn the proxy on."""
         await self._async_set_proxied(True)
 
     async def async_turn_off(self) -> None:

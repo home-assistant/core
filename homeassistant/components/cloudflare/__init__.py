@@ -170,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise
         except Exception as err:  # noqa: BLE001
             _LOGGER.exception(
-                "Unexpected error during manual update for zone %s: %s", dns_zone["name"], err
+                "Unexpected error during manual update for zone %s", dns_zone["name"]
             )
             raise HomeAssistantError("Unexpected Cloudflare update error") from err
 
@@ -184,8 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Cloudflare config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
