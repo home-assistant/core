@@ -64,6 +64,9 @@
       "autosw": {
         "default": "mdi:import"
       },
+      "cec": {
+        "default": "mdi:remote-tv"
+      },
       "cec0en": {
         "default": "mdi:remote-tv"
       },
@@ -102,6 +105,12 @@
       },
       "relay": {
         "default": "mdi:electric-switch"
+      },
+      "tx0plus5": {
+        "default": "mdi:lightning-bolt"
+      },
+      "tx1plus5": {
+        "default": "mdi:lightning-bolt"
       }
     }
   }
