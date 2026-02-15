@@ -855,7 +855,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             vol.Optional("enable_day"): cv.boolean,
             # Enable millisecond field in frontend.
             vol.Optional("enable_millisecond"): cv.boolean,
-            # Allow negative durations. Will default to False in HA Core 2025.6.0.
+            # Allow negative durations.
             vol.Optional("allow_negative"): cv.boolean,
         }
     )
@@ -866,7 +866,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        if self.config.get("allow_negative", True):
+        if self.config.get("allow_negative", False):
             cv.time_period_dict(data)
         else:
             cv.positive_time_period_dict(data)
