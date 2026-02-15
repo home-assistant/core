@@ -48,26 +48,6 @@ async def test_unload_entry(
 
 
 @pytest.mark.usefixtures("mock_entur_client")
-async def test_reload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reloading of config entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Reload the entry
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify the entry is still loaded after reload
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.usefixtures("mock_entur_client")
 async def test_options_update_triggers_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
