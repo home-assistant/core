@@ -22,6 +22,7 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   init:
@@ -29,7 +30,7 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # To check out the repository
     outputs:
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}

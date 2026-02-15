@@ -10,6 +10,7 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   stale:
