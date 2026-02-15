@@ -663,7 +663,10 @@ async def test_q10_locate_command_not_supported(
     vacuum = hass.states.get(Q10_ENTITY_ID)
     assert vacuum
 
-    with pytest.raises(HomeAssistantError, match="This command is not supported"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
         await hass.services.async_call(
             Platform.VACUUM,
             SERVICE_LOCATE,
@@ -758,7 +761,10 @@ async def test_q10_send_command_not_supported(
     vacuum = hass.states.get(Q10_ENTITY_ID)
     assert vacuum
 
-    with pytest.raises(HomeAssistantError, match="This command is not supported"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
         await hass.services.async_call(
             Platform.VACUUM,
             SERVICE_SEND_COMMAND,
