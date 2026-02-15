@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -122,25 +123,8 @@ def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: RoborockConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the Roborock sensor."""
-    async_add_entities(
-        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
-    )
-    async_add_entities(
-        RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
-    )
-    async_add_entities(
-        RoborockQ10Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
-    )
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Roborock vacuum platform."""
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -167,6 +151,29 @@ async def async_setup_entry(
         ),
         RoborockVacuum.async_set_vacuum_goto_position.__name__,
         supports_response=SupportsResponse.NONE,
+    )
+
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RoborockConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Roborock sensor."""
+    async_add_entities(
+        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
+    )
+    async_add_entities(
+        RoborockQ7Vacuum(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+    )
+    async_add_entities(
+        RoborockQ10Vacuum(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
 
 
