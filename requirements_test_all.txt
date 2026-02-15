@@ -309,7 +309,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.0
+aiomealie==1.2.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -2095,7 +2095,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.13
+pysmlight==0.2.14
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2283,7 +2283,7 @@ pywaze==1.1.1
 pyweatherflowudp==1.5.0
 
 # homeassistant.components.html5
-pywebpush==1.14.1
+pywebpush==2.3.0
 
 # homeassistant.components.wemo
 pywemo==1.4.0
