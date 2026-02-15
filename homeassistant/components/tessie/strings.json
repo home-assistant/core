@@ -331,6 +331,18 @@
       }
     },
     "sensor": {
+      "battery_energy_exported": {
+        "name": "Battery discharged"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery charged from generator"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery charged from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery charged from solar"
+      },
       "battery_power": {
         "name": "Battery power"
       },
@@ -390,6 +402,18 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
+      "consumer_energy_imported_from_battery": {
+        "name": "Energy consumed from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Energy consumed from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Energy consumed from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Energy consumed from solar"
+      },
       "drive_state_active_route_destination": {
         "name": "Destination"
       },
@@ -423,11 +447,32 @@
       "energy_left": {
         "name": "Energy left"
       },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
       "generator_power": {
         "name": "Generator power"
       },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
       "grid_power": {
         "name": "Grid power"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
       },
       "grid_services_power": {
         "name": "Grid services power"
@@ -448,11 +493,29 @@
       "percentage_charged": {
         "name": "Percentage charged"
       },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
       "solar_power": {
         "name": "Solar power"
       },
+      "total_battery_charge": {
+        "name": "Total battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Total battery discharged"
+      },
+      "total_grid_energy_exported": {
+        "name": "Total grid exported"
+      },
+      "total_home_usage": {
+        "name": "Total home usage"
+      },
       "total_pack_energy": {
         "name": "Total pack energy"
+      },
+      "total_solar_generation": {
+        "name": "Total solar generated"
       },
       "vehicle_state_odometer": {
         "name": "Odometer"
@@ -533,6 +596,9 @@
     "already_inactive": {
       "message": "{name} is already inactive."
     },
+    "auth_failed": {
+      "message": "Authentication failed."
+    },
     "cable_connected": {
       "message": "Charge cable is connected."
     },
@@ -544,6 +610,9 @@
     },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
+    },
+    "invalid_energy_history_data": {
+      "message": "Invalid energy history data."
     },
     "no_cable": {
       "message": "Insert cable to lock"

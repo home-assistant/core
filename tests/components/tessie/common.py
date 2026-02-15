@@ -52,6 +52,7 @@ ERROR_CONNECTION = ClientConnectionError()
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 RESPONSE_OK = {"response": {}, "error": None}
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 SCOPES = [
