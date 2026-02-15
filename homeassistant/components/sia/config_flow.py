@@ -63,7 +63,7 @@ ACCOUNT_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_OPTIONS = {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: None}
+DEFAULT_OPTIONS = {CONF_IGNORE_TIMESTAMPS: False, CONF_ZONES: None, CONF_IGNORE_BR: False}
 
 
 def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
@@ -175,6 +175,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._options[CONF_ACCOUNTS].setdefault(account, deepcopy(DEFAULT_OPTIONS))
         self._options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
+        self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
 
 
 class SIAOptionsFlowHandler(OptionsFlow):
