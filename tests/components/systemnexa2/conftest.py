@@ -94,3 +94,21 @@ def mock_patch_get_host():
         return_value="192.168.1.1",
     ) as get_host_mock:
         yield get_host_mock
+
+
+@pytest.fixture
+def mock_zeroconf_discovery_info():
+    """Return mock zeroconf discovery info."""
+    from ipaddress import ip_address
+
+    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.0.131"),
+        ip_addresses=[ip_address("10.0.0.131")],
+        hostname="systemnexa2_test.local.",
+        name="systemnexa2_test._systemnexa2._tcp.local.",
+        port=80,
+        type="_systemnexa2._tcp.local.",
+        properties={"id": "test_device_id", "model": "Test Model", "version": "1.0.0"},
+    )

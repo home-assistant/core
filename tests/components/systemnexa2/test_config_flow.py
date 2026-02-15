@@ -132,7 +132,7 @@ async def test_invalid_host(hass: HomeAssistant, host: str, use_patch: bool) -> 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: host}
         )
-    
+
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -191,21 +191,13 @@ async def test_unsupported_device(
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_zeroconf_discovery(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_zeroconf_discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test zeroconf discovery."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("10.0.0.131"),
-        ip_addresses=[ip_address("10.0.0.131")],
-        hostname="systemnexa2_test.local.",
-        name="systemnexa2_test._systemnexa2._tcp.local.",
-        port=80,
-        type="_systemnexa2._tcp.local.",
-        properties={"id": "test_device_id", "model": "Test Model", "version": "1.0.0"},
-    )
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=mock_zeroconf_discovery_info
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -223,6 +215,22 @@ async def test_zeroconf_discovery(
         CONF_MODEL: "Test Model",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_zeroconf_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zeroconf_discovery_info: ZeroconfServiceInfo,
+) -> None:
+    """Test we abort zeroconf discovery if the device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=mock_zeroconf_discovery_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_device_with_none_values(
