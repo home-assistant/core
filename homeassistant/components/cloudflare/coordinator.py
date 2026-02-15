@@ -28,10 +28,12 @@ _LOGGER = getLogger(__name__)
 @dataclass
 class CloudflareRuntimeData:
     """Runtime data for Cloudflare config entry."""
+
     client: pycfdns.Client
     dns_zone: pycfdns.ZoneModel
     coordinator: DataUpdateCoordinator[dict[str, Any]]
     api_token: str
+
 
 type CloudflareConfigEntry = ConfigEntry[CloudflareRuntimeData]
 
