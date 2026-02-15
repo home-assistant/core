@@ -463,6 +463,9 @@
     "command_failed": {
       "message": "Error while calling {command}"
     },
+    "command_not_supported": {
+      "message": "This command is not supported for this device model"
+    },
     "home_data_fail": {
       "message": "Failed to get Roborock home data"
     },
