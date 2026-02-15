@@ -611,7 +611,7 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 original_update(decoded_dps)
 
             # Replace method to intercept MQTT data before StatusTrait filtering
-            self.api.status.update_from_dps = update_wrapper  # type: ignore[method-assign]
+            setattr(self.api.status, "update_from_dps", update_wrapper)
             await self.api.start()
             self._started = True
 
