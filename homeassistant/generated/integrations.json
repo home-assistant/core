@@ -5163,12 +5163,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "picotts": {
-      "name": "Pico TTS",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "pilight": {
       "name": "Pilight",
       "integration_type": "hub",
