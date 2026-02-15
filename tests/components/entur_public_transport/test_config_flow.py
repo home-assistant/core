@@ -83,8 +83,12 @@ async def test_user_flow_with_quay(
     assert result["title"] == "Entur NSR:Quay:48550"
 
 
-async def test_user_flow_invalid_stop_id(hass: HomeAssistant) -> None:
-    """Test user flow with invalid stop ID."""
+async def test_user_flow_invalid_stop_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test user flow with invalid stop ID and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -102,12 +106,27 @@ async def test_user_flow_invalid_stop_id(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_stop_id"}
 
+    # Recover with valid input
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_SHOW_ON_MAP: False,
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_entur_client: MagicMock,
 ) -> None:
-    """Test user flow when API connection fails."""
+    """Test user flow when API connection fails and recovery."""
     mock_entur_client.update = AsyncMock(side_effect=ClientError("Connection error"))
 
     result = await hass.config_entries.flow.async_init(
@@ -127,12 +146,28 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Recover after connection is restored
+    mock_entur_client.update = AsyncMock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_SHOW_ON_MAP: False,
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_timeout(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_entur_client: MagicMock,
 ) -> None:
-    """Test user flow when API times out."""
+    """Test user flow when API times out and recovery."""
     mock_entur_client.update = AsyncMock(side_effect=TimeoutError("Timeout"))
 
     result = await hass.config_entries.flow.async_init(
@@ -152,12 +187,28 @@ async def test_user_flow_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Recover after timeout resolves
+    mock_entur_client.update = AsyncMock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_SHOW_ON_MAP: False,
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_error(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_entur_client: MagicMock,
 ) -> None:
-    """Test user flow when an unexpected error occurs."""
+    """Test user flow when an unexpected error occurs and recovery."""
     mock_entur_client.update = AsyncMock(side_effect=Exception("Unexpected error"))
 
     result = await hass.config_entries.flow.async_init(
@@ -176,6 +227,21 @@ async def test_user_flow_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    # Recover after error resolves
+    mock_entur_client.update = AsyncMock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STOP_IDS: ["NSR:StopPlace:548"],
+            CONF_SHOW_ON_MAP: False,
+            CONF_OMIT_NON_BOARDING: True,
+            CONF_NUMBER_OF_DEPARTURES: 2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
