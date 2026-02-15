@@ -745,8 +745,6 @@ class TibberSensor(TibberCoordinatorEntity, SensorEntity):
         tibber_home: TibberHome,
         coordinator: TibberDataCoordinator,
         entity_description: SensorEntityDescription,
-        *,
-        model: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
@@ -760,8 +758,6 @@ class TibberSensor(TibberCoordinatorEntity, SensorEntity):
                 f"{self._tibber_home.home_id}_{self.entity_description.key}"
             )
         self._device_name = self._home_name
-        if model is not None:
-            self._model = model
 
     @property
     def available(self) -> bool:

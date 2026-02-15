@@ -32,8 +32,12 @@ class TibberCoordinatorEntity(CoordinatorEntity[TibberDataCoordinator]):
         super().__init__(coordinator)
         self._tibber_home = tibber_home
         self._home_name: str = tibber_home.name or tibber_home.home_id
-        self._model: str | None = None
         self._device_name: str = self._home_name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            model="Tibber Pulse",
+        )
 
     def _get_home_data(self) -> TibberHomeData | None:
         """Return cached home data from the coordinator."""
@@ -41,15 +45,6 @@ class TibberCoordinatorEntity(CoordinatorEntity[TibberDataCoordinator]):
         if data is None:
             return None
         return data.get(self._tibber_home.home_id)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._tibber_home.home_id)},
-            name=self._device_name,
-            model=self._model,
-        )
 
 
 class TibberRTCoordinatorEntity(CoordinatorEntity[TibberRtDataCoordinator]):
@@ -68,25 +63,21 @@ class TibberRTCoordinatorEntity(CoordinatorEntity[TibberRtDataCoordinator]):
         super().__init__(coordinator)
         self._tibber_home = tibber_home
         self._home_name: str = tibber_home.name or tibber_home.home_id
-        self._model: str = "Tibber Pulse"
-        self._device_name: str = f"{self._model} {self._home_name}"
+        model: str = "Tibber Pulse"
+        self._device_name: str = f"{model} {self._home_name}"
         self.entity_description = description
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            model=model,
+        )
         self._attr_native_value = initial_state
         self._attr_last_reset: datetime | None = None
         self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.key}"
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._tibber_home.home_id)},
-            name=self._device_name,
-            model=self._model,
-        )
 
     @property
     def available(self) -> bool:
