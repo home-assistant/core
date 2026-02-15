@@ -29,14 +29,42 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Create a FreeClient to validate credentials
-            client = FreeClient(
-                user_input[CONF_USERNAME], user_input[CONF_ACCESS_TOKEN]
-            )
+            try:
+                client = FreeClient(
+                    user_input[CONF_USERNAME], user_input[CONF_ACCESS_TOKEN]
+                )
+            except Exception:
+                _LOGGER.exception("Failed to initialize FreeClient")
+                errors["base"] = "client_initialization_failed"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_USERNAME): str,
+                            vol.Required(CONF_ACCESS_TOKEN): str,
+                        }
+                    ),
+                    errors=errors,
+                )
 
             # Send a test SMS to validate the credentials
-            await self.hass.async_add_executor_job(
-                client.send_sms, "Home Assistant test"
-            )
+            try:
+                await self.hass.async_add_executor_job(
+                    client.send_sms, "Home Assistant test"
+                )
+            except Exception:
+                _LOGGER.exception("Failed to send test SMS")
+                errors["base"] = "test_sms_failed"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_USERNAME): str,
+                            vol.Required(CONF_ACCESS_TOKEN): str,
+                        }
+                    ),
+                    errors=errors,
+                )
 
             # If we get here, validation succeeded
             await self.async_set_unique_id(user_input[CONF_USERNAME])
