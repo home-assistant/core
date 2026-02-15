@@ -5,11 +5,6 @@ from typing import Final
 
 DOMAIN: Final = "saunum"
 
-# Device information
-DEVICE_NAME: Final = "Saunum Leil"
-DEVICE_MANUFACTURER: Final = "Saunum"
-DEVICE_MODEL: Final = "Leil Touch Panel"
-
 # Scan intervals
 DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=60)
 DELAYED_REFRESH_SECONDS: Final = timedelta(seconds=3)

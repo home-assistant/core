@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_MANUFACTURER, DEVICE_MODEL, DEVICE_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import LeilSaunaCoordinator
 
 
@@ -21,7 +21,7 @@ class LeilSaunaEntity(CoordinatorEntity[LeilSaunaCoordinator]):
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
-            name=DEVICE_NAME,
-            manufacturer=DEVICE_MANUFACTURER,
-            model=DEVICE_MODEL,
+            name="Saunum Leil",
+            manufacturer="Saunum",
+            model="Leil Touch Panel",
         )
