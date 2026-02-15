@@ -38,9 +38,9 @@
           "tenant_id": "Tenant ID"
         },
         "data_description": {
-          "tenant_id": "The tenant ID of your OneDrive for Business account's tenant."
+          "tenant_id": "The directory (tenant) ID from the Microsoft Entra admin center."
         },
-        "description": "To set up Onedrive for Business you need to create an app registration in the [Microsoft Entra admin center]({entra_url}) and set the redirect URI to `{redirect_url}`. In this step enter the tenant ID of the tenant where you created the app registration. In the next step you will be asked to provide the client ID and client secret of the app registration.",
+        "description": "To set up OneDrive for Business, you need to create an app registration in the [Microsoft Entra admin center]({entra_url}) and set the redirect URI to `{redirect_url}`. In this step, enter the ID of the tenant where you created the app registration. In the next step, you will be asked to provide the client ID and client secret of the app registration.",
         "title": "Select tenant"
       },
       "reauth_confirm": {
