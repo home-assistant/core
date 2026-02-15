@@ -604,25 +604,26 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         if not self._started:
             # Wrap status.update_from_dps to capture raw MQTT data
             original_update = self.api.status.update_from_dps
-            
+
             def update_wrapper(decoded_dps: dict) -> None:
                 """Capture MQTT data and call original."""
                 self._last_mqtt_data.update(decoded_dps)
                 original_update(decoded_dps)
-            
-            self.api.status.update_from_dps = update_wrapper
+
+            # Replace method to intercept MQTT data before StatusTrait filtering
+            self.api.status.update_from_dps = update_wrapper  # type: ignore[method-assign]
             await self.api.start()
             self._started = True
-            
+
         try:
             # Request fresh data from the device
             await self.api.refresh()
             # Give the device time to respond via MQTT
             await asyncio.sleep(1)
-            
+
             # Return the last MQTT data received (stored by the subscribe loop)
             data = self._last_mqtt_data.copy() if self._last_mqtt_data else {}
-            
+
             if not data:
                 _LOGGER.warning("No Q10 MQTT data received yet")
         except RoborockException as ex:

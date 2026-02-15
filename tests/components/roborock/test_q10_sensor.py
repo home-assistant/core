@@ -1,3 +1,5 @@
+"""Tests for Roborock Q10 sensor platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
