@@ -23,11 +23,7 @@ from homeassistant.components.cover import (
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
-)
-from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
-)
-from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
 )
 from homeassistant.components.switch import (
