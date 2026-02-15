@@ -9,6 +9,8 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
+from homeassistant.components.fritz.coordinator import FritzConnectionCached
+
 from .const import (
     MOCK_FB_SERVICES,
     MOCK_HOST_ATTRIBUTES_DATA,
@@ -60,7 +62,7 @@ class FritzConnectionMock:
 
     def clear_cache(self) -> None:
         """Mock clear_cache method."""
-        return
+        return FritzConnectionCached.clear_cache(self)
 
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
