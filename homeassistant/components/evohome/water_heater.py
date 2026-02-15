@@ -103,7 +103,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_set_dhw_override(
-        self, state: str, duration: timedelta | None = None
+        self, state: EvoDhwState | str, duration: timedelta | None = None
     ) -> None:
         """Set the DHW controller's override (state)."""
         if duration is not None:
