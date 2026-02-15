@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
-from pyliebherrhomeapi import TemperatureControl, ZonePosition
+import asyncio
+from collections.abc import Coroutine
+from typing import Any
 
+from pyliebherrhomeapi import (
+    LiebherrConnectionError,
+    LiebherrTimeoutError,
+    TemperatureControl,
+    ZonePosition,
+)
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, REFRESH_DELAY
 from .coordinator import LiebherrCoordinator
 
 # Zone position to translation key mapping
@@ -22,6 +32,7 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
     """Base entity for Liebherr devices."""
 
     _attr_has_entity_name = True
+    _optimistic_state: float | bool | None = None
 
     def __init__(
         self,
@@ -43,6 +54,32 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
             model=model,
             model_id=device.device_name,
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Clear optimistic state when coordinator provides fresh data."""
+        self._optimistic_state = None
+        super()._handle_coordinator_update()
+
+    async def _async_send_command(
+        self,
+        command: Coroutine[Any, Any, None],
+        optimistic_value: float | bool,
+    ) -> None:
+        """Send a command with error handling, optimistic update, and delayed refresh."""
+        try:
+            await command
+        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        self._optimistic_state = optimistic_value
+        self.async_write_ha_state()
+
+        await asyncio.sleep(REFRESH_DELAY.total_seconds())
+        await self.coordinator.async_request_refresh()
 
 
 class LiebherrZoneEntity(LiebherrEntity):

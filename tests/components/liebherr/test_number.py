@@ -172,6 +172,8 @@ async def test_set_temperature(
     """Test setting the temperature."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
+    initial_call_count = mock_liebherr_client.get_device_state.call_count
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -185,6 +187,9 @@ async def test_set_temperature(
         target=6,
         unit=TemperatureUnit.CELSIUS,
     )
+
+    # Verify coordinator refresh was triggered
+    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
 
 
 @pytest.mark.usefixtures("init_integration")
