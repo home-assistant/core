@@ -143,8 +143,3 @@ pytest_buckets.txt
 # AI tooling
 .claude/settings.local.json
 .serena/
-
-# Personal documentation/analysis files
-Q10_ZONE_CLEANING_ANALYSIS.md
-PR_SUMMARY.md
-*_ANALYSIS.md
