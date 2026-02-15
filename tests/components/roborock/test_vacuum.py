@@ -705,6 +705,39 @@ async def test_q10_set_fan_speed_command(
     assert api.command.send.call_count == 1
 
 
+async def test_q10_clean_spot_command(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test sending clean_spot command to the Q10 vacuum."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_CLEAN_SPOT,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+    )
+
+    # Q10 starts cleaning using vacuum.start_clean
+    api = q10_fake_device.b01_q10_properties
+    assert api.vacuum.start_clean.call_count == 1
+
+
 async def test_q10_send_command_not_supported(
     hass: HomeAssistant,
     q10_config_entry: MockConfigEntry,

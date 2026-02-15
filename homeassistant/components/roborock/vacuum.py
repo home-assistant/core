@@ -479,6 +479,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_SPOT
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -569,6 +570,21 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": "return_to_dock",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        """Clean a spot/zone."""
+        try:
+            # Start spot/zone cleaning using start_clean
+            await self.coordinator.api.vacuum.start_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "start_clean",
                 },
             ) from err
         await self.coordinator.async_refresh()
