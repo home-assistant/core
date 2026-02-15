@@ -7,7 +7,7 @@ import pytest
 from sn2 import InformationData, InformationUpdate, OnOffSetting
 
 from homeassistant.components.systemnexa2.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
 
 from tests.common import MockConfigEntry
 
@@ -76,8 +76,13 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
         unique_id="test_device_id",
+        data={
+            CONF_HOST: "10.0.0.100",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
     )
 
 

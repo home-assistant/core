@@ -37,23 +37,16 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+    assert result["result"].unique_id == "test_device_id"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_already_configured(hass: HomeAssistant) -> None:
+async def test_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we abort if the device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_device_id",
-        data={
-            CONF_HOST: "10.0.0.100",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_ID: "test_device_id",
-            CONF_MODEL: "Test Model",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
