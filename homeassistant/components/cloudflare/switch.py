@@ -7,20 +7,23 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .coordinator import CloudflareConfigEntry
 from .const import DOMAIN, CONF_DOMAINS
 from .helpers import async_update_proxied_state
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: CloudflareConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cloudflare proxy switches for a config entry."""
-    runtime = entry.runtime_data  # type: ignore[attr-defined]
+    runtime = entry.runtime_data
     coordinator = runtime.coordinator
     zone = runtime.dns_zone
     domains: list[str] = entry.data.get(CONF_DOMAINS, [])
@@ -84,11 +87,11 @@ class CloudflareProxySwitch(CoordinatorEntity, SwitchEntity):
             return False
         return bool(record.get("proxied"))
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the proxy on."""
         await self._async_set_proxied(True)
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the proxy off."""
         await self._async_set_proxied(False)
 
