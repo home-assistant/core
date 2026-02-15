@@ -2,11 +2,13 @@
 
 import logging
 
+import aiohttp
 from sn2 import (
     ConnectionStatus,
     Device,
     DeviceInitializationError,
     InformationData,
+    NotConnectedError,
     OnOffSetting,
     SettingsUpdate,
     StateChange,
@@ -16,7 +18,7 @@ from sn2.device import Setting, UpdateEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -130,3 +132,33 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             and data.state is not None
         ):
             self.async_set_updated_data(data)
+
+    async def _async_call_with_error_handling(self, coro):
+        """Execute a coroutine with error handling."""
+        try:
+            return await coro
+        except (TimeoutError, NotConnectedError, aiohttp.ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+            ) from err
+
+    async def async_turn_on(self) -> None:
+        """Turn on the device."""
+        await self._async_call_with_error_handling(self.device.turn_on())
+
+    async def async_turn_off(self) -> None:
+        """Turn off the device."""
+        await self._async_call_with_error_handling(self.device.turn_off())
+
+    async def async_toggle(self) -> None:
+        """Toggle the device."""
+        await self._async_call_with_error_handling(self.device.toggle())
+
+    async def async_setting_enable(self, setting: OnOffSetting) -> None:
+        """Enable a device setting."""
+        await self._async_call_with_error_handling(setting.enable(self.device))
+
+    async def async_setting_disable(self, setting: OnOffSetting) -> None:
+        """Disable a device setting."""
+        await self._async_call_with_error_handling(setting.disable(self.device))

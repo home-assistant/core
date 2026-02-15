@@ -169,12 +169,6 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self._discovered_device.host}
         )
 
-        _LOGGER.info(
-            "Configuring device %s: %s at %s",
-            self._discovered_device.name,
-            self._discovered_device.model,
-            self._discovered_device.host,
-        )
         self.context["title_placeholders"] = {
             "name": self._discovered_device.name,
             "model": self._discovered_device.model or "Unknown model",

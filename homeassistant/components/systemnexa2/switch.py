@@ -94,11 +94,11 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
-        await self._setting.enable(self.coordinator.device)
+        await self.coordinator.async_setting_enable(self._setting)
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
-        await self._setting.disable(self.coordinator.device)
+        await self.coordinator.async_setting_disable(self._setting)
 
     @property
     def is_on(self) -> bool:
@@ -125,15 +125,15 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.coordinator.device.turn_on()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.coordinator.device.turn_off()
+        await self.coordinator.async_turn_off()
 
     async def async_toggle(self, **_kwargs: Any) -> None:
         """Toggle the switch."""
-        await self.coordinator.device.toggle()
+        await self.coordinator.async_toggle()
 
     @property
     def is_on(self) -> bool | None:

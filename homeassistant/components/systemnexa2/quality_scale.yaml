@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: No service actions in integration
+    comment: No extra service actions in integration
   appropriate-polling:
     status: exempt
     comment: No polling used, push only
@@ -28,9 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No service actions in integration
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
