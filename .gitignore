@@ -146,4 +146,5 @@ pytest_buckets.txt
 
 # Personal documentation/analysis files
 Q10_ZONE_CLEANING_ANALYSIS.md
+PR_SUMMARY.md
 *_ANALYSIS.md
