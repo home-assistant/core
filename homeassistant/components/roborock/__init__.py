@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
+import logging
 from typing import Any
 
 from roborock import (
@@ -53,6 +54,8 @@ from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SCAN_INTERVAL = timedelta(seconds=30)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -116,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="api_rate_limit",
         ) from err
     except RoborockException as err:
+        _LOGGER.debug("Failed to get Roborock home data: %s", err)
         # Check if the error is due to rate limiting
         error_msg = str(err)
         if (
@@ -162,6 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
 
     try:
         devices = await device_manager.get_devices()
+        _LOGGER.debug("Device manager found %d devices", len(devices))
     except Exception as err:
         raise ConfigEntryNotReady(
             f"Failed to get devices: {err}",
@@ -221,6 +226,10 @@ def _remove_stale_devices(
         }
         if any(device_duid in device_map for device_duid in device_duids):
             continue
+        _LOGGER.info(
+            "Removing device: %s because it is no longer exists in your account",
+            device.name,
+        )
         device_registry.async_update_device(
             device_id=device.id,
             remove_config_entry_id=entry.entry_id,
@@ -229,6 +238,11 @@ def _remove_stale_devices(
 
 async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Migrate old configuration entries to the new format."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        entry.version,
+        entry.minor_version,
+    )
     if entry.version > 1:
         # Downgrade from future version
         return False
@@ -236,6 +250,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -
     # 1->2: Migrate from unique id as email address to unique id as rruid
     if entry.minor_version == 1:
         user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
+        _LOGGER.debug("Updating unique id to %s", user_data.rruid)
         hass.config_entries.async_update_entry(
             entry,
             unique_id=user_data.rruid,
@@ -268,6 +283,7 @@ def build_setup_functions(
         | RoborockDataUpdateCoordinatorB01
     ] = []
     for device in devices:
+        _LOGGER.debug("Creating device %s: %s", device.name, device)
         if device.v1_properties is not None:
             coordinators.append(
                 RoborockDataUpdateCoordinator(hass, entry, device, device.v1_properties)
@@ -293,7 +309,12 @@ def build_setup_functions(
                 )
             )
         else:
-            pass
+            _LOGGER.warning(
+                "Not adding device %s because its protocol version %s or category %s is not supported",
+                device.duid,
+                device.device_info.pv,
+                device.product.category.name,
+            )
 
     return [setup_coordinator(coordinator) for coordinator in coordinators]
 
