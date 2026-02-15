@@ -33,6 +33,7 @@ from .const import (
     CONF_IGNORE_TIMESTAMPS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    CONF_IGNORE_BR,
     DOMAIN,
     TITLE,
 )
@@ -219,6 +220,10 @@ class SIAOptionsFlowHandler(OptionsFlow):
                                 CONF_IGNORE_TIMESTAMPS
                             ],
                         ): bool,
+                        vol.Optional(
+                            CONF_IGNORE_BR,
+                            default=self.options[CONF_ACCOUNTS][account].get(CONF_IGNORE_BR, False),
+                        ): bool,
                     }
                 ),
                 errors=errors,
@@ -230,6 +235,7 @@ class SIAOptionsFlowHandler(OptionsFlow):
             CONF_IGNORE_TIMESTAMPS
         ]
         self.options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
+        self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
         if self.accounts_todo:
             return await self.async_step_options()
         return self.async_create_entry(title="", data=self.options)
