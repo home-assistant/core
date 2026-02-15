@@ -75,6 +75,9 @@
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
     },
+    "unable_to_get_account": {
+      "message": "Unable to get account \"{account_name}\"."
+    },
     "unable_to_send_message": {
       "message": "Unable to send message."
     },
@@ -93,6 +96,20 @@
     }
   },
   "services": {
+    "get_account": {
+      "description": "Gets information about a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to use to search.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Get account"
+    },
     "post": {
       "description": "Posts a status on your Mastodon account.",
       "fields": {

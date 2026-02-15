@@ -12,6 +12,7 @@ DATA_HASS_CONFIG = "mastodon_hass_config"
 DEFAULT_URL: Final = "https://mastodon.social"
 DEFAULT_NAME: Final = "Mastodon"
 
+ATTR_ACCOUNT_NAME = "account_name"
 ATTR_STATUS = "status"
 ATTR_VISIBILITY = "visibility"
 ATTR_IDEMPOTENCY_KEY = "idempotency_key"
