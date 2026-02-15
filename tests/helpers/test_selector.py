@@ -1308,17 +1308,17 @@ def test_attribute_selector_schema(
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
                 {"milliseconds": 500},
             ),
-            (None, {}),
+            (None, {}, {"seconds": -1}),
         ),
         (
             {"enable_day": True, "enable_millisecond": True},
             ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
-            (None, {}),
+            (None, {}, {"seconds": -1}),
         ),
         (
-            {"allow_negative": False},
-            ({"seconds": 10}, {"days": 10}),
-            (None, {}, {"seconds": -1}),
+            {"allow_negative": True},
+            ({"seconds": 10}, {"seconds": -1}),
+            (None, {}),
         ),
     ],
 )
