@@ -5,7 +5,6 @@ from typing import Final
 
 DOMAIN: Final = "saunum"
 
-# Scan intervals
 DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=60)
 DELAYED_REFRESH_SECONDS: Final = timedelta(seconds=3)
 
