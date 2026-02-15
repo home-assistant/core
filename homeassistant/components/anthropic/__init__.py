@@ -7,7 +7,7 @@ import anthropic
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,8 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     try:
         await client.models.list(timeout=10.0)
     except anthropic.AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        return False
+        raise ConfigEntryAuthFailed(err) from err
     except anthropic.AnthropicError as err:
         raise ConfigEntryNotReady(err) from err
 
