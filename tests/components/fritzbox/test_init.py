@@ -337,3 +337,33 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fritz: Mock,
+) -> None:
+    """Test migrate config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.1",
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.data == {
+        CONF_HOST: "http://10.0.0.1",
+        CONF_PASSWORD: "fake_pass",
+        CONF_USERNAME: "fake_user",
+        CONF_PORT: 80,
+        CONF_VERIFY_SSL: True,
+    }
