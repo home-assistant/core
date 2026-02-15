@@ -14,7 +14,6 @@
     "step": {
       "user": {
         "data": {
-          "expand_platforms": "Expand platforms",
           "line_whitelist": "Line whitelist",
           "number_of_departures": "Number of departures",
           "omit_non_boarding": "Omit non-boarding departures",
@@ -22,7 +21,6 @@
           "stop_ids": "Stop IDs"
         },
         "data_description": {
-          "expand_platforms": "Automatically expand stop places to include all quays/platforms",
           "line_whitelist": "Only show departures for these specific line IDs (leave empty for all lines)",
           "number_of_departures": "Number of upcoming departures to include in attributes",
           "omit_non_boarding": "Hide departures where boarding is not allowed (e.g., last stop)",
@@ -43,14 +41,12 @@
     "step": {
       "init": {
         "data": {
-          "expand_platforms": "[%key:component::entur_public_transport::config::step::user::data::expand_platforms%]",
           "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data::line_whitelist%]",
           "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data::number_of_departures%]",
           "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data::omit_non_boarding%]",
           "show_on_map": "[%key:component::entur_public_transport::config::step::user::data::show_on_map%]"
         },
         "data_description": {
-          "expand_platforms": "[%key:component::entur_public_transport::config::step::user::data_description::expand_platforms%]",
           "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data_description::line_whitelist%]",
           "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data_description::number_of_departures%]",
           "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data_description::omit_non_boarding%]",

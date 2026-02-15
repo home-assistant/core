@@ -32,7 +32,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_CLIENT_NAME,
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
@@ -47,7 +46,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_STOP_IDS): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
         ),
-        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): BooleanSelector(),
         vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
         vol.Optional(CONF_WHITELIST_LINES, default=[]): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
@@ -133,9 +131,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_STOP_IDS: stop_ids},
                     options={
-                        CONF_EXPAND_PLATFORMS: user_input.get(
-                            CONF_EXPAND_PLATFORMS, True
-                        ),
                         CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
                         CONF_WHITELIST_LINES: user_input.get(
                             CONF_WHITELIST_LINES, []
@@ -183,7 +178,6 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
             title=title,
             data={CONF_STOP_IDS: stop_ids},
             options={
-                CONF_EXPAND_PLATFORMS: import_data.get(CONF_EXPAND_PLATFORMS, True),
                 CONF_SHOW_ON_MAP: import_data.get(CONF_SHOW_ON_MAP, False),
                 CONF_WHITELIST_LINES: import_data.get(CONF_WHITELIST_LINES, []),
                 CONF_OMIT_NON_BOARDING: import_data.get(CONF_OMIT_NON_BOARDING, True),
@@ -214,10 +208,6 @@ class EnturOptionsFlow(OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_EXPAND_PLATFORMS,
-                    default=current.get(CONF_EXPAND_PLATFORMS, True),
-                ): BooleanSelector(),
                 vol.Optional(
                     CONF_SHOW_ON_MAP,
                     default=current.get(CONF_SHOW_ON_MAP, False),

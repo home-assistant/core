@@ -43,7 +43,6 @@ from .const import (
     ATTR_ROUTE,
     ATTR_ROUTE_ID,
     ATTR_STOP_ID,
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
@@ -60,7 +59,7 @@ if TYPE_CHECKING:
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
+        vol.Optional("expand_platforms", default=True): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
         vol.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,

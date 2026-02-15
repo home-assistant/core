@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError
 
 from homeassistant.components.entur_public_transport.const import (
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
@@ -39,7 +38,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_WHITELIST_LINES: [],
                 CONF_OMIT_NON_BOARDING: True,
@@ -53,7 +51,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
     assert result["options"] == {
-        CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -78,7 +75,6 @@ async def test_user_flow_with_quay(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:Quay:48550"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
@@ -100,7 +96,6 @@ async def test_user_flow_invalid_stop_id(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_STOP_IDS: ["invalid_id"],
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -128,7 +123,6 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
@@ -156,7 +150,6 @@ async def test_user_flow_timeout(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
@@ -184,7 +177,6 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
@@ -222,7 +214,6 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_STOP_IDS: ["NSR:StopPlace:548"],
-                CONF_EXPAND_PLATFORMS: True,
                 CONF_SHOW_ON_MAP: False,
                 CONF_OMIT_NON_BOARDING: True,
                 CONF_NUMBER_OF_DEPARTURES: 2,
@@ -250,7 +241,6 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            CONF_EXPAND_PLATFORMS: False,
             CONF_SHOW_ON_MAP: True,
             CONF_WHITELIST_LINES: ["NSB:Line:45"],
             CONF_OMIT_NON_BOARDING: False,
@@ -261,7 +251,6 @@ async def test_options_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_EXPAND_PLATFORMS: False,
         CONF_SHOW_ON_MAP: True,
         CONF_WHITELIST_LINES: ["NSB:Line:45"],
         CONF_OMIT_NON_BOARDING: False,
@@ -273,7 +262,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test successful import from YAML configuration."""
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: True,
         CONF_NAME: "My Bus Stop",
         "show_on_map": False,
         CONF_WHITELIST_LINES: [],
@@ -301,7 +289,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
     assert result["options"] == {
-        CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -313,7 +300,6 @@ async def test_import_flow_invalid_stop_id(hass: HomeAssistant) -> None:
     """Test import flow with invalid stop ID."""
     yaml_config = {
         CONF_STOP_IDS: ["invalid_id"],
-        CONF_EXPAND_PLATFORMS: True,
         CONF_NAME: "My Bus Stop",
         "show_on_map": False,
         CONF_WHITELIST_LINES: [],
@@ -335,7 +321,6 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test import flow when API connection fails."""
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: True,
         CONF_NAME: "My Bus Stop",
         "show_on_map": False,
         CONF_WHITELIST_LINES: [],
@@ -364,7 +349,6 @@ async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
     """Test import flow when an unexpected error occurs."""
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: True,
         CONF_NAME: "My Bus Stop",
         "show_on_map": False,
         CONF_WHITELIST_LINES: [],
@@ -403,7 +387,6 @@ async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
 
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_EXPAND_PLATFORMS: True,
         CONF_NAME: "My Bus Stop",
         "show_on_map": False,
         CONF_WHITELIST_LINES: [],

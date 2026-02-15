@@ -16,7 +16,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     API_CLIENT_NAME,
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
@@ -74,8 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnturConfigEntry) -> boo
         web_session=async_get_clientsession(hass),
     )
 
-    if entry.options.get(CONF_EXPAND_PLATFORMS, True):
-        await data.expand_all_quays()
+    await data.expand_all_quays()
     await data.update()
 
     proxy = EnturProxy(data)
