@@ -2,7 +2,6 @@
 
 from copy import copy
 from datetime import timedelta
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -364,14 +363,13 @@ async def test_alarm_update_exception_logs_warning(
     soco: MockSoCo,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test other SoCoExceptions during alarm update causes speaker to not be setup."""
+    """Test household mismatch logs warning and prevents speaker setup."""
     soco.alarmClock.ListAlarms.side_effect = SoCoException(
         "Alarm list UID does not match household"
     )
-    with caplog.at_level(logging.WARNING):
-        await async_setup_sonos()
-        await hass.async_block_till_done()
+    await async_setup_sonos()
+    await hass.async_block_till_done()
 
-    # Integration should not load entities
+    # Speaker should not be set up due to household mismatch
     assert "switch.sonos_alarm_14" not in entity_registry.entities
     assert "cannot be updated due to a household mismatch" in caplog.text
