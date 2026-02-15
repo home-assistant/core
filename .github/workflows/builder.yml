@@ -18,11 +18,15 @@ env:
   BASE_IMAGE_VERSION: "2026.01.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
+permissions: {}
+
 jobs:
   init:
     name: Initialize build
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
@@ -315,6 +319,8 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
