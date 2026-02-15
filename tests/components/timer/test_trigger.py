@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
+from tests.components import arm_trigger
 
 
 @pytest.fixture
@@ -69,6 +70,30 @@ async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
 
 
 @pytest.mark.parametrize(
+    "trigger_key",
+    [
+        "timer.start",
+        "timer.finish",
+        "timer.pause",
+        "timer.cancel",
+        "timer.restart",
+    ],
+)
+async def test_light_triggers_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+) -> None:
+    """Test the light triggers are gated by the labs flag."""
+    await arm_trigger(hass, trigger_key, None, {})
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
+        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
+        "feature to be enabled in Home Assistant Labs settings (feature flag: "
+        "'new_triggers_conditions')"
+    ) in caplog.text
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("timer", "steps", "timer_event"),
     [
         ("start", [SERVICE_START], "timer.started"),
@@ -101,6 +126,7 @@ async def test_timer_type_event(
     assert test_calls[0]["event_type"] == timer_event
 
 
+@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_full_usage(
     hass: HomeAssistant, automation_test_calls, service_calls: list[ServiceCall]
 ) -> None:
@@ -135,6 +161,7 @@ async def test_full_usage(
         assert test_calls[index]["entity_id"] == "timer.test"
 
 
+@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_exception_bad_trigger(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

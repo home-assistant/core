@@ -153,6 +153,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "siren",
     "switch",
     "text",
+    "timer",
     "update",
     "vacuum",
 }
