@@ -144,3 +144,6 @@ pytest_buckets.txt
 .claude/settings.local.json
 .serena/
 
+# Personal documentation/analysis files
+Q10_ZONE_CLEANING_ANALYSIS.md
+*_ANALYSIS.md
