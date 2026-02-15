@@ -36,11 +36,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TibberConfigEntry
 from .coordinator import (
+    TibberCoordinator,
     TibberDataAPICoordinator,
-    TibberDataCoordinator,
     TibberRtDataCoordinator,
 )
-from .entity import TibberDataCoordinatorEntity, TibberSensorRT
+from .entity import TibberCoordinatorEntity, TibberRTCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -674,17 +674,15 @@ async def _async_setup_graphql_sensors(
                 ).async_set_updated_data
             )
 
-    entities: list[TibberDataSensor] = []
+    entities: list[TibberSensor] = []
     coordinator = entry.runtime_data.data_coordinator
     if coordinator is not None and active_homes:
         for home in active_homes:
             entities.extend(
-                TibberDataSensor(home, coordinator, desc, model="Price Sensor")
+                TibberSensor(home, coordinator, desc, model="Price Sensor")
                 for desc in PRICE_SENSORS
             )
-            entities.extend(
-                TibberDataSensor(home, coordinator, desc) for desc in SENSORS
-            )
+            entities.extend(TibberSensor(home, coordinator, desc) for desc in SENSORS)
 
     async_add_entities(entities)
 
@@ -746,13 +744,13 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         return sensor.value if sensor else None
 
 
-class TibberDataSensor(TibberDataCoordinatorEntity):
+class TibberSensor(TibberCoordinatorEntity):
     """Representation of a Tibber sensor reading from coordinator data."""
 
     def __init__(
         self,
         tibber_home: TibberHome,
-        coordinator: TibberDataCoordinator,
+        coordinator: TibberCoordinator,
         entity_description: SensorEntityDescription,
         *,
         model: str | None = None,
@@ -777,7 +775,13 @@ class TibberDataSensor(TibberDataCoordinatorEntity):
         """Return the value of the sensor from coordinator data."""
         home_data = self._get_home_data()
         if home_data is None:
+            _LOGGER.error("Home data not found for home %s", self._tibber_home.home_id)
             return None
+        _LOGGER.error(
+            "Home data found for home %s: %s",
+            self._tibber_home.home_id,
+            getattr(home_data, self.entity_description.key, None),
+        )
         return cast(
             StateType,
             getattr(home_data, self.entity_description.key, None),
@@ -884,7 +888,7 @@ class TibberRtEntityCreator:
                 continue
 
             self._migrate_unique_id(sensor_description)
-            entity = TibberSensorRT(
+            entity = TibberRTCoordinatorEntity(
                 self._tibber_home,
                 sensor_description,
                 state,

@@ -88,7 +88,7 @@ def _build_home_data(home: TibberHome) -> TibberHomeData:
     )
 
 
-class TibberDataCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
+class TibberCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
     """Handle Tibber data, insert statistics, and expose per-home data for sensors."""
 
     config_entry: TibberConfigEntry

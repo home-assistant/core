@@ -12,20 +12,20 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import TibberDataCoordinator, TibberHomeData, TibberRtDataCoordinator
+from .coordinator import TibberCoordinator, TibberHomeData, TibberRtDataCoordinator
 
 if TYPE_CHECKING:
     from tibber import TibberHome
 
 
-class TibberDataCoordinatorEntity(CoordinatorEntity[TibberDataCoordinator]):
-    """Base entity for Tibber sensors using TibberDataCoordinator."""
+class TibberCoordinatorEntity(CoordinatorEntity[TibberCoordinator]):
+    """Base entity for Tibber sensors using TibberCoordinator."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TibberDataCoordinator,
+        coordinator: TibberCoordinator,
         tibber_home: TibberHome,
     ) -> None:
         """Initialize the entity."""
@@ -52,34 +52,7 @@ class TibberDataCoordinatorEntity(CoordinatorEntity[TibberDataCoordinator]):
         )
 
 
-class TibberSensor:
-    """Mixin for Tibber sensors that have a Tibber home and device info.
-
-    Used as the first base for real-time sensors (TibberSensorRT with
-    CoordinatorEntity["TibberRtDataCoordinator"]). Provides _tibber_home,
-    _home_name, _model, _device_name and device_info; does not inherit
-    CoordinatorEntity so the second base can be the coordinator entity.
-    """
-
-    def __init__(self, coordinator: object, tibber_home: TibberHome) -> None:
-        """Initialize the mixin."""
-        super().__init__(coordinator)  # type: ignore[call-arg]
-        self._tibber_home = tibber_home
-        self._home_name: str = tibber_home.name or tibber_home.home_id
-        self._model: str | None = None
-        self._device_name: str = self._home_name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._tibber_home.home_id)},
-            name=self._device_name,
-            model=self._model,
-        )
-
-
-class TibberSensorRT(TibberSensor, CoordinatorEntity[TibberRtDataCoordinator]):
+class TibberRTCoordinatorEntity(CoordinatorEntity[TibberRtDataCoordinator]):
     """Representation of a Tibber sensor for real time consumption."""
 
     def __init__(
@@ -90,10 +63,12 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity[TibberRtDataCoordinator]):
         coordinator: TibberRtDataCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
+        super().__init__(coordinator)
+        self._tibber_home = tibber_home
+        self._home_name: str = tibber_home.name or tibber_home.home_id
+        self._model: str = "Tibber Pulse"
+        self._device_name: str = f"{self._model} {self._home_name}"
         self.entity_description = description
-        self._model = "Tibber Pulse"
-        self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_native_value = initial_state
         self._attr_last_reset: datetime | None = None
@@ -101,6 +76,15 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity[TibberRtDataCoordinator]):
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            model=self._model,
+        )
 
     @property
     def available(self) -> bool:
