@@ -139,11 +139,12 @@ jobs:
         shell: bash
         env:
           UV_PRERELEASE: allow
+          VERSION: ${{ needs.init.outputs.version }}
         run: |
           python3 -m pip install "$(grep '^uv' < requirements.txt)"
           uv pip install packaging tomli
           uv pip install .
-          python3 script/version_bump.py nightly --set-nightly-version "${{ needs.init.outputs.version }}"
+          python3 script/version_bump.py nightly --set-nightly-version "${VERSION}"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
             echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
@@ -189,7 +190,7 @@ jobs:
       - name: Write meta info file
         shell: bash
         run: |
-          echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
+          echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -209,26 +210,32 @@ jobs:
       - name: Build variables
         id: vars
         shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
         run: |
-          echo "base_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ env.BASE_IMAGE_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "cache_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:latest" >> "$GITHUB_OUTPUT"
+          echo "base_image=ghcr.io/home-assistant/${ARCH}-homeassistant-base:${BASE_IMAGE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "cache_image=ghcr.io/home-assistant/${ARCH}-homeassistant:latest" >> "$GITHUB_OUTPUT"
           echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
 
       - name: Verify base image signature
+        env:
+          BASE_IMAGE: ${{ steps.vars.outputs.base_image }}
         run: |
           cosign verify \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --certificate-identity-regexp "https://github.com/home-assistant/docker/.*" \
-            "${{ steps.vars.outputs.base_image }}"
+            "${BASE_IMAGE}"
 
       - name: Verify cache image signature
         id: cache
         continue-on-error: true
+        env:
+          CACHE_IMAGE: ${{ steps.vars.outputs.cache_image }}
         run: |
           cosign verify \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
-            "${{ steps.vars.outputs.cache_image }}"
+            "${CACHE_IMAGE}"
 
       - name: Build base image
         id: build
@@ -250,8 +257,12 @@ jobs:
             org.opencontainers.image.version=${{ needs.init.outputs.version }}
 
       - name: Sign image
+        env:
+          ARCH: ${{ matrix.arch }}
+          VERSION: ${{ needs.init.outputs.version }}
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          cosign sign --yes "ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}@${{ steps.build.outputs.digest }}"
+          cosign sign --yes "ghcr.io/home-assistant/${ARCH}-homeassistant:${VERSION}@${DIGEST}"
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -286,11 +297,13 @@ jobs:
           persist-credentials: false
 
       - name: Set build additional args
+        env:
+          VERSION: ${{ needs.init.outputs.version }}
         run: |
           # Create general tags
-          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+          if [[ "${VERSION}" =~ d ]]; then
             echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
-          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+          elif [[ "${VERSION}" =~ b ]]; then
             echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
           else
             echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
@@ -389,14 +402,17 @@ jobs:
 
       - name: Verify architecture image signatures
         shell: bash
+        env:
+          ARCHITECTURES: ${{ needs.init.outputs.architectures }}
+          VERSION: ${{ needs.init.outputs.version }}
         run: |
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+          ARCHS=$(echo "${ARCHITECTURES}" | jq -r '.[]')
           for arch in $ARCHS; do
             echo "Verifying ${arch} image signature..."
             cosign verify \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               --certificate-identity-regexp https://github.com/home-assistant/core/.* \
-              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+              "ghcr.io/home-assistant/${arch}-homeassistant:${VERSION}"
           done
           echo "✓ All images verified successfully"
 
@@ -427,16 +443,19 @@ jobs:
       - name: Copy architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
         shell: bash
+        env:
+          ARCHITECTURES: ${{ needs.init.outputs.architectures }}
+          VERSION: ${{ needs.init.outputs.version }}
         run: |
           # Use imagetools to copy image blobs directly between registries
           # This preserves provenance/attestations and seems to be much faster than pull/push
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+          ARCHS=$(echo "${ARCHITECTURES}" | jq -r '.[]')
           for arch in $ARCHS; do
             echo "Copying ${arch} image to DockerHub..."
             for attempt in 1 2 3; do
               if docker buildx imagetools create \
-                --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
-                "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"; then
+                --tag "docker.io/homeassistant/${arch}-homeassistant:${VERSION}" \
+                "ghcr.io/home-assistant/${arch}-homeassistant:${VERSION}"; then
                 break
               fi
               echo "Attempt ${attempt} failed, retrying in 10 seconds..."
@@ -446,23 +465,28 @@ jobs:
                 exit 1
               fi
             done
-            cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+            cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${VERSION}"
           done
 
       - name: Create and push multi-arch manifests
         shell: bash
+        env:
+          ARCHITECTURES: ${{ needs.init.outputs.architectures }}
+          REGISTRY: ${{ matrix.registry }}
+          VERSION: ${{ needs.init.outputs.version }}
+          META_TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           # Build list of architecture images dynamically
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+          ARCHS=$(echo "${ARCHITECTURES}" | jq -r '.[]')
           ARCH_IMAGES=()
           for arch in $ARCHS; do
-            ARCH_IMAGES+=("${{ matrix.registry }}/${arch}-homeassistant:${{ needs.init.outputs.version }}")
+            ARCH_IMAGES+=("${REGISTRY}/${arch}-homeassistant:${VERSION}")
           done
 
           # Build list of all tags for single manifest creation
           # Note: Using sep-tags=',' in metadata-action for easier parsing
           TAG_ARGS=()
-          IFS=',' read -ra TAGS <<< "${{ steps.meta.outputs.tags }}"
+          IFS=',' read -ra TAGS <<< "${META_TAGS}"
           for tag in "${TAGS[@]}"; do
             TAG_ARGS+=("--tag" "${tag}")
           done
@@ -558,7 +582,7 @@ jobs:
           tags: ${{ env.HASSFEST_IMAGE_TAG }}
 
       - name: Run hassfest against core
-        run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
+        run: docker run --rm -v "${GITHUB_WORKSPACE}":/github/workspace "${HASSFEST_IMAGE_TAG}" --core-path=/github/workspace
 
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
