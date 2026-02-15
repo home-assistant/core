@@ -2166,3 +2166,46 @@ async def test_custom_wake_words(
     # Check non-existent wake word
     req = await http_client.get("/api/esphome/wake_words/wrong_wake_word.json")
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_pipeline_start_missing_wake_word_entity_loop(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that a missing wake word entity does not cause an infinite loop."""
+    await hass.async_block_till_done()
+
+    # Find the satellite entity
+    component = hass.data[assist_satellite.DOMAIN]
+    satellite = None
+    for entity in component.entities:
+        if entity.unique_id and "assist_satellite" in entity.unique_id:
+            satellite = entity
+            break
+
+    assert satellite is not None
+
+    # Mock get_wake_word_entity to return an ID that does NOT exist in hass.states
+    call_counts = {}
+
+    def side_effect(index: int) -> str | None:
+        call_counts[index] = call_counts.get(index, 0) + 1
+        if call_counts[index] > 100:
+            raise RuntimeError("Infinite loop detected in handle_pipeline_start")
+
+        # Index 0 returns an entity ID that is NOT in hass.states
+        if index == 0:
+            return "binary_sensor.missing_wake_word"
+        return None
+
+    with patch.object(satellite, "get_wake_word_entity", side_effect=side_effect):
+        assert hass.states.get("binary_sensor.missing_wake_word") is None
+
+        # This should raise RuntimeError if buggy because of infinite loop on index 0
+        await satellite.handle_pipeline_start(
+            conversation_id="test-conversation-id",
+            flags=VoiceAssistantCommandFlag.USE_WAKE_WORD,
+            audio_settings=VoiceAssistantAudioSettings(),
+            wake_word_phrase="test_phrase",
+        )
