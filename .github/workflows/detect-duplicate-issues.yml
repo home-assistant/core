@@ -5,13 +5,14 @@ on:
   issues:
     types: [labeled]
 
-permissions:
-  issues: write
-  models: read
+permissions: {}
 
 jobs:
   detect-duplicates:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      models: read
 
     steps:
       - name: Check if integration label was added and extract details
