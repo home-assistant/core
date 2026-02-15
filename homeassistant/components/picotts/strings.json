@@ -1,0 +1,11 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]"
+        }
+      }
+    }
+  }
+}
