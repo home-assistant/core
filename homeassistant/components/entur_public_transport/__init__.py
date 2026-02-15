@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from random import randint
 
 from enturclient import EnturPublicTransportData
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import Throttle
 
 from .const import (
     API_CLIENT_NAME,
@@ -20,9 +22,28 @@ from .const import (
     CONF_STOP_IDS,
     CONF_WHITELIST_LINES,
 )
-from .sensor import EnturProxy
 
 PLATFORMS = [Platform.SENSOR]
+
+
+class EnturProxy:
+    """Proxy for the Entur client.
+
+    Ensure throttle to not hit rate limiting on the API.
+    """
+
+    def __init__(self, api: EnturPublicTransportData) -> None:
+        """Initialize the proxy."""
+        self._api = api
+
+    @Throttle(timedelta(seconds=15))
+    async def async_update(self) -> None:
+        """Update data in client."""
+        await self._api.update()
+
+    def get_stop_info(self, stop_id: str):
+        """Get info about specific stop place."""
+        return self._api.get_stop_info(stop_id)
 
 
 @dataclass

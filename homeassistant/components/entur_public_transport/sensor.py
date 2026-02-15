@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from enturclient import EnturPublicTransportData
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DELAY,
@@ -55,7 +55,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import EnturConfigEntry
+    from . import EnturConfigEntry, EnturProxy
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -154,26 +154,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities, True)
-
-
-class EnturProxy:
-    """Proxy for the Entur client.
-
-    Ensure throttle to not hit rate limiting on the API.
-    """
-
-    def __init__(self, api):
-        """Initialize the proxy."""
-        self._api = api
-
-    @Throttle(timedelta(seconds=15))
-    async def async_update(self) -> None:
-        """Update data in client."""
-        await self._api.update()
-
-    def get_stop_info(self, stop_id: str) -> dict:
-        """Get info about specific stop place."""
-        return self._api.get_stop_info(stop_id)
 
 
 class EnturPublicTransportSensor(SensorEntity):
