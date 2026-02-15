@@ -78,8 +78,8 @@ jobs:
     name: Collect information & changes data
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
-      pull-requests: read
+      contents: read # To check out the repository
+      pull-requests: read # For paths-filter to detect changed files
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
@@ -1561,7 +1561,7 @@ jobs:
       - pytest-mariadb
     timeout-minutes: 10
     permissions:
-      id-token: write
+      id-token: write # For Codecov OIDC upload
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
     if: |

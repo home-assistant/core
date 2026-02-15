@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
-      actions: read
-      contents: read
-      security-events: write
+      actions: read # To read workflow information for CodeQL
+      contents: read # To check out the repository
+      security-events: write # To upload CodeQL results
 
     steps:
       - name: Check out code from GitHub
