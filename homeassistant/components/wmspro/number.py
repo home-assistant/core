@@ -52,10 +52,8 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
             self._attr_unique_id += f"-rotation-{name}"
         if name == "min":
             self._value_func = min
-            self._attr_icon = "mdi:rotate-left"
         elif name == "max":
             self._value_func = max
-            self._attr_icon = "mdi:rotate-right"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -123,7 +121,6 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
     """Representation of a WMS based slat-rotation for a slat-based cover."""
 
-    _attr_icon = "mdi:rotate-360"
     _attr_translation_key = "rotation"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
