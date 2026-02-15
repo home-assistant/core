@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from tesla_fleet_api.exceptions import Forbidden, InvalidToken
+from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
 
 from homeassistant.components.tessie import PLATFORMS
 from homeassistant.components.tessie.coordinator import (
@@ -138,16 +138,25 @@ async def test_coordinator_info_error(
 
 
 @pytest.mark.parametrize(
-    "mock_fixture",
-    ["mock_live_status", "mock_site_info", "mock_energy_history"],
+    ("mock_fixture", "side_effect"),
+    [
+        ("mock_live_status", InvalidToken),
+        ("mock_site_info", InvalidToken),
+        ("mock_site_info", MissingToken),
+        ("mock_energy_history", InvalidToken),
+        ("mock_energy_history", MissingToken),
+    ],
 )
 async def test_coordinator_reauth(
-    hass: HomeAssistant, mock_fixture: str, request: pytest.FixtureRequest
+    hass: HomeAssistant,
+    mock_fixture: str,
+    side_effect: type[Exception],
+    request: pytest.FixtureRequest,
 ) -> None:
     """Tests that energy coordinators handle auth errors."""
 
     mock = request.getfixturevalue(mock_fixture)
-    mock.side_effect = InvalidToken
+    mock.side_effect = side_effect
     entry = await setup_platform(hass, [Platform.SENSOR])
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
