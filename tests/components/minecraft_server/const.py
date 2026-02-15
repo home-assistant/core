@@ -27,9 +27,9 @@ TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
         online=3,
         max=10,
         sample=[
-            JavaResponsePlayer(id="1", name="Player 1"),
-            JavaResponsePlayer(id="2", name="Player 2"),
-            JavaResponsePlayer(id="3", name="Player 3"),
+            JavaStatusPlayer(id="1", name="Player 1"),
+            JavaStatusPlayer(id="2", name="Player 2"),
+            JavaStatusPlayer(id="3", name="Player 3"),
         ],
     ),
     version=JavaStatusVersion(name="Dummy Version", protocol=123),
