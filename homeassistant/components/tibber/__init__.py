@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 
 import aiohttp
@@ -38,8 +38,8 @@ class TibberRuntimeData:
     """Runtime data for Tibber API entries."""
 
     session: OAuth2Session
-    data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
-    data_coordinator: TibberDataCoordinator | None = field(default=None)
+    data_api_coordinator: TibberDataAPICoordinator
+    data_coordinator: TibberDataCoordinator
     _client: tibber.Tibber | None = None
 
     async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
@@ -101,8 +101,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
+    data_api_coordinator = TibberDataAPICoordinator(hass, entry)
+    await data_api_coordinator.async_config_entry_first_refresh()
+    data_coordinator = TibberDataCoordinator(hass, entry, entry.runtime_data)
+    await data_coordinator.async_config_entry_first_refresh()
+    await data_coordinator.update_listeners(dt_util.utcnow())
     entry.runtime_data = TibberRuntimeData(
         session=session,
+        data_api_coordinator=data_api_coordinator,
+        data_coordinator=data_coordinator,
     )
 
     tibber_connection = await entry.runtime_data.async_get_client(hass)
@@ -124,14 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Invalid login credentials") from err
     except tibber.FatalHttpExceptionError as err:
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
-
-    data_api_coordinator = TibberDataAPICoordinator(hass, entry)
-    await data_api_coordinator.async_config_entry_first_refresh()
-    entry.runtime_data.data_api_coordinator = data_api_coordinator
-
-    data_coordinator = TibberDataCoordinator(hass, entry, entry.runtime_data)
-    await data_coordinator.async_config_entry_first_refresh()
-    entry.runtime_data.data_coordinator = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

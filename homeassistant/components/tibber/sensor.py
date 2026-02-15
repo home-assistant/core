@@ -113,7 +113,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -641,14 +641,14 @@ async def _async_setup_graphql_sensors(
     entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Tibber GraphQL-based sensors."""
+    """Set up the Tibber sensor."""
 
     tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     entity_registry = er.async_get(hass)
 
+    coordinator: TibberDataCoordinator = entry.runtime_data.data_coordinator
     entities: list[TibberSensor] = []
-    coordinator = entry.runtime_data.data_coordinator
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
@@ -663,7 +663,7 @@ async def _async_setup_graphql_sensors(
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
-        if coordinator is not None and home.has_active_subscription:
+        if home.has_active_subscription:
             entities.extend(TibberSensor(home, coordinator, desc) for desc in SENSORS)
 
         if home.has_real_time_consumption:
@@ -689,8 +689,6 @@ def _setup_data_api_sensors(
     """Set up sensors backed by the Tibber Data API."""
 
     coordinator = entry.runtime_data.data_api_coordinator
-    if coordinator is None:
-        return
 
     entities: list[TibberDataAPISensor] = []
     api_sensors = {sensor.key: sensor for sensor in DATA_API_SENSORS}
