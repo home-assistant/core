@@ -12,6 +12,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_drive": "[%key:component::onedrive::config::abort::wrong_drive%]"
@@ -45,6 +46,16 @@
       "reauth_confirm": {
         "description": "The OneDrive for Business integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure_folder": {
+        "data": {
+          "folder_path": "[%key:component::onedrive_for_business::config::step::select_folder::data::folder_path%]"
+        },
+        "data_description": {
+          "folder_path": "[%key:component::onedrive_for_business::config::step::select_folder::data_description::folder_path%]"
+        },
+        "description": "[%key:component::onedrive_for_business::config::step::select_folder::description%]",
+        "title": "[%key:component::onedrive_for_business::config::step::select_folder::title%]"
       },
       "select_folder": {
         "data": {

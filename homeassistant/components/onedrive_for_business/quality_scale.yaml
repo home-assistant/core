@@ -116,7 +116,7 @@ rules:
     status: exempt
     comment: |
       This integration does not create entities.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
