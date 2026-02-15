@@ -1,4 +1,4 @@
-"""Config flow for Cloudflare integration."""
+"""Config flow for Cloudflare integration supporting multiple zones and record selection."""
 
 from __future__ import annotations
 
@@ -16,16 +16,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_RECORDS, DOMAIN
+from .const import CONF_DOMAINS, DOMAIN
 from .helpers import get_zone_id
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_TOKEN): str,
-    }
-)
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
 def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> vol.Schema:
@@ -39,13 +35,11 @@ def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> vol.Schema:
 
 
 def _records_schema(records: list[pycfdns.RecordModel] | None = None) -> vol.Schema:
-    """Zone records selection schema."""
-    records_dict = {}
-
+    """Schema for selecting existing A records (checkbox multi-select)."""
+    records_dict: dict[str, str] = {}
     if records:
-        records_dict = {name["name"]: name["name"] for name in records}
-
-    return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_dict)})
+        records_dict = {item["name"]: item["name"] for item in records}
+    return vol.Schema({vol.Required(CONF_DOMAINS): cv.multi_select(records_dict)})
 
 
 async def _validate_input(
@@ -57,6 +51,7 @@ async def _validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     zone = data.get(CONF_ZONE)
+
     records: list[pycfdns.RecordModel] = []
 
     client = pycfdns.Client(
@@ -143,8 +138,8 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_ZONE])
+                # Proceed to records selection step (existing A records)
                 self.records = info["records"]
-
                 return await self.async_step_records()
 
         return self.async_show_form(
@@ -156,16 +151,19 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_records(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the picking the zone records."""
-
+        """Select existing A records."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self.cloudflare_config.update(user_input)
-            title = self.cloudflare_config[CONF_ZONE]
-            return self.async_create_entry(title=title, data=self.cloudflare_config)
+            domains_list: list[str] = user_input.get(CONF_DOMAINS, [])
+            if not domains_list:
+                errors["base"] = "no_domains"
+            else:
+                self.cloudflare_config[CONF_DOMAINS] = domains_list
+                title = self.cloudflare_config[CONF_ZONE]
+                return self.async_create_entry(title=title, data=self.cloudflare_config)
 
         return self.async_show_form(
-            step_id="records",
-            data_schema=_records_schema(self.records),
+            step_id="records", data_schema=_records_schema(self.records), errors=errors
         )
 
     async def _async_validate_or_error(
