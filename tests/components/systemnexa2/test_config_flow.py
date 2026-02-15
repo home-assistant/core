@@ -61,13 +61,22 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_timeout(
+@pytest.mark.parametrize(
+    ("exception", "error_key"),
+    [
+        (TimeoutError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
+)
+async def test_connection_error_and_recovery(
     hass: HomeAssistant,
     mock_system_nexa_2_device: MagicMock,
     mock_setup_entry: AsyncMock,
+    exception: type[Exception],
+    error_key: str,
 ) -> None:
-    """Test connection timeout handling and recovery."""
-    mock_system_nexa_2_device.return_value.get_info.side_effect = TimeoutError
+    """Test connection error handling and recovery."""
+    mock_system_nexa_2_device.return_value.get_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -79,7 +88,7 @@ async def test_connection_timeout(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
 
     # Remove the side effect and retry - should succeed now
     device = mock_system_nexa_2_device.return_value
@@ -94,40 +103,15 @@ async def test_connection_timeout(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_connection_unknown_error(
-    hass: HomeAssistant,
-    mock_system_nexa_2_device: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test connection unknown error handling and recovery."""
-    mock_system_nexa_2_device.return_value.get_info.side_effect = RuntimeError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "10.0.0.131"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Remove the side effect and retry - should succeed now
-    device = mock_system_nexa_2_device.return_value
-    device.get_info.side_effect = None
-    device.get_info.return_value = InformationUpdate(information=device.info_data)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "10.0.0.131"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_empty_host(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("host", "use_patch"),
+    [
+        ("", False),
+        ("invalid-hostname.local", True),
+    ],
+    ids=["empty_host", "unresolvable_hostname"],
+)
+async def test_invalid_host(hass: HomeAssistant, host: str, use_patch: bool) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -135,30 +119,20 @@ async def test_empty_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: ""}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_host"}
-
-
-async def test_invalid_hostname(hass: HomeAssistant) -> None:
-    """Test invalid hostname/IP address handling."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # Test with hostname that cannot be resolved
-    # Mock socket.gethostbyname to raise gaierror to cover the exception handling path
-    with patch(
-        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
-        side_effect=socket.gaierror(-2, "Name or service not known"),
-    ):
+    if use_patch:
+        # Mock socket.gethostbyname to raise gaierror for unresolvable hostname
+        with patch(
+            "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+            side_effect=socket.gaierror(-2, "Name or service not known"),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_HOST: host}
+            )
+    else:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "invalid-hostname.local"}
+            result["flow_id"], {CONF_HOST: host}
         )
+    
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
 
