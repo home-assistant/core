@@ -421,12 +421,16 @@ async def async_setup_entry(
         for description in A01_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
     )
-    entities.extend(
-        RoborockSensorEntityB01(coordinator, description)
-        for coordinator in coordinators.b01
-        for description in Q7_B01_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
-    )
+    for coordinator in coordinators.b01:
+        if not isinstance(coordinator.data, B01Props):
+            continue
+
+        b01_data = coordinator.data
+        entities.extend(
+            RoborockSensorEntityB01(coordinator, description)
+            for description in Q7_B01_SENSOR_DESCRIPTIONS
+            if description.value_fn(b01_data) is not None
+        )
     async_add_entities(entities)
 
 
@@ -532,4 +536,8 @@ class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        data = self.coordinator.data
+        if not isinstance(data, B01Props):
+            return None
+
+        return self.entity_description.value_fn(data)
