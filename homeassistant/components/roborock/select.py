@@ -202,7 +202,11 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        data = self.coordinator.data
+        if not isinstance(data, B01Props):
+            return None
+
+        return self.entity_description.value_fn(data)
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
