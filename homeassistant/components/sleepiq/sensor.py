@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DOMAIN,
     HEART_RATE,
+    HRV,
     PRESSURE,
     RESPIRATORY_RATE,
     SLEEP_DURATION,
@@ -92,6 +93,13 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
         value_fn=lambda sleeper: sleeper.respiratory_rate,
+    ),
+    SleepIQSensorEntityDescription(
+        key=HRV,
+        translation_key="hrv",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="ms",
+        value_fn=lambda sleeper: sleeper.hrv,
     ),
 )
 

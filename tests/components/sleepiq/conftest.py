@@ -80,6 +80,7 @@ def mock_bed() -> MagicMock:
     sleeper_l.sleep_score = 85
     sleeper_l.heart_rate = 60
     sleeper_l.respiratory_rate = 14
+    sleeper_l.hrv = 68
 
     sleeper_r.side = Side.RIGHT
     sleeper_r.name = SLEEPER_R_NAME
@@ -91,6 +92,7 @@ def mock_bed() -> MagicMock:
     sleeper_r.sleep_score = 78
     sleeper_r.heart_rate = 65
     sleeper_r.respiratory_rate = 15
+    sleeper_r.hrv = 72
 
     bed.foundation = create_autospec(SleepIQFoundation)
     light_1 = create_autospec(SleepIQLight)
