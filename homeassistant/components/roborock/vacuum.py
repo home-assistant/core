@@ -91,12 +91,14 @@ def _get_q10_status(data: dict[Any, Any] | B01Props) -> WorkStatusMapping | None
     # Map YXDeviceState codes to WorkStatusMapping
     # Status mapping from Q10 device codes to WorkStatusMapping
     status_map = {
-        1: WorkStatusMapping.SWEEP_MOPING,  # Cleaning
-        2: WorkStatusMapping.WAITING_FOR_ORDERS,  # Idle/Waiting
-        3: WorkStatusMapping.PAUSED,  # Paused
-        4: WorkStatusMapping.CHARGING,  # Charging
-        5: WorkStatusMapping.DOCKING,  # Going to dock/returning
-        10: WorkStatusMapping.SWEEP_MOPING,  # Mopping
+        1: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEPING
+        2: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_MOPING
+        3: WorkStatusMapping.WAITING_FOR_ORDERS,  # STANDBY_STATE (idle)
+        4: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEP_AND_MOPING
+        5: WorkStatusMapping.SWEEP_MOPING,  # CLEANING_STATE
+        6: WorkStatusMapping.DOCKING,  # TO_CHARGE_STATE (returning to dock)
+        8: WorkStatusMapping.CHARGING,  # CHARGING_STATE
+        10: WorkStatusMapping.PAUSED,  # PAUSE_STATE
     }
 
     return status_map.get(status_code, WorkStatusMapping.WAITING_FOR_ORDERS)
