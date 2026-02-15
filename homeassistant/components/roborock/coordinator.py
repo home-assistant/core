@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -10,9 +11,11 @@ from typing import Any, TypeVar
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi
+from roborock.devices.traits.b01.q10 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
 from roborock.roborock_message import (
@@ -485,7 +488,9 @@ class RoborockWetDryVacUpdateCoordinator(
             ) from ex
 
 
-class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
+class RoborockDataUpdateCoordinatorB01(
+    DataUpdateCoordinator[B01Props | dict[B01_Q10_DP, Any]]
+):
     """Class to manage fetching data from the API for B01 devices."""
 
     config_entry: RoborockConfigEntry
@@ -569,6 +574,69 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_key="update_data_fail",
             ) from ex
         if data is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            )
+        return data
+
+
+class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
+    """Coordinator for B01 Q10 devices."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+        api: Q10PropertiesApi,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, device)
+        self.api = api
+        self._started = False
+
+    async def _async_update_data(
+        self,
+    ) -> B01Props | dict[B01_Q10_DP, Any]:
+        # Start the subscribe loop on first update
+        if not self._started:
+            await self.api.start()
+            self._started = True
+            
+        try:
+            # Request fresh data from the device
+            await self.api.refresh()
+            # Give the device time to respond via MQTT
+            await asyncio.sleep(1)
+            
+            # Build dict with B01_Q10_DP enum keys from StatusTrait properties
+            # StatusTrait properties use camelCase names, but code expects enum keys
+            status = self.api.status
+            _LOGGER.debug(
+                "Q10 status properties: battery=%s, status=%s, fan_level=%s, water_level=%s, clean_mode=%s",
+                status.battery, status.status, status.fan_level, status.water_level, status.clean_mode
+            )
+            data = {
+                B01_Q10_DP.BATTERY: status.battery,
+                B01_Q10_DP.STATUS: status.status,
+                B01_Q10_DP.FAN_LEVEL: status.fan_level,
+                B01_Q10_DP.WATER_LEVEL: status.water_level,
+                B01_Q10_DP.CLEAN_MODE: status.clean_mode,
+                B01_Q10_DP.CLEAN_TIME: status.clean_time,
+                B01_Q10_DP.CLEAN_AREA: status.clean_area,
+                B01_Q10_DP.CLEAN_COUNT: status.clean_count,
+                B01_Q10_DP.CLEAN_TASK_TYPE: status.clean_task_type,
+                B01_Q10_DP.BACK_TYPE: status.back_type,
+                B01_Q10_DP.CLEAN_PROGRESS: status.cleaning_progress,
+            }
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update Q10 data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
+        if not data:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",

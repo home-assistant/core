@@ -70,4 +70,8 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: exempt
+    comment: |
+      The python-roborock library does not yet provide a py.typed file for PEP 561 compliance.
+      This is a dependency limitation, not an integration issue.
