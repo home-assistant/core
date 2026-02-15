@@ -6,15 +6,15 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_DOMAINS, DOMAIN
 from .coordinator import CloudflareConfigEntry
-from .const import DOMAIN, CONF_DOMAINS
-from homeassistant.const import CONF_API_TOKEN
 from .helpers import async_update_proxied_state
 
 

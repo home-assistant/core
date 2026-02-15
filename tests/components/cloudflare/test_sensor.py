@@ -1,19 +1,14 @@
 """Test the Cloudflare sensors."""
 
-from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.cloudflare.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("location_info")
@@ -38,7 +33,7 @@ async def test_sensor_setup(
     state = hass.states.get("sensor.last_update")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    
+
     entry = entity_registry.async_get("sensor.last_update")
     assert entry
     assert entry.unique_id == "mock-zone-id_last_update"
@@ -47,19 +42,17 @@ async def test_sensor_setup(
     state = hass.states.get("sensor.external_ip")
     assert state
     assert state.state == "0.0.0.0"  # This comes from location_info fixture
-    
+
     entry = entity_registry.async_get("sensor.external_ip")
     assert entry
     assert entry.unique_id == "mock-zone-id_external_ip"
 
 
 @pytest.mark.usefixtures("location_info")
-async def test_sensor_values(
-    hass: HomeAssistant, cfupdate: MagicMock
-) -> None:
+async def test_sensor_values(hass: HomeAssistant, cfupdate: MagicMock) -> None:
     """Test sensor values update correctly."""
     await init_integration(hass)
-    
+
     # Verify initial state
     state = hass.states.get("sensor.external_ip")
     assert state

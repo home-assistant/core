@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pycfdns
 from aiohttp import ClientSession
+import pycfdns
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +39,18 @@ async def async_create_a_record(
         "ttl": 1,
         "proxied": proxied,
     }
-    headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Content-Type": "application/json",
+    }
     async with session.post(url, json=payload, headers=headers) as resp:
         if resp.status != 200:
-            _LOGGER.warning("Failed creating record %s (%s): %s", name, resp.status, await resp.text())
+            _LOGGER.warning(
+                "Failed creating record %s (%s): %s",
+                name,
+                resp.status,
+                await resp.text(),
+            )
             return None
         data = await resp.json()
         if not data.get("success"):
@@ -61,7 +69,9 @@ async def async_update_proxied_state(
     proxied: bool,
 ) -> bool:
     """Update only the proxied state of an existing record."""
-    url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}"
+    url = (
+        f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}"
+    )
     payload = {
         "type": "A",
         "name": name,
@@ -69,13 +79,23 @@ async def async_update_proxied_state(
         "ttl": 1,
         "proxied": proxied,
     }
-    headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Content-Type": "application/json",
+    }
     async with session.put(url, json=payload, headers=headers) as resp:
         if resp.status != 200:
-            _LOGGER.warning("Failed updating proxied state for %s (%s): %s", name, resp.status, await resp.text())
+            _LOGGER.warning(
+                "Failed updating proxied state for %s (%s): %s",
+                name,
+                resp.status,
+                await resp.text(),
+            )
             return False
         data = await resp.json()
         if not data.get("success"):
-            _LOGGER.warning("Cloudflare API error updating proxied state %s: %s", name, data)
+            _LOGGER.warning(
+                "Cloudflare API error updating proxied state %s: %s", name, data
+            )
             return False
         return True

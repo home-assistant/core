@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import socket
-from homeassistant.util import dt as dt_util
 from typing import Any
 
 import pycfdns
@@ -22,6 +21,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.network import is_ipv4_address
 
@@ -36,6 +36,7 @@ from .const import (
 from .helpers import async_create_a_record
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class CloudflareRuntimeData:
@@ -76,7 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch and synchronize DNS records for configured domains."""
         zone_id = dns_zone["id"]
         external_ip = await _async_get_external_ipv4()
-        configured_domains: list[str] = entry.data.get(CONF_DOMAINS) or entry.data.get(CONF_RECORDS) or []
+        configured_domains: list[str] = (
+            entry.data.get(CONF_DOMAINS) or entry.data.get(CONF_RECORDS) or []
+        )
 
         # Retrieve existing A records for zone
         records = await client.list_dns_records(zone_id=zone_id, type="A")
@@ -114,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         )
                     )
                 )
-            results[domain] = record if record else None
+            results[domain] = record or None
 
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
@@ -157,18 +160,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await coordinator.async_request_refresh()
         except pycfdns.AuthenticationException as err:
             _LOGGER.error(
-                "Authentication failed updating zone %s manually: %s", dns_zone["name"], err
+                "Authentication failed updating zone %s manually: %s",
+                dns_zone["name"],
+                err,
             )
             raise HomeAssistantError("Cloudflare authentication failed") from err
         except pycfdns.ComunicationException as err:
             _LOGGER.error(
-                "Communication error updating zone %s manually: %s", dns_zone["name"], err
+                "Communication error updating zone %s manually: %s",
+                dns_zone["name"],
+                err,
             )
             raise HomeAssistantError("Cloudflare communication error") from err
         except HomeAssistantError:
             # Already meaningful, just bubble up
             raise
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             _LOGGER.exception(
                 "Unexpected error during manual update for zone %s", dns_zone["name"]
             )
@@ -195,4 +202,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data=data)
         _LOGGER.info("Migrated Cloudflare entry %s to new domains key", entry.entry_id)
     return True
-

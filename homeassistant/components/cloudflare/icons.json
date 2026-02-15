@@ -1,19 +1,19 @@
 {
-  "services": {
-    "update_records": {
-      "service": "mdi:dns"
-    }
-  },
   "entity": {
-    "switch": {
-      "cloudflare": {
-        "default": "mdi:cloud"
-      }
-    },
     "sensor": {
       "cloudflare": {
         "default": "mdi:update"
       }
+    },
+    "switch": {
+      "cloudflare": {
+        "default": "mdi:cloud"
+      }
+    }
+  },
+  "services": {
+    "update_records": {
+      "service": "mdi:dns"
     }
   }
 }
