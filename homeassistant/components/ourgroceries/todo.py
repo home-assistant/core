@@ -1,6 +1,7 @@
 """A todo platform for OurGroceries."""
 
 import asyncio
+import logging
 from typing import Any
 
 from homeassistant.components.todo import (
@@ -16,6 +17,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OurGroceriesDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -104,9 +107,13 @@ class OurGroceriesTodoListEntity(
             if name.lower() == category_name.lower():
                 return cat_id
         # Category doesn't exist, create it
-        await self.coordinator.og.create_category(category_name)
-        # Refresh categories to get the new ID
-        await self.coordinator.async_refresh_categories()
+        try:
+            await self.coordinator.og.create_category(category_name)
+            # Refresh categories to get the new ID
+            await self.coordinator.async_refresh_categories()
+        except Exception:
+            _LOGGER.exception("Failed to create category '%s'", category_name)
+            return "uncategorized"
         for cat_id, name in self.coordinator.categories.items():
             if name.lower() == category_name.lower():
                 return cat_id
@@ -114,6 +121,8 @@ class OurGroceriesTodoListEntity(
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
+        if self.coordinator.data is None:
+            return
         api_items = self.coordinator.data[self._list_id]["list"]["items"]
         current_item = next(
             (api_item for api_item in api_items if api_item["id"] == item.uid),

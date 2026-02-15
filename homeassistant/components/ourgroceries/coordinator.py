@@ -10,7 +10,7 @@ from ourgroceries import OurGroceries
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -50,7 +50,12 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def async_refresh_categories(self) -> None:
         """Refresh category data from OurGroceries."""
-        category_data = await self.og.get_category_items()
+        try:
+            category_data = await self.og.get_category_items()
+        except Exception as err:
+            raise UpdateFailed(
+                f"Error fetching OurGroceries category data: {err}"
+            ) from err
         category_items = category_data.get("list", {}).get("items", [])
         self.categories = {cat["id"]: cat["name"] for cat in category_items}
         self.category_sort_order = {
