@@ -35,7 +35,6 @@ async def _do_get_token(
     result: ConfigFlowResult,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    tenant_id: str = TENANT_ID,
 ) -> None:
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -46,8 +45,8 @@ async def _do_get_token(
     )
 
     scope = "Files.ReadWrite.All+offline_access+openid"
-    authorize_url = OAUTH2_AUTHORIZE.format(tenant_id=tenant_id)
-    token_url = OAUTH2_TOKEN.format(tenant_id=tenant_id)
+    authorize_url = OAUTH2_AUTHORIZE.format(tenant_id=TENANT_ID)
+    token_url = OAUTH2_TOKEN.format(tenant_id=TENANT_ID)
 
     assert result["url"] == (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
@@ -357,6 +356,9 @@ async def test_reconfigure_flow_wrong_drive(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -374,9 +376,7 @@ async def test_reauth_flow(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await _do_get_token(
-        hass, result, hass_client_no_auth, aioclient_mock, "mock-tenant-id"
-    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
@@ -385,7 +385,7 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert mock_config_entry.data[CONF_FOLDER_PATH] == "backups/home_assistant"
     assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
-    assert mock_config_entry.data[CONF_TENANT_ID] == "mock-tenant-id"
+    assert mock_config_entry.data[CONF_TENANT_ID] == TENANT_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -409,9 +409,7 @@ async def test_reauth_flow_id_changed(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await _do_get_token(
-        hass, result, hass_client_no_auth, aioclient_mock, "mock-tenant-id"
-    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
@@ -420,4 +418,4 @@ async def test_reauth_flow_id_changed(
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
     assert mock_config_entry.data[CONF_FOLDER_PATH] == "backups/home_assistant"
     assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
-    assert mock_config_entry.data[CONF_TENANT_ID] == "mock-tenant-id"
+    assert mock_config_entry.data[CONF_TENANT_ID] == TENANT_ID
