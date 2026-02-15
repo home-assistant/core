@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CONF_DOMAINS
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -61,7 +61,7 @@ class CloudflareLastUpdateSensor(CloudflareBaseSensor):
 
     _attr_has_entity_name = True
     _attr_name = "Last Update"
-    _attr_unique_id = "cloudflare_last_update_{zone}"  # will be formatted in __init__
+    _attr_unique_id = "cloudflare_last_update_{zone}"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, coordinator, entry: ConfigEntry, zone_id: str, zone_name: str) -> None:
@@ -81,7 +81,7 @@ class CloudflareExternalIpSensor(CloudflareBaseSensor):
 
     _attr_has_entity_name = True
     _attr_name = "External IP"
-    _attr_unique_id = "cloudflare_external_ip_{zone}"  # formatted in __init__
+    _attr_unique_id = "cloudflare_external_ip_{zone}"
     _attr_device_class = None
 
     def __init__(self, coordinator, entry: ConfigEntry, zone_id: str, zone_name: str) -> None:

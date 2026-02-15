@@ -1,11 +1,10 @@
 {
   "domain": "cloudflare",
   "name": "Cloudflare",
-  "codeowners": ["@ludeeus", "@ctalkington"],
+  "codeowners": ["@ludeeus", "@ctalkington", "@cypherbits"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
   "iot_class": "cloud_push",
   "loggers": ["pycfdns"],
-  "requirements": ["pycfdns==3.0.0"],
-  "version": "0.2.0"
+  "requirements": ["pycfdns==3.0.0"]
 }

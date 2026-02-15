@@ -51,7 +51,7 @@ async def _validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     zone = data.get(CONF_ZONE)
-    # We no longer pre-select records; domains will be free-form
+
     records: list[pycfdns.RecordModel] = []
 
     client = pycfdns.Client(
@@ -151,7 +151,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_records(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Select existing A records (checkbox list)."""
+        """Select existing A records."""
         errors: dict[str, str] = {}
         if user_input is not None:
             domains_list: list[str] = user_input.get(CONF_DOMAINS, [])

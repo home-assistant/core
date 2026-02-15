@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import socket
 from homeassistant.util import dt as dt_util
@@ -21,7 +21,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval  # legacy import (can remove later)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.network import is_ipv4_address
@@ -37,9 +36,6 @@ from .const import (
 from .helpers import async_create_a_record
 
 _LOGGER = logging.getLogger(__name__)
-
-# Generic parameterization removed for compatibility; use plain ConfigEntry with runtime_data
-
 
 @dataclass
 class CloudflareRuntimeData:
