@@ -29,9 +29,7 @@ async def setup_config_entry(
 ) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=data,
-        unique_id=unique_id,
+        domain=DOMAIN, data=data, unique_id=unique_id, version=1, minor_version=2
     )
     entry.add_to_hass(hass)
     if device is not None and fritz is not None:
