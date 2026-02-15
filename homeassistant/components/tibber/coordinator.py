@@ -136,12 +136,8 @@ class TibberCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             await self._insert_statistics(tibber_connection)
         except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
-        except tibber.FatalHttpExceptionError:
-            # Fatal error. Reload config entry to show correct error.
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
-            return self.data if self.data is not None else {}
+        except tibber.FatalHttpExceptionError as err:
+            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
 
         result: dict[str, TibberHomeData] = {}
         for home in tibber_connection.get_homes(only_active=True):

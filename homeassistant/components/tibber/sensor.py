@@ -113,7 +113,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="accumulated_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -255,41 +255,49 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="current_price",
         translation_key="electricity_price",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="max_price",
         translation_key="max_price",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="avg_price",
         translation_key="avg_price",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="min_price",
         translation_key="min_price",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="off_peak_1",
         translation_key="off_peak_1",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="peak",
         translation_key="peak",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="off_peak_2",
         translation_key="off_peak_2",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
     ),
     SensorEntityDescription(
         key="intraday_price_ranking",
         translation_key="intraday_price_ranking",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
 )
 
