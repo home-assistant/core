@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
 from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
     ATTR_ITEM,
     ATTR_RENAME,
     ATTR_STATUS,
@@ -162,7 +163,7 @@ async def test_update_todo_item_status(
             [{"id": "12345", "name": "Soda", "categoryId": "test_category"}],
             "test_category",
         ),
-        ([{"id": "12345", "name": "Uncategorized"}], None),
+        ([{"id": "12345", "name": "Uncategorized"}], "uncategorized"),
     ],
 )
 async def test_update_todo_item_summary(
@@ -285,3 +286,171 @@ async def test_coordinator_error(
 
     state = hass.states.get("todo.test_list")
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("items", "expected_descriptions"),
+    [
+        (
+            [{"id": "12345", "name": "Soda", "categoryId": "test_category"}],
+            ["Test Category"],
+        ),
+        (
+            [{"id": "12345", "name": "Soda"}],
+            [None],
+        ),
+        (
+            [
+                {"id": "1", "name": "A", "categoryId": "test_category"},
+                {"id": "2", "name": "B", "categoryId": "other_category"},
+            ],
+            ["Other Category", "Test Category"],
+        ),
+    ],
+)
+async def test_todo_item_category_description(
+    hass: HomeAssistant,
+    setup_integration: None,
+    expected_descriptions: list[str | None],
+) -> None:
+    """Test that category names are shown as item descriptions."""
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
+        blocking=True,
+        return_response=True,
+    )
+    items = result["todo.test_list"]["items"]
+    assert [item.get("description") for item in items] == expected_descriptions
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        [
+            {"id": "1", "name": "A", "categoryId": "test_category"},
+            {"id": "2", "name": "B", "categoryId": "other_category"},
+            {"id": "3", "name": "C"},
+        ],
+    ],
+)
+async def test_todo_items_sorted_by_category(
+    hass: HomeAssistant,
+    setup_integration: None,
+) -> None:
+    """Test that items are sorted by category sort order."""
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
+        blocking=True,
+        return_response=True,
+    )
+    items = result["todo.test_list"]["items"]
+    summaries = [item["summary"] for item in items]
+    # "B" has "other_category" (sort "A"), "A" has "test_category" (sort "B"),
+    # "C" has no category (sorts last)
+    assert summaries == ["B", "A", "C"]
+
+
+@pytest.mark.parametrize(
+    "items",
+    [[{"id": "12345", "name": "Soda", "categoryId": "test_category"}]],
+)
+async def test_update_todo_item_description_existing_category(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ourgroceries: AsyncMock,
+) -> None:
+    """Test updating an item's description to an existing category."""
+    ourgroceries.change_item_on_list = AsyncMock()
+    _mock_version_id(ourgroceries, 2)
+    ourgroceries.get_list_items.return_value = items_to_shopping_list(
+        [{"id": "12345", "name": "Soda", "categoryId": "other_category"}],
+        version_id="2",
+    )
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_DESCRIPTION: "Other Category"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
+        blocking=True,
+    )
+    assert ourgroceries.change_item_on_list.called
+    args = ourgroceries.change_item_on_list.call_args
+    assert args.args == ("test_list", "12345", "other_category", "Soda")
+    ourgroceries.create_category.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "items",
+    [[{"id": "12345", "name": "Soda", "categoryId": "test_category"}]],
+)
+async def test_update_todo_item_description_new_category(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ourgroceries: AsyncMock,
+) -> None:
+    """Test updating an item's description creates a new category."""
+    ourgroceries.change_item_on_list = AsyncMock()
+    ourgroceries.create_category = AsyncMock()
+    # After create_category, the refresh returns the new category
+    ourgroceries.get_category_items.return_value = {
+        "list": {
+            "items": [
+                {"id": "test_category", "name": "Test Category", "sortOrder": "B"},
+                {"id": "other_category", "name": "Other Category", "sortOrder": "A"},
+                {"id": "new_cat_id", "name": "New Category", "sortOrder": "C"},
+            ]
+        }
+    }
+    _mock_version_id(ourgroceries, 2)
+    ourgroceries.get_list_items.return_value = items_to_shopping_list(
+        [{"id": "12345", "name": "Soda", "categoryId": "new_cat_id"}],
+        version_id="2",
+    )
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_DESCRIPTION: "New Category"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
+        blocking=True,
+    )
+    ourgroceries.create_category.assert_called_once_with("New Category")
+    assert ourgroceries.change_item_on_list.called
+    args = ourgroceries.change_item_on_list.call_args
+    assert args.args == ("test_list", "12345", "new_cat_id", "Soda")
+
+
+@pytest.mark.parametrize(
+    "items",
+    [[{"id": "12345", "name": "Soda", "categoryId": "test_category"}]],
+)
+async def test_update_todo_item_clear_description(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ourgroceries: AsyncMock,
+) -> None:
+    """Test clearing an item's description sets uncategorized."""
+    ourgroceries.change_item_on_list = AsyncMock()
+    _mock_version_id(ourgroceries, 2)
+    ourgroceries.get_list_items.return_value = items_to_shopping_list(
+        [{"id": "12345", "name": "Soda"}],
+        version_id="2",
+    )
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_DESCRIPTION: ""},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
+        blocking=True,
+    )
+    assert ourgroceries.change_item_on_list.called
+    args = ourgroceries.change_item_on_list.call_args
+    assert args.args == ("test_list", "12345", "uncategorized", "Soda")
