@@ -177,7 +177,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._options[CONF_ACCOUNTS].setdefault(account, deepcopy(DEFAULT_OPTIONS))
         self._options[CONF_ACCOUNTS][account][CONF_ZONES] = user_input[CONF_ZONES]
-        self.options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
+        self._options[CONF_ACCOUNTS][account][CONF_IGNORE_BR] = user_input[CONF_IGNORE_BR]
 
 
 class SIAOptionsFlowHandler(OptionsFlow):
