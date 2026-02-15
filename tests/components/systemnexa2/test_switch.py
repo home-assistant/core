@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sn2 import OnOffSetting, StateChange
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -13,13 +14,16 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_switch_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch entities."""
@@ -28,11 +32,7 @@ async def test_switch_entities(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check that the relay switch is created and has initial state
-    state = hass.states.get("switch.test_device_relay_1")
-    assert state is not None
-    # Entity is on because mock sends initial state=1.0 on connect
-    assert state.state == "on"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_switch_turn_on_off_toggle(
