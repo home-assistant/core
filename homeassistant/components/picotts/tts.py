@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.tts import (
     CONF_LANG,
 )
-from homeassistant.components.tts import PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA
 from homeassistant.components.tts import (
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
