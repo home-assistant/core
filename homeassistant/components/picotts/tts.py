@@ -53,7 +53,7 @@ async def async_setup_entry(
     """Set up Pico TTS speech component via config entry."""
     if await hass.async_add_executor_job(shutil.which, "pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
-        return False
+        return
     async_add_entities([PicoTTSEntity(config_entry, config_entry.data[CONF_LANG])])
 
 
