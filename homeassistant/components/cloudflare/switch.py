@@ -24,8 +24,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cloudflare proxy switches for a config entry."""
-    coordinator = entry.runtime_data
-    zone = coordinator.zone
+    runtime = entry.runtime_data
+    coordinator = runtime.coordinator
+    zone = runtime.dns_zone
     domains: list[str] = entry.data.get(CONF_DOMAINS, [])
 
     entities: list[CloudflareProxySwitch] = [
@@ -35,7 +36,7 @@ async def async_setup_entry(
             zone_id=zone["id"],
             zone_name=zone["name"],
             domain=domain,
-            api_token=entry.data[CONF_API_TOKEN],
+            api_token=runtime.api_token,
         )
         for domain in domains
     ]
