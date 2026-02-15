@@ -319,6 +319,7 @@ async def test_ssdp(
     assert result["data"][CONF_HOST] == test_data.upnp[ATTR_UPNP_PRESENTATION_URL]
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 
 
