@@ -23,9 +23,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cloudflare sensors."""
-    runtime = entry.runtime_data
-    coordinator = runtime.coordinator
-    zone = runtime.dns_zone
+    coordinator = entry.runtime_data
+    zone = coordinator.zone
 
     entities: list[SensorEntity] = [
         CloudflareLastUpdateSensor(

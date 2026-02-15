@@ -14,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import CloudflareConfigEntry
 from .const import DOMAIN, CONF_DOMAINS
+from homeassistant.const import CONF_API_TOKEN
 from .helpers import async_update_proxied_state
 
 
@@ -23,9 +24,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cloudflare proxy switches for a config entry."""
-    runtime = entry.runtime_data
-    coordinator = runtime.coordinator
-    zone = runtime.dns_zone
+    coordinator = entry.runtime_data
+    zone = coordinator.zone
     domains: list[str] = entry.data.get(CONF_DOMAINS, [])
 
     entities: list[CloudflareProxySwitch] = [
@@ -35,7 +35,7 @@ async def async_setup_entry(
             zone_id=zone["id"],
             zone_name=zone["name"],
             domain=domain,
-            api_token=runtime.api_token,
+            api_token=entry.data[CONF_API_TOKEN],
         )
         for domain in domains
     ]
