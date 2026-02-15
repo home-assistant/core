@@ -1133,14 +1133,14 @@
 # name: test_switches[mock_speaker][switch.mock_speaker_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock speaker Mute',
+      'friendly_name': 'Mock Speaker Mute',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_speaker_mute',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_switches[mock_switch_unit][switch.mock_switchunit-entry]
