@@ -28,11 +28,11 @@ async def test_switch_entities(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check that the relay switch is created
+    # Check that the relay switch is created and has initial state
     state = hass.states.get("switch.test_device_relay_1")
     assert state is not None
-    # Entity is unknown until coordinator receives state data
-    assert state.state == "unknown"
+    # Entity is on because mock sends initial state=1.0 on connect
+    assert state.state == "on"
 
 
 async def test_switch_turn_on_off_toggle(

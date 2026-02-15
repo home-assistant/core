@@ -60,7 +60,21 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
         device.settings = [mock_setting_433mhz, mock_setting_cloud]
         device.get_info = AsyncMock()
         device.get_info.return_value = InformationUpdate(information=device.info_data)
-        device.connect = AsyncMock()
+
+        # Mock connect to also send initial state update
+        async def mock_connect():
+            """Mock connect that sends initial state."""
+            # Get the callback that was registered
+            if mock_device.initiate_device.call_args:
+                on_update = mock_device.initiate_device.call_args.kwargs.get(
+                    "on_update"
+                )
+                if on_update:
+                    from sn2 import StateChange
+
+                    await on_update(StateChange(state=1.0))
+
+        device.connect = AsyncMock(side_effect=mock_connect)
         device.disconnect = AsyncMock()
         device.turn_on = AsyncMock()
         device.turn_off = AsyncMock()
