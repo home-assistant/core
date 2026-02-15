@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from asyncsleepiq import AsyncSleepIQ
@@ -95,13 +95,11 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         self.client = client
 
     async def _async_update_data(self) -> None:
-        """Fetch sleep health data from API."""
-        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
-
+        """Fetch sleep health data from API via asyncsleepiq library."""
         tasks = []
         for bed in self.client.beds.values():
             for sleeper in bed.sleepers:
-                tasks.append(sleeper.fetch_sleep_data(yesterday))
+                tasks.append(sleeper.fetch_sleep_data())
 
         await asyncio.gather(*tasks)
 

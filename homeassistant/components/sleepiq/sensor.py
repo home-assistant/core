@@ -65,7 +65,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="sleep_score",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
-        value_fn=lambda sleeper: sleeper.sleep_score,
+        value_fn=lambda sleeper: sleeper.sleep_data.sleep_score,
     ),
     SleepIQSensorEntityDescription(
         key=SLEEP_DURATION,
@@ -75,8 +75,8 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=1,
         value_fn=lambda sleeper: (
-            round(sleeper.sleep_duration / 3600, 1)
-            if sleeper.sleep_duration
+            round(sleeper.sleep_data.duration / 3600, 1)
+            if sleeper.sleep_data.duration
             else None
         ),
     ),
@@ -85,21 +85,21 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="heart_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
-        value_fn=lambda sleeper: sleeper.heart_rate,
+        value_fn=lambda sleeper: sleeper.sleep_data.heart_rate,
     ),
     SleepIQSensorEntityDescription(
         key=RESPIRATORY_RATE,
         translation_key="respiratory_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
-        value_fn=lambda sleeper: sleeper.respiratory_rate,
+        value_fn=lambda sleeper: sleeper.sleep_data.respiratory_rate,
     ),
     SleepIQSensorEntityDescription(
         key=HRV,
         translation_key="hrv",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="ms",
-        value_fn=lambda sleeper: sleeper.hrv,
+        value_fn=lambda sleeper: sleeper.sleep_data.hrv,
     ),
 )
 
