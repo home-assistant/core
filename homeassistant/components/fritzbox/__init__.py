@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 from yarl import URL
 
@@ -91,15 +93,23 @@ async def async_migrate_entry(
         new_data = {**config_entry.data}
         if config_entry.minor_version < 2:
             LOGGER.debug("Migrate config entry data to URL based configuration")
-            url = URL(config_entry.data[CONF_HOST])
-            if not url.scheme:
-                host = f"http://{config_entry.data[CONF_HOST]}"
+            if "://" not in config_entry.data[CONF_HOST]:
+                host = URL().build(
+                    scheme="http",
+                    host=config_entry.data[CONF_HOST],
+                )
+                port = 80
             else:
-                host = f"{url.scheme}://{url.host}"
+                host = config_entry.data[CONF_HOST]
+                url = URL(config_entry.data[CONF_HOST])
+                if TYPE_CHECKING:
+                    assert isinstance(url.port, int)
+                port = url.port
+
             new_data = {
                 **config_entry.data,
-                CONF_HOST: host,
-                CONF_PORT: url.port or 80,
+                CONF_HOST: str(host),
+                CONF_PORT: port,
                 CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             }
 

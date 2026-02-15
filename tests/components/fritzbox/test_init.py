@@ -339,31 +339,102 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    ("old_data", "new_data"),
+    [
+        (
+            {
+                CONF_HOST: "10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 80,
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "https://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "https://10.0.0.1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 443,
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "1234::1",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 80,
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "http://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 80,
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+        (
+            {
+                CONF_HOST: "https://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            },
+            {
+                CONF_HOST: "https://[1234::1]",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+                CONF_PORT: 443,
+                CONF_VERIFY_SSL: True,
+            },
+        ),
+    ],
+)
 async def test_migrate_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     fritz: Mock,
+    old_data: dict,
+    new_data: dict,
 ) -> None:
     """Test migrate config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "10.0.0.1",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        },
+        data=old_data,
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.fritzbox.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
     assert entry.minor_version == 2
-    assert entry.data == {
-        CONF_HOST: "http://10.0.0.1",
-        CONF_PASSWORD: "fake_pass",
-        CONF_USERNAME: "fake_user",
-        CONF_PORT: 80,
-        CONF_VERIFY_SSL: True,
-    }
+    assert entry.data == new_data
