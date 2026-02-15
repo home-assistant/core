@@ -42,6 +42,7 @@
       "options": {
         "data": {
           "ignore_timestamps": "Ignore the timestamp check of the SIA events",
+          "ignore_br_restore": "Ignore the Burglary Restore (BR) event, useful for Ajax panels",
           "zones": "[%key:component::sia::config::step::user::data::zones%]"
         },
         "description": "Set the options for account: {account}",
