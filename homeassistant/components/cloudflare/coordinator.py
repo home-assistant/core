@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from logging import getLogger
 import socket
+from typing import Any
 
 import pycfdns
 
@@ -22,7 +24,16 @@ from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL
 
 _LOGGER = getLogger(__name__)
 
-type CloudflareConfigEntry = ConfigEntry[CloudflareCoordinator]
+
+@dataclass
+class CloudflareRuntimeData:
+    """Runtime data for Cloudflare config entry."""
+    client: pycfdns.Client
+    dns_zone: pycfdns.ZoneModel
+    coordinator: DataUpdateCoordinator[dict[str, Any]]
+    api_token: str
+
+type CloudflareConfigEntry = ConfigEntry[CloudflareRuntimeData]
 
 
 class CloudflareCoordinator(DataUpdateCoordinator[None]):

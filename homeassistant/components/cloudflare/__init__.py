@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import socket
@@ -33,19 +32,10 @@ from .const import (
     PLATFORMS,
     SERVICE_UPDATE_RECORDS,
 )
+from .coordinator import CloudflareRuntimeData
 from .helpers import async_create_a_record
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class CloudflareRuntimeData:
-    """Runtime data for Cloudflare config entry."""
-
-    client: pycfdns.Client
-    dns_zone: pycfdns.ZoneModel
-    coordinator: DataUpdateCoordinator[dict[str, Any]]
-    api_token: str
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
