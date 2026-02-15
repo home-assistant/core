@@ -109,7 +109,7 @@ class TibberCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             _LOGGER,
             config_entry=config_entry,
             name="Tibber",
-            update_interval=timedelta(minutes=20),
+            update_interval=timedelta(minutes=15),
         )
         self._runtime_data = runtime_data
 

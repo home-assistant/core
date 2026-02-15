@@ -55,6 +55,8 @@ class TibberCoordinatorEntity(CoordinatorEntity[TibberCoordinator]):
 class TibberRTCoordinatorEntity(CoordinatorEntity[TibberRtDataCoordinator]):
     """Representation of a Tibber sensor for real time consumption."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         tibber_home: TibberHome,
