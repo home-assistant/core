@@ -8,7 +8,12 @@
         "data": {
           "access_token": "Access Token",
           "username": "Username"
-        }
+        },
+        "data_description": {
+          "access_token": "Find it in your Free Mobile account settings",
+          "username": "Your Free Mobile credential, this is not your phone number"
+        },
+        "description": "Enter your Free Mobile credentials to enable notifications. You can find your username and access token in your Free Mobile account settings."
       }
     }
   }
