@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import socket
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sn2 import InformationData, InformationUpdate
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_full_flow(hass: HomeAssistant) -> None:
+async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,6 +37,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
@@ -143,7 +144,7 @@ async def test_invalid_hostname(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
 @pytest.mark.usefixtures("mock_patch_get_host")
-async def test_valid_hostname(hass: HomeAssistant) -> None:
+async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -167,6 +168,7 @@ async def test_valid_hostname(hass: HomeAssistant) -> None:
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_unsupported_device(
@@ -193,7 +195,9 @@ async def test_unsupported_device(
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
+async def test_zeroconf_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test zeroconf discovery."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("10.0.0.131"),
@@ -223,6 +227,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_device_with_none_values(
