@@ -94,3 +94,159 @@ async def test_pressure_sensors(
     )
     assert entry
     assert entry.unique_id == f"{SLEEPER_R_ID}_pressure"
+
+
+async def test_sleep_score_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ sleep score sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleep_score"
+    )
+    assert state.state == "85"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Sleep Score"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleep_score"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_sleep_score"
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleep_score"
+    )
+    assert state.state == "78"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Sleep Score"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleep_score"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_sleep_score"
+
+
+async def test_sleep_duration_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ sleep duration sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleep_duration"
+    )
+    assert state.state == "8.0"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Sleep Duration"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleep_duration"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_sleep_duration"
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleep_duration"
+    )
+    assert state.state == "7.0"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Sleep Duration"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleep_duration"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_sleep_duration"
+
+
+async def test_heart_rate_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ heart rate average sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_heart_rate_average"
+    )
+    assert state.state == "60"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Heart Rate Average"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_heart_rate_average"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_heart_rate"
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_heart_rate_average"
+    )
+    assert state.state == "65"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Heart Rate Average"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_heart_rate_average"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_heart_rate"
+
+
+async def test_respiratory_rate_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ respiratory rate average sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_respiratory_rate_average"
+    )
+    assert state.state == "14"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Respiratory Rate Average"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_respiratory_rate_average"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_respiratory_rate"
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_respiratory_rate_average"
+    )
+    assert state.state == "15"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Respiratory Rate Average"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_respiratory_rate_average"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_respiratory_rate"

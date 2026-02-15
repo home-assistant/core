@@ -19,7 +19,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PRESSURE, SLEEP_NUMBER
+from .const import (
+    DOMAIN,
+    HEART_RATE,
+    PRESSURE,
+    RESPIRATORY_RATE,
+    SLEEP_DURATION,
+    SLEEP_NUMBER,
+    SLEEP_SCORE,
+)
 from .coordinator import (
     SleepIQData,
     SleepIQDataUpdateCoordinator,
@@ -52,38 +60,38 @@ BED_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
 
 SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
     SleepIQSensorEntityDescription(
-        key="sleep_score",
+        key=SLEEP_SCORE,
         translation_key="sleep_score",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
-        value_fn=lambda sleeper: getattr(sleeper, "sleep_score", None),
+        value_fn=lambda sleeper: sleeper.sleep_score,
     ),
     SleepIQSensorEntityDescription(
-        key="sleep_duration",
+        key=SLEEP_DURATION,
         translation_key="sleep_duration",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=1,
         value_fn=lambda sleeper: (
-            round(getattr(sleeper, "sleep_duration", 0) / 3600, 1)
-            if getattr(sleeper, "sleep_duration", 0)
+            round(sleeper.sleep_duration / 3600, 1)
+            if sleeper.sleep_duration
             else None
         ),
     ),
     SleepIQSensorEntityDescription(
-        key="heart_rate",
+        key=HEART_RATE,
         translation_key="heart_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
-        value_fn=lambda sleeper: getattr(sleeper, "heart_rate", None),
+        value_fn=lambda sleeper: sleeper.heart_rate,
     ),
     SleepIQSensorEntityDescription(
-        key="respiratory_rate",
+        key=RESPIRATORY_RATE,
         translation_key="respiratory_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
-        value_fn=lambda sleeper: getattr(sleeper, "respiratory_rate", None),
+        value_fn=lambda sleeper: sleeper.respiratory_rate,
     ),
 )
 
@@ -119,14 +127,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepIQSensorEntity(SleepIQSleeperEntity[DataUpdateCoordinator], SensorEntity):
+class SleepIQSensorEntity(
+    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator | SleepIQSleepDataCoordinator],
+    SensorEntity,
+):
     """Representation of a SleepIQ sensor."""
 
     entity_description: SleepIQSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SleepIQDataUpdateCoordinator | SleepIQSleepDataCoordinator,
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
         description: SleepIQSensorEntityDescription,

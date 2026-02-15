@@ -78,8 +78,6 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ sleep health data coordinator."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -103,46 +101,9 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         tasks = []
         for bed in self.client.beds.values():
             for sleeper in bed.sleepers:
-                tasks.append(self._fetch_sleeper_data(sleeper, yesterday))
+                tasks.append(sleeper.fetch_sleep_data(yesterday))
 
         await asyncio.gather(*tasks)
-
-    async def _fetch_sleeper_data(self, sleeper, date_str: str) -> None:
-        params = {
-            "date": date_str,
-            "interval": "D1",
-            "sleeper": sleeper.sleeper_id,
-            "includeSlices": "false"
-        }
-        param_str = "&".join(f"{k}={v}" for k, v in params.items())
-        endpoint = f"sleepData?{param_str}"
-
-        try:
-            data = await self.client.get(endpoint)
-        except Exception as err:
-            _LOGGER.debug(
-                "Error fetching sleep data for %s: %s",
-                sleeper.name,
-                err,
-            )
-            return
-
-        if data:
-            # Update sleeper attributes with sleep health metrics
-            # NOTE: totalSleepSessionTime is always 0, use inBed instead for duration
-            sleeper.sleep_duration = data["inBed"]  # seconds
-            sleeper.sleep_score = data["avgSleepIQ"]
-            sleeper.heart_rate = data["avgHeartRate"]
-            sleeper.respiratory_rate = data["avgRespirationRate"]
-
-            _LOGGER.debug(
-                "Updated sleep data for %s: score=%s, duration=%sh, hr=%s, rr=%s",
-                sleeper.name,
-                sleeper.sleep_score,
-                round(sleeper.sleep_duration / 3600, 1) if sleeper.sleep_duration else None,
-                sleeper.heart_rate,
-                sleeper.respiratory_rate,
-            )
 
 
 @dataclass
