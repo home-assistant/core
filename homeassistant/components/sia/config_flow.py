@@ -49,6 +49,7 @@ HUB_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Optional(CONF_IGNORE_BR, default=False): bool, 
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -59,6 +60,7 @@ ACCOUNT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Optional(CONF_IGNORE_BR, default=False): bool, 
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
