@@ -15,11 +15,7 @@ from pyliebherrhomeapi import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -57,7 +53,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         try:
             await self.client.get_device(self.device_id)
         except LiebherrAuthenticationError as err:
-            raise ConfigEntryError("Invalid API key") from err
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except LiebherrConnectionError as err:
             raise ConfigEntryNotReady(
                 f"Failed to connect to device {self.device_id}: {err}"
