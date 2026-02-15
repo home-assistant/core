@@ -17,7 +17,7 @@ from onedrive_personal_sdk.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -111,7 +111,7 @@ async def _handle_item_operation[T](func: Callable[[], Awaitable[T]], folder: st
     except NotFoundError:
         raise
     except AuthenticationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
     except (OneDriveException, TimeoutError) as err:

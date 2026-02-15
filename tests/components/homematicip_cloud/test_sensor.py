@@ -971,3 +971,55 @@ async def test_hmip_smoke_detector_test_counter(
 
     assert ha_state.state == "5"
     assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_hmip_soil_moisture_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipSoilMoistureSensor."""
+    entity_id = "sensor.soil_sensor_soil_moisture"
+    entity_name = "Soil Sensor Soil Moisture"
+    device_model = "ELV-SH-SMSI"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Soil Sensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "56"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await async_manipulate_test_data(hass, hmip_device, "soilMoisture", 75, channel=1)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "75"
+
+
+async def test_hmip_soil_temperature_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipSoilTemperatureSensor."""
+    entity_id = "sensor.soil_sensor_soil_temperature"
+    entity_name = "Soil Sensor Soil Temperature"
+    device_model = "ELV-SH-SMSI"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Soil Sensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "21.5"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "soilTemperature", 18.3, channel=1
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "18.3"
