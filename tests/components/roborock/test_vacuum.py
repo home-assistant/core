@@ -33,7 +33,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, create_b01_q10_trait, set_trait_attributes
-from .mock_data import Q10_HOME_DATA_DEVICE, STATUS
+from .mock_data import BASE_URL, Q10_HOME_DATA_DEVICE, ROBOROCK_RRUID, STATUS, USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -545,8 +545,6 @@ def q10_device_manager_fixture(q10_fake_device: FakeDevice) -> AsyncMock:
 @pytest.fixture(name="q10_config_entry")
 def q10_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Create a Q10 config entry."""
-    from .mock_data import BASE_URL, ROBOROCK_RRUID, USER_DATA
-
     config_entry = MockConfigEntry(
         domain="roborock",
         title="user@domain.com",
@@ -634,7 +632,7 @@ async def test_q10_state_changing_commands(
     )
 
     api = q10_fake_device.b01_q10_properties
-    api_call = getattr(api, api_method)
+    api_call = getattr(api.vacuum, api_method)
     assert api_call.call_count == 1
     assert api_call.call_args[0] == ()
 
@@ -760,10 +758,10 @@ async def test_q10_failed_commands(
     """Test that when Q10 commands fail, we raise HomeAssistantError."""
     # Configure the API to raise exceptions
     api = q10_fake_device.b01_q10_properties
-    api.start_clean.side_effect = send_message_exception
-    api.pause_clean.side_effect = send_message_exception
-    api.stop_clean.side_effect = send_message_exception
-    api.return_to_dock.side_effect = send_message_exception
+    api.vacuum.start_clean.side_effect = send_message_exception
+    api.vacuum.pause_clean.side_effect = send_message_exception
+    api.vacuum.stop_clean.side_effect = send_message_exception
+    api.vacuum.return_to_dock.side_effect = send_message_exception
 
     with (
         patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
