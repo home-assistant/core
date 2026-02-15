@@ -8,6 +8,26 @@ on:
 permissions: {}
 
 jobs:
+  add-no-stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    if: >-
+      github.event.issue.type.name == 'Task'
+      || github.event.issue.type.name == 'Epic'
+      || github.event.issue.type.name == 'Opportunity'
+    steps:
+      - name: Add no-stale label
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['no-stale']
+            });
+
   check-authorization:
     runs-on: ubuntu-latest
     permissions:
