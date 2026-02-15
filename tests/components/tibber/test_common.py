@@ -1,7 +1,7 @@
 """Test common."""
 
 import datetime as dt
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 CONSUMPTION_DATA_1 = [
     {
@@ -49,8 +49,24 @@ def mock_get_homes(only_active=True):
     tibber_home.has_active_subscription = True
     tibber_home.has_real_time_consumption = False
     tibber_home.country = "NO"
-    tibber_home.last_cons_data_timestamp = dt.datetime(2016, 1, 1, 12, 44, 57)
-    tibber_home.last_data_timestamp = dt.datetime(2016, 1, 1, 12, 48, 57)
+    tibber_home.last_cons_data_timestamp = dt.datetime(
+        2016, 1, 1, 12, 44, 57, tzinfo=dt.UTC
+    )
+    tibber_home.last_data_timestamp = dt.datetime(2016, 1, 1, 12, 48, 57, tzinfo=dt.UTC)
+    tibber_home.price_unit = "NOK/kWh"
+    tibber_home.current_price_data = MagicMock(
+        return_value=(0.0, None, None),
+    )
+    tibber_home.current_attributes = MagicMock(
+        return_value={
+            "max_price": 0.0,
+            "avg_price": 0.0,
+            "min_price": 0.0,
+            "off_peak_1": 0.0,
+            "peak": 0.0,
+            "off_peak_2": 0.0,
+        },
+    )
 
     def get_historic_data(n_data, resolution="HOURLY", production=False):
         return PRODUCTION_DATA_1 if production else CONSUMPTION_DATA_1

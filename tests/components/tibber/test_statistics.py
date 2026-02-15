@@ -1,10 +1,10 @@
 """Test adding external statistics from Tibber."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
-from homeassistant.components.tibber.coordinator import TibberCoordinator
+from homeassistant.components.tibber.coordinator import TibberDataCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -24,7 +24,11 @@ async def test_async_setup_entry(
     tibber_connection.fetch_production_data_active_homes.return_value = None
     tibber_connection.get_homes = mock_get_homes
 
-    coordinator = TibberCoordinator(hass, config_entry, tibber_connection)
+    runtime_data = MagicMock()
+    runtime_data.async_get_client = AsyncMock(return_value=tibber_connection)
+    config_entry.runtime_data = runtime_data
+
+    coordinator = TibberDataCoordinator(hass, config_entry)
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
