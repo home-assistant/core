@@ -350,7 +350,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        "get_shopping_list_items",
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
         _async_get_shopping_list_items,
         schema=SERVICE_GET_SHOPPING_LIST_ITEMS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
