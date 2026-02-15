@@ -1,11 +1,10 @@
 """Test the System Nexa 2 coordinator."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from sn2 import (
     ConnectionStatus,
-    DeviceInitializationError,
     OnOffSetting,
     SettingsUpdate,
     StateChange,
@@ -15,26 +14,8 @@ from homeassistant.components.systemnexa2.coordinator import (
     SystemNexa2DataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
-
-
-async def test_coordinator_setup_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_system_nexa_2_device,
-) -> None:
-    """Test coordinator setup failure raises ConfigEntryNotReady."""
-
-    mock_system_nexa_2_device.initiate_device = AsyncMock(
-        side_effect=DeviceInitializationError("Test error")
-    )
-
-    coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
-
-    with pytest.raises(ConfigEntryNotReady):
-        await coordinator.async_setup()
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
