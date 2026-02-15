@@ -25,6 +25,12 @@
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },
+      "grid_status": {
+        "state": {
+          "off": "mdi:transmission-tower-off",
+          "on": "mdi:transmission-tower"
+        }
+      },
       "storm_mode_active": {
         "default": "mdi:weather-sunny",
         "state": {
@@ -180,6 +186,9 @@
       },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
+      },
+      "charge_state_energy_remaining": {
+        "default": "mdi:battery-medium"
       },
       "charge_state_minutes_to_full_charge": {
         "default": "mdi:clock-end"

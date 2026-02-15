@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynintendoparental import NintendoParental
 from pynintendoparental.device import Device
+from pynintendoparental.enum import DeviceTimerMode
 import pytest
 
 from homeassistant.components.nintendo_parental_controls.const import DOMAIN
@@ -38,10 +39,15 @@ def mock_nintendo_device() -> Device:
     mock.limit_time = 120
     mock.today_playing_time = 110
     mock.today_time_remaining = 10
+    mock.bedtime_end = time(hour=7)
     mock.bedtime_alarm = time(hour=19)
+    mock.timer_mode = DeviceTimerMode.DAILY
+    mock.extra_playing_time = 30
     mock.add_extra_time.return_value = None
     mock.set_bedtime_alarm.return_value = None
+    mock.set_bedtime_end_time.return_value = None
     mock.update_max_daily_playtime.return_value = None
+    mock.set_timer_mode.return_value = None
     mock.forced_termination_mode = True
     mock.model = "Test Model"
     mock.generation = "P00"

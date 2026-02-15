@@ -27,19 +27,21 @@ from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PooldoseSensorEntityDescription(SensorEntityDescription):
     """Describes PoolDose sensor entity."""
 
-    use_dynamic_unit: bool = False
+    use_unit_conversion: bool = False
 
 
 SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        use_dynamic_unit=True,
+        use_unit_conversion=True,
     ),
     PooldoseSensorEntityDescription(key="ph", device_class=SensorDeviceClass.PH),
     PooldoseSensorEntityDescription(
@@ -57,14 +59,14 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="flow_rate",
         translation_key="flow_rate",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        use_dynamic_unit=True,
+        use_unit_conversion=True,
     ),
     PooldoseSensorEntityDescription(
         key="water_meter_total_permanent",
         translation_key="water_meter_total_permanent",
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        use_dynamic_unit=True,
+        use_unit_conversion=True,
     ),
     PooldoseSensorEntityDescription(
         key="ph_type_dosing",
@@ -227,12 +229,12 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (
-            self.entity_description.use_dynamic_unit
+            self.entity_description.use_unit_conversion
             and (data := self.get_data()) is not None
             and (device_unit := data.get("unit"))
         ):
-            # Map device unit (upper case) to Home Assistant unit, return None if unknown
-            return UNIT_MAPPING.get(device_unit.upper())
+            # Map device unit to Home Assistant unit, return None if unknown
+            return UNIT_MAPPING.get(device_unit)
 
         # Fall back to static unit from entity description
         return super().native_unit_of_measurement

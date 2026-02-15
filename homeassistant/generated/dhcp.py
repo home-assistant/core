@@ -573,6 +573,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "84E657*",
     },
     {
+        "domain": "playstation_network",
+        "hostname": "ps5-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps4-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps3",
+    },
+    {
         "domain": "pooldose",
         "hostname": "kommspot",
     },
@@ -828,6 +840,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "steamist",
         "hostname": "my[45]50*",
         "macaddress": "001E0C*",
+    },
+    {
+        "domain": "sunricher_dali",
+        "registered_devices": True,
     },
     {
         "domain": "tado",
@@ -1325,6 +1341,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*",
+    },
+    {
+        "domain": "vesync",
+        "hostname": "levoit-*",
     },
     {
         "domain": "vicare",

@@ -100,6 +100,7 @@ from .const import (
     TEST_OVERLAY_OFFSET_VOLUME_TTS,
     TEST_PLAYBACK_ERROR,
     TEST_PLAYBACK_METADATA,
+    TEST_PLAYBACK_METADATA_VIDEO,
     TEST_PLAYBACK_PROGRESS,
     TEST_PLAYBACK_STATE_PAUSED,
     TEST_PLAYBACK_STATE_PLAYING,
@@ -431,6 +432,36 @@ async def test_async_update_source_change(
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == content_type
     assert states.attributes[ATTR_MEDIA_POSITION] == progress
     assert (ATTR_MEDIA_CONTENT_ID in states.attributes) == content_id_available
+
+
+async def test_async_update_source_change_video(
+    hass: HomeAssistant,
+    integration: None,
+    mock_mozart_client: AsyncMock,
+) -> None:
+    """Test _async_update_source_change with a video source."""
+    playback_metadata_callback = (
+        mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
+    )
+    source_change_callback = (
+        mock_mozart_client.get_source_change_notifications.call_args[0][0]
+    )
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert ATTR_INPUT_SOURCE not in states.attributes
+    assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+
+    # Simulate metadata and source change
+    playback_metadata_callback(TEST_PLAYBACK_METADATA_VIDEO)
+    source_change_callback(Source(id="tv", name="TV"))
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_INPUT_SOURCE] == TEST_PLAYBACK_METADATA_VIDEO.title
+    assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == BeoMediaType.TV
+    assert (
+        states.attributes[ATTR_MEDIA_CONTENT_ID]
+        == TEST_PLAYBACK_METADATA_VIDEO.source_internal_id
+    )
 
 
 async def test_async_turn_off(
@@ -819,7 +850,7 @@ async def test_async_select_source(
     audio_source_call: int,
     video_source_call: int,
 ) -> None:
-    """Test async_select_source with an invalid source."""
+    """Test async_select_source with an invalid source and valid audio and video sources."""
     with expected_result:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

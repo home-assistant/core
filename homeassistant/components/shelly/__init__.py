@@ -63,6 +63,7 @@ from .repairs import (
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
+from .services import async_setup_services
 from .utils import (
     async_create_issue_unsupported_firmware,
     async_migrate_rpc_virtual_components_unique_ids,
@@ -116,6 +117,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
+
+    async_setup_services(hass)
 
     return True
 
@@ -172,6 +175,7 @@ async def _async_setup_block_entry(
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
@@ -285,6 +289,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
