@@ -20,12 +20,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DOMAIN,
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-)
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
@@ -33,6 +28,11 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
 )
 from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .services import (
+    GET_MAPS_SERVICE_NAME,
+    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
