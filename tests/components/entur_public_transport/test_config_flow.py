@@ -46,7 +46,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
                 CONF_NUMBER_OF_DEPARTURES: 2,
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Entur NSR:StopPlace:548"
