@@ -354,9 +354,9 @@ GAME_SENSOR_DESCRIPTIONS: tuple[XboxGameSensorEntityDescription, ...] = (
         key=XboxSensor.GENRES,
         translation_key=XboxSensor.GENRES,
         value_fn=(
-            lambda x: ", ".join(x.detail.genres)
-            if x.detail and x.detail.genres
-            else None
+            lambda x: (
+                ", ".join(x.detail.genres) if x.detail and x.detail.genres else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
