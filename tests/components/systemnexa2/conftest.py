@@ -16,7 +16,9 @@ from tests.common import MockConfigEntry
 def mock_system_nexa_2_device() -> Generator[MagicMock]:
     """Mock the System Nexa 2 API."""
     with (
-        patch("homeassistant.components.systemnexa2.coordinator.Device") as mock_device,
+        patch(
+            "homeassistant.components.systemnexa2.coordinator.Device", autospec=True
+        ) as mock_device,
         patch(
             "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
         ),
