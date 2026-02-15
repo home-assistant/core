@@ -24,7 +24,7 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers import config_validation as cv
 
 from .const import NumberConf
-from .dpt import get_supported_dpts, DPTInfo
+from .dpt import DPTInfo, get_supported_dpts
 
 
 def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
@@ -153,6 +153,7 @@ def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.
         enumClass.__getitem__,
     )
 
+
 def validate_number_attributes(
     transcoder: type[DPTNumeric], config: dict[str, Any]
 ) -> dict[str, Any]:
@@ -224,6 +225,7 @@ def validate_number_attributes(
         )
 
     return config
+
 
 def validate_sensor_attributes(
     dpt_info: DPTInfo, config: dict[str, Any]
