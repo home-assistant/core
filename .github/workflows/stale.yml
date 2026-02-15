@@ -6,10 +6,15 @@ on:
     - cron: "0 * * * *"
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   stale:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       # The 60 day stale policy for PRs
       # Used for:
