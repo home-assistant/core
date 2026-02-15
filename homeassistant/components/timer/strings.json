@@ -1,9 +1,4 @@
 {
-  "common": {
-    "trigger_events_description": "Triggers when the selected events of a timer fire.",
-    "trigger_events_field_events_description": "Possible events that a timer can fire",
-    "trigger_events_field_events_name": "Events"
-  },
   "entity_component": {
     "_": {
       "name": "Timer",
@@ -32,17 +27,6 @@
         "restore": {
           "name": "Restore"
         }
-      }
-    }
-  },
-  "selector": {
-    "timer_events": {
-      "options": {
-        "cancel": "[%key:component::timer::services::cancel::name%]",
-        "finish": "[%key:component::timer::services::finish::name%]",
-        "pause": "[%key:common::action::pause%]",
-        "restart": "[%key:common::action::restart%]",
-        "start": "[%key:common::action::start%]"
       }
     }
   },
@@ -86,15 +70,25 @@
   },
   "title": "Timer",
   "triggers": {
-    "events": {
-      "description": "[%key:component::timer::common::trigger_events_description%]",
-      "fields": {
-        "events": {
-          "description": "[%key:component::timer::common::trigger_events_field_events_description%]",
-          "name": "[%key:component::timer::common::trigger_events_field_events_name%]"
-        }
-      },
-      "name": "Timer event"
+    "cancel": {
+      "description": "Triggers when the timer gets canceled.",
+      "name": "Timer canceled"
+    },
+    "finish": {
+      "description": "Triggers when the timer finishes.",
+      "name": "Timer finished"
+    },
+    "pause": {
+      "description": "Triggers when the timer pauses.",
+      "name": "Timer paused"
+    },
+    "restart": {
+      "description": "Triggers when the timer restarts.",
+      "name": "Timer restarted"
+    },
+    "start": {
+      "description": "Triggers when the timer starts.",
+      "name": "Timer started"
     }
   }
 }

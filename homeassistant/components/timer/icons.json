@@ -20,8 +20,20 @@
     }
   },
   "triggers": {
-    "events": {
-      "trigger": "mdi:timer"
+    "cancel": {
+      "trigger": "mdi:timer-cancel-outline"
+    },
+    "finish": {
+      "trigger": "mdi:timer-check-outline"
+    },
+    "pause": {
+      "trigger": "mdi:timer-pause-outline"
+    },
+    "restart": {
+      "trigger": "mdi:timer-refresh-outline"
+    },
+    "start": {
+      "trigger": "mdi:timer-play-outline"
     }
   }
 }

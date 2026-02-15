@@ -2,18 +2,9 @@
   target:
     entity:
       domain: timer
-  fields:
-    events:
-      required: true
-      selector:
-        select:
-          options:
-            - start
-            - finish
-            - pause
-            - cancel
-            - restart
-          translation_key: timer_events
-          multiple: true
 
-events: *trigger_common
+start: *trigger_common
+finish: *trigger_common
+pause: *trigger_common
+cancel: *trigger_common
+restart: *trigger_common

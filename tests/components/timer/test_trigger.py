@@ -37,44 +37,76 @@ async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test": {CONF_DURATION: 10}}}
     )
+
+    automations = [
+        {
+            "alias": f"test_{event}",
+            "trigger": {
+                "platform": f"{DOMAIN}.{event}",
+                "target": {
+                    "entity_id": "timer.test",
+                },
+            },
+            "action": {
+                "service": "test.automation",
+                "data_template": {
+                    "entity_id": "{{ trigger.data.entity_id }}",
+                    "event_type": "{{ trigger.event_type }}",
+                    "message": "service called",
+                    "id": "{{ trigger.id }}",
+                },
+            },
+        }
+        for event in events
+    ]
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
-        {
-            automation.DOMAIN: [
-                {
-                    "alias": "test",
-                    "trigger": {
-                        "platform": f"{DOMAIN}.events",
-                        "target": {
-                            "entity_id": "timer.test",
-                        },
-                        "options": {
-                            "events": events,
-                        },
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "{{ trigger.data.entity_id }}",
-                            "event_type": "{{ trigger.event_type }}",
-                            "message": "service called",
-                            "id": "{{ trigger.id }}",
-                        },
-                    },
-                }
-            ]
-        },
+        {automation.DOMAIN: automations},
     )
     await hass.async_block_till_done()
 
 
-async def test_triggers(
+@pytest.mark.parametrize(
+    ("timer", "steps", "timer_event"),
+    [
+        ("start", [SERVICE_START], "timer.started"),
+        ("finish", [SERVICE_START, SERVICE_FINISH], "timer.finished"),
+        ("pause", [SERVICE_START, SERVICE_PAUSE], "timer.paused"),
+        ("cancel", [SERVICE_START, SERVICE_CANCEL], "timer.cancelled"),
+        ("restart", [SERVICE_START, SERVICE_PAUSE, SERVICE_START], "timer.restarted"),
+        ("restart", [SERVICE_START, SERVICE_START], "timer.restarted"),
+    ],
+)
+async def test_timer_type_event(
+    hass: HomeAssistant, timer, steps, timer_event, automation_test_calls
+) -> None:
+    """Test timer triggers."""
+
+    await config_setup(hass, [timer])
+
+    for step in steps:
+        await hass.services.async_call(
+            DOMAIN,
+            step,
+            {CONF_ENTITY_ID: "timer.test"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    test_calls = automation_test_calls()
+    assert len(test_calls) == 1
+    assert test_calls[0]["entity_id"] == "timer.test"
+    assert test_calls[0]["event_type"] == timer_event
+
+
+async def test_full_usage(
     hass: HomeAssistant, automation_test_calls, service_calls: list[ServiceCall]
 ) -> None:
     """Test timer triggers."""
 
-    await config_setup(hass, ["start", "pause", "finish", "restart", "cancel"])
+    await config_setup(hass, ["start", "pause", "finish", "cancel", "restart"])
 
     steps = [
         {"call": SERVICE_START},
@@ -84,7 +116,7 @@ async def test_triggers(
         {"call": SERVICE_START},
         {"call": SERVICE_FINISH},
         {"call": SERVICE_START},
-        {"call": SERVICE_START},  # restart event
+        {"call": SERVICE_START},
     ]
     for index, step in enumerate(steps):
         await hass.services.async_call(
@@ -101,30 +133,6 @@ async def test_triggers(
         assert len(test_calls) == index + 1
         assert service_calls[2 * index].data["entity_id"] == "timer.test"
         assert test_calls[index]["entity_id"] == "timer.test"
-
-
-async def test_restart_event(hass: HomeAssistant, automation_test_calls) -> None:
-    """Test timer triggers."""
-
-    await config_setup(hass, ["restart"])
-
-    steps = [
-        {"call": SERVICE_START},
-        {"call": SERVICE_START},  # restart event
-    ]
-    for step in steps:
-        await hass.services.async_call(
-            DOMAIN,
-            step["call"],
-            {CONF_ENTITY_ID: "timer.test"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    test_calls = automation_test_calls()
-    assert len(test_calls) == 1
-    assert test_calls[0]["entity_id"] == "timer.test"
-    assert test_calls[0]["event_type"] == "timer.restarted"
 
 
 async def test_exception_bad_trigger(
