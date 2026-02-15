@@ -417,10 +417,10 @@
       "child_lock": {
         "name": "Child lock"
       },
-      "not_disturb": {
+      "dnd_switch": {
         "name": "Do not disturb"
       },
-      "dnd_switch": {
+      "not_disturb": {
         "name": "Do not disturb"
       },
       "off_peak_switch": {
