@@ -14,7 +14,11 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer, DockerContainerStats
+from pyportainer.models.docker import (
+    DockerContainer,
+    DockerContainerStats,
+    DockerSystemDF,
+)
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
@@ -43,6 +47,7 @@ class PortainerCoordinatorData:
     containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
+    docker_system_df: DockerSystemDF
 
 
 @dataclass(slots=True)
@@ -143,9 +148,17 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 continue
 
             try:
-                containers = await self.portainer.get_containers(endpoint.id)
-                docker_version = await self.portainer.docker_version(endpoint.id)
-                docker_info = await self.portainer.docker_info(endpoint.id)
+                (
+                    containers,
+                    docker_version,
+                    docker_info,
+                    docker_system_df,
+                ) = await asyncio.gather(
+                    self.portainer.get_containers(endpoint.id),
+                    self.portainer.docker_version(endpoint.id),
+                    self.portainer.docker_info(endpoint.id),
+                    self.portainer.docker_system_df(endpoint.id),
+                )
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
@@ -215,6 +228,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers=container_map,
                 docker_version=docker_version,
                 docker_info=docker_info,
+                docker_system_df=docker_system_df,
             )
 
         self._async_add_remove_endpoints(mapped_endpoints)

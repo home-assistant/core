@@ -97,6 +97,7 @@ from .const import (
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -288,7 +289,7 @@ class TelegramNotificationService:
     def __init__(
         self,
         hass: HomeAssistant,
-        app: BaseTelegramBot,
+        app: BaseTelegramBot | None,
         bot: Bot,
         config: TelegramBotConfigEntry,
         parser: str,
@@ -306,24 +307,6 @@ class TelegramNotificationService:
         self.bot = bot
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
-
-    def _get_allowed_chat_ids(self) -> list[int]:
-        allowed_chat_ids: list[int] = [
-            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
-        ]
-
-        if not allowed_chat_ids:
-            bot_name: str = self.config.title
-            raise ServiceValidationError(
-                "No allowed chat IDs found for bot",
-                translation_domain=DOMAIN,
-                translation_key="missing_allowed_chat_ids",
-                translation_placeholders={
-                    "bot_name": bot_name,
-                },
-            )
-
-        return allowed_chat_ids
 
     def _get_msg_ids(
         self, msg_data: dict[str, Any], chat_id: int
@@ -355,7 +338,9 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
+        allowed_chat_ids: list[int] = [
+            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
+        ]
 
         if target is None:
             return [allowed_chat_ids[0]]
@@ -483,7 +468,7 @@ class TelegramNotificationService:
         *args_msg: Any,
         context: Context | None = None,
         **kwargs_msg: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Sends a message to each of the targets.
 
         If there is only 1 targtet, an error is raised if the send fails.
@@ -492,7 +477,7 @@ class TelegramNotificationService:
         :return: dict with chat_id keys and message_id values for successful sends
         """
         chat_ids = self.get_target_chat_ids(kwargs_msg.pop(ATTR_TARGET, None))
-        msg_ids = {}
+        msg_ids: dict[str, JsonValueType] = {}
         for chat_id in chat_ids:
             _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
@@ -513,7 +498,7 @@ class TelegramNotificationService:
                 **kwargs_msg,
             )
             if response:
-                msg_ids[chat_id] = response.id
+                msg_ids[str(chat_id)] = response.id
 
         return msg_ids
 
@@ -580,7 +565,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
@@ -659,15 +644,35 @@ class TelegramNotificationService:
 
         media: InputMedia
         if media_type == InputMediaType.ANIMATION:
-            media = InputMediaAnimation(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAnimation(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.AUDIO:
-            media = InputMediaAudio(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaAudio(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.DOCUMENT:
-            media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaDocument(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         elif media_type == InputMediaType.PHOTO:
-            media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaPhoto(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
         else:
-            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
+            media = InputMediaVideo(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
 
         return await self._send_msg(
             self.bot.edit_message_media,
@@ -778,9 +783,9 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a chat action to pre-allowed chat IDs."""
-        result = {}
+        result: dict[str, JsonValueType] = {}
         for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
             is_successful = await self._send_msg(
@@ -792,7 +797,7 @@ class TelegramNotificationService:
                 message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
-            result[chat_id] = is_successful
+            result[str(chat_id)] = is_successful
         return result
 
     async def send_file(
@@ -800,7 +805,7 @@ class TelegramNotificationService:
         file_type: str,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
@@ -920,7 +925,7 @@ class TelegramNotificationService:
         self,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
@@ -948,7 +953,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
@@ -976,7 +981,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
@@ -1103,12 +1108,26 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     api_key: str = p_config[CONF_API_KEY]
 
+    # set up timeouts to handle large file downloads and uploads
+    # server-side file size limit is 2GB
+    read_timeout = DEFAULT_TIMEOUT_SECONDS
+    media_write_timeout = DEFAULT_TIMEOUT_SECONDS
+
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
-        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            proxy=proxy,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
     else:
-        request = HTTPXRequest(connection_pool_size=8)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1147,7 +1166,9 @@ async def load_data(
             params["verify"] = verify_ssl
 
         retry_num = 0
-        async with httpx.AsyncClient(timeout=15, headers=headers, **params) as client:
+        async with httpx.AsyncClient(
+            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
+        ) as client:
             while retry_num < num_retries:
                 try:
                     req = await client.get(url)
@@ -1171,6 +1192,7 @@ async def load_data(
                     if data.read():
                         data.seek(0)
                         data.name = url
+                        _LOGGER.debug("file downloaded: %s", url)
                         return data
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1

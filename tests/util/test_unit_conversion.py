@@ -124,7 +124,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
-        18,
+        18.016,
     ),
     CarbonMonoxideConcentrationConverter: (
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -312,13 +312,13 @@ _CONVERTED_VALUE: dict[
         (
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
-            5,
+            4.99556,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         ),
         (
             1,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
-            18,
+            18.016,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),
     ],
@@ -775,6 +775,18 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             60.1378,
             CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1995.417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.0601378,
+            CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],
     PowerConverter: [

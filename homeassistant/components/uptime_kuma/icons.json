@@ -1,6 +1,15 @@
 {
   "entity": {
     "sensor": {
+      "avg_response_time_1d": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "avg_response_time_30d": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "avg_response_time_365d": {
+        "default": "mdi:timeline-clock-outline"
+      },
       "cert_days_remaining": {
         "default": "mdi:certificate"
       },
@@ -23,6 +32,15 @@
       },
       "type": {
         "default": "mdi:protocol"
+      },
+      "uptime_1d": {
+        "default": "mdi:history"
+      },
+      "uptime_30d": {
+        "default": "mdi:history"
+      },
+      "uptime_365d": {
+        "default": "mdi:history"
       },
       "url": {
         "default": "mdi:web"

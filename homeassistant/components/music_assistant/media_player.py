@@ -457,7 +457,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             queue_id,
             media=media_uris,
             option=self._convert_queueoption_to_media_player_enqueue(enqueue),
-            radio_mode=radio_mode if radio_mode else False,
+            radio_mode=radio_mode or False,
         )
 
     @catch_musicassistant_error

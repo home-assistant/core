@@ -82,7 +82,7 @@ def call_api_container_vm(
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
         elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
+    except ResourceException, requests.exceptions.ConnectionError:
         return None
 
     return status

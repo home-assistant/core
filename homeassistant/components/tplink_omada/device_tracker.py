@@ -1,7 +1,5 @@
 """Connected Wi-Fi device scanners for TP-Link Omada access points."""
 
-import logging
-
 from tplink_omada_client.clients import OmadaWirelessClient
 
 from homeassistant.components.device_tracker import ScannerEntity
@@ -13,7 +11,7 @@ from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
 from .controller import OmadaClientsCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
