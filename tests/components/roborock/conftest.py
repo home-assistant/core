@@ -177,6 +177,10 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.set_fan_speed = AsyncMock()
     q10_trait.send = AsyncMock()
 
+    # Add command mock for Q10-specific commands (like fan speed)
+    q10_trait.command = AsyncMock()
+    q10_trait.command.send = AsyncMock()
+
     # Add StatusTrait for sensor testing
     status_trait = AsyncMock()
     status_trait.data = deepcopy(Q10_STATUS_DATA)
@@ -184,8 +188,29 @@ def create_b01_q10_trait() -> Mock:
     async def status_refresh_side_effect():
         return status_trait.data
 
+    # Mock update_from_dps to simulate MQTT data reception
+    def update_from_dps_side_effect(decoded_dps: dict) -> None:
+        """Simulate receiving MQTT data."""
+        status_trait.data.update(decoded_dps)
+
     status_trait.refresh = AsyncMock(side_effect=status_refresh_side_effect)
+    status_trait.update_from_dps = Mock(side_effect=update_from_dps_side_effect)
     q10_trait.status = status_trait
+
+    # Mock start to simulate MQTT subscription initialization
+    async def start_side_effect():
+        """Simulate starting MQTT subscription by triggering update_from_dps."""
+        # Simulate receiving initial MQTT data
+        status_trait.update_from_dps(deepcopy(Q10_STATUS_DATA))
+
+    q10_trait.start = AsyncMock(side_effect=start_side_effect)
+    
+    # Mock refresh to also trigger data update
+    async def refresh_side_effect():
+        """Simulate refreshing data via MQTT."""
+        status_trait.update_from_dps(deepcopy(Q10_STATUS_DATA))
+
+    q10_trait.refresh = AsyncMock(side_effect=refresh_side_effect)
 
     return q10_trait
 
