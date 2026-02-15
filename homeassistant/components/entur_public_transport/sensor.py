@@ -97,19 +97,19 @@ async def async_setup_platform(
         result.get("type") is FlowResultType.ABORT
         and result.get("reason") != "already_configured"
     ):
+        reason = result.get("reason", "unknown")
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "deprecated_yaml_import_issue",
+            f"deprecated_yaml_import_issue_{reason}",
             breaks_in_ha_version="2026.7.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue",
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Entur public transport",
-                "error_reason": result.get("reason", "unknown"),
             },
         )
         return
