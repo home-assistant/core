@@ -29,6 +29,10 @@
     }
   },
   "services": {
+    "clear_dhw_override": {
+      "description": "Sets the DHW to follow its schedule.",
+      "name": "Clear DHW override"
+    },
     "clear_zone_override": {
       "description": "Sets a zone to follow its schedule.",
       "name": "Clear zone override"
@@ -40,6 +44,20 @@
     "reset_system": {
       "description": "Resets the system mode and sets all the zones to follow their schedule.",
       "name": "Reset system"
+    },
+    "set_dhw_override": {
+      "description": "Overrides the DHW state, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+      "fields": {
+        "duration": {
+          "description": "The DHW will revert to its schedule after this time. If 0 the change is until the next scheduled switchpoint.",
+          "name": "Duration"
+        },
+        "state": {
+          "description": "The state to set the DHW to (\"on\" or \"off\").",
+          "name": "State"
+        }
+      },
+      "name": "Set DHW override"
     },
     "set_system_mode": {
       "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",

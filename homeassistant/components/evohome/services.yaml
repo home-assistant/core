@@ -67,3 +67,27 @@ clear_zone_override:
     entity:
       integration: evohome
       domain: climate
+
+set_dhw_override:
+  target:
+    entity:
+      integration: evohome
+      domain: water_heater
+  fields:
+    state:
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:
+
+clear_dhw_override:
+  target:
+    entity:
+      integration: evohome
+      domain: water_heater

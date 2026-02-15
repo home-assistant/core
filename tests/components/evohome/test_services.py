@@ -521,3 +521,100 @@ async def test_zone_clear_zone_override_with_ctl_id(  # ServiceValidationError
         )
 
     assert excinfo.value.translation_key == "zone_only_service"
+
+
+# Entity-level service call tests (for a DHW controller)
+# these service calls use target=...
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_dhw_clear_dhw_override(
+    hass: HomeAssistant,
+    dhw_id: str,
+) -> None:
+    """Test Evohome's clear_dhw_override service (for a DHW controller)."""
+
+    # EvoZoneMode.FOLLOW_SCHEDULE
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.CLEAR_DHW_OVERRIDE,
+            {},
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_dhw_set_dhw_override(
+    hass: HomeAssistant,
+    dhw_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_dhw_override service (for a DHW controller)."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    # EvoZoneMode.PERMANENT_OVERRIDE: state=on
+    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                "state": "on",
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(until=None)
+
+    # EvoZoneMode.PERMANENT_OVERRIDE: state=off
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                "state": "off",
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(until=None)
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE: state=on, duration=135m
+    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                "state": "on",
+                ATTR_DURATION: {"minutes": 135},
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE: state=off, duration=135m
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_DHW_OVERRIDE,
+            {
+                "state": "off",
+                ATTR_DURATION: {"minutes": 135},
+            },
+            target={ATTR_ENTITY_ID: dhw_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(
+            until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
+        )

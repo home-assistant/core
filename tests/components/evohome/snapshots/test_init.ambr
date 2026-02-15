@@ -1,9 +1,88 @@
 # serializer version: 1
-# name: test_setup[default]
+# name: test_setup[botched]
   list([
+    'clear_dhw_override',
     'clear_zone_override',
     'refresh_system',
     'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[default]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[h032585]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[h099625]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[h139906]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[h157546]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[minimal]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
+    'set_system_mode',
+    'set_zone_override',
+  ])
+# ---
+# name: test_setup[sys_004]
+  list([
+    'clear_dhw_override',
+    'clear_zone_override',
+    'refresh_system',
+    'reset_system',
+    'set_dhw_override',
     'set_system_mode',
     'set_zone_override',
   ])

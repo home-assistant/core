@@ -1,5 +1,8 @@
 {
   "services": {
+    "clear_dhw_override": {
+      "service": "mdi:water-boiler-off"
+    },
     "clear_zone_override": {
       "service": "mdi:motion-sensor-off"
     },
@@ -8,6 +11,9 @@
     },
     "reset_system": {
       "service": "mdi:refresh"
+    },
+    "set_dhw_override": {
+      "service": "mdi:water-boiler"
     },
     "set_system_mode": {
       "service": "mdi:pencil"

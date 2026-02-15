@@ -227,3 +227,15 @@ def zone_id(evohome: MagicMock) -> str:
     zone: Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
+
+
+@pytest.fixture
+def dhw_id(evohome: MagicMock) -> str:
+    """Return the entity_id of the evohome integration's DHW controller."""
+
+    evo: EvohomeClient = evohome.return_value
+
+    if evo.tcs.hotwater is None:
+        pytest.skip("This TCS has no DHW")
+
+    return f"{Platform.WATER_HEATER}.{slugify(evo.tcs.hotwater.name)}"
