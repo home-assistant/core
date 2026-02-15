@@ -62,9 +62,11 @@ async def test_already_configured(
 
 
 async def test_connection_timeout(
-    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+    hass: HomeAssistant,
+    mock_system_nexa_2_device: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test connection timeout handling."""
+    """Test connection timeout handling and recovery."""
     mock_system_nexa_2_device.return_value.get_info.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_init(
@@ -79,11 +81,25 @@ async def test_connection_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Remove the side effect and retry - should succeed now
+    device = mock_system_nexa_2_device.return_value
+    device.get_info.side_effect = None
+    device.get_info.return_value = InformationUpdate(information=device.info_data)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Device (Test Model)"
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_connection_unknown_error(
-    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+    hass: HomeAssistant,
+    mock_system_nexa_2_device: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test connection timeout handling."""
+    """Test connection unknown error handling and recovery."""
     mock_system_nexa_2_device.return_value.get_info.side_effect = RuntimeError
 
     result = await hass.config_entries.flow.async_init(
@@ -97,6 +113,18 @@ async def test_connection_unknown_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    # Remove the side effect and retry - should succeed now
+    device = mock_system_nexa_2_device.return_value
+    device.get_info.side_effect = None
+    device.get_info.return_value = InformationUpdate(information=device.info_data)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Device (Test Model)"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_empty_host(hass: HomeAssistant) -> None:
