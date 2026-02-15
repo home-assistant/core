@@ -19,6 +19,8 @@ on:
 env:
   DEFAULT_PYTHON: "3.14.2"
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
   cancel-in-progress: true

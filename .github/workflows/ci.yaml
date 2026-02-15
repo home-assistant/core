@@ -67,6 +67,8 @@ env:
   PYTHONASYNCIODEBUG: 1
   HASS_CI: 1
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -75,6 +77,9 @@ jobs:
   info:
     name: Collect information & changes data
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
@@ -241,6 +246,8 @@ jobs:
   prek:
     name: Run prek checks
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
@@ -266,6 +273,8 @@ jobs:
   lint-hadolint:
     name: Check ${{ matrix.file }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs: [info]
     if: |
       github.event.inputs.pylint-only != 'true'
@@ -294,6 +303,8 @@ jobs:
   base:
     name: Prepare dependencies
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs: [info]
     timeout-minutes: 60
     strategy:
@@ -426,6 +437,8 @@ jobs:
   hassfest:
     name: Check hassfest
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -481,6 +494,8 @@ jobs:
   gen-requirements-all:
     name: Check all requirements
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -516,6 +531,8 @@ jobs:
   gen-copilot-instructions:
     name: Check copilot instructions
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
     if: |
@@ -540,6 +557,8 @@ jobs:
   dependency-review:
     name: Dependency review
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -561,6 +580,8 @@ jobs:
   audit-licenses:
     name: Audit licenses
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -610,6 +631,8 @@ jobs:
   pylint:
     name: Check pylint
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -658,6 +681,8 @@ jobs:
   pylint-tests:
     name: Check pylint on tests
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -707,6 +732,8 @@ jobs:
   mypy:
     name: Check mypy
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -772,6 +799,8 @@ jobs:
   prepare-pytest-full:
     name: Split tests for full run
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
@@ -838,6 +867,8 @@ jobs:
   pytest-full:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -976,6 +1007,8 @@ jobs:
   pytest-mariadb:
     name: Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -1129,6 +1162,8 @@ jobs:
   pytest-postgres:
     name: Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1285,6 +1320,8 @@ jobs:
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - pytest-full
@@ -1312,6 +1349,8 @@ jobs:
   pytest-partial:
     name: Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs:
       - info
       - base
@@ -1452,6 +1491,8 @@ jobs:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     timeout-minutes: 10
     needs:
       - info

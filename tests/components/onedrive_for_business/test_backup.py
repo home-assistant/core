@@ -6,7 +6,11 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import Mock, patch
 
-from onedrive_personal_sdk.exceptions import HashMismatchError, OneDriveException
+from onedrive_personal_sdk.exceptions import (
+    AuthenticationError,
+    HashMismatchError,
+    OneDriveException,
+)
 from onedrive_personal_sdk.models.items import File
 import pytest
 
@@ -18,6 +22,7 @@ from homeassistant.components.onedrive_for_business.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -422,6 +427,39 @@ async def test_agents_backup_not_found(
 
     assert response["success"]
     assert response["result"]["backup"] is None
+
+
+async def test_reauth_on_403(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we re-authenticate on 403."""
+
+    mock_onedrive_client.list_drive_items.side_effect = AuthenticationError(
+        403, "Auth failed"
+    )
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication error"
+    }
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
