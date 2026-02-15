@@ -98,6 +98,18 @@ async def async_setup_entry(
         RoborockQ10Switch(
             f"child_lock_{coordinator.duid_slug}",
             coordinator,
+            B01_Q10_DP.CHILD_LOCK,
+            "child_lock",
+        )
+        for coordinator in coordinators.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+    )
+    entities.extend(
+        RoborockQ10Switch(
+            f"not_disturb_{coordinator.duid_slug}",
+            coordinator,
+            B01_Q10_DP.NOT_DISTURB,
+            "not_disturb",
         )
         for coordinator in coordinators.b01
         if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
@@ -161,30 +173,33 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01, SwitchEntity):
     """Roborock Q10 switch entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_translation_key = "child_lock"
     coordinator: RoborockB01Q10UpdateCoordinator
 
     def __init__(
         self,
         unique_id: str,
         coordinator: RoborockB01Q10UpdateCoordinator,
+        dp_code: B01_Q10_DP,
+        translation_key: str,
     ) -> None:
-        """Initialize the Q10 child lock switch."""
+        """Initialize the Q10 switch."""
         super().__init__(unique_id, coordinator)
+        self._dp_code = dp_code
+        self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool | None:
-        """Return True if child lock is on."""
+        """Return True if switch is on."""
         if isinstance(self.coordinator.data, dict):
-            value = self.coordinator.data.get(B01_Q10_DP.CHILD_LOCK)
+            value = self.coordinator.data.get(self._dp_code)
             if value is not None:
                 return bool(value)
         return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on child lock."""
+        """Turn on the switch."""
         try:
-            await self.coordinator.api.command.send(B01_Q10_DP.CHILD_LOCK, 1)
+            await self.coordinator.api.command.send(self._dp_code, 1)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -193,9 +208,9 @@ class RoborockQ10Switch(RoborockCoordinatedEntityB01, SwitchEntity):
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off child lock."""
+        """Turn off the switch."""
         try:
-            await self.coordinator.api.command.send(B01_Q10_DP.CHILD_LOCK, 0)
+            await self.coordinator.api.command.send(self._dp_code, 0)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

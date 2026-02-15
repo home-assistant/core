@@ -417,6 +417,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "not_disturb": {
+        "name": "Do not disturb"
+      },
       "dnd_switch": {
         "name": "Do not disturb"
       },
