@@ -64,6 +64,10 @@ class TibberHomeData:
     peak_hour_time: datetime | None
     month_cons: float | None
 
+    def __getitem__(self, key: str) -> Any:
+        """Return attribute by name, or None if missing."""
+        return self.__dict__.get(key)
+
 
 def _build_home_data(home: TibberHome) -> TibberHomeData:
     """Build TibberHomeData from a TibberHome after price info has been fetched."""

@@ -44,7 +44,6 @@ from .entity import TibberCoordinatorEntity, TibberRTCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:currency-usd"
 PARALLEL_UPDATES = 0
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
@@ -252,9 +251,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-)
-
-PRICE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="current_price",
         translation_key="electricity_price",
@@ -263,32 +259,32 @@ PRICE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="max_price",
         translation_key="max_price",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="avg_price",
         translation_key="avg_price",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="min_price",
         translation_key="min_price",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="off_peak_1",
         translation_key="off_peak_1",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="peak",
         translation_key="peak",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="off_peak_2",
         translation_key="off_peak_2",
-        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="intraday_price_ranking",
@@ -643,7 +639,8 @@ async def _async_setup_graphql_sensors(
 
     entity_registry = er.async_get(hass)
 
-    active_homes: list[TibberHome] = []
+    entities: list[TibberSensor] = []
+    coordinator = entry.runtime_data.data_coordinator
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
@@ -658,8 +655,8 @@ async def _async_setup_graphql_sensors(
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
-        if home.has_active_subscription:
-            active_homes.append(home)
+        if coordinator is not None and home.has_active_subscription:
+            entities.extend(TibberSensor(home, coordinator, desc) for desc in SENSORS)
 
         if home.has_real_time_consumption:
             entity_creator = TibberRtEntityCreator(
@@ -673,16 +670,6 @@ async def _async_setup_graphql_sensors(
                     home,
                 ).async_set_updated_data
             )
-
-    entities: list[TibberSensor] = []
-    coordinator = entry.runtime_data.data_coordinator
-    if coordinator is not None and active_homes:
-        for home in active_homes:
-            entities.extend(
-                TibberSensor(home, coordinator, desc, model="Price Sensor")
-                for desc in PRICE_SENSORS
-            )
-            entities.extend(TibberSensor(home, coordinator, desc) for desc in SENSORS)
 
     async_add_entities(entities)
 
@@ -744,7 +731,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         return sensor.value if sensor else None
 
 
-class TibberSensor(TibberCoordinatorEntity):
+class TibberSensor(TibberCoordinatorEntity, SensorEntity):
     """Representation of a Tibber sensor reading from coordinator data."""
 
     def __init__(
@@ -771,49 +758,43 @@ class TibberSensor(TibberCoordinatorEntity):
             self._model = model
 
     @property
+    def available(self) -> bool:
+        """Return whether the sensor is available."""
+        return super().available and self._get_home_data() is not None
+
+    @property
     def native_value(self) -> StateType:
         """Return the value of the sensor from coordinator data."""
         home_data = self._get_home_data()
         if home_data is None:
-            _LOGGER.error("Home data not found for home %s", self._tibber_home.home_id)
             return None
-        _LOGGER.error(
-            "Home data found for home %s: %s",
-            self._tibber_home.home_id,
-            getattr(home_data, self.entity_description.key, None),
-        )
-        return cast(
-            StateType,
-            getattr(home_data, self.entity_description.key, None),
-        )
+        return cast(StateType, home_data[self.entity_description.key])
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit from coordinator data for monetary sensors."""
-        if self.entity_description.key == "current_price":
-            home_data = self._get_home_data()
-            if home_data is None:
-                return None
-            return home_data.price_unit
-
-        if self.entity_description.device_class == SensorDeviceClass.MONETARY:
-            home_data = self._get_home_data()
-            if home_data is None:
-                return None
-
-            if self.entity_description.key in {
+        if (
+            self.entity_description.device_class == SensorDeviceClass.MONETARY
+            or self.entity_description.key
+            in (
+                "current_price",
                 "max_price",
                 "avg_price",
                 "min_price",
                 "off_peak_1",
                 "peak",
                 "off_peak_2",
-            }:
-                return home_data.price_unit
-
-            return home_data.currency
-        desc = cast(SensorEntityDescription, self.entity_description)
-        return desc.native_unit_of_measurement
+            )
+        ):
+            home_data = self._get_home_data()
+            if home_data is None:
+                return None
+            return (
+                home_data.currency
+                if self.entity_description.device_class == SensorDeviceClass.MONETARY
+                else home_data.price_unit
+            )
+        return self.entity_description.native_unit_of_measurement
 
 
 class TibberRtEntityCreator:
