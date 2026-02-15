@@ -778,8 +778,8 @@ jobs:
         id: generate-mypy-key
         run: |
           mypy_version=$(cat requirements_test.txt | grep 'mypy.*=' | cut -d '=' -f 3)
-          echo "version=$mypy_version" >> $GITHUB_OUTPUT
-          echo "key=mypy-${MYPY_CACHE_VERSION}-$mypy_version-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
+          echo "version=${mypy_version}" >> $GITHUB_OUTPUT
+          echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
