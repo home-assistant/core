@@ -63,7 +63,7 @@ async def test_fritzboxtools_class_no_setup(
     )
 
     with pytest.raises(ClassSetupMissing):
-        assert getattr(coordinator, attr) is None
+        getattr(coordinator, attr)
 
 
 async def test_clear_connection_cache(
