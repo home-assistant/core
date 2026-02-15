@@ -3,14 +3,21 @@
 from __future__ import annotations
 
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
+from yarl import URL
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    UnitOfTemperature,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DEFAULT_VERIFY_SSL, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 
 
@@ -65,6 +72,49 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) ->
         LOGGER.debug("logout failed with '%s', anyway continue with unload", ex)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: FritzboxConfigEntry
+) -> bool:
+    """Migrate old config entry to a new format."""
+    LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        new_data = {**config_entry.data}
+        if config_entry.minor_version < 2:
+            LOGGER.debug("Migrate config entry data to URL based configuration")
+            url = URL(config_entry.data[CONF_HOST])
+            if not url.scheme:
+                host = f"http://{config_entry.data[CONF_HOST]}"
+            else:
+                host = f"{url.scheme}://{url.host}"
+            port = url.port or 80
+            verify_ssl = DEFAULT_VERIFY_SSL
+            new_data = {
+                **config_entry.data,
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_VERIFY_SSL: verify_ssl,
+            }
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, version=1, minor_version=2
+        )
+
+    LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True
 
 
 async def async_remove_config_entry_device(
