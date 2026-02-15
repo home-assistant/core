@@ -24,6 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -137,6 +138,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 except TeslaFleetError as e:
                     raise ConfigEntryNotReady(e.message) from e
 
+                powerwall = (
+                    product["components"]["battery"] or product["components"]["solar"]
+                )
+
                 energysites.append(
                     TessieEnergyData(
                         api=api,
@@ -150,6 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                         ),
                         info_coordinator=TessieEnergySiteInfoCoordinator(
                             hass, entry, api
+                        ),
+                        history_coordinator=(
+                            TessieEnergyHistoryCoordinator(hass, entry, api)
+                            if powerwall
+                            else None
                         ),
                         device=DeviceInfo(
                             identifiers={(DOMAIN, str(site_id))},
@@ -169,6 +179,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             *(
                 energysite.info_coordinator.async_config_entry_first_refresh()
                 for energysite in energysites
+            ),
+            *(
+                energysite.history_coordinator.async_config_entry_first_refresh()
+                for energysite in energysites
+                if energysite.history_coordinator is not None
             ),
         )
 
