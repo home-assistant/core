@@ -107,14 +107,7 @@ class LearningScheduleEventType(StrEnum):
 DEFAULT_CALENDAR_EVENTS = {
     CONF_DAILY_EVENTS: [
         DailyCalendarEventType.DATE,
-        DailyCalendarEventType.ALOT_HASHACHAR,
         DailyCalendarEventType.NETZ_HACHAMA,
-        DailyCalendarEventType.SOF_ZMAN_SHEMA_GRA,
-        DailyCalendarEventType.SOF_ZMAN_TFILLA_GRA,
-        DailyCalendarEventType.CHATZOT_HAYOM,
-        DailyCalendarEventType.MINCHA_GEDOLA,
-        DailyCalendarEventType.MINCHA_KETANA,
-        DailyCalendarEventType.PLAG_HAMINCHA,
         DailyCalendarEventType.SHKIA,
         DailyCalendarEventType.TSET_HAKOHAVIM,
     ],
