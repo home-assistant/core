@@ -1167,6 +1167,20 @@ async def test_bandwidth_port_sensors(
                         "up": True,
                         "speed": 100,
                     },
+                    {
+                        "media": "GE",
+                        "name": "Port 3",
+                        "port_idx": 3,
+                        "poe_class": "Unknown",
+                        "poe_enable": False,
+                        "poe_mode": "off",
+                        "poe_power": "0.00",
+                        "poe_voltage": "0.00",
+                        "portconf_id": "1a3",
+                        "port_poe": False,
+                        "up": False,
+                        "speed": 0,
+                    },
                 ],
                 "state": 1,
                 "type": "usw",
@@ -1188,6 +1202,9 @@ async def test_port_link_speed_sensors(
 
     p2_reg_entry = entity_registry.async_get("sensor.mock_name_port_2_link_speed")
     assert p2_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Port with speed 0 should not create an entity
+    assert not entity_registry.async_get("sensor.mock_name_port_3_link_speed")
 
     # Enable entity
     entity_registry.async_update_entity(
