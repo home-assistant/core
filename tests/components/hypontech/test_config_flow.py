@@ -36,7 +36,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert result["data"] == TEST_USER_INPUT
-    assert result["result"].unique_id == "mock_account_id_123"
+    assert result["result"].unique_id == "2123456789123456789"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

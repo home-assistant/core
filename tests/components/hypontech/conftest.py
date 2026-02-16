@@ -1,15 +1,16 @@
 """Common fixtures for the Hypontech Cloud tests."""
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, patch
 
-from hyponcloud import AdminInfo
+from hyponcloud import AdminInfo, InverterData, OverviewData, PlantData
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -30,12 +31,50 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
-        unique_id="mock_account_id_123",
+        unique_id="2123456789123456789",
     )
 
 
 @pytest.fixture
-def mock_hyponcloud() -> Generator[AsyncMock]:
+def load_overview_fixture() -> OverviewData:
+    """Load overview fixture data."""
+    data = json.loads(load_fixture("overview.json", DOMAIN))
+    return OverviewData.from_dict(data["data"])
+
+
+@pytest.fixture
+def load_plant_list_fixture() -> list[PlantData]:
+    """Load plant list fixture data."""
+    data = json.loads(load_fixture("plant_list.json", DOMAIN))
+    return [PlantData.from_dict(item) for item in data["data"]]
+
+
+@pytest.fixture
+def load_inverters_fixture() -> list[InverterData]:
+    """Load inverters fixture data."""
+    data = json.loads(load_fixture("inverters.json", DOMAIN))
+    return [InverterData.from_dict(item) for item in data["data"]]
+
+
+@pytest.fixture
+def load_admin_info_fixture() -> AdminInfo:
+    """Load admin info fixture data."""
+    data = json.loads(load_fixture("admin_info.json", DOMAIN))
+    admin_data = data["data"]
+    # Flatten nested "info" object into the main data dict
+    if "info" in admin_data and isinstance(admin_data["info"], dict):
+        info_data = admin_data.pop("info")
+        admin_data.update(info_data)
+    return AdminInfo.from_dict(admin_data)
+
+
+@pytest.fixture
+def mock_hyponcloud(
+    load_overview_fixture: OverviewData,
+    load_plant_list_fixture: list[PlantData],
+    load_inverters_fixture: list[InverterData],
+    load_admin_info_fixture: AdminInfo,
+) -> Generator[AsyncMock]:
     """Mock HyponCloud."""
     with (
         patch(
@@ -47,8 +86,8 @@ def mock_hyponcloud() -> Generator[AsyncMock]:
         ),
     ):
         mock_client = mock_hyponcloud.return_value
-        get_admin_info = AsyncMock(spec=AdminInfo)
-        get_admin_info.id = "mock_account_id_123"
-        mock_client.get_admin_info.return_value = get_admin_info
-        mock_client.get_list.return_value = []
+        mock_client.get_admin_info.return_value = load_admin_info_fixture
+        mock_client.get_list.return_value = load_plant_list_fixture
+        mock_client.get_overview.return_value = load_overview_fixture
+        mock_client.get_inverters.return_value = load_inverters_fixture
         yield mock_client
