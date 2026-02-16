@@ -43,7 +43,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Integration only requires IP and port, no additional configuration parameters.
+    comment: No options to be set.
   docs-installation-parameters: done
   entity-unavailable:
     status: todo
