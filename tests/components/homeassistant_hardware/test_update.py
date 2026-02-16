@@ -15,6 +15,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -232,7 +233,7 @@ async def mock_update_config_entry(
 ) -> AsyncGenerator[ConfigEntry]:
     """Set up a mock Home Assistant Hardware firmware update entity."""
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     mock_integration(
         hass,

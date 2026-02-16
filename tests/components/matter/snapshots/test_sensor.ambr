@@ -200,14 +200,14 @@
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -215,6 +215,7 @@
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -7544,14 +7545,14 @@
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -7559,6 +7560,7 @@
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'Mock Air Purifier Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
