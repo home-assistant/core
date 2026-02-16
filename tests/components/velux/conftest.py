@@ -4,7 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx import Blind, Light, OnOffLight, OnOffSwitch, Scene, Window
+from pyvlx import Light, OnOffLight, OnOffSwitch, Scene
+from pyvlx.opening_device import Blind, DualRollerShutter, Window
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
@@ -67,6 +68,22 @@ def mock_window() -> AsyncMock:
     window.position = MagicMock(position_percent=30, closed=False)
     window.pyvlx = MagicMock()
     return window
+
+
+# a dual roller shutter
+@pytest.fixture
+def mock_dual_roller_shutter() -> AsyncMock:
+    """Create a mock Velux dual roller shutter."""
+    cover = AsyncMock(spec=DualRollerShutter, autospec=True)
+    cover.name = "Test Dual Roller Shutter"
+    cover.serial_number = "987654321"
+    cover.is_opening = False
+    cover.is_closing = False
+    cover.position_upper_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position_lower_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position = MagicMock(position_percent=30, closed=False)
+    cover.pyvlx = MagicMock()
+    return cover
 
 
 # a blind
@@ -137,6 +154,8 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_opening = False
     cover.is_closing = False
     cover.position = MagicMock(position_percent=30, closed=False)
+    cover.position_upper_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position_lower_curtain = MagicMock(position_percent=30, closed=False)
     cover.pyvlx = MagicMock()
     return cover
 
@@ -149,6 +168,7 @@ def mock_pyvlx(
     mock_onoff_switch: AsyncMock,
     mock_window: AsyncMock,
     mock_blind: AsyncMock,
+    mock_dual_roller_shutter: AsyncMock,
     request: pytest.FixtureRequest,
 ) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
@@ -164,6 +184,7 @@ def mock_pyvlx(
         pyvlx.nodes = [request.getfixturevalue(request.param)]
     else:
         pyvlx.nodes = [
+            mock_dual_roller_shutter,
             mock_light,
             mock_onoff_light,
             mock_onoff_switch,
