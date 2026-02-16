@@ -109,7 +109,7 @@ class LoJackBinarySensor(CoordinatorEntity[LoJackCoordinator], BinarySensorEntit
         self.entity_description = description
         self._device_id = vehicle.device_id
 
-        self._attr_unique_id = f"{DOMAIN}_{vehicle.device_id}_{description.key}"
+        self._attr_unique_id = f"{vehicle.device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.device_id)},
             name=device_name,

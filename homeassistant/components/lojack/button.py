@@ -56,7 +56,7 @@ class LoJackRefreshLocationButton(ButtonEntity):
         self._entry = entry
         self._device_id = vehicle.device_id
 
-        self._attr_unique_id = f"{DOMAIN}_{vehicle.device_id}_refresh_location"
+        self._attr_unique_id = f"{vehicle.device_id}_refresh_location"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.device_id)},
             name=device_name,
