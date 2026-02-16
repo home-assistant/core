@@ -189,6 +189,10 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         elif current_position is not None and target_position < current_position:
             self._attr_is_opening = False
             self._attr_is_closing = True
+        else:
+            # Target equals current or position is None - clear opening/closing state
+            self._attr_is_opening = False
+            self._attr_is_closing = False
 
         await self._async_set_value(
             self._target_position_value,
