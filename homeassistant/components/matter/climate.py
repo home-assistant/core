@@ -352,12 +352,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @callback
     def _update_presets(self) -> None:
         """Update preset modes and active preset."""
-        # Check if the device supports presets feature before attempting to load
-        feature_map = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
-        )
-        if not (feature_map & ThermostatFeature.kPresets):
-            # Device doesn't support presets, skip preset update
+        # Check if the device supports presets feature before attempting to load.
+        # Use the already computed supported features instead of re-reading
+        # the FeatureMap attribute to keep a single source of truth and avoid
+        # casting None when the attribute is temporarily unavailable.
+        supported_features = self._attr_supported_features or 0
+        if not (supported_features & ClimateEntityFeature.PRESET_MODE):
+            # Device does not support presets, skip preset update
             self._preset_handle_by_name.clear()
             self._attr_preset_modes = []
             self._attr_preset_mode = None
