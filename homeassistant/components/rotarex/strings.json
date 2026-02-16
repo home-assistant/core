@@ -15,11 +15,11 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "email": "The email address for your DIMES SRG account.",
+          "password": "The password for your DIMES SRG account."
         },
         "description": "Enter your {name} account credentials.",
-        "title": "{name} Login"
+        "title": "{name} login"
       }
     }
   },
