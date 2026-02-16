@@ -9,6 +9,7 @@ from mastodon.Mastodon import (
     Mastodon,
     MastodonError,
     MastodonNotFoundError,
+    MastodonUnauthorizedError,
 )
 
 from homeassistant.const import (
@@ -18,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -48,6 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             entry,
         )
 
+    except MastodonUnauthorizedError as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
     except MastodonError as ex:
         raise ConfigEntryNotReady("Failed to connect") from ex
 
