@@ -1,0 +1,213 @@
+# serializer version: 1
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_pressure',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Pressure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Pressure',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '43219_pressure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Pressure',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1400',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleepnumber-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleepnumber',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R SleepNumber',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R SleepNumber',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '43219_sleep_number',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleepnumber-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed Sleeper R SleepNumber',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleepnumber',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_pressure',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Pressure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Pressure',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765_pressure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed SleeperL Pressure',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleepnumber-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleepnumber',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL SleepNumber',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL SleepNumber',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765_sleep_number',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleepnumber-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed SleeperL SleepNumber',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleepnumber',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
