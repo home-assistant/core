@@ -33,21 +33,33 @@ class HassEnforceConstantsChecker(BaseChecker):
 
         if isinstance(node.func, nodes.Name):
             if node.func.name == "async_setup_component":
-                if len(node.args) >= 2:
-                    self._ensure_domain_argument(node, node.args[1])
-                else:
-                    for keyword in node.keywords:
-                        if keyword.arg == "domain":
-                            self._ensure_domain_argument(node, keyword.value)
+                self._ensure_domain_argument(node, arg_position=1, kwarg_name="domain")
 
     def _ensure_domain_argument(
+        self, call_node: nodes.Call, *, arg_position: int, kwarg_name: str
+    ) -> None:
+
+        if len(call_node.args) > arg_position:
+            self._ensure_domain_argument_node(call_node, call_node.args[arg_position])
+
+        for keyword in call_node.keywords:
+            if keyword.arg == kwarg_name:
+                self._ensure_domain_argument_node(call_node, keyword.value)
+                return
+
+    def _ensure_domain_argument_node(
         self, call_node: nodes.Call, arg_node: nodes.Argument | nodes.Keyword
     ) -> None:
         if isinstance(arg_node, nodes.Attribute) and arg_node.attrname.endswith(
             "DOMAIN"
         ):
+            # component.***DOMAIN attribute constants are allowed
+            return
+        if isinstance(arg_node, nodes.Const):
+            # Allow string literals
             return
         if isinstance(arg_node, nodes.Name) and arg_node.name.endswith("DOMAIN"):
+            # ***DOMAIN constants are allowed
             return
 
         self.add_message(
