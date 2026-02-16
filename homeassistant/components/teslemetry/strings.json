@@ -1090,6 +1090,18 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate"
+    },
+    "auth_failed_invalid_token": {
+      "message": "Access token is invalid, please reauthenticate"
+    },
+    "auth_failed_migration": {
+      "message": "Failed to migrate to OAuth, please reauthenticate"
+    },
+    "auth_failed_subscription_required": {
+      "message": "Teslemetry subscription required"
+    },
     "command_error": {
       "message": "Command returned error: {error}"
     },
@@ -1126,6 +1138,12 @@
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
     },
+    "not_ready_api_error": {
+      "message": "Error communicating with Teslemetry API"
+    },
+    "not_ready_connection_error": {
+      "message": "Unable to connect to Teslemetry"
+    },
     "oauth_implementation_not_available": {
       "message": "OAuth implementation not available, try reauthenticating"
     },
@@ -1140,6 +1158,12 @@
     },
     "token_data_malformed": {
       "message": "Token data malformed, try reauthenticating"
+    },
+    "update_failed": {
+      "message": "Error fetching data from Teslemetry API"
+    },
+    "update_failed_invalid_data": {
+      "message": "Received invalid data from API"
     },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
