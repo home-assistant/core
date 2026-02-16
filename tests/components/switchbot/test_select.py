@@ -27,6 +27,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         (True, "12h"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_time_format_select_initial_state(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
@@ -40,7 +41,8 @@ async def test_time_format_select_initial_state(
     entry = mock_entry_factory("hygrometer_co2")
     entry.add_to_hass(hass)
 
-    mock_get_datetime = AsyncMock(
+    with patch(
+        "switchbot.SwitchbotMeterProCO2.get_datetime",
         return_value={
             "12h_mode": mode,
             "year": 2025,
@@ -49,12 +51,7 @@ async def test_time_format_select_initial_state(
             "hour": 12,
             "minute": 0,
             "second": 0,
-        }
-    )
-
-    with patch(
-        "switchbot.SwitchbotMeterProCO2.get_datetime",
-        mock_get_datetime,
+        },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -64,6 +61,7 @@ async def test_time_format_select_initial_state(
         assert state.state == expected_state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_time_format_select_change_to_12h(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
@@ -118,6 +116,7 @@ async def test_time_format_select_change_to_12h(
         assert state.state == "12h"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_time_format_select_change_to_24h(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
