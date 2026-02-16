@@ -263,9 +263,9 @@ async def test_zeroconf_already_configured(
     reason: str,
 ) -> None:
     """Test zeroconf discovery flow when already configured."""
-    mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = AsyncMock()
     mock_config_entry.runtime_data.connected = True
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
