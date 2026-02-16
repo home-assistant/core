@@ -3,22 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-import time
+import logging
 from typing import Any
 
-from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
-    DEFAULT_DELAY_SECS,
-    DEFAULT_NUM_REPEATS,
-    RemoteEntity,
-)
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -33,7 +30,7 @@ async def async_setup_entry(
     def handle_coordinator_update() -> None:
         """Add remote per session."""
         entities: list[RemoteEntity] = []
-        for session_id, session_data in coordinator.data.items():
+        for session_id, session_data in (coordinator.data or {}).items():
             if (
                 session_id not in coordinator.remote_session_ids
                 and session_data["SupportsRemoteControl"]
@@ -68,12 +65,10 @@ class JellyfinRemote(JellyfinClientEntity, RemoteEntity):
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to the client."""
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
-        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-
-        for _ in range(num_repeats):
-            for single_command in command:
+        for single_command in command:
+            try:
                 self.coordinator.api_client.jellyfin.command(
                     self.session_id, single_command
                 )
-                time.sleep(delay)
+            except IntegrationError as err:
+                _LOGGER.error("Failed to send command '%s': %s", single_command, err)

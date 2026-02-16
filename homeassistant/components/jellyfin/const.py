@@ -19,6 +19,11 @@ CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
 
 DEFAULT_NAME: Final = "Jellyfin"
 
+UPDATE_INTERVAL_CONNECTED: Final = 30  # seconds - normal polling when connected
+UPDATE_INTERVAL_DISCONNECTED: Final = (
+    600  # seconds (10 min) - slower polling when disconnected
+)
+
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
 ITEM_KEY_ID: Final = "Id"
 ITEM_KEY_IMAGE_TAGS: Final = "ImageTags"
@@ -26,6 +31,10 @@ ITEM_KEY_INDEX_NUMBER: Final = "IndexNumber"
 ITEM_KEY_MEDIA_SOURCES: Final = "MediaSources"
 ITEM_KEY_MEDIA_TYPE: Final = "MediaType"
 ITEM_KEY_NAME: Final = "Name"
+
+SERVER_KEY_ID: Final = "id"
+SERVER_KEY_NAME: Final = "name"
+SERVER_KEY_VERSION: Final = "version"
 
 ITEM_TYPE_ALBUM: Final = "MusicAlbum"
 ITEM_TYPE_ARTIST: Final = "MusicArtist"

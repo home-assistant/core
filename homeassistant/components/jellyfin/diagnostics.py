@@ -28,6 +28,7 @@ async def async_get_config_entry_diagnostics(
             "id": coordinator.server_id,
             "name": coordinator.server_name,
             "version": coordinator.server_version,
+            "connected": coordinator.connected,
         },
         "sessions": [
             {
@@ -41,6 +42,6 @@ async def async_get_config_entry_diagnostics(
                 "now_playing": session_data.get("NowPlayingItem"),
                 "play_state": session_data.get("PlayState"),
             }
-            for session_id, session_data in coordinator.data.items()
+            for session_id, session_data in (coordinator.data or {}).items()
         ],
     }

@@ -21,7 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): str,
+        vol.Required(
+            CONF_URL,
+            description={"suggested_value": "http://192.168.1.x:8096"},
+        ): str,
         vol.Required(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD, default=""): str,
     }
