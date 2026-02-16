@@ -1653,3 +1653,76 @@ async def test_remove_stale_media(
     assert not extra_media1.exists()
     assert not extra_media2.exists()
     assert extra_media3.exists()
+
+
+async def test_media_migration(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration of media files from legacy path to new path."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    file2 = legacy_device_path / "event2.mp4"
+    file2.write_text("content2")
+
+    # Run setup (which triggers migration)
+    await setup_platform()
+
+    # Check if files are moved to cache path
+    cache_device_path = cache_path / device_id
+    assert (cache_device_path / "event1.jpg").exists()
+    assert (cache_device_path / "event1.jpg").read_text() == "content1"
+    assert (cache_device_path / "event2.mp4").exists()
+    assert (cache_device_path / "event2.mp4").read_text() == "content2"
+
+    # Check if files are removed from legacy path
+    assert not file1.exists()
+    assert not file2.exists()
+    assert not legacy_device_path.exists()
+    assert not legacy_path.exists()
+
+
+async def test_media_migration_failure(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration failure handles the error gracefully."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    # Mock shutil.move to fail
+    with patch(
+        "homeassistant.components.nest.media_source.shutil.move",
+        side_effect=OSError("Storage full"),
+    ):
+        # Run setup (which triggers migration)
+        # Note: setup_platform handles the integration setup which calls async_get_media_event_store
+        await setup_platform()
+
+    # Verify that the legacy path still exists (migration was abandoned)
+    assert file1.exists()
+    assert legacy_path.exists()
+
+    # Verify that the cache path was still created (it should be empty)
+    assert cache_path.exists()
+    assert not (cache_path / device_id).exists()
