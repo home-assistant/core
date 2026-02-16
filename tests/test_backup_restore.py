@@ -110,7 +110,7 @@ def test_restoring_backup_that_does_not_exist(
     with (
         pytest.raises(ValueError, match="Backup file test does not exist"),
     ):
-        assert backup_restore.restore_backup(tmp_path) is False
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is False
     assert restore_result_file_content(tmp_path) == {
         "error": "Backup file test does not exist",
         "error_type": "ValueError",
@@ -144,7 +144,7 @@ def test_restoring_backup_when_instructions_can_not_be_read(
     )
     restore_file_path = tmp_path / ".HA_RESTORE"
     assert restore_file_path.exists()
-    assert backup_restore.restore_backup(tmp_path) is False
+    assert backup_restore.restore_backup(tmp_path.as_posix()) is False
     assert not restore_file_path.exists()
     assert restore_result_file_content(tmp_path) == restore_result
 
@@ -153,7 +153,7 @@ def test_restoring_backup_when_instructions_missing(tmp_path: Path) -> None:
     """Test restoring a backup when instructions are missing."""
     restore_file_path = tmp_path / ".HA_RESTORE"
     assert not restore_file_path.exists()
-    assert backup_restore.restore_backup(tmp_path) is False
+    assert backup_restore.restore_backup(tmp_path.as_posix()) is False
     assert not restore_file_path.exists()
     assert restore_result_file_content(tmp_path) is None
 
@@ -188,7 +188,7 @@ def test_restoring_backup_that_is_not_a_file(
     with (
         pytest.raises(IsADirectoryError, match="\\[Errno 21\\] Is a directory"),
     ):
-        assert backup_restore.restore_backup(tmp_path) is False
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is False
     restore_result = restore_result_file_content(tmp_path)
     assert restore_result == {
         "error": mock.ANY,
@@ -230,7 +230,7 @@ def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> Non
             match="You need at least Home Assistant version 9999.99.99 to restore this backup",
         ),
     ):
-        assert backup_restore.restore_backup(tmp_path) is True
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
     assert restore_result_file_content(tmp_path) == {
         "error": (
             "You need at least Home Assistant version 9999.99.99 to restore this backup"
@@ -348,7 +348,7 @@ def test_restore_backup(
             return_value=restore_backup_content,
         ),
     ):
-        assert backup_restore.restore_backup(tmp_path) is True
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
 
     files_after_restore = get_files(tmp_path)
     assert (
@@ -414,7 +414,7 @@ def test_restore_backup_filter_files(tmp_path: Path) -> None:
             "tarfile.TarFile._extract_one", autospec=True, wraps=real_extractone
         ) as extractone_mock,
     ):
-        assert backup_restore.restore_backup(tmp_path) is True
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
 
     # Check the unsafe files are not extracted, and that the safe files are extracted
     extracted_files = {call.args[1].name for call in extractone_mock.mock_calls}
@@ -456,7 +456,7 @@ def test_remove_backup_file_after_restore(
             ),
         ),
     ):
-        assert backup_restore.restore_backup(tmp_path) is True
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
     assert backup_file_path.exists() == (not remove_after_restore)
     assert restore_result_file_content(tmp_path) == {
         "error": None,
