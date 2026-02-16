@@ -22,10 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 # Every coordinator update refresh, we materialize a timeline of upcoming
-# events for determinig state. This is done in the background to avoid blocking
+# events for determining state. This is done in the background to avoid blocking
 # the event loop. When a state update happens we can scan for active events on
-# the materialized timeline. These parameters control the max lookahead which
-# just needs to cover the between the last update and the next update.
+# the materialized timeline. These parameters control the maximum lookahead
+# window and number of events we materialize from the calendar.
 MAX_LOOKAHEAD_EVENTS = 20
 MAX_LOOKAHEAD_TIME = timedelta(days=365)
 
