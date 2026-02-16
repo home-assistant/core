@@ -1205,10 +1205,12 @@ async def test_window_covering_open_close(
 
 
 
-async def test_multilevel_switch_cover_state(
+
+
+async def test_multilevel_switch_cover_opening_closing_state(
     hass: HomeAssistant, client, aeotec_nano_shutter, integration
 ) -> None:
-    """Test multilevel switch cover states including OPENING and CLOSING."""
+    """Test multilevel switch cover OPENING and CLOSING states."""
     node = aeotec_nano_shutter
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
 
@@ -1216,7 +1218,18 @@ async def test_multilevel_switch_cover_state(
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    # Simulate opening: Set targetValue to 99 while currentValue is still 0
+    # Call open_cover - should immediately set state to OPENING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Simulate cover moving: update targetValue to 99
     event = Event(
         type="value updated",
         data={
@@ -1236,6 +1249,7 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should still be OPENING
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.OPENING
 
@@ -1259,6 +1273,7 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should still be OPENING while moving
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.OPENING
     assert state.attributes[ATTR_CURRENT_POSITION] == 51
@@ -1283,11 +1298,23 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should now be OPEN (cleared opening state)
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
 
-    # Simulate closing: Set targetValue to 0 while currentValue is still 99
+    # Call close_cover - should immediately set state to CLOSING
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+    # Simulate target value update
     event = Event(
         type="value updated",
         data={
@@ -1307,10 +1334,11 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should still be CLOSING
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.CLOSING
 
-    # Simulate cover moving: currentValue is now 50, targetValue is still 0
+    # Simulate cover moving: currentValue is now 50
     event = Event(
         type="value updated",
         data={
@@ -1330,6 +1358,7 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should still be CLOSING while moving
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.CLOSING
     assert state.attributes[ATTR_CURRENT_POSITION] == 51
@@ -1354,7 +1383,34 @@ async def test_multilevel_switch_cover_state(
     )
     node.receive_event(event)
 
+    # State should now be CLOSED (cleared closing state)
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
+    # Test stop cover clears the state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Stop the cover
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
+        blocking=True,
+    )
+
+    # Should immediately clear opening/closing state
+    # Since currentValue (0) != targetValue (99 from previous open), 
+    # but we've explicitly stopped, state should not be opening
+    # The device will update targetValue to match currentValue
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    # State should not be OPENING anymore after stop
+    assert state.state != CoverState.OPENING

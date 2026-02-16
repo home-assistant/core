@@ -138,29 +138,23 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         """Return range between fully opened and fully closed position."""
         return self._fully_open_position - self._fully_closed_position
 
-    @property
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening or not."""
-        if (
-            not self._current_position_value
-            or self._current_position_value.value is None
-            or not self._target_position_value
-            or self._target_position_value.value is None
-        ):
-            return None
-        return bool(self._target_position_value.value > self._current_position_value.value)
+    @callback
+    def on_value_update(self) -> None:
+        """Handle value updates for the cover.
 
-    @property
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing or not."""
+        Clear opening/closing state when movement completes.
+        """
+        # Clear opening/closing state when target matches current
         if (
-            not self._current_position_value
-            or self._current_position_value.value is None
-            or not self._target_position_value
-            or self._target_position_value.value is None
+            self._current_position_value
+            and self._current_position_value.value is not None
+            and self._target_position_value
+            and self._target_position_value.value is not None
+            and self._current_position_value.value == self._target_position_value.value
         ):
-            return None
-        return bool(self._target_position_value.value < self._current_position_value.value)
+            if self._attr_is_opening or self._attr_is_closing:
+                self._attr_is_opening = False
+                self._attr_is_closing = False
 
     @property
     def is_closed(self) -> bool | None:
@@ -183,30 +177,54 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         assert self._target_position_value
+        assert self._current_position_value
+
+        target_position = self.percent_to_zwave_position(kwargs[ATTR_POSITION])
+        current_position = self._current_position_value.value
+
+        # Determine direction before issuing command
+        if current_position is not None and target_position > current_position:
+            self._attr_is_opening = True
+            self._attr_is_closing = False
+        elif current_position is not None and target_position < current_position:
+            self._attr_is_opening = False
+            self._attr_is_closing = True
+
         await self._async_set_value(
             self._target_position_value,
-            self.percent_to_zwave_position(kwargs[ATTR_POSITION]),
+            target_position,
         )
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         assert self._target_position_value
+        self._attr_is_opening = True
+        self._attr_is_closing = False
         await self._async_set_value(
             self._target_position_value, self._fully_open_position
         )
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         assert self._target_position_value
+        self._attr_is_opening = False
+        self._attr_is_closing = True
         await self._async_set_value(
             self._target_position_value, self._fully_closed_position
         )
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         assert self._stop_position_value
+        # Clear opening/closing state when stopped
+        self._attr_is_opening = False
+        self._attr_is_closing = False
         # Stop the cover, will stop regardless of the actual direction of travel.
         await self._async_set_value(self._stop_position_value, False)
+        self.async_write_ha_state()
 
 
 class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
@@ -449,15 +467,24 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        self._attr_is_opening = True
+        self._attr_is_closing = False
         await self._async_set_value(self._up_value, True)
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        self._attr_is_opening = False
+        self._attr_is_closing = True
         await self._async_set_value(self._down_value, True)
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
+        self._attr_is_opening = False
+        self._attr_is_closing = False
         await self._async_set_value(self._up_value, False)
+        self.async_write_ha_state()
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
