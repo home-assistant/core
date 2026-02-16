@@ -161,6 +161,19 @@
     ]),
     'vehicles': list([
       dict({
+        'battery': dict({
+          'battery_level': 73,
+          'battery_range': 250.5,
+          'energy_remaining': 55.2,
+          'ideal_battery_range': 280.2,
+          'lifetime_energy_used': 12345.6,
+          'module_temp_max': 24,
+          'module_temp_min': 22.5,
+          'pack_current': -0.6,
+          'pack_voltage': 390.1,
+          'phantom_drain_percent': 0.5,
+          'timestamp': 1704067200,
+        }),
         'data': dict({
           'access_type': 'OWNER',
           'api_version': 67,

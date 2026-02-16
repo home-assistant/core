@@ -102,6 +102,51 @@ async def test_coordinator_connection(
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
 
 
+async def test_coordinator_battery_update(
+    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that the battery coordinator handles updates."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_get_battery.reset_mock()
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_battery.assert_called_once()
+
+
+async def test_coordinator_battery_auth(
+    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that the battery coordinator handles auth errors."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_get_battery.reset_mock()
+    mock_get_battery.side_effect = ERROR_AUTH
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_battery.assert_called_once()
+
+
+async def test_coordinator_battery_error(
+    hass: HomeAssistant, mock_get_battery, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests that the battery coordinator handles client errors."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_get_battery.reset_mock()
+    mock_get_battery.side_effect = ERROR_UNKNOWN
+    freezer.tick(WAIT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_get_battery.assert_called_once()
+    assert hass.states.get("sensor.test_phantom_drain").state == STATE_UNAVAILABLE
+
+
 async def test_coordinator_live_error(
     hass: HomeAssistant, mock_live_status, freezer: FrozenDateTimeFactory
 ) -> None:

@@ -211,6 +211,9 @@
       "energy_left": {
         "default": "mdi:battery"
       },
+      "energy_remaining": {
+        "default": "mdi:battery-medium"
+      },
       "generator_power": {
         "default": "mdi:generator-stationary"
       },
@@ -220,8 +223,26 @@
       "grid_services_power": {
         "default": "mdi:transmission-tower"
       },
+      "lifetime_energy_used": {
+        "default": "mdi:battery-heart-variant"
+      },
       "load_power": {
         "default": "mdi:power-plug"
+      },
+      "module_temp_max": {
+        "default": "mdi:thermometer-high"
+      },
+      "module_temp_min": {
+        "default": "mdi:thermometer-low"
+      },
+      "pack_current": {
+        "default": "mdi:current-dc"
+      },
+      "pack_voltage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "phantom_drain_percent": {
+        "default": "mdi:battery-minus-outline"
       },
       "solar_power": {
         "default": "mdi:solar-power"

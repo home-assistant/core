@@ -447,6 +447,9 @@
       "energy_left": {
         "name": "Energy left"
       },
+      "energy_remaining": {
+        "name": "Energy remaining"
+      },
       "generator_energy_exported": {
         "name": "Generator exported"
       },
@@ -487,11 +490,29 @@
           "on_grid": "On-grid"
         }
       },
+      "lifetime_energy_used": {
+        "name": "Lifetime energy used"
+      },
       "load_power": {
         "name": "Load power"
       },
+      "module_temp_max": {
+        "name": "Battery module temperature max"
+      },
+      "module_temp_min": {
+        "name": "Battery module temperature min"
+      },
+      "pack_current": {
+        "name": "Battery pack current"
+      },
+      "pack_voltage": {
+        "name": "Battery pack voltage"
+      },
       "percentage_charged": {
         "name": "Percentage charged"
+      },
+      "phantom_drain_percent": {
+        "name": "Phantom drain"
       },
       "solar_energy_exported": {
         "name": "Solar exported"
