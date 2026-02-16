@@ -62,9 +62,18 @@ async def test_time_format_select_initial_state(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_time_format_select_change_to_12h(
+@pytest.mark.parametrize(
+    ("origin_mode", "expected_state"),
+    [
+        (False, "24h"),
+        (True, "12h"),
+    ],
+)
+async def test_set_time_format(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    origin_mode: bool,
+    expected_state: str,
 ) -> None:
     """Test changing time format to 12h."""
     await async_setup_component(hass, DOMAIN, {})
@@ -75,7 +84,7 @@ async def test_time_format_select_change_to_12h(
 
     mock_get_datetime = AsyncMock(
         return_value={
-            "12h_mode": False,
+            "12h_mode": origin_mode,
             "year": 2025,
             "month": 1,
             "day": 9,
@@ -104,68 +113,13 @@ async def test_time_format_select_change_to_12h(
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: "select.test_name_time_format",
-                ATTR_OPTION: "12h",
+                ATTR_OPTION: expected_state,
             },
             blocking=True,
         )
 
-        mock_set_time_display_format.assert_awaited_once_with(True)
+        mock_set_time_display_format.assert_awaited_once_with(origin_mode)
 
         state = hass.states.get("select.test_name_time_format")
         assert state is not None
-        assert state.state == "12h"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_time_format_select_change_to_24h(
-    hass: HomeAssistant,
-    mock_entry_factory: Callable[[str], MockConfigEntry],
-) -> None:
-    """Test changing time format to 24h."""
-    await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
-
-    entry = mock_entry_factory("hygrometer_co2")
-    entry.add_to_hass(hass)
-
-    mock_get_datetime = AsyncMock(
-        return_value={
-            "12h_mode": True,
-            "year": 2025,
-            "month": 1,
-            "day": 9,
-            "hour": 12,
-            "minute": 0,
-            "second": 0,
-        }
-    )
-    mock_set_time_display_format = AsyncMock(return_value=True)
-
-    with (
-        patch(
-            "switchbot.SwitchbotMeterProCO2.get_datetime",
-            mock_get_datetime,
-        ),
-        patch(
-            "switchbot.SwitchbotMeterProCO2.set_time_display_format",
-            mock_set_time_display_format,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: "select.test_name_time_format",
-                ATTR_OPTION: "24h",
-            },
-            blocking=True,
-        )
-
-        mock_set_time_display_format.assert_awaited_once_with(False)
-
-        state = hass.states.get("select.test_name_time_format")
-        assert state is not None
-        assert state.state == "24h"
+        assert state.state == expected_state
