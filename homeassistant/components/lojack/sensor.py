@@ -45,7 +45,7 @@ def _parse_timestamp(timestamp: datetime | str | None) -> datetime | None:
         if timestamp_str.endswith("Z"):
             timestamp_str = timestamp_str[:-1] + "+00:00"
         return datetime.fromisoformat(timestamp_str)
-    except ValueError, AttributeError:
+    except (ValueError, AttributeError):
         return None
 
 

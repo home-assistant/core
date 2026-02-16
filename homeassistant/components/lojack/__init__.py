@@ -69,7 +69,7 @@ def _safe_float(value: Any) -> float | None:
         return None
     try:
         return float(value)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return None
 
 
@@ -156,7 +156,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 return None
             try:
                 return int(val)
-            except ValueError, TypeError:
+            except (ValueError, TypeError):
                 try:
                     retry_dt = parsedate_to_datetime(val)
                     now = datetime.now(tz=UTC)
@@ -165,7 +165,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                         retry_dt = retry_dt.replace(tzinfo=UTC)
                     secs = int((retry_dt - now).total_seconds())
                     return max(0, secs)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     return None
         return None
 

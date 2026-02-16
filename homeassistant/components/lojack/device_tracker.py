@@ -113,7 +113,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
             if vehicle.accuracy is not None:
                 try:
                     return int(vehicle.accuracy)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     return 0
         return 0
 
