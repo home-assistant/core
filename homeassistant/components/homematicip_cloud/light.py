@@ -444,14 +444,19 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT
+    _attr_translation_key = "optical_signal_light"
 
-    _effect_list = [
-        OpticalSignalBehaviour.BILLOW_MIDDLE,
-        OpticalSignalBehaviour.BLINKING_MIDDLE,
-        OpticalSignalBehaviour.FLASH_MIDDLE,
-        OpticalSignalBehaviour.OFF,
-        OpticalSignalBehaviour.ON,
-    ]
+    _effect_to_behaviour: dict[str, OpticalSignalBehaviour] = {
+        "on": OpticalSignalBehaviour.ON,
+        "blinking": OpticalSignalBehaviour.BLINKING_MIDDLE,
+        "flash": OpticalSignalBehaviour.FLASH_MIDDLE,
+        "billow": OpticalSignalBehaviour.BILLOW_MIDDLE,
+    }
+    _behaviour_to_effect: dict[OpticalSignalBehaviour, str] = {
+        v: k for k, v in _effect_to_behaviour.items()
+    }
+
+    _attr_effect_list = list(_effect_to_behaviour)
 
     _color_switcher: dict[str, tuple[float, float]] = {
         RGBColorState.WHITE: (0.0, 0.0),
@@ -500,15 +505,10 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
 
     @property
-    def effect_list(self) -> list[str] | None:
-        """Return the list of supported effects."""
-        return self._effect_list
-
-    @property
     def effect(self) -> str | None:
         """Return the current effect."""
         channel = self.get_channel_or_raise()
-        return channel.opticalSignalBehaviour
+        return self._behaviour_to_effect.get(channel.opticalSignalBehaviour)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -539,12 +539,14 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         effect = self.effect
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
-        elif effect is None or effect == OpticalSignalBehaviour.OFF:
-            effect = OpticalSignalBehaviour.ON
+        elif effect is None:
+            effect = "on"
+
+        behaviour = self._effect_to_behaviour.get(effect, OpticalSignalBehaviour.ON)
 
         await self._device.set_optical_signal_async(
             channelIndex=self._channel,
-            opticalSignalBehaviour=effect,
+            opticalSignalBehaviour=behaviour,
             rgb=simple_rgb_color,
             dimLevel=dim_level,
         )
