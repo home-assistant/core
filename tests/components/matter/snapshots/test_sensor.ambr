@@ -207,7 +207,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -7552,7 +7552,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
