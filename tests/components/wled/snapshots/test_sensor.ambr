@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP',
     'options': dict({
     }),
     'original_device_class': None,
@@ -180,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -191,13 +195,14 @@
     'supported_features': 0,
     'translation_key': 'info_leds_count',
     'unique_id': 'aabbccddeeff_info_leds_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'LEDs',
   })
 # ---
 # name: test_snapshots[sensor.wled_rgb_light_led_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light LED count',
+      'unit_of_measurement': 'LEDs',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wled_rgb_light_led_count',
@@ -228,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -281,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -330,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi BSSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -378,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi channel',
     'options': dict({
     }),
     'original_device_class': None,
@@ -428,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -481,6 +491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal',
     'options': dict({
     }),
     'original_device_class': None,

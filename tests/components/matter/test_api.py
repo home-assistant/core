@@ -189,7 +189,7 @@ async def test_set_wifi_credentials(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_node_diagnostics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -258,7 +258,7 @@ async def test_node_diagnostics(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_ping_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -313,7 +313,7 @@ async def test_ping_node(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_open_commissioning_window(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -374,7 +374,7 @@ async def test_open_commissioning_window(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_remove_matter_fabric(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -425,7 +425,7 @@ async def test_remove_matter_fabric(
 
 @pytest.mark.usefixtures("matter_node")
 # setup (mock) integration with a random node fixture
-@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_onoff_light"])
 async def test_interview_node(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

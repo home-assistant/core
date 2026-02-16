@@ -9,8 +9,11 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_account_mismatch": "The authenticated account does not match the account that needed re-authentication",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -19,12 +22,19 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Watts Vision + integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
   "exceptions": {
     "set_hvac_mode_error": {
       "message": "An error occurred while setting the HVAC mode."
+    },
+    "set_switch_state_error": {
+      "message": "An error occurred while setting the switch state."
     },
     "set_temperature_error": {
       "message": "An error occurred while setting the temperature."
