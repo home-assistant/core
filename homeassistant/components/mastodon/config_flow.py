@@ -245,6 +245,5 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "account_name": remove_email_link(account_name),
-                "example_url": EXAMPLE_URL,
             },
         )
