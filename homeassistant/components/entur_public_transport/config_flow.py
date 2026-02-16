@@ -147,6 +147,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            description_placeholders={"entur_url": "https://entur.no/"},
             errors=errors,
         )
 

@@ -27,7 +27,7 @@
           "show_on_map": "Include GPS coordinates in entity attributes for map display",
           "stop_ids": "Enter one or more stop place IDs (e.g., NSR:StopPlace:337 or NSR:Quay:7203)"
         },
-        "description": "Set up a stop place or quay to monitor departures from. You can find your stop ID on [Entur's travel planner](https://entur.no/)."
+        "description": "Set up a stop place or quay to monitor departures from. You can find your stop ID on [Entur's travel planner]({entur_url})."
       }
     }
   },
