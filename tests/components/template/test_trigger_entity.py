@@ -199,6 +199,9 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
     await async_trigger(hass, "sensor.state", "opening")
     await async_trigger(hass, "sensor.position", "50")
     await async_trigger(hass, "sensor.tilt", "49")
+    await async_trigger(hass, "sensor.hvac_mode", "heat")
+    await async_trigger(hass, "sensor.hvac_action", "heating")
+    await async_trigger(hass, "sensor.current_temperature", "21.5")
     with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(
             hass,
@@ -219,9 +222,18 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
                         "open_cover": [],
                         "close_cover": [],
                     },
+                    "climate": {
+                        "name": "test",
+                        "hvac_modes": ["heat", "off"],
+                        "hvac_mode": "{{ states('sensor.hvac_mode') }}",
+                        "hvac_action": "{{ states('sensor.hvac_action') }}",
+                        "current_temperature": "{{ states('sensor.current_temperature') }}",
+                        "set_hvac_mode": [],
+                    },
                 },
             },
         )
+
     await async_trigger(hass, "sensor.trigger", "anything")
 
     state = hass.states.get("cover.test")
@@ -229,3 +241,9 @@ async def test_multiple_template_validators(hass: HomeAssistant) -> None:
     assert state.state == "opening"
     assert state.attributes["current_position"] == 50
     assert state.attributes["current_tilt_position"] == 49
+
+    state = hass.states.get("climate.test")
+    assert state
+    assert state.state == "heat"
+    assert state.attributes["current_temperature"] == 21.5
+    assert state.attributes["hvac_action"] == "heating"

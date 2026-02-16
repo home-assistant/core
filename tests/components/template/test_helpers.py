@@ -461,6 +461,22 @@ async def test_platform_not_ready(
             "garage_door",
         ),
         (
+            "climate",
+            {
+                "climate": {
+                    "platform": "template",
+                    "climates": {
+                        "central_heating": {
+                            "value_template": "{{ 'heat' }}",
+                            "hvac_modes": ["heat", "off"],
+                            "set_hvac_mode": {"action": "script.toggle"},
+                        }
+                    },
+                }
+            },
+            "central_heating",
+        ),
+        (
             "fan",
             {
                 "fan": {
@@ -915,16 +931,6 @@ async def test_yaml_config_recursion_depth(hass: HomeAssistant) -> None:
                 "media_player": {
                     "platform": "template",
                     "name": "My Media Player",
-                    "unique_id": "Foobar",
-                },
-            },
-        ),
-        (
-            "climate",
-            {
-                "climate": {
-                    "platform": "template",
-                    "name": "My Climate",
                     "unique_id": "Foobar",
                 },
             },
