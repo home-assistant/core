@@ -226,9 +226,10 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
                 self.entity_description.data_protocol,
                 1,
             )
-            await self.coordinator.async_request_refresh()
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="button_press_failed",
             ) from err
+        finally:
+            await self.coordinator.async_request_refresh()
