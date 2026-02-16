@@ -38,7 +38,7 @@
       "name": "Refresh system"
     },
     "reset_system": {
-      "description": "Sets the system to Auto mode and resets all the zones to follow their schedules.",
+      "description": "Resets the system mode and sets all the zones to follow their schedule.",
       "name": "Reset system"
     },
     "set_system_mode": {
