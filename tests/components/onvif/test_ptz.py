@@ -3,14 +3,11 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.onvif.device import CONTINUOUS_MOVE, ONVIFDevice
 from homeassistant.components.onvif.models import Capabilities
 from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.asyncio
 async def test_continuous_move_calls_stop_when_duration_nonzero(
     hass: HomeAssistant,
 ) -> None:
@@ -58,7 +55,6 @@ async def test_continuous_move_calls_stop_when_duration_nonzero(
     ptz_service.Stop.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_continuous_move_does_not_call_stop_when_duration_zero(
     hass: HomeAssistant,
 ) -> None:
