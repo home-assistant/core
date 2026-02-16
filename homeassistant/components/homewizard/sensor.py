@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
@@ -23,7 +22,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
-    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -34,8 +32,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -689,17 +686,6 @@ EXTERNAL_SENSORS = {
 }
 
 
-@callback
-def async_cleanup_deleted_sensor(
-    hass: HomeAssistant, entry: HomeWizardConfigEntry, description_key: str
-) -> None:
-    """Cleanup sensor if it previously existed as deleted entity."""
-    with suppress(KeyError):
-        er.async_get(hass).deleted_entities.pop(
-            (Platform.SENSOR, DOMAIN, f"{entry.unique_id}_{description_key}")
-        )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
@@ -755,11 +741,6 @@ async def async_setup_entry(
                 power_w * -1 if (power_w := data.measurement.power_w) else power_w
             ),
         )
-        # We cleanup any deleted instance to assure the correct power sensor is enabled
-        async_cleanup_deleted_sensor(hass, entry, active_power_sensor_description.key)
-        async_cleanup_deleted_sensor(
-            hass, entry, active_prodution_power_sensor_description.key
-        )
         entities.extend(
             (
                 HomeWizardSensorEntity(
@@ -771,7 +752,6 @@ async def async_setup_entry(
             )
         )
     elif (data := entry.runtime_data.data) and data.measurement.power_w is not None:
-        async_cleanup_deleted_sensor(hass, entry, active_power_sensor_description.key)
         entities.append(
             HomeWizardSensorEntity(entry.runtime_data, active_power_sensor_description)
         )
