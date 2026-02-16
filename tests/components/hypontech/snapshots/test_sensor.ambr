@@ -207,7 +207,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
-    'unique_id': '01KHM8BEJM33E9H5CF9KYKKGKH_lifetime_energy',
+    'unique_id': '2123456789123456789_lifetime_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -264,7 +264,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '01KHM8BEJM33E9H5CF9KYKKGKH_pv_power',
+    'unique_id': '2123456789123456789_pv_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -321,7 +321,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'today_energy',
-    'unique_id': '01KHM8BEJM33E9H5CF9KYKKGKH_today_energy',
+    'unique_id': '2123456789123456789_today_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
