@@ -1,7 +1,6 @@
 """Common fixtures for the Hypontech Cloud tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 from hyponcloud import AdminInfo, InverterData, OverviewData, PlantData
@@ -10,7 +9,7 @@ import pytest
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -38,28 +37,28 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def load_overview_fixture() -> OverviewData:
     """Load overview fixture data."""
-    data = json.loads(load_fixture("overview.json", DOMAIN))
+    data = load_json_object_fixture("overview.json", DOMAIN)
     return OverviewData.from_dict(data["data"])
 
 
 @pytest.fixture
 def load_plant_list_fixture() -> list[PlantData]:
     """Load plant list fixture data."""
-    data = json.loads(load_fixture("plant_list.json", DOMAIN))
+    data = load_json_object_fixture("plant_list.json", DOMAIN)
     return [PlantData.from_dict(item) for item in data["data"]]
 
 
 @pytest.fixture
 def load_inverters_fixture() -> list[InverterData]:
     """Load inverters fixture data."""
-    data = json.loads(load_fixture("inverters.json", DOMAIN))
+    data = load_json_object_fixture("inverters.json", DOMAIN)
     return [InverterData.from_dict(item) for item in data["data"]]
 
 
 @pytest.fixture
 def load_admin_info_fixture() -> AdminInfo:
     """Load admin info fixture data."""
-    data = json.loads(load_fixture("admin_info.json", DOMAIN))
+    data = load_json_object_fixture("admin_info.json", DOMAIN)
     admin_data = data["data"]
     # Flatten nested "info" object into the main data dict
     if "info" in admin_data and isinstance(admin_data["info"], dict):
