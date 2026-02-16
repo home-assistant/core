@@ -13,7 +13,7 @@ from homeassistant.components.homee.const import (
     RESULT_INVALID_AUTH,
     RESULT_UNKNOWN_ERROR,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -256,6 +256,7 @@ async def test_zeroconf_confirm_errors(
     ("ip", "reason"),
     [(HOMEE_IP, "already_configured"), ("192.168.1.171", "2nd_ip_address")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -266,6 +267,10 @@ async def test_zeroconf_already_configured(
     mock_config_entry.runtime_data = AsyncMock()
     mock_config_entry.runtime_data.connected = True
     mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.homee.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -43,7 +42,6 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id=HOMEE_ID,
         entry_id="test_entry_id",
-        state=ConfigEntryState.LOADED,
     )
 
 
