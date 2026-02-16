@@ -301,7 +301,7 @@ def test_restore_backup(
     backup_file_path = tmp_path / "backups" / "test.tar"
 
     def get_files(path: Path) -> set[str]:
-        """Get all files under path, excluding __pycache__ directories."""
+        """Get all files under path."""
         return {str(f.relative_to(path)) for f in path.rglob("*")}
 
     existing_dirs = {
