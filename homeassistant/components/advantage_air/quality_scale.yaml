@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: https://developers.home-assistant.io/blog/2025/09/25/entity-services-api-changes/
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: todo
+    comment: |
+      Move coordinator from __init__.py to coordinator.py.
+      Consider using entity descriptions for binary_sensor and switch.
+      Consider simplifying climate supported features flow.
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Add mock_setup_entry common fixture.
+      Test unique_id of the entry in happy flow.
+      Split duplicate entry test from happy flow, use mock_config_entry.
+      Error flow should end in CREATE_ENTRY to test recovery.
+      Add data_description for ip_address (and port) to strings.json - tests fail with:
+      "Translation not found for advantage_air: config.step.user.data_description.ip_address"
+  config-flow:
+    status: todo
+    comment: Data descriptions missing
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: done
+    comment: Consider extending coordinator to access API via coordinator and remove extra dataclass.
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options to be set.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: todo
+    comment: MyZone temp entity should be unavailable when MyZone is disabled rather than returning None.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: Integration connects to local device without authentication.
+  test-coverage:
+    status: todo
+    comment: |
+      Patch the library instead of mocking at integration level.
+      Split binary sensor tests into multiple tests (enable entities etc).
+      Split tests into Creation (right entities with right values), Actions (right library calls), and Other behaviors.
+
+  # Gold
+  devices:
+    status: todo
+    comment: Consider making every zone its own device for better naming and room assignment. Breaking change to split cover entities to separate devices.
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Device is a generic Android device (android-xxxxxxxx) indistinguishable from other Android devices, not discoverable.
+  discovery:
+    status: exempt
+    comment: Check mDNS, DHCP, SSDP confirmed not feasible. Device is a generic Android device (android-xxxxxxxx) indistinguishable from other Android devices.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: AC zones are static per unit and configured on the device itself.
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: Consider using UPDATE device class for app update binary sensor instead of custom.
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations:
+    status: todo
+    comment: UpdateFailed in the coordinator
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: Integration does not raise repair issues.
+  stale-devices:
+    status: exempt
+    comment: Zones are part of the AC unit, not separate removable devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

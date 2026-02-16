@@ -125,7 +125,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "adax",
     "adguard",
     "ads",
-    "advantage_air",
     "aemet",
     "aftership",
     "agent_dvr",
