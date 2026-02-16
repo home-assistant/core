@@ -197,6 +197,109 @@ async def test_oauth_invalid_response(
     assert result.get("reason") == "oauth_failed"
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
+        return_value="test-user-id",
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_config_entry.data["token"].pop("expires_at")
+    assert mock_config_entry.data["token"] == {
+        "refresh_token": "new-refresh-token",
+        "access_token": "new-access-token",
+        "token_type": "Bearer",
+        "expires_in": 3600,
+    }
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication with a different account aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
+        return_value="different-user-id",
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_unique_config_entry(
     hass: HomeAssistant,
