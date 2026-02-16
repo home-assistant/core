@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["pysaunum"],
   "quality_scale": "platinum",
-  "requirements": ["pysaunum==0.3.0"]
+  "requirements": ["pysaunum==0.5.0"]
 }
