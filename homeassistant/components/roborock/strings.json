@@ -422,7 +422,7 @@
         "name": "Softener empty",
         "state": {
           "available": "Available",
-          "empty": "Empty"
+          "empty": "[%key:common::state::empty%]"
         }
       },
       "state": {
