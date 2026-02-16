@@ -206,6 +206,12 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "degreasing_counter": {
+        "name": "Degreasing cycles"
+      },
+      "descaling_counter": {
+        "name": "Descaling cycles"
+      },
       "drying_step": {
         "name": "Drying step",
         "state": {
@@ -230,6 +236,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "milk_cleaning_counter": {
+        "name": "Milk pipework cleaning cycles"
       },
       "plate": {
         "name": "Plate {plate_no}",

@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.56.0
+PyViCare==2.57.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -309,7 +309,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.0
+aiomealie==1.2.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1471,7 +1471,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==2.15.0
+openai==2.21.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1537,7 +1537,7 @@ plugwise==1.11.2
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==2.0.0
+powerfox==2.1.0
 
 # homeassistant.components.prana
 prana-api-client==0.10.0
@@ -1990,7 +1990,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.9.10
+pypck==0.9.11
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2050,7 +2050,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.saunum
-pysaunum==0.3.0
+pysaunum==0.5.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
@@ -2099,7 +2099,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.13
+pysmlight==0.2.14
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2211,7 +2211,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.12.0
+python-roborock==4.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2287,7 +2287,7 @@ pywaze==1.1.1
 pyweatherflowudp==1.5.0
 
 # homeassistant.components.html5
-pywebpush==1.14.1
+pywebpush==2.3.0
 
 # homeassistant.components.wemo
 pywemo==1.4.0
@@ -2558,7 +2558,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==1.1.2
+thermopro-ble==1.1.3
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.9
