@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime, timedelta
-from functools import partial
 from http import HTTPStatus
 import json
 import logging
@@ -13,7 +12,7 @@ from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, cast
 from urllib.parse import urlparse
 import uuid
 
-from aiohttp import web
+from aiohttp import ClientSession, web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
 from py_vapid import Vapid
@@ -35,6 +34,7 @@ from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
@@ -203,8 +203,9 @@ async def async_get_service(
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
+    session = async_get_clientsession(hass)
     return HTML5NotificationService(
-        hass, vapid_prv_key, vapid_email, registrations, json_path
+        hass, session, vapid_prv_key, vapid_email, registrations, json_path
     )
 
 
@@ -420,12 +421,14 @@ class HTML5NotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
+        session: ClientSession,
         vapid_prv: str,
         vapid_email: str,
         registrations: dict[str, Registration],
         json_path: str,
     ) -> None:
         """Initialize the service."""
+        self.session = session
         self._vapid_prv = vapid_prv
         self._vapid_email = vapid_email
         self.registrations = registrations
@@ -456,22 +459,18 @@ class HTML5NotificationService(BaseNotificationService):
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
 
-    def dismiss(self, **kwargs: Any) -> None:
-        """Dismisses a notification."""
-        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
-        tag: str = data.get(ATTR_TAG, "") if data else ""
-        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
-
-        self._push_message(payload, **kwargs)
-
-    async def async_dismiss(self, **kwargs) -> None:
+    async def async_dismiss(self, **kwargs: Any) -> None:
         """Dismisses a notification.
 
         This method must be run in the event loop.
         """
-        await self.hass.async_add_executor_job(partial(self.dismiss, **kwargs))
+        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
+        tag: str = data.get(ATTR_TAG, "") if data else ""
+        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+        await self._push_message(payload, **kwargs)
+
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
@@ -503,9 +502,9 @@ class HTML5NotificationService(BaseNotificationService):
         ):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
 
-        self._push_message(payload, **kwargs)
+        await self._push_message(payload, **kwargs)
 
-    def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
+    async def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
         """Send the message."""
 
         timestamp = int(time.time())
@@ -535,7 +534,9 @@ class HTML5NotificationService(BaseNotificationService):
                 subscription["keys"]["auth"],
             )
 
-            webpusher = WebPusher(cast(dict[str, Any], info["subscription"]))
+            webpusher = WebPusher(
+                cast(dict[str, Any], info["subscription"]), aiohttp_session=self.session
+            )
 
             endpoint = urlparse(subscription["endpoint"])
             vapid_claims = {
@@ -545,28 +546,31 @@ class HTML5NotificationService(BaseNotificationService):
             }
             vapid_headers = Vapid.from_string(self._vapid_prv).sign(vapid_claims)
             vapid_headers.update({"urgency": priority, "priority": priority})
-            response = webpusher.send(
+
+            response = await webpusher.send_async(
                 data=json.dumps(payload), headers=vapid_headers, ttl=ttl
             )
 
             if TYPE_CHECKING:
                 assert not isinstance(response, str)
 
-            if response.status_code == HTTPStatus.GONE:
+            if response.status == HTTPStatus.GONE:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 try:
-                    save_json(self.registrations_json_path, self.registrations)
+                    await self.hass.async_add_executor_job(
+                        save_json, self.registrations_json_path, self.registrations
+                    )
                 except HomeAssistantError:
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")
-            elif response.status_code >= HTTPStatus.BAD_REQUEST:
+            elif response.status >= HTTPStatus.BAD_REQUEST:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status_code,
-                    response.text,
+                    response.status,
+                    await response.text(),
                 )
 
 

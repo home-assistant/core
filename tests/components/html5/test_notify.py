@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import json
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
@@ -71,6 +71,12 @@ SUBSCRIPTION_5 = {
 REGISTER_URL = "/api/notify.html5"
 PUBLISH_URL = "/api/notify.html5/callback"
 
+VAPID_HEADERS = {
+    "Authorization": "vapid t=signed!!!",
+    "urgency": "normal",
+    "priority": "normal",
+}
+
 
 async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
     """Test empty json file."""
@@ -82,11 +88,11 @@ async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
     assert service is not None
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_dismissing_message(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_dismissing_message(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     """Test dismissing message."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"device": SUBSCRIPTION_1}
 
@@ -99,23 +105,18 @@ async def test_dismissing_message(mock_wp, hass: HomeAssistant) -> None:
 
     await service.async_dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
-    assert len(mock_wp.mock_calls) == 4
-
-    # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
-
-    # Call to send
-    payload = json.loads(mock_wp.mock_calls[3][2]["data"])
-
-    assert payload["dismiss"] is True
-    assert payload["tag"] == "test"
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"tag": "test", "dismiss": true, "data": {"jwt": "JWT"}, "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_sending_message(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_sending_message(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     """Test sending message."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"device": SUBSCRIPTION_1}
 
@@ -130,23 +131,21 @@ async def test_sending_message(mock_wp, hass: HomeAssistant) -> None:
         "Hello", target=["device", "non_existing"], data={"icon": "beer.png"}
     )
 
-    assert len(mock_wp.mock_calls) == 4
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
 
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
-
-    # Call to send
-    payload = json.loads(mock_wp.mock_calls[3][2]["data"])
-
-    assert payload["body"] == "Hello"
-    assert payload["icon"] == "beer.png"
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_1["subscription"]
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_key_include(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_fcm_key_include(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     """Test if the FCM header is included."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"chrome": SUBSCRIPTION_5}
 
@@ -159,19 +158,23 @@ async def test_fcm_key_include(mock_wp, hass: HomeAssistant) -> None:
 
     await service.async_send_message("Hello", target=["chrome"])
 
-    assert len(mock_wp.mock_calls) == 4
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
+
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
-
-    # Get the keys passed to the WebPusher's send method
-    assert mock_wp.mock_calls[3][2]["headers"]["Authorization"] is not None
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_fcm_send_with_unknown_priority(
+    mock_wp: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"chrome": SUBSCRIPTION_5}
 
@@ -184,19 +187,20 @@ async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant) -> N
 
     await service.async_send_message("Hello", target=["chrome"], priority="undefined")
 
-    assert len(mock_wp.mock_calls) == 4
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
-
-    # Get the keys passed to the WebPusher's send method
-    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_no_targets(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_fcm_no_targets(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"chrome": SUBSCRIPTION_5}
 
@@ -209,19 +213,20 @@ async def test_fcm_no_targets(mock_wp, hass: HomeAssistant) -> None:
 
     await service.async_send_message("Hello")
 
-    assert len(mock_wp.mock_calls) == 4
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
-
-    # Get the keys passed to the WebPusher's send method
-    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
 
 
-@patch("homeassistant.components.html5.notify.WebPusher")
-async def test_fcm_additional_data(mock_wp, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_fcm_additional_data(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     """Test if the gcm_key is only included for GCM endpoints."""
     await async_setup_component(hass, "http", {})
-    mock_wp().send().status_code = 201
 
     data = {"chrome": SUBSCRIPTION_5}
 
@@ -234,12 +239,13 @@ async def test_fcm_additional_data(mock_wp, hass: HomeAssistant) -> None:
 
     await service.async_send_message("Hello", data={"mykey": "myvalue"})
 
-    assert len(mock_wp.mock_calls) == 4
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
-
-    # Get the keys passed to the WebPusher's send method
-    assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
 
 
 @pytest.mark.usefixtures("load_config")
@@ -581,11 +587,14 @@ async def test_callback_view_no_jwt(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_callback_view_with_jwt(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
+    mock_wp: AsyncMock,
 ) -> None:
     """Test that the notification callback view works with JWT."""
     load_config.return_value = {"device": SUBSCRIPTION_1}
@@ -599,27 +608,22 @@ async def test_callback_view_with_jwt(
 
     client = await hass_client()
 
-    with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
-        mock_wp().send().status_code = 201
-        await hass.services.async_call(
-            "notify",
-            "html5",
-            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "notify",
+        "html5",
+        {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+        blocking=True,
+    )
 
-    assert len(mock_wp.mock_calls) == 4
-
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_1["subscription"]
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_1["subscription"]
 
-    # Call to send
-    push_payload = json.loads(mock_wp.mock_calls[3][2]["data"])
-
-    assert push_payload["body"] == "Hello"
-    assert push_payload["icon"] == "beer.png"
-
-    bearer_token = f"Bearer {push_payload['data']['jwt']}"
+    bearer_token = "Bearer JWT"
 
     resp = await client.post(
         PUBLISH_URL, json={"type": "push"}, headers={AUTHORIZATION: bearer_token}
@@ -630,10 +634,13 @@ async def test_callback_view_with_jwt(
     assert body == {"event": "push", "status": "ok"}
 
 
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_fcm_without_targets(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
+    mock_wp: AsyncMock,
 ) -> None:
     """Test that the notification is send with FCM without targets."""
     load_config.return_value = {"device": SUBSCRIPTION_5}
@@ -645,25 +652,29 @@ async def test_send_fcm_without_targets(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
-        mock_wp().send().status_code = 201
-        await hass.services.async_call(
-            "notify",
-            "html5",
-            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "notify",
+        "html5",
+        {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+        blocking=True,
+    )
 
-    assert len(mock_wp.mock_calls) == 4
-
+    mock_wp.send_async.assert_awaited_once_with(
+        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        headers=VAPID_HEADERS,
+        ttl=86400,
+    )
     # WebPusher constructor
-    assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
+    assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
 
 
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_fcm_expired(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
+    mock_wp: AsyncMock,
 ) -> None:
     """Test that the FCM target is removed when expired."""
     load_config.return_value = {"device": SUBSCRIPTION_5}
@@ -674,12 +685,10 @@ async def test_send_fcm_expired(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
+    mock_wp.send_async.return_value.status = 410
     with (
-        patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
         patch("homeassistant.components.html5.notify.save_json") as mock_save,
     ):
-        mock_wp().send().status_code = 410
         await hass.services.async_call(
             "notify",
             "html5",
@@ -690,11 +699,14 @@ async def test_send_fcm_expired(
     mock_save.assert_called_once_with(hass.config.path(html5.REGISTRATIONS_FILE), {})
 
 
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_fcm_expired_save_fails(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     load_config: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    mock_wp: AsyncMock,
 ) -> None:
     """Test that the FCM target remains after expiry if save_json fails."""
     load_config.return_value = {"device": SUBSCRIPTION_5}
@@ -705,16 +717,13 @@ async def test_send_fcm_expired_save_fails(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
+    mock_wp.send_async.return_value.status = 410
     with (
-        patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
         patch(
             "homeassistant.components.html5.notify.save_json",
             side_effect=HomeAssistantError(),
         ),
     ):
-        mock_wp().send().status_code = 410
-
         await hass.services.async_call(
             "notify",
             "html5",
