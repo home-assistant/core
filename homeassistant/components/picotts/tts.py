@@ -60,8 +60,8 @@ class PicoTTSEntity(TextToSpeechEntity):
 
     def __init__(self, config_entry: ConfigEntry, lang: str) -> None:
         """Initialize Pico TTS service."""
-        self._lang = lang
-        self._attr_name = f"Pico TTS {self._lang}"
+        self._attr_default_language = lang
+        self._attr_name = f"Pico TTS {lang}"
         self._attr_unique_id = config_entry.entry_id
 
     @property
