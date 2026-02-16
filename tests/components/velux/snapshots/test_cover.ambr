@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blind_entity_setup[mock_blind][cover.test_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_awning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -106,8 +108,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_garagedoor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -158,8 +161,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_gate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -210,8 +214,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_rollershutter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -262,8 +267,9 @@
 # ---
 # name: test_cover_entity_setup[mock_cover_type-Window][cover.test_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_fan_snapshot[fan.test_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

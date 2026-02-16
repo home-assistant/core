@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -60,8 +61,9 @@
 # ---
 # name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -119,8 +121,9 @@
 # ---
 # name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.0,
@@ -178,8 +181,9 @@
 # ---
 # name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 25,
@@ -238,8 +242,9 @@
 # ---
 # name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -297,8 +302,9 @@
 # ---
 # name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -355,8 +361,9 @@
 # ---
 # name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -413,8 +420,9 @@
 # ---
 # name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50,
@@ -473,8 +481,9 @@
 # ---
 # name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50,
@@ -533,8 +542,9 @@
 # ---
 # name: test_numbers[eve_weather_sensor][number.eve_weather_altitude_above_sea_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9000,
@@ -593,8 +603,9 @@
 # ---
 # name: test_numbers[extended_color_light][number.mock_extended_color_light_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -651,8 +662,9 @@
 # ---
 # name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -710,8 +722,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75,
@@ -768,8 +781,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75,
@@ -826,8 +840,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -885,8 +900,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -943,8 +959,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1001,8 +1018,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1060,8 +1078,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1119,8 +1138,9 @@
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1178,8 +1198,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_led_off_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75,
@@ -1236,8 +1257,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_led_on_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 75,
@@ -1294,8 +1316,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1353,8 +1376,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_on_level_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1411,8 +1435,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_on_level_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1469,8 +1494,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1528,8 +1554,9 @@
 # ---
 # name: test_numbers[inovelli_vtm31][number.inovelli_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1587,8 +1614,9 @@
 # ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1646,8 +1674,9 @@
 # ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1704,8 +1733,9 @@
 # ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1763,8 +1793,9 @@
 # ---
 # name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1822,8 +1853,9 @@
 # ---
 # name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -1880,8 +1912,9 @@
 # ---
 # name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1939,8 +1972,9 @@
 # ---
 # name: test_numbers[mock_door_lock][number.mock_door_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -1998,8 +2032,9 @@
 # ---
 # name: test_numbers[mock_door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2057,8 +2092,9 @@
 # ---
 # name: test_numbers[mock_door_lock][number.mock_door_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2115,8 +2151,9 @@
 # ---
 # name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2174,8 +2211,9 @@
 # ---
 # name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2233,8 +2271,9 @@
 # ---
 # name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2291,8 +2330,9 @@
 # ---
 # name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2350,8 +2390,9 @@
 # ---
 # name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2409,8 +2450,9 @@
 # ---
 # name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2467,8 +2509,9 @@
 # ---
 # name: test_numbers[mock_microwave_oven][number.mock_microwave_oven_cooking_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 86400,
@@ -2527,8 +2570,9 @@
 # ---
 # name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2585,8 +2629,9 @@
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2644,8 +2689,9 @@
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2702,8 +2748,9 @@
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2761,8 +2808,9 @@
 # ---
 # name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2820,8 +2868,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2879,8 +2928,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -2937,8 +2987,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -2996,8 +3047,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3055,8 +3107,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3114,8 +3167,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3172,8 +3226,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3231,8 +3286,9 @@
 # ---
 # name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3290,8 +3346,9 @@
 # ---
 # name: test_numbers[mock_oven][number.mock_oven_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 288.0,
@@ -3349,8 +3406,9 @@
 # ---
 # name: test_numbers[mock_pump][number.mock_pump_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3407,8 +3465,9 @@
 # ---
 # name: test_numbers[mock_pump][number.mock_pump_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -3466,8 +3525,9 @@
 # ---
 # name: test_numbers[mock_speaker][number.mock_speaker_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -3525,8 +3585,9 @@
 # ---
 # name: test_numbers[mock_thermostat][number.mock_thermostat_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 25,
@@ -3585,8 +3646,9 @@
 # ---
 # name: test_numbers[mock_valve][number.mock_valve_default_open_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3644,8 +3706,9 @@
 # ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3702,8 +3765,9 @@
 # ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3761,8 +3825,9 @@
 # ---
 # name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
@@ -3820,8 +3885,9 @@
 # ---
 # name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3879,8 +3945,9 @@
 # ---
 # name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 255,
@@ -3937,8 +4004,9 @@
 # ---
 # name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 0.0,
@@ -3996,8 +4064,9 @@
 # ---
 # name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': -15.0,
@@ -4055,8 +4124,9 @@
 # ---
 # name: test_numbers[silabs_refrigerator][number.refrigerator_temperature_setpoint_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 4.0,

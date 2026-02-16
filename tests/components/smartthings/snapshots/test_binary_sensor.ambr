@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_sound-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,8 +205,9 @@
 # ---
 # name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -251,8 +256,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,8 +306,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,8 +357,9 @@
 # ---
 # name: test_all_entities[da_ks_cooktop_31001][binary_sensor.induction_hob_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -400,8 +408,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -449,8 +458,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -499,8 +509,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -549,8 +560,9 @@
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -598,8 +610,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -647,8 +660,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -697,8 +711,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -746,8 +761,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -795,8 +811,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -845,8 +862,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -894,8 +912,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_second_cavity_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -943,8 +962,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -992,8 +1012,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1042,8 +1063,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1091,8 +1113,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_second_cavity_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1140,8 +1163,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][binary_sensor.four_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1189,8 +1213,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][binary_sensor.four_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1239,8 +1264,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][binary_sensor.four_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1288,8 +1314,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_filter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1338,8 +1365,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1388,8 +1416,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_fridge_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1438,8 +1467,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_coolselect_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1488,8 +1518,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_filter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1538,8 +1569,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1588,8 +1620,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_fridge_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1638,8 +1671,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_filter_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1688,8 +1722,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1738,8 +1773,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][binary_sensor.frigo_fridge_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1788,8 +1824,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][binary_sensor.lodowka_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1838,8 +1875,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1887,8 +1925,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1937,8 +1976,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1986,8 +2026,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2035,8 +2076,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2085,8 +2127,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2134,8 +2177,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][binary_sensor.airdresser_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2183,8 +2227,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][binary_sensor.airdresser_keep_fresh_mode_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2232,8 +2277,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][binary_sensor.airdresser_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2282,8 +2328,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][binary_sensor.airdresser_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2331,8 +2378,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2380,8 +2428,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2430,8 +2479,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2479,8 +2529,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_wrinkle_prevent_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2528,8 +2579,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2577,8 +2629,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2627,8 +2680,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2676,8 +2730,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_wrinkle_prevent_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2725,8 +2780,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][binary_sensor.trockner_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2774,8 +2830,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][binary_sensor.trockner_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2824,8 +2881,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][binary_sensor.trockner_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2873,8 +2931,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][binary_sensor.trockner_wrinkle_prevent_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2922,8 +2981,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2971,8 +3031,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3021,8 +3082,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3070,8 +3132,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3119,8 +3182,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3169,8 +3233,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3218,8 +3283,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3267,8 +3333,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3317,8 +3384,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][binary_sensor.machine_a_laver_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3366,8 +3434,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3416,8 +3485,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3465,8 +3535,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3515,8 +3586,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3564,8 +3636,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_upper_washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3613,8 +3686,9 @@
 # ---
 # name: test_all_entities[ecobee_sensor][binary_sensor.child_bedroom_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3663,8 +3737,9 @@
 # ---
 # name: test_all_entities[ecobee_sensor][binary_sensor.child_bedroom_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3713,8 +3788,9 @@
 # ---
 # name: test_all_entities[gas_detector][binary_sensor.gas_detector_gas-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3763,8 +3839,9 @@
 # ---
 # name: test_all_entities[iphone][binary_sensor.iphone_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3813,8 +3890,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3863,8 +3941,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3913,8 +3992,9 @@
 # ---
 # name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

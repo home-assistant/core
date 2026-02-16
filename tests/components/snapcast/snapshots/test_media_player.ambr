@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[media_player.test_client_1_snapcast_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
@@ -77,8 +78,9 @@
 # ---
 # name: test_state[media_player.test_client_2_snapcast_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'source_list': list([

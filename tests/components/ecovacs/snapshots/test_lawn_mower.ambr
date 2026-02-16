@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lawn_mower[5xu9h3][lawn_mower.goat_g1-entity_entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -37,8 +38,9 @@
 # ---
 # name: test_lawn_mower[5xu9h3][lawn_mower.goat_g1-state]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_adam_number_entities[platforms0][number.bios_cv_thermostatic_radiator_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -61,8 +62,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.cv_kraan_garage_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -121,8 +123,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.floor_kraan_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -181,8 +184,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.thermostatic_radiator_badkamer_1_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -241,8 +245,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.thermostatic_radiator_badkamer_2_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -301,8 +306,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.thermostatic_radiator_jessie_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -361,8 +367,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.zone_lisa_bios_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -421,8 +428,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.zone_lisa_wk_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -481,8 +489,9 @@
 # ---
 # name: test_adam_number_entities[platforms0][number.zone_thermostat_jessie_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -541,8 +550,9 @@
 # ---
 # name: test_anna_number_entities[platforms0-True-anna_heatpump_heating][number.anna_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2.0,
@@ -601,8 +611,9 @@
 # ---
 # name: test_anna_number_entities[platforms0-True-anna_heatpump_heating][number.opentherm_domestic_hot_water_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60.0,
@@ -661,8 +672,9 @@
 # ---
 # name: test_anna_number_entities[platforms0-True-anna_heatpump_heating][number.opentherm_maximum_boiler_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,

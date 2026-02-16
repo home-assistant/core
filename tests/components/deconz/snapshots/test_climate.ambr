@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate_device_with_cooling_support[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -91,8 +92,9 @@
 # ---
 # name: test_climate_device_with_fan_support[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -181,8 +183,9 @@
 # ---
 # name: test_climate_device_with_preset[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -290,8 +293,9 @@
 # ---
 # name: test_climate_device_without_cooling_support[sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -360,8 +364,9 @@
 # ---
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.clip_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -427,8 +432,9 @@
 # ---
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -497,8 +503,9 @@
 # ---
 # name: test_simple_climate_device[sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

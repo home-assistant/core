@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[envoy][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -61,8 +62,9 @@
 # ---
 # name: test_sensor[envoy][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,8 +120,9 @@
 # ---
 # name: test_sensor[envoy][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -178,8 +181,9 @@
 # ---
 # name: test_sensor[envoy][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -238,8 +242,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -295,8 +300,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -352,8 +358,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -409,8 +416,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -466,8 +474,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -523,8 +532,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -580,8 +590,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -637,8 +648,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -694,8 +706,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -751,8 +764,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -801,8 +815,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -861,8 +876,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -918,8 +934,9 @@
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -975,8 +992,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1035,8 +1053,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1095,8 +1114,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_current_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1155,8 +1175,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1215,8 +1236,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1272,8 +1294,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1332,8 +1355,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1389,8 +1413,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1449,8 +1474,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_frequency_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1506,8 +1532,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1563,8 +1590,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1623,8 +1651,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1683,8 +1712,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1743,8 +1773,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1803,8 +1834,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_net_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1863,8 +1895,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1912,8 +1945,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1961,8 +1995,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_metering_status_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2022,8 +2057,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2083,8 +2119,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_net_consumption_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2143,8 +2180,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2199,8 +2237,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2255,8 +2294,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2315,8 +2355,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2375,8 +2416,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2435,8 +2477,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2492,8 +2535,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2549,8 +2593,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2606,8 +2651,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2663,8 +2709,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2720,8 +2767,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2777,8 +2825,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2834,8 +2883,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2891,8 +2941,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2948,8 +2999,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2998,8 +3050,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3058,8 +3111,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3115,8 +3169,9 @@
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3172,8 +3227,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.acb_1234_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3226,8 +3282,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.acb_1234_battery_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3289,8 +3346,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.acb_1234_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3346,8 +3404,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.encharge_123456_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3403,8 +3462,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.encharge_123456_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3457,8 +3517,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.encharge_123456_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3507,8 +3568,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.encharge_123456_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3564,8 +3626,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.encharge_123456_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3621,8 +3684,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_aggregated_available_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3678,8 +3742,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_aggregated_battery_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3732,8 +3797,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_aggregated_battery_soc-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3786,8 +3852,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_available_acb_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3843,8 +3910,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_available_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3900,8 +3968,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3960,8 +4029,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4014,8 +4084,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_battery_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4068,8 +4139,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4128,8 +4200,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4188,8 +4261,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4248,8 +4322,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4308,8 +4383,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4368,8 +4444,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4428,8 +4505,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4485,8 +4563,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4545,8 +4624,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4602,8 +4682,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4662,8 +4743,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4719,8 +4801,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4776,8 +4859,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4833,8 +4917,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4890,8 +4975,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4947,8 +5033,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5004,8 +5091,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5061,8 +5149,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_frequency_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5118,8 +5207,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5178,8 +5268,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5238,8 +5329,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5298,8 +5390,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5358,8 +5451,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5418,8 +5512,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5478,8 +5573,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5538,8 +5634,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5598,8 +5695,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5658,8 +5756,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5718,8 +5817,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_lifetime_net_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5778,8 +5878,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5827,8 +5928,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5876,8 +5978,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5925,8 +6028,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5974,8 +6078,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6023,8 +6128,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6072,8 +6178,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6121,8 +6228,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6170,8 +6278,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6231,8 +6340,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6292,8 +6402,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6353,8 +6464,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6414,8 +6526,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6475,8 +6588,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6536,8 +6650,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6597,8 +6712,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_metering_status_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6658,8 +6774,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_net_consumption_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6718,8 +6835,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6778,8 +6896,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6838,8 +6957,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6898,8 +7018,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6954,8 +7075,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7010,8 +7132,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7066,8 +7189,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7122,8 +7246,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7178,8 +7303,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7234,8 +7360,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7290,8 +7417,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7346,8 +7474,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7406,8 +7535,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_production_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7466,8 +7596,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_production_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7526,8 +7657,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_production_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7586,8 +7718,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_reserve_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7643,8 +7776,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7697,8 +7831,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7757,8 +7892,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7817,8 +7953,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7877,8 +8014,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7937,8 +8075,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7997,8 +8136,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8057,8 +8197,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8117,8 +8258,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_voltage_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8177,8 +8319,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8234,8 +8377,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8291,8 +8435,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8348,8 +8493,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8405,8 +8551,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8462,8 +8609,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -8519,8 +8667,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8576,8 +8725,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8633,8 +8783,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8690,8 +8841,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8740,8 +8892,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8800,8 +8953,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8857,8 +9011,9 @@
 # ---
 # name: test_sensor[envoy_acb_batt][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8914,8 +9069,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.encharge_123456_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8971,8 +9127,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.encharge_123456_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9025,8 +9182,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.encharge_123456_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9075,8 +9233,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.encharge_123456_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9132,8 +9291,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.encharge_123456_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9189,8 +9349,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_available_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9246,8 +9407,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9306,8 +9468,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9360,8 +9523,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_battery_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9414,8 +9578,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9474,8 +9639,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9534,8 +9700,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9594,8 +9761,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9654,8 +9822,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9714,8 +9883,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9774,8 +9944,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9831,8 +10002,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9891,8 +10063,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9948,8 +10121,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10008,8 +10182,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10065,8 +10240,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10122,8 +10298,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10179,8 +10356,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10236,8 +10414,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10293,8 +10472,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10350,8 +10530,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10407,8 +10588,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10464,8 +10646,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -10524,8 +10707,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10584,8 +10768,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10644,8 +10829,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10704,8 +10890,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10764,8 +10951,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10824,8 +11012,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10884,8 +11073,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10944,8 +11134,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11004,8 +11195,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11064,8 +11256,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -11124,8 +11317,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11173,8 +11367,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11222,8 +11417,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11271,8 +11467,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11320,8 +11517,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11369,8 +11567,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11418,8 +11617,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11467,8 +11667,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11516,8 +11717,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11577,8 +11779,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11638,8 +11841,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11699,8 +11903,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11760,8 +11965,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11821,8 +12027,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11882,8 +12089,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -11943,8 +12151,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_metering_status_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -12004,8 +12213,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12064,8 +12274,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12124,8 +12335,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12184,8 +12396,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12244,8 +12457,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12300,8 +12514,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12356,8 +12571,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12412,8 +12628,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12468,8 +12685,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12524,8 +12742,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12580,8 +12799,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12636,8 +12856,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12692,8 +12913,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12752,8 +12974,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12812,8 +13035,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12872,8 +13096,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12932,8 +13157,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_reserve_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -12989,8 +13215,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13043,8 +13270,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13103,8 +13331,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13163,8 +13392,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13223,8 +13453,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13283,8 +13514,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13343,8 +13575,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13403,8 +13636,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13463,8 +13697,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13523,8 +13758,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13580,8 +13816,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13637,8 +13874,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13694,8 +13932,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13751,8 +13990,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13808,8 +14048,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -13865,8 +14106,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -13922,8 +14164,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13979,8 +14222,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14036,8 +14280,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14086,8 +14331,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14146,8 +14392,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14203,8 +14450,9 @@
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14260,8 +14508,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.c6_combiner_482523040549_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14310,8 +14559,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_admin_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14359,8 +14609,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_grid_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14408,8 +14659,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14458,8 +14710,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_mid_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14507,8 +14760,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14564,8 +14818,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14621,8 +14876,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14675,8 +14931,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14725,8 +14982,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14782,8 +15040,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14839,8 +15098,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -14889,8 +15149,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.enpower_654321_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14946,8 +15207,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_available_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15003,8 +15265,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15063,8 +15326,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15123,8 +15387,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15183,8 +15448,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15243,8 +15509,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15297,8 +15564,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_battery_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -15351,8 +15619,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_battery_discharge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15411,8 +15680,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_battery_discharge_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15471,8 +15741,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_battery_discharge_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15531,8 +15802,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_battery_discharge_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15591,8 +15863,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15651,8 +15924,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15711,8 +15985,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15771,8 +16046,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15831,8 +16107,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15891,8 +16168,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -15951,8 +16229,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16011,8 +16290,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16071,8 +16351,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16131,8 +16412,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16191,8 +16473,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16251,8 +16534,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_current_power_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16311,8 +16595,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16368,8 +16653,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_last_seven_days_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16425,8 +16711,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_last_seven_days_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16482,8 +16769,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_last_seven_days_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16539,8 +16827,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16599,8 +16888,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_today_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16659,8 +16949,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_today_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16719,8 +17010,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_consumption_today_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -16779,8 +17071,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16836,8 +17129,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_last_seven_days_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16893,8 +17187,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_last_seven_days_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -16950,8 +17245,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_last_seven_days_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -17007,8 +17303,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17067,8 +17364,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_today_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17127,8 +17425,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_today_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17187,8 +17486,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_energy_production_today_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -17247,8 +17547,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17304,8 +17605,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17361,8 +17663,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17418,8 +17721,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17475,8 +17779,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17532,8 +17837,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17589,8 +17895,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17646,8 +17953,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17703,8 +18011,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17760,8 +18069,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17817,8 +18127,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17874,8 +18185,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -17931,8 +18243,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -17991,8 +18304,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -18051,8 +18365,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -18111,8 +18426,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -18171,8 +18487,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_charged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18231,8 +18548,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_charged_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18291,8 +18609,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_charged_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18351,8 +18670,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_charged_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18411,8 +18731,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_discharged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18471,8 +18792,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_discharged_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18531,8 +18853,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_discharged_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18591,8 +18914,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_discharged_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18651,8 +18975,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18711,8 +19036,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18771,8 +19097,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18831,8 +19158,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18891,8 +19219,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -18951,8 +19280,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19011,8 +19341,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19071,8 +19402,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19131,8 +19463,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19191,8 +19524,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19251,8 +19585,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19311,8 +19646,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19371,8 +19707,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19431,8 +19768,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19491,8 +19829,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19551,8 +19890,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_net_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -19611,8 +19951,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19660,8 +20001,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19709,8 +20051,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19758,8 +20101,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19807,8 +20151,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19856,8 +20201,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19905,8 +20251,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -19954,8 +20301,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20003,8 +20351,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_storage_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20052,8 +20401,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20101,8 +20451,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20150,8 +20501,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_meter_status_flags_active_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20199,8 +20551,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20260,8 +20613,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20321,8 +20675,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20382,8 +20737,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20443,8 +20799,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20504,8 +20861,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20565,8 +20923,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20626,8 +20985,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20687,8 +21047,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_storage_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20748,8 +21109,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20809,8 +21171,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20870,8 +21233,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_metering_status_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -20931,8 +21295,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -20991,8 +21356,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21051,8 +21417,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21111,8 +21478,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21171,8 +21539,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21227,8 +21596,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21283,8 +21653,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21339,8 +21710,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21395,8 +21767,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21451,8 +21824,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21507,8 +21881,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21563,8 +21938,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21619,8 +21995,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21675,8 +22052,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21731,8 +22109,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21787,8 +22166,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21843,8 +22223,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21903,8 +22284,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -21963,8 +22345,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22023,8 +22406,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22083,8 +22467,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22140,8 +22525,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22194,8 +22580,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22254,8 +22641,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22314,8 +22702,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22374,8 +22763,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22434,8 +22824,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22494,8 +22885,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22554,8 +22946,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22614,8 +23007,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22674,8 +23068,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22734,8 +23129,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22794,8 +23190,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22854,8 +23251,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22914,8 +23312,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_storage_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22974,8 +23373,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23034,8 +23434,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23094,8 +23495,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23154,8 +23556,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23211,8 +23614,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23268,8 +23672,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23325,8 +23730,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23382,8 +23788,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23439,8 +23846,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -23496,8 +23904,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -23553,8 +23962,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23610,8 +24020,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23667,8 +24078,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -23717,8 +24129,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -23777,8 +24190,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23834,8 +24248,9 @@
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23891,8 +24306,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -23951,8 +24367,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24011,8 +24428,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24071,8 +24489,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24131,8 +24550,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24191,8 +24611,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_net_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24251,8 +24672,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_net_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24311,8 +24733,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_net_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24371,8 +24794,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24431,8 +24855,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24491,8 +24916,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24551,8 +24977,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24611,8 +25038,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24671,8 +25099,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24731,8 +25160,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24791,8 +25221,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_power_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -24851,8 +25282,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -24908,8 +25340,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_last_seven_days_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -24965,8 +25398,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_last_seven_days_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25022,8 +25456,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_last_seven_days_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25079,8 +25514,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25139,8 +25575,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_today_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25199,8 +25636,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_today_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25259,8 +25697,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_consumption_today_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25319,8 +25758,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25376,8 +25816,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_last_seven_days_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25433,8 +25874,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_last_seven_days_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25490,8 +25932,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_last_seven_days_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25547,8 +25990,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25607,8 +26051,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_today_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25667,8 +26112,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_today_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25727,8 +26173,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_energy_production_today_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -25787,8 +26234,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -25844,8 +26292,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -25901,8 +26350,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -25958,8 +26408,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -26015,8 +26466,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -26072,8 +26524,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -26129,8 +26582,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -26186,8 +26640,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -26243,8 +26698,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -26303,8 +26759,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -26363,8 +26820,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -26423,8 +26881,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -26483,8 +26942,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26543,8 +27003,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26603,8 +27064,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26663,8 +27125,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26723,8 +27186,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26783,8 +27247,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26843,8 +27308,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26903,8 +27369,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -26963,8 +27430,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27023,8 +27491,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_consumption_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27083,8 +27552,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_consumption_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27143,8 +27613,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_consumption_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27203,8 +27674,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27263,8 +27735,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_production_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27323,8 +27796,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_production_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27383,8 +27857,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_net_energy_production_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -27443,8 +27918,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27492,8 +27968,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27541,8 +28018,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27590,8 +28068,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27639,8 +28118,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27688,8 +28168,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27737,8 +28218,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27786,8 +28268,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_meter_status_flags_active_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -27835,8 +28318,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -27896,8 +28380,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -27957,8 +28442,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28018,8 +28504,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28079,8 +28566,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28140,8 +28628,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28201,8 +28690,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28262,8 +28752,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_metering_status_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -28323,8 +28814,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28383,8 +28875,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28443,8 +28936,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28503,8 +28997,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28563,8 +29058,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28619,8 +29115,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28675,8 +29172,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28731,8 +29229,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28787,8 +29286,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28843,8 +29343,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28899,8 +29400,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28955,8 +29457,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29011,8 +29514,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29071,8 +29575,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29131,8 +29636,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29191,8 +29697,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29251,8 +29758,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29311,8 +29819,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29371,8 +29880,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29431,8 +29941,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29491,8 +30002,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29551,8 +30063,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29611,8 +30124,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29671,8 +30185,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29731,8 +30246,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29788,8 +30304,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29845,8 +30362,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29902,8 +30420,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -29959,8 +30478,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30016,8 +30536,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -30073,8 +30594,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -30130,8 +30652,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30187,8 +30710,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30244,8 +30768,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -30294,8 +30819,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -30354,8 +30880,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30411,8 +30938,9 @@
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30468,8 +30996,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_balanced_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30528,8 +31057,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30588,8 +31118,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_energy_production_last_seven_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -30645,8 +31176,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -30705,8 +31237,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_frequency_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30762,8 +31295,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -30822,8 +31356,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -30882,8 +31417,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_meter_status_flags_active_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -30931,8 +31467,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_metering_status_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -30992,8 +31529,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31048,8 +31586,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_production_ct_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31108,8 +31647,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_voltage_production_ct-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31168,8 +31708,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31225,8 +31766,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31282,8 +31824,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31339,8 +31882,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31396,8 +31940,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31453,8 +31998,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -31510,8 +32056,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -31567,8 +32114,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31624,8 +32172,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_last_report_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31681,8 +32230,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -31731,8 +32281,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -31791,8 +32342,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -31848,8 +32400,9 @@
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
