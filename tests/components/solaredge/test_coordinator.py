@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solaredge_web import EnergyData
@@ -27,13 +26,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -69,6 +68,7 @@ def mock_solaredge_api() -> AsyncMock:
         }
     )
     api.get_energy_details = AsyncMock(return_value={"energyDetails": {"unit": "Wh"}})
+    api.get_storage_data = AsyncMock(return_value=STORAGE_DATA_SINGLE_BATTERY)
     return api
 
 
@@ -528,29 +528,34 @@ async def test_storage_data_service(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock: AiohttpClientMocker,
     mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service fetches battery charge/discharge energy."""
     mock_solaredge.return_value = mock_solaredge_api
-
-    aioclient_mock.get(
-        f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
-        json=STORAGE_DATA_SINGLE_BATTERY,
-    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Look up entity IDs from the entity registry by unique_id
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is not None
+    assert discharge_entry is not None
+
     # Check battery charge today sensor
-    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    state = hass.states.get(charge_entry)
     assert state is not None
     assert float(state.state) == 500.0  # 1500 - 1000
 
     # Check battery discharge today sensor
-    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    state = hass.states.get(discharge_entry)
     assert state is not None
     assert float(state.state) == 300.0  # 800 - 500
 
@@ -561,32 +566,39 @@ async def test_storage_data_service_multi_battery(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock: AiohttpClientMocker,
     mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service aggregates data across multiple batteries."""
     mock_solaredge_api.get_inventory = AsyncMock(
         return_value={"Inventory": {"batteries": [{"SN": "BAT001"}, {"SN": "BAT002"}]}}
     )
-    mock_solaredge.return_value = mock_solaredge_api
-
-    aioclient_mock.get(
-        f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
-        json=STORAGE_DATA_MULTI_BATTERY,
+    mock_solaredge_api.get_storage_data = AsyncMock(
+        return_value=STORAGE_DATA_MULTI_BATTERY
     )
+    mock_solaredge.return_value = mock_solaredge_api
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is not None
+    assert discharge_entry is not None
+
     # BAT001: charge=500 (1500-1000), discharge=300 (800-500)
     # BAT002: charge=700 (2700-2000), discharge=400 (1400-1000)
-    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    state = hass.states.get(charge_entry)
     assert state is not None
     assert float(state.state) == 1200.0  # 500 + 700
 
-    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    state = hass.states.get(discharge_entry)
     assert state is not None
     assert float(state.state) == 700.0  # 300 + 400
 
@@ -597,9 +609,9 @@ async def test_storage_data_service_no_batteries(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock: AiohttpClientMocker,
     mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage service is not created when no batteries in inventory."""
     mock_solaredge_api.get_inventory = AsyncMock(
@@ -612,11 +624,14 @@ async def test_storage_data_service_no_batteries(
     await hass.async_block_till_done()
 
     # Sensors should not exist when inventory reports no batteries
-    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
-    assert state is None
-
-    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
-    assert state is None
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is None
+    assert discharge_entry is None
 
 
 @patch("homeassistant.components.solaredge.SolarEdge")
@@ -625,27 +640,32 @@ async def test_storage_data_service_api_error(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock: AiohttpClientMocker,
     mock_solaredge_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test storage data service handles API errors gracefully."""
+    mock_solaredge_api.get_storage_data = AsyncMock(side_effect=KeyError("storageData"))
     mock_solaredge.return_value = mock_solaredge_api
-
-    aioclient_mock.get(
-        f"https://monitoringapi.solaredge.com/site/{SITE_ID}/storageData",
-        exc=ClientError("Connection refused"),
-    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    charge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+    )
+    discharge_entry = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+    )
+    assert charge_entry is not None
+    assert discharge_entry is not None
+
     # Sensors should be unavailable when the API returns an error
-    state = hass.states.get("sensor.solaredge_battery_energy_charged_today")
+    state = hass.states.get(charge_entry)
     assert state is not None
     assert state.state == "unavailable"
 
-    state = hass.states.get("sensor.solaredge_battery_energy_discharged_today")
+    state = hass.states.get(discharge_entry)
     assert state is not None
     assert state.state == "unavailable"

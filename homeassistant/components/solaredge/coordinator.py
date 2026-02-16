@@ -7,7 +7,6 @@ from collections.abc import Iterable
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb, TimeUnit
 
@@ -22,7 +21,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -39,7 +38,6 @@ from .const import (
     MODULE_STATISTICS_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
-    SOLAREDGE_API_URL,
     STORAGE_DATA_UPDATE_DELAY,
 )
 
@@ -338,25 +336,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
 
 class SolarEdgeStorageDataService(SolarEdgeDataService):
-    """Get and update battery storage data including charge/discharge energy.
-
-    Uses a direct HTTP call to the /storageData endpoint because the
-    aiosolaredge library does not yet expose a get_storage_data() method.
-    A PR to add it upstream is pending; once merged and the dependency is
-    bumped, this service should be refactored to use the library client.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: SolarEdgeConfigEntry,
-        api: SolarEdge,
-        site_id: str,
-    ) -> None:
-        """Initialize the storage data service."""
-        super().__init__(hass, config_entry, api, site_id)
-        self._api_key = config_entry.data[CONF_API_KEY]
-        self._session = aiohttp_client.async_get_clientsession(hass)
+    """Get and update battery storage data including charge/discharge energy."""
 
     @property
     def update_interval(self) -> timedelta:
@@ -369,23 +349,10 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         today = now.date()
         midnight = datetime.combine(today, datetime.min.time())
 
-        # Format times for API call (YYYY-MM-DD HH:MM:SS)
-        start_time = midnight.strftime("%Y-%m-%d %H:%M:%S")
-        end_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
-        url = f"{SOLAREDGE_API_URL}/site/{self.site_id}/storageData"
-        params = {
-            "api_key": self._api_key,
-            "startTime": start_time,
-            "endTime": end_time,
-        }
-
         try:
-            async with self._session.get(url, params=params) as response:
-                response.raise_for_status()
-                data = await response.json()
-        except ClientError as ex:
-            raise UpdateFailed(f"Error fetching storage data: {ex}") from ex
+            data = await self.api.get_storage_data(self.site_id, midnight, now)
+        except KeyError as ex:
+            raise UpdateFailed("Missing storage data, skipping update") from ex
 
         storage_data = data.get("storageData", {})
         batteries = storage_data.get("batteries", [])

@@ -8,8 +8,6 @@ DOMAIN = "solaredge"
 
 LOGGER = logging.getLogger(__package__)
 
-SOLAREDGE_API_URL = "https://monitoringapi.solaredge.com"
-
 DATA_API_CLIENT: Final = "api_client"
 DATA_MODULES_COORDINATOR: Final = "modules_coordinator"
 
