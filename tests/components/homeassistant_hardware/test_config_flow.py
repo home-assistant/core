@@ -1,4 +1,4 @@
-"""Test the Home Assistant hardware firmware config flow."""
+"""Testing the Home Assistant hardware firmware config flow."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
