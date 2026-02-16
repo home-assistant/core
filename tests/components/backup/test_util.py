@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
+from pathlib import Path
 import tarfile
 from unittest.mock import Mock, patch
 
@@ -129,22 +130,39 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
         assert backup == expected_backup
 
 
-@pytest.mark.parametrize("password", [None, "hunter2"])
-def test_validate_password(password: str | None) -> None:
+@pytest.mark.parametrize(
+    ("backup", "password", "validation_result"),
+    [
+        # Backup not protected, no password provided -> validation passes
+        (Path("backup_v2_compressed.tar"), None, True),
+        (Path("backup_v2_uncompressed.tar"), None, True),
+        # Backup not protected, password provided -> validation fails
+        (Path("backup_v2_compressed.tar"), "hunter2", False),
+        (Path("backup_v2_uncompressed.tar"), "hunter2", False),
+        # Backup protected, correct password provided -> validation passes
+        (Path("backup_v2_compressed_protected.tar"), "hunter2", True),
+        (Path("backup_v2_uncompressed_protected.tar"), "hunter2", True),
+        # Backup protected, no password provided -> validation fails
+        (Path("backup_v2_compressed_protected.tar"), None, False),
+        (Path("backup_v2_uncompressed_protected.tar"), None, False),
+        # Backup protected, wrong password provided -> validation fails
+        (Path("backup_v2_compressed_protected.tar"), "wrong_password", False),
+        (Path("backup_v2_uncompressed_protected.tar"), "wrong_password", False),
+    ],
+)
+def test_validate_password(
+    password: str | None, backup: Path, validation_result: bool
+) -> None:
     """Test validating a password."""
-    mock_path = Mock()
+    test_backups = get_fixture_path("test_backups", DOMAIN)
 
-    with (
-        patch("homeassistant.components.backup.util.tarfile.open"),
-        patch("homeassistant.components.backup.util.SecureTarFile"),
-    ):
-        assert validate_password(mock_path, password) is True
+    assert validate_password(test_backups / backup, password) == validation_result
 
 
 @pytest.mark.parametrize("password", [None, "hunter2"])
 @pytest.mark.parametrize("secure_tar_side_effect", [tarfile.ReadError, Exception])
-def test_validate_password_wrong_password(
-    password: str | None, secure_tar_side_effect: Exception
+def test_validate_password_with_error(
+    password: str | None, secure_tar_side_effect: type[Exception]
 ) -> None:
     """Test validating a password."""
     mock_path = Mock()

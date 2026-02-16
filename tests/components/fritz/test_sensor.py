@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .const import MOCK_USER_DATA
 
@@ -44,7 +44,11 @@ async def test_sensor_setup(
 
 
 async def test_sensor_update_fail(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
 ) -> None:
     """Test failed update of Fritz!Tools sensors."""
 
@@ -55,7 +59,9 @@ async def test_sensor_update_fail(
     await hass.async_block_till_done()
 
     fc_class_mock().call_action_side_effect(FritzConnectionException("Boom"))
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=300))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error while updating the data: Boom" in caplog.text
