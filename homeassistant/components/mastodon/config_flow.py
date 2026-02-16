@@ -66,10 +66,10 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    base_url: str | None = None
-    client_id: str | None = None
-    client_secret: str | None = None
-    access_token: str | None = None
+    base_url: str
+    client_id: str
+    client_secret: str
+    access_token: str
 
     def check_connection(
         self,
@@ -79,12 +79,6 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         dict[str, str],
     ]:
         """Check connection to the Mastodon instance."""
-
-        assert self.base_url is not None
-        assert self.client_id is not None
-        assert self.client_secret is not None
-        assert self.access_token is not None
-
         try:
             client = create_mastodon_client(
                 self.base_url,
