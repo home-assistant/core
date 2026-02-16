@@ -78,8 +78,8 @@ jobs:
     name: Collect information & changes data
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
-      pull-requests: read
+      contents: read # To check out the repository
+      pull-requests: read # For paths-filter to detect changed files
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
@@ -309,7 +309,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check ${{ matrix.file }}
-        uses: docker://hadolint/hadolint:v2.12.0
+        uses: docker://hadolint/hadolint:v2.12.0@sha256:30a8fd2e785ab6176eed53f74769e04f125afb2f74a6c52aef7d463583b6d45e
         with:
           args: hadolint ${{ matrix.file }}
 
@@ -1039,7 +1039,7 @@ jobs:
       contents: read
     services:
       mariadb:
-        image: ${{ matrix.mariadb-group }}
+        image: ${{ matrix.mariadb-group }} # zizmor: ignore[unpinned-images]
         ports:
           - 3306:3306
         env:
@@ -1197,7 +1197,7 @@ jobs:
       contents: read
     services:
       postgres:
-        image: ${{ matrix.postgresql-group }}
+        image: ${{ matrix.postgresql-group }} # zizmor: ignore[unpinned-images]
         ports:
           - 5432:5432
         env:
@@ -1561,7 +1561,7 @@ jobs:
       - pytest-mariadb
     timeout-minutes: 10
     permissions:
-      id-token: write
+      id-token: write # For Codecov OIDC upload
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
     if: |

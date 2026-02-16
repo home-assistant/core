@@ -7,12 +7,16 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+
 jobs:
   detect-language:
+    name: Detect non-English issues
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      models: read
+      issues: write # To comment on, label, and close issues
+      models: read # For AI-based language detection
 
     steps:
       - name: Check issue language
