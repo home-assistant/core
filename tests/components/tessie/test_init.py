@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -50,30 +51,25 @@ async def test_connection_failure(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_battery_auth_failure(hass: HomeAssistant, mock_get_battery) -> None:
-    """Test init with a battery API authentication error."""
-
-    mock_get_battery.side_effect = ERROR_AUTH
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_battery_unknown_failure(hass: HomeAssistant, mock_get_battery) -> None:
-    """Test init with a battery API client response error."""
-
-    mock_get_battery.side_effect = ERROR_UNKNOWN
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_battery_connection_failure(
-    hass: HomeAssistant, mock_get_battery
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (ERROR_AUTH, ConfigEntryState.SETUP_ERROR),
+        (ERROR_UNKNOWN, ConfigEntryState.SETUP_ERROR),
+        (ERROR_CONNECTION, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_battery_setup_failure(
+    hass: HomeAssistant,
+    mock_get_battery,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test init with a battery API network connection error."""
+    """Test init with a battery API error."""
 
-    mock_get_battery.side_effect = ERROR_CONNECTION
+    mock_get_battery.side_effect = side_effect
     entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is expected_state
 
 
 async def test_products_error(hass: HomeAssistant) -> None:
