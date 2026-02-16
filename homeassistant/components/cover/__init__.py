@@ -35,6 +35,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_SPEED,
     DOMAIN,
     INTENT_CLOSE_COVER,
