@@ -1,40 +1,40 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "LoJack account",
-        "description": "Enter your LoJack/Spireon account credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate LoJack",
-        "description": "Please enter your password to re-authenticate.",
-        "data": {
-          "password": "Password"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure LoJack",
-        "description": "Update your LoJack/Spireon account credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      }
+    "abort": {
+      "account_mismatch": "The username does not match the existing configuration",
+      "already_configured": "This account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful"
     },
     "error": {
       "cannot_connect": "Failed to connect to LoJack servers",
       "invalid_auth": "Invalid username or password",
       "unknown": "An unexpected error occurred"
     },
-    "abort": {
-      "already_configured": "This account is already configured",
-      "reauth_successful": "Re-authentication was successful",
-      "account_mismatch": "The username does not match the existing configuration",
-      "reconfigure_successful": "Reconfiguration was successful"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password"
+        },
+        "description": "Please enter your password to re-authenticate.",
+        "title": "Re-authenticate LoJack"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Update your LoJack/Spireon account credentials.",
+        "title": "Reconfigure LoJack"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Enter your LoJack/Spireon account credentials.",
+        "title": "LoJack account"
+      }
     }
   },
   "entity": {
@@ -52,14 +52,11 @@
       }
     },
     "sensor": {
-      "odometer": {
-        "name": "Odometer"
-      },
-      "speed": {
-        "name": "Speed"
-      },
       "battery_voltage": {
         "name": "Battery voltage"
+      },
+      "license_plate": {
+        "name": "License plate"
       },
       "location_last_reported": {
         "name": "Location last reported"
@@ -70,14 +67,17 @@
       "model": {
         "name": "Model"
       },
-      "year": {
-        "name": "Year"
+      "odometer": {
+        "name": "Odometer"
+      },
+      "speed": {
+        "name": "Speed"
       },
       "vin": {
         "name": "VIN"
       },
-      "license_plate": {
-        "name": "License plate"
+      "year": {
+        "name": "Year"
       }
     }
   }

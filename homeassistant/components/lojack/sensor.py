@@ -45,7 +45,7 @@ def _parse_timestamp(timestamp: datetime | str | None) -> datetime | None:
         if timestamp_str.endswith("Z"):
             timestamp_str = timestamp_str[:-1] + "+00:00"
         return datetime.fromisoformat(timestamp_str)
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         return None
 
 
@@ -79,9 +79,9 @@ SENSOR_DESCRIPTIONS: tuple[LoJackSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda v: round(v.battery_voltage, 2)
-        if v.battery_voltage is not None
-        else None,
+        value_fn=lambda v: (
+            round(v.battery_voltage, 2) if v.battery_voltage is not None else None
+        ),
     ),
     LoJackSensorEntityDescription(
         key="location_last_reported",
@@ -111,7 +111,7 @@ DIAGNOSTIC_SENSOR_DESCRIPTIONS: tuple[LoJackSensorEntityDescription, ...] = (
         translation_key="year",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: v.year if v.year else None,
+        value_fn=lambda v: v.year or None,
     ),
     LoJackSensorEntityDescription(
         key="vin",

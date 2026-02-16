@@ -171,6 +171,3 @@ class CannotConnect(Exception):
 
 class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
-
-
-

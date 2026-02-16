@@ -43,13 +43,10 @@ async def async_setup_entry(
     entities: list[LoJackDeviceTracker] = []
 
     if coordinator.data:
-        for vehicle in coordinator.data.values():
-            entities.append(
-                LoJackDeviceTracker(
-                    coordinator,
-                    vehicle,
-                )
-            )
+        entities.extend(
+            LoJackDeviceTracker(coordinator, vehicle)
+            for vehicle in coordinator.data.values()
+        )
 
     async_add_entities(entities)
 
@@ -116,7 +113,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
             if vehicle.accuracy is not None:
                 try:
                     return int(vehicle.accuracy)
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     return 0
         return 0
 
