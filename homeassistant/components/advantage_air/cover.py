@@ -13,8 +13,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN
+from .coordinator import AdvantageAirCoordinator
 from .entity import AdvantageAirThingEntity, AdvantageAirZoneEntity
-from .models import AdvantageAirData
 
 PARALLEL_UPDATES = 0
 
@@ -26,24 +26,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir cover platform."""
 
-    instance = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     entities: list[CoverEntity] = []
-    if aircons := instance.coordinator.data.get("aircons"):
+    if aircons := coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone vent controls when zone in vent control mode.
                 if zone["type"] == 0:
-                    entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-    if things := instance.coordinator.data.get("myThings"):
+                    entities.append(AdvantageAirZoneVent(coordinator, ac_key, zone_key))
+    if things := coordinator.data.get("myThings"):
         for thing in things["things"].values():
             if thing["channelDipState"] in [1, 2]:  # 1 = "Blind", 2 = "Blind 2"
                 entities.append(
-                    AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
+                    AdvantageAirThingCover(coordinator, thing, CoverDeviceClass.BLIND)
                 )
             elif thing["channelDipState"] in [3, 10]:  # 3 & 10 = "Garage door"
                 entities.append(
-                    AdvantageAirThingCover(instance, thing, CoverDeviceClass.GARAGE)
+                    AdvantageAirThingCover(coordinator, thing, CoverDeviceClass.GARAGE)
                 )
     async_add_entities(entities)
 
@@ -58,9 +58,11 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an Advantage Air Zone Vent."""
-        super().__init__(instance, ac_key, zone_key)
+        super().__init__(coordinator, ac_key, zone_key)
         self._attr_name = self._zone["name"]
 
     @property
@@ -106,12 +108,12 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     def __init__(
         self,
-        instance: AdvantageAirData,
+        coordinator: AdvantageAirCoordinator,
         thing: dict[str, Any],
         device_class: CoverDeviceClass,
     ) -> None:
         """Initialize an Advantage Air Things Cover."""
-        super().__init__(instance, thing)
+        super().__init__(coordinator, thing)
         self._attr_device_class = device_class
 
     @property
