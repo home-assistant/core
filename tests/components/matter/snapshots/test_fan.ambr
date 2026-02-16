@@ -37,7 +37,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
@@ -103,7 +103,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 63>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
@@ -237,7 +237,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
@@ -306,7 +306,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })

@@ -5,13 +5,18 @@ on:
   issues:
     types: [labeled]
 
-permissions:
-  issues: write
-  models: read
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
 
 jobs:
   detect-duplicates:
+    name: Detect duplicate issues
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # To comment on and label issues
+      models: read # For AI-based duplicate detection
 
     steps:
       - name: Check if integration label was added and extract details
