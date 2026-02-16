@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx.lightening_device import Light
-from pyvlx.opening_device import Blind, Window
+from pyvlx import Light, OnOffLight, OnOffSwitch, Scene
+from pyvlx.opening_device import Blind, DualRollerShutter, Window
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.components.velux.scene import PyVLXScene as Scene
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
@@ -71,6 +70,22 @@ def mock_window() -> AsyncMock:
     return window
 
 
+# a dual roller shutter
+@pytest.fixture
+def mock_dual_roller_shutter() -> AsyncMock:
+    """Create a mock Velux dual roller shutter."""
+    cover = AsyncMock(spec=DualRollerShutter, autospec=True)
+    cover.name = "Test Dual Roller Shutter"
+    cover.serial_number = "987654321"
+    cover.is_opening = False
+    cover.is_closing = False
+    cover.position_upper_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position_lower_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position = MagicMock(position_percent=30, closed=False)
+    cover.pyvlx = MagicMock()
+    return cover
+
+
 # a blind
 @pytest.fixture
 def mock_blind() -> AsyncMock:
@@ -104,6 +119,31 @@ def mock_light() -> AsyncMock:
     return light
 
 
+# a light without intensity support (e.g., a simple on/off light)
+@pytest.fixture
+def mock_onoff_light() -> AsyncMock:
+    """Create a mock Velux light."""
+    light = AsyncMock(spec=OnOffLight, autospec=True)
+    light.name = "Test On Off Light"
+    light.serial_number = "0816"
+    light.intensity = MagicMock()
+    light.pyvlx = MagicMock()
+    return light
+
+
+# an on/off switch
+@pytest.fixture
+def mock_onoff_switch() -> AsyncMock:
+    """Create a mock Velux on/off switch."""
+    switch = AsyncMock(spec=OnOffSwitch, autospec=True)
+    switch.name = "Test On Off Switch"
+    switch.serial_number = "0817"
+    switch.is_on.return_value = False
+    switch.is_off.return_value = True
+    switch.pyvlx = MagicMock()
+    return switch
+
+
 # fixture to create all other cover types via parameterization
 @pytest.fixture
 def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
@@ -114,6 +154,8 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_opening = False
     cover.is_closing = False
     cover.position = MagicMock(position_percent=30, closed=False)
+    cover.position_upper_curtain = MagicMock(position_percent=30, closed=False)
+    cover.position_lower_curtain = MagicMock(position_percent=30, closed=False)
     cover.pyvlx = MagicMock()
     return cover
 
@@ -122,8 +164,11 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
 def mock_pyvlx(
     mock_scene: AsyncMock,
     mock_light: AsyncMock,
+    mock_onoff_light: AsyncMock,
+    mock_onoff_switch: AsyncMock,
     mock_window: AsyncMock,
     mock_blind: AsyncMock,
+    mock_dual_roller_shutter: AsyncMock,
     request: pytest.FixtureRequest,
 ) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
@@ -138,7 +183,15 @@ def mock_pyvlx(
     if hasattr(request, "param"):
         pyvlx.nodes = [request.getfixturevalue(request.param)]
     else:
-        pyvlx.nodes = [mock_light, mock_blind, mock_window, mock_cover_type]
+        pyvlx.nodes = [
+            mock_dual_roller_shutter,
+            mock_light,
+            mock_onoff_light,
+            mock_onoff_switch,
+            mock_blind,
+            mock_window,
+            mock_cover_type,
+        ]
 
     pyvlx.scenes = [mock_scene]
 

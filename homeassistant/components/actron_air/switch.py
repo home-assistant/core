@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
-from .entity import ActronAirAcEntity
+from .entity import ActronAirAcEntity, handle_actron_api_errors
 
 PARALLEL_UPDATES = 0
 
@@ -105,10 +105,12 @@ class ActronAirSwitch(ActronAirAcEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self.entity_description.is_on_fn(self.coordinator)
 
+    @handle_actron_api_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_fn(self.coordinator, True)
 
+    @handle_actron_api_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.coordinator, False)
