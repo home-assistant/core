@@ -1,0 +1,99 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The integration provides a notification platform, which does not require polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+    comment: |
+      The notification entity is set up during config entry setup and cleaned up correctly.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      This integration only exposes a notification entity, which does not require a unique ID.
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      The notification entity is not marked as unavailable for this integration.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      The notification entity does not fetch data.
+  parallel-updates:
+    status: exempt
+    comment: |
+      The notification entity does not fetch data.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is a notification service, not discoverable.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is a notification service, not discoverable.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This integration does not support specific devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration does not dynamically create devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration only exposes a notification entity, so default disabling is not applicable.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      Only one device per entry, is deleted with the entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not use web sessions.
+  strict-typing: todo
