@@ -80,23 +80,23 @@ async def test_button(
     """Test a button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_{name}"
+    entity_id = f"{PLATFORM}.{device_name}_{name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(state_key) == snapshot
-    assert entity_registry.async_get(state_key) == snapshot
+    assert hass.states.get(entity_id) == snapshot
+    assert entity_registry.async_get(entity_id) == snapshot
 
     # Emulate button press
     await hass.services.async_call(
         PLATFORM,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: state_key},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state.state == "2023-01-13T12:00:00+00:00"
     api = getattr(mock_device, api_name)
     assert getattr(api, trigger_method).call_count == 1
@@ -108,7 +108,7 @@ async def test_button(
         await hass.services.async_call(
             PLATFORM,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: state_key},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -117,7 +117,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     """Test setting unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_start_wps"
+    entity_id = f"{PLATFORM}.{device_name}_start_wps"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -128,7 +128,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
         await hass.services.async_call(
             PLATFORM,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: state_key},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 

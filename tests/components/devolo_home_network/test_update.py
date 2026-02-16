@@ -50,18 +50,18 @@ async def test_update_firmware(
     """Test updating a device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(state_key) == snapshot
-    assert entity_registry.async_get(state_key) == snapshot
+    assert hass.states.get(entity_id) == snapshot
+    assert entity_registry.async_get(entity_id) == snapshot
 
     await hass.services.async_call(
         PLATFORM,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: state_key},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_device.device.async_start_firmware_update.call_count == 1
@@ -77,7 +77,7 @@ async def test_update_firmware(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -96,12 +96,12 @@ async def test_device_failure_check(
     """Test device failure during check."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
 
     mock_device.device.async_check_firmware_available.side_effect = DeviceUnavailable
@@ -109,7 +109,7 @@ async def test_device_failure_check(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -121,7 +121,7 @@ async def test_device_failure_update(
     """Test device failure when starting update."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -133,7 +133,7 @@ async def test_device_failure_update(
         await hass.services.async_call(
             PLATFORM,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: state_key},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -142,7 +142,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     """Test updating unauthorized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -153,7 +153,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
         assert await hass.services.async_call(
             PLATFORM,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: state_key},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()

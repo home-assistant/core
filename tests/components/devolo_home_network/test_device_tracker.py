@@ -34,14 +34,14 @@ async def test_device_tracker(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker states."""
-    state_key = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     freezer.tick(LONG_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(state_key) == snapshot
+    assert hass.states.get(entity_id) == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
@@ -51,7 +51,7 @@ async def test_device_tracker(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
 
@@ -63,7 +63,7 @@ async def test_device_tracker(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -74,7 +74,7 @@ async def test_restoring_clients(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities."""
-    state_key = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
     entry = configure_integration(hass)
     entity_registry.async_get_or_create(
         PLATFORM,
@@ -90,6 +90,6 @@ async def test_restoring_clients(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME

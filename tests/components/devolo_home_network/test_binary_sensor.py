@@ -49,13 +49,13 @@ async def test_update_attached_to_router(
     """Test state change of a attached_to_router binary sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_connected_to_router"
+    entity_id = f"{PLATFORM}.{device_name}_connected_to_router"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(state_key) == snapshot
-    assert entity_registry.async_get(state_key) == snapshot
+    assert hass.states.get(entity_id) == snapshot
+    assert entity_registry.async_get(entity_id) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
@@ -65,7 +65,7 @@ async def test_update_attached_to_router(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -77,6 +77,6 @@ async def test_update_attached_to_router(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
