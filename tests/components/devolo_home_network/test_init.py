@@ -6,14 +6,14 @@ from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.button import DOMAIN as BUTTON
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.devolo_home_network.const import DOMAIN
-from homeassistant.components.image import DOMAIN as IMAGE
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.components.update import DOMAIN as UPDATE
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -90,13 +90,37 @@ async def test_device(
     [
         (
             "mock_device",
-            (BINARY_SENSOR, BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
+            (
+                BINARY_SENSOR_DOMAIN,
+                BUTTON_DOMAIN,
+                DEVICE_TRACKER_DOMAIN,
+                IMAGE_DOMAIN,
+                SENSOR_DOMAIN,
+                SWITCH_DOMAIN,
+                UPDATE_DOMAIN,
+            ),
         ),
         (
             "mock_repeater_device",
-            (BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
+            (
+                BUTTON_DOMAIN,
+                DEVICE_TRACKER_DOMAIN,
+                IMAGE_DOMAIN,
+                SENSOR_DOMAIN,
+                SWITCH_DOMAIN,
+                UPDATE_DOMAIN,
+            ),
         ),
-        ("mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)),
+        (
+            "mock_nonwifi_device",
+            (
+                BINARY_SENSOR_DOMAIN,
+                BUTTON_DOMAIN,
+                SENSOR_DOMAIN,
+                SWITCH_DOMAIN,
+                UPDATE_DOMAIN,
+            ),
+        ),
     ],
 )
 async def test_platforms(

@@ -45,6 +45,14 @@
       "rain_sensor": {
         "name": "Rain sensor"
       }
+    },
+    "cover": {
+      "dual_roller_shutter_lower": {
+        "name": "Lower shutter"
+      },
+      "dual_roller_shutter_upper": {
+        "name": "Upper shutter"
+      }
     }
   },
   "exceptions": {
