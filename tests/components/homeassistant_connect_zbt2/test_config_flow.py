@@ -1,4 +1,4 @@
-"""Test the Home Assistant Connect ZBT-2 config flow."""
+"""Testing the Home Assistant Connect ZBT-2 config flow."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, call, patch
