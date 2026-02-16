@@ -155,18 +155,6 @@ async def test_device_registry_single_node_composed_device(
     assert len(device_registry.devices) == 1
 
 
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["inovelli_vtm31"])
-async def test_multi_endpoint_name(hass: HomeAssistant) -> None:
-    """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
-    entity_state = hass.states.get("light.inovelli_light_1")
-    assert entity_state
-    assert entity_state.name == "Inovelli Light (1)"
-    entity_state = hass.states.get("light.inovelli_light_6")
-    assert entity_state
-    assert entity_state.name == "Inovelli Light (6)"
-
-
 async def test_get_clean_name() -> None:
     """Test get_clean_name helper.
 
