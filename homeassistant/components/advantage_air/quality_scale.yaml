@@ -18,6 +18,8 @@ rules:
       Test unique_id of the entry in happy flow.
       Split duplicate entry test from happy flow, use mock_config_entry.
       Error flow should end in CREATE_ENTRY to test recovery.
+      Add data_description for ip_address (and port) to strings.json - tests fail with:
+      "Translation not found for advantage_air: config.step.user.data_description.ip_address"
   config-flow: done
   dependency-transparency: done
   docs-actions: done
