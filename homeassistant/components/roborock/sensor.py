@@ -347,24 +347,6 @@ ZEO_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         translation_key="times_after_clean",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    RoborockSensorDescriptionA01(
-        key="detergent_empty",
-        data_protocol=RoborockZeoProtocol.DETERGENT_EMPTY,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="detergent_empty",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=["empty", "available"],
-        value_fn=lambda x: "empty" if x else "available",
-    ),
-    RoborockSensorDescriptionA01(
-        key="softener_empty",
-        data_protocol=RoborockZeoProtocol.SOFTENER_EMPTY,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="softener_empty",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=["empty", "available"],
-        value_fn=lambda x: "empty" if x else "available",
-    ),
 ]
 
 Q7_B01_SENSOR_DESCRIPTIONS = [

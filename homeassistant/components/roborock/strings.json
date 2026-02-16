@@ -50,6 +50,9 @@
       "clean_fluid_empty": {
         "name": "Cleaning fluid"
       },
+      "detergent_empty": {
+        "name": "Detergent empty"
+      },
       "dirty_box_full": {
         "name": "Dirty water box"
       },
@@ -61,6 +64,9 @@
       },
       "mop_drying_status": {
         "name": "Mop drying"
+      },
+      "softener_empty": {
+        "name": "Softener empty"
       },
       "water_box_attached": {
         "name": "Water box attached"
@@ -336,13 +342,6 @@
       "current_room": {
         "name": "Current room"
       },
-      "detergent_empty": {
-        "name": "Detergent empty",
-        "state": {
-          "available": "Available",
-          "empty": "Empty"
-        }
-      },
       "dock_error": {
         "name": "Dock error",
         "state": {
@@ -417,13 +416,6 @@
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
-      },
-      "softener_empty": {
-        "name": "Softener empty",
-        "state": {
-          "available": "Available",
-          "empty": "[%key:common::state::empty%]"
-        }
       },
       "state": {
         "name": "State",
