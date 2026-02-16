@@ -696,7 +696,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${ INTEGRATIONS_GLOB }
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ env.INTEGRATIONS_GLOB }}
 
   pylint-tests:
     name: Check pylint on tests
