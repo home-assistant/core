@@ -19,7 +19,6 @@ ABBREVIATIONS = {
     "bri_tpl": "brightness_template",
     "bri_val_tpl": "brightness_value_template",
     "clr_temp_cmd_tpl": "color_temp_command_template",
-    "clrm": "color_mode",
     "clrm_stat_t": "color_mode_state_topic",
     "clrm_val_tpl": "color_mode_value_template",
     "clr_temp_cmd_t": "color_temp_command_topic",
