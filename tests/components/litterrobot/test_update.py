@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
 )
@@ -40,7 +40,7 @@ async def test_robot_with_no_update(
     robot.get_latest_firmware = AsyncMock(return_value=None)
 
     entry = await setup_integration(
-        hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN
+        hass, mock_account_with_litterrobot_4, UPDATE_DOMAIN
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -63,7 +63,7 @@ async def test_robot_with_update(
     robot.has_firmware_update = AsyncMock(return_value=True)
     robot.get_latest_firmware = AsyncMock(return_value=NEW_FIRMWARE)
 
-    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_litterrobot_4, UPDATE_DOMAIN)
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -77,7 +77,7 @@ async def test_robot_with_update(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
@@ -87,7 +87,7 @@ async def test_robot_with_update(
 
     robot.update_firmware = AsyncMock(return_value=True)
     await hass.services.async_call(
-        PLATFORM_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     assert robot.update_firmware.call_count == 1
@@ -101,7 +101,7 @@ async def test_robot_with_update_already_in_progress(
     robot._update_data({"isFirmwareUpdateTriggered": True}, partial=True)
 
     entry = await setup_integration(
-        hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN
+        hass, mock_account_with_litterrobot_4, UPDATE_DOMAIN
     )
 
     state = hass.states.get(ENTITY_ID)
