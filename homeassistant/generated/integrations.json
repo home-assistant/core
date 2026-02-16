@@ -2990,6 +2990,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "hypontech": {
+      "name": "Hypontech Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ialarm": {
       "name": "Antifurto365 iAlarm",
       "integration_type": "device",

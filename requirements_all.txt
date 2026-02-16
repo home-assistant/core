@@ -1255,6 +1255,9 @@ huum==0.8.1
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
 
+# homeassistant.components.hypontech
+hyponcloud==0.3.0
+
 # homeassistant.components.iammeter
 iammeter==0.2.1
 

@@ -275,6 +275,7 @@ homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
+homeassistant.components.hypontech.*
 homeassistant.components.ibeacon.*
 homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
