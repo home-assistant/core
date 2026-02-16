@@ -759,6 +759,36 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="descaling_counter",
+            translation_key="descaling_counter",
+            value_fn=lambda value: value.descaling_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="degreasing_counter",
+            translation_key="degreasing_counter",
+            value_fn=lambda value: value.degreasing_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="milk_cleaning_counter",
+            translation_key="milk_cleaning_counter",
+            value_fn=lambda value: value.milk_cleaning_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 )
 
 
