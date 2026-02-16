@@ -11,7 +11,12 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -117,6 +122,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._name)
         if (
             existing_entry
+            and existing_entry.state == ConfigEntryState.LOADED
             and existing_entry.runtime_data.connected
             and existing_entry.data[CONF_HOST] != self._host
         ):
