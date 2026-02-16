@@ -3258,7 +3258,7 @@ wyoming==1.7.2
 xiaomi-ble==1.6.0
 
 # homeassistant.components.knx
-xknx==3.14.0
+xknx==3.15.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
