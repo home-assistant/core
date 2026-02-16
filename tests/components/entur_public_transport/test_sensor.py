@@ -279,9 +279,7 @@ async def test_yaml_import_unknown_error_creates_issue(
     mock_entur_client: MagicMock,
 ) -> None:
     """Test YAML import with unknown error creates specific issue."""
-    mock_entur_client.update = AsyncMock(
-        side_effect=RuntimeError("unexpected")
-    )
+    mock_entur_client.update = AsyncMock(side_effect=RuntimeError("unexpected"))
     assert await async_setup_component(hass, "sensor", YAML_CONFIG)
     await hass.async_block_till_done()
 

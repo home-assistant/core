@@ -132,9 +132,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_STOP_IDS: stop_ids},
                     options={
                         CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
-                        CONF_WHITELIST_LINES: user_input.get(
-                            CONF_WHITELIST_LINES, []
-                        ),
+                        CONF_WHITELIST_LINES: user_input.get(CONF_WHITELIST_LINES, []),
                         CONF_OMIT_NON_BOARDING: user_input.get(
                             CONF_OMIT_NON_BOARDING, True
                         ),
