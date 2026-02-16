@@ -9,11 +9,12 @@ from typing import Any
 from bs4 import BeautifulSoup
 
 from homeassistant.components.rest import CONF_PAYLOAD_TEMPLATE, RestData
-from .rest.const import XML_MIME_TYPES
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_RESOURCE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .rest.const import XML_MIME_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
