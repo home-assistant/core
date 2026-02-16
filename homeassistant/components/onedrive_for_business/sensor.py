@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.models.items import DriveQuota
@@ -112,7 +113,8 @@ class OneDriveDriveStateSensor(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        assert self.coordinator.data.quota
+        if TYPE_CHECKING:
+            assert self.coordinator.data.quota
         return self.entity_description.value_fn(self.coordinator.data.quota)
 
     @property

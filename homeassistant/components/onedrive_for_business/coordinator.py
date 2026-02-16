@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from time import time
@@ -10,7 +11,7 @@ from time import time
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
-from onedrive_personal_sdk.models.items import Drive, dataclass
+from onedrive_personal_sdk.models.items import Drive
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
