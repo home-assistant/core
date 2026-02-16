@@ -56,12 +56,18 @@
       },
       "binary_sensor": {
         "data": {
+          "auto_off": "Auto off",
+          "delay_off": "Delay off",
+          "delay_on": "Delay on",
           "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
           "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
+          "auto_off": "Requires a trigger. After how much time the entity should turn off after it rendered `on`.",
+          "delay_off": "The amount of time (e.g. `0:00:05`) the template state must be not met before this sensor will switch to `off`. This can also be a template.",
+          "delay_on": "The amount of time (e.g. `0:00:05`) the template state must be met before this sensor will switch to `on`. This can also be a template.",
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "The sensor is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`."
         },
@@ -608,10 +614,16 @@
       },
       "binary_sensor": {
         "data": {
+          "auto_off": "[%key:component::template::config::step::binary_sensor::data::auto_off%]",
+          "delay_off": "[%key:component::template::config::step::binary_sensor::data::delay_off%]",
+          "delay_on": "[%key:component::template::config::step::binary_sensor::data::delay_on%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
+          "auto_off": "[%key:component::template::config::step::binary_sensor::data_description::auto_off%]",
+          "delay_off": "[%key:component::template::config::step::binary_sensor::data_description::delay_off%]",
+          "delay_on": "[%key:component::template::config::step::binary_sensor::data_description::delay_on%]",
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "[%key:component::template::config::step::binary_sensor::data_description::state%]"
         },

@@ -57,7 +57,12 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_AUTO_OFF,
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
 from .const import (
     CONF_ADVANCED_OPTIONS,
     CONF_AVAILABILITY,
@@ -192,6 +197,18 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 ),
             }
+
+        schema |= {
+            vol.Optional(CONF_AUTO_OFF): selector.TextSelector(
+                selector.TextSelectorConfig()
+            ),
+            vol.Optional(CONF_DELAY_OFF): selector.TextSelector(
+                selector.TextSelectorConfig()
+            ),
+            vol.Optional(CONF_DELAY_ON): selector.TextSelector(
+                selector.TextSelectorConfig()
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
