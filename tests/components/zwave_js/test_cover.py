@@ -1202,3 +1202,159 @@ async def test_window_covering_open_close(
     assert args["value"] is False
 
     client.async_send_command.reset_mock()
+
+
+
+async def test_multilevel_switch_cover_state(
+    hass: HomeAssistant, client, aeotec_nano_shutter, integration
+) -> None:
+    """Test multilevel switch cover states including OPENING and CLOSING."""
+    node = aeotec_nano_shutter
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    # Simulate opening: Set targetValue to 99 while currentValue is still 0
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "targetValue",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "targetValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Simulate cover moving: currentValue is now 50, targetValue is still 99
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 50,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 51
+
+    # Simulate cover fully opened: currentValue reaches targetValue
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 99,
+                "prevValue": 50,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+    # Simulate closing: Set targetValue to 0 while currentValue is still 99
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "targetValue",
+                "newValue": 0,
+                "prevValue": 99,
+                "propertyName": "targetValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+    # Simulate cover moving: currentValue is now 50, targetValue is still 0
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 50,
+                "prevValue": 99,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 51
+
+    # Simulate cover fully closed: currentValue reaches targetValue
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 3,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 0,
+                "prevValue": 50,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+

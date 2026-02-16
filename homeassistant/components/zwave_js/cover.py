@@ -139,6 +139,30 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         return self._fully_open_position - self._fully_closed_position
 
     @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening or not."""
+        if (
+            not self._current_position_value
+            or self._current_position_value.value is None
+            or not self._target_position_value
+            or self._target_position_value.value is None
+        ):
+            return None
+        return bool(self._target_position_value.value > self._current_position_value.value)
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing or not."""
+        if (
+            not self._current_position_value
+            or self._current_position_value.value is None
+            or not self._target_position_value
+            or self._target_position_value.value is None
+        ):
+            return None
+        return bool(self._target_position_value.value < self._current_position_value.value)
+
+    @property
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         if not (value := self._current_position_value) or value.value is None:
