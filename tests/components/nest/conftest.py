@@ -148,11 +148,11 @@ async def auth(
 @pytest.fixture(autouse=True, name="media_path")
 def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
-    tmp_path = f".cache/{uuid.uuid4()}/media"
+    tmp_path = str(uuid.uuid4())
     with patch(
         "homeassistant.components.nest.media_source.MEDIA_CACHE_PATH", new=tmp_path
     ):
-        full_path = hass.config.path(tmp_path)
+        full_path = hass.config.cache_path(DOMAIN, tmp_path)
         yield full_path
         shutil.rmtree(full_path, ignore_errors=True)
 
@@ -160,7 +160,7 @@ def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
 @pytest.fixture(name="legacy_media_path")
 def cleanup_legacy_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
-    tmp_path = f"legacy/{uuid.uuid4()}/media"
+    tmp_path = str(uuid.uuid4())
     with patch(
         "homeassistant.components.nest.media_source.LEGACY_MEDIA_PATH", new=tmp_path
     ):
