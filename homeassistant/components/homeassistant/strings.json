@@ -165,7 +165,7 @@
     "orphaned_ignored_config_entry": {
       "fix_flow": {
         "abort": {
-          "issue_ignored": "Non-existent ignored integration {domain} ignored."
+          "issue_ignored": "Non-existent integration {domain} ignored."
         },
         "step": {
           "init": {
