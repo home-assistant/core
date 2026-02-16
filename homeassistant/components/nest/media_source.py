@@ -107,7 +107,6 @@ def _prepare_media_cache_dir(
             _LOGGER.info(
                 "Failed to migrate media cache directory, abandoning: %s", error
             )
-        return
     media_path.mkdir(parents=True, exist_ok=True)
 
 
