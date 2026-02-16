@@ -35,13 +35,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
     CONF_EFFECT,
-    CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_RGB,
-    CONF_XY,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -55,7 +51,6 @@ from homeassistant.util.json import json_loads_object
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
-    CONF_COLOR_MODE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -96,7 +91,7 @@ DEFAULT_NAME = "MQTT JSON Light"
 DEFAULT_FLASH = True
 DEFAULT_TRANSITION = True
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_JSON = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -139,24 +134,8 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Support for legacy color_mode handling was removed with HA Core 2025.3
-# The removed attributes can be removed from the schema's from HA Core 2026.3
 DISCOVERY_SCHEMA_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE, raise_if_present=False),
-    cv.removed(CONF_COLOR_TEMP, raise_if_present=False),
-    cv.removed(CONF_HS, raise_if_present=False),
-    cv.removed(CONF_RGB, raise_if_present=False),
-    cv.removed(CONF_XY, raise_if_present=False),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE),
-    cv.removed(CONF_COLOR_TEMP),
-    cv.removed(CONF_HS),
-    cv.removed(CONF_RGB),
-    cv.removed(CONF_XY),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_JSON.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
