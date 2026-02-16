@@ -17,4 +17,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, Platform.NOTIFY, DOMAIN, dict(entry.data), {}
         )
     )
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
     return True
