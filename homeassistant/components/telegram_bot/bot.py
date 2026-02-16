@@ -86,7 +86,6 @@ from .const import (
     ATTR_REPLYMARKUP,
     ATTR_RESIZE_KEYBOARD,
     ATTR_STICKER_ID,
-    ATTR_TARGET,
     ATTR_TEXT,
     ATTR_TIMEOUT,
     ATTR_TITLE,
@@ -332,35 +331,6 @@ class TelegramNotificationService:
             inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
-    def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
-        """Validate chat_id targets or return default target (first).
-
-        :param target: optional list of integers ([12234, -12345])
-        :return list of chat_id targets (integers)
-        """
-        allowed_chat_ids: list[int] = [
-            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
-        ]
-
-        if target is None:
-            return [allowed_chat_ids[0]]
-
-        chat_ids = [target] if isinstance(target, int) else target
-        valid_chat_ids = [
-            chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids
-        ]
-        if not valid_chat_ids:
-            raise ServiceValidationError(
-                "Invalid chat IDs",
-                translation_domain=DOMAIN,
-                translation_key="invalid_chat_ids",
-                translation_placeholders={
-                    "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
-                    "bot_name": self.config.title,
-                },
-            )
-        return valid_chat_ids
-
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
@@ -476,7 +446,7 @@ class TelegramNotificationService:
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_ids = self.get_target_chat_ids(kwargs_msg.pop(ATTR_TARGET, None))
+        chat_ids = [kwargs_msg.pop(ATTR_CHAT_ID)]
         msg_ids: dict[str, JsonValueType] = {}
         for chat_id in chat_ids:
             _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
@@ -561,8 +531,8 @@ class TelegramNotificationService:
 
     async def send_message(
         self,
-        message: str = "",
-        target: Any = None,
+        message: str,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
@@ -575,7 +545,7 @@ class TelegramNotificationService:
             "Error sending message",
             params[ATTR_MESSAGE_TAG],
             text,
-            target=target,
+            chat_id=chat_id,
             parse_mode=params[ATTR_PARSER],
             disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -588,12 +558,11 @@ class TelegramNotificationService:
 
     async def delete_message(
         self,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> bool:
         """Delete a previously sent message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
         deleted: bool = await self._send_msg(
@@ -613,12 +582,11 @@ class TelegramNotificationService:
     async def edit_message_media(
         self,
         media_type: str,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: Any,
     ) -> Any:
         "Edit message media of a previously sent message."
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -690,12 +658,11 @@ class TelegramNotificationService:
     async def edit_message(
         self,
         type_edit: str,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
         """Edit a previously sent message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -779,25 +746,24 @@ class TelegramNotificationService:
 
     async def send_chat_action(
         self,
+        chat_id: int,
         chat_action: str = "",
-        target: Any = None,
         context: Context | None = None,
         **kwargs: Any,
     ) -> dict[str, JsonValueType]:
         """Send a chat action to pre-allowed chat IDs."""
         result: dict[str, JsonValueType] = {}
-        for chat_id in self.get_target_chat_ids(target):
-            _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
-            is_successful = await self._send_msg(
-                self.bot.send_chat_action,
-                "Error sending action",
-                None,
-                chat_id=chat_id,
-                action=chat_action,
-                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
-                context=context,
-            )
-            result[str(chat_id)] = is_successful
+        _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
+        is_successful = await self._send_msg(
+            self.bot.send_chat_action,
+            "Error sending action",
+            None,
+            chat_id=chat_id,
+            action=chat_action,
+            message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
+            context=context,
+        )
+        result[str(chat_id)] = is_successful
         return result
 
     async def send_file(
@@ -827,7 +793,7 @@ class TelegramNotificationService:
                 self.bot.send_photo,
                 "Error sending photo",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 photo=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -844,7 +810,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 sticker=file_content,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -859,7 +825,7 @@ class TelegramNotificationService:
                 self.bot.send_video,
                 "Error sending video",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 video=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -876,7 +842,7 @@ class TelegramNotificationService:
                 self.bot.send_document,
                 "Error sending document",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 document=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -893,7 +859,7 @@ class TelegramNotificationService:
                 self.bot.send_voice,
                 "Error sending voice",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 voice=file_content,
                 caption=kwargs.get(ATTR_CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -909,7 +875,7 @@ class TelegramNotificationService:
             self.bot.send_animation,
             "Error sending animation",
             params[ATTR_MESSAGE_TAG],
-            target=kwargs.get(ATTR_TARGET),
+            chat_id=kwargs[ATTR_CHAT_ID],
             animation=file_content,
             caption=kwargs.get(ATTR_CAPTION),
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -935,7 +901,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
-                target=kwargs.get(ATTR_TARGET),
+                chat_id=kwargs[ATTR_CHAT_ID],
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -950,7 +916,6 @@ class TelegramNotificationService:
         self,
         latitude: Any,
         longitude: Any,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
@@ -962,7 +927,7 @@ class TelegramNotificationService:
             self.bot.send_location,
             "Error sending location",
             params[ATTR_MESSAGE_TAG],
-            target=target,
+            chat_id=kwargs[ATTR_CHAT_ID],
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -978,7 +943,6 @@ class TelegramNotificationService:
         options: Sequence[str | InputPollOption],
         is_anonymous: bool | None,
         allows_multiple_answers: bool | None,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
@@ -989,7 +953,7 @@ class TelegramNotificationService:
             self.bot.send_poll,
             "Error sending poll",
             params[ATTR_MESSAGE_TAG],
-            target=target,
+            chat_id=kwargs[ATTR_CHAT_ID],
             question=question,
             options=options,
             is_anonymous=is_anonymous,
@@ -1004,12 +968,11 @@ class TelegramNotificationService:
 
     async def leave_chat(
         self,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
         """Remove bot from chat."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
@@ -1018,13 +981,12 @@ class TelegramNotificationService:
     async def set_message_reaction(
         self,
         reaction: str,
-        chat_id: int | None = None,
+        chat_id: int,
         is_big: bool = False,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> None:
         """Set the bot's reaction for a given message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
 
