@@ -555,7 +555,9 @@ class HTML5NotificationService(BaseNotificationService):
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 try:
-                    save_json(self.registrations_json_path, self.registrations)
+                    await self.hass.async_add_executor_job(
+                        save_json, self.registrations_json_path, self.registrations
+                    )
                 except HomeAssistantError:
                     self.registrations[target] = reg
                     _LOGGER.error("Error saving registration")
