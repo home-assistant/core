@@ -25,7 +25,7 @@ def restore_result_file_content(config_dir: Path) -> dict[str, Any] | None:
     ("restore_config", "expected", "restore_result"),
     [
         (
-            "restore1.json",
+            "restore1.json",  # Empty file, so JSONDecodeError is expected
             None,
             {
                 "success": False,
@@ -34,12 +34,12 @@ def restore_result_file_content(config_dir: Path) -> dict[str, Any] | None:
             },
         ),
         (
-            "restore2.json",
+            "restore2.json",  # File missing the 'password' key, so KeyError is expected
             None,
             {"success": False, "error": "'password'", "error_type": "KeyError"},
         ),
         (
-            "restore3.json",
+            "restore3.json",  # Valid file
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password="psw",
@@ -50,7 +50,7 @@ def restore_result_file_content(config_dir: Path) -> dict[str, Any] | None:
             None,
         ),
         (
-            "restore4.json",
+            "restore4.json",  # Valid file
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password=None,
@@ -122,7 +122,7 @@ def test_restoring_backup_that_does_not_exist(
     ("restore_config", "restore_result"),
     [
         (
-            "restore1.json",
+            "restore1.json",  # Empty file, so JSONDecodeError is expected
             {
                 "success": False,
                 "error": "Expecting value: line 1 column 1 (char 0)",
@@ -130,7 +130,7 @@ def test_restoring_backup_that_does_not_exist(
             },
         ),
         (
-            "restore2.json",
+            "restore2.json",  # File missing the 'password' key, so KeyError is expected
             {"success": False, "error": "'password'", "error_type": "KeyError"},
         ),
     ],
