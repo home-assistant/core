@@ -111,32 +111,39 @@ class TibberDataCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         )
         self._listener_unsub: Callable[[], None] | None = None
 
-    def _get_next_15_interval(self, now: datetime) -> datetime:
-        """Compute next time we need to notify listeners (minutes 0, 15, 30, 45)."""
+    def _get_next_15_interval(self) -> datetime:
+        """Return the next 15-minute boundary (minutes 0, 15, 30, 45) in UTC."""
         next_run = dt_util.utcnow() + timedelta(minutes=15)
-        next_minute = next_run.minute // 15 * 15
+        next_minute = (next_run.minute // 15) * 15
         return next_run.replace(
             minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
         )
 
-    async def async_shutdown(self) -> None:
-        """Cancel any scheduled listener updates."""
-        await super().async_shutdown()
-        if self._listener_unsub:
-            self._listener_unsub()
-            self._listener_unsub = None
-
-    async def update_listeners(self, now: datetime) -> None:
-        """Notify listeners at 15-min boundaries."""
-        self._listener_unsub = async_track_point_in_utc_time(
+    @callback
+    def _on_scheduled_refresh(self, _fire_time: datetime) -> None:
+        """Run the scheduled refresh (same contract as base refresh interval)."""
+        self.config_entry.async_create_background_task(
             self.hass,
-            self.update_listeners,
-            self._get_next_15_interval(now),
+            self._handle_refresh_interval(),
+            name=f"{self.name} - {self.config_entry.title} - refresh",
+            eager_start=True,
         )
-        self.async_update_listeners()
+
+    @callback
+    def _schedule_refresh(self) -> None:
+        """Schedule a refresh at the next 15-minute boundary."""
+        if self.config_entry.pref_disable_polling:
+            return
+        self._async_unsub_refresh()
+        self._unsub_refresh = async_track_point_in_utc_time(
+            self.hass,
+            self._on_scheduled_refresh,
+            self._get_next_15_interval(),
+        )
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
         """Update data via API and return per-home data for sensors."""
+        _LOGGER.error("Updating data")
         tibber_connection = await self.config_entry.runtime_data.async_get_client(
             self.hass
         )

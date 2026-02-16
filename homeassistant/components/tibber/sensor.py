@@ -767,6 +767,7 @@ class TibberSensor(TibberCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value of the sensor from coordinator data."""
+        _LOGGER.error("native_value: %s", self.entity_description.key)
         home_data = self._get_home_data()
         if home_data is None:
             return None
