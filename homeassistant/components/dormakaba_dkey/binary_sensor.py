@@ -36,8 +36,10 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key="security_locked",
         translation_key="deadbolt",
         device_class=BinarySensorDeviceClass.LOCK,
-        is_on=lambda state: state.unlock_status
-        not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED),
+        is_on=lambda state: (
+            state.unlock_status
+            not in (UnlockStatus.SECURITY_LOCKED, UnlockStatus.UNLOCKED_SECURITY_LOCKED)
+        ),
     ),
 )
 

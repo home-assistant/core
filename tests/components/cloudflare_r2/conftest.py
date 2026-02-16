@@ -11,7 +11,7 @@ from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     suggested_filenames,
 )
-from homeassistant.components.cloudflare_r2.const import DOMAIN
+from homeassistant.components.cloudflare_r2.const import CONF_PREFIX, DOMAIN
 
 from .const import USER_INPUT
 
@@ -78,4 +78,20 @@ def mock_config_entry() -> MockConfigEntry:
         title="test",
         domain=DOMAIN,
         data=USER_INPUT,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_prefix(
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Return a mocked config entry with a prefix configured."""
+    data = dict(mock_config_entry.data)
+    data[CONF_PREFIX] = "ha/backups"
+
+    return MockConfigEntry(
+        entry_id=mock_config_entry.entry_id,
+        title=mock_config_entry.title,
+        domain=mock_config_entry.domain,
+        data=data,
     )

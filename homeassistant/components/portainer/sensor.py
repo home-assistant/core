@@ -28,6 +28,8 @@ from .entity import (
     PortainerEndpointEntity,
 )
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
@@ -223,6 +225,56 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_reclaimable",
+        translation_key="container_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="container_disk_usage_total_size",
+        translation_key="container_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.container_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_reclaimable",
+        translation_key="image_disk_usage_reclaimable",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.reclaimable,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="image_disk_usage_total_size",
+        translation_key="image_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.image_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerEndpointSensorEntityDescription(
+        key="volume_disk_usage_total",
+        translation_key="volume_disk_usage_total_size",
+        value_fn=lambda data: data.docker_system_df.volume_disk_usage.total_size,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

@@ -84,6 +84,7 @@ homeassistant.components.androidtv_remote.*
 homeassistant.components.anel_pwrctrl.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
+homeassistant.components.anthropic.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
 homeassistant.components.api.*
@@ -221,6 +222,7 @@ homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
+homeassistant.components.ghost.*
 homeassistant.components.gios.*
 homeassistant.components.github.*
 homeassistant.components.glances.*
@@ -241,6 +243,7 @@ homeassistant.components.guardian.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
@@ -286,6 +289,7 @@ homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
 homeassistant.components.integration.*
+homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
 homeassistant.components.ios.*
@@ -362,7 +366,6 @@ homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
-homeassistant.components.nanoleaf.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
@@ -384,11 +387,13 @@ homeassistant.components.ohme.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
+homeassistant.components.onedrive_for_business.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
+homeassistant.components.openevse.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
@@ -434,6 +439,7 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.redgtech.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
 homeassistant.components.remote_calendar.*
