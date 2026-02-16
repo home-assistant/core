@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -322,6 +322,35 @@ async def test_thermostat_service_calls(
     )
     matter_client.write_attribute.reset_mock()
 
+    # test changing only target_temp_high when target_temp_low stays the same
+    set_node_attribute(matter_node, 1, 513, 18, 1000)
+    set_node_attribute(matter_node, 1, 513, 17, 2500)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["target_temp_high"] == 25
+    assert state.attributes["target_temp_low"] == 10
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "target_temp_low": 10,  # Same as current
+            "target_temp_high": 28,  # Different from current
+        },
+        blocking=True,
+    )
+
+    # Only target_temp_high should be written since target_temp_low hasn't changed
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/513/17",
+        value=2800,
+    )
+    matter_client.write_attribute.reset_mock()
+
     # test change HAVC mode to heat
     await hass.services.async_call(
         "climate",
@@ -595,3 +624,54 @@ async def test_eve_thermo_v5_presets(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_mode"] == PRESET_NONE
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_preset_mode_error_on_invalid_preset(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test preset mode error when calling entity method directly with invalid preset."""
+    entity_id = "climate.eve_thermo_20ecd1701"
+
+    # Get the entity object directly via component
+    component = hass.data.get("entity_components", {}).get("climate")
+    assert component is not None
+
+    entity = component.get_entity(entity_id)
+    assert entity is not None
+
+    # Test calling async_set_preset_mode directly with invalid preset
+    # This tests the HomeAssistantError path in our code (lines 275-279)
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await entity.async_set_preset_mode("NonExistentPreset")
+
+    # Ensure no command was sent
+    assert matter_client.send_device_command.call_count == 0
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+async def test_hvac_mode_error_on_unsupported_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test HVAC mode error when calling entity method directly with unsupported mode."""
+    entity_id = "climate.longan_link_hvac"
+
+    # Get the entity object directly via component
+    component = hass.data.get("entity_components", {}).get("climate")
+    assert component is not None
+
+    entity = component.get_entity(entity_id)
+    assert entity is not None
+
+    # Test calling async_set_hvac_mode directly with an unsupported HVAC mode string
+    # This tests the ValueError path in our code (lines 300-301)
+    # We pass a string that's not in HVAC_SYSTEM_MODE_MAP
+    with pytest.raises(ValueError, match="Unsupported hvac mode"):
+        await entity.async_set_hvac_mode("unsupported_mode")
+
+    # Ensure no command was sent
+    assert matter_client.write_attribute.call_count == 0
