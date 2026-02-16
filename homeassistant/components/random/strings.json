@@ -71,6 +71,7 @@
         "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
         "running": "[%key:component::binary_sensor::entity_component::running::name%]",
         "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "sleeping": "[%key:component::binary_sensor::entity_component::sleeping::name%]",
         "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
         "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
         "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
