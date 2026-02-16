@@ -1,0 +1,19 @@
+{
+  "domain": "casper_glow",
+  "name": "Casper Glow",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "local_name": "Jar*"
+    }
+  ],
+  "codeowners": ["@mikeodr"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/casper_glow",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pycasperglow"],
+  "quality_scale": "bronze",
+  "requirements": ["pycasperglow==1.1.0"]
+}

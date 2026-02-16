@@ -273,6 +273,8 @@ build.json @home-assistant/supervisor
 /tests/components/cambridge_audio/ @noahhusby
 /homeassistant/components/camera/ @home-assistant/core
 /tests/components/camera/ @home-assistant/core
+/homeassistant/components/casper_glow/ @mikeodr
+/tests/components/casper_glow/ @mikeodr
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
 /homeassistant/components/ccm15/ @ocalvo
