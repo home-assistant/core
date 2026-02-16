@@ -15,7 +15,7 @@
       "first_name": "First Name",
       "last_name": "Last Name",
       "company": "",
-      "city": "",
+      "city": "New York",
       "city_mobile_code": "",
       "username": "admin@example.com",
       "country_mobile_code": "001",
