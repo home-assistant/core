@@ -84,10 +84,6 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
             "homeassistant.components.indevolt.config_flow.IndevoltAPI",
             new=mock_client,
         ),
-        patch(
-            "homeassistant.components.indevolt.async_setup",
-            return_value=True,
-        ),
     ):
         # Mock coordinator API (get_data)
         client = mock_client.return_value

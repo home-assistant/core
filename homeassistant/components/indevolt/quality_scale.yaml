@@ -47,8 +47,12 @@ rules:
   devices: done
   diagnostics:
     status: todo
-  discovery-update-info: done
-  discovery: done
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support network discovery
+  discovery:
+    status: exempt
+    comment: Integration does not support network discovery
   docs-data-update:
     status: todo
   docs-examples:

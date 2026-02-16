@@ -10,10 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "discovery_confirm": {
-        "description": "Do you want to add {type} ({host}) to Home Assistant?",
-        "title": "Discovered Indevolt device"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
