@@ -136,7 +136,7 @@ class TessieBatteryHealthCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from e
-            raise
+            raise UpdateFailed from e
 
         return data
 
