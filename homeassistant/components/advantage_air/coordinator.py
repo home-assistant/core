@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from advantage_air import ApiError, advantage_air
 
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type AdvantageAirDataConfigEntry = ConfigEntry[AdvantageAirCoordinator]
 
 
-class AdvantageAirCoordinator(DataUpdateCoordinator):
+class AdvantageAirCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Advantage Air coordinator."""
 
     config_entry: AdvantageAirDataConfigEntry
@@ -44,7 +45,7 @@ class AdvantageAirCoordinator(DataUpdateCoordinator):
         )
         self.api = api
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the API."""
         try:
             return await self.api.async_get()
