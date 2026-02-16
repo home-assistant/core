@@ -831,7 +831,7 @@ class SensorSchema(KNXPlatformSchema):
     CONF_SYNC_STATE = CONF_SYNC_STATE
 
     ENTITY_SCHEMA = vol.All(
-        vol.Schema(
+        COMMON_ENTITY_SCHEMA.extend(
             {
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
