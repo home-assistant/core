@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, NotRequired, TypedDict, cast
 from urllib.parse import urlparse
 import uuid
 
-from aiohttp import web
+from aiohttp import ClientSession, web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
 from py_vapid import Vapid
@@ -203,8 +203,9 @@ async def async_get_service(
     hass.http.register_view(HTML5PushRegistrationView(registrations, json_path))
     hass.http.register_view(HTML5PushCallbackView(registrations))
 
+    session = async_get_clientsession(hass)
     return HTML5NotificationService(
-        hass, vapid_prv_key, vapid_email, registrations, json_path
+        hass, session, vapid_prv_key, vapid_email, registrations, json_path
     )
 
 
@@ -420,12 +421,14 @@ class HTML5NotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
+        session: ClientSession,
         vapid_prv: str,
         vapid_email: str,
         registrations: dict[str, Registration],
         json_path: str,
     ) -> None:
         """Initialize the service."""
+        self.session = session
         self._vapid_prv = vapid_prv
         self._vapid_email = vapid_email
         self.registrations = registrations
@@ -530,9 +533,9 @@ class HTML5NotificationService(BaseNotificationService):
                 payload[ATTR_TAG],
                 subscription["keys"]["auth"],
             )
-            session = async_get_clientsession(self.hass)
+
             webpusher = WebPusher(
-                cast(dict[str, Any], info["subscription"]), aiohttp_session=session
+                cast(dict[str, Any], info["subscription"]), aiohttp_session=self.session
             )
 
             endpoint = urlparse(subscription["endpoint"])
