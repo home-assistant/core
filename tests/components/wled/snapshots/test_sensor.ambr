@@ -195,13 +195,14 @@
     'supported_features': 0,
     'translation_key': 'info_leds_count',
     'unique_id': 'aabbccddeeff_info_leds_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'LEDs',
   })
 # ---
 # name: test_snapshots[sensor.wled_rgb_light_led_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light LED count',
+      'unit_of_measurement': 'LEDs',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wled_rgb_light_led_count',
