@@ -20,7 +20,9 @@ rules:
       Error flow should end in CREATE_ENTRY to test recovery.
       Add data_description for ip_address (and port) to strings.json - tests fail with:
       "Translation not found for advantage_air: config.step.user.data_description.ip_address"
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Data descriptions missing
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
