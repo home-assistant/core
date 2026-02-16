@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime, timedelta
-from functools import partial
 from http import HTTPStatus
 import json
 import logging
@@ -35,6 +34,7 @@ from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
@@ -456,22 +456,18 @@ class HTML5NotificationService(BaseNotificationService):
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
 
-    def dismiss(self, **kwargs: Any) -> None:
-        """Dismisses a notification."""
-        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
-        tag: str = data.get(ATTR_TAG, "") if data else ""
-        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
-
-        self._push_message(payload, **kwargs)
-
-    async def async_dismiss(self, **kwargs) -> None:
+    async def async_dismiss(self, **kwargs: Any) -> None:
         """Dismisses a notification.
 
         This method must be run in the event loop.
         """
-        await self.hass.async_add_executor_job(partial(self.dismiss, **kwargs))
+        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
+        tag: str = data.get(ATTR_TAG, "") if data else ""
+        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+        await self._push_message(payload, **kwargs)
+
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         tag = str(uuid.uuid4())
         payload: dict[str, Any] = {
@@ -503,9 +499,9 @@ class HTML5NotificationService(BaseNotificationService):
         ):
             payload[ATTR_DATA][ATTR_URL] = URL_ROOT
 
-        self._push_message(payload, **kwargs)
+        await self._push_message(payload, **kwargs)
 
-    def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
+    async def _push_message(self, payload: dict[str, Any], **kwargs: Any) -> None:
         """Send the message."""
 
         timestamp = int(time.time())
@@ -534,8 +530,10 @@ class HTML5NotificationService(BaseNotificationService):
                 payload[ATTR_TAG],
                 subscription["keys"]["auth"],
             )
-
-            webpusher = WebPusher(cast(dict[str, Any], info["subscription"]))
+            session = async_get_clientsession(self.hass)
+            webpusher = WebPusher(
+                cast(dict[str, Any], info["subscription"]), aiohttp_session=session
+            )
 
             endpoint = urlparse(subscription["endpoint"])
             vapid_claims = {
@@ -545,14 +543,15 @@ class HTML5NotificationService(BaseNotificationService):
             }
             vapid_headers = Vapid.from_string(self._vapid_prv).sign(vapid_claims)
             vapid_headers.update({"urgency": priority, "priority": priority})
-            response = webpusher.send(
+
+            response = await webpusher.send_async(
                 data=json.dumps(payload), headers=vapid_headers, ttl=ttl
             )
 
             if TYPE_CHECKING:
                 assert not isinstance(response, str)
 
-            if response.status_code == HTTPStatus.GONE:
+            if response.status == HTTPStatus.GONE:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 try:
@@ -562,10 +561,10 @@ class HTML5NotificationService(BaseNotificationService):
                     _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")
-            elif response.status_code >= HTTPStatus.BAD_REQUEST:
+            elif response.status >= HTTPStatus.BAD_REQUEST:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status_code,
+                    response.status,
                     response.text,
                 )
 
