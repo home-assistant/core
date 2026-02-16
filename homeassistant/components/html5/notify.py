@@ -565,7 +565,7 @@ class HTML5NotificationService(BaseNotificationService):
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
                     response.status,
-                    response.text,
+                    await response.text(),
                 )
 
 
