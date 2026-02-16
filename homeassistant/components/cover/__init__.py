@@ -110,9 +110,6 @@ class CoverEntityFeature(IntFlag):
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_POSITION = "position"
-ATTR_PRESET_MODE = "preset_mode"
-ATTR_PRESET_MODES = "preset_modes"
-ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
 
 
@@ -312,13 +309,11 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def speed(self) -> int | None:
         """Return current cover speed percentage if known."""
-
         return self._attr_speed
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode if supported."""
-
         return self._attr_preset_mode
 
     @property
@@ -457,22 +452,22 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ft.partial(self.set_cover_position, **kwargs)
         )
 
-    def set_speed(self, **kwargs: Any) -> None:
+    def set_speed(self, speed: int) -> None:
         """Set the cover speed percentage."""
         raise NotImplementedError
 
-    async def async_set_speed(self, **kwargs: Any) -> None:
+    async def async_set_speed(self, speed: int) -> None:
         """Set the cover speed percentage."""
-        await self.hass.async_add_executor_job(ft.partial(self.set_speed, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.set_speed, speed))
 
-    def set_preset_mode(self, **kwargs: Any) -> None:
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set the cover preset mode."""
         raise NotImplementedError
 
-    async def async_set_preset_mode(self, **kwargs: Any) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the cover preset mode."""
         await self.hass.async_add_executor_job(
-            ft.partial(self.set_preset_mode, **kwargs)
+            ft.partial(self.set_preset_mode, preset_mode)
         )
 
     def stop_cover(self, **kwargs: Any) -> None:
