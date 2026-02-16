@@ -691,6 +691,8 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
         run: |
           . venv/bin/activate
           python --version
@@ -742,6 +744,8 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          TESTS_GLOB: ${{ needs.info.outputs.tests_glob }}
         run: |
           . venv/bin/activate
           python --version
@@ -808,6 +812,8 @@ jobs:
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
+        env:
+          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
         run: |
           . venv/bin/activate
           python --version
