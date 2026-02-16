@@ -37,7 +37,7 @@ fnv-hash-fast==1.6.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==5.8.0
-hass-nabucasa==1.13.0
+hass-nabucasa==1.15.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20260128.6
