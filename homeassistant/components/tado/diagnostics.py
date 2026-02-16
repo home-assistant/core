@@ -14,7 +14,4 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a Tado config entry."""
 
-    return {
-        "data": config_entry.runtime_data.coordinator.data,
-        "mobile_devices": config_entry.runtime_data.mobile_coordinator.data,
-    }
+    return {"data": config_entry.runtime_data.data}
