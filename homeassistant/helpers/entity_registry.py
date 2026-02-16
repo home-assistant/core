@@ -783,7 +783,8 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 ):
                     # Strip the device name prefix from the entity name if present,
                     # and add the full generated name as an alias.
-                    # If the name doesn't have the device name prefix, add the previous
+                    # If the name doesn't have the device name prefix and the
+                    # entity is exposed to a voice assistant, add the previous
                     # name as an alias instead to preserve backwards compatibility.
                     if (
                         new_name := _async_strip_prefix_from_entity_name(
@@ -791,7 +792,10 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         )
                     ) is not None:
                         entity["name"] = new_name
-                    else:
+                    elif any(
+                        entity.get("options", {}).get(key, {}).get("should_expose")
+                        for key in ("conversation", "cloud.google_assistant")
+                    ):
                         alias_to_add = name
 
                 entity["aliases"] = [alias_to_add, *entity["aliases"]]
