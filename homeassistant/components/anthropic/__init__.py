@@ -7,7 +7,7 @@ import anthropic
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,8 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     try:
         await client.models.list(timeout=10.0)
     except anthropic.AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        return False
+        raise ConfigEntryAuthFailed(err) from err
     except anthropic.AnthropicError as err:
         raise ConfigEntryNotReady(err) from err
 
@@ -77,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Unload Anthropic."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -105,7 +104,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[AnthropicConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

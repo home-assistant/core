@@ -1,18 +1,17 @@
 """Test the Cloudflare R2 backup platform."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 import json
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
-from botocore.exceptions import ConnectTimeoutError
+from botocore.exceptions import BotoCoreError, ConnectTimeoutError
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
-    BotoCoreError,
     R2BackupAgent,
     async_register_backup_agents_listener,
     suggested_filenames,
@@ -521,3 +520,57 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
+
+
+async def test_multipart_upload_uses_prefix_for_all_calls(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry_with_prefix: MockConfigEntry,
+) -> None:
+    """Test multipart upload uses the configured prefix for all S3 calls."""
+    mock_config_entry_with_prefix.runtime_data = mock_client
+    agent = R2BackupAgent(hass, mock_config_entry_with_prefix)
+
+    async def stream() -> AsyncIterator[bytes]:
+        # Force multipart: > MIN_PART_SIZE
+        yield b"x" * (MULTIPART_MIN_PART_SIZE_BYTES + 1)
+
+    async def open_stream():
+        return stream()
+
+    await agent._upload_multipart("test.tar", open_stream)
+
+    prefixed_key = "ha/backups/test.tar"
+
+    assert mock_client.create_multipart_upload.await_args.kwargs["Key"] == prefixed_key
+
+    for call in mock_client.upload_part.await_args_list:
+        assert call.kwargs["Key"] == prefixed_key
+
+    assert (
+        mock_client.complete_multipart_upload.await_args.kwargs["Key"] == prefixed_key
+    )
+
+
+async def test_list_backups_passes_prefix_to_list_objects(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry_with_prefix: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test list_objects_v2 is called with Prefix when configured."""
+    mock_config_entry_with_prefix.runtime_data = mock_client
+    agent = R2BackupAgent(hass, mock_config_entry_with_prefix)
+
+    # Make the listing for a prefixed bucket
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    mock_client.list_objects_v2.return_value = {
+        "Contents": [
+            {"Key": f"ha/backups/{metadata_filename}"},
+            {"Key": f"ha/backups/{tar_filename}"},
+        ]
+    }
+
+    await agent.async_list_backups()
+
+    assert mock_client.list_objects_v2.call_args.kwargs["Prefix"] == "ha/backups/"
