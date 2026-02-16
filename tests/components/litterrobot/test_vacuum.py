@@ -107,7 +107,7 @@ async def test_activities(
         (VACUUM_DOMAIN, SERVICE_START, "start_cleaning", None),
         (VACUUM_DOMAIN, SERVICE_STOP, "set_power_status", None),
         (
-            VACUUM_DOMAIN,
+            DOMAIN,
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True, "start_time": "22:30"}},
@@ -119,7 +119,7 @@ async def test_activities(
             {"data": {"enabled": True}},
         ),
         (
-            VACUUM_DOMAIN,
+            DOMAIN,
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": False}},
