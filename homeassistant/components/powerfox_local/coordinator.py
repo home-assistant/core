@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-from powerfox import (
-    LocalResponse,
-    PowerfoxAuthenticationError,
-    PowerfoxConnectionError,
-    PowerfoxLocal,
-)
+from powerfox import LocalResponse, PowerfoxConnectionError, PowerfoxLocal
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -26,9 +20,7 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
 
     config_entry: PowerfoxLocalConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, entry: PowerfoxLocalConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PowerfoxLocalConfigEntry) -> None:
         """Initialize the coordinator."""
         self.client = PowerfoxLocal(
             host=entry.data[CONF_HOST],
@@ -48,7 +40,5 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
         """Fetch data from the local poweropti."""
         try:
             return await self.client.value()
-        except PowerfoxAuthenticationError as err:
-            raise ConfigEntryAuthFailed(err) from err
         except PowerfoxConnectionError as err:
             raise UpdateFailed(err) from err
