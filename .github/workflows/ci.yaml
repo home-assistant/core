@@ -691,12 +691,10 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
-        env:
-          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
-        run: |
+        run: | # zizmor: ignore[template-injection]
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${{ env.INTEGRATIONS_GLOB }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pylint-tests:
     name: Check pylint on tests
@@ -744,12 +742,10 @@ jobs:
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
-        env:
-          TESTS_GLOB: ${{ needs.info.outputs.tests_glob }}
-        run: |
+        run: | # zizmor: ignore[template-injection]
           . venv/bin/activate
           python --version
-          pylint tests/components/${{ env.TESTS_GLOB }}
+          pylint tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
@@ -812,12 +808,10 @@ jobs:
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
-        env:
-          INTEGRATIONS_GLOB: ${{ needs.info.outputs.integrations_glob }}
-        run: |
+        run: | # zizmor: ignore[template-injection]
           . venv/bin/activate
           python --version
-          mypy homeassistant/components/${{ env.INTEGRATIONS_GLOB }}
+          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
     name: Split tests for full run
