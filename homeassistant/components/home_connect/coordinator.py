@@ -152,7 +152,7 @@ class HomeConnectRuntimeData:
                     elif event_message.type == EventType.PAIRED:
                         appliance_coordinator = HomeConnectApplianceCoordinator(
                             self.hass,
-                            self.config_entry.entry_id,
+                            self.config_entry,
                             self.client,
                             self.global_listeners,
                             await self.client.get_specific_appliance(
@@ -230,7 +230,7 @@ class HomeConnectRuntimeData:
             )
             new_coordinator = HomeConnectApplianceCoordinator(
                 self.hass,
-                self.config_entry.entry_id,
+                self.config_entry,
                 self.client,
                 self.global_listeners,
                 appliance,
@@ -245,7 +245,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry_id: str,
+        config_entry: HomeConnectConfigEntry,
         client: HomeConnectClient,
         global_listeners: dict[
             CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
@@ -253,12 +253,13 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         appliance: HomeAppliance,
     ) -> None:
         """Initialize."""
-        self.config_entry_id = config_entry_id
+        # We don't set config_entry attribute to avoid default beahavior
+        self._config_entry = config_entry
         super().__init__(
             hass,
             _LOGGER,
             config_entry=None,
-            name=f"{self.config_entry_id}-{appliance.ha_id}",
+            name=f"{self._config_entry.entry_id}-{appliance.ha_id}",
         )
         self.client = client
         self.device_registry = dr.async_get(self.hass)
@@ -364,7 +365,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 if device:
                     self.device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry_id,
+                        remove_config_entry_id=self._config_entry.entry_id,
                     )
                 for (
                     listener,
@@ -409,6 +410,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
                 await asyncio_sleep(delay)
             except UnauthorizedError as error:
+                self._config_entry.async_start_reauth(self.hass)
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="auth_error",
@@ -437,7 +439,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         """Get appliance data."""
         appliance = self.data.info
         self.device_registry.async_get_or_create(
-            config_entry_id=self.config_entry_id,
+            config_entry_id=self._config_entry.entry_id,
             identifiers={(DOMAIN, appliance.ha_id)},
             manufacturer=appliance.brand,
             name=appliance.name,

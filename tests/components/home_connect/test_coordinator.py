@@ -804,14 +804,43 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_auth_error_while_updating_appliance(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test that the configuration entry is set to require reauth when an auth error happens."""
+    entity_id = "switch.dishwasher_power"
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id)
+
+    client.get_specific_appliance = AsyncMock(
+        side_effect=UnauthorizedError("unauthorized")
+    )
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    result = flows_in_progress[0]
+    assert result["step_id"] == "reauth_confirm"
+    assert result["context"]["entry_id"] == config_entry.entry_id
+    assert result["context"]["source"] == "reauth"
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("side_effect", "log_level", "string_in_log"),
     [
-        (
-            UnauthorizedError("unauthorized-mocked-error"),
-            "ERROR",
-            r".*unauthorized-mocked-error.*",
-        ),
         (
             HomeConnectError("mocked-error"),
             "ERROR",
@@ -827,7 +856,7 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
         ),
     ],
 )
-async def test_auth_error_while_updating_appliance(
+async def test_other_errors_while_updating_appliance(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
@@ -837,7 +866,7 @@ async def test_auth_error_while_updating_appliance(
     log_level: str,
     string_in_log: str,
 ) -> None:
-    """Test that auth error is informed through the logs."""
+    """Test that other errors are informed through the logs."""
     entity_id = "switch.dishwasher_power"
 
     assert await integration_setup(client)
