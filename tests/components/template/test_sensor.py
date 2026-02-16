@@ -692,7 +692,7 @@ async def test_sun_renders_once_per_sensor(hass: HomeAssistant) -> None:
         hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.solar_angle").state == "75"
+    assert hass.states.get("sensor.solar_angle").state == "75.0"
     assert hass.states.get("sensor.sunrise").state == "75"
 
     assert len(async_render_calls) == 2
@@ -1524,7 +1524,7 @@ async def test_last_reset(hass: HomeAssistant, expected: str) -> None:
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0"
+    assert state.state == "0.0"
     assert state.attributes["state_class"] == "total"
     assert state.attributes["last_reset"] == expected
 
@@ -1553,7 +1553,7 @@ async def test_invalid_last_reset(
 
     state = hass.states.get(TEST_SENSOR.entity_id)
     assert state is not None
-    assert state.state == "0"
+    assert state.state == "0.0"
     assert state.attributes.get("last_reset") is None
 
     err = "Received invalid sensor last_reset: not a datetime for entity"
@@ -1956,3 +1956,40 @@ async def test_flow_preview(
     )
 
     assert state["state"] == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("count", "config", "state_template"),
+    [
+        (
+            1,
+            {
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+            "{{ states('sensor.test_state') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_state_sensor")
+async def test_numeric_sensor_recovers_from_exception(hass: HomeAssistant) -> None:
+    """Test template."""
+    assert hass.states.get(TEST_SENSOR.entity_id).state == STATE_UNKNOWN
+
+    for set_state, expected_state in (
+        ("0.0", "0.0"),
+        ("unavailable", STATE_UNKNOWN),
+        ("1.0", "1.0"),
+        ("unknown", STATE_UNKNOWN),
+        ("2.0", "2.0"),
+        ("kjfdah", STATE_UNKNOWN),
+        ("3.0", "3.0"),
+        ("3.x", STATE_UNKNOWN),
+        ("4.0", "4.0"),
+    ):
+        await async_trigger(hass, TEST_STATE_SENSOR, set_state)
+        assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state

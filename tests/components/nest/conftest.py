@@ -18,6 +18,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     async_import_client_credential,
 )
 from homeassistant.components.nest import DOMAIN
@@ -291,7 +292,7 @@ async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> N
     """Fixture that provides the ClientCredential for the test if any."""
     if not nest_test_config.credential:
         return
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, nest_test_config.credential, "imported-cred"
     )
