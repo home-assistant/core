@@ -58,6 +58,8 @@ async def async_setup_entry(
 class PicoTTSEntity(TextToSpeechEntity):
     """The Pico TTS API entity."""
 
+    _attr_supported_languages = SUPPORT_LANGUAGES
+
     def __init__(self, config_entry: ConfigEntry, lang: str) -> None:
         """Initialize Pico TTS service."""
         self._attr_default_language = lang
