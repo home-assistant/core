@@ -1,0 +1,10 @@
+pause:
+  target:
+    entity:
+      integration: casper_glow
+      domain: light
+resume:
+  target:
+    entity:
+      integration: casper_glow
+      domain: light

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Bluetooth address"
+                },
+                "data_description": {
+                    "address": "The Bluetooth address of the Casper Glow light"
+                }
+            }
+        }
+    },
+    "exceptions": {
+        "communication_error": {
+            "message": "An error occurred while communicating with the Casper Glow: {error}"
+        }
+    },
+    "services": {
+        "pause": {
+            "description": "Pause an active dimming sequence.",
+            "name": "Pause"
+        },
+        "resume": {
+            "description": "Resume a paused dimming sequence.",
+            "name": "Resume"
+        }
+    }
+}

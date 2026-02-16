@@ -1,0 +1,10 @@
+{
+  "services": {
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "resume": {
+      "service": "mdi:play"
+    }
+  }
+}
