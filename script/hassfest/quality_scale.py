@@ -1403,7 +1403,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
-    "gios",
     "github",
     "gitlab_ci",
     "gitter",
