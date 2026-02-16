@@ -62,6 +62,8 @@ def base_url_from_url(url: str) -> str:
 
 def remove_email_link(account_name: str) -> str:
     """Remove email link from account name."""
+
+    # Replaces the @ with a HTML entity to prevent mailto links.
     return account_name.replace("@", "&#64;")
 
 
