@@ -1,6 +1,6 @@
 """Test the Hypontech Cloud config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from hyponcloud import AuthenticationError
 import pytest
@@ -11,39 +11,32 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 TEST_USER_INPUT = {
     CONF_USERNAME: "test@example.com",
     CONF_PASSWORD: "test-password",
 }
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_user_flow(
+    hass: HomeAssistant, mock_hyponcloud: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a successful user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert result["data"] == TEST_USER_INPUT
+    assert result["result"].unique_id == "mock_account_id_123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -53,11 +46,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_hyponcloud: AsyncMock,
     side_effect: Exception,
     error_message: str,
 ) -> None:
@@ -66,107 +61,59 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
+    mock_hyponcloud.connect.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_message}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
+    mock_hyponcloud.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_INPUT,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test@example.com"
-    assert result["data"] == TEST_USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_duplicate_entry(
-    hass: HomeAssistant,
-    create_entry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hyponcloud: AsyncMock
 ) -> None:
     """Test that duplicate entries are prevented based on account ID."""
-    # Create an existing entry with account ID
-    create_entry()
-
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
 
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        # Try to add the same account again.
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
-
-    # Should abort because entry already exists
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_flow(hass: HomeAssistant, create_entry) -> None:
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hyponcloud: AsyncMock
+) -> None:
     """Test reauthentication flow."""
-    # Create an existing entry
-    entry = create_entry(password="old-password")
+    mock_config_entry.add_to_hass(hass)
 
-    # Start reauth flow
-    result = await entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
-    # Submit new credentials
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**TEST_USER_INPUT, CONF_PASSWORD: "password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_PASSWORD] == "password"
 
 
 @pytest.mark.parametrize(
@@ -175,83 +122,56 @@ async def test_reauth_flow(hass: HomeAssistant, create_entry) -> None:
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
     ],
 )
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    create_entry,
+    mock_config_entry: MockConfigEntry,
+    mock_hyponcloud: AsyncMock,
     side_effect: Exception,
     error_message: str,
 ) -> None:
     """Test reauthentication flow with errors."""
-    # Create an existing entry
-    entry = create_entry(password="old-password")
-
-    # Start reauth flow
-    result = await entry.start_reauth_flow(hass)
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
-    # Submit new credentials with error
-    with patch(
-        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
-        )
+    mock_hyponcloud.connect.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_message}
 
-    # Verify flow can recover from error
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
-        )
+    mock_hyponcloud.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_flow_wrong_account(hass: HomeAssistant, create_entry) -> None:
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hyponcloud: AsyncMock
+) -> None:
     """Test reauthentication flow with wrong account."""
-    # Create an existing entry
-    entry = create_entry()
-
-    # Start reauth flow
-    result = await entry.start_reauth_flow(hass)
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
 
-    # Submit credentials for a different account
-    with (
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        ),
-        patch(
-            "homeassistant.components.hypontech.config_flow.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-    ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "different_account_id_456"
-        mock_get_admin_info.return_value = mock_admin_info
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**TEST_USER_INPUT, CONF_USERNAME: "different@example.com"},
-        )
+    mock_hyponcloud.get_admin_info.return_value.id = "different_account_id_456"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**TEST_USER_INPUT, CONF_USERNAME: "different@example.com"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from hyponcloud import AuthenticationError, HyponCloud
+from hyponcloud import AuthenticationError, HyponCloud, RequestError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
         await hypontech_cloud.connect()
     except AuthenticationError as ex:
         raise ConfigEntryAuthFailed("Authentication failed for Hypontech Cloud") from ex
-    except (TimeoutError, ConnectionError) as ex:
+    except (RequestError, TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady("Cannot connect to Hypontech Cloud") from ex
 
     coordinator = HypontechDataCoordinator(hass, entry, hypontech_cloud)

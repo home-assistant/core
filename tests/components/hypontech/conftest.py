@@ -1,13 +1,13 @@
 """Common fixtures for the Hypontech Cloud tests."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from hyponcloud import AdminInfo
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -35,50 +35,20 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def create_entry(hass: HomeAssistant) -> Callable[..., MockConfigEntry]:
-    """Return a factory for creating config entries."""
-
-    def _create_entry(
-        username: str = "test@example.com",
-        password: str = "test-password",
-        unique_id: str = "mock_account_id_123",
-    ) -> MockConfigEntry:
-        """Create a config entry with custom parameters."""
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            },
-            unique_id=unique_id,
-        )
-        entry.add_to_hass(hass)
-        return entry
-
-    return _create_entry
-
-
-@pytest.fixture
 def mock_hyponcloud() -> Generator[AsyncMock]:
     """Mock HyponCloud."""
     with (
         patch(
-            "homeassistant.components.hypontech.HyponCloud.connect",
-            return_value=True,
+            "homeassistant.components.hypontech.HyponCloud", autospec=True
+        ) as mock_hyponcloud,
+        patch(
+            "homeassistant.components.hypontech.config_flow.HyponCloud",
+            new=mock_hyponcloud,
         ),
-        patch(
-            "homeassistant.components.hypontech.HyponCloud.get_admin_info",
-        ) as mock_get_admin_info,
-        patch(
-            "homeassistant.components.hypontech.coordinator.HyponCloud.get_overview",
-        ) as mock_get_overview,
-        patch(
-            "homeassistant.components.hypontech.coordinator.HyponCloud.get_list",
-        ) as mock_get_list,
     ):
-        mock_admin_info = AsyncMock()
-        mock_admin_info.id = "mock_account_id_123"
-        mock_get_admin_info.return_value = mock_admin_info
-        mock_get_overview.return_value = AsyncMock()
-        mock_get_list.return_value = []
-        yield mock_get_overview
+        mock_client = mock_hyponcloud.return_value
+        get_admin_info = AsyncMock(spec=AdminInfo)
+        get_admin_info.id = "mock_account_id_123"
+        mock_client.get_admin_info.return_value = get_admin_info
+        mock_client.get_list.return_value = []
+        yield mock_client

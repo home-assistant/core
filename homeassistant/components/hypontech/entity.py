@@ -43,11 +43,11 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
         )
 
     @property
-    def plant(self) -> PlantData | None:
+    def plant(self) -> PlantData:
         """Return the plant data."""
-        return self.coordinator.data.plants.get(self.plant_id)
+        return self.coordinator.data.plants[self.plant_id]
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.plant is not None
+        return super().available and self.plant_id in self.coordinator.data.plants

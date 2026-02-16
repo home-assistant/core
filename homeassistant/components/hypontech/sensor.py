@@ -149,6 +149,4 @@ class HypontechPlantSensor(HypontechPlantEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.plant is None:
-            return None
         return self.entity_description.value_fn(self.plant)
