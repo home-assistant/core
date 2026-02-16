@@ -19,7 +19,7 @@
         "data_description": {
           "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]"
         },
-        "description": "Please reauthenticate with Mastodon."
+        "description": "Please reauthenticate {account_name} with Mastodon."
       },
       "user": {
         "data": {

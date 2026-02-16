@@ -60,6 +60,11 @@ def base_url_from_url(url: str) -> str:
     return str(URL(url).origin())
 
 
+def remove_email_link(account_name: str) -> str:
+    """Remove email link from account name."""
+    return account_name.replace("@", "&#64;")
+
+
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -180,8 +185,12 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reauth_entry(),
                     data_updates={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
                 )
+        account_name = self._get_reauth_entry().title
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "account_name": remove_email_link(account_name),
+            },
         )
