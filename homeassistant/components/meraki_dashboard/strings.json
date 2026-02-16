@@ -1,0 +1,78 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid authentication",
+      "no_networks": "No networks were found for this organization",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "at_least_one_enabled": "At least one integration target must be enabled",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid authentication",
+      "no_organizations": "No organizations were found for this API key",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "network": {
+        "data": {
+          "network_id": "Network",
+          "track_bluetooth_clients": "Bluetooth clients",
+          "track_clients": "Clients",
+          "track_infrastructure_devices": "Infrastructure devices"
+        },
+        "data_description": {
+          "network_id": "The Meraki network to monitor.",
+          "track_bluetooth_clients": "Track Bluetooth clients as device trackers.",
+          "track_clients": "Track network clients as device trackers.",
+          "track_infrastructure_devices": "Track APs, switches, and firewalls as connectivity sensors."
+        }
+      },
+      "organization": {
+        "data": {
+          "organization_id": "Organization"
+        },
+        "data_description": {
+          "organization_id": "The Meraki organization to use for this integration."
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key used to authenticate with the Meraki Dashboard API."
+        },
+        "description": "Enter your Meraki Dashboard API key."
+      }
+    }
+  },
+  "issues": {
+    "rate_limited": {
+      "description": "Home Assistant is being rate limited by the Meraki Dashboard API. Data updates may be delayed until the rate limit window resets.",
+      "title": "Meraki Dashboard API rate limit reached"
+    }
+  },
+  "options": {
+    "error": {
+      "at_least_one_enabled": "[%key:component::meraki_dashboard::config::error::at_least_one_enabled%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "included_clients": "Tracked client devices",
+          "track_bluetooth_clients": "[%key:component::meraki_dashboard::config::step::network::data::track_bluetooth_clients%]",
+          "track_clients": "[%key:component::meraki_dashboard::config::step::network::data::track_clients%]",
+          "track_infrastructure_devices": "[%key:component::meraki_dashboard::config::step::network::data::track_infrastructure_devices%]"
+        },
+        "data_description": {
+          "included_clients": "Select which client devices should be created as device trackers. Leave empty to include all clients.",
+          "track_bluetooth_clients": "[%key:component::meraki_dashboard::config::step::network::data_description::track_bluetooth_clients%]",
+          "track_clients": "[%key:component::meraki_dashboard::config::step::network::data_description::track_clients%]",
+          "track_infrastructure_devices": "[%key:component::meraki_dashboard::config::step::network::data_description::track_infrastructure_devices%]"
+        }
+      }
+    }
+  }
+}

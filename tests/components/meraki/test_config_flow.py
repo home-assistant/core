@@ -1,7 +1,6 @@
 """Test the Meraki config flow."""
 
-from homeassistant.components.meraki.const import CONF_VALIDATOR, DOMAIN
-from homeassistant.const import CONF_SECRET
+from homeassistant.components.meraki.const import CONF_SECRET, CONF_VALIDATOR, DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry

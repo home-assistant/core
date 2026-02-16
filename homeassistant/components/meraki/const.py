@@ -1,10 +1,9 @@
 """Constants for the Meraki integration."""
 
-from homeassistant.const import CONF_SECRET
-
 DOMAIN = "meraki"
 
 CONF_VALIDATOR = "validator"
+CONF_SECRET = "secret"
 
 URL = "/api/meraki"
 ACCEPTED_VERSIONS = ["2.0", "2.1"]

@@ -1,0 +1,10 @@
+{
+  "domain": "meraki_dashboard",
+  "name": "Meraki Dashboard",
+  "codeowners": ["@cappern"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/meraki_dashboard",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze"
+}
