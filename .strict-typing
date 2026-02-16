@@ -84,6 +84,7 @@ homeassistant.components.androidtv_remote.*
 homeassistant.components.anel_pwrctrl.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
+homeassistant.components.anthropic.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
 homeassistant.components.api.*
@@ -242,6 +243,7 @@ homeassistant.components.guardian.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
@@ -273,6 +275,7 @@ homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
+homeassistant.components.hypontech.*
 homeassistant.components.ibeacon.*
 homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
@@ -494,6 +497,7 @@ homeassistant.components.smtp.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
+homeassistant.components.spaceapi.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
