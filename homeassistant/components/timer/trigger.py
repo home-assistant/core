@@ -44,7 +44,7 @@ class BaseTimerEventTrigger(Trigger):
         super().__init__(hass, config)
         assert config.target is not None
         self._target = config.target
-        self._unsubs: list[CALLBACK_TYPE] = []
+        self._unsub_listener: CALLBACK_TYPE | None = None
 
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
@@ -56,8 +56,8 @@ class BaseTimerEventTrigger(Trigger):
         @callback
         def async_remove() -> None:
             """Remove trigger."""
-            for unsub in self._unsubs:
-                unsub()
+            if self._unsub_listener:
+                self._unsub_listener()
 
         @callback
         def async_on_event(event: Event) -> None:
@@ -75,13 +75,11 @@ class BaseTimerEventTrigger(Trigger):
             entity_id = data.get("entity_id")
             return isinstance(entity_id, str) and entity_id in tracked_entities
 
-        event = self._event_type
-        unsub = self._hass.bus.async_listen(
-            event_type=event,
+        self._unsub_listener = self._hass.bus.async_listen(
+            event_type=self._event_type,
             event_filter=filter_event,
             listener=async_on_event,
         )
-        self._unsubs.append(unsub)
 
         return async_remove
 
