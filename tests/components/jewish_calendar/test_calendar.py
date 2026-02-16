@@ -127,8 +127,8 @@ async def test_daily_events(
 ) -> None:
     """Test default daily events for a regular day."""
     events = await get_calendar_events(hass, DAILY_EVENTS, dt.datetime(2024, 1, 15))
-    # Default config: 1 all-day date + 10 time-based events
-    assert len(events) == 11
+    # Default config: 1 all-day date + 3 time-based events (by default)
+    assert len(events) == 4
     assert events == snapshot
 
 
@@ -392,8 +392,8 @@ async def test_multi_day_range(hass: HomeAssistant, get_calendar_events) -> None
     start = dt.datetime(2024, 1, 15, 0, 0, 0)
     end = dt.datetime(2024, 1, 17, 23, 59, 59)
     events = await get_calendar_events(hass, DAILY_EVENTS, start, end)
-    # 3 days × 11 default daily events per day = 33
-    assert len(events) == 33
+    # 3 days × 4 default daily events per day = 12
+    assert len(events) == 12
 
 
 # ─── Calendar State / Event Property ─────────────────────────────────
