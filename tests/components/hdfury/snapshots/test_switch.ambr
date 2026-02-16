@@ -48,6 +48,55 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_cec-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.hdfury_vrroom_02_cec',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CEC',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CEC',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cec',
+    'unique_id': '000123456789_cec',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_cec-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 CEC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.hdfury_vrroom_02_cec',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_entities[switch.hdfury_vrroom_02_cec_rx0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -683,5 +732,103 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_tx0_force_5v-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.hdfury_vrroom_02_tx0_force_5v',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX0 force +5v',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX0 force +5v',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tx0plus5',
+    'unique_id': '000123456789_tx0plus5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_tx0_force_5v-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 TX0 force +5v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.hdfury_vrroom_02_tx0_force_5v',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_tx1_force_5v-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.hdfury_vrroom_02_tx1_force_5v',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TX1 force +5v',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TX1 force +5v',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tx1plus5',
+    'unique_id': '000123456789_tx1plus5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.hdfury_vrroom_02_tx1_force_5v-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 TX1 force +5v',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.hdfury_vrroom_02_tx1_force_5v',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---

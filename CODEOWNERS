@@ -762,6 +762,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
+/homeassistant/components/idrive_e2/ @patrickvorgers
+/tests/components/idrive_e2/ @patrickvorgers
 /homeassistant/components/igloohome/ @keithle888
 /tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
@@ -1178,6 +1180,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
 /tests/components/onedrive/ @zweckj
+/homeassistant/components/onedrive_for_business/ @zweckj
+/tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151

@@ -10,6 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import (
     TessieBatteryHealthCoordinator,
+    TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -31,6 +32,7 @@ class TessieEnergyData:
     api: EnergySite
     live_coordinator: TessieEnergySiteLiveCoordinator | None
     info_coordinator: TessieEnergySiteInfoCoordinator
+    history_coordinator: TessieEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
 
