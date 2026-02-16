@@ -1,0 +1,245 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'binary_sensor': dict({
+        'alarm_ofa_cl': dict({
+          'value': False,
+        }),
+        'alarm_ofa_orp': dict({
+          'value': False,
+        }),
+        'alarm_ofa_ph': dict({
+          'value': False,
+        }),
+        'flow_rate_alarm': dict({
+          'value': False,
+        }),
+        'orp_level_alarm': dict({
+          'value': False,
+        }),
+        'ph_level_alarm': dict({
+          'value': False,
+        }),
+        'pump_alarm': dict({
+          'value': True,
+        }),
+        'relay_alarm': dict({
+          'value': True,
+        }),
+        'relay_aux1': dict({
+          'value': False,
+        }),
+        'relay_aux2': dict({
+          'value': False,
+        }),
+        'relay_aux3': dict({
+          'value': False,
+        }),
+      }),
+      'number': dict({
+        'cl_target': dict({
+          'max': 65535,
+          'min': 0,
+          'step': 0.01,
+          'unit': 'ppm',
+          'value': 1,
+        }),
+        'ofa_cl_lower': dict({
+          'max': 10,
+          'min': 0,
+          'step': 0.1,
+          'unit': 'ppm',
+          'value': 0.2,
+        }),
+        'ofa_cl_upper': dict({
+          'max': 10,
+          'min': 0,
+          'step': 0.1,
+          'unit': 'ppm',
+          'value': 0.9,
+        }),
+        'ofa_orp_lower': dict({
+          'max': 1000,
+          'min': 0,
+          'step': 1,
+          'unit': 'mV',
+          'value': 600,
+        }),
+        'ofa_orp_upper': dict({
+          'max': 1000,
+          'min': 0,
+          'step': 1,
+          'unit': 'mV',
+          'value': 800,
+        }),
+        'ofa_ph_lower': dict({
+          'max': 14,
+          'min': 0,
+          'step': 0.1,
+          'unit': None,
+          'value': 6,
+        }),
+        'ofa_ph_upper': dict({
+          'max': 14,
+          'min': 0,
+          'step': 0.1,
+          'unit': None,
+          'value': 8,
+        }),
+        'orp_target': dict({
+          'max': 850,
+          'min': 400,
+          'step': 1,
+          'unit': 'mV',
+          'value': 680,
+        }),
+        'ph_target': dict({
+          'max': 8,
+          'min': 6,
+          'step': 0.1,
+          'unit': None,
+          'value': 6.5,
+        }),
+      }),
+      'select': dict({
+        'cl_type_dosing_method': dict({
+          'value': 'timed',
+        }),
+        'cl_type_dosing_set': dict({
+          'value': 'high',
+        }),
+        'flow_rate_unit': dict({
+          'value': 'L/s',
+        }),
+        'orp_type_dosing_method': dict({
+          'value': 'on_off',
+        }),
+        'orp_type_dosing_set': dict({
+          'value': 'low',
+        }),
+        'ph_type_dosing_method': dict({
+          'value': 'proportional',
+        }),
+        'ph_type_dosing_set': dict({
+          'value': 'acid',
+        }),
+        'water_meter_unit': dict({
+          'value': 'm3',
+        }),
+      }),
+      'sensor': dict({
+        'cl': dict({
+          'unit': 'ppm',
+          'value': 1.2,
+        }),
+        'cl_type_dosing': dict({
+          'unit': None,
+          'value': 'low',
+        }),
+        'flow_rate': dict({
+          'unit': 'L/s',
+          'value': 150,
+        }),
+        'ofa_orp_time': dict({
+          'unit': 'min',
+          'value': 0,
+        }),
+        'ofa_ph_time': dict({
+          'unit': 'min',
+          'value': 0,
+        }),
+        'orp': dict({
+          'unit': 'mV',
+          'value': 718,
+        }),
+        'orp_calibration_offset': dict({
+          'unit': 'mV',
+          'value': 0,
+        }),
+        'orp_calibration_slope': dict({
+          'unit': 'mV',
+          'value': 0.96,
+        }),
+        'orp_calibration_type': dict({
+          'unit': None,
+          'value': '1_point',
+        }),
+        'orp_type_dosing': dict({
+          'unit': None,
+          'value': 'low',
+        }),
+        'peristaltic_cl_dosing': dict({
+          'unit': None,
+          'value': 'off',
+        }),
+        'peristaltic_orp_dosing': dict({
+          'unit': None,
+          'value': 'proportional',
+        }),
+        'peristaltic_ph_dosing': dict({
+          'unit': None,
+          'value': 'proportional',
+        }),
+        'ph': dict({
+          'unit': None,
+          'value': 6.8,
+        }),
+        'ph_calibration_offset': dict({
+          'unit': 'mV',
+          'value': 8,
+        }),
+        'ph_calibration_slope': dict({
+          'unit': 'mV',
+          'value': 57.34,
+        }),
+        'ph_calibration_type': dict({
+          'unit': None,
+          'value': '2_points',
+        }),
+        'ph_type_dosing': dict({
+          'unit': None,
+          'value': 'alcalyne',
+        }),
+        'temperature': dict({
+          'unit': '°C',
+          'value': 25,
+        }),
+        'water_meter_total_permanent': dict({
+          'unit': 'm3',
+          'value': 12345.67,
+        }),
+        'water_meter_total_resettable': dict({
+          'unit': 'm3',
+          'value': 123.45,
+        }),
+      }),
+      'switch': dict({
+        'frequency_input': dict({
+          'value': False,
+        }),
+        'pause_dosing': dict({
+          'value': False,
+        }),
+        'pump_monitoring': dict({
+          'value': True,
+        }),
+      }),
+    }),
+    'device_info': dict({
+      'API_VERSION': 'v1/',
+      'DEVICE_ID': '**REDACTED**',
+      'FW_CODE': '539187',
+      'FW_VERSION': '1.30',
+      'GROUPNAME': '**REDACTED**',
+      'IP': '**REDACTED**',
+      'MAC': '',
+      'MODEL': 'POOL DOSE',
+      'MODEL_ID': 'PDPR1H1HAW100',
+      'NAME': '**REDACTED**',
+      'OWNERID': '**REDACTED**',
+      'SERIAL_NUMBER': '**REDACTED**',
+      'SW_VERSION': '2.10',
+    }),
+  })
+# ---

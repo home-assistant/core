@@ -4,21 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
-import tibber
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import TibberConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: TibberConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    tibber_connection: tibber.Tibber = hass.data[DOMAIN]
 
-    return {
+    runtime = config_entry.runtime_data
+    tibber_connection = await runtime.async_get_client(hass)
+    result: dict[str, Any] = {
         "homes": [
             {
                 "last_data_timestamp": home.last_data_timestamp,
@@ -30,3 +28,21 @@ async def async_get_config_entry_diagnostics(
             for home in tibber_connection.get_homes(only_active=False)
         ]
     }
+
+    devices = (
+        runtime.data_api_coordinator.data
+        if runtime.data_api_coordinator is not None
+        else {}
+    ) or {}
+
+    result["devices"] = [
+        {
+            "id": device.id,
+            "name": device.name,
+            "brand": device.brand,
+            "model": device.model,
+        }
+        for device in devices.values()
+    ]
+
+    return result

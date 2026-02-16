@@ -1,14 +1,15 @@
 """Test climate trigger."""
 
-from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     HVACAction,
     HVACMode,
@@ -17,45 +18,24 @@ from homeassistant.components.climate.trigger import CONF_HVAC_MODE
 from homeassistant.const import (
     ATTR_LABEL_ID,
     ATTR_TEMPERATURE,
-    CONF_ABOVE,
-    CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.trigger import (
-    CONF_LOWER_LIMIT,
-    CONF_THRESHOLD_TYPE,
-    CONF_UPPER_LIMIT,
-    ThresholdType,
-    async_validate_trigger_config,
-)
+from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
     target_entities,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.fixture
@@ -67,7 +47,13 @@ async def target_climates(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "climate.current_humidity_changed",
+        "climate.current_humidity_crossed_threshold",
+        "climate.current_temperature_changed",
+        "climate.current_temperature_crossed_threshold",
         "climate.hvac_mode_changed",
+        "climate.target_humidity_changed",
+        "climate.target_humidity_crossed_threshold",
         "climate.target_temperature_changed",
         "climate.target_temperature_crossed_threshold",
         "climate.turned_off",
@@ -88,7 +74,7 @@ async def test_climate_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -96,12 +82,12 @@ async def test_climate_triggers_gated_by_labs_flag(
         # Valid configurations
         (
             "climate.hvac_mode_changed",
-            {CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            {CONF_HVAC_MODE: ["heat", "cool"]},
             does_not_raise(),
         ),
         (
             "climate.hvac_mode_changed",
-            {CONF_HVAC_MODE: HVACMode.HEAT},
+            {CONF_HVAC_MODE: "heat"},
             does_not_raise(),
         ),
         # Invalid configurations
@@ -144,149 +130,7 @@ async def test_climate_trigger_validation(
         )
 
 
-def parametrize_climate_trigger_states(
-    *,
-    trigger: str,
-    trigger_options: dict | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
-    trigger_from_none: bool = True,
-    retrigger_on_target_state: bool = False,
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts."""
-    trigger_options = trigger_options or {}
-    return [
-        (s[0], trigger_options, *s[1:])
-        for s in parametrize_trigger_states(
-            trigger=trigger,
-            target_states=target_states,
-            other_states=other_states,
-            additional_attributes=additional_attributes,
-            trigger_from_none=trigger_from_none,
-            retrigger_on_target_state=retrigger_on_target_state,
-        )
-    ]
-
-
-def parametrize_xxx_changed_trigger_states(
-    trigger: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for xxx_changed triggers."""
-    return [
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={},
-            target_states=[
-                (HVACMode.AUTO, {attribute: 0}),
-                (HVACMode.AUTO, {attribute: 50}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-            other_states=[(HVACMode.AUTO, {attribute: None})],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={CONF_ABOVE: 10},
-            target_states=[
-                (HVACMode.AUTO, {attribute: 50}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 0}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={CONF_BELOW: 90},
-            target_states=[
-                (HVACMode.AUTO, {attribute: 0}),
-                (HVACMode.AUTO, {attribute: 50}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-            retrigger_on_target_state=True,
-        ),
-    ]
-
-
-def parametrize_xxx_crossed_threshold_trigger_states(
-    trigger: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for xxx_crossed_threshold triggers."""
-    return [
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (HVACMode.AUTO, {attribute: 50}),
-                (HVACMode.AUTO, {attribute: 60}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 0}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-        ),
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (HVACMode.AUTO, {attribute: 0}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 50}),
-                (HVACMode.AUTO, {attribute: 60}),
-            ],
-        ),
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
-                CONF_LOWER_LIMIT: 10,
-            },
-            target_states=[
-                (HVACMode.AUTO, {attribute: 50}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 0}),
-            ],
-        ),
-        *parametrize_climate_trigger_states(
-            trigger=trigger,
-            trigger_options={
-                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
-                CONF_UPPER_LIMIT: 90,
-            },
-            target_states=[
-                (HVACMode.AUTO, {attribute: 0}),
-                (HVACMode.AUTO, {attribute: 50}),
-            ],
-            other_states=[
-                (HVACMode.AUTO, {attribute: None}),
-                (HVACMode.AUTO, {attribute: 100}),
-            ],
-        ),
-    ]
-
-
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -294,18 +138,18 @@ def parametrize_xxx_crossed_threshold_trigger_states(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_on",
             target_states=[
                 HVACMode.AUTO,
@@ -330,7 +174,7 @@ async def test_climate_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -359,7 +203,7 @@ async def test_climate_state_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -367,23 +211,49 @@ async def test_climate_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_changed_trigger_states(
-            "climate.target_temperature_changed", ATTR_TEMPERATURE
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "climate.current_humidity_changed", HVACMode.AUTO, ATTR_CURRENT_HUMIDITY
         ),
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "climate.current_temperature_changed",
+            HVACMode.AUTO,
+            ATTR_CURRENT_TEMPERATURE,
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
+        ),
+        *parametrize_numerical_attribute_changed_trigger_states(
+            "climate.target_temperature_changed", HVACMode.AUTO, ATTR_TEMPERATURE
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_HUMIDITY,
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_TEMPERATURE,
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
@@ -399,7 +269,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -428,7 +298,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -436,18 +306,18 @@ async def test_climate_state_attribute_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_on",
             target_states=[
                 HVACMode.AUTO,
@@ -472,7 +342,7 @@ async def test_climate_state_trigger_behavior_first(
     entity_id: str,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -502,7 +372,7 @@ async def test_climate_state_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -510,20 +380,35 @@ async def test_climate_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_HUMIDITY,
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_TEMPERATURE,
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
@@ -569,7 +454,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -577,18 +462,18 @@ async def test_climate_state_attribute_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.turned_on",
             target_states=[
                 HVACMode.AUTO,
@@ -613,7 +498,7 @@ async def test_climate_state_trigger_behavior_last(
     entity_id: str,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -642,7 +527,7 @@ async def test_climate_state_trigger_behavior_last(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -650,20 +535,35 @@ async def test_climate_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_xxx_crossed_threshold_trigger_states(
-            "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_HUMIDITY,
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_CURRENT_TEMPERATURE,
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+        ),
+        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
+            "climate.target_temperature_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+        ),
+        *parametrize_trigger_states(
             trigger="climate.started_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_climate_trigger_states(
+        *parametrize_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
