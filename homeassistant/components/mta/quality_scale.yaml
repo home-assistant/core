@@ -1,0 +1,88 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not explicitly subscribe to events in async_added_to_hass.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication required.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: No discovery.
+  discovery:
+    status: exempt
+    comment: No discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: No physical devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration tracks a single configured stop, not dynamically discovered devices.
+  entity-category:
+    status: exempt
+    comment: All entities are primary entities without specific categories.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: N/A
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No repairs needed currently.
+  stale-devices:
+    status: exempt
+    comment: Integration tracks a single configured stop per entry, devices cannot become stale.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: todo
