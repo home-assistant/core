@@ -6,9 +6,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.components.wmspro.number import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry, unload_config_entry
@@ -89,7 +93,7 @@ async def test_number_set_value(
         before = len(mock_hub_status_prod_slat_rotate.mock_calls)
 
         await hass.services.async_call(
-            Platform.NUMBER,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: float(target_value)},
             blocking=True,
@@ -136,7 +140,7 @@ async def test_number_set_and_restore_value(
     assert float(entity.state) == float(initial_value)
 
     await hass.services.async_call(
-        Platform.NUMBER,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: float(target_value)},
         blocking=True,
