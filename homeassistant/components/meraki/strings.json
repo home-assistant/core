@@ -1,0 +1,17 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "secret": "Secret",
+          "validator": "Validator"
+        },
+        "description": "Set the validator and secret used by your Meraki CMX server",
+        "title": "Set up Meraki"
+      }
+    }
+  }
+}
