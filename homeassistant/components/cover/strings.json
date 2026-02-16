@@ -85,18 +85,58 @@
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
+        }
+      },
       "name": "[%key:common::action::close%]"
     },
     "close_cover_tilt": {
       "description": "Tilts a cover to close.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
+        }
+      },
       "name": "Close tilt"
     },
     "open_cover": {
       "description": "Opens a cover.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
+        }
+      },
       "name": "[%key:common::action::open%]"
     },
     "open_cover_tilt": {
       "description": "Tilts a cover open.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
+        }
+      },
       "name": "Open tilt"
     },
     "set_cover_position": {
@@ -105,6 +145,14 @@
         "position": {
           "description": "Target position.",
           "name": "Position"
+        },
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
         }
       },
       "name": "Set position"
@@ -112,6 +160,14 @@
     "set_cover_tilt_position": {
       "description": "Moves a cover tilt to a specific position.",
       "fields": {
+        "preset_mode": {
+          "description": "Preset mode if supported.",
+          "name": "Preset mode"
+        },
+        "speed": {
+          "description": "Speed percentage (0-100) if supported.",
+          "name": "Speed"
+        },
         "tilt_position": {
           "description": "Target tilt positition.",
           "name": "Tilt position"

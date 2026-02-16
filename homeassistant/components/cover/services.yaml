@@ -6,6 +6,16 @@ open_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.OPEN
+  fields:
+    preset_mode:
+      selector:
+        text: {}
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 close_cover:
   target:
@@ -13,6 +23,16 @@ close_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.CLOSE
+  fields:
+    preset_mode:
+      selector:
+        text: {}
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 toggle:
   target:
@@ -36,6 +56,15 @@ set_cover_position:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    preset_mode:
+      selector:
+        text: {}
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 stop_cover:
   target:
@@ -50,6 +79,16 @@ open_cover_tilt:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.OPEN_TILT
+  fields:
+    preset_mode:
+      selector:
+        text: {}
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 close_cover_tilt:
   target:
@@ -57,6 +96,16 @@ close_cover_tilt:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.CLOSE_TILT
+  fields:
+    preset_mode:
+      selector:
+        text: {}
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 toggle_cover_tilt:
   target:
@@ -75,6 +124,15 @@ set_cover_tilt_position:
   fields:
     tilt_position:
       required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    preset_mode:
+      selector:
+        text: {}
+    speed:
       selector:
         number:
           min: 0
