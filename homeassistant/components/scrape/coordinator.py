@@ -14,9 +14,14 @@ from homeassistant.const import CONF_RESOURCE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .rest.const import XML_MIME_TYPES
-
 _LOGGER = logging.getLogger(__name__)
+
+XML_MIME_TYPES = (
+    "application/rss+xml",
+    "application/xhtml+xml",
+    "application/xml",
+    "text/xml",
+)
 
 
 class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
