@@ -31,7 +31,7 @@ from roborock.roborock_typing import RoborockCommand
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
@@ -421,22 +421,19 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
-        try:
-            # Get the protocol value for the selected option
-            option_values = self.entity_description.enum_class.as_dict()
-            if option not in option_values:
-                raise ValueError(f"Invalid option: {option}")
-            value = option_values[option]
-            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
-                self.entity_description.data_protocol,
-                value,
-            )
-            await self.coordinator.async_request_refresh()
-        except RoborockException as err:
-            raise HomeAssistantError(
+        # Get the protocol value for the selected option
+        option_values = self.entity_description.enum_class.as_dict()
+        if option not in option_values:
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="select_option_failed",
-            ) from err
+            )
+        value = option_values[option]
+        await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+            self.entity_description.data_protocol,
+            value,
+        )
+        await self.coordinator.async_request_refresh()
 
     @property
     def current_option(self) -> str | None:
@@ -452,5 +449,4 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
             current_value,
             self.entity_description.key,
         )
-        # Find the option name that matches the current value
         return str(current_value)
