@@ -33,7 +33,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                 client = FreeClient(
                     user_input[CONF_USERNAME], user_input[CONF_ACCESS_TOKEN]
                 )
-            except Exception:
+            except AssertionError:
                 _LOGGER.exception("Failed to initialize FreeClient")
                 errors["base"] = "client_initialization_failed"
                 return self.async_show_form(
