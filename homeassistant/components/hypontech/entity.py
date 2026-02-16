@@ -20,7 +20,7 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.account_id)},
             name="Overview",
             manufacturer="Hypontech",
         )

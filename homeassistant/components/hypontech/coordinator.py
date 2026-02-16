@@ -35,6 +35,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
         hass: HomeAssistant,
         config_entry: HypontechConfigEntry,
         api: HyponCloud,
+        account_id: str,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -45,6 +46,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
             update_interval=timedelta(seconds=60),
         )
         self.api = api
+        self.account_id = account_id
 
     async def _async_update_data(self) -> HypontechCoordinatorData:
         try:
