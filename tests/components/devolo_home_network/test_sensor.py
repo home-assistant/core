@@ -13,7 +13,7 @@ from homeassistant.components.devolo_home_network.const import (
     LONG_UPDATE_INTERVAL,
     SHORT_UPDATE_INTERVAL,
 )
-from homeassistant.components.sensor import DOMAIN as PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -39,28 +39,28 @@ async def test_sensor_setup(
     assert entry.state is ConfigEntryState.LOADED
 
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_connected_wi_fi_clients"
+        f"{SENSOR_DOMAIN}.{device_name}_connected_wi_fi_clients"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_connected_plc_devices"
+        f"{SENSOR_DOMAIN}.{device_name}_connected_plc_devices"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_neighboring_wi_fi_networks"
+        f"{SENSOR_DOMAIN}.{device_name}_neighboring_wi_fi_networks"
     ).disabled
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
+        f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
     ).disabled
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+        f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[2].user_device_name}"
+        f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
+        f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_last_restart_of_the_device"
+        f"{SENSOR_DOMAIN}.{device_name}_last_restart_of_the_device"
     ).disabled
 
 
@@ -109,7 +109,7 @@ async def test_sensor(
     """Test state change of a sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_{name}"
+    entity_id = f"{SENSOR_DOMAIN}.{device_name}_{name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -148,8 +148,8 @@ async def test_update_plc_phyrates(
     """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id_downlink = f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
-    entity_id_uplink = f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    entity_id_downlink = f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    entity_id_uplink = f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 

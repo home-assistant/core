@@ -10,7 +10,7 @@ from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
 )
-from homeassistant.components.update import DOMAIN as PLATFORM, SERVICE_INSTALL
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,9 @@ async def test_update_setup(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    assert not entity_registry.async_get(f"{PLATFORM}.{device_name}_firmware").disabled
+    assert not entity_registry.async_get(
+        f"{UPDATE_DOMAIN}.{device_name}_firmware"
+    ).disabled
 
 
 async def test_update_firmware(
@@ -50,7 +52,7 @@ async def test_update_firmware(
     """Test updating a device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{UPDATE_DOMAIN}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -59,7 +61,7 @@ async def test_update_firmware(
     assert entity_registry.async_get(entity_id) == snapshot
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -96,7 +98,7 @@ async def test_device_failure_check(
     """Test device failure during check."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{UPDATE_DOMAIN}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -121,7 +123,7 @@ async def test_device_failure_update(
     """Test device failure when starting update."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{UPDATE_DOMAIN}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -131,7 +133,7 @@ async def test_device_failure_update(
     # Emulate update start
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
@@ -142,7 +144,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     """Test updating unauthorized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_firmware"
+    entity_id = f"{UPDATE_DOMAIN}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -151,7 +153,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
 
     with pytest.raises(HomeAssistantError):
         assert await hass.services.async_call(
-            PLATFORM,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

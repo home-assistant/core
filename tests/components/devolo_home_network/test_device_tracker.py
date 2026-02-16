@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.device_tracker import DOMAIN as PLATFORM
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
@@ -34,7 +34,9 @@ async def test_device_tracker(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker states."""
-    entity_id = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -74,10 +76,12 @@ async def test_restoring_clients(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities."""
-    entity_id = f"{PLATFORM}.{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
     entity_registry.async_get_or_create(
-        PLATFORM,
+        DEVICE_TRACKER_DOMAIN,
         DOMAIN,
         f"{STATION.mac_address}",
         config_entry=entry,

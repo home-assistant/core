@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import SHORT_UPDATE_INTERVAL
-from homeassistant.components.image import DOMAIN as PLATFORM
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ async def test_image_setup(
     assert entry.state is ConfigEntryState.LOADED
 
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_guest_wi_fi_credentials_as_qr_code"
+        f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
     ).disabled
 
 
@@ -53,7 +53,7 @@ async def test_guest_wifi_qr(
     """Test showing a QR code of the guest wifi credentials."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_guest_wi_fi_credentials_as_qr_code"
+    entity_id = f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

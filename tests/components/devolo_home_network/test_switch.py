@@ -13,7 +13,7 @@ from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     SHORT_UPDATE_INTERVAL,
 )
-from homeassistant.components.switch import DOMAIN as PLATFORM
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -47,10 +47,10 @@ async def test_switch_setup(
     assert entry.state is ConfigEntryState.LOADED
 
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_enable_guest_wi_fi"
+        f"{SWITCH_DOMAIN}.{device_name}_enable_guest_wi_fi"
     ).disabled
     assert not entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_enable_leds"
+        f"{SWITCH_DOMAIN}.{device_name}_enable_leds"
     ).disabled
 
 
@@ -87,7 +87,7 @@ async def test_update_enable_guest_wifi(
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_enable_guest_wi_fi"
+    entity_id = f"{SWITCH_DOMAIN}.{device_name}_enable_guest_wi_fi"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -112,7 +112,7 @@ async def test_update_enable_guest_wifi(
         enabled=False
     )
     await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     state = hass.states.get(entity_id)
@@ -130,7 +130,7 @@ async def test_update_enable_guest_wifi(
         enabled=True
     )
     await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     state = hass.states.get(entity_id)
@@ -151,7 +151,7 @@ async def test_update_enable_guest_wifi(
         HomeAssistantError, match=f"Device {entry.title} did not respond"
     ):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -168,7 +168,7 @@ async def test_update_enable_leds(
     """Test state change of a enable_leds switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_enable_leds"
+    entity_id = f"{SWITCH_DOMAIN}.{device_name}_enable_leds"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -189,7 +189,7 @@ async def test_update_enable_leds(
     # Switch off
     mock_device.device.async_get_led_setting.return_value = False
     await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     state = hass.states.get(entity_id)
@@ -205,7 +205,7 @@ async def test_update_enable_leds(
     # Switch on
     mock_device.device.async_get_led_setting.return_value = True
     await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     state = hass.states.get(entity_id)
@@ -226,7 +226,7 @@ async def test_update_enable_leds(
         HomeAssistantError, match=f"Device {entry.title} did not respond"
     ):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -251,7 +251,7 @@ async def test_device_failure(
     """Test device failure."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_{name}"
+    entity_id = f"{SWITCH_DOMAIN}.{device_name}_{name}"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -283,7 +283,7 @@ async def test_auth_failed(
     """Test setting unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id = f"{PLATFORM}.{device_name}_{name}"
+    entity_id = f"{SWITCH_DOMAIN}.{device_name}_{name}"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -297,7 +297,7 @@ async def test_auth_failed(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
     await hass.async_block_till_done()
@@ -314,7 +314,7 @@ async def test_auth_failed(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True
         )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
