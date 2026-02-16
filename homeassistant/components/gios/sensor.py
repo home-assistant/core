@@ -72,9 +72,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_CO,
         value=lambda sensors: sensors.co.value if sensors.co else None,
         suggested_display_precision=0,
+        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="co",
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO,
@@ -181,7 +181,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)

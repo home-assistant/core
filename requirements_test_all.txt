@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.56.0
+PyViCare==2.57.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1049,7 +1049,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.13.0
+hass-nabucasa==1.15.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1123,7 +1123,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==12.1.3
+ical==13.2.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1533,7 +1533,7 @@ plugwise==1.11.2
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==2.0.0
+powerfox==2.1.0
 
 # homeassistant.components.prana
 prana-api-client==0.10.0
@@ -1600,6 +1600,9 @@ py-nextbusnext==2.3.0
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.mta
+py-nymta==0.3.4
+
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
 
@@ -1635,6 +1638,9 @@ pyW215==0.8.0
 
 # homeassistant.components.ccm15
 py_ccm15==0.1.2
+
+# homeassistant.components.html5
+py_vapid==1.9.4
 
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.3.9
@@ -2046,7 +2052,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.saunum
-pysaunum==0.3.0
+pysaunum==0.5.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
@@ -2737,7 +2743,7 @@ wyoming==1.7.2
 xiaomi-ble==1.6.0
 
 # homeassistant.components.knx
-xknx==3.14.0
+xknx==3.15.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
