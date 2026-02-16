@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum, auto
+from enum import StrEnum
 from typing import Any
 
 from pyvlx.opening_device import (
@@ -49,17 +49,17 @@ async def async_setup_entry(
             # add three entities, one for each part and the "dual" control
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.dual
+                    node, config_entry.entry_id, VeluxDualRollerPart.DUAL
                 )
             )
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.upper
+                    node, config_entry.entry_id, VeluxDualRollerPart.UPPER
                 )
             )
             entities.append(
                 VeluxDualRollerShutter(
-                    node, config_entry.entry_id, VeluxDualRollerPart.lower
+                    node, config_entry.entry_id, VeluxDualRollerPart.LOWER
                 )
             )
         elif isinstance(node, OpeningDevice):
@@ -141,12 +141,12 @@ class VeluxCover(VeluxEntity, CoverEntity):
         await self.node.stop(wait_for_completion=False)
 
 
-class VeluxDualRollerPart(Enum):
+class VeluxDualRollerPart(StrEnum):
     """Enum for the parts of a dual roller shutter."""
 
-    upper = auto()
-    lower = auto()
-    dual = auto()
+    UPPER = "upper"
+    LOWER = "lower"
+    DUAL = "dual"
 
 
 class VeluxDualRollerShutter(VeluxCover):
@@ -160,40 +160,40 @@ class VeluxDualRollerShutter(VeluxCover):
     ) -> None:
         """Initialize VeluxDualRollerShutter."""
         super().__init__(node, config_entry_id)
-        if part == VeluxDualRollerPart.dual:
+        if part == VeluxDualRollerPart.DUAL:
             self._attr_name = None
         else:
-            self._attr_unique_id = f"{self._attr_unique_id}_{part.name}"
-            self._attr_translation_key = f"dual_roller_shutter_{part.name}"
+            self._attr_unique_id = f"{self._attr_unique_id}_{part}"
+            self._attr_translation_key = f"dual_roller_shutter_{part}"
         self.part = part
 
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        if self.part == VeluxDualRollerPart.upper:
+        if self.part == VeluxDualRollerPart.UPPER:
             return 100 - self.node.position_upper_curtain.position_percent
-        if self.part == VeluxDualRollerPart.lower:
+        if self.part == VeluxDualRollerPart.LOWER:
             return 100 - self.node.position_lower_curtain.position_percent
         return 100 - self.node.position.position_percent
 
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        if self.part == VeluxDualRollerPart.upper:
+        if self.part == VeluxDualRollerPart.UPPER:
             return self.node.position_upper_curtain.closed
-        if self.part == VeluxDualRollerPart.lower:
+        if self.part == VeluxDualRollerPart.LOWER:
             return self.node.position_lower_curtain.closed
         return self.node.position.closed
 
     @wrap_pyvlx_call_exceptions
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.node.close(curtain=self.part.name, wait_for_completion=False)
+        await self.node.close(curtain=self.part, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.node.open(curtain=self.part.name, wait_for_completion=False)
+        await self.node.open(curtain=self.part, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -202,7 +202,7 @@ class VeluxDualRollerShutter(VeluxCover):
 
         await self.node.set_position(
             Position(position_percent=position_percent),
-            curtain=self.part.name,
+            curtain=self.part,
             wait_for_completion=False,
         )
 
