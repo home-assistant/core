@@ -1407,10 +1407,8 @@ async def test_multilevel_switch_cover_opening_closing_state(
         blocking=True,
     )
 
-    # Should immediately clear opening/closing state
-    # Since currentValue (0) != targetValue (99 from previous open), 
-    # but we've explicitly stopped, state should not be opening
-    # The device will update targetValue to match currentValue
+    # Stop command should immediately clear opening/closing state
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
-    # State should not be OPENING anymore after stop
+    assert state.state == CoverState.CLOSED  # Current position is 0 (closed)
     assert state.state != CoverState.OPENING
+    assert state.state != CoverState.CLOSING

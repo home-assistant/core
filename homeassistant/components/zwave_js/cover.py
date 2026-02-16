@@ -152,9 +152,9 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             and self._target_position_value.value is not None
             and self._current_position_value.value == self._target_position_value.value
         ):
-            if self._attr_is_opening or self._attr_is_closing:
-                self._attr_is_opening = False
-                self._attr_is_closing = False
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+            self.async_write_ha_state()
 
     @property
     def is_closed(self) -> bool | None:
