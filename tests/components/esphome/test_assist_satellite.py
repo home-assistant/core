@@ -2174,16 +2174,16 @@ async def test_pipeline_start_missing_wake_word_entity_loop(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test that a missing wake word entity does not cause an infinite loop."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
     await hass.async_block_till_done()
 
-    # Find the satellite entity
-    component = hass.data[assist_satellite.DOMAIN]
-    satellite = None
-    for entity in component.entities:
-        if entity.unique_id and "assist_satellite" in entity.unique_id:
-            satellite = entity
-            break
-
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
     assert satellite is not None
 
     # Mock get_wake_word_entity to return an ID that does NOT exist in hass.states
