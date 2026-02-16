@@ -178,6 +178,7 @@ def config_entry(
     return MockConfigEntry(
         title=DEFAULT_NAME,
         domain=DOMAIN,
+        entry_id="01JJJJJJJJJJJJJJJJJJJJJJJJ",
         data={CONF_LANGUAGE: language, **param_data},
         options=param_options,
     )

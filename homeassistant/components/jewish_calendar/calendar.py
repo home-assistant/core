@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 import logging
 
 from hdate import HDateInfo, Zmanim
+from hdate.parasha import Parasha
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -29,6 +30,9 @@ from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+
+_SATURDAY = 5
+_SIMCHAT_TORAH = "simchat_torah"
 
 
 type JewishCalendarEventType = (
@@ -97,13 +101,19 @@ def _create_yearly_event(
             for holiday in info.holidays
         ]
 
-    if event_type == YearlyCalendarEventType.WEEKLY_PORTION and info.parasha:
-        return CalendarEvent(
-            start=target_date,
-            end=target_date,
-            summary=f"{info.parasha}",
-            description=f"Parshat Hashavua: {info.parasha}",
+    if event_type == YearlyCalendarEventType.WEEKLY_PORTION:
+        is_shabbat = target_date.weekday() == _SATURDAY
+        is_simchat_torah = any(
+            holiday.name == _SIMCHAT_TORAH for holiday in info.holidays
         )
+        if (is_shabbat or is_simchat_torah) and info.parasha != str(Parasha.NONE):
+            return CalendarEvent(
+                start=target_date,
+                end=target_date,
+                summary=f"{info.parasha}",
+                description=f"Parshat Hashavua: {info.parasha}",
+            )
+        return None
 
     if event_type == YearlyCalendarEventType.OMER_COUNT and info.omer.total_days > 0:
         return CalendarEvent(
