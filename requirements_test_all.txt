@@ -523,7 +523,7 @@ async-upnp-client==0.46.2
 asyncarve==0.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.6.0
+asyncsleepiq==1.7.0
 
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
