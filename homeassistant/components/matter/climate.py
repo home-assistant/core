@@ -221,7 +221,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Initialize the climate entity."""
         # Initialize preset handle mapping as instance attribute before calling super().__init__()
         # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
-        self._preset_handle_by_name: dict[str, bytes] = {}
+        self._preset_handle_by_name: dict[str, bytes | None] = {}
         super().__init__(*args, **kwargs)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -270,26 +270,37 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        preset_handle = self._preset_handle_by_name.get(preset_mode)
-
-        if preset_handle is None:
+        if preset_mode not in self._preset_handle_by_name:
             raise HomeAssistantError(
                 f"Preset mode '{preset_mode}' not found. "
                 f"Available presets: {self.preset_modes}"
             )
 
-        await self.send_device_command(
-            clusters.Thermostat.Commands.SetActivePresetRequest(
-                presetHandle=preset_handle
+        preset_handle = self._preset_handle_by_name[preset_mode]
+
+        # Handle clearing the preset (PRESET_NONE maps to None)
+        if preset_handle is None:
+            # Clear the active preset by setting ActivePresetHandle to None
+            # Use an empty bytes value or None to represent "no preset"
+            await self.send_device_command(
+                clusters.Thermostat.Commands.SetActivePresetRequest(presetHandle=b"")
             )
-        )
+            active_preset_handle = None
+        else:
+            await self.send_device_command(
+                clusters.Thermostat.Commands.SetActivePresetRequest(
+                    presetHandle=preset_handle
+                )
+            )
+            active_preset_handle = preset_handle
+
         # Optimistically update the endpoint's ActivePresetHandle attribute
         # to prevent _update_from_device() from reverting to stale device state
         active_preset_path = create_attribute_path_from_attribute(
             endpoint_id=self._endpoint.endpoint_id,
             attribute=clusters.Thermostat.Attributes.ActivePresetHandle,
         )
-        self._endpoint.set_attribute_value(active_preset_path, preset_handle)
+        self._endpoint.set_attribute_value(active_preset_path, active_preset_handle)
         self._update_from_device()
         self.async_write_ha_state()
 
@@ -349,7 +360,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # Device doesn't support presets, skip preset update
             self._preset_handle_by_name.clear()
             self._attr_preset_modes = []
-            self._attr_preset_mode = PRESET_NONE
+            self._attr_preset_mode = None
             return
 
         self.matter_presets = self.get_matter_attribute_value(
@@ -373,6 +384,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 presets.append(ha_preset_name)
                 self._preset_handle_by_name[ha_preset_name] = preset.presetHandle
 
+        # Always include PRESET_NONE to allow users to clear the preset
+        presets.append(PRESET_NONE)
+        self._preset_handle_by_name[PRESET_NONE] = None
+
         self._attr_preset_modes = presets
 
         # Update active preset mode
@@ -385,13 +400,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_preset_mode = None
             for preset_name, handle in self._preset_handle_by_name.items():
-                if handle == active_preset_handle:
+                if preset_name != PRESET_NONE and handle == active_preset_handle:
                     self._attr_preset_mode = preset_name
                     break
             else:
                 # Device reports an active preset handle that we don't know
-                # Avoid reporting PRESET_NONE in that case to prevent stale values
-                self._attr_preset_mode = None
+                # Avoid reporting an invalid mode in that case, fall back to PRESET_NONE
+                self._attr_preset_mode = PRESET_NONE
 
     @callback
     def _update_hvac_mode_and_action(self) -> None:
