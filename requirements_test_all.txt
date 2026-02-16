@@ -1636,6 +1636,9 @@ pyW215==0.8.0
 # homeassistant.components.ccm15
 py_ccm15==0.1.2
 
+# homeassistant.components.html5
+py_vapid==1.9.4
+
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.3.9
 

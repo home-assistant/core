@@ -1902,6 +1902,9 @@ pyW800rf32==0.4
 # homeassistant.components.ccm15
 py_ccm15==0.1.2
 
+# homeassistant.components.html5
+py_vapid==1.9.4
+
 # homeassistant.components.ads
 pyads==3.4.0
 
