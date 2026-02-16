@@ -4,7 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from httpx import AsyncClient
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
@@ -20,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -67,14 +67,14 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
-        async with AsyncClient() as session:
-            auth = AuthenticationManager(session, "", "", "")
-            auth.oauth = OAuth2TokenResponse(**data["token"])
-            await auth.refresh_tokens()
+        session = get_async_client(self.hass)
+        auth = AuthenticationManager(session, "", "", "")
+        auth.oauth = OAuth2TokenResponse(**data["token"])
+        await auth.refresh_tokens()
 
-            client = XboxLiveClient(auth)
+        client = XboxLiveClient(auth)
 
-            me = await client.people.get_friends_by_xuid(client.xuid)
+        me = await client.people.get_friends_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
 
