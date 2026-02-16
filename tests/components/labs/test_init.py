@@ -360,7 +360,9 @@ async def test_preview_feature_to_dict_is_built_in(
     assert result["is_built_in"] is expected_default
 
 
-async def test_async_listen_helper(hass: HomeAssistant) -> None:
+async def test_async_listen_helper(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the async_listen helper function for preview feature events."""
     # Load kitchen_sink integration
     hass.config.components.add("kitchen_sink")
@@ -382,6 +384,8 @@ async def test_async_listen_helper(hass: HomeAssistant) -> None:
         preview_feature="special_repair",
         listener=test_listener,
     )
+
+    assert ("calls `async_listen` which is deprecated") in caplog.text
 
     # Fire event for the subscribed feature
     hass.bus.async_fire(
