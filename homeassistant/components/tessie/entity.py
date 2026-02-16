@@ -154,6 +154,7 @@ class TessieBatteryEntity(TessieBaseEntity):
 
         super().__init__(vehicle.battery_coordinator, key)
 
+
 class TessieWallConnectorEntity(TessieBaseEntity):
     """Parent class for Tessie wall connector entities."""
 
