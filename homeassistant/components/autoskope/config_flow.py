@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow as ConfigFlowBase, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
