@@ -122,7 +122,8 @@ DEFAULT_CALENDAR_EVENTS = {
     CONF_YEARLY_EVENTS: [
         YearlyCalendarEventType.HOLIDAY,
         YearlyCalendarEventType.WEEKLY_PORTION,
-        YearlyCalendarEventType.OMER_COUNT,
+        YearlyCalendarEventType.CANDLE_LIGHTING,
+        YearlyCalendarEventType.HAVDALAH,
     ],
 }
 

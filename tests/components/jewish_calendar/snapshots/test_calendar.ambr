@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_candle_lighting_on_friday[calendar_events0-New York]
+# name: test_candle_lighting_on_friday[New York]
   list([
     dict({
       'description': 'Candle lighting time: 16:31',
@@ -295,13 +295,13 @@
 # name: test_entities[Jerusalem][calendar.jewish_calendar_yearly_events-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Parshat Hashavua: Bo',
-      'end_time': '2024-01-21 00:00:00',
+      'all_day': False,
+      'description': 'Candle lighting time: 16:21',
+      'end_time': '2024-01-19 16:21:00',
       'friendly_name': 'Jewish Calendar Yearly events',
       'location': '',
-      'message': 'Bo',
-      'start_time': '2024-01-20 00:00:00',
+      'message': 'Candle Lighting',
+      'start_time': '2024-01-19 16:21:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.jewish_calendar_yearly_events',
@@ -457,13 +457,13 @@
 # name: test_entities[New York][calendar.jewish_calendar_yearly_events-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Parshat Hashavua: Bo',
-      'end_time': '2024-01-21 00:00:00',
+      'all_day': False,
+      'description': 'Candle lighting time: 16:39',
+      'end_time': '2024-01-19 16:39:00',
       'friendly_name': 'Jewish Calendar Yearly events',
       'location': '',
-      'message': 'Bo',
-      'start_time': '2024-01-20 00:00:00',
+      'message': 'Candle Lighting',
+      'start_time': '2024-01-19 16:39:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.jewish_calendar_yearly_events',
@@ -506,17 +506,8 @@
     }),
   ])
 # ---
-# name: test_omer_count[New York]
+# name: test_omer_count[calendar_events0-New York]
   list([
-    dict({
-      'description': '''
-        Jewish Holiday: שני של פסח
-        Holiday Type: HolidayTypes.YOM_TOV
-      ''',
-      'end': '2024-04-25',
-      'start': '2024-04-24',
-      'summary': 'שני של פסח',
-    }),
     dict({
       'description': 'Sefirat HaOmer: היום יום אחד לעומר',
       'end': '2024-04-25',
@@ -533,6 +524,12 @@
       'start': '2024-01-13',
       'summary': 'וארא',
     }),
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T15:35:00+00:00',
+      'start': '2024-01-13T15:35:00+00:00',
+      'summary': 'Havdalah',
+    }),
   ])
 # ---
 # name: test_weekly_portion_on_shabbat[New York]
@@ -542,6 +539,12 @@
       'end': '2024-01-14',
       'start': '2024-01-13',
       'summary': 'וארא',
+    }),
+    dict({
+      'description': 'Havdalah time: 17:35',
+      'end': '2024-01-13T22:35:00+00:00',
+      'start': '2024-01-13T22:35:00+00:00',
+      'summary': 'Havdalah',
     }),
   ])
 # ---
@@ -561,6 +564,12 @@
       'end': '2024-10-26',
       'start': '2024-10-25',
       'summary': 'וזאת הברכה',
+    }),
+    dict({
+      'description': 'Candle lighting time: 17:42',
+      'end': '2024-10-25T21:42:00+00:00',
+      'start': '2024-10-25T21:42:00+00:00',
+      'summary': 'Candle Lighting',
     }),
   ])
 # ---
@@ -589,6 +598,12 @@
       'end': '2024-10-25',
       'start': '2024-10-24',
       'summary': 'וזאת הברכה',
+    }),
+    dict({
+      'description': 'Havdalah time: 18:34',
+      'end': '2024-10-24T15:34:00+00:00',
+      'start': '2024-10-24T15:34:00+00:00',
+      'summary': 'Havdalah',
     }),
   ])
 # ---
