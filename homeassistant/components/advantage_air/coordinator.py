@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
 REQUEST_REFRESH_DELAY = 0.5
 
@@ -50,4 +52,8 @@ class AdvantageAirCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.async_get()
         except ApiError as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -85,7 +85,7 @@ rules:
   entity-translations: todo
   exception-translations:
     status: todo
-    comment: UpdateFailed in the coordinator
+    comment: HomeAssistantError in entity.py and ServiceValidationError in climate.py
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
