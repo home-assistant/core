@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from mastodon.Mastodon import (
@@ -43,6 +44,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_ACCESS_TOKEN,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+    }
+)
+
+EXAMPLE_URL = "https://mastodon.social"
 
 
 def base_url_from_url(url: str) -> str:
@@ -56,24 +66,31 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    base_url: str | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    access_token: str | None = None
+
     def check_connection(
         self,
-        base_url: str,
-        client_id: str,
-        client_secret: str,
-        access_token: str,
     ) -> tuple[
         InstanceV2 | Instance | None,
         Account | None,
         dict[str, str],
     ]:
         """Check connection to the Mastodon instance."""
+
+        assert self.base_url is not None
+        assert self.client_id is not None
+        assert self.client_secret is not None
+        assert self.access_token is not None
+
         try:
             client = create_mastodon_client(
-                base_url,
-                client_id,
-                client_secret,
-                access_token,
+                self.base_url,
+                self.client_id,
+                self.client_secret,
+                self.access_token,
             )
             try:
                 instance = client.instance_v2()
@@ -117,12 +134,13 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             user_input[CONF_BASE_URL] = base_url_from_url(user_input[CONF_BASE_URL])
 
+            self.base_url = user_input[CONF_BASE_URL]
+            self.client_id = user_input[CONF_CLIENT_ID]
+            self.client_secret = user_input[CONF_CLIENT_SECRET]
+            self.access_token = user_input[CONF_ACCESS_TOKEN]
+
             instance, account, errors = await self.hass.async_add_executor_job(
-                self.check_connection,
-                user_input[CONF_BASE_URL],
-                user_input[CONF_CLIENT_ID],
-                user_input[CONF_CLIENT_SECRET],
-                user_input[CONF_ACCESS_TOKEN],
+                self.check_connection
             )
 
             if not errors:
@@ -137,5 +155,39 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.show_user_form(
             user_input,
             errors,
-            description_placeholders={"example_url": "https://mastodon.social"},
+            description_placeholders={"example_url": EXAMPLE_URL},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.base_url = entry_data[CONF_BASE_URL]
+        self.client_id = entry_data[CONF_CLIENT_ID]
+        self.client_secret = entry_data[CONF_CLIENT_SECRET]
+        self.access_token = entry_data[CONF_ACCESS_TOKEN]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+        if user_input:
+            self.access_token = user_input[CONF_ACCESS_TOKEN]
+            instance, account, errors = await self.hass.async_add_executor_job(
+                self.check_connection
+            )
+            if not errors:
+                name = construct_mastodon_username(instance, account)
+                await self.async_set_unique_id(slugify(name))
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            errors=errors,
         )
