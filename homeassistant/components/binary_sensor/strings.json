@@ -40,6 +40,7 @@
       "is_not_powered": "{entity_name} is not powered",
       "is_not_present": "{entity_name} is not present",
       "is_not_running": "{entity_name} is not running",
+      "is_not_sleeping": "{entity_name} is awake",
       "is_not_tampered": "{entity_name} is not detecting tampering",
       "is_not_unsafe": "{entity_name} is safe",
       "is_occupied": "{entity_name} is occupied",
@@ -51,9 +52,8 @@
       "is_present": "{entity_name} is present",
       "is_problem": "{entity_name} is detecting problem",
       "is_running": "{entity_name} is running",
-      "is_smoke": "{entity_name} is detecting smoke",
       "is_sleeping": "{entity_name} is sleeping",
-      "is_not_sleeping": "{entity_name} is awake",
+      "is_smoke": "{entity_name} is detecting smoke",
       "is_sound": "{entity_name} is detecting sound",
       "is_tampered": "{entity_name} is detecting tampering",
       "is_unsafe": "{entity_name} is unsafe",
@@ -280,18 +280,18 @@
         "on": "Unsafe"
       }
     },
-    "smoke": {
-      "name": "Smoke",
-      "state": {
-        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-      }
-    },
     "sleeping": {
       "name": "Sleeping",
       "state": {
         "off": "Awake",
         "on": "Asleep"
+      }
+    },
+    "smoke": {
+      "name": "Smoke",
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
       }
     },
     "sound": {

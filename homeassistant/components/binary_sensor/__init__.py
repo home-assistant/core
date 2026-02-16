@@ -101,7 +101,7 @@ class BinarySensorDeviceClass(StrEnum):
 
     # On means sleeping, Off means awake
     SLEEPING = "sleeping"
-    
+
     # On means smoke detected, Off means no smoke (clear)
     SMOKE = "smoke"
 

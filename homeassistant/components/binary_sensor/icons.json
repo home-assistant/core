@@ -138,16 +138,16 @@
         "on": "mdi:alert-circle"
       }
     },
-    "smoke": {
-      "default": "mdi:smoke-detector-variant",
-      "state": {
-        "on": "mdi:smoke-detector-variant-alert"
-      }
-    },
     "sleeping": {
       "default": "mdi:bed-outline",
       "state": {
         "on": "mdi:bed-clock"
+      }
+    },
+    "smoke": {
+      "default": "mdi:smoke-detector-variant",
+      "state": {
+        "on": "mdi:smoke-detector-variant-alert"
       }
     },
     "sound": {
