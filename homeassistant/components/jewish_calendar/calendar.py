@@ -14,6 +14,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DAILY_EVENTS,
@@ -83,7 +84,6 @@ def _create_yearly_event(
     zmanim: Zmanim,
 ) -> list[CalendarEvent] | CalendarEvent | None:
     """Create a yearly calendar event."""
-    # Holidays
     if event_type == YearlyCalendarEventType.HOLIDAY and info.holidays:
         return [
             CalendarEvent(
@@ -97,7 +97,6 @@ def _create_yearly_event(
             for holiday in info.holidays
         ]
 
-    # Weekly portion
     if event_type == YearlyCalendarEventType.WEEKLY_PORTION and info.parasha:
         return CalendarEvent(
             start=target_date,
@@ -106,7 +105,6 @@ def _create_yearly_event(
             description=f"Parshat Hashavua: {info.parasha}",
         )
 
-    # Omer count
     if event_type == YearlyCalendarEventType.OMER_COUNT and info.omer.total_days > 0:
         return CalendarEvent(
             start=target_date,
@@ -115,7 +113,6 @@ def _create_yearly_event(
             description=f"Sefirat HaOmer: {info.omer.count_str()}",
         )
 
-    # Candle lighting
     if event_type == YearlyCalendarEventType.CANDLE_LIGHTING and zmanim.candle_lighting:
         return CalendarEvent(
             start=zmanim.candle_lighting.astimezone(UTC),
@@ -124,7 +121,6 @@ def _create_yearly_event(
             description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
         )
 
-    # Havdalah
     if event_type == YearlyCalendarEventType.HAVDALAH and zmanim.havdalah:
         return CalendarEvent(
             start=zmanim.havdalah.astimezone(UTC),
@@ -143,7 +139,6 @@ def _create_learning_event(
     zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
-    # Daf Yomi
     if event_type == LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
         return CalendarEvent(
             start=target_date,
@@ -165,6 +160,7 @@ CALENDARS = (
         key=CONF_LEARNING_SCHEDULE,
         translation_key=CONF_LEARNING_SCHEDULE,
         set_value_fn=_create_learning_event,
+        entity_registry_enabled_default=False,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_YEARLY_EVENTS,
@@ -205,7 +201,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         # Get today's events first
-        today = datetime.now().date()
+        today = dt_util.now().date()
         events = self._get_events_for_date(today)
 
         if events:
