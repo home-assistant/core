@@ -64,10 +64,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      Waiting to move to OAuth.
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt
