@@ -113,9 +113,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         translation_key="active_tariff",
         has_fn=lambda data: data.measurement.tariff is not None,
         value_fn=(
-            lambda data: None
-            if data.measurement.tariff is None
-            else str(data.measurement.tariff)
+            lambda data: (
+                None
+                if data.measurement.tariff is None
+                else str(data.measurement.tariff)
+            )
         ),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4"],
@@ -128,13 +130,14 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
-            lambda data: data.system is not None
-            and data.system.wifi_strength_pct is not None
+            lambda data: (
+                data.system is not None and data.system.wifi_strength_pct is not None
+            )
         ),
         value_fn=(
-            lambda data: data.system.wifi_strength_pct
-            if data.system is not None
-            else None
+            lambda data: (
+                data.system.wifi_strength_pct if data.system is not None else None
+            )
         ),
     ),
     HomeWizardSensorEntityDescription(
@@ -145,8 +148,9 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
-            lambda data: data.system is not None
-            and data.system.wifi_rssi_db is not None
+            lambda data: (
+                data.system is not None and data.system.wifi_rssi_db is not None
+            )
         ),
         value_fn=(
             lambda data: data.system.wifi_rssi_db if data.system is not None else None
@@ -733,9 +737,9 @@ async def async_setup_entry(
                 )
             ),
             has_fn=lambda x: True,
-            value_fn=lambda data: power_w * -1
-            if (power_w := data.measurement.power_w)
-            else power_w,
+            value_fn=lambda data: (
+                power_w * -1 if (power_w := data.measurement.power_w) else power_w
+            ),
         )
         entities.append(
             HomeWizardSensorEntity(

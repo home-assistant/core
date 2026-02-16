@@ -1,4 +1,4 @@
-is_off:
+.condition_common: &condition_common
   target:
     entity:
       domain: light
@@ -12,17 +12,6 @@ is_off:
           options:
             - all
             - any
-is_on:
-  target:
-    entity:
-      domain: light
-  fields:
-    behavior:
-      required: true
-      default: any
-      selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+
+is_off: *condition_common
+is_on: *condition_common
