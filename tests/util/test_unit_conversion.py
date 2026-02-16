@@ -776,6 +776,18 @@ _CONVERTED_VALUE: dict[
             60.1378,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1995.417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.0601378,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
     ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),

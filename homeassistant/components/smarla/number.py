@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from pysmarlaapi.federwiege.classes import Property
+from pysmarlaapi.federwiege.services.classes import Property
 
 from homeassistant.components.number import (
     NumberEntity,

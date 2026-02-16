@@ -1,0 +1,14 @@
+{
+  "domain": "onedrive_for_business",
+  "name": "OneDrive for Business",
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/onedrive_for_business",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["onedrive_personal_sdk"],
+  "quality_scale": "bronze",
+  "requirements": ["onedrive-personal-sdk==0.1.2"]
+}
