@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
       "network_error": "The Mastodon instance was not found.",
@@ -80,6 +81,9 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate with Mastodon."
+    },
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
