@@ -117,6 +117,7 @@ FLOWS = {
         "caldav",
         "cambridge_audio",
         "canary",
+        "casper_glow",
         "cast",
         "ccm15",
         "cert_expiry",
