@@ -106,7 +106,7 @@ class OneDriveDriveStateSensor(
             name=coordinator.data.name or coordinator.config_entry.title,
             identifiers={(DOMAIN, coordinator.data.id)},
             manufacturer="Microsoft",
-            model="OneDrive for Business",
+            model=f"OneDrive {coordinator.data.drive_type.value.capitalize()}",
         )
 
     @property
