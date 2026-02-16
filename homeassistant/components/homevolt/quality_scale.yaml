@@ -33,13 +33,13 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration does not have an options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

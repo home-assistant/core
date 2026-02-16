@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
 )
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.cover import SCAN_INTERVAL
@@ -25,7 +26,6 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_OPEN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -144,7 +144,7 @@ async def test_cover_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -163,7 +163,7 @@ async def test_cover_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -237,7 +237,7 @@ async def test_cover_open_to_pos(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_POSITION: 50},
             blocking=True,
@@ -311,7 +311,7 @@ async def test_cover_open_and_stop(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_POSITION: 80},
             blocking=True,
@@ -330,7 +330,7 @@ async def test_cover_open_and_stop(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -384,7 +384,7 @@ async def test_cover_tilt_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER_TILT,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -402,7 +402,7 @@ async def test_cover_tilt_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER_TILT,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -455,7 +455,7 @@ async def test_cover_tilt_to_pos(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_TILT_POSITION: 50},
             blocking=True,
@@ -510,7 +510,7 @@ async def test_cover_tilt_with_open_and_close_pos(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_POSITION: 100},
             blocking=True,
@@ -530,7 +530,7 @@ async def test_cover_tilt_with_open_and_close_pos(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_POSITION: 0},
             blocking=True,
