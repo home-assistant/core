@@ -45,16 +45,16 @@ jobs:
 
       - name: Get information
         id: info
-        uses: home-assistant/actions/helpers/info@master
+        uses: home-assistant/actions/helpers/info@master # zizmor: ignore[unpinned-uses]
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        uses: home-assistant/actions/helpers/version@master # zizmor: ignore[unpinned-uses]
         with:
           type: ${{ env.BUILD_TYPE }}
 
       - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master
+        uses: home-assistant/actions/helpers/verify-version@master # zizmor: ignore[unpinned-uses]
         with:
           ignore-dev: true
 
@@ -316,9 +316,8 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # home-assistant/builder doesn't support sha pinning
       - name: Build base image
-        uses: home-assistant/builder@2025.11.0
+        uses: home-assistant/builder@21bc64d76dad7a5184c67826aab41c6b6f89023a # 2025.11.0
         with:
           args: |
             $BUILD_ARGS \
@@ -341,14 +340,14 @@ jobs:
           persist-credentials: false
 
       - name: Initialize git
-        uses: home-assistant/actions/helpers/git-init@master
+        uses: home-assistant/actions/helpers/git-init@master # zizmor: ignore[unpinned-uses]
         with:
           name: ${{ secrets.GIT_NAME }}
           email: ${{ secrets.GIT_EMAIL }}
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update version file
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
@@ -358,7 +357,7 @@ jobs:
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
