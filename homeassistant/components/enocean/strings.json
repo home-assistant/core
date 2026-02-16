@@ -13,7 +13,7 @@
           "device": "USB dongle"
         },
         "data_description": {
-          "device": "Path to your EnOcean dongle. Supports local USB devices and network serial connections."
+          "device": "Path to your EnOcean USB dongle."
         },
         "description": "Select the serial path to your EnOcean dongle or specify a remote location manually."
       },

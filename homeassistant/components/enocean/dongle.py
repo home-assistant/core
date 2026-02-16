@@ -128,14 +128,11 @@ def validate_path(path: str) -> bool:
     """
     # Support pyserial URL handlers for network serial devices
     if _is_serial_url(path):
-        # Basic URL format validation
         parsed = urlparse(path)
-        if not parsed.scheme:
-            _LOGGER.warning("Invalid URL format: %s", path)
-            return False
-        # Some schemes like loop:// and spy:// don't require netloc
-        # rfc2217:// and socket:// do require netloc
-        if parsed.scheme in ("rfc2217", "socket") and not parsed.netloc:
+        # rfc2217:// and socket:// require host and port, loop:// and spy:// don't
+        if parsed.scheme in ("rfc2217", "socket") and (
+            not parsed.hostname or not parsed.port
+        ):
             _LOGGER.warning("Invalid URL format: %s (missing host:port)", path)
             return False
 
