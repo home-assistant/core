@@ -26,6 +26,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bot": { "name": "Bot" },
+      "discoverable": { "name": "Discoverable" },
+      "indexable": { "name": "Indexable" },
+      "limited": { "name": "Limited" },
+      "locked": { "name": "Locked" },
+      "memorial": { "name": "Memorial" },
+      "moved": { "name": "Moved" },
+      "suspended": { "name": "Suspended" }
+    },
     "sensor": {
       "followers": {
         "name": "Followers",
@@ -35,9 +45,26 @@
         "name": "Following",
         "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
       },
+      "last_post": {
+        "name": "Last post"
+      },
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      },
+      "username": {
+        "name": "Username",
+        "state_attributes": {
+          "bio": {
+            "name": "Bio"
+          },
+          "created": {
+            "name": "Created"
+          },
+          "display_name": {
+            "name": "Display name"
+          }
+        }
       }
     }
   },
@@ -45,14 +72,11 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
-    },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
+    },
+    "unable_to_get_account": {
+      "message": "Unable to get account \"{account_name}\"."
     },
     "unable_to_send_message": {
       "message": "Unable to send message."
@@ -72,6 +96,20 @@
     }
   },
   "services": {
+    "get_account": {
+      "description": "Gets information about a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to use to search.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Get account"
+    },
     "post": {
       "description": "Posts a status on your Mastodon account.",
       "fields": {

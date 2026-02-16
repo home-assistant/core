@@ -76,7 +76,6 @@ CONF_GOOGLE_ACTIONS = "google_actions"
 CONF_USER_POOL_ID = "user_pool_id"
 
 CONF_ACCOUNT_LINK_SERVER = "account_link_server"
-CONF_ACCOUNTS_SERVER = "accounts_server"
 CONF_ACME_SERVER = "acme_server"
 CONF_API_SERVER = "api_server"
 CONF_DISCOVERY_SERVICE_ACTIONS = "discovery_service_actions"
