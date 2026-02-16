@@ -66,16 +66,6 @@ class PicoTTSEntity(TextToSpeechEntity):
         self._attr_name = f"Pico TTS {lang}"
         self._attr_unique_id = config_entry.entry_id
 
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
-
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
