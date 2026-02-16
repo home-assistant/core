@@ -3,6 +3,7 @@
   "name": "Hypontech Cloud",
   "codeowners": ["@jcisio"],
   "config_flow": true,
+  "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/hypontech",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
