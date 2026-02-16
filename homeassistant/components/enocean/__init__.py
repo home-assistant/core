@@ -1,5 +1,6 @@
 """Support for EnOcean devices."""
 
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -45,10 +46,9 @@ async def async_setup_entry(
     """Set up an EnOcean dongle for the given entry."""
     try:
         usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-        await usb_dongle.async_setup()
-    except Exception as err:
+    except SerialException as err:
         raise ConfigEntryNotReady(f"Failed to set up EnOcean dongle: {err}") from err
-
+    await usb_dongle.async_setup()
     config_entry.runtime_data = usb_dongle
 
     return True
