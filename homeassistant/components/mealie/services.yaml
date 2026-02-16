@@ -45,6 +45,12 @@ get_recipes:
           mode: box
           unit_of_measurement: recipes
 
+get_shopping_list_items:
+  target:
+    entity:
+      integration: mealie
+      domain: todo
+
 import_recipe:
   fields:
     config_entry_id:
