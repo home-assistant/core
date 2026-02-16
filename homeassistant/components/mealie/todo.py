@@ -286,5 +286,5 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             ) from err
         return {
             "name": self.shopping_list.name,
-            "shopping_list_items": asdict(shopping_items),
+            "items": [asdict(item) for item in shopping_items.items],
         }
