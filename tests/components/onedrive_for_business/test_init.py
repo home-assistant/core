@@ -8,7 +8,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import AppRoot, Folder
+from onedrive_personal_sdk.models.items import Folder
 import pytest
 
 from homeassistant.components.onedrive_for_business.const import (
@@ -72,7 +72,6 @@ async def test_get_integration_folder_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
-    mock_approot: AppRoot,
     mock_folder: Folder,
 ) -> None:
     """Test faulty integration folder creation."""
