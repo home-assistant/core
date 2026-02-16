@@ -8,13 +8,18 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   stale:
+    name: Mark stale issues and PRs
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      pull-requests: write
+      issues: write # To label and close stale issues
+      pull-requests: write # To label and close stale PRs
     steps:
       # The 60 day stale policy for PRs
       # Used for:
