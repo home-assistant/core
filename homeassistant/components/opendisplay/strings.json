@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Select the Bluetooth device to set up."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to device: {error}"
+    },
+    "device_not_found": {
+      "message": "Could not find Bluetooth device with address `{address}`."
+    },
+    "media_download_error": {
+      "message": "Failed to download media: {error}"
+    },
+    "upload_error": {
+      "message": "Failed to upload image: {error}"
+    }
+  },
+  "selector": {
+    "dither_mode": {
+      "options": {
+        "0": "None",
+        "1": "Burkes",
+        "2": "Ordered",
+        "3": "Floyd-Steinberg",
+        "4": "Atkinson",
+        "5": "Stucki",
+        "6": "Sierra",
+        "7": "Sierra Lite",
+        "8": "Jarvis, Judice & Ninke"
+      }
+    },
+    "fit_mode": {
+      "options": {
+        "0": "Stretch",
+        "1": "Contain",
+        "2": "Cover",
+        "3": "Crop"
+      }
+    },
+    "refresh_mode": {
+      "options": {
+        "0": "Full",
+        "1": "Fast"
+      }
+    }
+  },
+  "services": {
+    "upload_image": {
+      "description": "Upload an image to an OpenDisplay device.",
+      "fields": {
+        "dither_mode": {
+          "description": "The dithering algorithm to use for converting the image to the display's color palette.",
+          "name": "Dither mode"
+        },
+        "fit_mode": {
+          "description": "How the image is fitted to the display dimensions.",
+          "name": "Fit mode"
+        },
+        "image": {
+          "description": "The image to upload to the displays.",
+          "name": "Image"
+        },
+        "refresh_mode": {
+          "description": "The display refresh mode. Full refresh clears ghosting but is slower. Fast refresh is not supported on all displays.",
+          "name": "Refresh mode"
+        },
+        "rotation": {
+          "description": "The rotation angle in degrees, applied clockwise.",
+          "name": "Rotation"
+        },
+        "tone_compression": {
+          "description": "Dynamic range compression strength. Leave empty for automatic.",
+          "name": "Tone compression"
+        }
+      },
+      "name": "Upload image",
+      "sections": {
+        "advanced_options": {
+          "name": "Advanced options"
+        }
+      }
+    }
+  }
+}
