@@ -105,32 +105,52 @@ def fc_class_mock(fc_data):
 @pytest.fixture
 def fh_class_mock():
     """Fixture that sets up a mocked FritzHosts class."""
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzHosts",
-        new=FritzHosts,
-    ) as result:
-        result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
-        result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzHosts",
+            new=FritzHosts,
+        ) as result,
+        patch.object(
+            FritzHosts,
+            "get_mesh_topology",
+            MagicMock(return_value=MOCK_MESH_DATA),
+        ),
+        patch.object(
+            FritzHosts,
+            "get_hosts_attributes",
+            MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA),
+        ),
+    ):
         yield result
 
 
 @pytest.fixture
 def fs_class_mock():
     """Fixture that sets up a mocked FritzStatus class."""
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzStatus",
-        new=FritzStatus,
-    ) as result:
-        result.get_default_connection_service = MagicMock(
-            return_value=MOCK_STATUS_CONNECTION_DATA
-        )
-        result.get_device_info = MagicMock(
-            return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)
-        )
-        result.get_monitor_data = MagicMock(return_value={})
-        result.get_cpu_temperatures = MagicMock(return_value=[42, 38])
-        result.get_avm_device_log = MagicMock(
-            return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA
-        )
-        result.has_wan_enabled = True
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzStatus",
+            new=FritzStatus,
+        ) as result,
+        patch.object(
+            FritzStatus,
+            "get_default_connection_service",
+            MagicMock(return_value=MOCK_STATUS_CONNECTION_DATA),
+        ),
+        patch.object(
+            FritzStatus,
+            "get_device_info",
+            MagicMock(return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)),
+        ),
+        patch.object(FritzStatus, "get_monitor_data", MagicMock(return_value={})),
+        patch.object(
+            FritzStatus, "get_cpu_temperatures", MagicMock(return_value=[42, 38])
+        ),
+        patch.object(
+            FritzStatus,
+            "get_avm_device_log",
+            MagicMock(return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA),
+        ),
+        patch.object(FritzStatus, "has_wan_enabled", True),
+    ):
         yield result
