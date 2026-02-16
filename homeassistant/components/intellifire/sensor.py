@@ -71,7 +71,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         translation_key="flame_height",
         state_class=SensorStateClass.MEASUREMENT,
         # UI uses 1-5 for flame height, backing lib uses 0-4
-        value_fn=lambda coordinator: (coordinator.data.flameheight + 1),
+        value_fn=lambda coordinator: coordinator.data.flameheight + 1,
     ),
     IntellifireSensorEntityDescription(
         key="temperature",

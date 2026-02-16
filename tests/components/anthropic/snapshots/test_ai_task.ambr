@@ -1,0 +1,252 @@
+# serializer version: 1
+# name: test_generate_structured_data
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': '{"characters": ["Mario", "Luigi"]}',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-haiku-4-5',
+    'output_config': dict({
+      'format': dict({
+        'schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'type': 'json_schema',
+      }),
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'temperature': 1.0,
+    'thinking': dict({
+      'type': 'disabled',
+    }),
+  })
+# ---
+# name: test_generate_structured_data_legacy
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': '{"characters": ["Mario", "Luigi"]}',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-0',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'temperature': 1.0,
+    'thinking': dict({
+      'type': 'disabled',
+    }),
+    'tool_choice': dict({
+      'name': 'test_task',
+      'type': 'tool',
+    }),
+    'tools': list([
+      dict({
+        'description': 'Use this tool to reply to the user',
+        'input_schema': dict({
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'name': 'test_task',
+      }),
+    ]),
+  })
+# ---
+# name: test_generate_structured_data_legacy_extended_thinking
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': '{"characters": ["Mario", "Luigi"]}',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-0',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+      dict({
+        'text': "Claude MUST use the 'test_task' tool to provide the final answer instead of plain text.",
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1500,
+      'type': 'enabled',
+    }),
+    'tool_choice': dict({
+      'type': 'auto',
+    }),
+    'tools': list([
+      dict({
+        'description': 'Use this tool to reply to the user',
+        'input_schema': dict({
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'name': 'test_task',
+      }),
+    ]),
+  })
+# ---
+# name: test_generate_structured_data_legacy_tools
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'Generate test data',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'text': '{"characters": ["Mario", "Luigi"]}',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-0',
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a Home Assistant expert and help users with their tasks.
+          Current time is 04:00:00. Today's date is 2026-01-01.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'temperature': 1.0,
+    'thinking': dict({
+      'type': 'disabled',
+    }),
+    'tool_choice': dict({
+      'type': 'any',
+    }),
+    'tools': list([
+      dict({
+        'max_uses': None,
+        'name': 'web_search',
+        'type': 'web_search_20250305',
+      }),
+      dict({
+        'description': 'Use this tool to reply to the user',
+        'input_schema': dict({
+          'properties': dict({
+            'characters': dict({
+              'items': dict({
+                'type': 'string',
+              }),
+              'type': 'array',
+            }),
+          }),
+          'required': list([
+            'characters',
+          ]),
+          'type': 'object',
+        }),
+        'name': 'test_task',
+      }),
+    ]),
+  })
+# ---

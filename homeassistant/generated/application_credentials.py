@@ -34,6 +34,7 @@ APPLICATION_CREDENTIALS = [
     "olarm",
     "ondilo_ico",
     "onedrive",
+    "onedrive_for_business",
     "point",
     "senz",
     "smartthings",

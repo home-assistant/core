@@ -1005,7 +1005,7 @@ async def test_automatic_feature_device_addition_and_removal(
         pytest.param(
             "light",
             [Module.Light, Module.LightEffect],
-            [],
+            ["brightness", "hsv", "color_temp"],
             None,
             DeviceType.Camera,
             id="light_effect",
