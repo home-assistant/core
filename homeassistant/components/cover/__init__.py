@@ -49,6 +49,9 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
+SERVICE_SET_COVER_PRESET_MODE = "set_cover_preset_mode"
+SERVICE_SET_COVER_SPEED = "set_cover_speed"
+
 SPEED_PRESET_FIELDS = {
     vol.Optional(ATTR_SPEED): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
     vol.Optional(ATTR_PRESET_MODE): cv.string,
@@ -108,6 +111,7 @@ ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_POSITION = "position"
 ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
 
@@ -207,6 +211,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT],
     )
 
+    component.async_register_entity_service(
+        SERVICE_SET_COVER_SPEED,
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_SPEED): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=100)
+                ),
+            }
+        ),
+        "async_set_speed",
+        [CoverEntityFeature.SET_SPEED],
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_COVER_PRESET_MODE,
+        cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_PRESET_MODE): cv.string,
+            }
+        ),
+        "async_set_preset_mode",
+        [CoverEntityFeature.PRESET_MODE],
+    )
+
     return True
 
 
@@ -240,6 +268,8 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for cover entities."""
 
     entity_description: CoverEntityDescription
+    _entity_component_unrecorded_attributes = frozenset({ATTR_PRESET_MODES})
+
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
     _attr_device_class: CoverDeviceClass | None
@@ -296,6 +326,17 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return available preset modes if supported."""
 
         return self._attr_preset_modes
+
+    @property
+    def capability_attributes(self) -> dict[str, list[str] | None]:
+        """Return capability attributes."""
+        attrs: dict[str, list[str] | None] = {}
+        supported_features = self.supported_features
+
+        if CoverEntityFeature.PRESET_MODE in supported_features:
+            attrs[ATTR_PRESET_MODES] = self.preset_modes
+
+        return attrs
 
     @property
     @final

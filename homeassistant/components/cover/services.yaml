@@ -145,3 +145,30 @@ stop_cover_tilt:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.STOP_TILT
+
+set_cover_speed:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.SET_SPEED
+  fields:
+    speed:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+set_cover_preset_mode:
+  target:
+    entity:
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.PRESET_MODE
+  fields:
+    preset_mode:
+      required: true
+      selector:
+        text: {}

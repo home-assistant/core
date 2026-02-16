@@ -175,6 +175,26 @@
       },
       "name": "Set tilt position"
     },
+    "set_cover_preset_mode": {
+      "description": "Sets the preset mode for a cover.",
+      "fields": {
+        "preset_mode": {
+          "description": "The preset mode to set.",
+          "name": "Preset mode"
+        }
+      },
+      "name": "Set preset mode"
+    },
+    "set_cover_speed": {
+      "description": "Sets the speed for a cover.",
+      "fields": {
+        "speed": {
+          "description": "The speed percentage to set.",
+          "name": "Speed"
+        }
+      },
+      "name": "Set speed"
+    },
     "stop_cover": {
       "description": "Stops the cover movement.",
       "name": "[%key:common::action::stop%]"
