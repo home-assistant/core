@@ -2,15 +2,61 @@
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from freesms import FreeClient
+import voluptuous as vol
 
-from homeassistant.components.notify import NotifyEntity
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+    NotifyEntity,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import PLATFORMS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_ACCESS_TOKEN): str,
+    }
+)
+
+
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> FreeSMSNotificationService | None:
+    """Get the Free Mobile SMS notification service."""
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=False,
+        translation_key="deprecated_yaml",
+        severity=ir.IssueSeverity.WARNING,
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Free Mobile",
+        },
+    )
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    return FreeSMSNotificationService(config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
 
 
 async def async_setup_entry(
@@ -42,6 +88,27 @@ class FreeSMSNotifyEntity(NotifyEntity):
     def _send_sms(self, message: str, client: FreeClient) -> None:
         """Send SMS via Free Mobile API (blocking call)."""
         resp = client.send_sms(message)
+
+        if resp.status_code == HTTPStatus.BAD_REQUEST:
+            _LOGGER.error("At least one parameter is missing")
+        elif resp.status_code == HTTPStatus.FORBIDDEN:
+            _LOGGER.error("Wrong Username/Password")
+        elif resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+            _LOGGER.error("Server error, try later")
+        elif resp.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            _LOGGER.error("Too many SMS sent in a short time")
+
+
+class FreeSMSNotificationService(BaseNotificationService):
+    """Implement a notification service for the Free Mobile SMS service."""
+
+    def __init__(self, username: str, access_token: str) -> None:
+        """Initialize the service."""
+        self._free_client = FreeClient(username, access_token)
+
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
+        """Send a message to the Free Mobile user cell."""
+        resp = self._free_client.send_sms(message)
 
         if resp.status_code == HTTPStatus.BAD_REQUEST:
             _LOGGER.error("At least one parameter is missing")
