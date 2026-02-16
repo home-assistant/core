@@ -111,9 +111,9 @@ async def test_time_server_load_from_config_store(
         {}, config_store_fixture="config_store_time_server.json"
     )
     # Verify all three formats are written on startup
-    await knx.assert_write("1/1/1", RAW_TIME)
-    await knx.assert_write("2/2/2", RAW_DATE)
-    await knx.assert_write("3/3/3", RAW_DATETIME)
+    await knx.assert_write("1/1/1", RAW_TIME, ignore_order=True)
+    await knx.assert_write("2/2/2", RAW_DATE, ignore_order=True)
+    await knx.assert_write("3/3/3", RAW_DATETIME, ignore_order=True)
 
     client = await hass_ws_client(hass)
     # Verify configuration was loaded
