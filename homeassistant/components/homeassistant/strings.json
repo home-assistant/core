@@ -162,6 +162,24 @@
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}",
       "title": "Unused YAML configuration for the {platform} integration"
     },
+    "orphaned_ignored_config_entry": {
+      "fix_flow": {
+        "abort": {
+          "issue_ignored": "Non-existent ignored integration {domain} ignored."
+        },
+        "step": {
+          "init": {
+            "description": "There is an ignored orphaned config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
+            "menu_options": {
+              "confirm": "Remove",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]"
+          }
+        }
+      },
+      "title": "Orphaned ignored config entry for {domain}"
+    },
     "platform_only": {
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
       "title": "The {domain} integration does not support YAML configuration under its own key"
