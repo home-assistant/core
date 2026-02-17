@@ -303,6 +303,23 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "american_standard": {
+      "name": "American Standard",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
+        }
+      }
+    },
     "amp_motorization": {
       "name": "AMP Motorization",
       "integration_type": "virtual",
@@ -474,7 +491,10 @@
     },
     "aqara": {
       "name": "Aqara",
-      "iot_standards": ["matter", "zigbee"]
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "aquacell": {
       "name": "AquaCell",
@@ -1321,7 +1341,9 @@
           "name": "devolo Home Network"
         }
       },
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "dexcom": {
       "name": "Dexcom",
@@ -1669,7 +1691,9 @@
     },
     "eltako": {
       "name": "Eltako",
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "elv": {
       "name": "ELV PCA",
@@ -1879,7 +1903,9 @@
     },
     "eve": {
       "name": "Eve",
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "evergy": {
       "name": "Evergy",
@@ -2196,7 +2222,9 @@
     },
     "frient": {
       "name": "Frient",
-      "iot_standards": ["zigbee"]
+      "iot_standards": [
+        "zigbee"
+      ]
     },
     "fritzbox": {
       "name": "FRITZ!",
@@ -2698,7 +2726,9 @@
     },
     "heatit": {
       "name": "Heatit",
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "heatmiser": {
       "name": "Heatmiser",
@@ -2719,7 +2749,10 @@
     },
     "heiman": {
       "name": "Heiman",
-      "iot_standards": ["matter", "zigbee"]
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "heiwa": {
       "name": "Heiwa",
@@ -2728,7 +2761,9 @@
     },
     "heltun": {
       "name": "HELTUN",
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -2850,7 +2885,9 @@
     },
     "homeseer": {
       "name": "HomeSeer",
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "homevolt": {
       "name": "Homevolt",
@@ -3128,7 +3165,10 @@
     },
     "inovelli": {
       "name": "Inovelli",
-      "iot_standards": ["zigbee", "zwave"]
+      "iot_standards": [
+        "zigbee",
+        "zwave"
+      ]
     },
     "inspired_shades": {
       "name": "Inspired Shades",
@@ -3285,7 +3325,9 @@
     },
     "jasco": {
       "name": "Jasco",
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "jellyfin": {
       "name": "Jellyfin",
@@ -3570,7 +3612,9 @@
     },
     "level": {
       "name": "Level",
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "leviton": {
       "name": "Leviton",
@@ -3582,7 +3626,9 @@
           "name": "Leviton Decora Wi-Fi"
         }
       },
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "levoit": {
       "name": "Levoit",
@@ -4268,7 +4314,9 @@
           "name": "Motionblinds Bluetooth"
         }
       },
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "motioneye": {
       "name": "motionEye",
@@ -4494,12 +4542,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "nexia": {
-      "name": "Nexia/American Standard/Trane",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "nexity": {
       "name": "Nexity Eug\u00e9nie",
       "integration_type": "virtual",
@@ -4671,7 +4713,9 @@
           "name": "Nuki Bridge"
         }
       },
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "numato": {
       "name": "Numato USB GPIO Expander",
@@ -6096,7 +6140,9 @@
           "name": "Shelly"
         }
       },
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "shodan": {
       "name": "Shodan",
@@ -6652,7 +6698,9 @@
           "name": "SwitchBot Cloud"
         }
       },
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "switcher_kis": {
       "name": "Switcher",
@@ -6928,7 +6976,10 @@
     },
     "third_reality": {
       "name": "Third Reality",
-      "iot_standards": ["matter", "zigbee"]
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
     },
     "thomson": {
       "name": "Thomson",
@@ -7065,7 +7116,9 @@
           "name": "Tapo"
         }
       },
-      "iot_standards": ["matter"]
+      "iot_standards": [
+        "matter"
+      ]
     },
     "traccar": {
       "name": "Traccar",
@@ -7116,6 +7169,23 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Trafikverket Weather Station"
+        }
+      }
+    },
+    "trane": {
+      "name": "Trane",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
         }
       }
     },
@@ -7202,7 +7272,9 @@
         "ultraloq": {
           "integration_type": "virtual",
           "config_flow": false,
-          "iot_standards": ["zwave"],
+          "iot_standards": [
+            "zwave"
+          ],
           "name": "Ultraloq"
         }
       }
@@ -7984,7 +8056,9 @@
     },
     "zooz": {
       "name": "Zooz",
-      "iot_standards": ["zwave"]
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "zwave_js": {
       "name": "Z-Wave",
