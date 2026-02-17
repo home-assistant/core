@@ -216,8 +216,8 @@ class BroadlinkSP4BDevice(BroadlinkDevice):
 def get_device(name):
     """Get a device by name."""
     dev_type = BROADLINK_DEVICES[name][5]
-    if dev_type in {0x4EB5}:
+    if dev_type == 0x4EB5:
         return BroadlinkMP1BG1Device(name, *BROADLINK_DEVICES[name])
-    if dev_type in {0x5115}:
+    if dev_type == 0x5115:
         return BroadlinkSP4BDevice(name, *BROADLINK_DEVICES[name])
     return BroadlinkDevice(name, *BROADLINK_DEVICES[name])

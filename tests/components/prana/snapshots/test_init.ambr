@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_device_info_registered
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'prana',
+        'ECC9FFE0E574',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Prana',
+    'model': 'PRANA RECUPERATOR 150',
+    'model_id': None,
+    'name': 'PRANA RECUPERATOR',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'ECC9FFE0E574',
+    'sw_version': '46',
+    'via_device_id': None,
+  })
+# ---

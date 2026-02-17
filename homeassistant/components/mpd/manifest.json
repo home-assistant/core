@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/mpd",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["mpd"],
   "requirements": ["python-mpd2==3.1.1"]

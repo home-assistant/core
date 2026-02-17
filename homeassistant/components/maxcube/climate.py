@@ -149,7 +149,7 @@ class MaxCubeClimate(ClimateEntity):
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_temperature_mode(self._device, temp, mode)
-            except (TimeoutError, OSError):
+            except TimeoutError, OSError:
                 _LOGGER.error("Setting HVAC mode failed")
 
     @property
@@ -192,7 +192,7 @@ class MaxCubeClimate(ClimateEntity):
         self._set_target(None, temp)
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self._device.mode == MAX_DEVICE_MODE_MANUAL:
             if self._device.target_temperature == self._device.comfort_temperature:

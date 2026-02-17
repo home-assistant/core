@@ -6,7 +6,6 @@ from typing import Any, cast
 from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -15,7 +14,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
 from .const import ATTR_REQUESTED_BY, ATTR_SORT_ORDER, ATTR_STATUS, DOMAIN, LOGGER
@@ -32,23 +32,6 @@ SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
         vol.Optional(ATTR_REQUESTED_BY): int,
     }
 )
-
-
-def _async_get_entry(hass: HomeAssistant, config_entry_id: str) -> OverseerrConfigEntry:
-    """Get the Overseerr config entry."""
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(OverseerrConfigEntry, entry)
 
 
 async def _get_media(
@@ -70,7 +53,9 @@ async def _get_media(
 
 async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     """Get requests made to Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    entry: OverseerrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     client = entry.runtime_data.client
     kwargs: dict[str, Any] = {}
     if status := call.data.get(ATTR_STATUS):
