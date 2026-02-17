@@ -28,6 +28,7 @@ from homeassistant.helpers.selector import (
     ConfigEntrySelector,
     ConfigEntrySelectorConfig,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import client_context
 
@@ -65,9 +66,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-                vol.Optional(
-                    CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION
-                ): vol.In(ENCRYPTION_OPTIONS),
+                vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+                    ENCRYPTION_OPTIONS
+                ),
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_SENDER_NAME): cv.string,
@@ -88,8 +89,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     _LOGGER.debug("Importing SMTP configuration from YAML")
-
-    from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
     async_create_issue(
         hass,
@@ -122,6 +121,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
 
 CONF_CONFIG_ENTRY = "config_entry"
 
