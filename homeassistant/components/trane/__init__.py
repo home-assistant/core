@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> boo
     try:
         await conn.connect()
         await conn.login()
-    except (SteamloopConnectionError, TimeoutError) as err:
+    except SteamloopConnectionError, TimeoutError as err:
         await conn.disconnect()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
