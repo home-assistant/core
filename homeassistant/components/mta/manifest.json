@@ -1,0 +1,12 @@
+{
+  "domain": "mta",
+  "name": "MTA New York City Transit",
+  "codeowners": ["@OnFreund"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mta",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pymta"],
+  "quality_scale": "silver",
+  "requirements": ["py-nymta==0.3.4"]
+}
