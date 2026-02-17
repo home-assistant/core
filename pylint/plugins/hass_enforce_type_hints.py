@@ -781,14 +781,17 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="async_get_last_state",
         return_type=["State", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_get_last_extra_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_restore_state_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
@@ -2559,10 +2562,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="extra_restore_state_data",
                     return_type="SensorExtraStoredData",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_get_last_sensor_data",
                     return_type=["SensorExtraStoredData", None],
+                    mandatory=True,
                 ),
             ],
         ),

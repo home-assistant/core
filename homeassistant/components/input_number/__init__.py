@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Self
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -268,7 +268,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_ID]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),

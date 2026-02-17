@@ -69,12 +69,47 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "drive_state": {
+        "name": "[%key:component::onedrive::entity::sensor::drive_state::name%]",
+        "state": {
+          "critical": "[%key:component::onedrive::entity::sensor::drive_state::state::critical%]",
+          "exceeded": "[%key:component::onedrive::entity::sensor::drive_state::state::exceeded%]",
+          "nearing": "[%key:component::onedrive::entity::sensor::drive_state::state::nearing%]",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "remaining_size": {
+        "name": "[%key:component::onedrive::entity::sensor::remaining_size::name%]"
+      },
+      "total_size": {
+        "name": "[%key:component::onedrive::entity::sensor::total_size::name%]"
+      },
+      "used_size": {
+        "name": "[%key:component::onedrive::entity::sensor::used_size::name%]"
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "[%key:component::onedrive::exceptions::authentication_failed::message%]"
     },
     "failed_to_get_folder": {
       "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
+    },
+    "update_failed": {
+      "message": "[%key:component::onedrive::exceptions::update_failed::message%]"
+    }
+  },
+  "issues": {
+    "drive_almost_full": {
+      "description": "[%key:component::onedrive::issues::drive_almost_full::description%]",
+      "title": "[%key:component::onedrive::issues::drive_almost_full::title%]"
+    },
+    "drive_full": {
+      "description": "[%key:component::onedrive::issues::drive_full::description%]",
+      "title": "[%key:component::onedrive::issues::drive_full::title%]"
     }
   }
 }
