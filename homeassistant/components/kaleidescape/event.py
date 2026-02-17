@@ -164,7 +164,7 @@ class KaleidescapeEventEntity(KaleidescapeEntity, EventEntity):
 
         try:
             volume_level = int(params[0])
-        except (IndexError, ValueError, TypeError):
+        except IndexError, ValueError, TypeError:
             _LOGGER.warning("Invalid level for SET_VOLUME_LEVEL: %s", params)
             return
 
