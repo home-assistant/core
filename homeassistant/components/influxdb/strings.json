@@ -26,7 +26,7 @@
         },
         "data_description": {
           "database": "The name of the database.",
-          "ssl_ca_cert": "Part to the SSL Certificate"
+          "ssl_ca_cert": "Path to the SSL Certificate"
         },
         "title": "InfluxDB Configuration"
       },
@@ -42,12 +42,12 @@
         "data_description": {
           "bucket": "The name of the bucket.",
           "organization": "The name of the organization.",
-          "ssl_ca_cert": "Part to the SSL Certificate"
+          "ssl_ca_cert": "Path to the SSL Certificate"
         },
         "title": "InfluxDB Configuration"
       },
       "import": {
-        "title": "Import configuration"
+        "title": "Import Configuration"
       },
       "user": {
         "menu_options": {

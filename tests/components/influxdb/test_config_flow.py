@@ -603,7 +603,7 @@ async def test_import(
         data=config_base,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{db_name} ({host})"
     assert result["data"] == config_base
 
@@ -659,7 +659,12 @@ async def test_import(
     indirect=["mock_client"],
 )
 async def test_import_connection_error(
-    hass: HomeAssistant, mock_client, config_base, get_write_api, test_exception, reason
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
+    test_exception: Exception,
+    reason: str,
 ) -> None:
     """Test abort on connection error."""
     write_api = get_write_api(mock_client)
@@ -671,7 +676,7 @@ async def test_import_connection_error(
         data=config_base,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
