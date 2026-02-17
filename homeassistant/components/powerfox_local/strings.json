@@ -41,5 +41,10 @@
         "name": "Energy usage low tariff"
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error while updating the device: {error}"
+    }
   }
 }
