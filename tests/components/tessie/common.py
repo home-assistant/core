@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 # Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
+TEST_VEHICLE_BATTERY = load_json_object_fixture("battery.json", DOMAIN)
 TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
 TEST_VEHICLE_STATUS_ASLEEP = {"status": TessieStatus.ASLEEP}
 
@@ -52,6 +53,7 @@ ERROR_CONNECTION = ClientConnectionError()
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 RESPONSE_OK = {"response": {}, "error": None}
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 SCOPES = [

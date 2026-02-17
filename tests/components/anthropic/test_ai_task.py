@@ -3,10 +3,13 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.anthropic.const import CONF_CHAT_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -51,13 +54,45 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
-async def test_generate_structured_data_legacy(
+async def test_empty_data(
     hass: HomeAssistant,
-    mock_config_entry_with_no_structured_output: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test AI Task data generation but the data returned is empty."""
+    mock_create_stream.return_value = [create_content_block(0, [""])]
+
+    with pytest.raises(
+        HomeAssistantError, match="Last content in chat log is not an AssistantContent"
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+        )
+
+
+@freeze_time("2026-01-01 12:00:00")
+async def test_generate_structured_data_legacy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test AI Task structured data generation with legacy method."""
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                CONF_CHAT_MODEL: "claude-sonnet-4-0",
+            },
+        )
+
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -86,15 +121,122 @@ async def test_generate_structured_data_legacy(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+
+
+@freeze_time("2026-01-01 12:00:00")
+async def test_generate_structured_data_legacy_tools(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test AI Task structured data generation with legacy method and tools enabled."""
+    mock_create_stream.return_value = [
+        create_tool_use_block(
+            1,
+            "toolu_0123456789AbCdEfGhIjKlM",
+            "test_task",
+            ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+        ),
+    ]
+
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={"chat_model": "claude-sonnet-4-0", "web_search": True},
+        )
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+
+
+@freeze_time("2026-01-01 12:00:00")
+async def test_generate_structured_data_legacy_extended_thinking(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test AI Task structured data generation with legacy method and extended_thinking."""
+    mock_create_stream.return_value = [
+        create_tool_use_block(
+            1,
+            "toolu_0123456789AbCdEfGhIjKlM",
+            "test_task",
+            ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+        ),
+    ]
+
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                "chat_model": "claude-sonnet-4-0",
+                "thinking_budget": 1500,
+            },
+        )
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
 
 
 async def test_generate_invalid_structured_data_legacy(
     hass: HomeAssistant,
-    mock_config_entry_with_no_structured_output: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test AI Task with invalid JSON response with legacy method."""
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                CONF_CHAT_MODEL: "claude-sonnet-4-0",
+            },
+        )
+
     mock_create_stream.return_value = [
         create_tool_use_block(
             1,
@@ -126,11 +268,13 @@ async def test_generate_invalid_structured_data_legacy(
         )
 
 
+@freeze_time("2026-01-01 12:00:00")
 async def test_generate_structured_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test AI Task structured data generation."""
     mock_create_stream.return_value = [
@@ -156,6 +300,7 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
 
 
 async def test_generate_data_with_attachments(
@@ -177,7 +322,7 @@ async def test_generate_data_with_attachments(
             side_effect=[
                 media_source.PlayMedia(
                     url="http://example.com/doorbell_snapshot.jpg",
-                    mime_type="image/jpeg",
+                    mime_type="image/jpg",
                     path=Path("doorbell_snapshot.jpg"),
                 ),
                 media_source.PlayMedia(
@@ -188,10 +333,6 @@ async def test_generate_data_with_attachments(
             ],
         ),
         patch("pathlib.Path.exists", return_value=True),
-        patch(
-            "homeassistant.components.openai_conversation.entity.guess_file_type",
-            return_value=("image/jpeg", None),
-        ),
         patch("pathlib.Path.read_bytes", return_value=b"fake_image_data"),
     ):
         result = await ai_task.async_generate_data(
@@ -242,3 +383,75 @@ async def test_generate_data_with_attachments(
     assert document_block["source"]["data"] == "ZmFrZV9pbWFnZV9kYXRh"
     assert document_block["source"]["media_type"] == "application/pdf"
     assert document_block["source"]["type"] == "base64"
+
+
+async def test_generate_data_invalid_attachments(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test AI Task data generation with attachments of unsupported type."""
+    entity_id = "ai_task.claude_ai_task"
+
+    mock_create_stream.return_value = [create_content_block(0, ["Hi there!"])]
+
+    # Test path that doesn't exist
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            side_effect=[
+                media_source.PlayMedia(
+                    url="http://example.com/doorbell_snapshot.jpg",
+                    mime_type="image/jpeg",
+                    path=Path("doorbell_snapshot.jpg"),
+                )
+            ],
+        ),
+        patch("pathlib.Path.exists", return_value=False),
+        pytest.raises(
+            HomeAssistantError, match="`doorbell_snapshot.jpg` does not exist"
+        ),
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=entity_id,
+            instructions="Test prompt",
+            attachments=[
+                {"media_content_id": "media-source://media/doorbell_snapshot.jpg"},
+            ],
+        )
+
+    # Test unsupported file type
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            side_effect=[
+                media_source.PlayMedia(
+                    url="http://example.com/doorbell_snapshot.txt",
+                    mime_type=None,
+                    path=Path("doorbell_snapshot.txt"),
+                )
+            ],
+        ),
+        patch("pathlib.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.anthropic.entity.guess_file_type",
+            return_value=("text/plain", None),
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Only images and PDF are supported by the Anthropic API",
+        ),
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=entity_id,
+            instructions="Test prompt",
+            attachments=[
+                {"media_content_id": "media-source://media/doorbell_snapshot.txt"},
+            ],
+        )

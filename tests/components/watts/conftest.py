@@ -7,6 +7,7 @@ import pytest
 from visionpluspython.models import Device, create_device_from_data
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -33,7 +34,7 @@ TEST_EXPIRES_AT = 9999999999
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Ensure the application credentials are registered for each test."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
 
     await async_import_client_credential(
         hass,

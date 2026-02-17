@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from pysmarlaapi.connection.exceptions import AuthenticationException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -17,7 +18,7 @@ async def test_init_invalid_auth(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
 ) -> None:
     """Test init invalid authentication behavior."""
-    mock_connection.refresh_token.return_value = False
+    mock_connection.refresh_token.side_effect = AuthenticationException
 
     assert not await setup_integration(hass, mock_config_entry)
 
