@@ -118,6 +118,27 @@ async def test_reauth_flow_connection_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_reauth_flow_unexpected_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bus_feed: MagicMock,
+) -> None:
+    """Test the reauth flow with unexpected error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_bus_feed.return_value.get_stops.side_effect = RuntimeError("Unexpected error")
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "bad_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 # Subway subentry tests
 
 
@@ -411,6 +432,38 @@ async def test_bus_subentry_route_fetch_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_route"}
+
+
+async def test_bus_subentry_connection_test_error(
+    hass: HomeAssistant,
+    mock_config_entry_with_api_key: MockConfigEntry,
+    mock_bus_feed: MagicMock,
+) -> None:
+    """Test bus subentry flow when connection test fails after route validation."""
+    mock_config_entry_with_api_key.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_api_key.entry_id)
+    await hass.async_block_till_done()
+
+    # get_stops succeeds but get_arrivals fails
+    mock_bus_feed.return_value.get_arrivals.side_effect = MTAFeedError("Connection error")
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry_with_api_key.entry_id, SUBENTRY_TYPE_BUS),
+        context={"source": SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE: "M15"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "400561"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_bus_subentry_with_direction(
