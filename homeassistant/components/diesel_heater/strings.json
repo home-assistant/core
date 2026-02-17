@@ -26,7 +26,7 @@
           "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data::temperature_offset%]",
           "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
         },
-        "description": "Select your Diesel Heater from the list.",
+        "description": "Select your Diesel heater from the list.",
         "data_description": {
           "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data_description::temperature_offset%]",
           "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
