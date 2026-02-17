@@ -131,8 +131,7 @@ class SerialSensor(SensorEntity):
         value_template,
     ):
         """Initialize the Serial sensor."""
-        self._name = name
-        self._state = None
+        self._attr_name = name
         self._port = port
         self._baudrate = baudrate
         self._bytesize = bytesize
@@ -143,7 +142,6 @@ class SerialSensor(SensorEntity):
         self._dsrdtr = dsrdtr
         self._serial_loop_task = None
         self._template = value_template
-        self._attributes = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
@@ -215,7 +213,7 @@ class SerialSensor(SensorEntity):
                             pass
                         else:
                             if isinstance(data, dict):
-                                self._attributes = data
+                                self._attr_extra_state_attributes = data
 
                         if self._template is not None:
                             line = self._template.async_render_with_possible_json_value(
@@ -223,13 +221,13 @@ class SerialSensor(SensorEntity):
                             )
 
                         _LOGGER.debug("Received: %s", line)
-                        self._state = line
+                        self._attr_native_value = line
                         self.async_write_ha_state()
 
     async def _handle_error(self):
         """Handle error for serial connection."""
-        self._state = None
-        self._attributes = None
+        self._attr_native_value = None
+        self._attr_extra_state_attributes = None
         self.async_write_ha_state()
         await asyncio.sleep(5)
 
@@ -238,18 +236,3 @@ class SerialSensor(SensorEntity):
         """Close resources."""
         if self._serial_loop_task:
             self._serial_loop_task.cancel()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the attributes of the entity (if any JSON present)."""
-        return self._attributes
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
