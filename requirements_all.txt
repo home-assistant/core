@@ -1670,7 +1670,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.2
+onedrive-personal-sdk==0.1.4
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
