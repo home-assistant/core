@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -27,6 +28,7 @@ from homeassistant.helpers.selector import (
     ConfigEntrySelector,
     ConfigEntrySelectorConfig,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import client_context
 
 from .const import (
@@ -40,11 +42,86 @@ from .const import (
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
+    DEFAULT_DEBUG,
+    DEFAULT_ENCRYPTION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
     DOMAIN,
+    ENCRYPTION_OPTIONS,
     SERVICE_SEND_MESSAGE,
 )
 from .helpers import try_connect
 from .notify import MailNotificationService
+
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
+                vol.Required(CONF_SENDER): vol.Email(),
+                vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                vol.Optional(
+                    CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION
+                ): vol.In(ENCRYPTION_OPTIONS),
+                vol.Optional(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SENDER_NAME): cv.string,
+                vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up SMTP from YAML configuration."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    _LOGGER.debug("Importing SMTP configuration from YAML")
+
+    from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={
+                CONF_SERVER: conf[CONF_SERVER],
+                CONF_PORT: conf[CONF_PORT],
+                CONF_TIMEOUT: conf[CONF_TIMEOUT],
+                CONF_ENCRYPTION: conf[CONF_ENCRYPTION],
+                CONF_USERNAME: conf.get(CONF_USERNAME),
+                CONF_PASSWORD: conf.get(CONF_PASSWORD),
+                CONF_SENDER: conf[CONF_SENDER],
+                CONF_SENDER_NAME: conf.get(CONF_SENDER_NAME),
+                CONF_RECIPIENT: conf[CONF_RECIPIENT],
+                CONF_DEBUG: conf[CONF_DEBUG],
+                CONF_VERIFY_SSL: conf[CONF_VERIFY_SSL],
+            },
+        )
+    )
+
+    return True
 
 CONF_CONFIG_ENTRY = "config_entry"
 

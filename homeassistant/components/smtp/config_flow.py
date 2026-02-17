@@ -192,6 +192,18 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(
+        self, import_data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        # Check if already configured with same sender
+        self._async_abort_entries_match({CONF_SENDER: import_data[CONF_SENDER]})
+
+        return self.async_create_entry(
+            title=import_data[CONF_SENDER],
+            data=import_data,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
