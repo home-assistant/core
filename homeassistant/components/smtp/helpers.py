@@ -46,7 +46,7 @@ def try_connect(
         return "invalid_auth"
     except smtplib.SMTPException:
         return "cannot_connect"
-    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):
+    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):  # fmt: skip
         return "cannot_connect"
     else:
         return None
