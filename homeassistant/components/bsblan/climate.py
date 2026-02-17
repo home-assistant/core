@@ -103,21 +103,22 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         """Return the current temperature."""
         if self.coordinator.data.state.current_temperature is None:
             return None
-        return self.coordinator.data.state.current_temperature.value
+        return float(self.coordinator.data.state.current_temperature.value)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.state.target_temperature is None:
+        if (target_temp := self.coordinator.data.state.target_temperature) is None:
             return None
-        return self.coordinator.data.state.target_temperature.value
+        return float(target_temp.value)
 
     @property
     def _hvac_mode_value(self) -> int | str | None:
         """Return the raw hvac_mode value from the coordinator."""
         if (hvac_mode := self.coordinator.data.state.hvac_mode) is None:
             return None
-        return hvac_mode.value
+        value: int | str = hvac_mode.value
+        return value
 
     @property
     def hvac_mode(self) -> HVACMode | None:

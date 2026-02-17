@@ -123,14 +123,14 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
         """Return the current temperature."""
         if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
             return None
-        return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
+        return float(self.coordinator.data.dhw.dhw_actual_value_top_temperature.value)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.coordinator.data.dhw.nominal_setpoint is None:
             return None
-        return self.coordinator.data.dhw.nominal_setpoint.value
+        return float(self.coordinator.data.dhw.nominal_setpoint.value)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

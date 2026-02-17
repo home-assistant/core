@@ -131,6 +131,7 @@ homeassistant.components.bring.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
+homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
