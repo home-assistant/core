@@ -1,7 +1,9 @@
 """Tests for the Mastodon integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from mastodon.Mastodon import (
     MastodonError,
     MastodonNotFoundError,
@@ -19,7 +21,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_device_info(
@@ -117,6 +119,7 @@ async def test_coordinator_general_error(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test general error during coordinator update makes entities unavailable."""
     await setup_integration(hass, mock_config_entry)
@@ -128,7 +131,8 @@ async def test_coordinator_general_error(
 
     mock_mastodon_client.account_verify_credentials.side_effect = MastodonError
 
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -146,6 +150,7 @@ async def test_coordinator_auth_failure_triggers_reauth(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test auth failure during coordinator update triggers reauth flow."""
     await setup_integration(hass, mock_config_entry)
@@ -155,7 +160,8 @@ async def test_coordinator_auth_failure_triggers_reauth(
         MastodonUnauthorizedError
     )
 
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
