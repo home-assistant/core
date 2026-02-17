@@ -19,7 +19,10 @@ def mock_github_api() -> Generator[AsyncMock]:
 
         # Mock PR response
         pr_response = AsyncMock()
-        pr_response.data = {"head": {"sha": "abc123def456"}}
+        pr_response.data = {
+            "head": {"sha": "abc123def456"},
+            "base": {"sha": "base789abc012"},
+        }
 
         # Mock workflow runs response
         workflow_response = AsyncMock()
