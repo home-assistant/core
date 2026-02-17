@@ -101,9 +101,9 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.state.current_temperature is None:
+        if (current_temp := self.coordinator.data.state.current_temperature) is None:
             return None
-        return float(self.coordinator.data.state.current_temperature.value)
+        return float(current_temp.value)
 
     @property
     def target_temperature(self) -> float | None:
