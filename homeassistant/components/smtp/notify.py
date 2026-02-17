@@ -226,9 +226,7 @@ class MailNotificationService(BaseNotificationService):
 
         return True
 
-    def send_message(
-        self, message: str, **kwargs: Any
-    ) -> tuple[MIMEMultipart | MIMEText, list[str]] | None:
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 
         Will send plain text normally, with pictures as attachments if images config is
@@ -276,9 +274,7 @@ class MailNotificationService(BaseNotificationService):
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        self._send_email(msg, recipients)
-
-        return msg, recipients
+        return self._send_email(msg, recipients)
 
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
