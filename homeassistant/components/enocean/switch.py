@@ -51,12 +51,12 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._attr_is_on = is_on
         self.schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        self.gateway.switch_turn_on(self.enocean_entity_id)
+        await self.gateway.switch_async_turn_on(self.enocean_entity_id)
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        self.gateway.switch_turn_off(self.enocean_entity_id)
+        await self.gateway.switch_async_turn_off(self.enocean_entity_id)
         self.schedule_update_ha_state()
