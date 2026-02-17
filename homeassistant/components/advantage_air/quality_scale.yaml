@@ -5,12 +5,7 @@ rules:
     comment: https://developers.home-assistant.io/blog/2025/09/25/entity-services-api-changes/
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      Move coordinator from __init__.py to coordinator.py.
-      Consider using entity descriptions for binary_sensor and switch.
-      Consider simplifying climate supported features flow.
+  common-modules: done
   config-flow-test-coverage:
     status: todo
     comment: |
@@ -33,9 +28,7 @@ rules:
     comment: Entities do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: done
-    comment: Consider extending coordinator to access API via coordinator and remove extra dataclass.
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -92,7 +85,7 @@ rules:
   entity-translations: todo
   exception-translations:
     status: todo
-    comment: UpdateFailed in the coordinator
+    comment: HomeAssistantError in entity.py and ServiceValidationError in climate.py
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
