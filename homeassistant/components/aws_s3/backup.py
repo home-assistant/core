@@ -99,7 +99,7 @@ class S3BackupAgent(BackupAgent):
         self.unique_id = entry.entry_id
         self._backup_cache: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
-        self._prefix: str = entry.data.get(CONF_PREFIX, "").strip("/")
+        self._prefix: str = entry.data.get(CONF_PREFIX, "")
 
     def _with_prefix(self, key: str) -> str:
         """Add prefix to a key if configured."""

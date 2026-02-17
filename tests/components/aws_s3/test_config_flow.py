@@ -196,9 +196,22 @@ async def test_no_abort_if_different_prefix(
     assert result["data"][CONF_PREFIX] == "prefix-b"
 
 
-async def test_flow_prefix_normalization(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("input_prefix", "expected_prefix", "expected_title"),
+    [
+        ("/backups/", "backups", "test - backups"),
+        ("/", "", "test"),
+        ("my-prefix/", "my-prefix", "test - my-prefix"),
+    ],
+)
+async def test_flow_prefix_normalization(
+    hass: HomeAssistant,
+    input_prefix: str,
+    expected_prefix: str,
+    expected_title: str,
+) -> None:
     """Test that leading/trailing slashes are stripped from the prefix."""
-    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "/backups/"})
+    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: input_prefix})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test - backups"
-    assert result["data"][CONF_PREFIX] == "backups"
+    assert result["title"] == expected_title
+    assert result["data"][CONF_PREFIX] == expected_prefix
