@@ -38,7 +38,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-3-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -102,7 +102,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -166,7 +166,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -230,7 +230,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -294,7 +294,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -358,7 +358,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-3-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -422,7 +422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -486,7 +486,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -550,7 +550,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-6-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-6-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -618,7 +618,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -690,7 +690,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -759,7 +759,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-3-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -828,7 +828,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -900,7 +900,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -969,7 +969,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-6-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-6-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1038,7 +1038,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-7-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-7-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1110,7 +1110,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-8-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-8-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1179,7 +1179,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-9-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-9-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1247,7 +1247,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1317,7 +1317,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1387,7 +1387,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1457,7 +1457,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1527,7 +1527,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1597,7 +1597,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-3-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1664,7 +1664,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1728,7 +1728,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1794,7 +1794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1858,7 +1858,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---

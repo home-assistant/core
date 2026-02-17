@@ -159,8 +159,8 @@ async def setup_integration_with_node_fixtures(
 ) -> None:
     """Set up Matter integration with all fixtures as nodes."""
     nodes = [
-        create_node_from_fixture(node_fixture, node_id=next_id)
-        for next_id, node_fixture in enumerate(FIXTURES, start=1)
+        create_node_from_fixture(node_fixture, override_serial=True)
+        for node_fixture in FIXTURES
     ]
 
     await _setup_integration_with_nodes(hass, client, nodes)
@@ -169,16 +169,14 @@ async def setup_integration_with_node_fixtures(
 def create_node_from_fixture(
     node_fixture: str,
     override_attributes: dict[str, Any] | None = None,
-    node_id: int | None = None,
+    *,
+    override_serial: bool = False,
 ) -> MatterNode:
     """Create a node from a fixture."""
     node_data = load_and_parse_node_fixture(node_fixture)
-    if node_id is not None:
-        # Override node_id to ensure uniqueness across fixtures
-        node_data["node_id"] = node_id
-        # Override serial number to ensure uniqueness across fixtures
-        if "0/40/15" in node_data["attributes"]:
-            node_data["attributes"]["0/40/15"] = f"serial_{node_id}"
+    # Override serial number to ensure uniqueness across fixtures
+    if override_serial and "0/40/15" in node_data["attributes"]:
+        node_data["attributes"]["0/40/15"] = f"serial_{node_data['node_id']}"
     if override_attributes:
         node_data["attributes"].update(override_attributes)
     return MatterNode(
@@ -218,12 +216,14 @@ async def trigger_subscription_callback(
 
 
 @cache
-def _get_fixture_name(node_id: int) -> str:
+def _get_fixture_name(node_id: int) -> dict[int, str]:
     """Get the fixture name for a given node ID."""
-    try:
-        return FIXTURES[node_id - 1]
-    except IndexError as err:
-        raise KeyError(f"Fixture for node id {node_id} not found") from err
+    for fixture_name in FIXTURES:
+        fixture_data = load_and_parse_node_fixture(fixture_name)
+        if fixture_data["node_id"] == node_id:
+            return fixture_name
+
+    raise KeyError(f"Fixture for node id {node_id} not found")
 
 
 def snapshot_matter_entities(
