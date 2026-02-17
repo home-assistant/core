@@ -54,7 +54,7 @@ async def test_dynamic_entities(
         "00:00:00:00:00:02"
     ].heater_data = heater_data
 
-    await mock_config_entry.runtime_data._async_receive_callback()
+    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
     assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
         eheimdigital_hub_mock.return_value.devices[
