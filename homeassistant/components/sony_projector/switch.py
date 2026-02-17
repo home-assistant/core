@@ -58,6 +58,7 @@ class SonyProjector(SwitchEntity):
     def __init__(self, sdcp_connection, name):
         """Init of the Sony projector."""
         self._sdcp = sdcp_connection
+        self._attr_available = False
         self._attr_name = name
 
     def update(self) -> None:
