@@ -814,6 +814,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "286D97*",
     },
     {
+        "domain": "smartthings",
+        "hostname": "samsung-*",
+    },
+    {
         "domain": "smlight",
         "registered_devices": True,
     },
@@ -1341,6 +1345,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*",
+    },
+    {
+        "domain": "vesync",
+        "hostname": "levoit-*",
     },
     {
         "domain": "vicare",

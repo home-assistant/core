@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
@@ -14,11 +14,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.hass_dict import HassKey
 
-from . import OnkyoConfigEntry
 from .const import (
     DOMAIN,
     LEGACY_HDMI_OUTPUT_MAPPING,
@@ -31,10 +31,15 @@ from .const import (
     VolumeResolution,
 )
 from .receiver import ReceiverManager
-from .services import DATA_MP_ENTITIES
 from .util import get_meaning
 
+if TYPE_CHECKING:
+    from . import OnkyoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
+
+
+DATA_MP_ENTITIES: HassKey[dict[str, dict[Zone, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 
 SUPPORTED_FEATURES_BASE = (
@@ -103,6 +108,12 @@ async def async_setup_entry(
 
     entities: dict[Zone, OnkyoMediaPlayer] = {}
     all_entities[entry.entry_id] = entities
+
+    @callback
+    def del_mp_entities() -> None:
+        del all_entities[entry.entry_id]
+
+    entry.async_on_unload(del_mp_entities)
 
     volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]

@@ -478,7 +478,7 @@ class Template:
         """Parse the result."""
         try:
             return _cached_parse_result(render_result)
-        except (ValueError, TypeError, SyntaxError, MemoryError):
+        except ValueError, TypeError, SyntaxError, MemoryError:
             pass
 
         return render_result
@@ -1416,7 +1416,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
             # if method is common or something else, use common rounding
             value = round(float(value), precision)
         return int(value) if precision == 0 else value
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("round", value)
@@ -1427,7 +1427,7 @@ def multiply(value, amount, default=_SENTINEL):
     """Filter to convert value to float and multiply it."""
     try:
         return float(value) * amount
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("multiply", value)
@@ -1438,7 +1438,7 @@ def add(value, amount, default=_SENTINEL):
     """Filter to convert value to float and add it."""
     try:
         return float(value) + amount
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value can't be converted to float
         if default is _SENTINEL:
             raise_no_default("add", value)
@@ -1546,7 +1546,7 @@ def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         if default is _SENTINEL:
             raise_no_default("float", value)
         return default
@@ -1556,7 +1556,7 @@ def forgiving_float_filter(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         if default is _SENTINEL:
             raise_no_default("float", value)
         return default
@@ -1582,7 +1582,7 @@ def is_number(value):
     """Try to convert value to a float."""
     try:
         fvalue = float(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return False
     if not math.isfinite(fvalue):
         return False

@@ -87,6 +87,28 @@
       "cell_voltage": {
         "name": "Cell {cell} voltage"
       },
+      "charge_state": {
+        "name": "Charge state",
+        "state": {
+          "absorption": "[%key:component::victron_ble::entity::sensor::device_state::state::absorption%]",
+          "active": "[%key:component::victron_ble::entity::sensor::device_state::state::active%]",
+          "battery_safe": "[%key:component::victron_ble::entity::sensor::device_state::state::battery_safe%]",
+          "bulk": "[%key:component::victron_ble::entity::sensor::device_state::state::bulk%]",
+          "equalize_manual": "[%key:component::victron_ble::entity::sensor::device_state::state::equalize_manual%]",
+          "external_control": "[%key:component::victron_ble::entity::sensor::device_state::state::external_control%]",
+          "fault": "[%key:component::victron_ble::entity::sensor::device_state::state::fault%]",
+          "float": "[%key:component::victron_ble::entity::sensor::device_state::state::float%]",
+          "inverting": "[%key:component::victron_ble::entity::sensor::device_state::state::inverting%]",
+          "low_power": "[%key:component::victron_ble::entity::sensor::device_state::state::low_power%]",
+          "not_available": "[%key:component::victron_ble::entity::sensor::device_state::state::not_available%]",
+          "off": "[%key:common::state::off%]",
+          "power_supply": "[%key:component::victron_ble::entity::sensor::device_state::state::power_supply%]",
+          "recondition": "[%key:component::victron_ble::entity::sensor::device_state::state::recondition%]",
+          "repeated_absorption": "[%key:component::victron_ble::entity::sensor::device_state::state::repeated_absorption%]",
+          "starting_up": "[%key:component::victron_ble::entity::sensor::device_state::state::starting_up%]",
+          "storage": "[%key:component::victron_ble::entity::sensor::device_state::state::storage%]"
+        }
+      },
       "charger_error": {
         "name": "Charger error",
         "state": {
