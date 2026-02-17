@@ -2982,6 +2982,9 @@ starlink-grpc-core==1.2.3
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.trane
+steamloop==1.1.0
+
 # homeassistant.components.steam_online
 steamodd==4.21
 
