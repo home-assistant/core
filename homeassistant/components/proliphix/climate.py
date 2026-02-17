@@ -78,7 +78,7 @@ class ProliphixThermostat(ClimateEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
 

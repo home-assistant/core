@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
@@ -125,9 +126,9 @@ class SwissHydrologicalDataSensor(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
 
         if not self._data:
             return attrs

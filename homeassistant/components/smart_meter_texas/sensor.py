@@ -1,5 +1,7 @@
 """Support for Smart Meter Texas sensors."""
 
+from typing import Any
+
 from smart_meter_texas import Meter
 
 from homeassistant.components.sensor import (
@@ -58,7 +60,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_unique_id = f"{meter.esiid}_{meter.meter}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {
             METER_NUMBER: self.meter.meter,

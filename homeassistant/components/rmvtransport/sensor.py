@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import (
@@ -166,7 +167,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         try:
             return {
