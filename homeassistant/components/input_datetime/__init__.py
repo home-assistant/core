@@ -337,9 +337,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         }
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_EDITABLE: self.editable,
         }
 

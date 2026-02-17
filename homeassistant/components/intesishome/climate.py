@@ -218,7 +218,7 @@ class IntesisAC(ClimateEntity):
             raise PlatformNotReady from ex
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attrs = {}
         if self._outdoor_temp:

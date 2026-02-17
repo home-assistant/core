@@ -7,6 +7,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 import random
+from typing import Any
 
 import aiohue
 
@@ -622,7 +623,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self.is_group:
             return {}

@@ -83,7 +83,7 @@ class HMDevice(Entity):
         return self._available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         # Static attributes
         attr = {
@@ -240,7 +240,7 @@ class HMHub(Entity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
 

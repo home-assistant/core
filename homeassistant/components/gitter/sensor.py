@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from gitterpy.client import GitterClient
 from gitterpy.errors import GitterRoomError, GitterTokenError
@@ -90,7 +91,7 @@ class GitterSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_USERNAME: self._username,
