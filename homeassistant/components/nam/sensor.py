@@ -10,7 +10,7 @@ import logging
 from nettigo_air_monitor import NAMSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -381,7 +381,9 @@ async def async_setup_entry(
     for old_sensor, new_sensor in MIGRATION_SENSORS:
         old_unique_id = f"{coordinator.unique_id}-{old_sensor}"
         new_unique_id = f"{coordinator.unique_id}-{new_sensor}"
-        if entity_id := ent_reg.async_get_entity_id(PLATFORM, DOMAIN, old_unique_id):
+        if entity_id := ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, old_unique_id
+        ):
             _LOGGER.debug(
                 "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
                 entity_id,

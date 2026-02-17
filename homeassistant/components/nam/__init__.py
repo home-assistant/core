@@ -12,7 +12,7 @@ from nettigo_air_monitor import (
     NettigoAirMonitor,
 )
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
     for sensor_type in ("sds", ATTR_SDS011, ATTR_SPS30):
         unique_id = f"{coordinator.unique_id}-{sensor_type}"
         if entity_id := ent_reg.async_get_entity_id(
-            AIR_QUALITY_PLATFORM, DOMAIN, unique_id
+            AIR_QUALITY_DOMAIN, DOMAIN, unique_id
         ):
             _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
             ent_reg.async_remove(entity_id)

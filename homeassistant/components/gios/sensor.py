@@ -9,7 +9,7 @@ import logging
 from gios.model import GiosSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -187,7 +187,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.gios.station_id}-pm2.5"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.gios.station_id}-{ATTR_PM25}"
         _LOGGER.debug(
