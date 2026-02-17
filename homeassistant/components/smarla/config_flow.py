@@ -12,7 +12,7 @@ from pysmarlaapi.connection.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import DOMAIN, HOST
@@ -25,50 +25,67 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _handle_token(self, token: str) -> tuple[dict[str, str], str | None]:
-        """Handle the token input."""
-        errors: dict[str, str] = {}
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.errors: dict[str, str] = {}
 
+    async def _handle_token(self, token: str) -> str | None:
+        """Handle the token input."""
         try:
             conn = Connection(url=HOST, token_b64=token)
         except ValueError:
-            errors["base"] = "malformed_token"
-            return errors, None
+            self.errors["base"] = "malformed_token"
+            return None
 
         try:
             await conn.refresh_token()
         except ConnectionException:
-            errors["base"] = "cannot_connect"
-            return errors, None
+            self.errors["base"] = "cannot_connect"
+            return None
         except AuthenticationException:
-            errors["base"] = "invalid_auth"
-            return errors, None
+            self.errors["base"] = "invalid_auth"
+            return None
 
-        return errors, conn.token.serialNumber
+        return conn.token.serialNumber
+
+    async def _validate_input(
+        self, user_input: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
+        """Validate the user input."""
+        if user_input is None:
+            return None
+
+        token = user_input[CONF_ACCESS_TOKEN]
+        serial_number = await self._handle_token(token=token)
+
+        if serial_number is not None:
+            await self.async_set_unique_id(serial_number)
+
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch()
+            else:
+                self._abort_if_unique_id_configured()
+
+            return {"token": token, "serial_number": serial_number}
+
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            raw_token = user_input[CONF_ACCESS_TOKEN]
-            errors, serial_number = await self._handle_token(token=raw_token)
-
-            if not errors and serial_number is not None:
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=serial_number,
-                    data={CONF_ACCESS_TOKEN: raw_token},
-                )
+        validated_info = await self._validate_input(user_input)
+        if validated_info is not None:
+            return self.async_create_entry(
+                title=validated_info["serial_number"],
+                data={CONF_ACCESS_TOKEN: validated_info["token"]},
+            )
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+            errors=self.errors,
         )
 
     async def async_step_reauth(
@@ -81,25 +98,15 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication dialog."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            raw_token = user_input[CONF_ACCESS_TOKEN]
-            errors, serial_number = await self._handle_token(token=raw_token)
-
-            config_entry = self._get_reauth_entry()
-
-            if not errors and serial_number != config_entry.unique_id:
-                errors["base"] = "serial_number_mismatch"
-
-            if not errors and serial_number is not None:
-                return self.async_update_reload_and_abort(
-                    config_entry,
-                    data_updates={CONF_ACCESS_TOKEN: raw_token},
-                )
+        validated_info = await self._validate_input(user_input)
+        if validated_info is not None:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={CONF_ACCESS_TOKEN: validated_info["token"]},
+            )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
+            errors=self.errors,
         )

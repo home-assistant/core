@@ -167,6 +167,6 @@ async def test_reauth_mismatch(
         user_input=MOCK_USER_INPUT_MISMATCH,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "serial_number_mismatch"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_USER_INPUT
