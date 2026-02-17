@@ -169,9 +169,8 @@ jobs:
 
           if [[ "${INTEGRATION_CHANGES}" != "[]" ]];
           then
-            # Create a file glob for the integrations
-            integrations_glob=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '. | join(",")')
-            [[ "${integrations_glob}" == *","* ]] && integrations_glob="{${integrations_glob}}"
+            # Create a space-separated list of integrations
+            integrations_glob=$(echo "${INTEGRATION_CHANGES}" | jq -r '. | join(" ")')
 
             # Create list of testable integrations
             possible_integrations=$(echo "${INTEGRATION_CHANGES}" | jq -cSr '.[]')
@@ -190,9 +189,8 @@ jobs:
             # Test group count should be 1, we don't split partial tests
             test_group_count=1
 
-            # Create a file glob for the integrations tests
-            tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
-            [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
+            # Create a space-separated list of test integrations
+            tests_glob=$(echo "${tests}" | jq -r '. | join(" ")')
 
             mariadb_groups="[]"
             postgresql_groups="[]"
@@ -716,7 +714,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${INTEGRATIONS_GLOB}
+          pylint --ignore-missing-annotations=y $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   pylint-tests:
     name: Check pylint on tests
@@ -769,7 +767,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint tests/components/${TESTS_GLOB}
+          pylint $(printf "tests/components/%s " ${TESTS_GLOB})
 
   mypy:
     name: Check mypy
@@ -837,7 +835,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant/components/${INTEGRATIONS_GLOB}
+          mypy $(printf "homeassistant/components/%s " ${INTEGRATIONS_GLOB})
 
   prepare-pytest-full:
     name: Split tests for full run

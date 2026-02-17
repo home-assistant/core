@@ -39,8 +39,9 @@ def _make_climate_data(
     humidity: int = 50,
     cool_setpoint: float = 75.0,
     heat_setpoint: float = 68.0,
+    scale: str = "FAHRENHEIT",
 ) -> dict[int, dict[str, Any]]:
-    """Build mock climate variable data for item ID 123."""
+    """Build mock climate variable data for item ID 123 (Fahrenheit)."""
     return {
         123: {
             "HVAC_STATE": hvac_state,
@@ -49,6 +50,7 @@ def _make_climate_data(
             "HUMIDITY": humidity,
             "COOL_SETPOINT_F": cool_setpoint,
             "HEAT_SETPOINT_F": heat_setpoint,
+            "SCALE": scale,
         }
     }
 
@@ -344,6 +346,7 @@ async def test_climate_not_created_when_no_initial_data(
                 # Missing TEMPERATURE_F and HUMIDITY
                 "COOL_SETPOINT_F": 75.0,
                 "HEAT_SETPOINT_F": 68.0,
+                "SCALE": "FAHRENHEIT",
             }
         }
     ],
@@ -444,6 +447,7 @@ async def test_set_fan_mode(
                 "HUMIDITY": 50,
                 "COOL_SETPOINT_F": 75.0,
                 "HEAT_SETPOINT_F": 68.0,
+                "SCALE": "FAHRENHEIT",
                 # No FAN_MODE or FAN_MODES_LIST
             }
         }
@@ -467,3 +471,55 @@ async def test_fan_mode_not_supported(
     assert not (
         state.attributes.get("supported_features") & ClimateEntityFeature.FAN_MODE
     )
+
+
+# Temperature unit tests - verify correct API methods are called based on SCALE
+
+
+@pytest.mark.parametrize(
+    ("mock_climate_variables", "expected_method", "unexpected_method"),
+    [
+        pytest.param(
+            _make_climate_data(hvac_state="Off", hvac_mode="Heat"),
+            "setHeatSetpointF",
+            "setHeatSetpointC",
+            id="fahrenheit_heat_calls_F_not_C",
+        ),
+        pytest.param(
+            _make_climate_data(hvac_state="Cool", hvac_mode="Cool"),
+            "setCoolSetpointF",
+            "setCoolSetpointC",
+            id="fahrenheit_cool_calls_F_not_C",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_set_temperature_calls_correct_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_climate: MagicMock,
+    expected_method: str,
+    unexpected_method: str,
+) -> None:
+    """Test setting temperature calls correct API method based on SCALE.
+
+    Verifies that when setting temperature:
+    - The correct method for the scale is called
+    - The wrong scale's method is NOT called
+    """
+    # Reset mock to clear any calls from previous parametrized test runs
+    mock_c4_climate.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        blocking=True,
+    )
+    getattr(mock_c4_climate, expected_method).assert_called_once_with(70.0)
+    getattr(mock_c4_climate, unexpected_method).assert_not_called()
