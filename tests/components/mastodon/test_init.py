@@ -107,3 +107,25 @@ async def test_migrate(
     assert config_entry.version == MastodonConfigFlow.VERSION
     assert config_entry.minor_version == MastodonConfigFlow.MINOR_VERSION
     assert config_entry.unique_id == "trwnh_mastodon_social"
+
+
+@pytest.mark.parametrize(
+    ("exc", "state"),
+    [
+        (MastodonNotFoundError, ConfigEntryState.SETUP_RETRY),
+        (MastodonUnauthorizedError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_coordinator_update_failure(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exc: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator update failure."""
+    mock_mastodon_client.account_verify_credentials.side_effect = exc
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state
