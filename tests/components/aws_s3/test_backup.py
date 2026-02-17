@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 from time import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from botocore.exceptions import ConnectTimeoutError
 import pytest
@@ -595,3 +595,145 @@ async def test_agent_list_backups_with_prefix(
     mock_client.get_paginator.return_value.paginate.assert_called_with(
         Bucket="test", Prefix=f"{prefix}/"
     )
+
+
+async def test_agent_delete_backup_with_prefix(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test agent delete backup with prefix."""
+    prefix = "my-prefix"
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": "23e64aec",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    expected_tar_key = f"{prefix}/{tar_filename}"
+    expected_metadata_key = f"{prefix}/{metadata_filename}"
+
+    mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_tar_key)
+    mock_client.delete_object.assert_any_call(Bucket="test", Key=expected_metadata_key)
+
+
+async def test_agent_upload_backup_with_prefix(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup with prefix."""
+    prefix = "my-prefix"
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=test_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        # we must emit at least two chunks
+        # the "appendix" chunk triggers the upload of the final buffer part
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * test_backup.size,
+                b"appendix",
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+        assert resp.status == 201
+
+        tar_filename, metadata_filename = suggested_filenames(test_backup)
+        expected_tar_key = f"{prefix}/{tar_filename}"
+        expected_metadata_key = f"{prefix}/{metadata_filename}"
+
+        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
+            mock_client.put_object.assert_any_call(
+                Bucket="test", Key=expected_tar_key, Body=ANY
+            )
+            mock_client.put_object.assert_any_call(
+                Bucket="test", Key=expected_metadata_key, Body=ANY
+            )
+        else:
+            mock_client.create_multipart_upload.assert_called_with(
+                Bucket="test", Key=expected_tar_key
+            )
+            mock_client.upload_part.assert_any_call(
+                Bucket="test",
+                Key=expected_tar_key,
+                PartNumber=1,
+                UploadId="upload_id",
+                Body=ANY,
+            )
+            mock_client.complete_multipart_upload.assert_called_with(
+                Bucket="test",
+                Key=expected_tar_key,
+                UploadId="upload_id",
+                MultipartUpload=ANY,
+            )
+            mock_client.put_object.assert_called_with(
+                Bucket="test", Key=expected_metadata_key, Body=ANY
+            )
+
+
+async def test_agent_download_backup_with_prefix(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test agent download backup with prefix."""
+    prefix = "my-prefix"
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    backup_id = "23e64aec"
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+    )
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
+
+    tar_filename, _ = suggested_filenames(test_backup)
+    expected_tar_key = f"{prefix}/{tar_filename}"
+
+    mock_client.get_object.assert_any_call(Bucket="test", Key=expected_tar_key)
