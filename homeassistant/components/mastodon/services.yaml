@@ -9,6 +9,38 @@ get_account:
       required: true
       selector:
         text:
+mute_account:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mastodon
+    account_name:
+      required: true
+      selector:
+        text:
+    duration:
+      required: false
+      selector:
+        number:
+          mode: box
+    hide_notifications:
+      default: true
+      required: false
+      selector:
+        boolean:
+unmute_account:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mastodon
+    account_name:
+      required: true
+      selector:
+        text:
 post:
   fields:
     config_entry_id:
