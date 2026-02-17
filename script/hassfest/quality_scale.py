@@ -155,7 +155,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "anel_pwrctrl",
     "anova",
     "anthemav",
-    "anthropic",
     "aosmith",
     "apache_kafka",
     "apple_tv",
