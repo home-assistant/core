@@ -96,12 +96,20 @@ async def test_pr_download_uses_cache(
         assert "pulls" in str(calls[0])
 
 
-async def test_pr_download_cache_invalidated_head_changed(
+@pytest.mark.parametrize(
+    ("cache_key"),
+    [
+        ("old_head_sha:base789abc012"),
+        ("abc123def456:old_base_sha"),
+    ],
+)
+async def test_pr_download_cache_invalidated(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_github_api,
     aioclient_mock: AiohttpClientMocker,
     mock_zipfile,
+    cache_key: str,
 ) -> None:
     """Test that cache is invalidated when head commit changes."""
     hass.config.config_dir = str(tmp_path)
@@ -110,7 +118,7 @@ async def test_pr_download_cache_invalidated_head_changed(
     frontend_dir = pr_cache_dir / "hass_frontend"
     frontend_dir.mkdir(parents=True)
     (frontend_dir / "index.html").write_text("test")
-    (pr_cache_dir / ".sha").write_text("old_head_sha:base789abc012")
+    (pr_cache_dir / ".sha").write_text(cache_key)
 
     aioclient_mock.get(
         "https://api.github.com/artifact/download",
@@ -128,42 +136,6 @@ async def test_pr_download_cache_invalidated_head_changed(
     await hass.async_block_till_done()
 
     # Should download - head commit changed
-    assert len(aioclient_mock.mock_calls) == 1
-
-
-async def test_pr_download_cache_invalidated_base_changed(
-    hass: HomeAssistant,
-    tmp_path: Path,
-    mock_github_api,
-    aioclient_mock: AiohttpClientMocker,
-    mock_zipfile,
-) -> None:
-    """Test that cache is invalidated when base branch changes."""
-    hass.config.config_dir = str(tmp_path)
-
-    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
-    frontend_dir = pr_cache_dir / "hass_frontend"
-    frontend_dir.mkdir(parents=True)
-    (frontend_dir / "index.html").write_text("test")
-    # Same head SHA but different base SHA
-    (pr_cache_dir / ".sha").write_text("abc123def456:old_base_sha")
-
-    aioclient_mock.get(
-        "https://api.github.com/artifact/download",
-        content=b"fake zip data",
-    )
-
-    config = {
-        DOMAIN: {
-            "development_pr": 12345,
-            "github_token": "test_token",
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    # Should download - base branch changed
     assert len(aioclient_mock.mock_calls) == 1
 
 
