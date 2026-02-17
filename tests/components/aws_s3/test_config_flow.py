@@ -10,7 +10,12 @@ from botocore.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aws_s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
+from homeassistant.components.aws_s3.const import (
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    CONF_PREFIX,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -141,3 +146,59 @@ async def test_flow_create_not_aws_endpoint(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == USER_INPUT
+
+
+async def test_flow_with_prefix(hass: HomeAssistant) -> None:
+    """Test config flow with prefix."""
+    user_input = USER_INPUT | {CONF_PREFIX: "my-prefix"}
+    result = await _async_start_flow(hass, user_input)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test - my-prefix"
+    assert result["data"] == user_input
+
+
+async def test_flow_with_empty_prefix(hass: HomeAssistant) -> None:
+    """Test config flow with empty prefix."""
+    user_input = USER_INPUT | {CONF_PREFIX: ""}
+    result = await _async_start_flow(hass, user_input)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"] == USER_INPUT
+
+
+async def test_abort_if_already_configured_with_same_prefix(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+) -> None:
+    """Test we abort if same bucket, endpoint, and prefix are already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=USER_INPUT | {CONF_PREFIX: "my-prefix"},
+    )
+    entry.add_to_hass(hass)
+    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "my-prefix"})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_no_abort_if_different_prefix(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+) -> None:
+    """Test we do not abort when same bucket+endpoint but a different prefix is used."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=USER_INPUT | {CONF_PREFIX: "prefix-a"},
+    )
+    entry.add_to_hass(hass)
+    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "prefix-b"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PREFIX] == "prefix-b"
+
+
+async def test_flow_prefix_normalization(hass: HomeAssistant) -> None:
+    """Test that leading/trailing slashes are stripped from the prefix."""
+    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "/backups/"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test - backups"
+    assert result["data"][CONF_PREFIX] == "backups"

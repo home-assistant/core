@@ -18,6 +18,7 @@ from homeassistant.components.aws_s3.backup import (
 )
 from homeassistant.components.aws_s3.const import (
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
@@ -568,3 +569,29 @@ async def test_list_backups_with_pagination(
     assert len(backups) == 2
     backup_ids = {backup.backup_id for backup in backups}
     assert backup_ids == {"backup1", "backup2"}
+
+
+async def test_agent_list_backups_with_prefix(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    test_backup: AgentBackup,
+) -> None:
+    """Test agent list backups with prefix."""
+    prefix = "my-prefix"
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: prefix}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    mock_client.get_paginator.return_value.paginate.assert_called_with(
+        Bucket="test", Prefix=f"{prefix}/"
+    )
