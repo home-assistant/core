@@ -120,7 +120,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except (serial.SerialException, OSError):
+        except serial.SerialException, OSError:
             LOGGER.exception("Error connecting to DSMR")
             return False
 

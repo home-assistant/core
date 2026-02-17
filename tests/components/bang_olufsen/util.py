@@ -11,7 +11,8 @@ from homeassistant.components.bang_olufsen.const import (
 )
 
 from .const import (
-    TEST_BATTERY_A5_SENSOR_ENTITY_ID,
+    TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+    TEST_BATTERY_SENSOR_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_MEDIA_PLAYER_ENTITY_ID_2,
     TEST_MEDIA_PLAYER_ENTITY_ID_3,
@@ -52,7 +53,8 @@ def get_a5_entity_ids() -> list[str]:
     """Return a list of entity_ids that a Beosound A5 provides."""
     buttons = [
         TEST_MEDIA_PLAYER_ENTITY_ID_4,
-        TEST_BATTERY_A5_SENSOR_ENTITY_ID,
+        TEST_BATTERY_SENSOR_ENTITY_ID,
+        TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
         *_get_button_entity_ids("beosound_a5_44444444"),
     ]
     buttons.remove("event.beosound_a5_44444444_microphone")

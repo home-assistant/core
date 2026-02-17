@@ -124,10 +124,6 @@
     "entity_not_found": {
       "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
     },
-
-    "entry_not_loaded": {
-      "message": "The account associated with this Bring! list is either not loaded or disabled in Home Assistant."
-    },
     "notify_missing_argument": {
       "message": "This action requires field {field}, please enter a valid value for {field}"
     },

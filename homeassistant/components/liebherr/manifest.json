@@ -1,0 +1,18 @@
+{
+  "domain": "liebherr",
+  "name": "Liebherr",
+  "codeowners": ["@mettolen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/liebherr",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyliebherrhomeapi"],
+  "quality_scale": "silver",
+  "requirements": ["pyliebherrhomeapi==0.2.1"],
+  "zeroconf": [
+    {
+      "name": "liebherr*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}
