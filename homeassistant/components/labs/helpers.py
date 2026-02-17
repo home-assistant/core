@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.const import EVENT_LABS_UPDATED
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.frame import report_usage
 
 from .const import LABS_DATA
 from .models import EventLabsUpdatedData
@@ -79,6 +80,8 @@ def async_listen(
 ) -> Callable[[], None]:
     """Listen for changes to a specific preview feature.
 
+    Deprecated: use async_subscribe_preview_feature instead.
+
     Args:
         hass: HomeAssistant instance
         domain: Integration domain
@@ -88,6 +91,11 @@ def async_listen(
     Returns:
         Callable to unsubscribe from the listener
     """
+    report_usage(
+        "calls `async_listen` which is deprecated, "
+        "use `async_subscribe_preview_feature` instead",
+        breaks_in_ha_version="2027.3.0",
+    )
 
     async def _listener(_event_data: EventLabsUpdatedData) -> None:
         listener()

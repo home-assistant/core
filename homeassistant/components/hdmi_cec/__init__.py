@@ -23,7 +23,7 @@ from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONF_DEVICES,
@@ -122,11 +122,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DEVICES): vol.Any(
                     DEVICE_SCHEMA, vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
                 ),
-                vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
+                vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER_DOMAIN),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_DISPLAY_NAME): cv.string,
                 vol.Optional(CONF_TYPES, default={}): vol.Schema(
-                    {cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)}
+                    {cv.entity_id: vol.Any(MEDIA_PLAYER_DOMAIN, SWITCH)}
                 ),
             }
         )
