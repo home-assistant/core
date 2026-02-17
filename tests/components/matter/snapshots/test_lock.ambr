@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lock',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLock-257-0',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-MatterLock-257-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': <LockEntityFeature: 1>,
     'translation_key': 'lock',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLock-257-0',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-MatterLock-257-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lock',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-MatterLock-257-0',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-MatterLock-257-0',
     'unit_of_measurement': None,
   })
 # ---
