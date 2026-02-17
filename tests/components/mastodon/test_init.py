@@ -15,7 +15,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -127,7 +133,7 @@ async def test_coordinator_general_error(
 
     state = hass.states.get("binary_sensor.mastodon_trwnh_mastodon_social_bot")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     mock_mastodon_client.account_verify_credentials.side_effect = MastodonError
 
@@ -139,7 +145,7 @@ async def test_coordinator_general_error(
 
     state = hass.states.get("binary_sensor.mastodon_trwnh_mastodon_social_bot")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     # No reauth flow should be triggered (unlike auth errors)
     flows = hass.config_entries.flow.async_progress()
