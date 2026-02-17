@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_SECRET_KEY = "test_secret_key"
+MOCK_ENTRY_ID = "test_entry_id"
 
 
 @pytest.fixture
@@ -21,6 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
         title=f"Thermostat ({MOCK_HOST})",
         data={
             CONF_HOST: MOCK_HOST,

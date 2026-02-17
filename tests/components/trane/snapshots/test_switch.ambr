@@ -31,7 +31,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hold',
-    'unique_id': '01KHP7YYR3RDWMBRMV46SBVEK1_1_hold',
+    'unique_id': 'test_entry_id_1_hold',
     'unit_of_measurement': None,
   })
 # ---

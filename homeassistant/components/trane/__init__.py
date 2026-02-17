@@ -11,8 +11,9 @@ from steamloop import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SECRET_KEY, DOMAIN, PLATFORMS
+from .const import CONF_SECRET_KEY, DOMAIN, MANUFACTURER, PLATFORMS
 from .types import TraneConfigEntry
 
 
@@ -41,6 +42,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> boo
 
     conn.start_background_tasks()
     entry.runtime_data = conn
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer=MANUFACTURER,
+        name="Thermostat",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

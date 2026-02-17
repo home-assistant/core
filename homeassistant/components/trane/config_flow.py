@@ -39,7 +39,7 @@ class TraneConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await conn.connect()
                 await conn.pair()
-            except (SteamloopConnectionError, PairingError):
+            except SteamloopConnectionError, PairingError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception during pairing")
