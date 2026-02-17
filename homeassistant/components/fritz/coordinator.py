@@ -12,7 +12,11 @@ import re
 from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzActionError, FritzSecurityError
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzConnectionException,
+    FritzSecurityError,
+)
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -87,47 +91,6 @@ class UpdateCoordinatorDataType(TypedDict):
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
     wifi_networks: dict[int, dict]
-
-
-class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
-    """FritzConnection with cached call action."""
-
-    _call_cache: dict[str, dict[str, Any]]
-
-    def clear_cache(self) -> None:
-        """Clear cached calls."""
-        self._call_cache = {}
-        _LOGGER.debug("Cleared FritzConnection call action cache")
-
-    def call_action(
-        self,
-        service_name: str,
-        action_name: str,
-        *,
-        arguments: dict | None = None,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Call action with cached services. Only get actions are cached."""
-        if not action_name.lower().startswith("get"):
-            return super().call_action(  # type: ignore[no-any-return]
-                service_name, action_name, arguments=arguments, **kwargs
-            )
-
-        if not hasattr(self, "_call_cache"):
-            self._call_cache = {}
-
-        kwargs_key = ",".join(f"{k}={v!r}" for k, v in sorted(kwargs.items()))
-
-        cache_key = slugify(f"{service_name}:{action_name}:{arguments}:{kwargs_key}")
-        if (result := self._call_cache.get(cache_key)) is not None:
-            _LOGGER.debug("Using cached result for %s %s", service_name, action_name)
-            return result
-
-        result = super().call_action(
-            service_name, action_name, arguments=arguments, **kwargs
-        )
-        self._call_cache[cache_key] = result
-        return result  # type: ignore[no-any-return]
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -469,7 +432,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Return service details."""
 
         if self.hass.is_stopping:
-            _ha_is_stopping(f"{service_name}/{action_name}")
+            ha_is_stopping(f"{service_name}/{action_name}")
             return {}
 
         if f"{service_name}{service_suffix}" not in self.connection.services:
