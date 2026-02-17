@@ -220,6 +220,15 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "selected_zone": {
+        "name": "Selected zone",
+        "state": {
+          "all": "All",
+          "lower": "Lower",
+          "none": "None",
+          "upper": "Upper"
+        }
+      },
       "soil_level": {
         "name": "Soil level",
         "state": {
@@ -283,6 +292,15 @@
           "semi_hot": "Semi Hot",
           "tap_cold": "Tap Cold",
           "warm": "Warm"
+        }
+      },
+      "zone_booster": {
+        "name": "Zone booster",
+        "state": {
+          "all": "All",
+          "left": "Left",
+          "none": "None",
+          "right": "Right"
         }
       }
     },
@@ -825,6 +843,9 @@
       }
     },
     "switch": {
+      "add_rinse": {
+        "name": "Add rinse"
+      },
       "auto_cycle_link": {
         "name": "Auto Cycle Link"
       },
@@ -833,6 +854,18 @@
       },
       "display_lighting": {
         "name": "Display lighting"
+      },
+      "dry_plus": {
+        "name": "Dry plus"
+      },
+      "heated_dry": {
+        "name": "Heated dry"
+      },
+      "high_temp_wash": {
+        "name": "High temp wash"
+      },
+      "hot_air_dry": {
+        "name": "Hot air dry"
       },
       "ice_maker": {
         "name": "Cubed ice"
@@ -843,11 +876,17 @@
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
       },
+      "multi_tab": {
+        "name": "Multi-tab"
+      },
       "power_cool": {
         "name": "Power cool"
       },
       "power_freeze": {
         "name": "Power freeze"
+      },
+      "rinse_plus": {
+        "name": "Rinse plus"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
@@ -855,8 +894,20 @@
       "sanitize": {
         "name": "Sanitize"
       },
+      "sanitizing_wash": {
+        "name": "Sanitizing wash"
+      },
       "sound_effect": {
         "name": "Sound effect"
+      },
+      "speed_booster": {
+        "name": "Speed booster"
+      },
+      "steam_soak": {
+        "name": "Steam soak"
+      },
+      "storm_wash": {
+        "name": "Storm wash"
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
