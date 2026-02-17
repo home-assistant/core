@@ -296,7 +296,9 @@ class HassImportsFormatChecker(BaseChecker):
 
         # Check for `from homeassistant.components.other import DOMAIN`
         for name, alias in node.names:
-            if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
+            if name == "DOMAIN" and (
+                alias is None or alias == "DOMAIN" or not (alias.endswith("_DOMAIN"))
+            ):
                 self.add_message(
                     "hass-import-constant-alias",
                     node=node,
