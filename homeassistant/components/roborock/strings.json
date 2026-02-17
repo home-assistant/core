@@ -51,7 +51,11 @@
         "name": "Cleaning fluid"
       },
       "detergent_empty": {
-        "name": "Detergent empty"
+        "name": "Detergent",
+        "state": {
+          "off": "Available",
+          "on": "[%key:common::state::empty%]"
+        }
       },
       "dirty_box_full": {
         "name": "Dirty water box"
@@ -66,7 +70,11 @@
         "name": "Mop drying"
       },
       "softener_empty": {
-        "name": "Softener empty"
+        "name": "Softener",
+        "state": {
+          "off": "Available",
+          "on": "[%key:common::state::empty%]"
+        }
       },
       "water_box_attached": {
         "name": "Water box attached"
