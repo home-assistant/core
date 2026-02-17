@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -49,7 +49,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.water_heater import (
-    DOMAIN as DOMAIN_WATER_HEATER,
+    DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_WATER_HEATER,
 )
 from homeassistant.const import (
@@ -388,13 +388,13 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
         mode = self.swing_on_mode if swing_on else SWING_OFF
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_SWING_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE, params)
 
     def _set_fan_speed(self, speed: int) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
         mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _get_on_mode(self) -> str:
         if self.ordered_fan_speeds:
@@ -412,13 +412,13 @@ class Thermostat(HomeAccessory):
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _set_fan_auto(self, auto: int) -> None:
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
+        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _temperature_to_homekit(self, temp: float) -> float:
         return temperature_to_homekit(temp, self._unit)
@@ -480,7 +480,7 @@ class Thermostat(HomeAccessory):
             # `SERVICE_SET_HVAC_MODE_THERMOSTAT` before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
             # to ensure the device is in the right mode before setting the temp.
             self.async_call_service(
-                DOMAIN_CLIMATE,
+                CLIMATE_DOMAIN,
                 SERVICE_SET_HVAC_MODE_THERMOSTAT,
                 params.copy(),
                 ", ".join(events),
@@ -557,7 +557,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             self.async_call_service(
-                DOMAIN_CLIMATE,
+                CLIMATE_DOMAIN,
                 service,
                 params,
                 ", ".join(events),
@@ -608,7 +608,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.async_call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
+            CLIMATE_DOMAIN, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
     @callback
@@ -804,7 +804,7 @@ class WaterHeater(HomeAccessory):
         temperature = temperature_to_states(value, self._unit)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TEMPERATURE: temperature}
         self.async_call_service(
-            DOMAIN_WATER_HEATER,
+            WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE_WATER_HEATER,
             params,
             f"{temperature}{self._unit}",
