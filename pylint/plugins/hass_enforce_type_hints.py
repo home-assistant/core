@@ -2669,6 +2669,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="todo_items",
                     return_type=["list[TodoItem]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_create_todo_item",
@@ -2676,6 +2677,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_update_todo_item",
@@ -2683,6 +2685,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_delete_todo_items",
@@ -2690,6 +2693,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "list[str]",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_move_todo_item",
@@ -2698,6 +2702,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         2: "str | None",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
             ],
         ),
