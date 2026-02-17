@@ -198,7 +198,7 @@ async def test_wol_button_absent_for_non_lan_device(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("button.printer_wake_on_lan")
+    assert hass.states.get("button.printer_wake_on_lan") is None
 
 
 async def test_cleanup_button(
