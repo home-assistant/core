@@ -332,6 +332,7 @@ async def handle_call_service(
         connection.logger.error(
             "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
         )
+        connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
