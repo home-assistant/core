@@ -12,8 +12,8 @@
       "confirm": {
         "description": "Do you want to set up {name}?",
         "data": {
-          "temperature_offset": "Temperature Offset (°C)",
-          "pin": "PIN Code"
+          "temperature_offset": "Temperature offset (°C)",
+          "pin": "PIN code"
         },
         "data_description": {
           "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
@@ -23,30 +23,30 @@
       "user": {
         "data": {
           "address": "Device",
-          "temperature_offset": "Temperature Offset (°C)",
-          "pin": "PIN Code"
+          "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data::temperature_offset%]",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
         },
         "description": "Select your Diesel Heater from the list.",
         "data_description": {
-          "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
-          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+          "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data_description::temperature_offset%]",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
         }
       },
       "manual": {
         "data": {
-          "address": "Bluetooth MAC Address",
-          "temperature_offset": "Temperature Offset (°C)",
-          "pin": "PIN Code"
+          "address": "Bluetooth MAC address",
+          "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data::temperature_offset%]",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
         },
         "description": "Enter the Bluetooth MAC address of your heater (e.g., A4:C1:37:24:B8:64). You can find this in the Bluetooth logs or using a BLE scanner app.",
         "data_description": {
-          "temperature_offset": "Calibration offset for interior temperature sensor. Use negative value if readings are too high, positive if too low. Range: -20 to +20°C.",
-          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+          "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data_description::temperature_offset%]",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
         }
       }
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "invalid_mac": "Invalid MAC address format. Please use format AA:BB:CC:DD:EE:FF"
@@ -56,12 +56,12 @@
     "step": {
       "init": {
         "data": {
-          "temperature_offset": "Temperature Offset (°C)",
-          "pin": "PIN Code",
-          "preset_away_temp": "Away Preset Temperature (°C)",
-          "preset_comfort_temp": "Comfort Preset Temperature (°C)",
-          "external_temp_sensor": "External Temperature Sensor",
-          "auto_offset_max": "Max Auto Offset (°C)"
+          "temperature_offset": "[%key:component::diesel_heater::config::step::confirm::data::temperature_offset%]",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]",
+          "preset_away_temp": "Away preset temperature (°C)",
+          "preset_comfort_temp": "Comfort preset temperature (°C)",
+          "external_temp_sensor": "External temperature sensor",
+          "auto_offset_max": "Max auto offset (°C)"
         },
         "data_description": {
           "temperature_offset": "Manual temperature calibration offset. Changes take effect within 30 seconds. Range: -20 to +20°C.",
