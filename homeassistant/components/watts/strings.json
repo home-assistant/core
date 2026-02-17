@@ -30,14 +30,41 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "device_not_found": {
+      "message": "Device {device_id} not found"
+    },
+    "failed_to_discover_devices": {
+      "message": "Failed to discover devices"
+    },
+    "failed_to_refresh_device": {
+      "message": "Failed to refresh device {device_id}"
+    },
+    "failed_to_update_devices": {
+      "message": "Failed to update devices"
+    },
+    "network_issue": {
+      "message": "Network issue during OAuth setup"
+    },
+    "oauth_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "oauth_session_not_valid": {
+      "message": "OAuth session not valid"
+    },
     "set_hvac_mode_error": {
-      "message": "An error occurred while setting the HVAC mode."
+      "message": "An error occurred while setting the HVAC mode"
     },
     "set_switch_state_error": {
-      "message": "An error occurred while setting the switch state."
+      "message": "An error occurred while setting the switch state"
     },
     "set_temperature_error": {
-      "message": "An error occurred while setting the temperature."
+      "message": "An error occurred while setting the temperature"
+    },
+    "temporary_connection_error": {
+      "message": "Temporary connection error"
     }
   }
 }
