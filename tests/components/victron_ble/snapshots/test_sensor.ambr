@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'no_alarm',
         'low_voltage',
         'high_voltage',
         'low_soc',
@@ -58,6 +59,7 @@
       'device_class': 'enum',
       'friendly_name': 'Battery Monitor Alarm',
       'options': list([
+        'no_alarm',
         'low_voltage',
         'high_voltage',
         'low_soc',
@@ -79,7 +81,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_alarm',
   })
 # ---
 # name: test_sensors[battery_monitor][sensor.battery_monitor_battery-entry]
@@ -592,6 +594,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'no_alarm',
         'low_voltage',
         'high_voltage',
         'low_soc',
@@ -644,6 +647,7 @@
       'device_class': 'enum',
       'friendly_name': 'DC Energy Meter Alarm',
       'options': list([
+        'no_alarm',
         'low_voltage',
         'high_voltage',
         'low_soc',
