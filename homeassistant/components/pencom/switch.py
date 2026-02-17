@@ -108,6 +108,6 @@ class PencomRelay(SwitchEntity):
         self._state = self._hub.get(self._board, self._addr)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return supported attributes."""
         return {"board": self._board, "addr": self._addr}
