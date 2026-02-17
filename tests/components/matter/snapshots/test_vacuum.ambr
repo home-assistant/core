@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12828>,
-    'translation_key': None,
+    'translation_key': 'vacuum',
     'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
@@ -80,7 +80,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12828>,
-    'translation_key': None,
+    'translation_key': 'vacuum',
     'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
@@ -130,7 +130,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12316>,
-    'translation_key': None,
+    'translation_key': 'vacuum',
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
@@ -180,7 +180,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 12316>,
-    'translation_key': None,
+    'translation_key': 'vacuum',
     'unique_id': '00000000000004D2-0000000000000061-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
     'unit_of_measurement': None,
   })
