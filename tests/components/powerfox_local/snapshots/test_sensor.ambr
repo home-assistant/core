@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_sensors[sensor.poweropti_energy_return-entry]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_return-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poweropti_energy_return',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_return',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,23 +40,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_return-state]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_return-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy return',
+      'friendly_name': 'Poweropti (1.1.1.1) Energy return',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poweropti_energy_return',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_return',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '111111',
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage-entry]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +71,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poweropti_energy_usage',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,23 +97,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage-state]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage',
+      'friendly_name': 'Poweropti (1.1.1.1) Energy usage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poweropti_energy_usage',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1111111',
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage_high_tariff-entry]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage_high_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -128,7 +128,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poweropti_energy_usage_high_tariff',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage_high_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,23 +154,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage_high_tariff-state]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage_high_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage high tariff',
+      'friendly_name': 'Poweropti (1.1.1.1) Energy usage high tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poweropti_energy_usage_high_tariff',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage_high_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '111111',
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage_low_tariff-entry]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage_low_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -185,7 +185,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poweropti_energy_usage_low_tariff',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage_low_tariff',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -211,23 +211,23 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_energy_usage_low_tariff-state]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_energy_usage_low_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage low tariff',
+      'friendly_name': 'Poweropti (1.1.1.1) Energy usage low tariff',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poweropti_energy_usage_low_tariff',
+    'entity_id': 'sensor.poweropti_1_1_1_1_energy_usage_low_tariff',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '111111',
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_power-entry]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -242,7 +242,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poweropti_power',
+    'entity_id': 'sensor.poweropti_1_1_1_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -268,16 +268,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_sensors[sensor.poweropti_power-state]
+# name: test_all_sensors[sensor.poweropti_1_1_1_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Poweropti Power',
+      'friendly_name': 'Poweropti (1.1.1.1) Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poweropti_power',
+    'entity_id': 'sensor.poweropti_1_1_1_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -45,11 +45,14 @@ async def test_update_failed(
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("sensor.poweropti_energy_usage").state is not None
+    assert hass.states.get("sensor.poweropti_1_1_1_1_energy_usage").state is not None
 
     mock_powerfox_local_client.value.side_effect = PowerfoxConnectionError
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.poweropti_energy_usage").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.poweropti_1_1_1_1_energy_usage").state
+        == STATE_UNAVAILABLE
+    )

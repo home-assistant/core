@@ -85,28 +85,20 @@ async def test_zeroconf_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_cannot_connect(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        PowerfoxConnectionError,
+        PowerfoxAuthenticationError,
+    ],
+)
+async def test_zeroconf_discovery_errors(
     hass: HomeAssistant,
     mock_powerfox_local_client: AsyncMock,
+    exception: Exception,
 ) -> None:
-    """Test zeroconf discovery aborts when device cannot be reached."""
-    mock_powerfox_local_client.value.side_effect = PowerfoxConnectionError
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_DISCOVERY_INFO,
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
-
-
-async def test_zeroconf_auth_error(
-    hass: HomeAssistant,
-    mock_powerfox_local_client: AsyncMock,
-) -> None:
-    """Test zeroconf discovery aborts on auth error (no local support)."""
-    mock_powerfox_local_client.value.side_effect = PowerfoxAuthenticationError
+    """Test zeroconf discovery aborts on connection/auth errors."""
+    mock_powerfox_local_client.value.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
