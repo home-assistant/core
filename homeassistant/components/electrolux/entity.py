@@ -73,8 +73,8 @@ class ElectroluxBaseEntity[T: ApplianceData](
         self._handle_coordinator_update()
 
     @abstractmethod
-    def _update_attr_state(self) -> None:
-        """Update entity-specific attributes."""
+    def _update_attr_state(self) -> bool:
+        """Update entity-specific attributes. Returns True if any attributes were changed, otherwise False."""
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -87,6 +87,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
         # Update state
         self._appliance_data.update_state(appliance_state)
         self._reported_appliance_state = appliance_state.properties.get("reported")
-        self._update_attr_state()
+        state_changed = self._update_attr_state()
 
-        self.async_write_ha_state()
+        if state_changed:
+            self.async_write_ha_state()

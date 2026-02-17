@@ -56,6 +56,7 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
             config_entry=config_entry,
             name=f"{DOMAIN}_{config_entry.entry_id}_{appliance_id}",
             update_interval=None,
+            always_update=False,
         )
 
     async def _async_update_data(self) -> ApplianceState:
@@ -85,14 +86,6 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         updated_state = self._apply_sse_update(
             current_state,
             event,
-        )
-
-        _LOGGER.info(
-            "SSE update for %s, property %s, value %s, state: %s",
-            self._appliance_id,
-            event.get("property"),
-            event.get("value"),
-            updated_state,
         )
 
         self.async_set_updated_data(updated_state)
