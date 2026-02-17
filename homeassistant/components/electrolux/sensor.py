@@ -49,6 +49,8 @@ class ElectroluxSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[..., StateType]
     is_supported_fn: Callable[..., Any] = lambda *args: None
+    feature_name: str | None = None
+    options: list[str] | None = None
 
 
 OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
@@ -57,6 +59,8 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         translation_key="appliance_state",
         icon="mdi:information-outline",
         value_fn=lambda appliance: appliance.get_current_appliance_state(),
+        device_class=SensorDeviceClass.ENUM,
+        feature_name=APPLIANCE_STATE,
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
             APPLIANCE_STATE
         ),
@@ -66,6 +70,8 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         translation_key="food_probe_state",
         icon="mdi:thermometer-probe",
         value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
+        device_class=SensorDeviceClass.ENUM,
+        feature_name=FOOD_PROBE_STATE,
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
             FOOD_PROBE_STATE
         ),
@@ -75,15 +81,17 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         translation_key="door_state",
         icon="mdi:door",
         value_fn=lambda appliance: appliance.get_current_door_state(),
+        device_class=SensorDeviceClass.ENUM,
+        feature_name=DOOR_STATE,
         is_supported_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
     ),
     ElectroluxSensorDescription(
         key="remote_control",
         translation_key="remote_control",
         icon="mdi:remote",
-        value_fn=lambda appliance: appliance.get_current_remote_control().lower(),
+        value_fn=lambda appliance: appliance.get_current_remote_control(),
         device_class=SensorDeviceClass.ENUM,
-        options=["enabled", "disabled", "not_safety_relevant_enabled"],
+        feature_name=REMOTE_CONTROL,
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
             REMOTE_CONTROL
         ),
@@ -171,14 +179,34 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(appliance_data, coordinator)
+
+        if description.options is None and description.feature_name is not None:
+            options = appliance_data.get_feature_state_string_options(
+                description.feature_name
+            )
+            camel_case_options = [_convert_to_snake_case(option) for option in options]
+            if len(camel_case_options) > 0:
+                self._attr_options = camel_case_options
+
         self.entity_description = description
         self._attr_unique_id = (
             f"{appliance_data.appliance.applianceId}_{description.key}"
         )
+
         self._update_attr_state()
 
-    def _update_attr_state(self) -> None:
-        self._attr_native_value = self._get_value()
+    def _update_attr_state(self) -> bool:
+        state_changed = False
+
+        new_value = self._get_value()
+        if isinstance(new_value, str):
+            new_value = _convert_to_snake_case(new_value)
+
+        if self._attr_native_value != new_value:
+            self._attr_native_value = new_value
+            state_changed = True
+
+        return state_changed
 
     def _get_value(self) -> StateType:
         return self.entity_description.value_fn(self._appliance_data)
@@ -199,10 +227,6 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         super().__init__(appliance_data, coordinator, description)
         self._update_attr_state()
 
-    def _update_attr_state(self) -> None:
-        self._attr_native_value = self._get_value()
-        self._attr_suggested_unit_of_measurement = self._get_temperature_unit()
-
     def _get_value(self) -> StateType:
         return self.entity_description.value_fn(
             self._appliance_data, temp_unit=self._attr_native_unit_of_measurement
@@ -217,3 +241,15 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         return ELECTROLUX_TO_HA_TEMPERATURE_UNIT.get(
             temp_unit, UnitOfTemperature.CELSIUS
         )
+
+
+def _convert_to_snake_case(x: str) -> str:
+    "Converts a string to snake case."
+    lower_case = x.lower()
+    return "".join([_convert_char_to_snake_case(char) for char in lower_case])
+
+
+def _convert_char_to_snake_case(char: str):
+    if char.isspace():
+        return "_"
+    return char

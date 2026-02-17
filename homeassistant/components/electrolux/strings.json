@@ -51,7 +51,8 @@
         "state": {
           "disabled": "Disabled",
           "enabled": "Enabled",
-          "not_safety_relevant_enabled": "Not safety relevant enabled"
+          "not_safety_relevant_enabled": "Not safety relevant enabled",
+          "temporary_locked": "Temporarily locked"
         }
       }
     }
