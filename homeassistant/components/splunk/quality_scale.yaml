@@ -1,0 +1,139 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Event-driven push integration that listens to state changes, no polling occurs.
+  brands: done
+  common-modules: done
+  config-entry-unloading: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: todo
+    comment: |
+      Missing `data_description` for `token` in `config.step.reauth_confirm` in strings.json. Tests fail with: "Translation not found for splunk: config.step.reauth_confirm.data_description.token".
+  dependency-transparency:
+    status: todo
+    comment: |
+      The hass-splunk library needs a public CI/CD pipeline. Add GitHub Actions workflow to https://github.com/Bre77/hass_splunk to automate lint, test, build, and publish to PyPI.
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  docs-high-level-description:
+    status: todo
+    comment: |
+      Verify integration docs at https://www.home-assistant.io/integrations/splunk/ include a high-level description of Splunk with a link to https://www.splunk.com/ and explain the integration's purpose for users unfamiliar with Splunk.
+  docs-installation-instructions:
+    status: todo
+    comment: |
+      Verify integration docs include clear prerequisites and step-by-step setup instructions including how to configure Splunk HTTP Event Collector and obtain the required token.
+  docs-removal-instructions:
+    status: todo
+    comment: |
+      Verify integration docs include instructions on how to remove the integration and clarify what happens to data already in Splunk.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  has-entity-name:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  integration-owner: done
+  reauthentication-flow: done
+  runtime-data:
+    status: todo
+    comment: |
+      Replace hass.data[DATA_FILTER] storage with entry.runtime_data. Create typed ConfigEntry in const.py as 'type SplunkConfigEntry = ConfigEntry[EntityFilter]', update async_setup_entry signature to use SplunkConfigEntry, replace hass.data[DATA_FILTER] assignments with entry.runtime_data, and update all references including line 236 in __init__.py.
+  test-before-configure: done
+  test-before-setup: done
+  test-coverage: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      Integration does not provide custom actions.
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      Integration does not have an options flow.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      Verify docs describe all config flow parameters including host, port, token, SSL settings, and entity filter. The strings.json has good data_description fields that should be reflected in documentation.
+  entity-unavailable:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  parallel-updates:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+
+  # Gold
+  diagnostics:
+    status: todo
+    comment: |
+      Consider adding diagnostics support including config entry data with redacted token, connection status, event submission statistics, entity filter configuration, and recent error messages to help troubleshooting.
+  discovery:
+    status: exempt
+    comment: |
+      Integration does not support automatic discovery.
+  devices:
+    status: exempt
+    comment: |
+      Integration does not create devices.
+  entity-category:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  exception-translations:
+    status: todo
+    comment: |
+      Consider adding exception translations for user-facing errors beyond the current strings.json error section to provide more detailed translated error messages.
+  icon-translations:
+    status: exempt
+    comment: |
+      Integration does not create entities.
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Consider adding reconfiguration flow to allow users to update host, port, entity filter, and SSL settings without deleting and re-adding the config entry.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: |
+      Verify all methods in hass-splunk library at https://github.com/Bre77/hass_splunk are truly async with no blocking calls or synchronous I/O operations.
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: |
+      Add py.typed marker to hass-splunk library, add comprehensive type hints to all functions and methods in both library and integration, use custom typed ConfigEntry, add integration to homeassistant/components/.strict-typing file, and verify mypy passes. This should be done after runtime-data is implemented.

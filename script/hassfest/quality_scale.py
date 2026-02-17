@@ -894,7 +894,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "spc",
     "speedtestdotnet",
     "spider",
-    "splunk",
     "spotify",
     "sql",
     "srp_energy",
