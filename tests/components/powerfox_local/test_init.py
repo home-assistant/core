@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import PowerfoxConnectionError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

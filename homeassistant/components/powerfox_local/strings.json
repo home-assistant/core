@@ -11,12 +11,12 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Poweropti device.",
-          "api_key": "The API key (device ID) of your Poweropti device."
+          "api_key": "The API key (device ID) of your Poweropti device.",
+          "host": "The hostname or IP address of your Poweropti device."
         },
         "description": "Set up your Poweropti device to poll locally."
       },
