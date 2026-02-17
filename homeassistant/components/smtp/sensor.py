@@ -6,6 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SENDER, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -19,6 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMTP sensors based on a config entry."""
     entities: list[SensorEntity] = [
+        SMTPStatusSensor(hass, entry),
         SMTPLastErrorSensor(hass, entry),
         SMTPLastSentSensor(hass, entry),
     ]
@@ -27,8 +29,9 @@ async def async_setup_entry(
 
     # Store sensor references for updates
     hass.data[DOMAIN][entry.entry_id]["sensors"] = {
-        "last_error": entities[0],
-        "last_sent": entities[1],
+        "status": entities[0],
+        "last_error": entities[1],
+        "last_sent": entities[2],
     }
 
 
@@ -47,12 +50,39 @@ class SMTPBaseSensor(SensorEntity):
         self._hass = hass
         self._entry = entry
         sender = entry.data.get(CONF_SENDER, "Email")
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": f"SMTP ({sender})",
-            "manufacturer": "SMTP",
-            "model": "Email Service",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=f"SMTP ({sender})",
+            manufacturer="SMTP",
+            model="Email Service",
+        )
+
+
+class SMTPStatusSensor(SMTPBaseSensor):
+    """Sensor showing SMTP connection status."""
+
+    _attr_name = "Status"
+    _attr_icon = "mdi:email-check"
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the status sensor."""
+        super().__init__(hass, entry)
+        self._attr_unique_id = f"{entry.entry_id}_status"
+        self._attr_native_value = "Connected"
+
+    @callback
+    def update_status(self, status: str) -> None:
+        """Update the status."""
+        self._attr_native_value = status
+        if status == "Connected":
+            self._attr_icon = "mdi:email-check"
+        elif status == "Error":
+            self._attr_icon = "mdi:email-remove"
+        elif status == "Sending":
+            self._attr_icon = "mdi:email-sync"
+        else:
+            self._attr_icon = "mdi:email"
+        self.async_write_ha_state()
 
 
 class SMTPLastErrorSensor(SMTPBaseSensor):
@@ -65,12 +95,12 @@ class SMTPLastErrorSensor(SMTPBaseSensor):
         """Initialize the last error sensor."""
         super().__init__(hass, entry)
         self._attr_unique_id = f"{entry.entry_id}_last_error"
-        self._attr_native_value = "None"
+        self._attr_native_value = None
 
     @callback
     def update_error(self, error: str | None) -> None:
         """Update the error."""
-        self._attr_native_value = error if error else "None"
+        self._attr_native_value = error
         self.async_write_ha_state()
 
 

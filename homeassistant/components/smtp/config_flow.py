@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-import contextlib
-import smtplib
-import socket
+import re
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -37,6 +36,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .helpers import try_connect
 from .const import (
     CONF_DEBUG,
     CONF_ENCRYPTION,
@@ -123,57 +123,21 @@ def _build_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
-def _try_connect(
-    server: str,
-    port: int,
-    timeout: int,
-    encryption: str,
-    username: str | None,
-    password: str | None,
-    verify_ssl: bool,
-) -> str | None:
-    """Try to connect to the SMTP server and return error key if failed."""
-    from homeassistant.util.ssl import client_context
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
-    # Ignore verify_ssl when no encryption is used
-    if encryption == "none":
-        verify_ssl = False
 
-    ssl_context = client_context() if verify_ssl else None
-    mail: smtplib.SMTP_SSL | smtplib.SMTP | None = None
+def _validate_recipients(raw: str) -> list[str] | None:
+    """Parse and validate comma-separated email addresses.
 
-    try:
-        if encryption == "tls":
-            mail = smtplib.SMTP_SSL(
-                server,
-                port,
-                timeout=timeout,
-                context=ssl_context,
-            )
-        else:
-            mail = smtplib.SMTP(server, port, timeout=timeout)
-
-        mail.ehlo_or_helo_if_needed()
-
-        if encryption == "starttls":
-            mail.starttls(context=ssl_context)
-            mail.ehlo()
-
-        if username and password:
-            mail.login(username, password)
-
+    Returns list of addresses if valid, None if any are invalid.
+    """
+    recipients = [r.strip() for r in raw.split(",") if r.strip()]
+    if not recipients:
         return None
-
-    except smtplib.SMTPAuthenticationError:
-        return "invalid_auth"
-    except smtplib.SMTPException:
-        return "cannot_connect"
-    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):
-        return "cannot_connect"
-    finally:
-        if mail:
-            with contextlib.suppress(smtplib.SMTPException):
-                mail.quit()
+    for addr in recipients:
+        if not EMAIL_PATTERN.match(addr):
+            return None
+    return recipients
 
 
 class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -195,33 +159,32 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
             user_input[CONF_TIMEOUT] = int(user_input[CONF_TIMEOUT])
 
-            # Validate connection
-            error = await self.hass.async_add_executor_job(
-                _try_connect,
-                user_input[CONF_SERVER],
-                user_input[CONF_PORT],
-                user_input[CONF_TIMEOUT],
-                user_input[CONF_ENCRYPTION],
-                user_input.get(CONF_USERNAME) or None,
-                user_input.get(CONF_PASSWORD) or None,
-                user_input[CONF_VERIFY_SSL],
-            )
-
-            if error:
-                errors["base"] = error
+            # Validate recipients
+            recipients = _validate_recipients(user_input[CONF_RECIPIENT])
+            if recipients is None:
+                errors[CONF_RECIPIENT] = "invalid_email"
             else:
-                # Convert recipient to list for storage
-                recipients = [
-                    r.strip()
-                    for r in user_input[CONF_RECIPIENT].split(",")
-                    if r.strip()
-                ]
-                data = {**user_input, CONF_RECIPIENT: recipients}
-
-                return self.async_create_entry(
-                    title=user_input[CONF_SENDER],
-                    data=data,
+                # Validate connection
+                error = await self.hass.async_add_executor_job(
+                    try_connect,
+                    user_input[CONF_SERVER],
+                    user_input[CONF_PORT],
+                    user_input[CONF_TIMEOUT],
+                    user_input[CONF_ENCRYPTION],
+                    user_input.get(CONF_USERNAME) or None,
+                    user_input.get(CONF_PASSWORD) or None,
+                    user_input[CONF_VERIFY_SSL],
                 )
+
+                if error:
+                    errors["base"] = error
+                else:
+                    data = {**user_input, CONF_RECIPIENT: recipients}
+
+                    return self.async_create_entry(
+                        title=user_input[CONF_SENDER],
+                        data=data,
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -233,9 +196,9 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> SMTPOptionsFlow:
         """Get the options flow for this handler."""
-        return SMTPOptionsFlow(config_entry)
+        return SMTPOptionsFlow()
 
 
 UNCHANGED_PASSWORD = "__UNCHANGED__"
@@ -273,9 +236,7 @@ def _build_options_schema(user_input: dict[str, Any], has_password: bool) -> vol
             ): TextSelector(),
             vol.Optional(
                 CONF_PASSWORD,
-                description={
-                    "suggested_value": UNCHANGED_PASSWORD if has_password else ""
-                },
+                description={"suggested_value": UNCHANGED_PASSWORD if has_password else ""},
             ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             # Email addresses
             vol.Required(
@@ -314,16 +275,12 @@ def _build_options_schema(user_input: dict[str, Any], has_password: bool) -> vol
 class SMTPOptionsFlow(OptionsFlow):
     """Handle SMTP options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self._config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        current = self._config_entry.data
+        current = self.config_entry.data
         has_password = bool(current.get(CONF_PASSWORD))
 
         if user_input is not None:
@@ -336,36 +293,35 @@ class SMTPOptionsFlow(OptionsFlow):
             if password == UNCHANGED_PASSWORD or not password:
                 user_input[CONF_PASSWORD] = current.get(CONF_PASSWORD, "")
 
-            # Validate connection
-            error = await self.hass.async_add_executor_job(
-                _try_connect,
-                user_input[CONF_SERVER],
-                user_input[CONF_PORT],
-                user_input[CONF_TIMEOUT],
-                user_input[CONF_ENCRYPTION],
-                user_input.get(CONF_USERNAME) or None,
-                user_input.get(CONF_PASSWORD) or None,
-                user_input[CONF_VERIFY_SSL],
-            )
-
-            if error:
-                errors["base"] = error
+            # Validate recipients
+            recipients = _validate_recipients(user_input[CONF_RECIPIENT])
+            if recipients is None:
+                errors[CONF_RECIPIENT] = "invalid_email"
             else:
-                # Convert recipient to list for storage
-                recipients = [
-                    r.strip()
-                    for r in user_input[CONF_RECIPIENT].split(",")
-                    if r.strip()
-                ]
-                new_data = {**user_input, CONF_RECIPIENT: recipients}
-
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry,
-                    data=new_data,
-                    title=user_input[CONF_SENDER],
+                # Validate connection
+                error = await self.hass.async_add_executor_job(
+                    try_connect,
+                    user_input[CONF_SERVER],
+                    user_input[CONF_PORT],
+                    user_input[CONF_TIMEOUT],
+                    user_input[CONF_ENCRYPTION],
+                    user_input.get(CONF_USERNAME) or None,
+                    user_input.get(CONF_PASSWORD) or None,
+                    user_input[CONF_VERIFY_SSL],
                 )
-                await self.hass.config_entries.async_reload(self._config_entry.entry_id)
-                return self.async_create_entry(title="", data={})
+
+                if error:
+                    errors["base"] = error
+                else:
+                    new_data = {**user_input, CONF_RECIPIENT: recipients}
+
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data=new_data,
+                        title=user_input[CONF_SENDER],
+                    )
+                    await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                    return self.async_create_entry(title="", data={})
 
         # Build current values for the form
         current_input = {

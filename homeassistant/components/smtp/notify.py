@@ -2,29 +2,28 @@
 
 from __future__ import annotations
 
-import email.utils
-import logging
-import os
-import smtplib
-import socket
-import ssl
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import email.utils
+import logging
+import os
 from pathlib import Path
+import smtplib
+import socket
+import ssl
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    BaseNotificationService,
-)
-from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -204,7 +203,7 @@ class MailNotificationService(BaseNotificationService):
         server = None
         try:
             server = self.connect()
-        except socket.gaierror, ConnectionRefusedError:
+        except (socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
                 (
                     "SMTP server not found or refused connection (%s:%s). Please check"
@@ -213,6 +212,7 @@ class MailNotificationService(BaseNotificationService):
                 self._server,
                 self._port,
             )
+            return False
 
         except smtplib.SMTPAuthenticationError:
             _LOGGER.exception(
@@ -274,7 +274,7 @@ class MailNotificationService(BaseNotificationService):
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        return self._send_email(msg, recipients)
+        self._send_email(msg, recipients)
 
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
@@ -299,7 +299,7 @@ class MailNotificationService(BaseNotificationService):
 def _build_text_msg(message: str) -> MIMEText:
     """Build plaintext email."""
     _LOGGER.debug("Building plain text email")
-    return MIMEText(message)
+    return MIMEText(message, _charset="utf-8")
 
 
 def _attach_file(
@@ -352,7 +352,7 @@ def _attach_file(
         else:
             attachment.add_header(
                 "Content-Disposition",
-                f"attachment; filename={os.path.basename(atch_name)}",
+                f'attachment; filename="{os.path.basename(atch_name)}"',
             )
 
     return attachment

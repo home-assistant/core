@@ -27,14 +27,15 @@
           "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
           "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
           "timeout": "How long to wait for server response",
-          "verify_ssl": "Ignored when security is set to None. Recommended to keep enabled.",
+          "verify_ssl": "Recommended to keep enabled for security",
           "debug": "Log detailed SMTP communication for troubleshooting"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to mail server. Verify the server address, port, and security settings.",
-      "invalid_auth": "Login failed. Check your username and password."
+      "invalid_auth": "Login failed. Check your username and password.",
+      "invalid_email": "Invalid email address. Check the format (e.g. user@example.com)."
     },
     "abort": {
       "already_configured": "This sender address is already configured."
@@ -68,14 +69,15 @@
           "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
           "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
           "timeout": "How long to wait for server response",
-          "verify_ssl": "Ignored when security is set to None. Recommended to keep enabled.",
+          "verify_ssl": "Recommended to keep enabled for security",
           "debug": "Log detailed SMTP communication for troubleshooting"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to mail server. Verify the server address, port, and security settings.",
-      "invalid_auth": "Login failed. Check your username and password."
+      "invalid_auth": "Login failed. Check your username and password.",
+      "invalid_email": "Invalid email address. Check the format (e.g. user@example.com)."
     }
   },
   "selector": {
@@ -102,7 +104,7 @@
         },
         "subject": {
           "name": "Subject",
-          "description": "Subject line. Supports templates and emojis (🚨 🏠 🔔)."
+          "description": "Subject line. Supports templates."
         },
         "to": {
           "name": "Recipients",
@@ -125,6 +127,9 @@
   },
   "entity": {
     "sensor": {
+      "status": {
+        "name": "Status"
+      },
       "last_error": {
         "name": "Last error"
       },

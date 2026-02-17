@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import contextlib
-import smtplib
-import socket
 from typing import Any
 
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -20,15 +18,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import template
-from homeassistant.helpers.selector import (
-    ConfigEntrySelector,
-    ConfigEntrySelectorConfig,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.selector import ConfigEntrySelector, ConfigEntrySelectorConfig
 from homeassistant.util.ssl import client_context
 
+from .helpers import try_connect
 from .const import (
     ATTR_FROM_NAME,
     ATTR_HTML,
@@ -55,7 +50,7 @@ SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
         ),
         vol.Optional(ATTR_MESSAGE, default=""): cv.string,
         vol.Optional(ATTR_SUBJECT): cv.string,
-        vol.Optional(ATTR_TO): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TO): vol.All(cv.ensure_list, [vol.Email()]),
         vol.Optional(ATTR_FROM_NAME): cv.string,
         vol.Optional(ATTR_HTML): cv.string,
         vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
@@ -67,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SMTP from a config entry."""
     # Validate connection
     error = await hass.async_add_executor_job(
-        _try_connect,
+        try_connect,
         entry.data[CONF_SERVER],
         entry.data[CONF_PORT],
         entry.data[CONF_TIMEOUT],
@@ -84,13 +79,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "config": entry.data,
+        "status": "Connected",
+        "last_error": None,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register the send_message service (only once)
     if not hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE):
-
         async def async_send_message(call: ServiceCall) -> None:
             """Handle the send_message service call."""
             # Import here to avoid circular imports
@@ -99,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Get the config entry
             entry_id = call.data[CONF_CONFIG_ENTRY]
             if entry_id not in hass.data[DOMAIN]:
-                raise ValueError(f"Config entry {entry_id} not found")
+                raise ServiceValidationError(f"Config entry {entry_id} not found")
 
             entry_data = hass.data[DOMAIN][entry_id]
             data = entry_data["config"]
@@ -128,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if not value:
                     return value
                 tpl = template.Template(value, hass)
-                return str(tpl.async_render(parse_result=False))
+                return tpl.async_render(parse_result=False)
 
             # Render message with templates
             message_text = render_template(call.data.get(ATTR_MESSAGE, ""))
@@ -154,7 +150,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if msg_data:
                 kwargs["data"] = msg_data
 
+            # Update status to sending
             sensors = entry_data.get("sensors", {})
+            if sensors.get("status"):
+                sensors["status"].update_status("Sending")
 
             def _send() -> None:
                 service.send_message(message_text, **kwargs)
@@ -162,12 +161,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await hass.async_add_executor_job(_send)
                 # Update sensors on success
+                if sensors.get("status"):
+                    sensors["status"].update_status("Connected")
                 if sensors.get("last_error"):
                     sensors["last_error"].update_error(None)
                 if sensors.get("last_sent"):
                     sensors["last_sent"].update_sent()
             except Exception as err:
                 # Update sensors on error
+                if sensors.get("status"):
+                    sensors["status"].update_status("Error")
                 if sensors.get("last_error"):
                     sensors["last_error"].update_error(str(err))
                 raise
@@ -201,50 +204,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, SERVICE_SEND_MESSAGE)
 
     return unload_ok
-
-
-def _try_connect(
-    server: str,
-    port: int,
-    timeout: int,
-    encryption: str,
-    username: str | None,
-    password: str | None,
-    verify_ssl: bool,
-) -> str | None:
-    """Try to connect to the SMTP server and return error key if failed."""
-    ssl_context = client_context() if verify_ssl else None
-    mail: smtplib.SMTP_SSL | smtplib.SMTP | None = None
-
-    try:
-        if encryption == "tls":
-            mail = smtplib.SMTP_SSL(
-                server,
-                port,
-                timeout=timeout,
-                context=ssl_context,
-            )
-        else:
-            mail = smtplib.SMTP(server, port, timeout=timeout)
-
-        mail.ehlo_or_helo_if_needed()
-
-        if encryption == "starttls":
-            mail.starttls(context=ssl_context)
-            mail.ehlo()
-
-        if username and password:
-            mail.login(username, password)
-
-        return None
-
-    except smtplib.SMTPAuthenticationError:
-        return "invalid_auth"
-    except smtplib.SMTPException:
-        return "cannot_connect"
-    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):
-        return "cannot_connect"
-    finally:
-        if mail:
-            with contextlib.suppress(smtplib.SMTPException):
-                mail.quit()
