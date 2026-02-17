@@ -3185,7 +3185,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.4.9
 
 # homeassistant.components.victron_gx_mqtt
-victron-mqtt==2026.1.2
+victron-mqtt==2026.2.2
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8

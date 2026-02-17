@@ -64,7 +64,7 @@
         "name": "Alternator mode"
       },
       "digitalinput_settings_invert_translation": {
-        "name": "Digital input settings invert translation"
+        "name": "Invert digital input"
       },
       "evcharger_charge": {
         "name": "EV charging"
@@ -244,6 +244,9 @@
       "generator_gen_id_warm_up_timer": {
         "name": "Generator warm-up timer"
       },
+      "hub4_ac_grid_setpoint": {
+        "name": "AC grid setpoint"
+      },
       "multi_ess_ac_power_setpoint": {
         "name": "ESS AC power setpoint"
       },
@@ -294,6 +297,9 @@
       },
       "transfer_switch_generator_current_limit": {
         "name": "Generator AC current limit"
+      },
+      "vebus_ac_power_setpoint_phase": {
+        "name": "AC power setpoint {phase}"
       },
       "vebus_inverter_current_limit": {
         "name": "Inverter current limit"
@@ -496,6 +502,21 @@
       },
       "charge_mode": {
         "name": "Battery charge mode"
+      },
+      "charger_dc_current": {
+        "name": "Charger DC output current"
+      },
+      "charger_dc_voltage": {
+        "name": "Charger DC output voltage"
+      },
+      "charger_error_code": {
+        "name": "Charger error code"
+      },
+      "charger_nr_of_outputs": {
+        "name": "Charger number of outputs"
+      },
+      "charger_state": {
+        "name": "Charger state"
       },
       "dcload_current": {
         "name": "DC load current"
@@ -728,6 +749,9 @@
       "heatpump_voltage_phase": {
         "name": "Heat pump voltage on {phase}"
       },
+      "hub4_ac_grid_setpoint": {
+        "name": "AC grid setpoint"
+      },
       "inverter_mode": {
         "name": "Inverter mode"
       },
@@ -743,8 +767,20 @@
       "inverter_output_voltage_phase": {
         "name": "Inverter output voltage {phase}"
       },
+      "inverter_pv_power_total": {
+        "name": "PV power total"
+      },
+      "inverter_pv_voltage": {
+        "name": "PV bus voltage"
+      },
       "inverter_state": {
         "name": "Inverter state"
+      },
+      "inverter_total_pv_yield_system": {
+        "name": "Total PV yield system"
+      },
+      "inverter_total_pv_yield_user": {
+        "name": "Total PV yield user"
       },
       "multi_acin1_to_acout": {
         "name": "AC-in-1 to AC-out"
@@ -1154,6 +1190,9 @@
       "transfer_switch_generator_current_limit": {
         "name": "Generator AC current limit"
       },
+      "vebus_ac_power_setpoint_phase": {
+        "name": "AC power setpoint {phase}"
+      },
       "vebus_device_device_number_input_power_l1": {
         "name": "VE.Bus device {device_number} line 1 input power"
       },
@@ -1289,7 +1328,7 @@
         "name": "Alternator mode"
       },
       "digitalinput_settings_invert_translation": {
-        "name": "Digital input settings invert translation"
+        "name": "Invert digital input"
       },
       "evcharger_charge": {
         "name": "EV charging"
