@@ -37,6 +37,7 @@ class VictronBaseEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._device = device
+        self._attr_device_info = device_info
         self._metric = metric
         self._device_info = device_info
         self._attr_unique_id = metric.unique_id.lower()
@@ -136,8 +137,3 @@ class VictronBaseEntity(Entity):
         if metric.unit_of_measurement == "h":
             return UnitOfTime.HOURS
         return metric.unit_of_measurement
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the sensor."""
-        return self._device_info
