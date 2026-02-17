@@ -168,11 +168,14 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "communication_error": {
-      "message": "Failed to communicate with Homevolt: {error}"
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "unknown_error": {
-      "message": "An unknown error occurred: {error}"
+      "message": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

@@ -47,7 +47,10 @@ def homevolt_exception_handler[_HomevoltEntityT: HomevoltEntity, **_P](
         try:
             await func(self, *args, **kwargs)
         except HomevoltAuthenticationError as error:
-            raise ConfigEntryAuthFailed("Authentication failed") from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from error
         except HomevoltConnectionError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
