@@ -1,7 +1,7 @@
 """conftest.py for myneomitis integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -32,6 +32,8 @@ def mock_pyaxenco_client() -> Generator[AsyncMock]:
         client.connect_websocket = AsyncMock()
         client.get_devices = AsyncMock(return_value=[])
         client.disconnect_websocket = AsyncMock()
+        client.set_device_mode = AsyncMock()
+        client.register_listener = Mock(return_value=Mock())
         client.user_id = "user-123"
         client.token = "tok"
         client.refresh_token = "rtok"

@@ -39,13 +39,14 @@ def make_client_response_error(status: int) -> ClientResponseError:
     )
 
 
-async def test_user_flow_success(hass: HomeAssistant, mock_pyaxenco_client) -> None:
+async def test_user_flow_success(
+    hass: HomeAssistant,
+    mock_pyaxenco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test successful user flow for MyNeoMitis integration."""
-    instance = mock_pyaxenco_client
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -63,7 +64,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_pyaxenco_client) -> N
         CONF_REFRESH_TOKEN: "rtok",
         CONF_USER_ID: "user-123",
     }
-    assert result["result"].unique_id == instance.user_id
+    assert result["result"].unique_id == "user-123"
 
 
 @pytest.mark.parametrize(
@@ -76,7 +77,11 @@ async def test_user_flow_success(hass: HomeAssistant, mock_pyaxenco_client) -> N
     ],
 )
 async def test_flow_errors(
-    hass: HomeAssistant, mock_pyaxenco_client, side_effect, expected_error
+    hass: HomeAssistant,
+    mock_pyaxenco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
     """Test flow errors and recovery to CREATE_ENTRY."""
     mock_pyaxenco_client.login.side_effect = side_effect
@@ -105,13 +110,12 @@ async def test_flow_errors(
 
 
 async def test_abort_if_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyaxenco_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
 ) -> None:
     """Test abort when an entry for the same user_id already exists."""
     mock_config_entry.add_to_hass(hass)
-
-    mock_api = mock_pyaxenco_client
-    mock_api.login = AsyncMock()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

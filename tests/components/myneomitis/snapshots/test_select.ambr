@@ -191,7 +191,7 @@
     'state': 'heating',
   })
 # ---
-# name: test_setup_entry_filters_unsupported_devices[select.supported_ews-entry]
+# name: test_setup_entry_filters_unsupported_devices[select.pilote_device-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -217,7 +217,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.supported_ews',
+    'entity_id': 'select.pilote_device',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -236,14 +236,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pilote',
-    'unique_id': 'supported1',
+    'unique_id': 'pilote1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_entry_filters_unsupported_devices[select.supported_ews-state]
+# name: test_setup_entry_filters_unsupported_devices[select.pilote_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Supported EWS',
+      'friendly_name': 'Pilote Device',
       'options': list([
         'comfort',
         'eco',
@@ -258,7 +258,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.supported_ews',
+    'entity_id': 'select.pilote_device',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
