@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import MastodonNotFoundError, MastodonUnauthorizedError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
@@ -33,17 +34,43 @@ async def test_device_info(
     assert device_entry == snapshot
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (MastodonNotFoundError, ConfigEntryState.SETUP_RETRY),
+        (MastodonUnauthorizedError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_initialization_failure(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
     """Test initialization failure."""
-    mock_mastodon_client.instance.side_effect = MastodonError
+    mock_mastodon_client.instance_v1.side_effect = exception
+    mock_mastodon_client.instance_v2.side_effect = exception
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
+
+
+async def test_setup_integration_fallback_to_instance_v1(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test full flow where instance_v2 fails and falls back to instance_v1."""
+    mock_mastodon_client.instance_v2.side_effect = MastodonNotFoundError(
+        "Instance API v2 not found"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.instance_v2.assert_called_once()
+    mock_mastodon_client.instance_v1.assert_called_once()
 
 
 async def test_migrate(

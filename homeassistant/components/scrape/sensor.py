@@ -7,8 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -143,6 +142,8 @@ async def async_setup_entry(
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):
     """Representation of a web scrape sensor."""
 
+    _sensor_name: str | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -163,14 +164,26 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         self._value_template = value_template
         self._attr_native_value = None
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
-            self._attr_name = None
+            self._sensor_name = None
             self._attr_has_entity_name = True
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="Scrape",
-                name=self.name,
+                name=self._rendered[CONF_NAME],
             )
+        else:
+            self._sensor_name = self._rendered.get(CONF_NAME)
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the sensor.
+
+        Override needed because TriggerBaseEntity.name always returns the
+        rendered name, ignoring _attr_name. When has_entity_name is True,
+        we need name to return None to use the device name instead.
+        """
+        return self._sensor_name
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
@@ -218,17 +231,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
                 self.entity_id, variables, None
             )
 
-        if self.device_class not in {
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        }:
-            self._attr_native_value = value
-            self._process_manual_data(variables)
-            return
-
-        self._attr_native_value = async_parse_date_datetime(
-            value, self.entity_id, self.device_class
-        )
+        self._set_native_value_with_possible_timestamp(value)
         self._process_manual_data(variables)
 
     @property

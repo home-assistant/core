@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 54,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 297,
       'color_temp_kelvin': 3367,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
@@ -12,9 +11,7 @@
         47.743,
       ),
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 344,
       'min_color_temp_kelvin': 2900,
-      'min_mireds': 142,
       'rgb_color': tuple(
         255,
         189,
@@ -44,9 +41,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 344,
       'min_color_temp_kelvin': 2900,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -66,6 +61,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -102,7 +98,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -112,7 +107,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -122,7 +116,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 54,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 297,
       'color_temp_kelvin': 3367,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
@@ -130,9 +123,7 @@
         47.743,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 285,
       'min_color_temp_kelvin': 3500,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         189,
@@ -163,9 +154,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 285,
       'min_color_temp_kelvin': 3500,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -186,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -222,7 +212,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -232,7 +221,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -242,7 +230,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
@@ -250,9 +237,7 @@
         6.0,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 285,
       'min_color_temp_kelvin': 3500,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         240,
@@ -283,9 +268,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 285,
       'min_color_temp_kelvin': 3500,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -306,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -342,7 +326,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -352,7 +335,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })

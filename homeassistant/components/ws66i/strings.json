@@ -1,22 +1,21 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to the device",
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
-        }
-      }
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "title": "Connect to the device"
+      }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Configure sources",
         "data": {
           "source_1": "Name of source #1",
           "source_2": "Name of source #2",
@@ -24,7 +23,8 @@
           "source_4": "Name of source #4",
           "source_5": "Name of source #5",
           "source_6": "Name of source #6"
-        }
+        },
+        "title": "Configure sources"
       }
     }
   }

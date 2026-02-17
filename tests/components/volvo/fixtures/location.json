@@ -1,0 +1,11 @@
+{
+  "type": "Feature",
+  "properties": {
+    "timestamp": "2024-12-30T15:00:00.000Z",
+    "heading": "90"
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [11.849843629550225, 57.72537482589284, 0.0]
+  }
+}

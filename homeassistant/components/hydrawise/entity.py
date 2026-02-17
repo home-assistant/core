@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, MODEL_ZONE
 from .coordinator import HydrawiseDataUpdateCoordinator
 
 
@@ -40,7 +40,9 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
             identifiers={(DOMAIN, self._device_id)},
             name=self.zone.name if zone_id is not None else controller.name,
             model=(
-                "Zone" if zone_id is not None else controller.hardware.model.description
+                MODEL_ZONE
+                if zone_id is not None
+                else controller.hardware.model.description
             ),
             manufacturer=MANUFACTURER,
         )

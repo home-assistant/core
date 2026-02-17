@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 import copy
 import io
+import logging
 from typing import Any, cast
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
@@ -175,6 +176,12 @@ def climate_eurotronic_spirit_z_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_eurotronic_spirit_z_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z_state", scope="package")
+def climate_eurotronic_comet_z_state_fixture() -> dict[str, Any]:
+    """Load the climate Eurotronic Comet Z thermostat node state fixture data."""
+    return load_json_object_fixture("climate_eurotronic_comet_z_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm6_state", scope="package")
 def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
@@ -277,6 +284,14 @@ def qubino_shutter_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("cover_qubino_shutter_state.json", DOMAIN)
 
 
+@pytest.fixture(name="qubino_shutter_state_firmware_14_2_0", scope="package")
+def qubino_shutter_state_firmware_14_2_0_fixture() -> dict[str, Any]:
+    """Load the Qubino Shutter node state fixture data with firmware 14.2.0."""
+    return load_json_object_fixture(
+        "cover_qubino_shutter_state_firmware_14_2_0.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="aeotec_nano_shutter_state", scope="package")
 def aeotec_nano_shutter_state_fixture() -> dict[str, Any]:
     """Load the Aeotec Nano Shutter node state fixture data."""
@@ -323,6 +338,18 @@ def aeon_smart_switch_6_state_fixture() -> dict[str, Any]:
 def ge_12730_state_fixture() -> dict[str, Any]:
     """Load the GE 12730 node state fixture data."""
     return load_json_object_fixture("fan_ge_12730_state.json", DOMAIN)
+
+
+@pytest.fixture(name="jasco_14314_state", scope="package")
+def jasco_14314_state_fixture() -> dict[str, Any]:
+    """Load the Jasco 14314 node state fixture data."""
+    return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
+
+
+@pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
+def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
+    return load_json_object_fixture("enbrighten_58446_zwa4013_state.json", DOMAIN)
 
 
 @pytest.fixture(name="aeotec_radiator_thermostat_state", scope="package")
@@ -419,6 +446,12 @@ def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
 def fortrezz_ssa1_siren_state_fixture() -> dict[str, Any]:
     """Load the fortrezz ssa1 siren node state fixture data."""
     return load_json_object_fixture("fortrezz_ssa1_siren_state.json", DOMAIN)
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren_state", scope="package")
+def fortrezz_ssa2_siren_state_fixture() -> dict[str, Any]:
+    """Load the fortrezz ssa2 siren node state fixture data."""
+    return load_json_object_fixture("fortrezz_ssa2_siren_state.json", DOMAIN)
 
 
 @pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
@@ -532,6 +565,24 @@ def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="nabu_casa_zwa2_state")
+def nabu_casa_zwa2_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy_state")
+def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2 (legacy firmware)."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -541,12 +592,6 @@ def mock_listen_block_fixture() -> asyncio.Event:
     return asyncio.Event()
 
 
-@pytest.fixture(name="listen_result")
-def listen_result_fixture() -> asyncio.Future[None]:
-    """Mock a listen result."""
-    return asyncio.Future()
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state: dict[str, Any],
@@ -554,7 +599,6 @@ def mock_client_fixture(
     version_state: dict[str, Any],
     log_config_state: dict[str, Any],
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -563,15 +607,16 @@ def mock_client_fixture(
         client = client_class.return_value
 
         async def connect():
+            listen_block.clear()
             await asyncio.sleep(0)
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
-            await listen_result
 
         async def disconnect():
+            listen_block.set()
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
@@ -812,6 +857,16 @@ def climate_eurotronic_spirit_z_fixture(
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z")
+def climate_eurotronic_comet_z_fixture(
+    client: MagicMock, climate_eurotronic_comet_z_state: dict[str, Any]
+) -> Node:
+    """Mock a climate Eurotronic Comet Z node."""
+    node = Node(client, copy.deepcopy(climate_eurotronic_comet_z_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm6")
 def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     """Mock a climate radio HEATIT Z-TRM6 node."""
@@ -901,6 +956,7 @@ async def integration_fixture(
     hass: HomeAssistant,
     client: MagicMock,
     platforms: list[Platform],
+    caplog: pytest.LogCaptureFixture,
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
@@ -914,6 +970,11 @@ async def integration_fixture(
         await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
+
+    # Make sure no errors logged during setup.
+    # Eg. unique id collisions are only logged as errors and not raised,
+    # and may not cause tests to fail otherwise.
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
 
     return entry
 
@@ -1012,6 +1073,16 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state) -> Node:
     return node
 
 
+@pytest.fixture(name="qubino_shutter_firmware_14_2_0")
+def qubino_shutter_firmware_14_2_0_cover_fixture(
+    client, qubino_shutter_state_firmware_14_2_0
+) -> Node:
+    """Mock a Qubino flush shutter node with firmware 14.2.0."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state_firmware_14_2_0))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeotec_nano_shutter")
 def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state) -> Node:
     """Mock a Aeotec Nano Shutter node."""
@@ -1074,6 +1145,22 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state) -> Node:
 def ge_12730_fixture(client, ge_12730_state) -> Node:
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="jasco_14314")
+def jasco_14314_fixture(client, jasco_14314_state) -> Node:
+    """Mock a Jasco 14314 fan controller node."""
+    node = Node(client, copy.deepcopy(jasco_14314_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="enbrighten_58446_zwa4013")
+def enbrighten_58446_zwa4013_fixture(client, enbrighten_58446_zwa4013_state) -> Node:
+    """Mock a Enbrighten_58446/zwa4013 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_58446_zwa4013_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1188,6 +1275,14 @@ def lock_popp_electric_strike_lock_control_fixture(
 def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state) -> Node:
     """Mock a fortrezz ssa1 siren node."""
     node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren")
+def fortrezz_ssa2_siren_fixture(client, fortrezz_ssa2_siren_state) -> Node:
+    """Mock a fortrezz ssa2 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa2_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1342,5 +1437,25 @@ def zcombo_smoke_co_alarm_fixture(
 ) -> Node:
     """Load node for ZCombo-G Smoke/CO Alarm."""
     node = Node(client, zcombo_smoke_co_alarm_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2")
+def nabu_casa_zwa2_fixture(
+    client: MagicMock, nabu_casa_zwa2_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2."""
+    node = Node(client, nabu_casa_zwa2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy")
+def nabu_casa_zwa2_legacy_fixture(
+    client: MagicMock, nabu_casa_zwa2_legacy_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
+    node = Node(client, nabu_casa_zwa2_legacy_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

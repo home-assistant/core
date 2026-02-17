@@ -118,7 +118,7 @@ async def test_lcn_devices_scan_command(
     """Test lcn/devices/scan command."""
     # add new module which is not stored in config_entry
     lcn_connection = await init_integration(hass, entry)
-    lcn_connection.get_address_conn(LcnAddr(0, 10, False))
+    lcn_connection.get_device_connection(LcnAddr(0, 10, False))
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({**SCAN_PAYLOAD, "entry_id": entry.entry_id})
@@ -191,6 +191,16 @@ async def test_lcn_entities_add_command(
     assert res["success"], res
 
     assert entity_config in entry.data[CONF_ENTITIES]
+
+    # invalid domain
+    await client.send_json_auto_id(
+        {**ENTITIES_ADD_PAYLOAD, "entry_id": entry.entry_id, CONF_DOMAIN: "invalid"}
+    )
+
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["translation_key"] == "invalid_domain"
 
 
 async def test_lcn_entities_delete_command(

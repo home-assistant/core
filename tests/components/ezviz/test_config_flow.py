@@ -129,6 +129,7 @@ async def test_async_step_reauth(
             CONF_PASSWORD: "test-password",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -217,6 +218,7 @@ async def test_async_step_integration_discovery(
     assert result["result"].unique_id == "C666666"
 
 
+@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -639,6 +641,7 @@ async def test_reauth_errors(
             CONF_PASSWORD: "test-password",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

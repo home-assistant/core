@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -28,10 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQConfigEntry, AirQCoordinator
-from .const import (
-    ACTIVITY_BECQUEREL_PER_CUBIC_METER,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-)
+from .const import ACTIVITY_BECQUEREL_PER_CUBIC_METER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,7 +193,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="humidity_abs",
-        translation_key="absolute_humidity",
+        device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
         native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("humidity_abs"),
@@ -220,6 +218,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("ch4_MIPEX"),
+    ),
+    AirQEntityDescription(
+        key="mold",
+        translation_key="mold",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("mold"),
     ),
     AirQEntityDescription(
         key="n2o",
@@ -321,11 +326,25 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("c3h8_MIPEX"),
     ),
     AirQEntityDescription(
-        key="refigerant",
-        translation_key="refigerant",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        key="r32",
+        translation_key="r32",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.get("refigerant"),
+        value=lambda data: data.get("r32"),
+    ),
+    AirQEntityDescription(
+        key="r454b",
+        translation_key="r454b",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("r454b"),
+    ),
+    AirQEntityDescription(
+        key="r454c",
+        translation_key="r454c",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("r454c"),
     ),
     AirQEntityDescription(
         key="sih4",

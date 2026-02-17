@@ -3,6 +3,9 @@
     "_": {
       "default": "mdi:ray-vertex"
     },
+    "absolute_humidity": {
+      "default": "mdi:water-opacity"
+    },
     "apparent_power": {
       "default": "mdi:flash"
     },
@@ -132,6 +135,9 @@
     "temperature": {
       "default": "mdi:thermometer"
     },
+    "temperature_delta": {
+      "default": "mdi:thermometer"
+    },
     "volatile_organic_compounds": {
       "default": "mdi:molecule"
     },
@@ -143,6 +149,9 @@
     },
     "volume": {
       "default": "mdi:car-coolant-level"
+    },
+    "volume_flow_rate": {
+      "default": "mdi:pipe-valve"
     },
     "volume_storage": {
       "default": "mdi:storage-tank"

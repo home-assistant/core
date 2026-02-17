@@ -121,7 +121,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Add-on"
+    assert result3.get("title") == "App"
     assert result3.get("data") == {
         CONF_URL: TEST_URL,
         CONF_ADMIN_USERNAME: "admin-username",
@@ -532,7 +532,7 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert CONF_STREAM_URL_TEMPLATE not in result["data"]
         assert len(mock_setup.mock_calls) == 0
-        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 1
 
         result = await hass.config_entries.options.async_init(
             config_entry.entry_id, context={"show_advanced_options": True}
@@ -551,4 +551,4 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
         assert result["data"][CONF_STREAM_URL_TEMPLATE] == "http://moo"
         assert len(mock_setup.mock_calls) == 0
-        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 1

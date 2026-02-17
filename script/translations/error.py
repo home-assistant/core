@@ -12,6 +12,15 @@ class ExitApp(Exception):
         self.exit_code = exit_code
 
 
+class MissingReference(Exception):
+    """Exception to indicate a missing reference in translations."""
+
+    def __init__(self, reference_key: str):
+        """Initialize the missing reference exception."""
+        self.reference_key = reference_key
+        super().__init__(f"Missing reference key: {reference_key}")
+
+
 class JSONDecodeErrorWithPath(json.JSONDecodeError):
     """Subclass of JSONDecodeError with additional properties.
 

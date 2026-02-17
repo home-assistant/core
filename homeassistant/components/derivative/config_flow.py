@@ -36,7 +36,7 @@ from .const import (
 
 UNIT_PREFIXES = [
     selector.SelectOptionDict(value="n", label="n (nano)"),
-    selector.SelectOptionDict(value="µ", label="µ (micro)"),
+    selector.SelectOptionDict(value="μ", label="μ (micro)"),
     selector.SelectOptionDict(value="m", label="m (milli)"),
     selector.SelectOptionDict(value="k", label="k (kilo)"),
     selector.SelectOptionDict(value="M", label="M (mega)"),
@@ -94,6 +94,7 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 max=6,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="decimals",
+                translation_key="round",
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
@@ -139,6 +140,10 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    VERSION = 1
+    MINOR_VERSION = 4
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

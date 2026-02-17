@@ -30,12 +30,11 @@ from homeassistant.components.media_player import (
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
-    ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
-    SERVICE_SEARCH,
 )
+from homeassistant.components.roku.services import ATTR_KEYWORD, SERVICE_SEARCH
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
@@ -52,15 +51,19 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
+    STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -100,7 +103,7 @@ async def test_setup(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
     assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
@@ -112,12 +115,13 @@ async def test_idle_setup(
     """Test setup with idle device."""
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state
-    assert state.state == STATE_STANDBY
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
@@ -146,7 +150,9 @@ async def test_tv_setup(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
     assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living room").id
+    )
 
 
 @pytest.mark.parametrize(

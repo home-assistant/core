@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -90,7 +90,9 @@ _LEAP_DEVICE_TYPES = {
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
-    def __init__(self, can_connect=True, timeout_on_connect=False) -> None:
+    def __init__(
+        self, can_connect=True, timeout_on_connect=False, smart_away_state=""
+    ) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.timeout_on_connect = timeout_on_connect
         self.can_connect = can_connect
@@ -100,6 +102,24 @@ class MockBridge:
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
         self.buttons = self.load_buttons()
+        self._subscribers: dict[str, list] = {}
+        self.smart_away_state = smart_away_state
+        self._smart_away_subscribers = []
+
+        self.activate_smart_away = AsyncMock(side_effect=self._activate)
+        self.deactivate_smart_away = AsyncMock(side_effect=self._deactivate)
+
+    async def _activate(self):
+        """Activate smart away."""
+        self.smart_away_state = "Enabled"
+        for callback in self._smart_away_subscribers:
+            callback(self.smart_away_state)
+
+    async def _deactivate(self):
+        """Deactivate smart away."""
+        self.smart_away_state = "Disabled"
+        for callback in self._smart_away_subscribers:
+            callback(self.smart_away_state)
 
     async def connect(self):
         """Connect the mock bridge."""
@@ -110,9 +130,26 @@ class MockBridge:
 
     def add_subscriber(self, device_id: str, callback_):
         """Mock a listener to be notified of state changes."""
+        if device_id not in self._subscribers:
+            self._subscribers[device_id] = []
+        self._subscribers[device_id].append(callback_)
+
+    def add_smart_away_subscriber(self, callback_):
+        """Add a smart away subscriber."""
+        self._smart_away_subscribers.append(callback_)
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
+
+    def call_subscribers(self, device_id: str):
+        """Notify subscribers of a device state change."""
+        if device_id in self._subscribers:
+            for callback in self._subscribers[device_id]:
+                callback()
+
+    def get_device_by_id(self, device_id: str):
+        """Get a device by its ID."""
+        return self.devices.get(device_id)
 
     def is_connected(self):
         """Return whether the mock bridge is connected."""
@@ -309,6 +346,20 @@ class MockBridge:
     def tap_button(self, button_id: str):
         """Mock a button press and release message for the given button ID."""
 
+    async def set_value(self, device_id: str, value: int) -> None:
+        """Mock setting a device value."""
+        if device_id in self.devices:
+            self.devices[device_id]["current_state"] = value
+
+    async def raise_cover(self, device_id: str) -> None:
+        """Mock raising a cover."""
+
+    async def lower_cover(self, device_id: str) -> None:
+        """Mock lowering a cover."""
+
+    async def stop_cover(self, device_id: str) -> None:
+        """Mock stopping a cover."""
+
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
@@ -326,6 +377,7 @@ async def async_setup_integration(
     can_connect: bool = True,
     timeout_during_connect: bool = False,
     timeout_during_configure: bool = False,
+    smart_away_state: str = "",
 ) -> MockConfigEntry:
     """Set up a mock bridge."""
     if config_entry_id is None:
@@ -342,7 +394,9 @@ async def async_setup_integration(
         if not timeout_during_connect:
             on_connect_callback()
         return mock_bridge(
-            can_connect=can_connect, timeout_on_connect=timeout_during_configure
+            can_connect=can_connect,
+            timeout_on_connect=timeout_during_configure,
+            smart_away_state=smart_away_state,
         )
 
     with patch(

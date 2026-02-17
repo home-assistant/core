@@ -3,6 +3,7 @@
 from enum import StrEnum, auto
 
 import pypck
+from pypck.device import DeviceConnection
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -48,7 +49,7 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import DeviceConnectionType, LcnConfigEntry, is_states_string
+from .helpers import LcnConfigEntry, is_states_string
 
 
 class LcnServiceCall:
@@ -65,7 +66,7 @@ class LcnServiceCall:
         """Initialize service call."""
         self.hass = hass
 
-    def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
+    def get_device_connection(self, service: ServiceCall) -> DeviceConnection:
         """Get address connection object."""
         entries: list[LcnConfigEntry] = self.hass.config_entries.async_loaded_entries(
             DOMAIN
@@ -330,8 +331,9 @@ class SendKeys(LcnServiceCall):
         if (delay_time := service.data[CONF_TIME]) != 0:
             hit = pypck.lcn_defs.SendKeyCommand.HIT
             if pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]] != hit:
-                raise ValueError(
-                    "Only hit command is allowed when sending deferred keys."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_send_keys_action",
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
             await device_connection.send_keys_hit_deferred(keys, delay_time, delay_unit)
@@ -368,8 +370,9 @@ class LockKeys(LcnServiceCall):
 
         if (delay_time := service.data[CONF_TIME]) != 0:
             if table_id != 0:
-                raise ValueError(
-                    "Only table A is allowed when locking keys for a specific time."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_lock_keys_table",
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
             await device_connection.lock_keys_tab_a_temporary(
@@ -377,9 +380,6 @@ class LockKeys(LcnServiceCall):
             )
         else:
             await device_connection.lock_keys(table_id, states)
-
-        handler = device_connection.status_requests_handler
-        await handler.request_status_locked_keys_timeout()
 
 
 class DynText(LcnServiceCall):

@@ -34,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -70,7 +71,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -80,7 +80,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -120,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -156,7 +156,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -166,7 +165,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })

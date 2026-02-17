@@ -14,14 +14,26 @@
           'model_number': '12345',
         }),
       }),
-      'ovens': dict({
-      }),
-      'washer_dryers': dict({
+      'dryers': dict({
         'Dryer': dict({
           'category': 'washer_dryer',
           'data_model': 'dryer',
           'model_number': '12345',
         }),
+      }),
+      'ovens': dict({
+        'Dual Cavity Oven': dict({
+          'category': 'oven',
+          'data_model': 'oven',
+          'model_number': '12345',
+        }),
+        'Single Cavity Oven': dict({
+          'category': 'oven',
+          'data_model': 'oven',
+          'model_number': '12345',
+        }),
+      }),
+      'washers': dict({
         'Washer': dict({
           'category': 'washer_dryer',
           'data_model': 'washer',
@@ -49,7 +61,7 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
   })

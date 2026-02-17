@@ -2,8 +2,10 @@
 
 import logging
 import os
+import re
+from typing import Any
 
-from psutil._common import shwtemp
+from psutil._common import sfan, shwtemp
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
@@ -21,12 +23,6 @@ def get_all_disk_mounts(
     """Return all disk mount points on system."""
     disks: set[str] = set()
     for part in psutil_wrapper.psutil.disk_partitions(all=True):
-        if os.name == "nt":
-            if "cdrom" in part.opts or part.fstype == "":
-                # skip cd-rom drives with no disk in it; they may raise
-                # ENOENT, pop-up a Windows GUI error for a non-ready
-                # partition or just hang.
-                continue
         if part.fstype in SKIP_DISK_TYPES:
             # Ignore disks which are memory
             continue
@@ -95,3 +91,81 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
                 return round(entry.current, 1)
 
     return None
+
+
+def read_fan_speed(fans: dict[str, list[sfan]]) -> dict[str, int]:
+    """Attempt to read fan speed."""
+    entry: sfan
+
+    _LOGGER.debug("Fan speed: %s", fans)
+    if not fans:
+        return {}
+    sensor_fans: dict[str, int] = {}
+    for name, entries in fans.items():
+        for entry in entries:
+            _label = name if not entry.label else entry.label
+            sensor_fans[_label] = round(entry.current, 0)
+
+    return sensor_fans
+
+
+def parse_pressure_file(file_path: str) -> dict[str, dict[str, float | int]] | None:
+    """Parses a single /proc/pressure file (cpu, memory, or io).
+
+    Args:
+        file_path (str): The full path to the pressure file.
+
+    Returns:
+        dict: A dictionary containing the parsed pressure stall information,
+              or None if the file cannot be read or parsed.
+    """
+    try:
+        with open(file_path, encoding="utf-8") as f:
+            content = f.read()
+    except OSError:
+        return None
+
+    data: dict[str, dict[str, float | int]] = {}
+    # The regex looks for 'some' and 'full' lines and captures the values.
+    # It accounts for floating point numbers and integer values.
+    # Example line: "some avg10=0.00 avg60=0.00 avg300=0.00 total=0"
+    pattern = re.compile(r"(some|full)\s+(.*)")
+    lines = content.strip().split("\n")
+
+    for line in lines:
+        match = pattern.match(line)
+        if match:
+            line_type, values_str = match.groups()
+            values: dict[str, float | int] = {}
+            for item in values_str.split():
+                try:
+                    key, value = item.split("=")
+                    # Convert values to float, except for 'total' which is an integer
+                    if key == "total":
+                        values[key] = int(value)
+                    else:
+                        values[key] = float(value)
+                except ValueError:
+                    continue
+            data[line_type] = values
+
+    return data
+
+
+def get_all_pressure_info() -> dict[str, Any]:
+    """Parses all available pressure information from /proc/pressure/.
+
+    Returns:
+        dict: A dictionary containing cpu, memory, and io pressure info.
+              Returns an empty dictionary if no pressure files are found.
+    """
+    pressure_info: dict[str, Any] = {}
+    resources = ["cpu", "memory", "io"]
+
+    for resource in resources:
+        file_path = f"/proc/pressure/{resource}"
+        parsed_data = parse_pressure_file(file_path)
+        if parsed_data:
+            pressure_info[resource] = parsed_data
+
+    return pressure_info

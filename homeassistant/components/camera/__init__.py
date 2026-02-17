@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceCandidateInit, RTCIceServer
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -37,6 +37,7 @@ from homeassistant.components.stream import (
     Stream,
     create_stream,
 )
+from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -51,12 +52,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
@@ -80,10 +75,16 @@ from .const import (
     StreamType,
 )
 from .helper import get_camera_from_entity_id
-from .img_util import scale_jpeg_camera_image
-from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
+from .img_util import (
+    TurboJPEGSingleton,  # noqa: F401
+    scale_jpeg_camera_image,
+)
+from .prefs import (
+    CameraPreferences,
+    DynamicStreamSettings,  # noqa: F401
+    get_dynamic_camera_stream_settings,
+)
 from .webrtc import (
-    DATA_ICE_SERVERS,
     CameraWebRTCProvider,
     WebRTCAnswer,  # noqa: F401
     WebRTCCandidate,  # noqa: F401
@@ -92,7 +93,6 @@ from .webrtc import (
     WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
     async_get_supported_provider,
-    async_register_ice_servers,
     async_register_webrtc_provider,  # noqa: F401
     async_register_ws,
 )
@@ -113,12 +113,6 @@ SERVICE_PLAY_STREAM: Final = "play_stream"
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
-
-# These constants are deprecated as of Home Assistant 2024.10
-# Please use the StreamType enum instead.
-_DEPRECATED_STATE_RECORDING = DeprecatedConstantEnum(CameraState.RECORDING, "2025.10")
-_DEPRECATED_STATE_STREAMING = DeprecatedConstantEnum(CameraState.STREAMING, "2025.10")
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(CameraState.IDLE, "2025.10")
 
 
 class CameraEntityFeature(IntFlag):
@@ -405,20 +399,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
-    @callback
-    def get_ice_servers() -> list[RTCIceServer]:
-        if hass.config.webrtc.ice_servers:
-            return hass.config.webrtc.ice_servers
-        return [
-            RTCIceServer(
-                urls=[
-                    "stun:stun.home-assistant.io:80",
-                    "stun:stun.home-assistant.io:3478",
-                ]
-            ),
-        ]
-
-    async_register_ice_servers(hass, get_ice_servers)
     return True
 
 
@@ -550,9 +530,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     self.hass,
                     source,
                     options=self.stream_options,
-                    dynamic_stream_settings=await self.hass.data[
-                        DATA_CAMERA_PREFS
-                    ].get_dynamic_stream_settings(self.entity_id),
+                    dynamic_stream_settings=await get_dynamic_camera_stream_settings(
+                        self.hass, self.entity_id
+                    ),
                     stream_label=self.entity_id,
                 )
                 self.stream.set_update_callback(self.async_write_ha_state)
@@ -736,11 +716,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
+        ice_servers = async_get_ice_servers(self.hass)
         config.configuration.ice_servers.extend(ice_servers)
 
         return config
@@ -942,9 +918,7 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
-        msg["entity_id"]
-    )
+    stream_prefs = await get_dynamic_camera_stream_settings(hass, msg["entity_id"])
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 
@@ -1115,11 +1089,3 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

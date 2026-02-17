@@ -10,6 +10,9 @@ import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_EFFECT,
     ATTR_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
@@ -234,6 +237,20 @@ class LIFXLight(LIFXEntity, LightEntity):
         else:
             fade = 0
 
+        if ATTR_BRIGHTNESS_STEP in kwargs or ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+            brightness = self.brightness if self.is_on and self.brightness else 0
+
+            if ATTR_BRIGHTNESS_STEP in kwargs:
+                brightness += kwargs.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness_pct = round(brightness / 255 * 100)
+                brightness = round(
+                    (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+                )
+
+            kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+
         # These are both False if ATTR_POWER is not set
         power_on = kwargs.get(ATTR_POWER, False)
         power_off = not kwargs.get(ATTR_POWER, True)
@@ -324,7 +341,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.manager.async_register_entity(self.entity_id, self.entry.entry_id)
+            self.manager.async_register_entity(self.entity_id, self.coordinator)
         )
         return await super().async_added_to_hass()
 

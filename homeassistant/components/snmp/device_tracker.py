@@ -7,13 +7,13 @@ import logging
 from typing import TYPE_CHECKING
 
 from pysnmp.error import PySnmpError
-from pysnmp.hlapi.asyncio import (
+from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
-    bulkWalkCmd,
-    isEndOfMib,
+    bulk_walk_cmd,
+    is_end_of_mib,
 )
 import voluptuous as vol
 
@@ -59,7 +59,7 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
-    scanner = SnmpScanner(config[DEVICE_TRACKER_DOMAIN])
+    scanner = await SnmpScanner.create(config[DEVICE_TRACKER_DOMAIN])
     await scanner.async_init(hass)
 
     return scanner if scanner.success_init else None
@@ -69,27 +69,14 @@ class SnmpScanner(DeviceScanner):
     """Queries any SNMP capable Access Point for connected devices."""
 
     def __init__(self, config):
-        """Initialize the scanner and test the target device."""
-        host = config[CONF_HOST]
+        """Initialize the scanner after testing the target device."""
+
         community = config[CONF_COMMUNITY]
         baseoid = config[CONF_BASEOID]
         authkey = config.get(CONF_AUTH_KEY)
         authproto = DEFAULT_AUTH_PROTOCOL
         privkey = config.get(CONF_PRIV_KEY)
         privproto = DEFAULT_PRIV_PROTOCOL
-
-        try:
-            # Try IPv4 first.
-            target = UdpTransportTarget((host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT)
-        except PySnmpError:
-            # Then try IPv6.
-            try:
-                target = Udp6TransportTarget(
-                    (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
-                )
-            except PySnmpError as err:
-                _LOGGER.error("Invalid SNMP host: %s", err)
-                return
 
         if authkey is not None or privkey is not None:
             if not authkey:
@@ -109,16 +96,43 @@ class SnmpScanner(DeviceScanner):
                 community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]
             )
 
-        self._target = target
+        self._target: UdpTransportTarget | Udp6TransportTarget
         self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
         self.last_results = []
         self.success_init = False
 
+    @classmethod
+    async def create(cls, config):
+        """Asynchronously test the target device before fully initializing the scanner."""
+        host = config[CONF_HOST]
+
+        try:
+            # Try IPv4 first.
+            target = await UdpTransportTarget.create(
+                (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+            )
+        except PySnmpError:
+            # Then try IPv6.
+            try:
+                target = Udp6TransportTarget(
+                    (host, DEFAULT_PORT), timeout=DEFAULT_TIMEOUT
+                )
+            except PySnmpError as err:
+                _LOGGER.error("Invalid SNMP host: %s", err)
+                return None
+        instance = cls(config)
+        instance._target = target
+
+        return instance
+
     async def async_init(self, hass: HomeAssistant) -> None:
         """Make a one-off read to check if the target device is reachable and readable."""
         self.request_args = await async_create_request_cmd_args(
-            hass, self._auth_data, self._target, self.baseoid
+            hass,
+            self._auth_data,
+            self._target,
+            self.baseoid,
         )
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
@@ -132,6 +146,13 @@ class SnmpScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         # We have no names
         return None
+
+    async def async_get_extra_attributes(self, device: str) -> dict:
+        """Return the extra attributes of the given device or an empty dictionary if we have none."""
+        for client in self.last_results:
+            if client.get("mac") and device == client["mac"]:
+                return {"mac": client["mac"]}
+        return {}
 
     async def _async_update_info(self):
         """Ensure the information from the device is up to date.
@@ -154,7 +175,7 @@ class SnmpScanner(DeviceScanner):
             assert self.request_args is not None
 
         engine, auth_data, target, context_data, object_type = self.request_args
-        walker = bulkWalkCmd(
+        walker = bulk_walk_cmd(
             engine,
             auth_data,
             target,
@@ -177,7 +198,7 @@ class SnmpScanner(DeviceScanner):
                 return None
 
             for _oid, value in res:
-                if not isEndOfMib(res):
+                if not is_end_of_mib(res):
                     try:
                         mac = binascii.hexlify(value.asOctets()).decode("utf-8")
                     except AttributeError:

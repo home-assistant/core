@@ -14,22 +14,22 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter import (
     select as um_select,
     sensor as um_sensor,
 )
 from homeassistant.components.utility_meter.config_flow import ConfigFlowHandler
 from homeassistant.components.utility_meter.const import DOMAIN, SERVICE_RESET
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
-    Platform,
     UnitOfEnergy,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
@@ -108,6 +108,7 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     """Track entity registry actions for an entity."""
     events = []
 
+    @callback
     def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
         """Add entity registry updated event to the list."""
         events.append(event.data["action"])
@@ -138,7 +139,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     )
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, Platform.SENSOR, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     # restore from cache
@@ -171,7 +172,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, Platform.SENSOR, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -530,93 +531,79 @@ async def test_setup_and_remove_config_entry(
     assert len(entity_registry.entities) == 0
 
 
-async def test_device_cleaning(
+@pytest.mark.parametrize(
+    ("tariffs", "expected_entities"),
+    [
+        ([], {"sensor.my_utility_meter"}),
+        (
+            ["peak", "offpeak"],
+            {
+                "select.my_utility_meter",
+                "sensor.my_utility_meter_offpeak",
+                "sensor.my_utility_meter_peak",
+            },
+        ),
+    ],
+)
+async def test_async_handle_source_entity_changes_source_entity_removed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    utility_meter_config_entry: MockConfigEntry,
+    sensor_config_entry: ConfigEntry,
+    sensor_device: dr.DeviceEntry,
+    sensor_entity_entry: er.RegistryEntry,
+    expected_entities: set[str],
 ) -> None:
-    """Test for source entity device for Utility Meter."""
-
-    # Source entity device config entry
-    source_config_entry = MockConfigEntry()
-    source_config_entry.add_to_hass(hass)
-
-    # Device entry of the source entity
-    source_device1_entry = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test1")},
-        connections={("mac", "30:31:32:33:34:01")},
-    )
-
-    # Source entity registry
-    source_entity = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "source",
-        config_entry=source_config_entry,
-        device_id=source_device1_entry.id,
-    )
-    await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
-
-    # Configure the configuration entry for Utility Meter
-    utility_meter_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "cycle": "monthly",
-            "delta_values": False,
-            "name": "Meter",
-            "net_consumption": False,
-            "offset": 0,
-            "periodically_resetting": True,
-            "source": "sensor.test_source",
-            "tariffs": [],
-        },
-        title="Meter",
-    )
-    utility_meter_config_entry.add_to_hass(hass)
+    """Test the utility_meter config entry is removed when the source entity is removed."""
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm the link between the source entity device and the meter sensor
-    utility_meter_entity = entity_registry.async_get("sensor.meter")
-    assert utility_meter_entity is not None
-    assert utility_meter_entity.device_id == source_entity.device_id
-
-    # Device entry incorrectly linked to Utility Meter config entry
-    device_registry.async_get_or_create(
-        config_entry_id=utility_meter_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test2")},
-        connections={("mac", "30:31:32:33:34:02")},
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=utility_meter_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test3")},
-        connections={("mac", "30:31:32:33:34:03")},
-    )
-    await hass.async_block_till_done()
-
-    # Before reloading the config entry, two devices are expected to be linked
-    devices_before_reload = device_registry.devices.get_devices_for_config_entry_id(
+    events = {}
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
         utility_meter_config_entry.entry_id
-    )
-    assert len(devices_before_reload) == 3
+    ):
+        assert utility_meter_entity.device_id == sensor_entity_entry.device_id
+        events[utility_meter_entity.entity_id] = track_entity_registry_actions(
+            hass, utility_meter_entity.entity_id
+        )
+    assert set(events) == expected_entities
 
-    # Config entry reload
-    await hass.config_entries.async_reload(utility_meter_config_entry.entry_id)
-    await hass.async_block_till_done()
+    sensor_device = device_registry.async_get(sensor_device.id)
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
-    # Confirm the link between the source entity device and the meter sensor after reload
-    utility_meter_entity = entity_registry.async_get("sensor.meter")
-    assert utility_meter_entity is not None
-    assert utility_meter_entity.device_id == source_entity.device_id
+    # Remove the source sensor's config entry from the device, this removes the
+    # source sensor
+    with patch(
+        "homeassistant.components.utility_meter.async_unload_entry",
+        wraps=utility_meter.async_unload_entry,
+    ) as mock_unload_entry:
+        device_registry.async_update_device(
+            sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    mock_unload_entry.assert_not_called()
 
-    # After reloading the config entry, only one linked device is expected
-    devices_after_reload = device_registry.devices.get_devices_for_config_entry_id(
+    # Check that the entities are no longer linked to the source device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
         utility_meter_config_entry.entry_id
-    )
-    assert len(devices_after_reload) == 1
+    ):
+        assert utility_meter_entity.device_id is None
+
+    # Check that the device is removed
+    assert not device_registry.async_get(sensor_device.id)
+
+    # Check that the utility_meter config entry is not removed
+    assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    for entity_events in events.values():
+        assert entity_events == ["update"]
 
 
 @pytest.mark.parametrize(
@@ -633,7 +620,7 @@ async def test_device_cleaning(
         ),
     ],
 )
-async def test_async_handle_source_entity_changes_source_entity_removed(
+async def test_async_handle_source_entity_changes_source_entity_removed_shared_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -667,7 +654,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
     # Remove the source sensor's config entry from the device, this removes the
     # source sensor
@@ -682,7 +669,15 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
-    # Check that the utility_meter config entry is removed from the device
+    # Check that the entities are no longer linked to the source device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id is None
+
+    # Check that the utility_meter config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
@@ -734,7 +729,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
     # Remove the source sensor from the device
     with patch(
@@ -747,7 +742,15 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
         await hass.async_block_till_done()
     mock_unload_entry.assert_called_once()
 
-    # Check that the utility_meter config entry is removed from the device
+    # Check that the entities are no longer linked to the source device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id is None
+
+    # Check that the utility_meter config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
@@ -805,7 +808,7 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
     assert utility_meter_config_entry.entry_id not in sensor_device_2.config_entries
 
@@ -820,11 +823,19 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
         await hass.async_block_till_done()
     mock_unload_entry.assert_called_once()
 
-    # Check that the utility_meter config entry is moved to the other device
+    # Check that the entities are linked to the other device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == sensor_device_2.id
+
+    # Check that the derivative config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
     assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert utility_meter_config_entry.entry_id in sensor_device_2.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device_2.config_entries
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -874,7 +885,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
     # Change the source entity's entity ID
     with patch(
@@ -890,9 +901,9 @@ async def test_async_handle_source_entity_new_entity_id(
     # Check that the utility_meter config entry is updated with the new entity ID
     assert utility_meter_config_entry.options["source"] == "sensor.new_entity_id"
 
-    # Check that the helper config is still in the device
+    # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -900,3 +911,108 @@ async def test_async_handle_source_entity_new_entity_id(
     # Check we got the expected events
     for entity_events in events.values():
         assert entity_events == []
+
+
+@pytest.mark.parametrize(
+    ("tariffs", "expected_entities"),
+    [
+        ([], {"sensor.my_utility_meter"}),
+        (
+            ["peak", "offpeak"],
+            {
+                "select.my_utility_meter",
+                "sensor.my_utility_meter_offpeak",
+                "sensor.my_utility_meter_peak",
+            },
+        ),
+    ],
+)
+async def test_migration_2_1(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    sensor_entity_entry: er.RegistryEntry,
+    sensor_device: dr.DeviceEntry,
+    tariffs: list[str],
+    expected_entities: set[str],
+) -> None:
+    """Test migration from v2.1 removes utility_meter config entry from device."""
+
+    utility_meter_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "My utility meter",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": sensor_entity_entry.entity_id,
+            "tariffs": tariffs,
+        },
+        title="My utility meter",
+        version=2,
+        minor_version=1,
+    )
+    utility_meter_config_entry.add_to_hass(hass)
+
+    # Add the helper config entry to the device
+    device_registry.async_update_device(
+        sensor_device.id, add_config_entry_id=utility_meter_config_entry.entry_id
+    )
+
+    # Check preconditions
+    sensor_device = device_registry.async_get(sensor_device.id)
+    assert utility_meter_config_entry.entry_id in sensor_device.config_entries
+
+    await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert utility_meter_config_entry.state is ConfigEntryState.LOADED
+
+    # Check that the helper config entry is removed from the device and the helper
+    # entities are linked to the source device
+    sensor_device = device_registry.async_get(sensor_device.id)
+    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    # Check that the entities are linked to the other device
+    entities = set()
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        entities.add(utility_meter_entity.entity_id)
+        assert utility_meter_entity.device_id == sensor_entity_entry.device_id
+    assert entities == expected_entities
+
+    assert utility_meter_config_entry.version == 2
+    assert utility_meter_config_entry.minor_version == 2
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from future version."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "My utility meter",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": "sensor.test",
+            "tariffs": [],
+        },
+        title="My utility meter",
+        version=3,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

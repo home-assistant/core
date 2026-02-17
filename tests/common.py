@@ -75,6 +75,7 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
+    condition,
     device_registry as dr,
     entity,
     entity_platform,
@@ -296,6 +297,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await condition.async_setup(hass)
     await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
@@ -558,7 +560,11 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
-    if integration is None and "/" in filename and not filename.startswith("helpers/"):
+    if (
+        integration is None
+        and "/" in filename
+        and not filename.startswith(("core/", "helpers/"))
+    ):
         integration, filename = filename.split("/", 1)
 
     if integration is None:
@@ -695,6 +701,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    object_id_base: str | None = attr.ib(default=None)
     options: er.ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=er._protect_entity_options
     )
@@ -932,6 +939,7 @@ class MockModule:
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
         return {
+            "integration_type": "hub",
             **loader.manifest_from_legacy_module(self.DOMAIN, self),
             **(self._partial_manifest or {}),
         }
@@ -1528,7 +1536,7 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
         return loaded
 
     async def mock_write_data(
-        store: storage.Store, path: str, data_to_write: dict[str, Any]
+        store: storage.Store, data_to_write: dict[str, Any]
     ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized
@@ -1605,12 +1613,16 @@ def mock_integration(
     top_level_files: set[str] | None = None,
 ) -> loader.Integration:
     """Mock an integration."""
-    integration = loader.Integration(
-        hass,
+    path = (
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
-        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        pathlib.Path(""),
+        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}"
+    )
+
+    integration = loader.Integration(
+        hass,
+        path,
+        pathlib.Path(path.replace(".", "/")),
         module.mock_manifest(),
         top_level_files,
     )
@@ -1824,9 +1836,9 @@ def import_and_test_deprecated_constant(
         module.__name__,
         logging.WARNING,
         (
-            f"{constant_name} was used from test_constant_deprecation,"
-            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
+            f"The deprecated constant {constant_name} was used from "
+            "test_constant_deprecation. It will be removed in HA Core "
+            f"{breaks_in_ha_version}. Use {replacement_name} instead, please report "
             "it to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
@@ -1858,9 +1870,9 @@ def import_and_test_deprecated_alias(
         module.__name__,
         logging.WARNING,
         (
-            f"{alias_name} was used from test_constant_deprecation,"
-            f" this is a deprecated alias which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement_name} instead, please report "
+            f"The deprecated alias {alias_name} was used from "
+            "test_constant_deprecation. It will be removed in HA Core "
+            f"{breaks_in_ha_version}. Use {replacement_name} instead, please report "
             "it to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples

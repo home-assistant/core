@@ -38,7 +38,12 @@ from miio.gateway.gateway import GatewayException
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -72,10 +77,12 @@ from .const import (
     SetupException,
 )
 from .gateway import ConnectXiaomiGateway
+from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 POLLING_TIMEOUT_SEC = 10
 UPDATE_INTERVAL = timedelta(seconds=15)
 
@@ -121,6 +128,12 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -> bool:
@@ -466,8 +479,6 @@ async def async_setup_gateway_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
 
 async def async_setup_device_entry(
     hass: HomeAssistant, entry: XiaomiMiioConfigEntry
@@ -481,8 +492,6 @@ async def async_setup_device_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
 
 
@@ -493,10 +502,3 @@ async def async_unload_entry(
     platforms = get_platforms(config_entry)
 
     return await hass.config_entries.async_unload_platforms(config_entry, platforms)
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: XiaomiMiioConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

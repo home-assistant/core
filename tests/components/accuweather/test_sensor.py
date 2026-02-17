@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import ApiError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,6 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
     UPDATE_INTERVAL_OBSERVATION,
+)
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -86,7 +90,6 @@ async def test_availability(
         ApiError("API Error"),
         ConnectionError,
         ClientConnectorError,
-        InvalidApiKeyError("Invalid API key"),
         RequestsExceededError("Requests exceeded"),
     ],
 )
@@ -134,13 +137,13 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     assert mock_accuweather_client.async_get_current_conditions.call_count == 1
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["sensor.home_cloud_ceiling"]},
         blocking=True,
     )

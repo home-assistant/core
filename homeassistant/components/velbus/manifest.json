@@ -3,7 +3,7 @@
   "name": "Velbus",
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
-  "dependencies": ["usb"],
+  "dependencies": ["usb", "file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/velbus",
   "integration_type": "hub",
   "iot_class": "local_push",
@@ -13,24 +13,24 @@
     "velbus-packet",
     "velbus-protocol"
   ],
-  "quality_scale": "bronze",
-  "requirements": ["velbus-aio==2025.5.0"],
+  "quality_scale": "silver",
+  "requirements": ["velbus-aio==2026.1.4"],
   "usb": [
     {
-      "vid": "10CF",
-      "pid": "0B1B"
+      "pid": "0B1B",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0516"
+      "pid": "0516",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0517"
+      "pid": "0517",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0518"
+      "pid": "0518",
+      "vid": "10CF"
     }
   ]
 }

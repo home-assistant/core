@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from automower_ble.mower import Mower
+from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address
 
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
     """Class to manage fetching data."""
 
     def __init__(
@@ -62,16 +63,16 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         )
 
         try:
-            if not await self.mower.connect(device):
+            if await self.mower.connect(device) is not ResponseResult.OK:
                 raise UpdateFailed("Failed to connect")
         except BleakError as err:
             raise UpdateFailed("Failed to connect") from err
 
-    async def _async_update_data(self) -> dict[str, bytes]:
+    async def _async_update_data(self) -> dict[str, str | int]:
         """Poll the device."""
         LOGGER.debug("Polling device")
 
-        data: dict[str, bytes] = {}
+        data: dict[str, str | int] = {}
 
         try:
             if not self.mower.is_connected():

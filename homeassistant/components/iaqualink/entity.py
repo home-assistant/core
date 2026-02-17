@@ -29,6 +29,7 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](Entity):
         self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, dev.system.serial),
             manufacturer=dev.manufacturer,
             model=dev.model,
             name=dev.label,

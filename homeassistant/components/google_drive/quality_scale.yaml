@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: No actions.
-  appropriate-polling:
-    status: exempt
-    comment: No polling.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -17,12 +15,8 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: exempt
-    comment: No entities.
-  entity-unique-id:
-    status: exempt
-    comment: No entities.
+  entity-event-setup: done
+  entity-unique-id: done
   has-entity-name:
     status: exempt
     comment: No entities.
@@ -38,39 +32,24 @@ rules:
     status: exempt
     comment: No configuration options.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: No entities.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: No entities.
-  parallel-updates:
-    status: exempt
-    comment: No actions and no entities.
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: No devices.
-  diagnostics:
-    status: exempt
-    comment: No data to diagnose.
+  devices: done
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: No discovery.
   discovery:
     status: exempt
     comment: No discovery.
-  docs-data-update:
-    status: exempt
-    comment: No updates.
-  docs-examples:
-    status: exempt
-    comment: |
-      This integration only serves backup.
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
@@ -79,20 +58,13 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
-    comment: No devices.
-  entity-category:
-    status: exempt
-    comment: No entities.
-  entity-device-class:
-    status: exempt
-    comment: No entities.
-  entity-disabled-by-default:
-    status: exempt
-    comment: No entities.
-  entity-translations:
-    status: exempt
-    comment: No entities.
+    status: done
+    comment: |
+      This integration has a fixed single service.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
@@ -104,8 +76,9 @@ rules:
     status: exempt
     comment: No repairs.
   stale-devices:
-    status: exempt
-    comment: No devices.
+    status: done
+    comment: |
+      This integration has a fixed single service.
 
   # Platinum
   async-dependency: done

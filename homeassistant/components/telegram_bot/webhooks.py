@@ -14,20 +14,19 @@ from telegram.ext import Application, ApplicationBuilder, TypeHandler
 from homeassistant.components.http import HomeAssistantRequest, HomeAssistantView
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
 from .const import CONF_TRUSTED_NETWORKS
+from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
-REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> BaseTelegramBot | None:
     """Set up the Telegram webhooks platform."""
@@ -39,9 +38,16 @@ async def async_setup_platform(
     pushbot = PushBot(hass, bot, config, secret_token)
 
     await pushbot.start_application()
+
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        raise ConfigEntryNotReady("Failed to register webhook with Telegram")
+        raise RuntimeError("Failed to register webhook with Telegram")
+    _LOGGER.info(
+        "[%s %s] Webhook registered with %s",
+        bot.username,
+        bot.id,
+        get_base_url(bot),
+    )
 
     hass.http.register_view(
         PushBotView(
@@ -52,6 +58,8 @@ async def async_setup_platform(
             secret_token,
         )
     )
+
+    _LOGGER.info("[%s %s] Webhook bot ready", bot.username, bot.id)
     return pushbot
 
 
@@ -77,16 +85,17 @@ class PushBot(BaseTelegramBot):
         # Dumb Application that just gets our updates to our handler callback (self.handle_update)
         self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
-        super().__init__(hass, config)
+        super().__init__(hass, config, bot)
 
         self.base_url = config.data.get(CONF_URL) or get_url(
             hass, require_ssl=True, allow_internal=False
         )
-        self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
+        self.webhook_url = self.base_url + _get_webhook_url(bot)
 
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()
+        _LOGGER.info("[%s %s] Webhook bot shutdown", self.bot.username, self.bot.id)
 
     async def _try_to_set_webhook(self) -> bool:
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
@@ -98,9 +107,11 @@ class PushBot(BaseTelegramBot):
                     api_kwargs={"secret_token": self.secret_token},
                     connect_timeout=5,
                 )
-            except TelegramError:
+            except TelegramError as err:
                 retry_num += 1
-                _LOGGER.warning("Error trying to set webhook (retry #%d)", retry_num)
+                _LOGGER.warning(
+                    "Error trying to set webhook (retry #%d)", retry_num, exc_info=err
+                )
 
         return False
 
@@ -115,14 +126,7 @@ class PushBot(BaseTelegramBot):
         # Some logging of Bot current status:
         _LOGGER.debug("telegram webhook status: %s", current_status)
 
-        result = await self._try_to_set_webhook()
-        if result:
-            _LOGGER.debug("Set new telegram webhook %s", self.webhook_url)
-        else:
-            _LOGGER.error("Set telegram webhook failed %s", self.webhook_url)
-            return False
-
-        return True
+        return await self._try_to_set_webhook()
 
     async def stop_application(self) -> None:
         """Handle gracefully stopping the Application object."""
@@ -143,7 +147,6 @@ class PushBotView(HomeAssistantView):
     """View for handling webhook calls from Telegram."""
 
     requires_auth = False
-    url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
     def __init__(
@@ -160,6 +163,7 @@ class PushBotView(HomeAssistantView):
         self.application = application
         self.trusted_networks = trusted_networks
         self.secret_token = secret_token
+        self.url = _get_webhook_url(bot)
 
     async def post(self, request: HomeAssistantRequest) -> Response | None:
         """Accept the POST from telegram."""
@@ -183,3 +187,7 @@ class PushBotView(HomeAssistantView):
         await self.application.process_update(update)
 
         return None
+
+
+def _get_webhook_url(bot: Bot) -> str:
+    return f"{TELEGRAM_WEBHOOK_URL}_{bot.id}"

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from binascii import unhexlify
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
-from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 from zha.application.const import (
@@ -23,7 +23,7 @@ from zha.application.const import (
     CLUSTER_TYPE_IN,
 )
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete
+from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.profiles.zha
@@ -94,11 +94,26 @@ def required_platform_only():
 
 
 @pytest.fixture
+def speed_up_radio_mgr():
+    """Speed up the radio manager connection time by removing delays.
+
+    This fixture replaces the fixture in conftest.py by patching the connect
+    and shutdown delays to 0 to allow waiting for the patched delays when
+    running tests with time frozen, which otherwise blocks forever.
+    """
+    with (
+        patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0),
+        patch("zha.application.gateway.SHUT_DOWN_DELAY_S", 0),
+    ):
+        yield
+
+
+@pytest.fixture
 async def zha_client(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> MockHAClientWebSocket:
     """Get ZHA WebSocket client."""
 
@@ -216,7 +231,7 @@ async def test_device_cluster_commands(zha_client) -> None:
         assert command[TYPE] is not None
 
 
-@freeze_time("2023-09-23 20:16:00+00:00")
+@pytest.mark.freeze_time("2023-09-23 20:16:00+00:00")
 async def test_list_devices(zha_client) -> None:
     """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
@@ -261,7 +276,9 @@ async def test_get_zha_config(zha_client) -> None:
 
 
 async def test_get_zha_config_with_alarm(
-    hass: HomeAssistant, zha_client, zigpy_device_mock
+    hass: HomeAssistant,
+    zha_client,
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test getting ZHA custom configuration."""
 
@@ -596,7 +613,9 @@ async def test_remove_group_member(hass: HomeAssistant, zha_client) -> None:
 
 @pytest.fixture
 async def app_controller(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> ControllerApplication:
     """Fixture for zigpy Application Controller."""
     await setup_zha()
@@ -1138,7 +1157,9 @@ async def test_websocket_bind_unbind_group(
 
 
 async def test_websocket_reconfigure(
-    hass: HomeAssistant, zha_client: MockHAClientWebSocket, zigpy_device_mock
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test websocket API to reconfigure a device."""
     gateway = get_zha_gateway(hass)

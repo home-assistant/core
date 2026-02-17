@@ -35,19 +35,24 @@ from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
 
+_DESCRIPTION_PLACEHOLDERS = {
+    "sensor_value_types_url": "https://www.home-assistant.io/integrations/knx/#value-types"
+}
+
 
 @callback
-def register_knx_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register KNX integration services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
         service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     hass.services.async_register(
@@ -63,6 +68,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EVENT_REGISTER,
         service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
@@ -71,6 +77,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EXPOSURE_REGISTER,
         service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
@@ -186,7 +193,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
                 " for '%s' - %s"
             ),
             group_address,
-            replaced_exposure.device.name,
+            replaced_exposure.name,
         )
         replaced_exposure.async_remove()
     exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
@@ -194,7 +201,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     _LOGGER.debug(
         "Service exposure_register registered exposure for '%s' - %s",
         group_address,
-        exposure.device.name,
+        exposure.name,
     )
 
 

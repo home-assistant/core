@@ -30,7 +30,6 @@ async def test_camera_single_image(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []
@@ -75,7 +74,6 @@ async def test_camera_single_image_unavailable_before_requested(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []
@@ -113,7 +111,6 @@ async def test_camera_single_image_unavailable_during_request(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []
@@ -155,7 +152,6 @@ async def test_camera_stream(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []
@@ -212,7 +208,6 @@ async def test_camera_stream_unavailable(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []
@@ -249,7 +244,6 @@ async def test_camera_stream_with_disconnection(
             object_id="mycamera",
             key=1,
             name="my camera",
-            unique_id="my_camera",
         )
     ]
     states = []

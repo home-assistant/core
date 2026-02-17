@@ -9,6 +9,7 @@ BASE_CUSTOM_CONFIGURATION = {
                 "valueMax": 6553.6,
                 "name": "default_light_transition",
                 "optional": True,
+                "required": False,
                 "default": 0,
             },
             {
@@ -40,6 +41,7 @@ BASE_CUSTOM_CONFIGURATION = {
                 "valueMin": 0,
                 "name": "consider_unavailable_mains",
                 "optional": True,
+                "required": False,
                 "default": 7200,
             },
             {
@@ -47,6 +49,7 @@ BASE_CUSTOM_CONFIGURATION = {
                 "valueMin": 0,
                 "name": "consider_unavailable_battery",
                 "optional": True,
+                "required": False,
                 "default": 21600,
             },
             {
@@ -80,6 +83,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "valueMax": 6553.6,
                 "name": "default_light_transition",
                 "optional": True,
+                "required": False,
                 "default": 0,
             },
             {
@@ -111,6 +115,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "valueMin": 0,
                 "name": "consider_unavailable_mains",
                 "optional": True,
+                "required": False,
                 "default": 7200,
             },
             {
@@ -118,6 +123,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "valueMin": 0,
                 "name": "consider_unavailable_battery",
                 "optional": True,
+                "required": False,
                 "default": 21600,
             },
             {

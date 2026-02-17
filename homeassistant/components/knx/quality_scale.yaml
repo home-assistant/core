@@ -104,8 +104,8 @@ rules:
       Since all entities are configured manually, names are user-defined.
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

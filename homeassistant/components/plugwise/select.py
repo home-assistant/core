@@ -9,7 +9,15 @@ from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SelectOptionsType, SelectType
+from .const import (
+    SELECT_DHW_MODE,
+    SELECT_GATEWAY_MODE,
+    SELECT_REGULATION_MODE,
+    SELECT_SCHEDULE,
+    SELECT_ZONE_PROFILE,
+    SelectOptionsType,
+    SelectType,
+)
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -27,27 +35,33 @@ class PlugwiseSelectEntityDescription(SelectEntityDescription):
 
 SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
-        key="select_schedule",
-        translation_key="select_schedule",
+        key=SELECT_SCHEDULE,
+        translation_key=SELECT_SCHEDULE,
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
-        key="select_regulation_mode",
-        translation_key="regulation_mode",
+        key=SELECT_REGULATION_MODE,
+        translation_key=SELECT_REGULATION_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="regulation_modes",
     ),
     PlugwiseSelectEntityDescription(
-        key="select_dhw_mode",
-        translation_key="dhw_mode",
+        key=SELECT_DHW_MODE,
+        translation_key=SELECT_DHW_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="dhw_modes",
     ),
     PlugwiseSelectEntityDescription(
-        key="select_gateway_mode",
-        translation_key="gateway_mode",
+        key=SELECT_GATEWAY_MODE,
+        translation_key=SELECT_GATEWAY_MODE,
         entity_category=EntityCategory.CONFIG,
         options_key="gateway_modes",
+    ),
+    PlugwiseSelectEntityDescription(
+        key=SELECT_ZONE_PROFILE,
+        translation_key=SELECT_ZONE_PROFILE,
+        entity_category=EntityCategory.CONFIG,
+        options_key="zone_profiles",
     ),
 )
 
@@ -70,7 +84,7 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if description.options_key in coordinator.data[device_id]
+            if coordinator.data[device_id].get(description.options_key)
         )
 
     _add_entities()
@@ -98,7 +112,7 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
             self._location = location
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.device[self.entity_description.key]
 

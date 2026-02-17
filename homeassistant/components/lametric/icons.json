@@ -7,10 +7,10 @@
       "app_previous": {
         "default": "mdi:arrow-left-bold"
       },
-      "dismiss_current": {
+      "dismiss_all": {
         "default": "mdi:bell-cancel"
       },
-      "dismiss_all": {
+      "dismiss_current": {
         "default": "mdi:bell-cancel"
       }
     },

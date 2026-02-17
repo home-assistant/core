@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -25,7 +24,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -106,15 +104,6 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SERVICE_PLAY_PRESET = "play_preset"
-ATTR_PRESET_NUMBER = "preset_number"
-
-SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
-    }
-)
-
 RETRY_POLL_MAXIMUM = 3
 SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
@@ -126,14 +115,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
-
-    # register services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
-    )
-
-    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
@@ -315,14 +296,19 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             return []
 
         shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        leader_id: str | None = None
+        followers = []
 
-        return [
-            entity_id
-            for entity_id, bridge in shared_data.entity_to_bridge.items()
-            if bridge
-            in [multiroom.leader.device.uuid]
-            + [follower.device.uuid for follower in multiroom.followers]
-        ]
+        # find leader and followers
+        for ent_id, uuid in shared_data.entity_to_bridge.items():
+            if uuid == multiroom.leader.device.uuid:
+                leader_id = ent_id
+            elif uuid in {f.device.uuid for f in multiroom.followers}:
+                followers.append(ent_id)
+
+        if TYPE_CHECKING:
+            assert leader_id is not None
+        return [leader_id, *followers]
 
     @property
     def media_image_url(self) -> str | None:

@@ -72,11 +72,11 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
     if _is_yellow(hass) and device == "/dev/ttyAMA1":
         return f"Home Assistant Yellow ({discovery_info.name})"
 
-    if device and "SkyConnect" in device:
-        return f"Home Assistant SkyConnect ({discovery_info.name})"
-
-    if device and "Connect_ZBT-1" in device:
+    if device and ("Connect_ZBT-1" in device or "SkyConnect" in device):
         return f"Home Assistant Connect ZBT-1 ({discovery_info.name})"
+
+    if device and "Nabu_Casa_ZBT-2" in device:
+        return f"Home Assistant Connect ZBT-2 ({discovery_info.name})"
 
     return discovery_info.name
 
@@ -111,7 +111,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
-                        channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
+                        channel=allowed_channel or DEFAULT_CHANNEL,
                         network_name=compose_default_network_name(pan_id),
                         pan_id=pan_id,
                     )

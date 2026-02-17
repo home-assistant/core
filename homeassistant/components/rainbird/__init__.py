@@ -18,19 +18,26 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_SERIAL_NUMBER
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 from .coordinator import (
     RainbirdScheduleUpdateCoordinator,
     RainbirdUpdateCoordinator,
     async_create_clientsession,
 )
+from .services import async_setup_services
 from .types import RainbirdConfigEntry, RainbirdData
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CALENDAR,
@@ -38,9 +45,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-
-DOMAIN = "rainbird"
 
 
 def _async_register_clientsession_shutdown(
@@ -59,6 +63,12 @@ def _async_register_clientsession_shutdown(
     )
     entry.async_on_unload(unsub)
     entry.async_on_unload(_async_close_websession)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
@@ -218,6 +228,9 @@ def _async_fix_device_id(
     for device_entry in device_entries:
         unique_id = str(next(iter(device_entry.identifiers))[1])
         device_entry_map[unique_id] = device_entry
+        if unique_id.startswith(mac_address):
+            # Already in the correct format
+            continue
         if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
             migrations[unique_id] = f"{mac_address}{suffix}"
 

@@ -10,7 +10,11 @@ import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -51,7 +55,7 @@ DEFAULT_USE_TELNET_NEW_INSTALL = True
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
 
     async def async_step_init(
@@ -195,7 +199,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             success = await connect_denonavr.async_connect_receiver()
-        except (AvrNetworkError, AvrTimoutError):
+        except AvrNetworkError, AvrTimoutError:
             success = False
         if not success:
             return self.async_abort(reason="cannot_connect")

@@ -7,6 +7,7 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="LG_Smart_Dryer2_open",
-    macaddress="34:E6:E6:11:22:33",
+    macaddress=dr.format_mac("34:E6:E6:11:22:33").replace(":", ""),
 )
 
 
@@ -48,8 +49,7 @@ async def test_config_flow(
 
 
 async def test_config_flow_invalid_pat(
-    hass: HomeAssistant,
-    mock_invalid_thinq_api: AsyncMock,
+    hass: HomeAssistant, mock_invalid_thinq_api: AsyncMock
 ) -> None:
     """Test that an thinq flow should be aborted with an invalid PAT."""
     result = await hass.config_entries.flow.async_init(

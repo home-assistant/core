@@ -29,19 +29,24 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
 from .const import (
     ATTR_DURATION,
     ATTR_DURATION_UNTIL,
     ATTR_PERIOD,
     ATTR_SETPOINT,
+    EVOHOME_DATA,
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
@@ -80,9 +85,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    loc_idx = hass.data[EVOHOME_KEY].loc_idx
-    tcs = hass.data[EVOHOME_KEY].tcs
+    coordinator = hass.data[EVOHOME_DATA].coordinator
+    loc_idx = hass.data[EVOHOME_DATA].loc_idx
+    tcs = hass.data[EVOHOME_DATA].tcs
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -243,7 +248,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs["temperature"]
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         if (until := kwargs.get("until")) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:

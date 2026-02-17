@@ -1,0 +1,14 @@
+{
+  "issues": {
+    "duplicate_instance_id": {
+      "fix_flow": {
+        "step": {
+          "confirm_recreate": {
+            "description": "Another device ({other_ip}) on your network is advertising the same Home Assistant instance ID ({instance_id} reachable via {other_host_url}) as this instance. This can cause network instability and excessive traffic.\n\nTo fix this issue:\n1. Change the instance ID on **only one** of the Home Assistant instances.\n2. Once the conflict is resolved, the repair issue on the other instance will disappear automatically.\n\nAfter confirming, a new instance ID will be generated for this Home Assistant instance and the instance will restart. This will not affect your configuration or data, but it may take a few minutes for other devices on your network to recognize the change.\n\nTo proceed, click 'Submit' below."
+          }
+        }
+      },
+      "title": "Duplicate Home Assistant instance detected on your network"
+    }
+  }
+}

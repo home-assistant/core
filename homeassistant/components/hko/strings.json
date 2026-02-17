@@ -9,10 +9,10 @@
     },
     "step": {
       "user": {
-        "description": "Please select a location to use for weather forecasting.",
         "data": {
           "location": "[%key:common::config_flow::data::location%]"
-        }
+        },
+        "description": "Please select a location to use for weather forecasting."
       }
     }
   }

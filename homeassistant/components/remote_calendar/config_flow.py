@@ -4,13 +4,14 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, TimeoutException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.httpx_client import get_async_client
 
+from .client import get_calendar
 from .const import CONF_CALENDAR_NAME, DOMAIN
 from .ics import InvalidIcsException, parse_calendar
 
@@ -20,6 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
         vol.Required(CONF_URL): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -47,9 +49,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 "webcal://", "https://", 1
             )
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        client = get_async_client(self.hass)
+        client = get_async_client(self.hass, verify_ssl=user_input[CONF_VERIFY_SSL])
         try:
-            res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            res = await get_calendar(client, user_input[CONF_URL])
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
                 return self.async_show_form(
@@ -58,9 +60,14 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             res.raise_for_status()
+        except TimeoutException as err:
+            errors["base"] = "timeout_connect"
+            _LOGGER.debug(
+                "A timeout error occurred: %s", str(err) or type(err).__name__
+            )
         except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
-            _LOGGER.debug("An error occurred: %s", err)
+            _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
             try:
                 await parse_calendar(self.hass, res.text)

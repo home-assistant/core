@@ -8,6 +8,7 @@ from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_NAME,
@@ -20,14 +21,9 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_CONFIG_ENTRY_ID,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-    PLATFORMS,
-    WEBOSTV_EXCEPTIONS,
-)
+from .const import DATA_HASS_CONFIG, DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
 from .helpers import WebOsTvConfigEntry, update_client_key
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -35,6 +31,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG webOS TV platform."""
     hass.data.setdefault(DOMAIN, {DATA_HASS_CONFIG: config})
+
+    async_setup_services(hass)
 
     return True
 
@@ -75,8 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         )
     )
 
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
     async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
         client.clear_state_update_callbacks()
@@ -86,11 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     )
     return True
-
-
-async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
