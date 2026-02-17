@@ -194,19 +194,20 @@ async def download_pr_artifact(
     if frontend_dir.exists() and sha_file.exists():
         try:
             cached_key = await hass.async_add_executor_job(sha_file.read_text)
-            if cached_key.strip() == cache_key:
+            cached_key = cached_key.strip()
+            if cached_key == cache_key:
                 _LOGGER.info(
                     "Using cached PR #%s (commit %s) from %s",
                     pr_number,
-                    head_sha[:8],
+                    cache_key,
                     tmp_dir,
                 )
                 return tmp_dir
             _LOGGER.info(
                 "PR #%s cache outdated (cached: %s, current: %s), re-downloading",
                 pr_number,
-                cached_key[:8],
-                head_sha[:8],
+                cached_key,
+                cache_key,
             )
         except OSError as err:
             _LOGGER.debug("Failed to read cache SHA file: %s", err)
