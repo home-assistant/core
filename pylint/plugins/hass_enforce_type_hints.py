@@ -2586,10 +2586,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="available_tones",
                     return_type=["dict[int, str]", "list[int | str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="SirenEntityFeature",
+                    mandatory=True,
                 ),
             ],
         ),
