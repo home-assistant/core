@@ -67,31 +67,31 @@ class MeteoclimaticWeather(
         )
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(self.coordinator.data["weather"].condition)
 
     @property
-    def native_temperature(self) -> float:
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data["weather"].temp_current
 
     @property
-    def humidity(self) -> float:
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data["weather"].humidity_current
 
     @property
-    def native_pressure(self) -> float:
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data["weather"].pressure_current
 
     @property
-    def native_wind_speed(self) -> float:
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data["weather"].wind_current
 
     @property
-    def wind_bearing(self) -> float:
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self.coordinator.data["weather"].wind_bearing
