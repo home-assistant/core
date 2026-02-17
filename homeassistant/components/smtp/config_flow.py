@@ -13,7 +13,6 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -36,7 +36,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .helpers import try_connect
 from .const import (
     CONF_DEBUG,
     CONF_ENCRYPTION,
@@ -50,6 +49,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
+from .helpers import try_connect
 
 
 def _build_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
@@ -236,7 +236,9 @@ def _build_options_schema(user_input: dict[str, Any], has_password: bool) -> vol
             ): TextSelector(),
             vol.Optional(
                 CONF_PASSWORD,
-                description={"suggested_value": UNCHANGED_PASSWORD if has_password else ""},
+                description={
+                    "suggested_value": UNCHANGED_PASSWORD if has_password else ""
+                },
             ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
             # Email addresses
             vol.Required(
@@ -320,7 +322,9 @@ class SMTPOptionsFlow(OptionsFlow):
                         data=new_data,
                         title=user_input[CONF_SENDER],
                     )
-                    await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                    await self.hass.config_entries.async_reload(
+                        self.config_entry.entry_id
+                    )
                     return self.async_create_entry(title="", data={})
 
         # Build current values for the form

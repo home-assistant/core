@@ -17,13 +17,18 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.selector import ConfigEntrySelector, ConfigEntrySelectorConfig
+from homeassistant.helpers.selector import (
+    ConfigEntrySelector,
+    ConfigEntrySelectorConfig,
+)
 from homeassistant.util.ssl import client_context
 
-from .helpers import try_connect
-from .notify import MailNotificationService
 from .const import (
     ATTR_FROM_NAME,
     ATTR_HTML,
@@ -38,6 +43,8 @@ from .const import (
     DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from .helpers import try_connect
+from .notify import MailNotificationService
 
 CONF_CONFIG_ENTRY = "config_entry"
 
@@ -81,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register the send_message service (only once)
     if not hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE):
+
         async def async_send_message(call: ServiceCall) -> None:
             """Handle the send_message service call."""
             # Get the config entry
@@ -126,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if ATTR_SUBJECT in call.data:
                 kwargs["title"] = render_template(call.data[ATTR_SUBJECT])
 
-            if ATTR_TO in call.data and call.data[ATTR_TO]:
+            if call.data.get(ATTR_TO):
                 kwargs["target"] = call.data[ATTR_TO]
 
             # Build data dict for html, images, from_name
