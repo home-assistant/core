@@ -14,6 +14,8 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The authenticated account does not match the account that needed re-authentication",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_account_mismatch": "The authenticated account does not match the account that needed reconfiguration",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
