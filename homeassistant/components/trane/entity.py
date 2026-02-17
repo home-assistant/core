@@ -33,25 +33,6 @@ class TraneEntity(Entity):
         self.async_write_ha_state()
 
 
-class TraneThermostatEntity(TraneEntity):
-    """Base class for Trane thermostat-level entities."""
-
-    def __init__(
-        self,
-        conn: ThermostatConnection,
-        entry_id: str,
-        unique_id_suffix: str,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(conn)
-        self._attr_unique_id = f"{entry_id}_{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            manufacturer=MANUFACTURER,
-            name="Thermostat",
-        )
-
-
 class TraneZoneEntity(TraneEntity):
     """Base class for Trane zone-level entities."""
 
