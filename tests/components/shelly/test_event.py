@@ -82,6 +82,41 @@ async def test_rpc_button(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
 
 
+async def test_rpc_bthome_button_with_idx(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC BThome button event with idx field."""
+    await init_integration(hass, 2)
+    entity_id = "event.test_name_test_input_0"
+
+    # Simulate BThome button event with idx field (button index)
+    # id is the bthomedevice ID, idx is the actual button index
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "bthomedevice:202",
+                    "event": "single_push",
+                    "id": 202,
+                    "idx": 0,
+                    "channel": -1,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_script_1_event(
     hass: HomeAssistant,

@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import init_integration
+from . import init_integration, inject_rpc_device_event
 
 from tests.common import async_get_device_automations
 
@@ -481,3 +481,52 @@ async def test_block_no_runtime_data(
 
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_single"
+
+
+async def test_bthome_button_event_with_idx(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test for BThome button click events using idx field."""
+    entry = await init_integration(hass, 2)
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    events = []
+
+    def capture_event(event):
+        events.append(event.data)
+
+    hass.bus.async_listen(EVENT_SHELLY_CLICK, capture_event)
+
+    # Simulate BThome button events with idx field for buttons 0-3
+    for button_idx in range(4):
+        inject_rpc_device_event(
+            monkeypatch,
+            mock_rpc_device,
+            {
+                "events": [
+                    {
+                        "component": "bthomedevice:202",
+                        "event": "single_push",
+                        "id": 202,  # BThome device ID
+                        "idx": button_idx,  # Button index
+                        "channel": -1,
+                        "ts": 1668522399.2,
+                    }
+                ],
+                "ts": 1668522399.2,
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify we got 4 distinct events with channels 1-4
+    assert len(events) == 4
+    assert events[0][ATTR_CHANNEL] == 1
+    assert events[1][ATTR_CHANNEL] == 2
+    assert events[2][ATTR_CHANNEL] == 3
+    assert events[3][ATTR_CHANNEL] == 4
+    for event in events:
+        assert event[CONF_DEVICE_ID] == device.id
+        assert event[ATTR_CLICK_TYPE] == "single_push"
