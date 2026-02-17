@@ -32,14 +32,6 @@ class TessieState(StrEnum):
     ONLINE = "online"
 
 
-class TessieStatus(StrEnum):
-    """Tessie status."""
-
-    ASLEEP = "asleep"
-    AWAKE = "awake"
-    WAITING = "waiting_for_sleep"
-
-
 class TessieSeatHeaterOptions(StrEnum):
     """Tessie seat heater options."""
 
