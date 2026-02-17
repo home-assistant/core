@@ -8,10 +8,14 @@ from typing import Any, cast
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import AppRoot
+from onedrive_personal_sdk.models.items import Drive
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -34,7 +38,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
 
     client: OneDriveClient
-    approot: AppRoot
+    drive: Drive
 
     @property
     def logger(self) -> logging.Logger:
@@ -98,8 +102,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            self.approot = await self.client.get_approot()
-            drive = await self.client.get_drive()
+            self.drive = await self.client.get_drive()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -107,7 +110,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(drive.id)
+        await self.async_set_unique_id(self.drive.id)
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_drive")
@@ -116,9 +119,15 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data_updates=data,
             )
 
-        self._abort_if_unique_id_configured()
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="wrong_drive")
+        else:
+            self._abort_if_unique_id_configured()
 
         self._data.update(data)
+
+        if self.source == SOURCE_RECONFIGURE:
+            return await self.async_step_reconfigure_folder()
 
         return await self.async_step_select_folder()
 
@@ -137,9 +146,11 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "folder_creation_error"
             if not errors:
                 title = (
-                    f"{self.approot.created_by.user.display_name}'s OneDrive"
-                    if self.approot.created_by.user
-                    and self.approot.created_by.user.display_name
+                    f"{self.drive.owner.user.display_name}'s OneDrive ({self.drive.owner.user.email})"
+                    if self.drive.owner
+                    and self.drive.owner.user
+                    and self.drive.owner.user.display_name
+                    and self.drive.owner.user.email
                     else "OneDrive"
                 )
                 return self.async_create_entry(
@@ -154,6 +165,47 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_show_form(
             step_id="select_folder",
             data_schema=FOLDER_NAME_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        self._data[CONF_TENANT_ID] = self._get_reconfigure_entry().data[CONF_TENANT_ID]
+        with tenant_id_context(self._data[CONF_TENANT_ID]):
+            return await self.async_step_pick_implementation()
+
+    async def async_step_reconfigure_folder(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Step to ask for new folder path during reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            path = str(user_input[CONF_FOLDER_PATH]).lstrip("/")
+            try:
+                folder = await self.client.create_folder("root", path)
+            except OneDriveException:
+                self.logger.debug("Failed to create folder", exc_info=True)
+                errors["base"] = "folder_creation_error"
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={
+                        **self._data,
+                        CONF_FOLDER_ID: folder.id,
+                        CONF_FOLDER_PATH: user_input[CONF_FOLDER_PATH],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_folder",
+            data_schema=self.add_suggested_values_to_schema(
+                FOLDER_NAME_SCHEMA,
+                {CONF_FOLDER_PATH: reconfigure_entry.data[CONF_FOLDER_PATH]},
+            ),
             errors=errors,
         )
 

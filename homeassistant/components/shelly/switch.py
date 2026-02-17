@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import (
-    DOMAIN as SWITCH_PLATFORM,
+    DOMAIN as SWITCH_DOMAIN,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -101,7 +101,7 @@ RPC_SWITCHES = {
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, SWITCH_PLATFORM)
+            not is_view_for_platform(config, key, SWITCH_DOMAIN)
         ),
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -379,13 +379,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so we need
     # to remove orphaned entities
     virtual_switch_ids = get_virtual_component_ids(
-        coordinator.device.config, SWITCH_PLATFORM
+        coordinator.device.config, SWITCH_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SWITCH_PLATFORM,
+        SWITCH_DOMAIN,
         virtual_switch_ids,
         "boolean",
     )
@@ -396,7 +396,7 @@ def _async_setup_rpc_entry(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SWITCH_PLATFORM,
+        SWITCH_DOMAIN,
         coordinator.device.status,
         "script",
     )
@@ -407,7 +407,7 @@ def _async_setup_rpc_entry(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        CLIMATE_PLATFORM,
+        CLIMATE_DOMAIN,
         coordinator.device.status,
         "thermostat",
     )
