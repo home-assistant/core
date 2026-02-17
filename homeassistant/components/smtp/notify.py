@@ -299,7 +299,7 @@ class MailNotificationService(BaseNotificationService):
 def _build_text_msg(message: str) -> MIMEText:
     """Build plaintext email."""
     _LOGGER.debug("Building plain text email")
-    return MIMEText(message, _charset="utf-8")
+    return MIMEText(message)
 
 
 def _attach_file(
