@@ -339,6 +339,8 @@ async def test_current_option_zeo_program() -> None:
     assert entity.current_option == "1"
     coordinator.data = {}
     assert entity.current_option is None
+    coordinator.data = {RoborockZeoProtocol.PROGRAM: None}
+    assert entity.current_option is None
 
 
 async def test_update_failure_zeo_program(
