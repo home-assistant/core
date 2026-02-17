@@ -371,7 +371,7 @@ async def search_items(
 ) -> list[BrowseMedia]:
     """Search the items for the query."""
 
-    media_filter_classes = query.media_filter_classes
+    media_filter_classes = query.media_filter_classes or []
     media_filter_classes_supported_for_search = [
         MediaClass.MOVIE,
         MediaClass.TV_SHOW,
@@ -379,13 +379,13 @@ async def search_items(
 
     is_internal = is_internal_request(hass)
 
-    if media_filter_classes:
-        media_filter_classes = [
-            t
-            for t in media_filter_classes
-            if t in media_filter_classes_supported_for_search
-        ]
-    else:
+    media_filter_classes = [
+        t
+        for t in media_filter_classes
+        if t in media_filter_classes_supported_for_search
+    ]
+
+    if not media_filter_classes:
         media_filter_classes = media_filter_classes_supported_for_search
 
     if query.media_content_id and media_source.is_media_source_id(
