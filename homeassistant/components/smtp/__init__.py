@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import ConfigEntrySelector, ConfigEntrySelec
 from homeassistant.util.ssl import client_context
 
 from .helpers import try_connect
+from .notify import MailNotificationService
 from .const import (
     ATTR_FROM_NAME,
     ATTR_HTML,
@@ -82,9 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE):
         async def async_send_message(call: ServiceCall) -> None:
             """Handle the send_message service call."""
-            # Import here to avoid circular imports
-            from .notify import MailNotificationService
-
             # Get the config entry
             entry_id = call.data[CONF_CONFIG_ENTRY]
             if entry_id not in hass.data[DOMAIN]:
@@ -117,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if not value:
                     return value
                 tpl = template.Template(value, hass)
-                return tpl.async_render(parse_result=False)
+                return str(tpl.async_render(parse_result=False))
 
             # Render message with templates
             message_text = render_template(call.data.get(ATTR_MESSAGE, ""))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import smtplib
 import socket
 
@@ -41,17 +42,15 @@ def try_connect(
         if username and password:
             mail.login(username, password)
 
-        return None
-
-    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):
-        return "cannot_connect"
     except smtplib.SMTPAuthenticationError:
         return "invalid_auth"
     except smtplib.SMTPException:
         return "cannot_connect"
+    except (socket.gaierror, ConnectionRefusedError, TimeoutError, OSError):
+        return "cannot_connect"
+    else:
+        return None
     finally:
         if mail:
-            try:
+            with contextlib.suppress(smtplib.SMTPException):
                 mail.quit()
-            except smtplib.SMTPException:
-                pass
