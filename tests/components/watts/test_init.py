@@ -19,6 +19,7 @@ from homeassistant.components.watts.const import (
     DISCOVERY_INTERVAL_MINUTES,
     DOMAIN,
     OAUTH2_TOKEN,
+    UPDATE_INTERVAL_SECONDS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -273,3 +274,48 @@ async def test_stale_device_removal(
         identifiers={(DOMAIN, "thermostat_456")}
     )
     assert device_456_after_removal is None
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        WattsVisionAuthError("expired"),
+        WattsVisionConnectionError("lost"),
+    ],
+)
+async def test_hub_coordinator_update_errors(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test hub coordinator handles errors during regular update."""
+    await setup_integration(hass, mock_config_entry)
+    hub = mock_config_entry.runtime_data.hub_coordinator
+    mock_watts_client.get_devices_report.side_effect = exception
+
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hub.last_update_success is False
+
+
+async def test_device_coordinator_refresh_error(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test device coordinator handles refresh error."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = next(
+        iter(mock_config_entry.runtime_data.device_coordinators.values())
+    )
+
+    mock_watts_client.get_device.side_effect = WattsVisionConnectionError("lost")
+
+    await coordinator.async_request_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
