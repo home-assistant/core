@@ -2,7 +2,9 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from steamloop import HoldType
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -13,8 +15,20 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_entities(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Snapshot all switch entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_hold_switch_on(
