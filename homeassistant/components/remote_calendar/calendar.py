@@ -7,7 +7,7 @@ import logging
 from ical.event import Event
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -79,14 +79,18 @@ class RemoteCalendarEntity(
 
         return await self.hass.async_add_executor_job(events_in_range)
 
-    async def async_update(self) -> None:
-        """Refresh the timeline.
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.hass.async_create_task(self._async_rebuild_and_write_state())
 
-        This is called when the coordinator updates. Creating the timeline may
-        require walking through the entire calendar and handling recurring
-        events, so it is done as a separate task without blocking the event loop.
-        """
-        await super().async_update()
+    async def _async_rebuild_and_write_state(self) -> None:
+        """Rebuild upcoming events cache and write state."""
+        await self._async_rebuild_upcoming_events()
+        self.async_write_ha_state()
+
+    async def _async_rebuild_upcoming_events(self) -> None:
+        """Rebuild the upcoming events cache from coordinator data."""
 
         def upcoming_events() -> list[CalendarEvent]:
             now = dt_util.now()
@@ -99,9 +103,25 @@ class RemoteCalendarEntity(
                 upcoming.append(cal_event)
                 if cal_event.start_datetime_local >= now + SCAN_INTERVAL:
                     break
+            if len(upcoming) >= _UPCOMING_EVENTS_CACHE_LIMIT:
+                _LOGGER.warning(
+                    "Upcoming events cache limit (%s) reached; some events"
+                    " may not be cached",
+                    _UPCOMING_EVENTS_CACHE_LIMIT,
+                )
             return upcoming
 
         self._upcoming_events = await self.hass.async_add_executor_job(upcoming_events)
+
+    async def async_update(self) -> None:
+        """Refresh the timeline.
+
+        This is called when the coordinator updates. Creating the timeline may
+        require walking through the entire calendar and handling recurring
+        events, so it is done as a separate task without blocking the event loop.
+        """
+        await super().async_update()
+        await self._async_rebuild_upcoming_events()
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

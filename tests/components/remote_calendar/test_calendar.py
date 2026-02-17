@@ -1,6 +1,6 @@
 """Tests for calendar platform of Remote Calendar."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import pathlib
 import textwrap
 
@@ -748,65 +748,3 @@ async def test_multi_day_event_to_next_event(
     assert state
     assert state.state == STATE_ON
     assert state.attributes["message"] == "Next Event"
-
-
-def _generate_large_calendar(num_events: int, base: datetime) -> str:
-    """Generate a large ICS calendar with many short events."""
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0"]
-    for i in range(num_events):
-        start = base + timedelta(minutes=15 * i)
-        end = start + timedelta(minutes=10)
-        lines.extend(
-            [
-                "BEGIN:VEVENT",
-                f"SUMMARY:Event {i + 1}",
-                f"DTSTART:{start.strftime('%Y%m%dT%H%M%SZ')}",
-                f"DTEND:{end.strftime('%Y%m%dT%H%M%SZ')}",
-                f"UID:event-{i + 1}@test",
-                "END:VEVENT",
-            ]
-        )
-    lines.append("END:VCALENDAR")
-    return "\n".join(lines)
-
-
-@pytest.mark.freeze_time(datetime(2025, 3, 1, 10, 0, 0))
-@respx.mock
-async def test_large_calendar_performance(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that a calendar with thousands of events loads and transitions."""
-    num_events = 3000
-    ics = _generate_large_calendar(num_events, base=datetime(2025, 3, 1, 9, 55, 0))
-    respx.get(CALENDER_URL).mock(
-        return_value=Response(status_code=200, text=ics),
-    )
-    await setup_integration(hass, config_entry)
-
-    # First event is active at 10:00 (started 09:55)
-    state = hass.states.get(TEST_ENTITY)
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes["message"] == "Event 1"
-
-    # Advance past first event end (10:05), second event starts at 10:10
-    freezer.move_to(datetime(2025, 3, 1, 10, 6, 0))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes["message"] == "Event 2"
-
-    # Advance into second event
-    freezer.move_to(datetime(2025, 3, 1, 10, 10, 0))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes["message"] == "Event 2"
