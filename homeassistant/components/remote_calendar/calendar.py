@@ -1,6 +1,7 @@
 """Calendar platform for a Remote Calendar."""
 
 from datetime import datetime
+import itertools
 import logging
 
 from ical.event import Event
@@ -13,12 +14,16 @@ from homeassistant.util import dt as dt_util
 
 from . import RemoteCalendarConfigEntry
 from .const import CONF_CALENDAR_NAME
-from .coordinator import RemoteCalendarDataUpdateCoordinator
+from .coordinator import SCAN_INTERVAL, RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+# Safety limit to prevent unbounded iteration over malformed calendars
+# with excessive overlapping events in the same time window.
+_UPCOMING_EVENTS_CACHE_LIMIT = 200
 
 
 async def async_setup_entry(
@@ -48,12 +53,16 @@ class RemoteCalendarEntity(
         super().__init__(coordinator)
         self._attr_name = entry.data[CONF_CALENDAR_NAME]
         self._attr_unique_id = entry.entry_id
-        self._event: CalendarEvent | None = None
+        self._upcoming_events: list[CalendarEvent] = []
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        now = dt_util.now()
+        for event in self._upcoming_events:
+            if now < event.end_datetime_local:
+                return event
+        return None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -79,14 +88,20 @@ class RemoteCalendarEntity(
         """
         await super().async_update()
 
-        def next_event() -> CalendarEvent | None:
+        def upcoming_events() -> list[CalendarEvent]:
             now = dt_util.now()
-            events = self.coordinator.data.timeline_tz(now.tzinfo).active_after(now)
-            if event := next(events, None):
-                return _get_calendar_event(event)
-            return None
+            upcoming: list[CalendarEvent] = []
+            for event in itertools.islice(
+                self.coordinator.data.timeline_tz(now.tzinfo).active_after(now),
+                _UPCOMING_EVENTS_CACHE_LIMIT,
+            ):
+                cal_event = _get_calendar_event(event)
+                upcoming.append(cal_event)
+                if cal_event.start_datetime_local >= now + SCAN_INTERVAL:
+                    break
+            return upcoming
 
-        self._event = await self.hass.async_add_executor_job(next_event)
+        self._upcoming_events = await self.hass.async_add_executor_job(upcoming_events)
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

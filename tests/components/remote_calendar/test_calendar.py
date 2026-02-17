@@ -1,9 +1,10 @@
 """Tests for calendar platform of Remote Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import pathlib
 import textwrap
 
+from freezegun.api import FrozenDateTimeFactory
 from httpx import Response
 import pytest
 import respx
@@ -21,7 +22,7 @@ from .conftest import (
     event_fields,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test data files with known calendars from various sources. You can add a new file
 # in the testdata directory and add it will be parsed and tested.
@@ -422,3 +423,390 @@ async def test_calendar_examples(
     await setup_integration(hass, config_entry)
     events = await get_events("1997-07-14T00:00:00", "2025-07-01T00:00:00")
     assert events == snapshot
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 10, 0, 0))
+@respx.mock
+async def test_consecutive_events_transition(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that entity correctly transitions between consecutive events."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Event 1
+            DTSTART:20250301T095500Z
+            DTEND:20250301T100500Z
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Event 2
+            DTSTART:20250301T101000Z
+            DTEND:20250301T101500Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    # At 10:00 UTC, Event 1 is active (started 09:55)
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 1"
+
+    # At 10:06 UTC, Event 1 ended, Event 2 hasn't started yet
+    freezer.move_to(datetime(2025, 3, 1, 10, 6, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Event 2"
+
+    # At 10:10 UTC, Event 2 starts
+    freezer.move_to(datetime(2025, 3, 1, 10, 10, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 2"
+
+    # At 10:16 UTC, Event 2 ended, no more events
+    freezer.move_to(datetime(2025, 3, 1, 10, 16, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {"friendly_name": FRIENDLY_NAME}
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 10, 0, 0))
+@respx.mock
+async def test_back_to_back_events_transition(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity transitions when one event ends exactly as the next starts."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Event 1
+            DTSTART:20250301T095500Z
+            DTEND:20250301T100500Z
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Event 2
+            DTSTART:20250301T100500Z
+            DTEND:20250301T101500Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    # At 10:00 UTC, Event 1 is active
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 1"
+
+    # At 10:05 UTC, Event 1 ends and Event 2 starts simultaneously
+    freezer.move_to(datetime(2025, 3, 1, 10, 5, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 2"
+
+    # At 10:16 UTC, Event 2 ended
+    freezer.move_to(datetime(2025, 3, 1, 10, 16, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {"friendly_name": FRIENDLY_NAME}
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 10, 0, 0))
+@respx.mock
+async def test_overlapping_events_transition(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity shows the first event when events overlap."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Event 1
+            DTSTART:20250301T095500Z
+            DTEND:20250301T101000Z
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Event 2
+            DTSTART:20250301T100500Z
+            DTEND:20250301T101500Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    # At 10:00 UTC, Event 1 is active, Event 2 not yet started
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 1"
+
+    # At 10:06 UTC, both events are active, Event 1 shown (first in timeline)
+    freezer.move_to(datetime(2025, 3, 1, 10, 6, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 1"
+
+    # At 10:11 UTC, Event 1 ended, Event 2 still active
+    freezer.move_to(datetime(2025, 3, 1, 10, 11, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 2"
+
+    # At 10:16 UTC, Event 2 ended
+    freezer.move_to(datetime(2025, 3, 1, 10, 16, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {"friendly_name": FRIENDLY_NAME}
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 12, 0, 0))
+@respx.mock
+async def test_all_day_events_transition(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test transition between consecutive all-day events."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Day 1 Event
+            DTSTART:20250301
+            DTEND:20250302
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Day 2 Event
+            DTSTART:20250302
+            DTEND:20250303
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    # During day 1, Day 1 Event is active
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Day 1 Event"
+
+    # At start of day 2, Day 1 Event ends and Day 2 Event starts
+    freezer.move_to(datetime(2025, 3, 2, 6, 0, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Day 2 Event"
+
+    # At start of day 3, Day 2 Event ended
+    freezer.move_to(datetime(2025, 3, 3, 6, 0, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {"friendly_name": FRIENDLY_NAME}
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 12, 0, 0))
+@respx.mock
+async def test_multi_day_event_to_next_event(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test transition from a multi-day event to the next event."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
+            BEGIN:VCALENDAR
+            VERSION:2.0
+            BEGIN:VEVENT
+            SUMMARY:Multi-day Event
+            DTSTART:20250301T100000Z
+            DTEND:20250303T100000Z
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:Next Event
+            DTSTART:20250303T110000Z
+            DTEND:20250303T120000Z
+            END:VEVENT
+            END:VCALENDAR
+            """
+            ),
+        )
+    )
+    await setup_integration(hass, config_entry)
+
+    # Day 1: Multi-day Event is active
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Multi-day Event"
+
+    # Day 2: still active
+    freezer.move_to(datetime(2025, 3, 2, 12, 0, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Multi-day Event"
+
+    # Day 3 10:00 UTC: Multi-day Event ends, Next Event not yet started
+    freezer.move_to(datetime(2025, 3, 3, 10, 0, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Next Event"
+
+    # Day 3 11:00 UTC: Next Event starts
+    freezer.move_to(datetime(2025, 3, 3, 11, 0, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Next Event"
+
+
+def _generate_large_calendar(num_events: int, base: datetime) -> str:
+    """Generate a large ICS calendar with many short events."""
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0"]
+    for i in range(num_events):
+        start = base + timedelta(minutes=15 * i)
+        end = start + timedelta(minutes=10)
+        lines.extend(
+            [
+                "BEGIN:VEVENT",
+                f"SUMMARY:Event {i + 1}",
+                f"DTSTART:{start.strftime('%Y%m%dT%H%M%SZ')}",
+                f"DTEND:{end.strftime('%Y%m%dT%H%M%SZ')}",
+                f"UID:event-{i + 1}@test",
+                "END:VEVENT",
+            ]
+        )
+    lines.append("END:VCALENDAR")
+    return "\n".join(lines)
+
+
+@pytest.mark.freeze_time(datetime(2025, 3, 1, 10, 0, 0))
+@respx.mock
+async def test_large_calendar_performance(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a calendar with thousands of events loads and transitions."""
+    num_events = 3000
+    ics = _generate_large_calendar(num_events, base=datetime(2025, 3, 1, 9, 55, 0))
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text=ics),
+    )
+    await setup_integration(hass, config_entry)
+
+    # First event is active at 10:00 (started 09:55)
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 1"
+
+    # Advance past first event end (10:05), second event starts at 10:10
+    freezer.move_to(datetime(2025, 3, 1, 10, 6, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes["message"] == "Event 2"
+
+    # Advance into second event
+    freezer.move_to(datetime(2025, 3, 1, 10, 10, 0))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Event 2"
