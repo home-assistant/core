@@ -74,10 +74,10 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get device data (type, serial number, generation) from API."""
         api = IndevoltAPI(host, DEFAULT_PORT, async_get_clientsession(self.hass))
         config_data = await api.get_config()
-        device_data = config_data.get("device", {})
+        device_data = config_data["device"]
 
         return {
-            CONF_SERIAL_NUMBER: device_data.get("sn"),
-            CONF_GENERATION: device_data.get("generation", 1),
-            CONF_MODEL: device_data.get("type"),
+            CONF_SERIAL_NUMBER: device_data["sn"],
+            CONF_GENERATION: device_data["generation"],
+            CONF_MODEL: device_data["type"],
         }
