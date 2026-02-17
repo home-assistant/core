@@ -699,7 +699,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zeo_one_detergent_empty-entry]
+# name: test_binary_sensors[binary_sensor.zeo_one_detergent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -712,7 +712,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.zeo_one_detergent_empty',
+    'entity_id': 'binary_sensor.zeo_one_detergent',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -720,12 +720,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Detergent empty',
+    'object_id_base': 'Detergent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Detergent empty',
+    'original_name': 'Detergent',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -735,21 +735,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zeo_one_detergent_empty-state]
+# name: test_binary_sensors[binary_sensor.zeo_one_detergent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Zeo One Detergent empty',
+      'friendly_name': 'Zeo One Detergent',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zeo_one_detergent_empty',
+    'entity_id': 'binary_sensor.zeo_one_detergent',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zeo_one_softener_empty-entry]
+# name: test_binary_sensors[binary_sensor.zeo_one_softener-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -762,7 +762,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.zeo_one_softener_empty',
+    'entity_id': 'binary_sensor.zeo_one_softener',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -770,12 +770,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Softener empty',
+    'object_id_base': 'Softener',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Softener empty',
+    'original_name': 'Softener',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -785,14 +785,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zeo_one_softener_empty-state]
+# name: test_binary_sensors[binary_sensor.zeo_one_softener-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Zeo One Softener empty',
+      'friendly_name': 'Zeo One Softener',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zeo_one_softener_empty',
+    'entity_id': 'binary_sensor.zeo_one_softener',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
