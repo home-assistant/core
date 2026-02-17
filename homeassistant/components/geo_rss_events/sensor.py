@@ -40,7 +40,6 @@ ATTR_TITLE = "title"
 
 CONF_CATEGORIES = "categories"
 
-DEFAULT_ICON = "mdi:alert"
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = "Events"
@@ -111,15 +110,14 @@ def setup_platform(
 class GeoRssServiceSensor(SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_icon = "mdi:alert"
+
     def __init__(
         self, coordinates, url, radius, category, service_name, unit_of_measurement
     ):
         """Initialize the sensor."""
-        self._category = category
-        self._service_name = service_name
-        self._state = None
-        self._state_attributes = None
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_name = f"{service_name} {'Any' if category is None else category}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
         self._feed = GenericFeed(
             coordinates,
@@ -127,31 +125,6 @@ class GeoRssServiceSensor(SensorEntity):
             filter_radius=radius,
             filter_categories=None if not category else [category],
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._service_name} {'Any' if self._category is None else self._category}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the default icon to use in the frontend."""
-        return DEFAULT_ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._state_attributes
 
     def update(self) -> None:
         """Update this sensor from the GeoRSS service."""
@@ -161,14 +134,14 @@ class GeoRssServiceSensor(SensorEntity):
             _LOGGER.debug(
                 "Adding events to sensor %s: %s", self.entity_id, feed_entries
             )
-            self._state = len(feed_entries)
+            self._attr_native_value = len(feed_entries)
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
                 matrix[entry.title] = (
                     f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
                 )
-            self._state_attributes = matrix
+            self._attr_extra_state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)
             # Don't change the state or state attributes.
@@ -178,5 +151,5 @@ class GeoRssServiceSensor(SensorEntity):
             )
             # If no events were found due to an error then just set state to
             # zero.
-            self._state = 0
-            self._state_attributes = {}
+            self._attr_native_value = 0
+            self._attr_extra_state_attributes = {}

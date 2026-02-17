@@ -286,6 +286,11 @@
           "unsupported_charging_mode": "Unsupported charging mode"
         }
       }
+    },
+    "switch": {
+      "charging_enabled": {
+        "name": "Charging enabled"
+      }
     }
   },
   "exceptions": {
@@ -294,6 +299,9 @@
     },
     "authentication_error": {
       "message": "Authentication failed. Please check your credentials."
+    },
+    "command_rejected": {
+      "message": "The device rejected the request: {reason}"
     },
     "communication_error": {
       "message": "Communication error with NRGkick device: {error}"
