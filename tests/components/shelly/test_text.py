@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.text import (
     ATTR_VALUE,
-    DOMAIN as TEXT_PLATFORM,
+    DOMAIN as TEXT_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -72,7 +72,7 @@ async def test_rpc_device_virtual_text(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: "sed do eiusmod"},
         blocking=True,
@@ -105,7 +105,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         "test_name_text_200",
         "text:200-text_generic",
         config_entry,
@@ -129,7 +129,7 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         "test_name_text_200",
         "text:200-text_generic",
         config_entry,
@@ -180,10 +180,10 @@ async def test_text_set_exc(
 
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
-            TEXT_PLATFORM,
+            TEXT_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+                ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
                 ATTR_VALUE: "new value",
             },
             blocking=True,
@@ -212,10 +212,10 @@ async def test_text_set_reauth_error(
     mock_rpc_device.text_set.side_effect = InvalidAuthError
 
     await hass.services.async_call(
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+            ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
             ATTR_VALUE: "new value",
         },
         blocking=True,
