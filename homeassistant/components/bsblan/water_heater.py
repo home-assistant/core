@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from bsblan import BSBLANError, SetHotWaterParam
 
@@ -124,14 +124,14 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
             current_temp := self.coordinator.data.dhw.dhw_actual_value_top_temperature
         ) is None:
             return None
-        return float(current_temp.value)
+        return cast(float, current_temp.value)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self.coordinator.data.dhw.nominal_setpoint) is None:
             return None
-        return float(target_temp.value)
+        return cast(float, target_temp.value)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

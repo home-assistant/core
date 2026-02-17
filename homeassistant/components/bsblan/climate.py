@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from bsblan import BSBLANError, get_hvac_action_category
 
@@ -103,14 +103,14 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         """Return the current temperature."""
         if (current_temp := self.coordinator.data.state.current_temperature) is None:
             return None
-        return float(current_temp.value)
+        return cast(float, current_temp.value)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self.coordinator.data.state.target_temperature) is None:
             return None
-        return float(target_temp.value)
+        return cast(float, target_temp.value)
 
     @property
     def _hvac_mode_value(self) -> int | str | None:
