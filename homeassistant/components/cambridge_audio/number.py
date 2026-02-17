@@ -1,0 +1,88 @@
+"""Support for Cambridge Audio switch entities."""
+
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+from aiostreammagic import StreamMagicClient
+
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import CambridgeAudioConfigEntry
+from .entity import CambridgeAudioEntity, command
+
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
+    """Describes Cambridge Audio switch entity."""
+
+    load_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
+    value_fn: Callable[[StreamMagicClient], int]
+    set_value_fn: Callable[[StreamMagicClient, int], Awaitable[None]]
+
+
+def room_correction_intensity(client: StreamMagicClient) -> int:
+    """Check if room correction is enabled."""
+    if TYPE_CHECKING:
+        assert client.audio.tilt_eq is not None
+    return client.audio.tilt_eq.intensity
+
+
+CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
+    CambridgeAudioNumberEntityDescription(
+        key="room_correction_intensity",
+        translation_key="room_correction_intensity",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=-15,
+        native_max_value=15,
+        native_step=1,
+        load_fn=lambda client: client.audio.tilt_eq is not None,
+        value_fn=room_correction_intensity,
+        set_value_fn=lambda client, value: client.set_room_correction_intensity(value),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: CambridgeAudioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Cambridge Audio switch entities based on a config entry."""
+    client: StreamMagicClient = entry.runtime_data
+    async_add_entities(
+        CambridgeAudioNumber(entry.runtime_data, description)
+        for description in CONTROL_ENTITIES
+        if description.load_fn(client)
+    )
+
+
+class CambridgeAudioNumber(CambridgeAudioEntity, NumberEntity):
+    """Defines a Cambridge Audio switch entity."""
+
+    entity_description: CambridgeAudioNumberEntityDescription
+
+    def __init__(
+        self,
+        client: StreamMagicClient,
+        description: CambridgeAudioNumberEntityDescription,
+    ) -> None:
+        """Initialize Cambridge Audio switch."""
+        super().__init__(client)
+        self.entity_description = description
+        self._attr_unique_id = f"{client.info.unit_id}-{description.key}"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the number."""
+        return self.entity_description.value_fn(self.client)
+
+    @command
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the selected value."""
+        await self.entity_description.set_value_fn(self.client, int(value))
