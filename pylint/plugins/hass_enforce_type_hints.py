@@ -2559,10 +2559,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="extra_restore_state_data",
                     return_type="SensorExtraStoredData",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_get_last_sensor_data",
                     return_type=["SensorExtraStoredData", None],
+                    mandatory=True,
                 ),
             ],
         ),
