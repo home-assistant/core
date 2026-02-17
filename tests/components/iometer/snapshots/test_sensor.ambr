@@ -107,7 +107,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1904.5',
   })
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_consumption_tariff_t2-entry]
@@ -164,7 +164,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '9876.21',
   })
 # ---
 # name: test_all_sensors[sensor.iometer_1isk0000000000_meter_number-entry]
