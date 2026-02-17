@@ -392,12 +392,18 @@ async def test_switch_device_no_ip_address(
             "async_set_deflection_enable",
             STATE_ON,
         ),
+        (
+            "switch.mock_title_wi_fi_mywifi",
+            "async_set_wlan_configuration",
+            STATE_ON,
+        ),
     ],
 )
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     entity_id: str,
     wrapper_method: str,
     state_value: str,
