@@ -436,7 +436,7 @@ class RegistryEntry:
 
 
 @callback
-def _async_get_full_entity_name_generic(
+def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
     device_id: str | None,
@@ -490,7 +490,7 @@ def async_get_full_entity_name(
     original_name = (
         original_name if original_name is not UNDEFINED else entry.original_name
     )
-    return _async_get_full_entity_name_generic(
+    return _async_get_full_entity_name(
         hass,
         device_id=entry.device_id,
         fallback="",
@@ -509,8 +509,8 @@ def async_get_entity_aliases(
 ) -> list[str]:
     """Get all names/aliases for an entity.
 
-    Processes entry aliases where None entries are replaced with the computed
-    full entity name. String entries are used as-is.
+    Processes entry aliases where COMPUTED_NAME entries are replaced with the
+    computed full entity name. String entries are used as-is.
 
     The returned list preserves the order set by the user.
     """
@@ -1175,7 +1175,7 @@ class EntityRegistry(BaseRegistry):
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
-        object_id = _async_get_full_entity_name_generic(
+        object_id = _async_get_full_entity_name(
             self.hass,
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
