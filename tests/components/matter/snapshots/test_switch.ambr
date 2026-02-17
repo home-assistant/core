@@ -130,7 +130,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
@@ -578,7 +578,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
@@ -677,7 +677,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
@@ -875,7 +875,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
@@ -1174,7 +1174,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
@@ -1323,7 +1323,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
