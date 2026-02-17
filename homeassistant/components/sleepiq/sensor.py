@@ -74,8 +74,8 @@ class SleepIQSensorEntity(
         description: SleepIQSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, bed, sleeper, description.key)
         self.entity_description = description
+        super().__init__(coordinator, bed, sleeper, description.key)
 
     @callback
     def _async_update_attrs(self) -> None:
