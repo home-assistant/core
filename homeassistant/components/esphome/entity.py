@@ -421,7 +421,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         # the friendly_name will be "{friendly_name} " with a trailing
         # space. ESPHome uses protobuf under the hood, and an empty field
         # gets a default value of "".
-        self._attr_name = static_info.name if static_info.name else None
+        self._attr_name = static_info.name or None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:

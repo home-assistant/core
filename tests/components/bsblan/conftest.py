@@ -17,7 +17,6 @@ import pytest
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -81,16 +80,3 @@ def mock_bsblan() -> Generator[MagicMock]:
         bsblan.get_temperature_unit = "°C"
 
         yield bsblan
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_bsblan: MagicMock
-) -> MockConfigEntry:
-    """Set up the bsblan integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry

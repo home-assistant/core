@@ -196,7 +196,7 @@ class Remote:
         """Send a key to the TV and handle exceptions."""
         try:
             key = getattr(Keys, key.upper())
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             key = getattr(key, "value", key)
 
         assert self._control is not None
