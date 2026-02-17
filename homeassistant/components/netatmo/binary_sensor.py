@@ -90,17 +90,6 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str:
     )
 
 
-def process_opening_category(
-    netatmo_device: NetatmoDevice,
-) -> BinarySensorDeviceClass | None:
-    """Helper function to map Netatmo device opening category to Home Assistant device class exceptions."""
-
-    # Use a specific device class if we have a match, otherwise default to OPENING
-    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
-        get_opening_category(netatmo_device), BinarySensorDeviceClass.OPENING
-    )
-
-
 OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
     DOORTAG_CATEGORY_DOOR: None,
     DOORTAG_CATEGORY_FURNITURE: DOORTAG_CATEGORY_FURNITURE,
@@ -109,14 +98,6 @@ OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
     DOORTAG_CATEGORY_OTHER: DEFAULT_OPENING_SENSOR_KEY,
     DOORTAG_CATEGORY_WINDOW: None,
 }
-
-
-def process_opening_key(netatmo_device: NetatmoDevice) -> str | None:
-    """Helper function to map Netatmo device opening category to Component key exceptions."""
-
-    return OPENING_CATEGORY_TO_KEY.get(
-        get_opening_category(netatmo_device), DEFAULT_OPENING_SENSOR_KEY
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -382,12 +363,16 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         super().__init__(netatmo_device, description)
 
         # Apply Dynamic Device Class override
-        self._attr_device_class = process_opening_category(netatmo_device)
+        self._attr_device_class = OPENING_CATEGORY_TO_DEVICE_CLASS.get(
+            get_opening_category(netatmo_device), BinarySensorDeviceClass.OPENING
+        )
 
         # Apply Dynamic Translation Key override if needed
-        device_key = process_opening_key(netatmo_device)
-        if device_key is not None:
-            self._attr_translation_key = device_key
+        translation_key = OPENING_CATEGORY_TO_KEY.get(
+            get_opening_category(netatmo_device), DEFAULT_OPENING_SENSOR_KEY
+        )
+        if translation_key is not None:
+            self._attr_translation_key = translation_key
 
     @callback
     def async_update_callback(self) -> None:
