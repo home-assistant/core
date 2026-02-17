@@ -146,7 +146,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_grid_status-entry]
+# name: test_binary_sensors[binary_sensor.energy_site_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'entity_id': 'binary_sensor.energy_site_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -167,12 +167,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Grid status',
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Grid status',
+    'original_name': 'Power',
     'platform': 'tessie',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -182,14 +182,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_grid_status-state]
+# name: test_binary_sensors[binary_sensor.energy_site_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Energy Site Grid status',
+      'friendly_name': 'Energy Site Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.energy_site_grid_status',
+    'entity_id': 'binary_sensor.energy_site_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -886,6 +886,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_off_peak_charging_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_off_peak_charging_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off-peak charging enabled',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-peak charging enabled',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_off_peak_charging_enabled',
+    'unique_id': 'VINVINVIN-charge_state_off_peak_charging_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_off_peak_charging_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Off-peak charging enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_off_peak_charging_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
