@@ -2,13 +2,17 @@
 
 from unittest.mock import AsyncMock
 
-from mastodon.Mastodon import MastodonNotFoundError, MastodonUnauthorizedError
+from mastodon.Mastodon import (
+    MastodonError,
+    MastodonNotFoundError,
+    MastodonUnauthorizedError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -109,23 +113,56 @@ async def test_migrate(
     assert config_entry.unique_id == "trwnh_mastodon_social"
 
 
-@pytest.mark.parametrize(
-    ("exc", "state"),
-    [
-        (MastodonNotFoundError, ConfigEntryState.SETUP_RETRY),
-        (MastodonUnauthorizedError, ConfigEntryState.SETUP_ERROR),
-    ],
-)
-async def test_coordinator_update_failure(
+async def test_coordinator_general_error(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exc: Exception,
-    state: ConfigEntryState,
 ) -> None:
-    """Test coordinator update failure."""
-    mock_mastodon_client.account_verify_credentials.side_effect = exc
-
+    """Test general error during coordinator update makes entities unavailable."""
     await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert mock_config_entry.state is state
+    state = hass.states.get("binary_sensor.mastodon_trwnh_mastodon_social_bot")
+    assert state is not None
+    assert state.state == "on"
+
+    mock_mastodon_client.account_verify_credentials.side_effect = MastodonError
+
+    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("binary_sensor.mastodon_trwnh_mastodon_social_bot")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # No reauth flow should be triggered (unlike auth errors)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
+async def test_coordinator_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth failure during coordinator update triggers reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_mastodon_client.account_verify_credentials.side_effect = (
+        MastodonUnauthorizedError
+    )
+
+    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
