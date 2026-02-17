@@ -36,8 +36,8 @@ async def async_get_config_entry_diagnostics(
                     else None
                 ),
                 "last_discovery": (
-                    hub_coordinator._last_discovery.isoformat()  # noqa: SLF001
-                    if hub_coordinator._last_discovery  # noqa: SLF001
+                    hub_coordinator.last_discovery.isoformat()
+                    if hub_coordinator.last_discovery
                     else None
                 ),
                 "total_devices": len(hub_coordinator.data),
@@ -52,13 +52,13 @@ async def async_get_config_entry_diagnostics(
                     "device": dataclasses.asdict(coordinator.data.device),
                     "last_update_success": coordinator.last_update_success,
                     "fast_polling_active": (
-                        coordinator._fast_polling_until is not None  # noqa: SLF001
-                        and coordinator._fast_polling_until > now  # noqa: SLF001
+                        coordinator.fast_polling_until is not None
+                        and coordinator.fast_polling_until > now
                     ),
                     "fast_polling_until": (
-                        coordinator._fast_polling_until.isoformat()  # noqa: SLF001
-                        if coordinator._fast_polling_until is not None  # noqa: SLF001
-                        and coordinator._fast_polling_until > now  # noqa: SLF001
+                        coordinator.fast_polling_until.isoformat()
+                        if coordinator.fast_polling_until is not None
+                        and coordinator.fast_polling_until > now
                         else None
                     ),
                 }

@@ -19,7 +19,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    _mock_watts_client: AsyncMock,
+    mock_watts_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
