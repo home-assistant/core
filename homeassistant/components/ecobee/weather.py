@@ -28,7 +28,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EcobeeConfigEntry
+from . import EcobeeConfigEntry, EcobeeData
 from .const import (
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
@@ -64,7 +64,7 @@ class EcobeeWeather(WeatherEntity):
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, data, name, index):
+    def __init__(self, data: EcobeeData, name: str, index: int) -> None:
         """Initialize the Ecobee weather platform."""
         self.data = data
         self._name = name
@@ -99,7 +99,7 @@ class EcobeeWeather(WeatherEntity):
         )
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         try:
             return ECOBEE_WEATHER_SYMBOL_TO_HASS[self.get_forecast(0, "weatherSymbol")]
@@ -107,7 +107,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         try:
             return float(self.get_forecast(0, "temperature")) / 10
@@ -115,7 +115,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         try:
             pressure = self.get_forecast(0, "pressure")
@@ -124,7 +124,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         try:
             return int(self.get_forecast(0, "relativeHumidity"))
@@ -132,7 +132,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_visibility(self):
+    def native_visibility(self) -> float | None:
         """Return the visibility."""
         try:
             return int(self.get_forecast(0, "visibility"))
@@ -140,7 +140,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
             return int(self.get_forecast(0, "windSpeed"))
@@ -148,7 +148,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         try:
             return int(self.get_forecast(0, "windBearing"))
@@ -156,7 +156,7 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
         if not self.weather:
             return None
@@ -167,7 +167,7 @@ class EcobeeWeather(WeatherEntity):
 
     def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        if "forecasts" not in self.weather:
+        if not self.weather or "forecasts" not in self.weather:
             return None
 
         forecasts: list[Forecast] = []
