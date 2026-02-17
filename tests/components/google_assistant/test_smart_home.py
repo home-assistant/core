@@ -146,7 +146,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     )
     registries.entity.async_update_entity(
         entity.entity_id,
-        aliases=[None, "Stay", "Healthy"],
+        aliases=[er.COMPUTED_NAME, "Stay", "Healthy"],
     )
 
     light = DemoLight(

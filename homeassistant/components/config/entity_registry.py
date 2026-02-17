@@ -230,10 +230,10 @@ def websocket_update_entity(
         #   - Empty strings
         changes["aliases"] = aliases = []
         for alias in msg["aliases"]:
-            if alias is not None:
-                if not (alias := alias.strip()):
-                    continue
-            aliases.append(alias)
+            if alias is None:
+                aliases.append(er.COMPUTED_NAME)
+            elif alias := alias.strip():
+                aliases.append(alias)
 
     if "labels" in msg:
         # Convert labels to a set

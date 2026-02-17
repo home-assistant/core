@@ -484,7 +484,9 @@ async def test_assist_api_prompt(
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
     def create_entity(
-        device: dr.DeviceEntry, write_state=True, aliases: set[str] | None = None
+        device: dr.DeviceEntry,
+        write_state=True,
+        aliases: list[er.AliasEntry] | None = None,
     ) -> None:
         """Create an entity for a device and track entity_id."""
         entity = entity_registry.async_get_or_create(
@@ -509,7 +511,7 @@ async def test_assist_api_prompt(
             model="Test Model",
             suggested_area="Test Area",
         ),
-        aliases=[None, "my test light"],
+        aliases=[er.COMPUTED_NAME, "my test light"],
     )
     for i in range(3):
         create_entity(
@@ -806,7 +808,9 @@ async def test_script_tool(
     async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entity_registry.async_update_entity(
-        "script.test_script", name="script name", aliases=[None, "script alias"]
+        "script.test_script",
+        name="script name",
+        aliases=[er.COMPUTED_NAME, "script alias"],
     )
 
     area = area_registry.async_create("Living room")

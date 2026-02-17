@@ -1513,7 +1513,7 @@ def async_get_entity_aliases(
 
     If no entity registry entry is provided, returns a list with just the
     state name. Otherwise, delegates to the entity registry to resolve aliases,
-    where None aliases are replaced with the computed full entity name.
+    where COMPUTED_NAME aliases are replaced with the computed full entity name.
 
     The returned list preserves the order set by the user.
     """

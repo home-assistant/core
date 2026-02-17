@@ -372,7 +372,7 @@ async def test_duplicated_names_resolved_with_device_area(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="top light",
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1300,7 +1300,7 @@ async def test_error_duplicate_names(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="kitchen light",
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1352,7 +1352,7 @@ async def test_duplicate_names_but_one_is_exposed(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="kitchen light",
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1394,7 +1394,7 @@ async def test_error_duplicate_names_same_area(
             light.entity_id,
             name="kitchen light",
             area_id=area_kitchen.id,
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1452,7 +1452,7 @@ async def test_duplicate_names_same_area_but_one_is_exposed(
             light.entity_id,
             name="kitchen light",
             area_id=area_kitchen.id,
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1503,7 +1503,7 @@ async def test_duplicate_names_different_areas(
         light = entity_registry.async_update_entity(
             light.entity_id,
             name="test light",
-            aliases=[None, "overhead light"],
+            aliases=[er.COMPUTED_NAME, "overhead light"],
         )
         hass.states.async_set(
             light.entity_id,
@@ -1763,7 +1763,7 @@ async def test_empty_aliases(
         kitchen_light.entity_id,
         device_id=kitchen_device.id,
         name="kitchen light",
-        aliases=[None, " "],
+        aliases=[er.COMPUTED_NAME, " "],
     )
     hass.states.async_set(
         kitchen_light.entity_id,
@@ -1933,7 +1933,7 @@ async def test_same_aliased_entities_in_different_areas(
         kitchen_light.entity_id,
         area_id=area_kitchen.id,
         name="kitchen overhead light",
-        aliases=[None, "overhead light"],
+        aliases=[er.COMPUTED_NAME, "overhead light"],
     )
     hass.states.async_set(
         kitchen_light.entity_id,
@@ -1946,7 +1946,7 @@ async def test_same_aliased_entities_in_different_areas(
         bedroom_light.entity_id,
         area_id=area_bedroom.id,
         name="bedroom overhead light",
-        aliases=[None, "overhead light"],
+        aliases=[er.COMPUTED_NAME, "overhead light"],
     )
     hass.states.async_set(
         bedroom_light.entity_id,
@@ -2107,7 +2107,7 @@ async def test_intent_entity_added_removed(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
     entity_registry.async_update_entity(
-        "light.kitchen", aliases=[None, "my cool light"]
+        "light.kitchen", aliases=[er.COMPUTED_NAME, "my cool light"]
     )
     await hass.async_block_till_done()
     hass.states.async_set("light.kitchen", "off")
@@ -2143,7 +2143,7 @@ async def test_intent_entity_added_removed(
 
     # Now add an alias
     entity_registry.async_update_entity(
-        "light.late", aliases=[None, "late added light"]
+        "light.late", aliases=[er.COMPUTED_NAME, "late added light"]
     )
 
     result = await conversation.async_converse(
@@ -2199,7 +2199,7 @@ async def test_intent_alias_added_removed(
 
     # Add an alias
     entity_registry.async_update_entity(
-        "light.kitchen", aliases=[None, "late added alias"]
+        "light.kitchen", aliases=[er.COMPUTED_NAME, "late added alias"]
     )
 
     result = await conversation.async_converse(
@@ -2212,7 +2212,7 @@ async def test_intent_alias_added_removed(
     assert data["response"]["response_type"] == "action_done"
 
     # Now remove the alias
-    entity_registry.async_update_entity("light.kitchen", aliases=[None])
+    entity_registry.async_update_entity("light.kitchen", aliases=[er.COMPUTED_NAME])
 
     result = await conversation.async_converse(
         hass, "turn on late added alias", None, context
@@ -2587,7 +2587,9 @@ async def test_turn_on_area(
         "light", "demo", "1234", suggested_object_id="stove"
     )
     entity_registry.async_update_entity(
-        "light.stove", aliases=[None, "my stove light"], area_id=kitchen_area.id
+        "light.stove",
+        aliases=[er.COMPUTED_NAME, "my stove light"],
+        area_id=kitchen_area.id,
     )
     hass.states.async_set("light.stove", "off")
 

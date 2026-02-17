@@ -79,7 +79,7 @@ async def test_async_match_states(
         original_name="kitchen light",
     )
     entity_registry.async_update_entity(
-        state1.entity_id, area_id=area_kitchen.id, aliases=[None]
+        state1.entity_id, area_id=area_kitchen.id, aliases=[er.COMPUTED_NAME]
     )
 
     entity_registry.async_get_or_create(
@@ -93,7 +93,7 @@ async def test_async_match_states(
         state2.entity_id,
         area_id=area_bedroom.id,
         device_class=switch.SwitchDeviceClass.OUTLET,
-        aliases=[None, "kill switch"],
+        aliases=[er.COMPUTED_NAME, "kill switch"],
     )
 
     # Match on name
@@ -226,7 +226,7 @@ async def test_async_match_targets(
     kitchen_outlet = entity_registry.async_update_entity(
         kitchen_outlet.entity_id,
         name="kitchen outlet",
-        aliases=[None],
+        aliases=[er.COMPUTED_NAME],
         device_class=switch.SwitchDeviceClass.OUTLET,
         area_id=area_kitchen.id,
     )
@@ -238,7 +238,7 @@ async def test_async_match_targets(
     bathroom_light_1 = entity_registry.async_update_entity(
         bathroom_light_1.entity_id,
         name="bathroom light",
-        aliases=[None, "overhead light"],
+        aliases=[er.COMPUTED_NAME, "overhead light"],
         area_id=area_bathroom_1.id,
     )
     state_bathroom_light_1 = State(bathroom_light_1.entity_id, "off")
@@ -260,7 +260,7 @@ async def test_async_match_targets(
     bedroom_switch_2 = entity_registry.async_update_entity(
         bedroom_switch_2.entity_id,
         name="second floor bedroom switch",
-        aliases=[None],
+        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_2.id,
     )
     state_bedroom_switch_2 = State(
@@ -273,7 +273,7 @@ async def test_async_match_targets(
     )
     bathroom_light_2 = entity_registry.async_update_entity(
         bathroom_light_2.entity_id,
-        aliases=[None, "bathroom light", "overhead light"],
+        aliases=[er.COMPUTED_NAME, "bathroom light", "overhead light"],
         area_id=area_bathroom_2.id,
         supported_features=light.LightEntityFeature.EFFECT,
     )
@@ -296,7 +296,7 @@ async def test_async_match_targets(
     bedroom_switch_3 = entity_registry.async_update_entity(
         bedroom_switch_3.entity_id,
         name="third floor bedroom switch",
-        aliases=[None],
+        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_3.id,
     )
     state_bedroom_switch_3 = State(
@@ -311,7 +311,7 @@ async def test_async_match_targets(
     bathroom_light_3 = entity_registry.async_update_entity(
         bathroom_light_3.entity_id,
         name="overhead light",
-        aliases=[None, "bathroom light"],
+        aliases=[er.COMPUTED_NAME, "bathroom light"],
         area_id=area_bathroom_3.id,
     )
     state_bathroom_light_3 = State(
@@ -902,14 +902,14 @@ async def test_service_handler_device_classes(
     [
         (None, "Kitchen Light", ["Kitchen Light"]),
         (None, "  spaced  ", ["spaced"]),
-        ([None, "custom alias"], "My Device Original Name", None),
+        ([er.COMPUTED_NAME, "custom alias"], "My Device Original Name", None),
     ],
 )
 async def test_get_all_entity_aliases(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    aliases: list[str | None] | None,
+    aliases: list[er.AliasEntry] | None,
     friendly_name: str,
     expected: list[str] | None,
 ) -> None:

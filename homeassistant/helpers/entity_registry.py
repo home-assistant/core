@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
-from enum import StrEnum
+from enum import Enum, StrEnum
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
@@ -90,6 +90,28 @@ ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
     val: idx for idx, val in enumerate(EntityCategory)
 }
 ENTITY_CATEGORY_INDEX_TO_VALUE = dict(enumerate(EntityCategory))
+
+
+class ComputedNameType(Enum):
+    """Singleton representing the computed full entity name in aliases."""
+
+    _singleton = 0
+
+
+COMPUTED_NAME = ComputedNameType._singleton  # noqa: SLF001
+
+type AliasEntry = str | ComputedNameType
+
+
+def _serialize_aliases(aliases: list[AliasEntry]) -> list[str | None]:
+    """Convert aliases to a JSON-serializable list."""
+    return [None if a is COMPUTED_NAME else a for a in aliases]
+
+
+def _deserialize_aliases(aliases: list[str | None]) -> list[AliasEntry]:
+    """Convert aliases from JSON to internal representation."""
+    return [COMPUTED_NAME if a is None else a for a in aliases]
+
 
 # Attributes relevant to describing entity
 # to external services.
@@ -184,8 +206,7 @@ class RegistryEntry:
     unique_id: str = attr.ib()
     platform: str = attr.ib()
     previous_unique_id: str | None = attr.ib(default=None)
-    # Aliases for voice. None means "compute full name dynamically".
-    aliases: list[str | None] = attr.ib(factory=list)
+    aliases: list[AliasEntry] = attr.ib(factory=list)
     area_id: str | None = attr.ib(default=None)
     categories: dict[str, str] = attr.ib(factory=dict)
     capabilities: Mapping[str, Any] | None = attr.ib()
@@ -321,7 +342,7 @@ class RegistryEntry:
         # it every time
         return {
             **self.as_partial_dict,
-            "aliases": self.aliases,
+            "aliases": _serialize_aliases(self.aliases),
             "capabilities": self.capabilities,
             "device_class": self.device_class,
             "original_device_class": self.original_device_class,
@@ -350,7 +371,7 @@ class RegistryEntry:
         return json_fragment(
             json_bytes(
                 {
-                    "aliases": self.aliases,
+                    "aliases": _serialize_aliases(self.aliases),
                     "area_id": self.area_id,
                     "categories": self.categories,
                     "capabilities": self.capabilities,
@@ -497,11 +518,11 @@ def async_get_entity_aliases(
     if not entry_aliases:
         if allow_empty:
             return []
-        entry_aliases = [None]
+        entry_aliases = [COMPUTED_NAME]
 
     aliases = []
     for alias in entry_aliases:
-        if alias is None:
+        if alias is COMPUTED_NAME:
             alias = async_get_full_entity_name(hass, entry)
         aliases.append(alias.strip())
 
@@ -563,7 +584,7 @@ class DeletedRegistryEntry:
     unique_id: str = attr.ib()
     platform: str = attr.ib()
 
-    aliases: list[str | None] = attr.ib()
+    aliases: list[AliasEntry] = attr.ib()
     area_id: str | None = attr.ib()
     categories: dict[str, str] = attr.ib()
     config_entry_id: str | None = attr.ib()
@@ -596,7 +617,7 @@ class DeletedRegistryEntry:
         return json_fragment(
             json_bytes(
                 {
-                    "aliases": self.aliases,
+                    "aliases": _serialize_aliases(self.aliases),
                     "area_id": self.area_id,
                     "categories": self.categories,
                     "config_entry_id": self.config_entry_id,
@@ -772,7 +793,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         if old_major_version < 2:
             # Version 2.1 migrates the full name to include device name,
             # even if entity name is overwritten by user.
-            # It also adds support for None in aliases and starts preserving their order.
+            # It also adds support for COMPUTED_NAME in aliases and starts preserving their order.
             device_registry = dr.async_get(self.hass)
 
             for entity in data["entities"]:
@@ -1305,7 +1326,7 @@ class EntityRegistry(BaseRegistry):
             else:
                 options = get_initial_options() if get_initial_options else None
         else:
-            aliases = [None]
+            aliases = [COMPUTED_NAME]
             area_id = None
             categories = {}
             device_class = None
@@ -1541,7 +1562,7 @@ class EntityRegistry(BaseRegistry):
         self,
         entity_id: str,
         *,
-        aliases: list[str | None] | UndefinedType = UNDEFINED,
+        aliases: list[AliasEntry] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
@@ -1692,7 +1713,7 @@ class EntityRegistry(BaseRegistry):
         self,
         entity_id: str,
         *,
-        aliases: list[str | None] | UndefinedType = UNDEFINED,
+        aliases: list[AliasEntry] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
@@ -1834,7 +1855,7 @@ class EntityRegistry(BaseRegistry):
                     continue
 
                 entities[entity["entity_id"]] = RegistryEntry(
-                    aliases=entity["aliases"],
+                    aliases=_deserialize_aliases(entity["aliases"]),
                     area_id=entity["area_id"],
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
@@ -1904,7 +1925,7 @@ class EntityRegistry(BaseRegistry):
                     entity["unique_id"],
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
-                    aliases=entity["aliases"],
+                    aliases=_deserialize_aliases(entity["aliases"]),
                     area_id=entity["area_id"],
                     categories=entity["categories"],
                     config_entry_id=entity["config_entry_id"],
