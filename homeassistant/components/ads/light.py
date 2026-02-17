@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    filter_supported_color_modes,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -98,14 +99,14 @@ class AdsLight(AdsEntity, LightEntity):
         self._ads_var_color_temp_kelvin = ads_var_color_temp_kelvin
 
         # Determine supported color modes
-        supported_modes = [ColorMode.ONOFF]
+        color_modes = {ColorMode.ONOFF}
         if ads_var_brightness is not None:
-            supported_modes.append(ColorMode.BRIGHTNESS)
+            color_modes.add(ColorMode.BRIGHTNESS)
         if ads_var_color_temp_kelvin is not None:
-            supported_modes.append(ColorMode.COLOR_TEMP)
+            color_modes.add(ColorMode.COLOR_TEMP)
 
-        self._attr_supported_color_modes = set(supported_modes)
-        self._attr_color_mode = supported_modes[-1]
+        self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
+        self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
         # Set color temperature range (static config values take precedence over defaults)
         if ads_var_color_temp_kelvin is not None:
