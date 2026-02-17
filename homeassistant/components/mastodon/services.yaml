@@ -1,3 +1,14 @@
+get_account:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mastodon
+    account_name:
+      required: true
+      selector:
+        text:
 post:
   fields:
     config_entry_id:

@@ -588,6 +588,12 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(
+                reason="entry_not_loaded",
+                description_placeholders={"telegram_bot": self._get_entry().title},
+            )
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
