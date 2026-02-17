@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
@@ -152,7 +153,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         return "alert level"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {
             key: value
