@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import praw
 import voluptuous as vol
@@ -118,7 +119,7 @@ class RedditSensor(SensorEntity):
         return len(self._subreddit_data)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_SUBREDDIT: self._subreddit,

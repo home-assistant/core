@@ -1113,6 +1113,9 @@ huum==0.8.1
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
 
+# homeassistant.components.hypontech
+hyponcloud==0.3.0
+
 # homeassistant.components.iaqualink
 iaqualink==0.6.0
 
@@ -1151,6 +1154,9 @@ imgw_pib==2.0.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.12
+
+# homeassistant.components.indevolt
+indevolt-api==1.1.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1453,7 +1459,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.2
+onedrive-personal-sdk==0.1.4
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2277,7 +2283,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.29
+pyvlx==0.2.30
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
