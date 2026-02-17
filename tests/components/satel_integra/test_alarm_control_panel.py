@@ -67,14 +67,6 @@ async def test_alarm_control_panel_initial_state(
     """Test alarm control panel has a correct initial state after initialization."""
     mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
 
-    # Instantly call callback to ensure we have initial data set
-    async def mock_monitor_callback(
-        alarm_status_callback, zones_callback, outputs_callback
-    ):
-        alarm_status_callback()
-
-    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
-
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     assert (
@@ -158,14 +150,6 @@ async def test_alarm_control_panel_disarming(
 ) -> None:
     """Test alarm panel correctly disarms and dismisses alarm."""
     mock_satel.partition_states = {AlarmState.TRIGGERED: [1]}
-
-    # Instantly call callback to ensure we have initial data set
-    async def mock_monitor_callback(
-        alarm_status_callback, zones_callback, outputs_callback
-    ):
-        alarm_status_callback()
-
-    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 

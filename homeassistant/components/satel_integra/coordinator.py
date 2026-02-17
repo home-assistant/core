@@ -61,7 +61,7 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]])
         self.data = {}
 
     @callback
-    def zones_update_callback(self, status: dict[str, dict[int, int]]):
+    def zones_update_callback(self, status: dict[str, dict[int, int]]) -> None:
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
 
@@ -82,7 +82,7 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
         self.data = {}
 
     @callback
-    def outputs_update_callback(self, status: dict[str, dict[int, int]]):
+    def outputs_update_callback(self, status: dict[str, dict[int, int]]) -> None:
         """Update output objects as per notification from the alarm."""
         _LOGGER.debug("Outputs callback, status: %s", status)
 
@@ -107,7 +107,7 @@ class SatelIntegraPartitionsCoordinator(
         self.data = {}
 
     @callback
-    def partitions_update_callback(self):
+    def partitions_update_callback(self) -> None:
         """Update partition objects as per notification from the alarm."""
         _LOGGER.debug("Sending request to update panel state")
 

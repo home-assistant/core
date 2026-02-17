@@ -55,9 +55,9 @@ def mock_satel() -> Generator[AsyncMock]:
 
         # Immediately push baseline values so entities have stable states for snapshots
         async def _monitor_status(partitions_cb, zones_cb, outputs_cb):
+            partitions_cb()
             zones_cb({"zones": {1: 0}})
             outputs_cb({"outputs": {1: 0}})
-            partitions_cb()
 
         client.monitor_status = AsyncMock(side_effect=_monitor_status)
 
