@@ -22,6 +22,7 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_AWS_S3_DOCS_URL,
@@ -39,6 +40,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 
@@ -53,10 +55,12 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            normalized_prefix = user_input.get(CONF_PREFIX, "").strip("/")
             self._async_abort_entries_match(
                 {
                     CONF_BUCKET: user_input[CONF_BUCKET],
                     CONF_ENDPOINT_URL: user_input[CONF_ENDPOINT_URL],
+                    CONF_PREFIX: normalized_prefix,
                 }
             )
 
@@ -84,9 +88,14 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 except ConnectionError:
                     errors[CONF_ENDPOINT_URL] = "cannot_connect"
                 else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_BUCKET], data=user_input
-                    )
+                    data = dict(user_input)
+                    data[CONF_PREFIX] = normalized_prefix
+
+                    title = user_input[CONF_BUCKET]
+                    if normalized_prefix:
+                        title = f"{title} - {normalized_prefix}"
+
+                    return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="user",
