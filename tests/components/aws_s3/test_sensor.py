@@ -9,7 +9,7 @@ from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aws_s3.const import SCAN_INTERVAL
+from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
 from homeassistant.components.backup import AgentBackup
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant

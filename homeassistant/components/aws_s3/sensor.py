@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import S3ConfigEntry, S3DataUpdateCoordinator, SensorData
+from .coordinator import S3ConfigEntry, SensorData
 from .entity import S3Entity
 
 # Coordinator is used to centralize the data updates
@@ -59,15 +59,6 @@ class S3SensorEntity(S3Entity, SensorEntity):
     """Defines an AWS S3 sensor entity."""
 
     entity_description: S3SensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: S3DataUpdateCoordinator,
-        description: S3SensorEntityDescription,
-    ) -> None:
-        """Initialize an AWS S3 sensor entity."""
-        self.entity_description = description
-        super().__init__(coordinator)
 
     @property
     def native_value(self) -> StateType:

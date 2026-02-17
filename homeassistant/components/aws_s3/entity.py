@@ -1,6 +1,7 @@
 """Define the AWS S3 entity."""
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_BUCKET, DOMAIN
@@ -12,12 +13,13 @@ class S3Entity(CoordinatorEntity[S3DataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: S3DataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: S3DataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize an AWS S3 entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{self.entity_description.key}"
-        )
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
