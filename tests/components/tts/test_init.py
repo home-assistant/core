@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
@@ -65,7 +65,7 @@ async def test_config_entry_unload(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -154,7 +154,7 @@ async def test_service(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -217,7 +217,7 @@ async def test_service_default_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with default language and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -281,7 +281,7 @@ async def test_service_default_special_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with default special language and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -341,7 +341,7 @@ async def test_service_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with language."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -401,7 +401,7 @@ async def test_service_wrong_language(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -455,7 +455,7 @@ async def test_service_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -539,7 +539,7 @@ async def test_service_default_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with default options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -613,7 +613,7 @@ async def test_merge_default_service_options(
 
     This tests merging default and user provided options.
     """
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -680,7 +680,7 @@ async def test_service_wrong_options(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service with wrong options."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -736,7 +736,7 @@ async def test_service_clear_cache(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service clear cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -798,7 +798,7 @@ async def test_service_receive_voice(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -870,7 +870,7 @@ async def test_service_receive_voice_german(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1001,7 +1001,7 @@ async def test_service_without_cache(
     expected_url_suffix: str,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -1046,7 +1046,7 @@ async def test_setup_legacy_cache_dir(
     mock_provider: MockTTSProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     tts_data = MOCK_DATA
     cache_file = (
@@ -1084,7 +1084,7 @@ async def test_setup_cache_dir(
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     tts_data = MOCK_DATA
     cache_file = mock_tts_cache_dir / (
@@ -1170,7 +1170,7 @@ async def test_service_get_tts_error(
     service_data: dict[str, Any],
 ) -> None:
     """Set up a TTS platform with wrong get_tts_audio."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     await hass.services.async_call(
         tts.DOMAIN,
