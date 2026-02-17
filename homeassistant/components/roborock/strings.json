@@ -246,7 +246,7 @@
       "softener_type": {
         "name": "Softener type",
         "state": {
-          "empty": "Empty",
+          "empty": "[%key:common::state::empty%]",
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]"
