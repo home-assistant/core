@@ -49,7 +49,7 @@
       "message": "Network issue during OAuth setup"
     },
     "oauth_implementation_unavailable": {
-      "message": "OAuth2 implementation temporarily unavailable"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "oauth_session_not_valid": {
       "message": "OAuth session not valid"
