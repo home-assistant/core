@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, SENSOR_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 30
@@ -49,7 +49,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_model: str | None
         self.firmware_version: str | None
         self.generation: int
-        self._initial_sensor_keys: list[str] = []
 
     async def async_initialize(self) -> None:
         """Fetch device info once on boot."""
@@ -70,7 +69,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
-        sensor_keys = list(self.async_contexts())
+        sensor_keys = SENSOR_KEYS.get(self.generation, [])
         if not sensor_keys:
             return {}
 

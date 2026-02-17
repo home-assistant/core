@@ -686,7 +686,7 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         description: IndevoltSensorEntityDescription,
     ) -> None:
         """Initialize the Indevolt sensor entity."""
-        super().__init__(coordinator, context=description.key)
+        super().__init__(coordinator)
 
         self.entity_description = description
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
