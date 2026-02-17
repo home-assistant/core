@@ -1,9 +1,12 @@
 """Tests for Fritz!Tools."""
 
+import re
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant import core
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
@@ -12,13 +15,14 @@ from homeassistant.components.fritz.const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
@@ -126,4 +130,30 @@ async def test_upnp_missing(
     assert (
         "Config entry 'Mock Title' for fritz integration could not authenticate: Missing UPnP configuration"
         in caplog.text
+    )
+
+
+async def test_execute_action_while_shutdown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test Fritz!Tools actions executed during shutdown of HomeAssistant."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.set_state(core.CoreState.stopping)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert re.search(
+        r"Cannot execute (.+): HomeAssistant is shutting down", caplog.text
     )

@@ -351,6 +351,29 @@ async def test_switch_device_no_wan_access(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_switch_device_no_ip_address(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test Fritz!Tools switches when device has no IP address."""
+
+    entity_id = "switch.printer_internet_access"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    attributes = deepcopy(MOCK_HOST_ATTRIBUTES_DATA)
+    attributes[0]["IPAddress"] = ""
+
+    fh_class_mock.get_hosts_attributes = MagicMock(return_value=attributes)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id) is None
+
+
 @pytest.mark.parametrize(
     ("entity_id", "wrapper_method", "state_value"),
     [
