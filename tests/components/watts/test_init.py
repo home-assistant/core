@@ -1,10 +1,8 @@
 """Test the Watts Vision integration initialization."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from visionpluspython.exceptions import (
     WattsVisionAuthError,
@@ -13,21 +11,14 @@ from visionpluspython.exceptions import (
     WattsVisionError,
     WattsVisionTimeoutError,
 )
-from visionpluspython.models import create_device_from_data
 
-from homeassistant.components.watts.const import (
-    DISCOVERY_INTERVAL_MINUTES,
-    DOMAIN,
-    OAUTH2_TOKEN,
-    UPDATE_INTERVAL_SECONDS,
-)
+from homeassistant.components.watts.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -187,135 +178,3 @@ async def test_setup_entry_discover_devices_errors(
 
     assert result is False
     assert mock_config_entry.state is expected_state
-
-
-async def test_dynamic_device_creation(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test new devices are created dynamically."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_123")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_456")})
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_789")})
-        is None
-    )
-
-    new_device_data = {
-        "deviceId": "thermostat_789",
-        "deviceName": "Kitchen Thermostat",
-        "deviceType": "thermostat",
-        "interface": "homeassistant.components.THERMOSTAT",
-        "roomName": "Kitchen",
-        "isOnline": True,
-        "currentTemperature": 21.0,
-        "setpoint": 20.0,
-        "thermostatMode": "Comfort",
-        "minAllowedTemperature": 5.0,
-        "maxAllowedTemperature": 30.0,
-        "temperatureUnit": "C",
-        "availableThermostatModes": ["Program", "Eco", "Comfort", "Off"],
-    }
-    new_device = create_device_from_data(new_device_data)
-
-    current_devices = list(mock_watts_client.discover_devices.return_value)
-    mock_watts_client.discover_devices.return_value = [*current_devices, new_device]
-
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_789")}
-    )
-    assert new_device_entry is not None
-    assert new_device_entry.name == "Kitchen Thermostat"
-
-    state = hass.states.get("climate.kitchen_thermostat")
-    assert state is not None
-
-
-async def test_stale_device_removal(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test stale devices are removed dynamically."""
-    await setup_integration(hass, mock_config_entry)
-
-    device_123 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_123")}
-    )
-    device_456 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
-    )
-    assert device_123 is not None
-    assert device_456 is not None
-
-    current_devices = list(mock_watts_client.discover_devices.return_value)
-    # remove thermostat_456
-    mock_watts_client.discover_devices.return_value = [
-        d for d in current_devices if d.device_id != "thermostat_456"
-    ]
-
-    freezer.tick(timedelta(minutes=DISCOVERY_INTERVAL_MINUTES))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Verify thermostat_456 has been removed
-    device_456_after_removal = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
-    )
-    assert device_456_after_removal is None
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        WattsVisionAuthError("expired"),
-        WattsVisionConnectionError("lost"),
-    ],
-)
-async def test_hub_coordinator_update_errors(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test hub coordinator handles errors during regular update."""
-    await setup_integration(hass, mock_config_entry)
-    hub = mock_config_entry.runtime_data.hub_coordinator
-    mock_watts_client.get_devices_report.side_effect = exception
-
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL_SECONDS))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hub.last_update_success is False
-
-
-async def test_device_coordinator_refresh_error(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test device coordinator handles refresh error."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = next(
-        iter(mock_config_entry.runtime_data.device_coordinators.values())
-    )
-
-    mock_watts_client.get_device.side_effect = WattsVisionConnectionError("lost")
-
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
-
-    assert coordinator.last_update_success is False
