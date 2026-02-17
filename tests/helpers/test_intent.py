@@ -939,4 +939,4 @@ async def test_get_all_entity_aliases(
         entry = None
 
     state = State("light.test", "on", {"friendly_name": friendly_name})
-    assert intent.async_get_all_entity_aliases(hass, entry, state=state) == expected
+    assert intent.async_get_entity_aliases(hass, entry, state=state) == expected

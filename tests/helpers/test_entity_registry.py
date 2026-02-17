@@ -75,7 +75,7 @@ async def test_get_all_entity_aliases(
     )
     entry = entity_registry.async_update_entity(entry.entity_id, aliases=aliases)
 
-    assert er.async_get_all_entity_aliases(hass, entry, allow_empty=allow_empty) == (
+    assert er.async_get_entity_aliases(hass, entry, allow_empty=allow_empty) == (
         expected
     )
 

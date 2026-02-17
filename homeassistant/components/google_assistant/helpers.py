@@ -615,7 +615,7 @@ class GoogleEntity:
             ),
         }
         # Add name and aliases
-        aliases = intent.async_get_all_entity_aliases(
+        aliases = intent.async_get_entity_aliases(
             self.hass, entity_entry, state=state, allow_empty=False
         )
         name, *aliases = aliases

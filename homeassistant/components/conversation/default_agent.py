@@ -993,7 +993,7 @@ class DefaultAgent(ConversationEntity):
                     context[attr] = state.attributes[attr]
 
             entity_entry = entity_registry.async_get(state.entity_id)
-            for name in intent.async_get_all_entity_aliases(
+            for name in intent.async_get_entity_aliases(
                 self.hass, entity_entry, state=state
             ):
                 yield (name, name, context)

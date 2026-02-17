@@ -664,7 +664,7 @@ def _get_exposed_entities(
             if entity_entry is not None and entity_entry.device_id is not None
             else None
         )
-        names = intent.async_get_all_entity_aliases(hass, entity_entry, state=state)
+        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
         area_names = []
 
         if entity_entry is not None:
@@ -930,7 +930,7 @@ def _get_cached_action_parameters(
             ) is not None and (
                 entity_entry := entity_registry.async_get(entity_id)
             ) is not None:
-                aliases = er.async_get_all_entity_aliases(hass, entity_entry)
+                aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
                         description = description + ". Aliases: " + str(list(aliases))

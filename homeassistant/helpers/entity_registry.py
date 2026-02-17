@@ -480,7 +480,7 @@ def async_get_full_entity_name(
 
 
 @callback
-def async_get_all_entity_aliases(
+def async_get_entity_aliases(
     hass: HomeAssistant,
     entry: RegistryEntry,
     *,
@@ -489,7 +489,9 @@ def async_get_all_entity_aliases(
     """Get all names/aliases for an entity.
 
     Processes entry aliases where None entries are replaced with the computed
-    full name. String entries are used as-is.
+    full entity name. String entries are used as-is.
+
+    The returned list preserves the order set by the user.
     """
     entry_aliases = entry.aliases
     if not entry_aliases:

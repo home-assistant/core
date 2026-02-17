@@ -429,7 +429,7 @@ def _filter_by_name(
             yield candidate
             continue
 
-        for candidate_name in async_get_all_entity_aliases(
+        for candidate_name in async_get_entity_aliases(
             hass, candidate.entity, state=candidate.state
         ):
             if _normalize_name(candidate_name) == name_norm:
@@ -1502,15 +1502,22 @@ class IntentResponse:
 
 
 @callback
-def async_get_all_entity_aliases(
+def async_get_entity_aliases(
     hass: HomeAssistant,
     entity_entry: er.RegistryEntry | None,
     *,
     state: State,
     allow_empty: bool = True,
 ) -> list[str]:
-    """Get all names/aliases for an entity."""
+    """Get all names/aliases for an entity.
+
+    If no entity registry entry is provided, returns a list with just the
+    state name. Otherwise, delegates to the entity registry to resolve aliases,
+    where None aliases are replaced with the computed full entity name.
+
+    The returned list preserves the order set by the user.
+    """
     if entity_entry is None:
         return [state.name.strip()]
 
-    return er.async_get_all_entity_aliases(hass, entity_entry, allow_empty=allow_empty)
+    return er.async_get_entity_aliases(hass, entity_entry, allow_empty=allow_empty)
