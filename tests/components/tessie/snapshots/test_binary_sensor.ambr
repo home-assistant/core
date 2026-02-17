@@ -146,7 +146,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_power-entry]
+# name: test_binary_sensors[binary_sensor.energy_site_grid_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.energy_site_power',
+    'entity_id': 'binary_sensor.energy_site_grid_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -167,12 +167,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Power',
+    'object_id_base': 'Grid status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Grid status',
     'platform': 'tessie',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -182,14 +182,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.energy_site_power-state]
+# name: test_binary_sensors[binary_sensor.energy_site_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Energy Site Power',
+      'friendly_name': 'Energy Site Grid status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.energy_site_power',
+    'entity_id': 'binary_sensor.energy_site_grid_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
