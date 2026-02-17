@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---
 # name: test_number[2][number.cms_sf2000_feed_in_power_limit-entry]
@@ -114,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '52.3',
+    'state': '52',
   })
 # ---
 # name: test_number[2][number.cms_sf2000_inverter_input_limit-entry]
@@ -173,7 +173,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.2',
+    'state': '50',
   })
 # ---
 # name: test_number[2][number.cms_sf2000_max_ac_output_power-entry]
@@ -232,6 +232,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85.0',
+    'state': '85',
   })
 # ---

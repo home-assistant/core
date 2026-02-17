@@ -113,16 +113,13 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> int | None:
         """Return the current value of the entity."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
         if raw_value is None:
             return None
 
-        try:
-            return float(raw_value)
-        except TypeError, ValueError:
-            return None
+        return int(raw_value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value for the entity."""
