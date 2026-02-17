@@ -62,7 +62,6 @@ def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfig
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
-        entry_id="AAAAAAAAAAAAAAAAAAAAA",
         data=entry_data,
         unique_id=device_info["sn"],
     )
