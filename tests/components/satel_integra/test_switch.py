@@ -6,19 +6,24 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
+from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -53,17 +58,34 @@ async def test_switches(
     assert device_entry == snapshot(name="device")
 
 
-async def test_switch_initial_state_on(
+@pytest.mark.parametrize(
+    ("violated_outputs", "expected_state"),
+    [
+        ({2: 1}, STATE_UNKNOWN),
+        ({1: 0}, STATE_OFF),
+        ({1: 1}, STATE_ON),
+    ],
+)
+async def test_switch_initial_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
+    violated_outputs: dict[int, int],
+    expected_state: str,
 ) -> None:
-    """Test switch has a correct initial state ON after initialization."""
-    mock_satel.violated_outputs = [1]
+    """Test switch has a correct initial state after initialization."""
+
+    # Instantly call callback to ensure we have initial data set
+    async def mock_monitor_callback(
+        alarm_status_callback, zones_callback, outputs_callback
+    ):
+        outputs_callback({"outputs": violated_outputs})
+
+    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    assert hass.states.get("switch.switchable_output").state == STATE_ON
+    assert hass.states.get("switch.switchable_output").state == expected_state
 
 
 async def test_switch_callback(
@@ -76,15 +98,17 @@ async def test_switch_callback(
 
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
-    monitor_status_call = mock_satel.monitor_status.call_args_list[0][0]
-    output_update_method = monitor_status_call[2]
-
-    # Should do nothing, only react to it's own number
-    output_update_method({"outputs": {2: 1}})
-    assert hass.states.get("switch.switchable_output").state == STATE_OFF
+    _, _, output_update_method = get_monitor_callbacks(mock_satel)
 
     output_update_method({"outputs": {1: 1}})
     assert hass.states.get("switch.switchable_output").state == STATE_ON
+
+    output_update_method({"outputs": {1: 0}})
+    assert hass.states.get("switch.switchable_output").state == STATE_OFF
+
+    # The client library should always report all entries, but test that we set the status correctly if it doesn't
+    output_update_method({"outputs": {2: 1}})
+    assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
 
 async def test_switch_change_state(

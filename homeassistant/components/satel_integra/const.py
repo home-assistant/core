@@ -1,9 +1,5 @@
 """Constants for the Satel Integra integration."""
 
-from satel_integra.satel_integra import AsyncSatel
-
-from homeassistant.config_entries import ConfigEntry
-
 DEFAULT_CONF_ARM_HOME_MODE = 1
 DEFAULT_PORT = 7094
 DEFAULT_ZONE_TYPE = "motion"
@@ -28,11 +24,3 @@ CONF_OUTPUTS = "outputs"
 CONF_SWITCHABLE_OUTPUTS = "switchable_outputs"
 
 ZONES = "zones"
-
-
-SIGNAL_PANEL_MESSAGE = "satel_integra.panel_message"
-
-SIGNAL_ZONES_UPDATED = "satel_integra.zones_updated"
-SIGNAL_OUTPUTS_UPDATED = "satel_integra.outputs_updated"
-
-type SatelConfigEntry = ConfigEntry[AsyncSatel]

@@ -36,7 +36,7 @@ def mock_satel() -> Generator[AsyncMock]:
     """Override the satel test."""
     with (
         patch(
-            "homeassistant.components.satel_integra.AsyncSatel",
+            "homeassistant.components.satel_integra.client.AsyncSatel",
             autospec=True,
         ) as mock_client,
         patch(
@@ -45,11 +45,21 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+
         client.partition_states = {}
         client.violated_outputs = []
         client.violated_zones = []
+
         client.connect = AsyncMock(return_value=True)
         client.set_output = AsyncMock()
+
+        # Immediately push baseline values so entities have stable states for snapshots
+        async def _monitor_status(partitions_cb, zones_cb, outputs_cb):
+            partitions_cb()
+            zones_cb({"zones": {1: 0}})
+            outputs_cb({"outputs": {1: 0}})
+
+        client.monitor_status = AsyncMock(side_effect=_monitor_status)
 
         yield client
 

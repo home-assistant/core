@@ -1,5 +1,10 @@
 """The tests for Satel Integra integration."""
 
+from collections.abc import Callable
+from unittest.mock import AsyncMock
+
+import pytest
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra import (
     CONF_ARM_HOME_MODE,
@@ -80,3 +85,19 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def get_monitor_callbacks(
+    mock_satel: AsyncMock,
+) -> tuple[
+    Callable[[], None],
+    Callable[[dict[str, dict[int, int]]], None],
+    Callable[[dict[str, dict[int, int]]], None],
+]:
+    """Return (partitions_cb, zones_cb, outputs_cb) passed to monitor_status."""
+    if not mock_satel.monitor_status.call_args_list:
+        pytest.fail("monitor_status was not called")
+
+    call = mock_satel.monitor_status.call_args_list[-1]
+    partitions_cb, zones_cb, outputs_cb = call.args
+    return partitions_cb, zones_cb, outputs_cb

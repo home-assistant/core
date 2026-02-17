@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from satel_integra.satel_integra import AlarmState, AsyncSatel
+from satel_integra.satel_integra import AlarmState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -15,16 +15,10 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_ARM_HOME_MODE,
-    CONF_PARTITION_NUMBER,
-    SIGNAL_PANEL_MESSAGE,
-    SUBENTRY_TYPE_PARTITION,
-    SatelConfigEntry,
-)
+from .const import CONF_ARM_HOME_MODE, CONF_PARTITION_NUMBER, SUBENTRY_TYPE_PARTITION
+from .coordinator import SatelConfigEntry, SatelIntegraPartitionsCoordinator
 from .entity import SatelIntegraEntity
 
 ALARM_STATE_MAP = {
@@ -49,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up for Satel Integra alarm panels."""
 
-    controller = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     partition_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
@@ -63,7 +57,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraAlarmPanel(
-                    controller,
+                    runtime_data.coordinator_partitions,
                     config_entry.entry_id,
                     subentry,
                     partition_num,
@@ -74,8 +68,10 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
-    """Representation of an AlarmDecoder-based alarm panel."""
+class SatelIntegraAlarmPanel(
+    SatelIntegraEntity[SatelIntegraPartitionsCoordinator], AlarmControlPanelEntity
+):
+    """Representation of a Satel Integra-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
@@ -85,7 +81,7 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
-        controller: AsyncSatel,
+        coordinator: SatelIntegraPartitionsCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -93,7 +89,7 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
     ) -> None:
         """Initialize the alarm panel."""
         super().__init__(
-            controller,
+            coordinator,
             config_entry_id,
             subentry,
             device_number,
@@ -101,19 +97,11 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
 
         self._arm_home_mode = arm_home_mode
 
-    async def async_added_to_hass(self) -> None:
-        """Update alarm status and register callbacks for future updates."""
         self._attr_alarm_state = self._read_alarm_state()
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
-            )
-        )
-
     @callback
-    def _update_alarm_status(self) -> None:
-        """Handle alarm status update."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         state = self._read_alarm_state()
 
         if state != self._attr_alarm_state:
@@ -123,14 +111,14 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
     def _read_alarm_state(self) -> AlarmControlPanelState | None:
         """Read current status of the alarm and translate it into HA status."""
 
-        if not self._satel.connected:
+        if not self._controller.connected:
             _LOGGER.debug("Alarm panel not connected")
             return None
 
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
-                satel_state in self._satel.partition_states
-                and self._device_number in self._satel.partition_states[satel_state]
+                satel_state in self.coordinator.data
+                and self._device_number in self.coordinator.data[satel_state]
             ):
                 return ha_state
 
@@ -146,21 +134,21 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        await self._satel.disarm(code, [self._device_number])
+        await self._controller.disarm(code, [self._device_number])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self._satel.clear_alarm(code, [self._device_number])
+            await self._controller.clear_alarm(code, [self._device_number])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         if code:
-            await self._satel.arm(code, [self._device_number])
+            await self._controller.arm(code, [self._device_number])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         if code:
-            await self._satel.arm(code, [self._device_number], self._arm_home_mode)
+            await self._controller.arm(code, [self._device_number], self._arm_home_mode)
