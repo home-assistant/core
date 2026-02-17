@@ -110,12 +110,15 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
-                "Authentication failed for BSB-Lan device"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
             ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST]
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {host}"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
             ) from err
 
         return BSBLanFastData(

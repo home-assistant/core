@@ -69,7 +69,6 @@ async def async_setup_entry(
 class BSBLANClimate(BSBLanEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     # Determine preset modes
     _attr_supported_features = (

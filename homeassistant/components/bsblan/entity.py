@@ -34,6 +34,11 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
                 if data.info.device_identification
                 else None
             ),
+            model_id=(
+                f"{data.info.controller_family.value}_{data.info.controller_variant.value}"
+                if data.info.controller_family and data.info.controller_variant
+                else None
+            ),
             sw_version=data.device.version,
             configuration_url=f"http://{host}",
         )
