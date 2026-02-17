@@ -24,6 +24,6 @@ class PowerfoxLocalEntity(CoordinatorEntity[PowerfoxLocalDataUpdateCoordinator])
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Powerfox",
             model="Poweropti",
-            name="Poweropti",
+            name=coordinator.config_entry.title,
             serial_number=coordinator.device_id,
         )
