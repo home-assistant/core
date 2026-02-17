@@ -74,20 +74,20 @@ async def test_turn_on_off_success(
 
     with (
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
-    ):
-        with patch(
+        patch(
             "homeassistant.components.vesync.light.VeSyncBaseLightHA.async_write_ha_state"
-        ) as update_mock:
-            await hass.services.async_call(
-                LIGHT_DOMAIN,
-                action,
-                {ATTR_ENTITY_ID: ENTITY_LIGHT},
-                blocking=True,
-            )
+        ) as update_mock,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            blocking=True,
+        )
 
-        await hass.async_block_till_done()
-        method_mock.assert_called_once()
-        update_mock.assert_called_once()
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()
+    update_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
