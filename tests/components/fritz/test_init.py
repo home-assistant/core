@@ -25,7 +25,12 @@ from .const import MOCK_USER_DATA
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
     """Test setup and unload of Fritz!Tools."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -40,7 +45,10 @@ async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
 
 
 async def test_options_reload(
-    hass: HomeAssistant, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test reload of Fritz!Tools, when options changed."""
 
@@ -109,7 +117,11 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
 
 
 async def test_upnp_missing(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test UPNP configuration is missing."""
 
@@ -139,6 +151,7 @@ async def test_execute_action_while_shutdown(
     caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
 ) -> None:
     """Test Fritz!Tools actions executed during shutdown of HomeAssistant."""
 
