@@ -148,6 +148,12 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
+        expires_at = self._entry.data["token"]["expires_at"]
+        _LOGGER.debug(
+            "Starting backup upload, token expiry: %s (in %s seconds)",
+            expires_at,
+            expires_at - time(),
+        )
         backup_filename, metadata_filename = suggested_filenames(backup)
         file = FileInfo(
             backup_filename,

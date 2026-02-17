@@ -420,6 +420,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Timeout fetching %s data", self.name)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
@@ -427,6 +428,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error requesting %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except urllib.error.URLError as err:
@@ -439,6 +441,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.logger.error(
                             "Error requesting %s data: %s", self.name, err
                         )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except UpdateFailed as err:
@@ -456,6 +459,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except ConfigEntryError as err:
@@ -467,6 +471,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_entry_error:
                 raise
@@ -481,6 +486,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_auth_failed:
                 raise

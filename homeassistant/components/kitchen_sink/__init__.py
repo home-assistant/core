@@ -7,11 +7,16 @@ incorrect behavior, and are thus not wanted in the demo integration.
 from __future__ import annotations
 
 import datetime
+from functools import partial
 from random import random
 
 import voluptuous as vol
 
-from homeassistant.components.labs import async_is_preview_feature_enabled, async_listen
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_is_preview_feature_enabled,
+    async_subscribe_preview_feature,
+)
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -128,16 +133,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Subscribe to labs feature updates for kitchen_sink preview repair
     entry.async_on_unload(
-        async_listen(
+        async_subscribe_preview_feature(
             hass,
             domain=DOMAIN,
             preview_feature="special_repair",
-            listener=lambda: _async_update_special_repair(hass),
+            listener=partial(_async_update_special_repair, hass),
         )
     )
 
     # Check if lab feature is currently enabled and create repair if so
-    _async_update_special_repair(hass)
+    await _async_update_special_repair(hass)
 
     return True
 
@@ -166,15 +171,22 @@ async def async_remove_config_entry_device(
     return True
 
 
-@callback
-def _async_update_special_repair(hass: HomeAssistant) -> None:
+async def _async_update_special_repair(
+    hass: HomeAssistant,
+    event_data: EventLabsUpdatedData | None = None,
+) -> None:
     """Create or delete the special repair issue.
 
     Creates a repair issue when the special_repair lab feature is enabled,
     and deletes it when disabled. This demonstrates how lab features can interact
     with Home Assistant's repair system.
     """
-    if async_is_preview_feature_enabled(hass, DOMAIN, "special_repair"):
+    enabled = (
+        event_data["enabled"]
+        if event_data is not None
+        else async_is_preview_feature_enabled(hass, DOMAIN, "special_repair")
+    )
+    if enabled:
         async_create_issue(
             hass,
             DOMAIN,
