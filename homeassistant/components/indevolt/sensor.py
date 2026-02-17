@@ -42,7 +42,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="606",
         translation_key="mode",
-        state_mapping={"1000": "master", "1001": "slave", "1002": "standalone"},
+        state_mapping={"1000": "main", "1001": "sub", "1002": "standalone"},
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -655,21 +655,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device_gen = coordinator.generation
 
-    # Sensorwaarden ophalen (via coordinator)
-    battery_pack_keys = [keys[0] for keys in BATTERY_PACK_SENSOR_KEYS]
-    battery_pack_data = await coordinator.async_fetch_sensors(battery_pack_keys)
-
-    # Build set of sensor keys that should be excluded (battery packs without SN)
     excluded_keys: set[str] = set()
     for pack_keys in BATTERY_PACK_SENSOR_KEYS:
         sn_key = pack_keys[0]
 
-        if not battery_pack_data.get(sn_key):
+        if not coordinator.data.get(sn_key):
             excluded_keys.update(pack_keys)
 
     # Sensor initialization
     async_add_entities(
-        IndevoltSensorEntity(coordinator=coordinator, description=description)
+        IndevoltSensorEntity(coordinator, description)
         for description in SENSORS
         if device_gen in description.generation and description.key not in excluded_keys
     )
@@ -698,11 +693,6 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float | None:
         """Return the current value of the sensor in its native unit."""
-        # Handle None values on initialization
-        if self.coordinator.data is None:
-            return None
-
-        # Attempt to retrieve actual value
         raw_value = self.coordinator.data.get(self.entity_description.key)
         if raw_value is None:
             return None

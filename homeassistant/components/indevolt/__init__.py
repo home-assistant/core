@@ -12,18 +12,13 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
     """Set up indevolt integration entry using given configuration."""
-    # Setup coordinator and perform initial data refresh
     coordinator = IndevoltCoordinator(hass, entry)
-    await coordinator.async_initialize()
 
-    # Store coordinator in runtime_data
+    await coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = coordinator
 
-    # Setup platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Perform single refresh after all platforms have registered their contexts
-    await coordinator.async_config_entry_first_refresh()
 
     return True
 

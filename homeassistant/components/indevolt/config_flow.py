@@ -8,10 +8,10 @@ from indevolt_api import IndevoltAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,12 +20,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        super().__init__()
-        self._discovered_host: str | None = None
-        self._discovered_device_data: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,12 +32,12 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, device_data = await self._async_validate_input(user_input)
 
             if not errors and device_data:
-                await self.async_set_unique_id(device_data["sn"])
+                await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
 
                 # Handle initial setup
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"INDEVOLT {device_data['device_model']}",
+                    title=f"INDEVOLT {device_data[CONF_MODEL]}",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         **device_data,
@@ -83,7 +77,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         device_data = config_data.get("device", {})
 
         return {
-            "sn": device_data.get("sn"),
-            "generation": device_data.get("generation", 1),
-            "device_model": device_data.get("type", "unknown"),
+            CONF_SERIAL_NUMBER: device_data.get("sn"),
+            CONF_GENERATION: device_data.get("generation", 1),
+            CONF_MODEL: device_data.get("type"),
         }

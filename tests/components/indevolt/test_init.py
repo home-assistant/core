@@ -1,19 +1,21 @@
 """Tests for the Indevolt integration initialization and services."""
 
+from unittest.mock import AsyncMock
+
 from indevolt_api import TimeOutException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import setup_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 async def test_load_unload(
-    hass: HomeAssistant, mock_indevolt, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting up and removing a config entry."""
     await setup_integration(hass, mock_config_entry)
@@ -31,7 +33,7 @@ async def test_load_unload(
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 async def test_load_failure(
-    hass: HomeAssistant, mock_indevolt, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_indevolt: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup failure when coordinator update fails."""
     # Simulate timeout error during coordinator initialization

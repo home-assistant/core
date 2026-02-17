@@ -580,9 +580,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'master',
-        'slave',
+        'main',
         'standalone',
+        'sub',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -621,9 +621,9 @@
       'device_class': 'enum',
       'friendly_name': 'BK1600 Device mode',
       'options': list([
-        'master',
-        'slave',
+        'main',
         'standalone',
+        'sub',
       ]),
     }),
     'context': <ANY>,
@@ -631,7 +631,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'master',
+    'state': 'main',
   })
 # ---
 # name: test_sensor[1][sensor.bk1600_energy_mode-entry]
@@ -3671,9 +3671,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'master',
-        'slave',
+        'main',
         'standalone',
+        'sub',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3712,9 +3712,9 @@
       'device_class': 'enum',
       'friendly_name': 'CMS-SF2000 Device mode',
       'options': list([
-        'master',
-        'slave',
+        'main',
         'standalone',
+        'sub',
       ]),
     }),
     'context': <ANY>,
@@ -3722,7 +3722,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'slave',
+    'state': 'sub',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_energy_mode-entry]

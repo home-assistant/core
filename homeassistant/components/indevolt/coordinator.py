@@ -9,13 +9,19 @@ from typing import Any
 from indevolt_api import IndevoltAPI, TimeOutException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DOMAIN, SENSOR_KEYS
+from .const import (
+    CONF_GENERATION,
+    CONF_SERIAL_NUMBER,
+    DEFAULT_PORT,
+    DOMAIN,
+    SENSOR_KEYS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 30
@@ -27,6 +33,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
     config_entry: IndevoltConfigEntry
+    firmware_version: str | None
 
     def __init__(self, hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
         """Initialize the indevolt coordinator."""
@@ -45,12 +52,11 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
-        self.serial_number: str
-        self.device_model: str | None
-        self.firmware_version: str | None
-        self.generation: int
+        self.serial_number = entry.data[CONF_SERIAL_NUMBER]
+        self.device_model = entry.data[CONF_MODEL]
+        self.generation = entry.data[CONF_GENERATION]
 
-    async def async_initialize(self) -> None:
+    async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
         try:
             config_data = await self.api.get_config()
@@ -62,34 +68,13 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Cache device information
         device_data = config_data.get("device", {})
 
-        self.serial_number = device_data.get("sn")
-        self.device_model = device_data.get("type")
         self.firmware_version = device_data.get("fw")
-        self.generation = device_data.get("generation", 1)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
-        sensor_keys = SENSOR_KEYS.get(self.generation, [])
-        if not sensor_keys:
-            return {}
+        sensor_keys = SENSOR_KEYS[self.generation]
 
         try:
             return await self.api.fetch_data(sensor_keys)
         except TimeOutException as err:
             raise UpdateFailed(f"Device update timed out: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Device update failed: {err}") from err
-
-    async def async_fetch_sensors(self, sensor_keys: list[str]) -> dict[str, Any]:
-        """Fetch specific sensors from the device by keys."""
-        if not sensor_keys:
-            return {}
-
-        try:
-            return await self.api.fetch_data(sensor_keys)
-        except TimeOutException as err:
-            raise HomeAssistantError(
-                f"Device timed out fetching sensors: {err}"
-            ) from err
-        except Exception as err:
-            raise HomeAssistantError(f"Failed to fetch sensors: {err}") from err

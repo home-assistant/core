@@ -12,9 +12,8 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
-from .conftest import setup_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -51,7 +50,7 @@ async def test_sensor_availability(
 
     mock_indevolt.fetch_data.side_effect = ConnectionError
     freezer.tick(delta=timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass, utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.cms_sf2000_battery_soc"))
@@ -79,9 +78,6 @@ async def test_battery_pack_filtering(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Verify fetch_data was called with SN keys
-    mock_indevolt.fetch_data.assert_any_call(["9032", "9051", "9070", "9165", "9218"])
 
     # Get all sensor entities
     entity_entries = er.async_entries_for_config_entry(

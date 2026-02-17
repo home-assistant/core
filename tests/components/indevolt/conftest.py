@@ -12,7 +12,6 @@ from homeassistant.components.indevolt.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -63,7 +62,7 @@ def mock_config_entry(generation: int, entry_data: dict[str, Any]) -> MockConfig
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
-        entry_id=f"{DOMAIN}_{device_info['device'].lower()}_gen{generation}",
+        entry_id="AAAAAAAAAAAAAAAAAAAAA",
         data=entry_data,
         unique_id=device_info["sn"],
     )
@@ -105,16 +104,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the async_setup_entry function."""
     with patch(
         "homeassistant.components.indevolt.async_setup_entry",
-        new_callable=AsyncMock,
         return_value=True,
     ) as mock_setup:
         yield mock_setup
-
-
-async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Set up the integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
