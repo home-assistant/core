@@ -16,6 +16,7 @@ from homeassistant.components.roborock.services import (
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -105,7 +106,7 @@ async def test_commands(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         service,
         data,
         blocking=True,
@@ -149,7 +150,7 @@ async def test_resume_cleaning(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         SERVICE_START,
         data,
         blocking=True,
@@ -170,7 +171,7 @@ async def test_failed_user_command(
         pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
     ):
         await hass.services.async_call(
-            Platform.VACUUM,
+            VACUUM_DOMAIN,
             SERVICE_SEND_COMMAND,
             data,
             blocking=True,
@@ -350,7 +351,7 @@ async def test_q7_state_changing_commands(
 
     data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         service,
         data,
         blocking=True,
@@ -381,7 +382,7 @@ async def test_q7_locate_command(
     assert vacuum
 
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         SERVICE_LOCATE,
         {ATTR_ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
@@ -400,7 +401,7 @@ async def test_q7_set_fan_speed_command(
     assert vacuum
 
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
         blocking=True,
@@ -420,7 +421,7 @@ async def test_q7_send_command(
     assert vacuum
 
     await hass.services.async_call(
-        Platform.VACUUM,
+        VACUUM_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
         blocking=True,
@@ -464,7 +465,7 @@ async def test_q7_failed_commands(
 
     with pytest.raises(HomeAssistantError, match=f"Error while calling {command_name}"):
         await hass.services.async_call(
-            Platform.VACUUM,
+            VACUUM_DOMAIN,
             service,
             data,
             blocking=True,

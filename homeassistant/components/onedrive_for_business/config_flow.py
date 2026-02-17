@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import AppRoot
+from onedrive_personal_sdk.models.items import Drive
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -38,7 +38,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
 
     client: OneDriveClient
-    approot: AppRoot
+    drive: Drive
 
     @property
     def logger(self) -> logging.Logger:
@@ -102,8 +102,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            self.approot = await self.client.get_approot()
-            drive = await self.client.get_drive()
+            self.drive = await self.client.get_drive()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -111,7 +110,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(drive.id)
+        await self.async_set_unique_id(self.drive.id)
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_drive")
@@ -147,9 +146,11 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "folder_creation_error"
             if not errors:
                 title = (
-                    f"{self.approot.created_by.user.display_name}'s OneDrive"
-                    if self.approot.created_by.user
-                    and self.approot.created_by.user.display_name
+                    f"{self.drive.owner.user.display_name}'s OneDrive ({self.drive.owner.user.email})"
+                    if self.drive.owner
+                    and self.drive.owner.user
+                    and self.drive.owner.user.display_name
+                    and self.drive.owner.user.email
                     else "OneDrive"
                 )
                 return self.async_create_entry(
