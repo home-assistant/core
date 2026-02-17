@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[aqara_door_window_p2-binary_sensor.aqara_door_and_window_sensor_p2_door-entry]
+# name: test_binary_sensors[aqara_door_window_p2][binary_sensor.aqara_door_and_window_sensor_p2_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[aqara_door_window_p2-binary_sensor.aqara_door_and_window_sensor_p2_door-state]
+# name: test_binary_sensors[aqara_door_window_p2][binary_sensor.aqara_door_and_window_sensor_p2_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -49,7 +49,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[aqara_motion_p2-binary_sensor.aqara_motion_and_light_sensor_p2_occupancy-entry]
+# name: test_binary_sensors[aqara_motion_p2][binary_sensor.aqara_motion_and_light_sensor_p2_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -85,7 +85,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[aqara_motion_p2-binary_sensor.aqara_motion_and_light_sensor_p2_occupancy-state]
+# name: test_binary_sensors[aqara_motion_p2][binary_sensor.aqara_motion_and_light_sensor_p2_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -99,7 +99,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[aqara_presence_fp300-binary_sensor.presence_multi_sensor_fp300_1_occupancy-entry]
+# name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[aqara_presence_fp300-binary_sensor.presence_multi_sensor_fp300_1_occupancy-state]
+# name: test_binary_sensors[aqara_presence_fp300][binary_sensor.presence_multi_sensor_fp300_1_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -149,7 +149,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[aqara_u200-binary_sensor.aqara_smart_lock_u200_actuator-entry]
+# name: test_binary_sensors[aqara_u200][binary_sensor.aqara_smart_lock_u200_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -185,7 +185,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[aqara_u200-binary_sensor.aqara_smart_lock_u200_actuator-state]
+# name: test_binary_sensors[aqara_u200][binary_sensor.aqara_smart_lock_u200_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Smart Lock U200 Actuator',
@@ -198,7 +198,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_contact_sensor-binary_sensor.eve_door_door-entry]
+# name: test_binary_sensors[eve_contact_sensor][binary_sensor.eve_door_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -234,7 +234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_contact_sensor-binary_sensor.eve_door_door-state]
+# name: test_binary_sensors[eve_contact_sensor][binary_sensor.eve_door_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -248,7 +248,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[eve_shutter-binary_sensor.eve_shutter_switch_20eci1701_configuration_status-entry]
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -284,7 +284,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_shutter-binary_sensor.eve_shutter_switch_20eci1701_configuration_status-state]
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -298,7 +298,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_thermo_v4-binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-entry]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -334,7 +334,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_thermo_v4-binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-state]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo 20EBP1701 Local temperature remote sensing',
@@ -347,7 +347,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_thermo_v5-binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing-entry]
+# name: test_binary_sensors[eve_thermo_v5][binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -383,7 +383,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_thermo_v5-binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing-state]
+# name: test_binary_sensors[eve_thermo_v5][binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo 20ECD1701 Local temperature remote sensing',
@@ -396,7 +396,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_battery_alert-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_battery_alert-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -432,7 +432,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_battery_alert-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_battery_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -446,7 +446,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_carbon_monoxide-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -482,7 +482,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_carbon_monoxide-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_monoxide',
@@ -496,7 +496,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_end_of_service-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_end_of_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -532,7 +532,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_end_of_service-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_end_of_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -546,7 +546,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_hardware_fault-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_hardware_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -582,7 +582,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_hardware_fault-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_hardware_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -596,7 +596,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_muted-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_muted-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -632,7 +632,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_muted-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart CO sensor Muted',
@@ -645,7 +645,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_test_in_progress-entry]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_test_in_progress-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -681,7 +681,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_co_sensor-binary_sensor.smart_co_sensor_test_in_progress-state]
+# name: test_binary_sensors[heiman_co_sensor][binary_sensor.smart_co_sensor_test_in_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -695,7 +695,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_motion_sensor_m1-binary_sensor.smart_motion_sensor_occupancy-entry]
+# name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -731,7 +731,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_motion_sensor_m1-binary_sensor.smart_motion_sensor_occupancy-state]
+# name: test_binary_sensors[heiman_motion_sensor_m1][binary_sensor.smart_motion_sensor_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -745,7 +745,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_battery_alert-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_battery_alert-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -781,7 +781,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_battery_alert-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_battery_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -795,7 +795,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_end_of_service-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_end_of_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -831,7 +831,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_end_of_service-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_end_of_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -845,7 +845,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_hardware_fault-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_hardware_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -881,7 +881,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_hardware_fault-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_hardware_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -895,7 +895,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_muted-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_muted-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -931,7 +931,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_muted-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_muted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke sensor Muted',
@@ -944,7 +944,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_smoke-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -980,7 +980,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_smoke-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
@@ -994,7 +994,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_test_in_progress-entry]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_test_in_progress-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1030,7 +1030,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[heiman_smoke_detector-binary_sensor.smoke_sensor_test_in_progress-state]
+# name: test_binary_sensors[heiman_smoke_detector][binary_sensor.smoke_sensor_test_in_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -1044,7 +1044,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[longan_link_thermostat-binary_sensor.longan_link_hvac_occupancy-entry]
+# name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1080,7 +1080,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[longan_link_thermostat-binary_sensor.longan_link_hvac_occupancy-state]
+# name: test_binary_sensors[longan_link_thermostat][binary_sensor.longan_link_hvac_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -1094,7 +1094,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_door_lock-binary_sensor.mock_door_lock_actuator-entry]
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1130,7 +1130,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_door_lock-binary_sensor.mock_door_lock_actuator-state]
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock Actuator',
@@ -1143,7 +1143,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_door_lock-binary_sensor.mock_door_lock_battery-entry]
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1179,7 +1179,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_door_lock-binary_sensor.mock_door_lock_battery-state]
+# name: test_binary_sensors[mock_door_lock][binary_sensor.mock_door_lock_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1193,7 +1193,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_actuator-entry]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1229,7 +1229,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_actuator-state]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Door Lock with unbolt Actuator',
@@ -1242,7 +1242,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_battery-entry]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1278,7 +1278,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_battery-state]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1292,7 +1292,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_door-entry]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1328,7 +1328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_door_lock_with_unbolt-binary_sensor.mock_door_lock_with_unbolt_door-state]
+# name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -1342,7 +1342,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_leak_sensor-binary_sensor.water_leak_detector_water_leak-entry]
+# name: test_binary_sensors[mock_leak_sensor][binary_sensor.water_leak_detector_water_leak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1378,7 +1378,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_leak_sensor-binary_sensor.water_leak_detector_water_leak-state]
+# name: test_binary_sensors[mock_leak_sensor][binary_sensor.water_leak_detector_water_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
@@ -1392,7 +1392,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_actuator-entry]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1428,7 +1428,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_actuator-state]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock Actuator',
@@ -1441,7 +1441,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_battery-entry]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1477,7 +1477,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_battery-state]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1491,7 +1491,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_door-entry]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1527,7 +1527,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_lock-binary_sensor.mock_lock_door-state]
+# name: test_binary_sensors[mock_lock][binary_sensor.mock_lock_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -1541,7 +1541,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_occupancy_sensor-binary_sensor.mock_occupancy_sensor_occupancy-entry]
+# name: test_binary_sensors[mock_occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1577,7 +1577,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_occupancy_sensor-binary_sensor.mock_occupancy_sensor_occupancy-state]
+# name: test_binary_sensors[mock_occupancy_sensor][binary_sensor.mock_occupancy_sensor_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -1591,7 +1591,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_onoff_light_alt_name-binary_sensor.mock_onoff_light_occupancy-entry]
+# name: test_binary_sensors[mock_onoff_light_alt_name][binary_sensor.mock_onoff_light_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1627,7 +1627,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_onoff_light_alt_name-binary_sensor.mock_onoff_light_occupancy-state]
+# name: test_binary_sensors[mock_onoff_light_alt_name][binary_sensor.mock_onoff_light_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -1641,7 +1641,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_onoff_light_no_name-binary_sensor.mock_light_occupancy-entry]
+# name: test_binary_sensors[mock_onoff_light_no_name][binary_sensor.mock_light_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1677,7 +1677,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_onoff_light_no_name-binary_sensor.mock_light_occupancy-state]
+# name: test_binary_sensors[mock_onoff_light_no_name][binary_sensor.mock_light_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -1691,7 +1691,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_pump-binary_sensor.mock_pump_problem-entry]
+# name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1727,7 +1727,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_pump-binary_sensor.mock_pump_problem-state]
+# name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1741,7 +1741,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_pump-binary_sensor.mock_pump_running-entry]
+# name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_running-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1777,7 +1777,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_pump-binary_sensor.mock_pump_running-state]
+# name: test_binary_sensors[mock_pump][binary_sensor.mock_pump_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -1791,7 +1791,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_local_temperature_remote_sensing-entry]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_local_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1827,7 +1827,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_local_temperature_remote_sensing-state]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Thermostat Local temperature remote sensing',
@@ -1840,7 +1840,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_occupancy_remote_sensing-entry]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_occupancy_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1876,7 +1876,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_occupancy_remote_sensing-state]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_occupancy_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Thermostat Occupancy remote sensing',
@@ -1889,7 +1889,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing-entry]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1925,7 +1925,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_thermostat-binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing-state]
+# name: test_binary_sensors[mock_thermostat][binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Thermostat Outdoor temperature remote sensing',
@@ -1938,7 +1938,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_general_fault-entry]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_general_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1974,7 +1974,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_general_fault-state]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_general_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1988,7 +1988,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_valve_blocked-entry]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_blocked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2024,7 +2024,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_valve_blocked-state]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2038,7 +2038,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_valve_leaking-entry]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_leaking-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2074,7 +2074,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_valve-binary_sensor.mock_valve_valve_leaking-state]
+# name: test_binary_sensors[mock_valve][binary_sensor.mock_valve_valve_leaking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2088,7 +2088,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_full-binary_sensor.mock_full_window_covering_configuration_status-entry]
+# name: test_binary_sensors[mock_window_covering_full][binary_sensor.mock_full_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2124,7 +2124,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_full-binary_sensor.mock_full_window_covering_configuration_status-state]
+# name: test_binary_sensors[mock_window_covering_full][binary_sensor.mock_full_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2138,7 +2138,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_lift-binary_sensor.mock_lift_window_covering_configuration_status-entry]
+# name: test_binary_sensors[mock_window_covering_lift][binary_sensor.mock_lift_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2174,7 +2174,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_lift-binary_sensor.mock_lift_window_covering_configuration_status-state]
+# name: test_binary_sensors[mock_window_covering_lift][binary_sensor.mock_lift_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2188,7 +2188,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_pa_lift-binary_sensor.longan_link_wncv_da01_configuration_status-entry]
+# name: test_binary_sensors[mock_window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2224,7 +2224,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_pa_lift-binary_sensor.longan_link_wncv_da01_configuration_status-state]
+# name: test_binary_sensors[mock_window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2238,7 +2238,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_pa_tilt-binary_sensor.mock_pa_tilt_window_covering_configuration_status-entry]
+# name: test_binary_sensors[mock_window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2274,7 +2274,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_pa_tilt-binary_sensor.mock_pa_tilt_window_covering_configuration_status-state]
+# name: test_binary_sensors[mock_window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2288,7 +2288,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_tilt-binary_sensor.mock_tilt_window_covering_configuration_status-entry]
+# name: test_binary_sensors[mock_window_covering_tilt][binary_sensor.mock_tilt_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2324,7 +2324,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[mock_window_covering_tilt-binary_sensor.mock_tilt_window_covering_configuration_status-state]
+# name: test_binary_sensors[mock_window_covering_tilt][binary_sensor.mock_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2338,7 +2338,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[secuyou_smart_lock-binary_sensor.secuyou_smart_lock_actuator-entry]
+# name: test_binary_sensors[secuyou_smart_lock][binary_sensor.secuyou_smart_lock_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2374,7 +2374,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[secuyou_smart_lock-binary_sensor.secuyou_smart_lock_actuator-state]
+# name: test_binary_sensors[secuyou_smart_lock][binary_sensor.secuyou_smart_lock_actuator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Secuyou Smart Lock Actuator',
@@ -2387,7 +2387,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[silabs_dishwasher-binary_sensor.dishwasher_door_alarm-entry]
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2423,7 +2423,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_dishwasher-binary_sensor.dishwasher_door_alarm-state]
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_door_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2437,7 +2437,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[silabs_dishwasher-binary_sensor.dishwasher_inflow_alarm-entry]
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2473,7 +2473,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_dishwasher-binary_sensor.dishwasher_inflow_alarm-state]
+# name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2487,7 +2487,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_charger_supply_state-entry]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charger_supply_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2523,7 +2523,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_charger_supply_state-state]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charger_supply_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
@@ -2537,7 +2537,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_charging_status-entry]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charging_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2573,7 +2573,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_charging_status-state]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
@@ -2587,7 +2587,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_plug-entry]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2623,7 +2623,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging-binary_sensor.evse_plug-state]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'plug',
@@ -2637,7 +2637,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[silabs_refrigerator-binary_sensor.refrigerator_door_alarm-entry]
+# name: test_binary_sensors[silabs_refrigerator][binary_sensor.refrigerator_door_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2673,7 +2673,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_refrigerator-binary_sensor.refrigerator_door_alarm-state]
+# name: test_binary_sensors[silabs_refrigerator][binary_sensor.refrigerator_door_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2687,7 +2687,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[silabs_water_heater-binary_sensor.water_heater_boost_state-entry]
+# name: test_binary_sensors[silabs_water_heater][binary_sensor.water_heater_boost_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2723,7 +2723,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_water_heater-binary_sensor.water_heater_boost_state-state]
+# name: test_binary_sensors[silabs_water_heater][binary_sensor.water_heater_boost_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Water Heater Boost state',
@@ -2736,7 +2736,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zemismart_mt25b-binary_sensor.zemismart_mt25b_roller_motor_configuration_status-entry]
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2772,7 +2772,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zemismart_mt25b-binary_sensor.zemismart_mt25b_roller_motor_configuration_status-state]
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',

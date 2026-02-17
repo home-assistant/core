@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_vacuum[ecovacs_deebot-vacuum.ecodeebot-entry]
+# name: test_vacuum[ecovacs_deebot][vacuum.ecodeebot-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[ecovacs_deebot-vacuum.ecodeebot-state]
+# name: test_vacuum[ecovacs_deebot][vacuum.ecodeebot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'ecodeebot',
@@ -49,7 +49,7 @@
     'state': 'docked',
   })
 # ---
-# name: test_vacuum[eufy_vacuum_omni_e28-vacuum.2bavs_ab6031x_44pe-entry]
+# name: test_vacuum[eufy_vacuum_omni_e28][vacuum.2bavs_ab6031x_44pe-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -85,7 +85,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[eufy_vacuum_omni_e28-vacuum.2bavs_ab6031x_44pe-state]
+# name: test_vacuum[eufy_vacuum_omni_e28][vacuum.2bavs_ab6031x_44pe-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '2BAVS-AB6031X-44PE',
@@ -99,7 +99,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_vacuum[mock_vacuum_cleaner-vacuum.mock_vacuum-entry]
+# name: test_vacuum[mock_vacuum_cleaner][vacuum.mock_vacuum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[mock_vacuum_cleaner-vacuum.mock_vacuum-state]
+# name: test_vacuum[mock_vacuum_cleaner][vacuum.mock_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Vacuum',
@@ -149,7 +149,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_vacuum[switchbot_k11_plus-vacuum.k11-entry]
+# name: test_vacuum[switchbot_k11_plus][vacuum.k11-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -185,7 +185,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_vacuum[switchbot_k11_plus-vacuum.k11-state]
+# name: test_vacuum[switchbot_k11_plus][vacuum.k11-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'K11+',

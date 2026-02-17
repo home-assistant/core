@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climates[aqara_thermostat_w500-climate.floor_heating_thermostat-entry]
+# name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -42,7 +42,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[aqara_thermostat_w500-climate.floor_heating_thermostat-state]
+# name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.2,
@@ -64,7 +64,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eberle_ute3000-climate.connected_thermostat_ute_3000-entry]
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -107,7 +107,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eberle_ute3000-climate.connected_thermostat_ute_3000-state]
+# name: test_climates[eberle_ute3000][climate.connected_thermostat_ute_3000-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.5,
@@ -129,7 +129,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eve_thermo_v4-climate.eve_thermo_20ebp1701-entry]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -172,7 +172,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eve_thermo_v4-climate.eve_thermo_20ebp1701-state]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,
@@ -194,7 +194,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eve_thermo_v5-climate.eve_thermo_20ecd1701-entry]
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -237,7 +237,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eve_thermo_v5-climate.eve_thermo_20ecd1701-state]
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 16.2,
@@ -259,7 +259,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[longan_link_thermostat-climate.longan_link_hvac-entry]
+# name: test_climates[longan_link_thermostat][climate.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -304,7 +304,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[longan_link_thermostat-climate.longan_link_hvac-state]
+# name: test_climates[longan_link_thermostat][climate.longan_link_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 28.3,
@@ -330,7 +330,7 @@
     'state': 'cool',
   })
 # ---
-# name: test_climates[mock_air_purifier-climate.mock_air_purifier-entry]
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -373,7 +373,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[mock_air_purifier-climate.mock_air_purifier-state]
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -395,7 +395,7 @@
     'state': 'off',
   })
 # ---
-# name: test_climates[mock_room_airconditioner-climate.room_airconditioner-entry]
+# name: test_climates[mock_room_airconditioner][climate.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -442,7 +442,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[mock_room_airconditioner-climate.room_airconditioner-state]
+# name: test_climates[mock_room_airconditioner][climate.room_airconditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -468,7 +468,7 @@
     'state': 'off',
   })
 # ---
-# name: test_climates[mock_thermostat-climate.mock_thermostat-entry]
+# name: test_climates[mock_thermostat][climate.mock_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -513,7 +513,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[mock_thermostat-climate.mock_thermostat-state]
+# name: test_climates[mock_thermostat][climate.mock_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 18.0,
@@ -540,7 +540,7 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_climates[resideo_x2s_thermostat-climate.x2s_smart_thermostat-entry]
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -585,7 +585,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[resideo_x2s_thermostat-climate.x2s_smart_thermostat-state]
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.6,
@@ -609,7 +609,7 @@
     'state': 'off',
   })
 # ---
-# name: test_climates[tado_smart_radiator_thermostat_x-climate.smart_radiator_thermostat_x-entry]
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -652,7 +652,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[tado_smart_radiator_thermostat_x-climate.smart_radiator_thermostat_x-state]
+# name: test_climates[tado_smart_radiator_thermostat_x][climate.smart_radiator_thermostat_x-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 74.92,

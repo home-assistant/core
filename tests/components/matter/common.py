@@ -217,6 +217,15 @@ async def trigger_subscription_callback(
     await hass.async_block_till_done()
 
 
+@cache
+def _get_fixture_name(node_id: int) -> str:
+    """Get the fixture name for a given node ID."""
+    try:
+        return FIXTURES[node_id - 1]
+    except IndexError as err:
+        raise KeyError(f"Fixture for node id {node_id} not found") from err
+
+
 def snapshot_matter_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -228,10 +237,10 @@ def snapshot_matter_entities(
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         node_id = int(entity_entry.unique_id.split("-")[1], 16)
-        fixture_name = FIXTURES[node_id - 1]
+        fixture_name = _get_fixture_name(node_id)
         assert entity_entry == snapshot(
-            name=f"{fixture_name}-{entity_entry.entity_id}-entry"
+            name=f"{fixture_name}][{entity_entry.entity_id}-entry"
         )
         assert entity_state == snapshot(
-            name=f"{fixture_name}-{entity_entry.entity_id}-state"
+            name=f"{fixture_name}][{entity_entry.entity_id}-state"
         )

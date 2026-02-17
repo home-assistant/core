@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_lights[color_temperature_light-light.mock_color_temperature_light-entry]
+# name: test_lights[color_temperature_light][light.mock_color_temperature_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[color_temperature_light-light.mock_color_temperature_light-state]
+# name: test_lights[color_temperature_light][light.mock_color_temperature_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 128,
@@ -76,7 +76,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[extended_color_light-light.mock_extended_color_light-entry]
+# name: test_lights[extended_color_light][light.mock_extended_color_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -120,7 +120,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[extended_color_light-light.mock_extended_color_light-state]
+# name: test_lights[extended_color_light][light.mock_extended_color_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 128,
@@ -157,7 +157,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[inovelli_vtm30-light.white_series_onoff_switch_light_rgb_indicator-entry]
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_light_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -201,7 +201,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[inovelli_vtm30-light.white_series_onoff_switch_light_rgb_indicator-state]
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_light_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -228,7 +228,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[inovelli_vtm31-light.inovelli_light_1-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -268,7 +268,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[inovelli_vtm31-light.inovelli_light_1-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -287,7 +287,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[inovelli_vtm31-light.inovelli_light_6-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -331,7 +331,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[inovelli_vtm31-light.inovelli_light_6-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -358,7 +358,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[mock_dimmable_light-light.mock_dimmable_light-entry]
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -398,7 +398,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_dimmable_light-light.mock_dimmable_light-state]
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 51,
@@ -417,7 +417,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[mock_dimmable_plugin_unit-light.dimmable_plugin_unit-entry]
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -457,7 +457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_dimmable_plugin_unit-light.dimmable_plugin_unit-state]
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 255,
@@ -476,7 +476,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[mock_mounted_dimmable_load_control_fixture-light.mock_mounted_dimmable_load_control-entry]
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -516,7 +516,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_mounted_dimmable_load_control_fixture-light.mock_mounted_dimmable_load_control-state]
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Mounted dimmable load control',
@@ -533,7 +533,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_lights[mock_onoff_light-light.mock_onoff_light-entry]
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -573,7 +573,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_onoff_light-light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
@@ -591,7 +591,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[mock_onoff_light_alt_name-light.mock_onoff_light_2-entry]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -635,7 +635,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_onoff_light_alt_name-light.mock_onoff_light_2-state]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -662,7 +662,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[mock_onoff_light_no_name-light.mock_light-entry]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -706,7 +706,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_onoff_light_no_name-light.mock_light-state]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -733,7 +733,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[onoff_light_with_levelcontrol_present-light.d215s-entry]
+# name: test_lights[onoff_light_with_levelcontrol_present][light.d215s-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -773,7 +773,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light_with_levelcontrol_present-light.d215s-state]
+# name: test_lights[onoff_light_with_levelcontrol_present][light.d215s-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,

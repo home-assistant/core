@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_air_quality-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -44,7 +44,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_air_quality-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -66,7 +66,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -104,7 +104,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_dioxide',
@@ -120,7 +120,7 @@
     'state': '678.0',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_humidity-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -158,7 +158,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_humidity-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -174,7 +174,7 @@
     'state': '28.75',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -212,7 +212,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'nitrogen_dioxide',
@@ -228,7 +228,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm1-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -266,7 +266,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm1-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm1',
@@ -282,7 +282,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm10-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -320,7 +320,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm10-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm10',
@@ -336,7 +336,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm2_5-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -374,7 +374,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_pm2_5-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
@@ -390,7 +390,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_temperature-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -431,7 +431,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_temperature-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -447,7 +447,7 @@
     'state': '20.08',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -485,7 +485,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_quality_sensor-sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
@@ -501,7 +501,7 @@
     'state': '189.0',
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery-entry]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -539,7 +539,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery-state]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -555,7 +555,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery_type-entry]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -591,7 +591,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery_type-state]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Door and Window Sensor P2 Battery type',
@@ -604,7 +604,7 @@
     'state': 'CR123A',
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery_voltage-entry]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -648,7 +648,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_door_window_p2-sensor.aqara_door_and_window_sensor_p2_battery_voltage-state]
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -664,7 +664,7 @@
     'state': '3.01',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery-entry]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -702,7 +702,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery-state]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -718,7 +718,7 @@
     'state': '50',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery_type-entry]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -754,7 +754,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery_type-state]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara Motion and Light Sensor P2 Battery type',
@@ -767,7 +767,7 @@
     'state': 'CR2450',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery_voltage-entry]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -811,7 +811,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_battery_voltage-state]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -827,7 +827,7 @@
     'state': '2.904',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_illuminance-entry]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -865,7 +865,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensors[aqara_motion_p2-sensor.aqara_motion_and_light_sensor_p2_illuminance-state]
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -881,7 +881,7 @@
     'state': '37.0',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -919,7 +919,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -935,7 +935,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery_type-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -971,7 +971,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery_type-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Presence Multi-Sensor FP300 1 Battery type',
@@ -984,7 +984,7 @@
     'state': 'CR2450',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery_voltage-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1028,7 +1028,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_battery_voltage-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1044,7 +1044,7 @@
     'state': '3.008',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_humidity-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1082,7 +1082,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_humidity-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -1098,7 +1098,7 @@
     'state': '63.43',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_illuminance-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1136,7 +1136,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_illuminance-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -1152,7 +1152,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_temperature-entry]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1193,7 +1193,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[aqara_presence_fp300-sensor.presence_multi_sensor_fp300_1_temperature-state]
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1209,7 +1209,7 @@
     'state': '27.94',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1247,7 +1247,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1263,7 +1263,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery_type-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1299,7 +1299,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery_type-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Climate Sensor W100 Battery type',
@@ -1312,7 +1312,7 @@
     'state': 'CR2450',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery_voltage-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1356,7 +1356,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_battery_voltage-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1372,7 +1372,7 @@
     'state': '3.12',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_3-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1410,7 +1410,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_3-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Climate Sensor W100 Current switch position (3)',
@@ -1424,7 +1424,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_4-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1462,7 +1462,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_4-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Climate Sensor W100 Current switch position (4)',
@@ -1476,7 +1476,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_5-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1514,7 +1514,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_current_switch_position_5-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Climate Sensor W100 Current switch position (5)',
@@ -1528,7 +1528,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_humidity-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1566,7 +1566,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_humidity-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -1582,7 +1582,7 @@
     'state': '44.72',
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_temperature-entry]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1623,7 +1623,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[aqara_sensor_w100-sensor.climate_sensor_w100_temperature-state]
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1639,7 +1639,7 @@
     'state': '27.73',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_energy-entry]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1683,7 +1683,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_energy-state]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1699,7 +1699,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_humidity-entry]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1737,7 +1737,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_humidity-state]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -1753,7 +1753,7 @@
     'state': '59.0',
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_temperature-entry]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1794,7 +1794,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[aqara_thermostat_w500-sensor.floor_heating_thermostat_temperature-state]
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1810,7 +1810,7 @@
     'state': '21.18',
   })
 # ---
-# name: test_sensors[aqara_u200-sensor.aqara_smart_lock_u200_battery-entry]
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1848,7 +1848,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqara_u200-sensor.aqara_smart_lock_u200_battery-state]
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1864,7 +1864,7 @@
     'state': '40',
   })
 # ---
-# name: test_sensors[aqara_u200-sensor.aqara_smart_lock_u200_battery_voltage-entry]
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1908,7 +1908,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[aqara_u200-sensor.aqara_smart_lock_u200_battery_voltage-state]
+# name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -1924,7 +1924,7 @@
     'state': '7.4',
   })
 # ---
-# name: test_sensors[eberle_ute3000-sensor.connected_thermostat_ute_3000_heating_demand-entry]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1960,7 +1960,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eberle_ute3000-sensor.connected_thermostat_ute_3000_heating_demand-state]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Connected Thermostat UTE 3000 Heating demand',
@@ -1974,7 +1974,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eberle_ute3000-sensor.connected_thermostat_ute_3000_temperature-entry]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2015,7 +2015,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eberle_ute3000-sensor.connected_thermostat_ute_3000_temperature-state]
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2031,7 +2031,7 @@
     'state': '22.5',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_battery-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2069,7 +2069,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_battery-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2085,7 +2085,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_battery_charge_state-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_battery_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2127,7 +2127,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_battery_charge_state-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_battery_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2146,7 +2146,7 @@
     'state': 'full_charge',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_current_phase-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2215,7 +2215,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_current_phase-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_current_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2261,7 +2261,7 @@
     'state': 'Idle',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_operational_error-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2319,7 +2319,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_operational_error-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2354,7 +2354,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_operational_state-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2400,7 +2400,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_operational_state-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2423,7 +2423,7 @@
     'state': 'docked',
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_time_to_full_charge-entry]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_time_to_full_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2467,7 +2467,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[ecovacs_deebot-sensor.ecodeebot_time_to_full_charge-state]
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_time_to_full_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -2483,7 +2483,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_battery-entry]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2521,7 +2521,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_battery-state]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2537,7 +2537,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_battery_charge_state-entry]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2579,7 +2579,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_battery_charge_state-state]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2598,7 +2598,7 @@
     'state': 'full_charge',
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_operational_error-entry]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2656,7 +2656,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_operational_error-state]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2691,7 +2691,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_operational_state-entry]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2737,7 +2737,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[eufy_vacuum_omni_e28-sensor.2bavs_ab6031x_44pe_operational_state-state]
+# name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2760,7 +2760,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[eve_contact_sensor-sensor.eve_door_battery-entry]
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2798,7 +2798,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_contact_sensor-sensor.eve_door_battery-state]
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2814,7 +2814,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_contact_sensor-sensor.eve_door_battery_voltage-entry]
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2858,7 +2858,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_contact_sensor-sensor.eve_door_battery_voltage-state]
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -2874,7 +2874,7 @@
     'state': '3.558',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_current_top-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2915,7 +2915,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_current_top-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -2931,7 +2931,7 @@
     'state': '0.159999996423721',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_energy_top-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2972,7 +2972,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_energy_top-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_energy_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2988,7 +2988,7 @@
     'state': '18.7803344726562',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_power_top-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3029,7 +3029,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_power_top-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_power_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3045,7 +3045,7 @@
     'state': '13.3999996185303',
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_voltage_top-entry]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3086,7 +3086,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_20ecn4101-sensor.eve_energy_20ecn4101_voltage_top-state]
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3102,7 +3102,7 @@
     'state': '123.099998474121',
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_current-entry]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3143,7 +3143,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_current-state]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -3159,7 +3159,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_energy-entry]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3200,7 +3200,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_energy-state]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3216,7 +3216,7 @@
     'state': '0.220000028610229',
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_power-entry]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3257,7 +3257,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_power-state]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3273,7 +3273,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_voltage-entry]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3314,7 +3314,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug-sensor.eve_energy_plug_voltage-state]
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3330,7 +3330,7 @@
     'state': '238.800003051758',
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_active_current-entry]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3374,7 +3374,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_active_current-state]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -3390,7 +3390,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_energy-entry]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3434,7 +3434,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_energy-state]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3450,7 +3450,7 @@
     'state': '0.0025',
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_power-entry]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3494,7 +3494,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_power-state]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3510,7 +3510,7 @@
     'state': '550.0',
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_voltage-entry]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3554,7 +3554,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched-sensor.eve_energy_plug_patched_voltage-state]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3570,7 +3570,7 @@
     'state': '220.0',
   })
 # ---
-# name: test_sensors[eve_shutter-sensor.eve_shutter_switch_20eci1701_target_opening_position-entry]
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3606,7 +3606,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_shutter-sensor.eve_shutter_switch_20eci1701_target_opening_position-state]
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Shutter Switch 20ECI1701 Target opening position',
@@ -3620,7 +3620,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_battery-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3658,7 +3658,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_battery-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -3674,7 +3674,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_battery_voltage-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3718,7 +3718,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_battery_voltage-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3734,7 +3734,7 @@
     'state': '3.05',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_temperature-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3775,7 +3775,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_temperature-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3791,7 +3791,7 @@
     'state': '21.0',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_valve_position-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3827,7 +3827,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo_v4-sensor.eve_thermo_20ebp1701_valve_position-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo 20EBP1701 Valve position',
@@ -3841,7 +3841,7 @@
     'state': '10',
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_battery-entry]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3879,7 +3879,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_battery-state]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -3895,7 +3895,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_temperature-entry]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3936,7 +3936,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_temperature-state]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3952,7 +3952,7 @@
     'state': '16.2',
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_valve_position-entry]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3988,7 +3988,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo_v5-sensor.eve_thermo_20ecd1701_valve_position-state]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo 20ECD1701 Valve position',
@@ -4002,7 +4002,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_battery-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4040,7 +4040,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_battery-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4056,7 +4056,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_battery_voltage-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4100,7 +4100,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_battery_voltage-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4116,7 +4116,7 @@
     'state': '2.956',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_humidity-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4154,7 +4154,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_humidity-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -4170,7 +4170,7 @@
     'state': '80.66',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_pressure-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4211,7 +4211,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_pressure-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -4227,7 +4227,7 @@
     'state': '1008.5',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_temperature-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4268,7 +4268,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_temperature-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4284,7 +4284,7 @@
     'state': '16.03',
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_weather_trend-entry]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4327,7 +4327,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[eve_weather_sensor-sensor.eve_weather_weather_trend-state]
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4347,7 +4347,7 @@
     'state': 'rainy',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_battery-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4385,7 +4385,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_battery-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4401,7 +4401,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_battery_voltage-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4445,7 +4445,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_battery_voltage-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4461,7 +4461,7 @@
     'state': '2.316',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_1-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4499,7 +4499,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_1-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (1)',
@@ -4513,7 +4513,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_2-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4551,7 +4551,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_2-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (2)',
@@ -4565,7 +4565,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_3-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4603,7 +4603,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_3-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (3)',
@@ -4617,7 +4617,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_4-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4655,7 +4655,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_4-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (4)',
@@ -4669,7 +4669,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_5-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4707,7 +4707,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_5-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (5)',
@@ -4721,7 +4721,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_6-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4759,7 +4759,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haojai_switch-sensor.hjmt_6b_current_switch_position_6-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (6)',
@@ -4773,7 +4773,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery-entry]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4811,7 +4811,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery-state]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4827,7 +4827,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery_type-entry]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4863,7 +4863,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery_type-state]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart CO sensor Battery type',
@@ -4876,7 +4876,7 @@
     'state': 'AA',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery_voltage-entry]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4920,7 +4920,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_battery_voltage-state]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4936,7 +4936,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_carbon_monoxide-entry]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4974,7 +4974,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_carbon_monoxide-state]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_monoxide',
@@ -4990,7 +4990,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_time_remaining-entry]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_time_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5034,7 +5034,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[heiman_co_sensor-sensor.smart_co_sensor_time_remaining-state]
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_time_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -5050,7 +5050,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery-entry]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5088,7 +5088,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery-state]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -5104,7 +5104,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery_type-entry]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5140,7 +5140,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery_type-state]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart motion sensor Battery type',
@@ -5153,7 +5153,7 @@
     'state': 'CR2',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery_voltage-entry]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5197,7 +5197,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_battery_voltage-state]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -5213,7 +5213,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_illuminance-entry]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5251,7 +5251,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_illuminance-state]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -5267,7 +5267,7 @@
     'state': '105.0',
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_time_remaining-entry]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_time_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5311,7 +5311,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[heiman_motion_sensor_m1-sensor.smart_motion_sensor_time_remaining-state]
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_time_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -5327,7 +5327,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery-entry]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5365,7 +5365,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery-state]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -5381,7 +5381,7 @@
     'state': '94',
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery_type-entry]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5417,7 +5417,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery_type-state]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke sensor Battery type',
@@ -5430,7 +5430,7 @@
     'state': 'CR123A',
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery_voltage-entry]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5474,7 +5474,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[heiman_smoke_detector-sensor.smoke_sensor_battery_voltage-state]
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -5490,7 +5490,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_air_quality-entry]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5535,7 +5535,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_air_quality-state]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -5557,7 +5557,7 @@
     'state': 'good',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_carbon_dioxide-entry]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5595,7 +5595,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_carbon_dioxide-state]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_dioxide',
@@ -5611,7 +5611,7 @@
     'state': '394.0',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_humidity-entry]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5649,7 +5649,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_humidity-state]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -5665,7 +5665,7 @@
     'state': '46.21',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_pm2_5-entry]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5703,7 +5703,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_pm2_5-state]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
@@ -5719,7 +5719,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_temperature-entry]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5760,7 +5760,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[ikea_air_quality_monitor-sensor.alpstuga_air_quality_monitor_temperature-state]
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -5776,7 +5776,7 @@
     'state': '19.71',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5814,7 +5814,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -5830,7 +5830,7 @@
     'state': '42',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery_type-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5866,7 +5866,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery_type-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Battery type',
@@ -5879,7 +5879,7 @@
     'state': 'AAA',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery_voltage-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5923,7 +5923,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_battery_voltage-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -5939,7 +5939,7 @@
     'state': '2.57',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_1-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5977,7 +5977,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_1-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (1)',
@@ -5991,7 +5991,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_2-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6029,7 +6029,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_2-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (2)',
@@ -6043,7 +6043,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_3-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6081,7 +6081,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_3-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (3)',
@@ -6095,7 +6095,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_4-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6133,7 +6133,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_4-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (4)',
@@ -6147,7 +6147,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_5-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6185,7 +6185,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_5-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (5)',
@@ -6199,7 +6199,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_6-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6237,7 +6237,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_6-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (6)',
@@ -6251,7 +6251,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_7-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6289,7 +6289,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_7-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (7)',
@@ -6303,7 +6303,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_8-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6341,7 +6341,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_8-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (8)',
@@ -6355,7 +6355,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_9-entry]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6393,7 +6393,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ikea_scroll_wheel-sensor.bilresa_scroll_wheel_current_switch_position_9-state]
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_current_switch_position_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BILRESA scroll wheel Current switch position (9)',
@@ -6407,7 +6407,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_active_current-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6451,7 +6451,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_active_current-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -6467,7 +6467,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_config-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6505,7 +6505,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_config-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch Current switch position (Config)',
@@ -6519,7 +6519,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_down-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6557,7 +6557,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_down-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch Current switch position (Down)',
@@ -6571,7 +6571,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_up-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6609,7 +6609,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_current_switch_position_up-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_current_switch_position_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch Current switch position (Up)',
@@ -6623,7 +6623,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_energy-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6667,7 +6667,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_energy-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6683,7 +6683,7 @@
     'state': '13.13919',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_humidity-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6721,7 +6721,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_humidity-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -6737,7 +6737,7 @@
     'state': '62.92',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_power-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6781,7 +6781,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_power-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6797,7 +6797,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_temperature-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6838,7 +6838,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_temperature-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -6854,7 +6854,7 @@
     'state': '21.83',
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_voltage-entry]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6898,7 +6898,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[inovelli_vtm30-sensor.white_series_onoff_switch_voltage-state]
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -6914,7 +6914,7 @@
     'state': '124.643',
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_config-entry]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6952,7 +6952,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_config-state]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Current switch position (Config)',
@@ -6966,7 +6966,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_down-entry]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7004,7 +7004,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_down-state]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Current switch position (Down)',
@@ -7018,7 +7018,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_up-entry]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7056,7 +7056,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[inovelli_vtm31-sensor.inovelli_current_switch_position_up-state]
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_current_switch_position_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Current switch position (Up)',
@@ -7070,7 +7070,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[longan_link_thermostat-sensor.longan_link_hvac_outdoor_temperature-entry]
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7111,7 +7111,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[longan_link_thermostat-sensor.longan_link_hvac_outdoor_temperature-state]
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -7127,7 +7127,7 @@
     'state': '12.5',
   })
 # ---
-# name: test_sensors[longan_link_thermostat-sensor.longan_link_hvac_temperature-entry]
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7168,7 +7168,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[longan_link_thermostat-sensor.longan_link_hvac_temperature-state]
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -7184,7 +7184,7 @@
     'state': '28.3',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7222,7 +7222,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_activated_carbon_filter_condition-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Air Purifier Activated carbon filter condition',
@@ -7237,7 +7237,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_air_quality-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7282,7 +7282,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_air_quality-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -7304,7 +7304,7 @@
     'state': 'good',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_carbon_dioxide-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7342,7 +7342,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_carbon_dioxide-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_dioxide',
@@ -7358,7 +7358,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_carbon_monoxide-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7396,7 +7396,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_carbon_monoxide-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'carbon_monoxide',
@@ -7412,7 +7412,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_hepa_filter_condition-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7450,7 +7450,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_hepa_filter_condition-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Air Purifier HEPA filter condition',
@@ -7465,7 +7465,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_humidity-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7503,7 +7503,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_humidity-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -7519,7 +7519,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_nitrogen_dioxide-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7557,7 +7557,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_nitrogen_dioxide-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'nitrogen_dioxide',
@@ -7573,7 +7573,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_ozone-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7611,7 +7611,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_ozone-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'ozone',
@@ -7627,7 +7627,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm1-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7665,7 +7665,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm1-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm1',
@@ -7681,7 +7681,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm10-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7719,7 +7719,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm10-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm10',
@@ -7735,7 +7735,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm2_5-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7773,7 +7773,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_pm2_5-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
@@ -7789,7 +7789,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_temperature-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7830,7 +7830,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_temperature-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -7846,7 +7846,7 @@
     'state': '20.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_temperature_2-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7887,7 +7887,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_temperature_2-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -7903,7 +7903,7 @@
     'state': '20.0',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_tvoc_level-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7946,7 +7946,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_tvoc_level-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -7966,7 +7966,7 @@
     'state': 'low',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8004,7 +8004,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[mock_air_purifier-sensor.mock_air_purifier_volatile_organic_compounds_parts-state]
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
@@ -8020,7 +8020,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_active_current-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8064,7 +8064,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_active_current-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -8080,7 +8080,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_appliance_energy_state-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_appliance_energy_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8124,7 +8124,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_appliance_energy_state-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_appliance_energy_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -8145,7 +8145,7 @@
     'state': 'online',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_battery-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8183,7 +8183,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_battery-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -8199,7 +8199,7 @@
     'state': '90',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_battery_voltage-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8243,7 +8243,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_battery_voltage-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -8259,7 +8259,7 @@
     'state': '48.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_energy_optimization_opt_out-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8302,7 +8302,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_energy_optimization_opt_out-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -8322,7 +8322,7 @@
     'state': 'no_opt_out',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_power-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8366,7 +8366,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_power-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -8382,7 +8382,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_time_remaining-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8426,7 +8426,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_time_remaining-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -8442,7 +8442,7 @@
     'state': '120.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_time_to_full_charge-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_to_full_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8486,7 +8486,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_time_to_full_charge-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_to_full_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -8502,7 +8502,7 @@
     'state': '30.0',
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_voltage-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8546,7 +8546,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[mock_battery_storage-sensor.mock_battery_storage_voltage-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -8562,7 +8562,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_cooktop-sensor.mock_cooktop_temperature-entry]
+# name: test_sensors[mock_cooktop][sensor.mock_cooktop_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8603,7 +8603,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_cooktop-sensor.mock_cooktop_temperature-state]
+# name: test_sensors[mock_cooktop][sensor.mock_cooktop_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -8619,7 +8619,7 @@
     'state': '180.0',
   })
 # ---
-# name: test_sensors[mock_extractor_hood-sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8657,7 +8657,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_extractor_hood-sensor.mock_extractor_hood_activated_carbon_filter_condition-state]
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extractor hood Activated carbon filter condition',
@@ -8672,7 +8672,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[mock_extractor_hood-sensor.mock_extractor_hood_hepa_filter_condition-entry]
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8710,7 +8710,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_extractor_hood-sensor.mock_extractor_hood_hepa_filter_condition-state]
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extractor hood HEPA filter condition',
@@ -8725,7 +8725,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[mock_flow_sensor-sensor.mock_flow_sensor_flow-entry]
+# name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8763,7 +8763,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
-# name: test_sensors[mock_flow_sensor-sensor.mock_flow_sensor_flow-state]
+# name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Flow Sensor Flow',
@@ -8778,7 +8778,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_generic_switch-sensor.mock_generic_switch_current_switch_position-entry]
+# name: test_sensors[mock_generic_switch][sensor.mock_generic_switch_current_switch_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8816,7 +8816,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_generic_switch-sensor.mock_generic_switch_current_switch_position-state]
+# name: test_sensors[mock_generic_switch][sensor.mock_generic_switch_current_switch_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Generic Switch Current switch position',
@@ -8830,7 +8830,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi-sensor.mock_generic_switch_current_switch_position_1-entry]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8868,7 +8868,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi-sensor.mock_generic_switch_current_switch_position_1-state]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Generic Switch Current switch position (1)',
@@ -8882,7 +8882,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi-sensor.mock_generic_switch_current_switch_position_2-entry]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8920,7 +8920,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_generic_switch_multi-sensor.mock_generic_switch_current_switch_position_2-state]
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Generic Switch Current switch position (2)',
@@ -8934,7 +8934,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor-sensor.mock_humidity_sensor_humidity-entry]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8972,7 +8972,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor-sensor.mock_humidity_sensor_humidity-state]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -8988,7 +8988,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_current_phase-entry]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9030,7 +9030,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_current_phase-state]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_current_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9049,7 +9049,7 @@
     'state': 'pre-soak',
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_operational_error-entry]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9092,7 +9092,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_operational_error-state]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9112,7 +9112,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_operational_state-entry]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9155,7 +9155,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_laundry_dryer-sensor.mock_laundrydryer_operational_state-state]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9175,7 +9175,7 @@
     'state': 'running',
   })
 # ---
-# name: test_sensors[mock_light_sensor-sensor.mock_light_sensor_illuminance-entry]
+# name: test_sensors[mock_light_sensor][sensor.mock_light_sensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9213,7 +9213,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensors[mock_light_sensor-sensor.mock_light_sensor_illuminance-state]
+# name: test_sensors[mock_light_sensor][sensor.mock_light_sensor_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -9229,7 +9229,7 @@
     'state': '1.3',
   })
 # ---
-# name: test_sensors[mock_lock-sensor.mock_lock_door_closed_events-entry]
+# name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9267,7 +9267,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_lock-sensor.mock_lock_door_closed_events-state]
+# name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock Door closed events',
@@ -9281,7 +9281,7 @@
     'state': '3',
   })
 # ---
-# name: test_sensors[mock_lock-sensor.mock_lock_door_open_events-entry]
+# name: test_sensors[mock_lock][sensor.mock_lock_door_open_events-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9319,7 +9319,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_lock-sensor.mock_lock_door_open_events-state]
+# name: test_sensors[mock_lock][sensor.mock_lock_door_open_events-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Lock Door open events',
@@ -9333,7 +9333,7 @@
     'state': '5',
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_estimated_end_time-entry]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_estimated_end_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9369,7 +9369,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_estimated_end_time-state]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_estimated_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -9383,7 +9383,7 @@
     'state': '2025-01-01T14:00:30+00:00',
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_operational_error-entry]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9426,7 +9426,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_operational_error-state]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9446,7 +9446,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_operational_state-entry]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9489,7 +9489,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_microwave_oven-sensor.mock_microwave_oven_operational_state-state]
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9509,7 +9509,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_current_phase-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9551,7 +9551,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_current_phase-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9570,7 +9570,7 @@
     'state': 'pre-heating',
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_operational_state-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9612,7 +9612,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_operational_state-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9631,7 +9631,7 @@
     'state': 'running',
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_temperature_2-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9672,7 +9672,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_temperature_2-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -9688,7 +9688,7 @@
     'state': '65.55',
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_temperature_4-entry]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9729,7 +9729,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_oven-sensor.mock_oven_temperature_4-state]
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -9745,7 +9745,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_pressure_sensor-sensor.mock_pressure_sensor_pressure-entry]
+# name: test_sensors[mock_pressure_sensor][sensor.mock_pressure_sensor_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9786,7 +9786,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors[mock_pressure_sensor-sensor.mock_pressure_sensor_pressure-state]
+# name: test_sensors[mock_pressure_sensor][sensor.mock_pressure_sensor_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -9802,7 +9802,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_control_mode-entry]
+# name: test_sensors[mock_pump][sensor.mock_pump_control_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9847,7 +9847,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_control_mode-state]
+# name: test_sensors[mock_pump][sensor.mock_pump_control_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -9869,7 +9869,7 @@
     'state': 'constant_temperature',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_flow-entry]
+# name: test_sensors[mock_pump][sensor.mock_pump_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9907,7 +9907,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_flow-state]
+# name: test_sensors[mock_pump][sensor.mock_pump_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump Flow',
@@ -9922,7 +9922,7 @@
     'state': '5.0',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_pressure-entry]
+# name: test_sensors[mock_pump][sensor.mock_pump_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9963,7 +9963,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_pressure-state]
+# name: test_sensors[mock_pump][sensor.mock_pump_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -9979,7 +9979,7 @@
     'state': '10.0',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_rotation_speed-entry]
+# name: test_sensors[mock_pump][sensor.mock_pump_rotation_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10017,7 +10017,7 @@
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_rotation_speed-state]
+# name: test_sensors[mock_pump][sensor.mock_pump_rotation_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Pump Rotation speed',
@@ -10032,7 +10032,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_temperature-entry]
+# name: test_sensors[mock_pump][sensor.mock_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10073,7 +10073,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_pump-sensor.mock_pump_temperature-state]
+# name: test_sensors[mock_pump][sensor.mock_pump_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -10089,7 +10089,7 @@
     'state': '60.0',
   })
 # ---
-# name: test_sensors[mock_room_airconditioner-sensor.room_airconditioner_temperature-entry]
+# name: test_sensors[mock_room_airconditioner][sensor.room_airconditioner_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10130,7 +10130,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_room_airconditioner-sensor.room_airconditioner_temperature-state]
+# name: test_sensors[mock_room_airconditioner][sensor.room_airconditioner_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -10146,7 +10146,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_active_current-entry]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10190,7 +10190,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_active_current-state]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -10206,7 +10206,7 @@
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_energy_exported-entry]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_energy_exported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10250,7 +10250,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_energy_exported-state]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_energy_exported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -10266,7 +10266,7 @@
     'state': '42.279',
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_power-entry]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10310,7 +10310,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_power-state]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -10326,7 +10326,7 @@
     'state': '-850.0',
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_voltage-entry]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10370,7 +10370,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[mock_solar_inverter-sensor.mock_solar_inverter_voltage-state]
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -10386,7 +10386,7 @@
     'state': '234.899',
   })
 # ---
-# name: test_sensors[mock_temperature_sensor-sensor.mock_temperature_sensor_temperature-entry]
+# name: test_sensors[mock_temperature_sensor][sensor.mock_temperature_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10427,7 +10427,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_temperature_sensor-sensor.mock_temperature_sensor_temperature-state]
+# name: test_sensors[mock_temperature_sensor][sensor.mock_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -10443,7 +10443,7 @@
     'state': '21.0',
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_heating_demand-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_heating_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10479,7 +10479,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_heating_demand-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_heating_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Thermostat Heating demand',
@@ -10493,7 +10493,7 @@
     'state': '25',
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_outdoor_temperature-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10534,7 +10534,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_outdoor_temperature-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -10550,7 +10550,7 @@
     'state': '5.0',
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_temperature-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10591,7 +10591,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_thermostat-sensor.mock_thermostat_temperature-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -10607,7 +10607,7 @@
     'state': '18.0',
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_estimated_end_time-entry]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10643,7 +10643,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_estimated_end_time-state]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -10657,7 +10657,7 @@
     'state': '2025-08-29T21:00:00+00:00',
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_operational_error-entry]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10715,7 +10715,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_operational_error-state]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -10750,7 +10750,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_operational_state-entry]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10796,7 +10796,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_vacuum_cleaner-sensor.mock_vacuum_operational_state-state]
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -10819,7 +10819,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[mock_valve-sensor.mock_valve_auto_close_time-entry]
+# name: test_sensors[mock_valve][sensor.mock_valve_auto_close_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10855,7 +10855,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_valve-sensor.mock_valve_auto_close_time-state]
+# name: test_sensors[mock_valve][sensor.mock_valve_auto_close_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -10869,7 +10869,7 @@
     'state': '2025-01-01T00:00:00+00:00',
   })
 # ---
-# name: test_sensors[mock_window_covering_full-sensor.mock_full_window_covering_target_opening_position-entry]
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10905,7 +10905,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_window_covering_full-sensor.mock_full_window_covering_target_opening_position-state]
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Full Window Covering Target opening position',
@@ -10919,7 +10919,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[mock_window_covering_pa_lift-sensor.longan_link_wncv_da01_target_opening_position-entry]
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10955,7 +10955,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_window_covering_pa_lift-sensor.longan_link_wncv_da01_target_opening_position-state]
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Longan link WNCV DA01 Target opening position',
@@ -10969,7 +10969,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[resideo_x2s_thermostat-sensor.x2s_smart_thermostat_temperature-entry]
+# name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11010,7 +11010,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[resideo_x2s_thermostat-sensor.x2s_smart_thermostat_temperature-state]
+# name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -11026,7 +11026,7 @@
     'state': '20.55',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_effective_current-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11070,7 +11070,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_effective_current-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -11086,7 +11086,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_effective_voltage-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11130,7 +11130,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_effective_voltage-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -11146,7 +11146,7 @@
     'state': '120.0',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_energy-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11190,7 +11190,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_energy-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -11206,7 +11206,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_operational_error-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11249,7 +11249,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_operational_error-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11269,7 +11269,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_operational_state-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11313,7 +11313,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_operational_state-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11334,7 +11334,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_power-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11378,7 +11378,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[silabs_dishwasher-sensor.dishwasher_power-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -11394,7 +11394,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_appliance_energy_state-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11438,7 +11438,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_appliance_energy_state-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11459,7 +11459,7 @@
     'state': 'online',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_circuit_capacity-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_circuit_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11503,7 +11503,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_circuit_capacity-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_circuit_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -11519,7 +11519,7 @@
     'state': '32.0',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_energy_optimization_opt_out-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_energy_optimization_opt_out-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11562,7 +11562,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_energy_optimization_opt_out-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_energy_optimization_opt_out-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11582,7 +11582,7 @@
     'state': 'no_opt_out',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_fault_state-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_fault_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11637,7 +11637,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_fault_state-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_fault_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11669,7 +11669,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_max_charge_current-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_max_charge_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11713,7 +11713,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_max_charge_current-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_max_charge_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -11729,7 +11729,7 @@
     'state': '30.0',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_min_charge_current-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_min_charge_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11773,7 +11773,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_min_charge_current-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_min_charge_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -11789,7 +11789,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_state_of_charge-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11827,7 +11827,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_state_of_charge-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_state_of_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -11843,7 +11843,7 @@
     'state': '75',
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_user_max_charge_current-entry]
+# name: test_sensors[silabs_evse_charging][sensor.evse_user_max_charge_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11887,7 +11887,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_evse_charging-sensor.evse_user_max_charge_current-state]
+# name: test_sensors[silabs_evse_charging][sensor.evse_user_max_charge_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -11903,7 +11903,7 @@
     'state': '32.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_current_phase-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11945,7 +11945,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_current_phase-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -11964,7 +11964,7 @@
     'state': 'pre-soak',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_effective_current-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12008,7 +12008,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_effective_current-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -12024,7 +12024,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_effective_voltage-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12068,7 +12068,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_effective_voltage-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -12084,7 +12084,7 @@
     'state': '120.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_energy-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12128,7 +12128,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_energy-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12144,7 +12144,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_operational_error-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12187,7 +12187,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_operational_error-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -12207,7 +12207,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_operational_state-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12250,7 +12250,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_operational_state-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -12270,7 +12270,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_power-entry]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12314,7 +12314,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher-sensor.laundrywasher_power-state]
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -12330,7 +12330,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_light_switch-sensor.light_switch_example_current_switch_position-entry]
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12368,7 +12368,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_light_switch-sensor.light_switch_example_current_switch_position-state]
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Light switch example Current switch position',
@@ -12382,7 +12382,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_active_current-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12426,7 +12426,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_active_current-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -12442,7 +12442,7 @@
     'state': '0.1',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_appliance_energy_state-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12486,7 +12486,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_appliance_energy_state-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -12507,7 +12507,7 @@
     'state': 'online',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_energy_optimization_opt_out-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_energy_optimization_opt_out-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12550,7 +12550,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_energy_optimization_opt_out-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_energy_optimization_opt_out-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -12570,7 +12570,7 @@
     'state': 'no_opt_out',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_hot_water_level-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_hot_water_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12608,7 +12608,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_hot_water_level-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_hot_water_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Water Heater Hot water level',
@@ -12623,7 +12623,7 @@
     'state': '40',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_power-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12667,7 +12667,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_power-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -12683,7 +12683,7 @@
     'state': '23.0',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_required_heating_energy-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_required_heating_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12727,7 +12727,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_required_heating_energy-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_required_heating_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12743,7 +12743,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_tank_volume-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_tank_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12784,7 +12784,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_tank_volume-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_tank_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_storage',
@@ -12800,7 +12800,7 @@
     'state': '200',
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_voltage-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12844,7 +12844,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[silabs_water_heater-sensor.water_heater_voltage-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -12860,7 +12860,7 @@
     'state': '230.0',
   })
 # ---
-# name: test_sensors[switchbot_k11_plus-sensor.k11_operational_error-entry]
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12918,7 +12918,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[switchbot_k11_plus-sensor.k11_operational_error-state]
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -12953,7 +12953,7 @@
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[switchbot_k11_plus-sensor.k11_operational_state-entry]
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12999,7 +12999,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[switchbot_k11_plus-sensor.k11_operational_state-state]
+# name: test_sensors[switchbot_k11_plus][sensor.k11_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -13022,7 +13022,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[tado_smart_radiator_thermostat_x-sensor.smart_radiator_thermostat_x_humidity-entry]
+# name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13060,7 +13060,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[tado_smart_radiator_thermostat_x-sensor.smart_radiator_thermostat_x_humidity-state]
+# name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -13076,7 +13076,7 @@
     'state': '74.92',
   })
 # ---
-# name: test_sensors[tado_smart_radiator_thermostat_x-sensor.smart_radiator_thermostat_x_temperature-entry]
+# name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13117,7 +13117,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[tado_smart_radiator_thermostat_x-sensor.smart_radiator_thermostat_x_temperature-state]
+# name: test_sensors[tado_smart_radiator_thermostat_x][sensor.smart_radiator_thermostat_x_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -13133,7 +13133,7 @@
     'state': '20.9',
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_current-entry]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13174,7 +13174,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_current-state]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -13190,7 +13190,7 @@
     'state': '0.59',
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_power-entry]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13231,7 +13231,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_power-state]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -13247,7 +13247,7 @@
     'state': '70.0',
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_voltage-entry]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13288,7 +13288,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[yandex_smart_socket-sensor.yndx_00540_voltage-state]
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -13304,7 +13304,7 @@
     'state': '217.0',
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery-entry]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13342,7 +13342,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery-state]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -13358,7 +13358,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery_charge_state-entry]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13400,7 +13400,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery_charge_state-state]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery_charge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -13419,7 +13419,7 @@
     'state': 'not_charging',
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery_voltage-entry]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13463,7 +13463,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[zemismart_mt25b-sensor.zemismart_mt25b_roller_motor_battery_voltage-state]
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',

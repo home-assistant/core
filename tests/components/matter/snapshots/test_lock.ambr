@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_locks[aqara_u200-lock.aqara_smart_lock_u200-entry]
+# name: test_locks[aqara_u200][lock.aqara_smart_lock_u200-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[aqara_u200-lock.aqara_smart_lock_u200-state]
+# name: test_locks[aqara_u200][lock.aqara_smart_lock_u200-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
@@ -50,7 +50,7 @@
     'state': 'locked',
   })
 # ---
-# name: test_locks[mock_door_lock-lock.mock_door_lock-entry]
+# name: test_locks[mock_door_lock][lock.mock_door_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -86,7 +86,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[mock_door_lock-lock.mock_door_lock-state]
+# name: test_locks[mock_door_lock][lock.mock_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
@@ -101,7 +101,7 @@
     'state': 'unlocked',
   })
 # ---
-# name: test_locks[mock_door_lock_with_unbolt-lock.mock_door_lock_with_unbolt-entry]
+# name: test_locks[mock_door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -137,7 +137,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[mock_door_lock_with_unbolt-lock.mock_door_lock_with_unbolt-state]
+# name: test_locks[mock_door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
@@ -152,7 +152,7 @@
     'state': 'locked',
   })
 # ---
-# name: test_locks[mock_lock-lock.mock_lock-entry]
+# name: test_locks[mock_lock][lock.mock_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -188,7 +188,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[mock_lock-lock.mock_lock-state]
+# name: test_locks[mock_lock][lock.mock_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
@@ -203,7 +203,7 @@
     'state': 'locked',
   })
 # ---
-# name: test_locks[secuyou_smart_lock-lock.secuyou_smart_lock-entry]
+# name: test_locks[secuyou_smart_lock][lock.secuyou_smart_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -239,7 +239,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_locks[secuyou_smart_lock-lock.secuyou_smart_lock-state]
+# name: test_locks[secuyou_smart_lock][lock.secuyou_smart_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': 'Unknown',
