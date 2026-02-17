@@ -445,7 +445,9 @@ async def test_bus_subentry_connection_test_error(
     await hass.async_block_till_done()
 
     # get_stops succeeds but get_arrivals fails
-    mock_bus_feed.return_value.get_arrivals.side_effect = MTAFeedError("Connection error")
+    mock_bus_feed.return_value.get_arrivals.side_effect = MTAFeedError(
+        "Connection error"
+    )
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry_with_api_key.entry_id, SUBENTRY_TYPE_BUS),

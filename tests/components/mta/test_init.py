@@ -6,7 +6,12 @@ from unittest.mock import MagicMock
 from pymta import MTAFeedError
 import pytest
 
-from homeassistant.components.mta.const import CONF_LINE, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
+from homeassistant.components.mta.const import (
+    CONF_LINE,
+    CONF_STOP_ID,
+    CONF_STOP_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -136,10 +141,7 @@ async def test_setup_entry_coordinator_fetch_error(
     )
     await hass.async_block_till_done()
 
-    assert (
-        mock_config_entry_with_subway_subentry.state
-        is ConfigEntryState.SETUP_RETRY
-    )
+    assert mock_config_entry_with_subway_subentry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.freeze_time("2023-10-21")
