@@ -4,7 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 
+from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -41,7 +43,12 @@ async def test_dynamic_entities(
         )
         await hass.async_block_till_done()
 
-    assert "00:00:00:00:00:02" in mock_config_entry.runtime_data.incomplete_devices
+    assert (
+        entity_registry.async_get_entity_id(
+            DOMAIN, Platform.NUMBER, "mock_heater_night_temperature_offset"
+        )
+        is None
+    )
 
     eheimdigital_hub_mock.return_value.devices[
         "00:00:00:00:00:02"
@@ -49,7 +56,6 @@ async def test_dynamic_entities(
 
     await mock_config_entry.runtime_data._async_receive_callback()
 
-    assert len(mock_config_entry.runtime_data.incomplete_devices) == 0
     assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
         eheimdigital_hub_mock.return_value.devices[
             "00:00:00:00:00:02"
