@@ -49,13 +49,6 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    # Pretend we already set up a config entry.
-    hass.config.components.add("anthropic")
-    MockConfigEntry(
-        domain=DOMAIN,
-        state=config_entries.ConfigEntryState.LOADED,
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
