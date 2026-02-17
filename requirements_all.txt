@@ -1280,7 +1280,7 @@ icalendar==6.3.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.6.3
+idasen-ha==2.6.4
 
 # homeassistant.components.idrive_e2
 idrive-e2-client==0.1.1
