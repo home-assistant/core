@@ -23,6 +23,39 @@
     }
   },
   "entity": {
+    "event": {
+      "user_defined": {
+        "name": "User defined event",
+        "state_attributes": {
+          "command": {
+            "name": "Command"
+          },
+          "params": {
+            "name": "Params"
+          }
+        }
+      },
+      "volume_down": {
+        "name": "Volume down pressed"
+      },
+      "volume_mute": {
+        "name": "Volume mute toggled"
+      },
+      "volume_query": {
+        "name": "Volume state queried"
+      },
+      "volume_set": {
+        "name": "Volume level set",
+        "state_attributes": {
+          "volume_level": {
+            "name": "Volume level"
+          }
+        }
+      },
+      "volume_up": {
+        "name": "Volume up pressed"
+      }
+    },
     "sensor": {
       "cinemascape_mask": {
         "name": "Cinemascape mask"
