@@ -147,20 +147,15 @@ async def test_form_duplicate_entry(
 async def test_host_url_construction(
     hass: HomeAssistant,
     mock_teltasync: MagicMock,
+    mock_teltasync_client: MagicMock,
     mock_setup_entry: AsyncMock,
     host_input: str,
     expected_base_url: str,
     expected_host: str,
 ) -> None:
     """Test that host URLs are constructed correctly."""
-    # Set unique device ID for each host
-    device_info = MagicMock()
-    device_info.device_name = "RUTX50 Test"
-    device_info.device_identifier = f"TEST{hash(host_input)}"
-    mock_teltasync.return_value.get_device_info = AsyncMock(return_value=device_info)
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -173,10 +168,8 @@ async def test_host_url_construction(
         },
     )
 
-    await hass.async_block_till_done()
-
     # Verify Teltasync was called with correct base URL
-    assert mock_teltasync.call_count == 1
+    assert mock_teltasync_client.get_device_info.call_count == 1
     call_args = mock_teltasync.call_args_list[0]
     assert call_args.kwargs["base_url"] == expected_base_url
     assert call_args.kwargs["verify_ssl"] is False
@@ -187,11 +180,11 @@ async def test_host_url_construction(
 
 
 async def test_form_user_flow_http_fallback(
-    hass: HomeAssistant, mock_teltasync: MagicMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_teltasync_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we fall back to HTTP when HTTPS fails."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # First call (HTTPS) fails
@@ -211,7 +204,10 @@ async def test_form_user_flow_http_fallback(
     http_client.validate_credentials = AsyncMock(return_value=True)
     http_client.close = AsyncMock()
 
-    mock_teltasync.side_effect = [https_client, http_client]
+    mock_teltasync_client.get_device_info.side_effect = [
+        TeltonikaConnectionError("HTTPS unavailable"),
+        mock_teltasync_client.get_device_info.return_value,
+    ]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -223,14 +219,11 @@ async def test_form_user_flow_http_fallback(
         },
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "http://192.168.1.1"
-    assert mock_teltasync.call_count == 2
+    assert mock_teltasync_client.get_device_info.call_count == 2
     # HTTPS client should be closed before falling back
-    https_client.close.assert_awaited_once()
-    http_client.close.assert_awaited_once()
+    assert mock_teltasync_client.close.call_count == 2
 
 
 async def test_dhcp_discovery(
@@ -265,8 +258,6 @@ async def test_dhcp_discovery(
             CONF_PASSWORD: "password",
         },
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RUTX50 Discovered"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from teltasync import Teltasync
@@ -17,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import TeltonikaDataUpdateCoordinator
 from .util import normalize_url
@@ -26,15 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
-type TeltonikaConfigEntry = ConfigEntry[TeltonikaData]
-
-
-@dataclass
-class TeltonikaData:
-    """Runtime data for Teltonika integration."""
-
-    coordinator: TeltonikaDataUpdateCoordinator
-    device_info: DeviceInfo
+type TeltonikaConfigEntry = ConfigEntry[TeltonikaDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
@@ -64,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
     assert coordinator.device_info is not None
 
     # Store runtime data
-    entry.runtime_data = TeltonikaData(coordinator, coordinator.device_info)
+    entry.runtime_data = coordinator
 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -75,6 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.coordinator.client.close()
+        await entry.runtime_data.client.close()
 
     return unload_ok

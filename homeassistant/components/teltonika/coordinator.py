@@ -11,7 +11,7 @@ from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnecti
 from teltasync.modems import Modems
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,6 +27,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Teltonika data."""
+
+    device_info: DeviceInfo
 
     def __init__(
         self,
@@ -45,7 +47,6 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.base_url = base_url
-        self.device_info: DeviceInfo | None = None
 
     async def _async_setup(self) -> None:
         """Set up the coordinator - authenticate and fetch device info."""
@@ -53,12 +54,12 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.client.get_device_info()
             system_info_response = await self.client.get_system_info()
         except TeltonikaAuthenticationError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryError(f"Authentication failed: {err}") from err
         except (ClientResponseError, ContentTypeError) as err:
             if isinstance(err, ClientResponseError) and err.status in (401, 403):
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+                raise ConfigEntryError(f"Authentication failed: {err}") from err
             if isinstance(err, ContentTypeError) and err.status == 403:
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+                raise ConfigEntryError(f"Authentication failed: {err}") from err
             raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
         except TeltonikaConnectionError as err:
             raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err

@@ -4,6 +4,9 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from teltasync.modems import ModemStatusFull
+from teltasync.system import DeviceStatusData
+from teltasync.unauthorized import UnauthorizedStatusData
 
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -25,51 +28,27 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_teltasync() -> Generator[MagicMock]:
     """Mock Teltasync client for both config flow and init."""
-    # Load fixture device data
-    device_data = load_json_object_fixture("device_data.json", DOMAIN)
-
     with (
         patch(
             "homeassistant.components.teltonika.config_flow.Teltasync",
             autospec=True,
-        ) as mock_config_flow,
+        ) as mock_teltasync_class,
         patch(
             "homeassistant.components.teltonika.Teltasync",
-            autospec=True,
-        ) as mock_init,
+            new=mock_teltasync_class,
+        ),
     ):
-        # Configure both mocks with the same client instance
-        shared_client = MagicMock()
+        shared_client = mock_teltasync_class.return_value
 
-        # Mock device info
-        device_info = MagicMock()
-        device_info.device_name = device_data["system_info"]["static"]["device_name"]
-        device_info.device_identifier = device_data["system_info"]["mnf_info"]["serial"]
+        device_info = load_json_object_fixture("device_info.json", DOMAIN)
+        shared_client.get_device_info.return_value = UnauthorizedStatusData(
+            **device_info
+        )
 
-        # Mock system info
-        system_info = MagicMock()
-        system_info.mnf_info = MagicMock()
-        system_info.mnf_info.serial = device_data["system_info"]["mnf_info"]["serial"]
-        system_info.mnf_info.name = device_data["system_info"]["mnf_info"]["name"]
-        system_info.static = MagicMock()
-        system_info.static.device_name = device_data["system_info"]["static"][
-            "device_name"
-        ]
-        system_info.static.model = device_data["system_info"]["static"]["model"]
-        system_info.static.fw_version = device_data["system_info"]["static"][
-            "fw_version"
-        ]
+        system_info = load_json_object_fixture("system_info.json", DOMAIN)
+        shared_client.get_system_info.return_value = DeviceStatusData(**system_info)
 
-        shared_client.get_device_info = AsyncMock(return_value=device_info)
-        shared_client.get_system_info = AsyncMock(return_value=system_info)
-        shared_client.validate_credentials = AsyncMock(return_value=True)
-        shared_client.close = AsyncMock()
-
-        # Both mocks return the same client instance
-        mock_config_flow.return_value = shared_client
-        mock_init.return_value = shared_client
-
-        yield mock_config_flow
+        yield mock_teltasync_class
 
 
 @pytest.fixture
@@ -81,7 +60,6 @@ def mock_teltasync_client(mock_teltasync: MagicMock) -> MagicMock:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    # Load real device data for realistic config entry
     device_data = load_json_object_fixture("device_data.json", DOMAIN)
     return MockConfigEntry(
         domain=DOMAIN,
@@ -96,7 +74,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_modems() -> Generator[MagicMock]:
+def mock_modems() -> Generator[AsyncMock]:
     """Mock Modems class."""
     with patch(
         "homeassistant.components.teltonika.coordinator.Modems",
@@ -106,36 +84,17 @@ def mock_modems() -> Generator[MagicMock]:
 
         # Load device data to get modem info
         device_data = load_json_object_fixture("device_data.json", DOMAIN)
-        modem_fixture = device_data["modems_data"][0]  # type: ignore[index]
-
-        # Create modem object mock
-        modem_mock = MagicMock()
-        modem_mock.id = modem_fixture["id"]  # type: ignore[index]
-        modem_mock.name = modem_fixture["name"]  # type: ignore[index]
-        modem_mock.model = modem_fixture["model"]  # type: ignore[index]
-        modem_mock.imei = modem_fixture["imei"]  # type: ignore[index]
-        modem_mock.temperature = modem_fixture["temperature"]  # type: ignore[index]
-        modem_mock.operator = modem_fixture["operator"]  # type: ignore[index]
-        modem_mock.conntype = modem_fixture["conntype"]  # type: ignore[index]
-        modem_mock.state = modem_fixture["state"]  # type: ignore[index]
-        modem_mock.rssi = modem_fixture["rssi"]  # type: ignore[index]
-        modem_mock.rsrp = modem_fixture["rsrp"]  # type: ignore[index]
-        modem_mock.rsrq = modem_fixture["rsrq"]  # type: ignore[index]
-        modem_mock.sinr = modem_fixture["sinr"]  # type: ignore[index]
-        modem_mock.band = modem_fixture.get("band", "5G N3")  # type: ignore[union-attr]
-        modem_mock.txbytes = modem_fixture.get("txbytes", 0)  # type: ignore[union-attr]
-        modem_mock.rxbytes = modem_fixture.get("rxbytes", 0)  # type: ignore[union-attr]
-
         # Create response object with data attribute
         response_mock = MagicMock()
-        response_mock.data = [modem_mock]
-
-        mock_modems_instance.get_status = AsyncMock(return_value=response_mock)
+        response_mock.data = [
+            ModemStatusFull(**modem) for modem in device_data["modems_data"]
+        ]
+        mock_modems_instance.get_status.return_value = response_mock
 
         # Mock is_online to return True for the modem
         mock_modems_class.is_online = MagicMock(return_value=True)
 
-        yield mock_modems_class
+        yield mock_modems_instance
 
 
 @pytest.fixture

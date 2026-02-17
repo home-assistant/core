@@ -12,7 +12,7 @@
     "fw_version": "RUTX_R_00.07.17.3",
     "kernel": "6.6.96",
     "system": "ARMv7 Processor rev 5 (v7l)",
-    "device_name": "Test Device",
+    "device_name": "RUTX50 Test",
     "hostname": "RUTX50",
     "cpu_count": 4,
     "release": {

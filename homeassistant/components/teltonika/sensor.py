@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TeltonikaConfigEntry, TeltonikaData, TeltonikaDataUpdateCoordinator
+from . import TeltonikaConfigEntry, TeltonikaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,8 +108,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Teltonika sensor platform."""
-    data: TeltonikaData = entry.runtime_data
-    coordinator = data.coordinator
+    coordinator = entry.runtime_data
 
     # Track known modems to detect new ones
     known_modems: set[str] = set()
@@ -124,7 +123,7 @@ async def async_setup_entry(
             entities = [
                 TeltonikaSensorEntity(
                     coordinator,
-                    data.device_info,
+                    coordinator.device_info,
                     description,
                     modem_id,
                     coordinator.data[modem_id],
@@ -148,6 +147,7 @@ class TeltonikaSensorEntity(
     """Teltonika sensor entity."""
 
     _attr_has_entity_name = True
+    entity_description: TeltonikaSensorEntityDescription
 
     def __init__(
         self,
@@ -159,7 +159,7 @@ class TeltonikaSensorEntity(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description: TeltonikaSensorEntityDescription = description
+        self.entity_description = description
         self._modem_id = modem_id
         self._attr_device_info = device_info
 
