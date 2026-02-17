@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
@@ -20,6 +21,19 @@
           "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]"
         },
         "description": "Please reauthenticate {account_name} with Mastodon."
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data::client_secret%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data_description::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data_description::client_secret%]"
+        },
+        "description": "Reconfigure {account_name} with Mastodon."
       },
       "user": {
         "data": {

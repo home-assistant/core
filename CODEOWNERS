@@ -753,6 +753,8 @@ build.json @home-assistant/supervisor
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
+/homeassistant/components/hypontech/ @jcisio
+/tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/iammeter/ @lewei50

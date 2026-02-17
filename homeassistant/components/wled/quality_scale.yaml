@@ -24,10 +24,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -41,17 +42,13 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: todo
-    comment: |
-      Analog RGBCCT Strip are poor supported by HA.
-      See: https://github.com/home-assistant/core/issues/123614
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
