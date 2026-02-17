@@ -41,6 +41,20 @@ def _set_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
     raise HomeAssistantError("Device does not support mist level adjustment.")
 
 
+def _warm_mist_levels(device: VeSyncBaseDevice) -> list[int]:
+    """Return warm mist levels for devices that support warm mist."""
+    if is_humidifier(device) and device.supports_warm_mist:
+        return device.warm_mist_levels
+    raise HomeAssistantError("Device does not support warm mist level adjustment.")
+
+
+def _set_warm_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
+    """Set warm mist level on humidifier."""
+    if is_humidifier(device) and device.supports_warm_mist:
+        return device.set_warm_level(int(value))
+    raise HomeAssistantError("Device does not support warm mist level adjustment.")
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
@@ -50,6 +64,15 @@ class VeSyncNumberEntityDescription(NumberEntityDescription):
     native_min_value_fn: Callable[[VeSyncBaseDevice], float]
     native_max_value_fn: Callable[[VeSyncBaseDevice], float]
     set_value_fn: Callable[[VeSyncBaseDevice, float], Awaitable[bool]]
+
+
+def _warm_mist_value(device: VeSyncBaseDevice) -> float:
+    """Return current warm mist level, or min level if state not yet available."""
+    level = device.state.warm_mist_level
+    if level is not None:
+        return float(level)
+    levels = _warm_mist_levels(device)
+    return float(min(levels))
 
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
@@ -63,7 +86,18 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         exists_fn=is_humidifier,
         set_value_fn=_set_mist_level,
         value_fn=lambda device: device.state.mist_virtual_level,
-    )
+    ),
+    VeSyncNumberEntityDescription(
+        key="warm_mist_level",
+        translation_key="warm_mist_level",
+        native_min_value_fn=lambda device: min(_warm_mist_levels(device)),
+        native_max_value_fn=lambda device: max(_warm_mist_levels(device)),
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        exists_fn=lambda device: is_humidifier(device) and device.supports_warm_mist,
+        set_value_fn=_set_warm_level,
+        value_fn=_warm_mist_value,
+    ),
 ]
 
 
