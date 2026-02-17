@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pysmarlaapi import Connection
@@ -16,7 +17,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import DOMAIN, HOST
 
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_ACCESS_TOKEN: str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
 
 class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,7 +37,10 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await conn.refresh_token()
-        except ConnectionException, AuthenticationException:
+        except ConnectionException:
+            errors["base"] = "cannot_connect"
+            return errors, None
+        except AuthenticationException:
             errors["base"] = "invalid_auth"
             return errors, None
 
@@ -63,6 +67,39 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            raw_token = user_input[CONF_ACCESS_TOKEN]
+            errors, serial_number = await self._handle_token(token=raw_token)
+
+            config_entry = self._get_reauth_entry()
+
+            if not errors and serial_number != config_entry.unique_id:
+                errors["base"] = "serial_number_mismatch"
+
+            if not errors and serial_number is not None:
+                return self.async_update_reload_and_abort(
+                    config_entry,
+                    data_updates={CONF_ACCESS_TOKEN: raw_token},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysmarlaapi import AuthToken
 from pysmarlaapi.federwiege.services.classes import Property, Service
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from .const import MOCK_ACCESS_TOKEN_JSON, MOCK_SERIAL_NUMBER, MOCK_USER_INPUT
+from .const import MOCK_ACCESS_TOKEN_JSON, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_SERIAL_NUMBER,
+        unique_id=MOCK_ACCESS_TOKEN_JSON["serialNumber"],
         source=SOURCE_USER,
         data=MOCK_USER_INPUT,
     )
@@ -36,30 +35,23 @@ def mock_setup_entry() -> Generator:
 
 
 @pytest.fixture
-def mock_connection() -> Generator[MagicMock]:
-    """Patch Connection object."""
-    with (
-        patch(
-            "homeassistant.components.smarla.config_flow.Connection", autospec=True
-        ) as mock_connection,
-        patch(
-            "homeassistant.components.smarla.Connection",
-            mock_connection,
-        ),
-    ):
-        connection = mock_connection.return_value
-        connection.token = AuthToken.from_json(MOCK_ACCESS_TOKEN_JSON)
-        yield connection
+def mock_refresh_token() -> Generator[AsyncMock]:
+    """Mock the refresh token function."""
+    with patch(
+        "homeassistant.components.smarla.Connection.refresh_token",
+        autospec=True,
+    ) as mock_refresh:
+        yield mock_refresh
 
 
 @pytest.fixture
-def mock_federwiege(mock_connection: MagicMock) -> Generator[MagicMock]:
-    """Mock the Federwiege instance."""
+def mock_federwiege_cls(mock_refresh_token: MagicMock) -> Generator[MagicMock]:
+    """Mock the Federwiege class."""
     with patch(
         "homeassistant.components.smarla.Federwiege", autospec=True
-    ) as mock_federwiege:
-        federwiege = mock_federwiege.return_value
-        federwiege.serial_number = MOCK_SERIAL_NUMBER
+    ) as mock_federwiege_cls:
+        mock_federwiege = mock_federwiege_cls.return_value
+        mock_federwiege.serial_number = MOCK_ACCESS_TOKEN_JSON["serialNumber"]
 
         mock_babywiege_service = MagicMock(spec=Service)
         mock_babywiege_service.props = {
@@ -83,13 +75,21 @@ def mock_federwiege(mock_connection: MagicMock) -> Generator[MagicMock]:
         mock_analyser_service.props["activity"].get.return_value = 0
         mock_analyser_service.props["swing_count"].get.return_value = 0
 
-        federwiege.services = {
+        mock_federwiege.services = {
             "babywiege": mock_babywiege_service,
             "analyser": mock_analyser_service,
         }
 
-        federwiege.get_property = MagicMock(
-            side_effect=lambda service, prop: federwiege.services[service].props[prop]
+        mock_federwiege.get_property = MagicMock(
+            side_effect=lambda service, prop: mock_federwiege.services[service].props[
+                prop
+            ]
         )
 
-        yield federwiege
+        yield mock_federwiege_cls
+
+
+@pytest.fixture
+def mock_federwiege(mock_federwiege_cls: MagicMock) -> Generator[MagicMock]:
+    """Mock the Federwiege instance."""
+    return mock_federwiege_cls.return_value
