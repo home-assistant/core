@@ -1064,7 +1064,9 @@ async def test_update_core_sets_progress_immediately(
     assert state.attributes.get("in_progress") is False
 
     # Mock update_core to verify in_progress is set before it's called
-    def check_progress(*args, **kwargs):
+    async def check_progress(
+        hass: HomeAssistant, version: str | None, backup: bool
+    ) -> None:
         assert (
             hass.states.get("update.home_assistant_core_update").attributes.get(
                 "in_progress"
@@ -1145,7 +1147,13 @@ async def test_update_addon_sets_progress_immediately(
     assert state.attributes.get("in_progress") is False
 
     # Mock update_addon to verify in_progress is set before it's called
-    def check_progress(*args, **kwargs):
+    async def check_progress(
+        hass: HomeAssistant,
+        addon: str,
+        backup: bool,
+        addon_name: str | None,
+        installed_version: str | None,
+    ) -> None:
         assert (
             hass.states.get("update.test_update").attributes.get("in_progress") is True
         )
