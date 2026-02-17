@@ -21,14 +21,8 @@ rules:
     status: exempt
     comment: |
       Entities of this integration does not explicitly subscribe to events.
-  entity-unique-id:
-    status: exempt
-    comment: |
-      This integration does not create entities.
-  has-entity-name:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -42,27 +36,15 @@ rules:
     comment: |
       This integration does not have configuration parameters.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: |
-      This integration does not create entities.
-  parallel-updates:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt
@@ -72,10 +54,7 @@ rules:
     status: exempt
     comment: |
       This integration is a cloud service and does not support discovery.
-  docs-data-update:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: |
@@ -95,32 +74,14 @@ rules:
     status: exempt
     comment: |
       This integration connects to a single service.
-  entity-category:
-    status: exempt
-    comment: |
-      This integration does not create entities.
-  entity-device-class:
-    status: exempt
-    comment: |
-      This integration does not create entities.
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      This integration does not create entities.
-  entity-translations:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      This integration does not create entities.
+  icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs yet.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
