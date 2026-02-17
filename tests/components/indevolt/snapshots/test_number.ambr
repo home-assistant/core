@@ -28,7 +28,7 @@
     'object_id_base': 'Discharge limit',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Discharge limit',
     'platform': 'indevolt',
@@ -43,6 +43,7 @@
 # name: test_number[2][number.cms_sf2000_discharge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'battery',
       'friendly_name': 'CMS-SF2000 Discharge limit',
       'max': 100,
       'min': 0,
@@ -87,7 +88,7 @@
     'object_id_base': 'Feed-in power limit',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Feed-in power limit',
     'platform': 'indevolt',
@@ -102,6 +103,7 @@
 # name: test_number[2][number.cms_sf2000_feed_in_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'power',
       'friendly_name': 'CMS-SF2000 Feed-in power limit',
       'max': 2400,
       'min': 0,
@@ -146,7 +148,7 @@
     'object_id_base': 'Inverter input limit',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Inverter input limit',
     'platform': 'indevolt',
@@ -161,6 +163,7 @@
 # name: test_number[2][number.cms_sf2000_inverter_input_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'power',
       'friendly_name': 'CMS-SF2000 Inverter input limit',
       'max': 2400,
       'min': 100,
@@ -205,7 +208,7 @@
     'object_id_base': 'Max AC output power',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Max AC output power',
     'platform': 'indevolt',
@@ -220,6 +223,7 @@
 # name: test_number[2][number.cms_sf2000_max_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'power',
       'friendly_name': 'CMS-SF2000 Max AC output power',
       'max': 2400,
       'min': 0,

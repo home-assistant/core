@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
+from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,6 +17,18 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+KEY_READ_DISCHARGE_LIMIT = "6105"
+KEY_WRITE_DISCHARGE_LIMIT = "1142"
+
+KEY_READ_MAX_AC_OUTPUT_POWER = "11011"
+KEY_WRITE_MAX_AC_OUTPUT_POWER = "1147"
+
+KEY_READ_INVERTER_INPUT_LIMIT = "11009"
+KEY_WRITE_INVERTER_INPUT_LIMIT = "1138"
+
+KEY_READ_FEEDIN_POWER_LIMIT = "11010"
+KEY_WRITE_FEEDIN_POWER_LIMIT = "1146"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -38,10 +51,30 @@ async def test_number(
 @pytest.mark.parametrize(
     ("entity_id", "read_key", "write_key", "test_value"),
     [
-        ("number.cms_sf2000_discharge_limit", "6105", "1142", 50),
-        ("number.cms_sf2000_max_ac_output_power", "11011", "1147", 1500),
-        ("number.cms_sf2000_inverter_input_limit", "11009", "1138", 800),
-        ("number.cms_sf2000_feed_in_power_limit", "11010", "1146", 1200),
+        (
+            "number.cms_sf2000_discharge_limit",
+            KEY_READ_DISCHARGE_LIMIT,
+            KEY_WRITE_DISCHARGE_LIMIT,
+            50,
+        ),
+        (
+            "number.cms_sf2000_max_ac_output_power",
+            KEY_READ_MAX_AC_OUTPUT_POWER,
+            KEY_WRITE_MAX_AC_OUTPUT_POWER,
+            1500,
+        ),
+        (
+            "number.cms_sf2000_inverter_input_limit",
+            KEY_READ_INVERTER_INPUT_LIMIT,
+            KEY_WRITE_INVERTER_INPUT_LIMIT,
+            800,
+        ),
+        (
+            "number.cms_sf2000_feed_in_power_limit",
+            KEY_READ_FEEDIN_POWER_LIMIT,
+            KEY_WRITE_FEEDIN_POWER_LIMIT,
+            1200,
+        ),
     ],
 )
 async def test_number_set_values(
@@ -65,8 +98,8 @@ async def test_number_set_values(
 
     # Call the service to set the value
     await hass.services.async_call(
-        "number",
-        "set_value",
+        Platform.NUMBER,
+        SERVICE_SET_VALUE,
         {"entity_id": entity_id, "value": test_value},
         blocking=True,
     )
@@ -97,8 +130,8 @@ async def test_number_set_value_error(
     # Attempt to set value
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "number",
-            "set_value",
+            Platform.NUMBER,
+            SERVICE_SET_VALUE,
             {
                 "entity_id": "number.cms_sf2000_discharge_limit",
                 "value": 50,

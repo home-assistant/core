@@ -6,12 +6,14 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
@@ -41,6 +43,7 @@ NUMBERS: Final = (
         native_max_value=100,
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
+        device_class=NumberDeviceClass.BATTERY,
     ),
     IndevoltNumberEntityDescription(
         key="max_ac_output_power",
@@ -52,6 +55,7 @@ NUMBERS: Final = (
         native_max_value=2400,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
     ),
     IndevoltNumberEntityDescription(
         key="inverter_input_limit",
@@ -63,6 +67,7 @@ NUMBERS: Final = (
         native_max_value=2400,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
     ),
     IndevoltNumberEntityDescription(
         key="feedin_power_limit",
@@ -74,6 +79,7 @@ NUMBERS: Final = (
         native_max_value=2400,
         native_step=100,
         native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=NumberDeviceClass.POWER,
     ),
 )
 
@@ -130,6 +136,7 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            new_data = dict(self.coordinator.data)
-            new_data[self.entity_description.read_key] = int_value
-            self.coordinator.async_set_updated_data(new_data)
+            await self.coordinator.async_request_refresh()
+
+        else:
+            raise HomeAssistantError(f"Failed to set value {int_value} for {self.name}")
