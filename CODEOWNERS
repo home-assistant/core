@@ -719,6 +719,8 @@ build.json @home-assistant/supervisor
 /tests/components/homematic/ @pvizeli
 /homeassistant/components/homematicip_cloud/ @hahn-th @lackas
 /tests/components/homematicip_cloud/ @hahn-th @lackas
+/homeassistant/components/homevolt/ @danielhiversen
+/tests/components/homevolt/ @danielhiversen
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
@@ -751,6 +753,8 @@ build.json @home-assistant/supervisor
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
+/homeassistant/components/hypontech/ @jcisio
+/tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/iammeter/ @lewei50
@@ -760,6 +764,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
+/homeassistant/components/idrive_e2/ @patrickvorgers
+/tests/components/idrive_e2/ @patrickvorgers
 /homeassistant/components/igloohome/ @keithle888
 /tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
@@ -782,6 +788,8 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
+/homeassistant/components/indevolt/ @xirtnl
+/tests/components/indevolt/ @xirtnl
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01
@@ -1064,6 +1072,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
+/homeassistant/components/mta/ @OnFreund
+/tests/components/mta/ @OnFreund
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
 /homeassistant/components/music_assistant/ @music-assistant @arturpragacz
@@ -1176,6 +1186,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
 /tests/components/onedrive/ @zweckj
+/homeassistant/components/onedrive_for_business/ @zweckj
+/tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
@@ -1569,6 +1581,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /tests/components/speedtestdotnet/ @rohankapoorcom @engrbm87
 /homeassistant/components/splunk/ @Bre77
+/tests/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck @joostlek
 /tests/components/spotify/ @frenck @joostlek
 /homeassistant/components/sql/ @gjohansson-ST @dougiteixeira

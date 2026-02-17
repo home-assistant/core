@@ -24,6 +24,9 @@
     {
       "hostname": "hub*",
       "macaddress": "286D97*"
+    },
+    {
+      "hostname": "samsung-*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
