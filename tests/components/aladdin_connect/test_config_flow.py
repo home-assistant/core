@@ -83,8 +83,15 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -156,8 +163,15 @@ async def test_full_dhcp_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -219,7 +233,8 @@ async def test_duplicate_entry(
     )
 
     with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+        autospec=True,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -301,8 +316,15 @@ async def test_flow_reauth(
         },
     )
 
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            autospec=True,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -371,7 +393,11 @@ async def test_flow_wrong_account_reauth(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+        autospec=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort with wrong account
     assert result["type"] == "abort"
@@ -412,3 +438,85 @@ async def test_reauthentication_no_cloud(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cloud_not_enabled"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_flow_connection_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+) -> None:
+    """Test config flow aborts when API connection fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+        autospec=True,
+    ) as mock_client:
+        mock_client.return_value.get_doors.side_effect = Exception("Connection failed")
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_flow_invalid_token(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test config flow aborts when JWT token is invalid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "not-a-valid-jwt-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
