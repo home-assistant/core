@@ -429,10 +429,20 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
                 translation_key="select_option_failed",
             )
         value = option_values[option]
-        await self.coordinator.api.set_value(  # type: ignore[attr-defined]
-            self.entity_description.data_protocol,
-            value,
-        )
+        try:
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+                self.entity_description.data_protocol,
+                value,
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": self.entity_description.key,
+                },
+            ) from err
+
         await self.coordinator.async_request_refresh()
 
     @property
