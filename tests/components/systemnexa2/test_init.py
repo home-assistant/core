@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from sn2 import DeviceInitializationError
 
 from homeassistant.config_entries import ConfigEntryState

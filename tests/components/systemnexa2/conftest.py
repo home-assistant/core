@@ -1,13 +1,15 @@
 """Fixtures for System Nexa 2 integration tests."""
 
 from collections.abc import Generator
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from sn2 import InformationData, InformationUpdate, OnOffSetting
+from sn2 import InformationData, InformationUpdate, OnOffSetting, StateChange
 
 from homeassistant.components.systemnexa2.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -70,8 +72,6 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
                     "on_update"
                 )
                 if on_update:
-                    from sn2 import StateChange
-
                     await on_update(StateChange(state=1.0))
 
         device.connect = AsyncMock(side_effect=mock_connect)
@@ -113,9 +113,6 @@ def mock_patch_get_host():
 @pytest.fixture
 def mock_zeroconf_discovery_info():
     """Return mock zeroconf discovery info."""
-    from ipaddress import ip_address
-
-    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
     return ZeroconfServiceInfo(
         ip_address=ip_address("10.0.0.131"),

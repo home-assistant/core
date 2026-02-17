@@ -1,5 +1,6 @@
 """Data coordinator for System Nexa 2 integration."""
 
+from collections.abc import Awaitable
 import logging
 
 import aiohttp
@@ -133,11 +134,12 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         ):
             self.async_set_updated_data(data)
 
-    async def _async_call_with_error_handling(self, coro):
+    async def _async_sn2_call_with_error_handling(self, coro: Awaitable[None]) -> None:
         """Execute a coroutine with error handling."""
         try:
-            return await coro
+            await coro
         except (TimeoutError, NotConnectedError, aiohttp.ClientError) as err:
+            _LOGGER.debug("Device communication error: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_error",
@@ -145,20 +147,20 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
 
     async def async_turn_on(self) -> None:
         """Turn on the device."""
-        await self._async_call_with_error_handling(self.device.turn_on())
+        await self._async_sn2_call_with_error_handling(self.device.turn_on())
 
     async def async_turn_off(self) -> None:
         """Turn off the device."""
-        await self._async_call_with_error_handling(self.device.turn_off())
+        await self._async_sn2_call_with_error_handling(self.device.turn_off())
 
     async def async_toggle(self) -> None:
         """Toggle the device."""
-        await self._async_call_with_error_handling(self.device.toggle())
+        await self._async_sn2_call_with_error_handling(self.device.toggle())
 
     async def async_setting_enable(self, setting: OnOffSetting) -> None:
         """Enable a device setting."""
-        await self._async_call_with_error_handling(setting.enable(self.device))
+        await self._async_sn2_call_with_error_handling(setting.enable(self.device))
 
     async def async_setting_disable(self, setting: OnOffSetting) -> None:
         """Disable a device setting."""
-        await self._async_call_with_error_handling(setting.disable(self.device))
+        await self._async_sn2_call_with_error_handling(setting.disable(self.device))

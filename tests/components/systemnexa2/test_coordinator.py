@@ -1,15 +1,10 @@
 """Test the System Nexa 2 coordinator."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
-from sn2 import (
-    ConnectionStatus,
-    OnOffSetting,
-    SettingsUpdate,
-    StateChange,
-)
+from sn2 import ConnectionStatus, SettingsUpdate, StateChange
 from sn2.device import UpdateEvent
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
