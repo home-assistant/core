@@ -683,14 +683,17 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="capability_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="state_attributes",
         return_type=["dict[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="device_info",
