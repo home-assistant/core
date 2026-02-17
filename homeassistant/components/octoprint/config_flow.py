@@ -161,6 +161,14 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             unique_id = discovery.upnp_uuid
 
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_PATH: user_input[CONF_PATH],
+            }
+        )
+
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
