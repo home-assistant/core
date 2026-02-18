@@ -60,7 +60,7 @@ async def async_update_with_retry(hass: HomeAssistant, iss: pyiss.ISS) -> IssDat
                 )
                 await asyncio.sleep(backoff)
             else:
-                _LOGGER.error("ISS update failed after %d attempts", MAX_RETRIES)
+                _LOGGER.warning("ISS update failed after %d attempts", MAX_RETRIES)
 
     raise UpdateFailed("Unable to retrieve data") from last_exception
 
