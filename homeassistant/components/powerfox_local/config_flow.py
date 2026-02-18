@@ -27,6 +27,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _api_key: str
+    _device_id: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -37,6 +38,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._api_key = user_input[CONF_API_KEY]
+            self._device_id = self._api_key
 
             try:
                 await self._async_validate_connection()
@@ -58,7 +60,8 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host
-        self._api_key = discovery_info.properties.get("id", "")
+        self._device_id = discovery_info.properties["id"]
+        self._api_key = self._device_id
 
         try:
             await self._async_validate_connection()
@@ -98,5 +101,5 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         await client.value()
 
-        await self.async_set_unique_id(self._api_key)
+        await self.async_set_unique_id(self._device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
