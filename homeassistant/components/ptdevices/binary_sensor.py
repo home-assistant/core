@@ -100,5 +100,5 @@ class PTDevicesBinarySensorEntity(PTDevicesEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return the state of the senor."""
+        """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.device)
