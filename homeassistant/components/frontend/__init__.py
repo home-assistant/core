@@ -18,7 +18,7 @@ from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,
@@ -1049,7 +1049,7 @@ async def websocket_update_panel(
     url_path: str = msg["url_path"]
 
     if url_path not in hass.data.get(DATA_PANELS, {}):
-        connection.send_error(msg["id"], "not_found", "Panel not found")
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Panel not found")
         return
 
     panels_config = hass.data[DATA_PANELS_CONFIG]
@@ -1057,10 +1057,10 @@ async def websocket_update_panel(
 
     for key in ("title", "icon", "require_admin", "show_in_sidebar"):
         if key in msg:
-            if msg[key] is None:
+            if (value := msg[key]) is None:
                 panel_config.pop(key, None)
             else:
-                panel_config[key] = msg[key]
+                panel_config[key] = value
 
     if panel_config:
         panels_config[url_path] = panel_config
