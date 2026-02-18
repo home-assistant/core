@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The device does not match the existing configuration."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "dhcp_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to authenticate with the device.",
+          "username": "The username to authenticate with the device."
+        },
+        "description": "A Teltonika device ({name}) was discovered at {host}. Enter the credentials to add it to Home Assistant.",
+        "title": "Discovered Teltonika device"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Teltonika device.",
+          "password": "The password to authenticate with the device.",
+          "username": "The username to authenticate with the device.",
+          "verify_ssl": "Whether to validate the SSL certificate when using HTTPS."
+        },
+        "description": "Enter the connection details for your Teltonika device.",
+        "title": "Set up Teltonika device"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "band": {
+        "name": "{modem_name} Band"
+      },
+      "connection_type": {
+        "name": "{modem_name} Connection type"
+      },
+      "operator": {
+        "name": "{modem_name} Operator"
+      },
+      "rsrp": {
+        "name": "{modem_name} RSRP"
+      },
+      "rsrq": {
+        "name": "{modem_name} RSRQ"
+      },
+      "rssi": {
+        "name": "{modem_name} RSSI"
+      },
+      "sinr": {
+        "name": "{modem_name} SINR"
+      }
+    }
+  }
+}

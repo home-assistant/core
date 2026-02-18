@@ -858,6 +858,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "teltonika",
+        "macaddress": "209727*",
+    },
+    {
+        "domain": "teltonika",
+        "macaddress": "001E42*",
+    },
+    {
         "domain": "tesla_wall_connector",
         "hostname": "teslawallconnector_*",
         "macaddress": "DC44271*",

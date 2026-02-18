@@ -6870,6 +6870,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "teltonika": {
+      "name": "Teltonika",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "temper": {
       "name": "TEMPer",
       "integration_type": "hub",
