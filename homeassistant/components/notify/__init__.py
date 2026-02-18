@@ -161,9 +161,9 @@ class NotifyEntity(RestoreEntity):
 
         Should not be overridden, handle setting last notification timestamp.
         """
+        await self.async_send_message(**kwargs)
         self.__set_state(dt_util.utcnow().isoformat())
         self.async_write_ha_state()
-        await self.async_send_message(**kwargs)
 
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
