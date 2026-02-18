@@ -101,12 +101,12 @@ class KnxYamlEntity(_KnxEntityBase):
         self,
         knx_module: KNXModule,
         unique_id: str,
-        name: str | None,
+        name: str,
         entity_category: EntityCategory | None,
     ) -> None:
         """Initialize the YAML entity."""
         self._knx_module = knx_module
-        self._attr_name = name
+        self._attr_name = name or None
         self._attr_unique_id = unique_id
         self._attr_entity_category = entity_category
 
