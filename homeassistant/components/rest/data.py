@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from xml.parsers.expat import ExpatError
 
 import aiohttp
 from aiohttp import hdrs
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 def _payload_looks_like_xml(payload: str) -> bool:
     """Return True if the payload looks like XML.
 
-    Some devices incorrectly label JSON responses as XML content types.
+    Some devices incorrectly label JSON responses as `application/x-javascript`.
     Avoid attempting XML parsing unless the payload starts with an XML tag.
     """
     return payload.lstrip("\ufeff \t\r\n").startswith("<")
@@ -103,15 +102,14 @@ class RestData:
             and (content_type := headers.get(hdrs.CONTENT_TYPE))
             and content_type.startswith(XML_MIME_TYPES)
         ):
-            if not _payload_looks_like_xml(value):
+            # `application/x-javascript` is commonly used for JSON/JS/JSONP payloads.
+            # Only attempt XML conversion if the payload itself looks like XML.
+            if content_type.startswith("application/x-javascript") and not _payload_looks_like_xml(
+                value
+            ):
                 return value
 
-            try:
-                value = json_dumps(xmltodict.parse(value))
-            except ExpatError:
-                # Return the raw payload so templates like `value_json` still work.
-                return value
-
+            value = json_dumps(xmltodict.parse(value))
             _LOGGER.debug("JSON converted from XML: %s", value)
         return value
 
