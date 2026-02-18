@@ -42,6 +42,12 @@
     }
   },
   "exceptions": {
+    "attachment_not_found": {
+      "message": "Attachment \"{file_path}\" not found. Check the file path and ensure the file exists."
+    },
+    "entry_not_found": {
+      "message": "The selected SMTP account was not found or is not loaded."
+    },
     "remote_path_not_allowed": {
       "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
     }
@@ -124,7 +130,7 @@
           "name": "Subject"
         },
         "to": {
-          "description": "Add one email per line. Leave empty to use default from setup.",
+          "description": "Add one email per line. Leave empty to use the default recipient(s) from setup.",
           "name": "Recipients"
         }
       },

@@ -337,7 +337,7 @@ def _build_text_msg(message: str) -> MIMEText:
 
 def _attach_file(
     hass: HomeAssistant, atch_name: str, content_id: str | None = None
-) -> MIMEImage | MIMEApplication | None:
+) -> MIMEImage | MIMEApplication:
     """Create a message attachment.
 
     If MIMEImage is successful and content_id is passed (HTML), add images in-line.
@@ -363,9 +363,12 @@ def _attach_file(
             )
         with open(atch_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
-    except FileNotFoundError:
-        _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
-        return None
+    except FileNotFoundError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="attachment_not_found",
+            translation_placeholders={"file_path": atch_name},
+        ) from err
 
     attachment: MIMEImage | MIMEApplication
     try:
@@ -401,9 +404,7 @@ def _build_multipart_msg(
     msg.attach(body_txt)
 
     for atch_name in images:
-        attachment = _attach_file(hass, atch_name)
-        if attachment:
-            msg.attach(attachment)
+        msg.attach(_attach_file(hass, atch_name))
 
     return msg
 
@@ -421,7 +422,5 @@ def _build_html_msg(
 
     for atch_name in images:
         name = os.path.basename(atch_name)
-        attachment = _attach_file(hass, atch_name, name)
-        if attachment:
-            msg.attach(attachment)
+        msg.attach(_attach_file(hass, atch_name, name))
     return msg

@@ -206,15 +206,13 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         name = import_data.pop(CONF_NAME)
-        title = _build_title(import_data[CONF_SENDER], name)
 
-        # Check if already imported with the same name
-        for entry in self._async_current_entries():
-            if entry.title == title:
-                return self.async_abort(reason="already_configured")
+        # Use name as unique ID to prevent duplicate imports
+        await self.async_set_unique_id(name)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=title,
+            title=_build_title(import_data[CONF_SENDER], name),
             data=import_data,
         )
 
