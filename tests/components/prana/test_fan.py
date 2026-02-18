@@ -31,9 +31,6 @@ async def test_fans(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Prana fans snapshot."""
-    # The default mock state has bound=False.
-    # Therefore, 'supply' and 'extract' fans will be available, while 'bounded' will be unavailable.
-    # This expected availability state is captured by the snapshot.
     with patch("homeassistant.components.prana.PLATFORMS", [Platform.FAN]):
         await async_init_integration(hass, mock_config_entry)
 
@@ -41,11 +38,11 @@ async def test_fans(
 
 
 @pytest.mark.parametrize(
-    ("type_key", "entity_suffix", "is_bound_mode"),
+    ("type_key", "is_bound_mode"),
     [
-        ("supply", "_supply", False),
-        ("extract", "_extract", False),
-        ("bounded", "_bounded", True),
+        ("supply", False),
+        ("extract", False),
+        ("bounded", True),
     ],
 )
 async def test_fans_actions(
@@ -54,21 +51,20 @@ async def test_fans_actions(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     type_key: str,
-    entity_suffix: str,
     is_bound_mode: bool,
 ) -> None:
     """Test turning fans on/off, setting speed and presets."""
-
-    # Set the bound mode in the mock, as this determines entity availability.
+    # Set the mock API state for the fan type being tested
     mock_prana_api.get_state.return_value.bound = is_bound_mode
 
     await async_init_integration(hass, mock_config_entry)
 
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert entries
-    target = f"fan.prana_recuperator{entity_suffix}"
+    unique_id = f"{mock_config_entry.unique_id}_{type_key}"
+
+    entity_entry = entity_registry.async_get_entity_id(FAN_DOMAIN, "prana", unique_id)
+
+    assert entity_entry, f"Entity with unique_id {unique_id} not found in registry"
+    target = entity_entry
 
     # --- Test Turn OFF ---
     hass.states.async_set(target, "on")
@@ -81,10 +77,10 @@ async def test_fans_actions(
     )
     mock_prana_api.set_speed_is_on.assert_called_with(False, type_key)
 
-    # Reset the mock to clear previous call history.
     mock_prana_api.reset_mock()
 
     # --- Test Turn ON ---
+
     hass.states.async_set(target, "off")
 
     await hass.services.async_call(

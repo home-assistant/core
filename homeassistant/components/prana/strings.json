@@ -27,7 +27,7 @@
   "entity": {
     "fan": {
       "bounded": {
-        "name": "Bounded Air Flows",
+        "name": "Bounded Air Flow",
         "state_attributes": {
           "preset_mode": {
             "state": {
