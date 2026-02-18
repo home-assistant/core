@@ -20,13 +20,17 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   init:
     name: Initialize build
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # To check out the repository
     outputs:
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
@@ -88,9 +92,9 @@ jobs:
     needs: init
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       fail-fast: false
       matrix:
@@ -270,9 +274,9 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       matrix:
         machine:
@@ -372,9 +376,9 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      id-token: write # For cosign signing
     strategy:
       fail-fast: false
       matrix:
@@ -509,8 +513,8 @@ jobs:
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: read # To check out the repository
+      id-token: write # For PyPI trusted publishing
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
@@ -550,10 +554,10 @@ jobs:
     name: Build and test hassfest image
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
+      contents: read # To check out the repository
+      packages: write # To push to GHCR
+      attestations: write # For build provenance attestation
+      id-token: write # For build provenance attestation
     needs: ["init"]
     if: github.repository_owner == 'home-assistant'
     env:

@@ -64,18 +64,14 @@ def mock_proxmox_client():
     """Mock Proxmox client with dynamic exception injection support."""
     with (
         patch(
-            "homeassistant.components.proxmoxve.ProxmoxAPI", autospec=True
+            "homeassistant.components.proxmoxve.coordinator.ProxmoxAPI", autospec=True
         ) as mock_api,
-        patch(
-            "homeassistant.components.proxmoxve.common.ProxmoxAPI", autospec=True
-        ) as mock_api_common,
         patch(
             "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI"
         ) as mock_api_cf,
     ):
         mock_instance = MagicMock()
         mock_api.return_value = mock_instance
-        mock_api_common.return_value = mock_instance
         mock_api_cf.return_value = mock_instance
 
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
@@ -139,4 +135,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="ProxmoxVE test",
         data=MOCK_TEST_CONFIG,
+        entry_id="1234",
     )
