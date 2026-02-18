@@ -41,9 +41,7 @@ from .common import (
 # Feature map bits
 _FEATURE_USR = 256  # kUser (bit 8)
 _FEATURE_PIN = 1  # kPinCredential (bit 0)
-_FEATURE_RFID = 4  # kRfidCredential (bit 2)
 _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
-_FEATURE_USR_PIN_RFID = _FEATURE_USR | _FEATURE_PIN | _FEATURE_RFID  # 261
 
 
 @pytest.mark.usefixtures("matter_devices")
