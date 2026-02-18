@@ -112,7 +112,7 @@
   },
   "services": {
     "clean_area": {
-      "description": "Tells the vacuum cleaner to clean an area.",
+      "description": "Tells a vacuum cleaner to clean an area.",
       "fields": {
         "cleaning_area_id": {
           "description": "Areas to clean.",
@@ -122,11 +122,11 @@
       "name": "Clean area"
     },
     "clean_spot": {
-      "description": "Tells the vacuum cleaner to do a spot clean-up.",
+      "description": "Tells a vacuum cleaner to do a spot clean-up.",
       "name": "Clean spot"
     },
     "locate": {
-      "description": "Locates the vacuum cleaner robot.",
+      "description": "Locates a vacuum cleaner robot.",
       "name": "Locate"
     },
     "pause": {
@@ -134,11 +134,11 @@
       "name": "[%key:common::action::pause%]"
     },
     "return_to_base": {
-      "description": "Tells the vacuum cleaner to return to its dock.",
+      "description": "Tells a vacuum cleaner to return to its dock.",
       "name": "Return to dock"
     },
     "send_command": {
-      "description": "Sends a command to the vacuum cleaner.",
+      "description": "Sends a command to a vacuum cleaner.",
       "fields": {
         "command": {
           "description": "Command to execute. The commands are integration-specific.",
@@ -152,7 +152,7 @@
       "name": "Send command"
     },
     "set_fan_speed": {
-      "description": "Sets the fan speed of the vacuum cleaner.",
+      "description": "Sets the fan speed of a vacuum cleaner.",
       "fields": {
         "fan_speed": {
           "description": "Fan speed. The value depends on the integration. Some integrations have speed steps, like 'medium'. Some use a percentage, between 0 and 100.",
