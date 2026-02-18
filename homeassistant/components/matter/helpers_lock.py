@@ -1,13 +1,7 @@
 """Lock-specific helpers for the Matter integration.
 
 Provides DoorLock cluster endpoint resolution, feature detection, and
-business logic for lock user/credential management. These are separated
-from the general Matter helpers (helpers.py) to maintain single
-responsibility — general helpers handle node/device resolution while
-this module handles lock-specific concerns.
-
-All business logic functions accept MatterClient + MatterNode (or raw IDs)
-and have no dependency on websocket or entity interfaces.
+business logic for lock user/credential management.
 """
 
 from __future__ import annotations
@@ -21,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
+    ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_MAX_CREDENTIALS_PER_USER,
     ATTR_MAX_PIN_USERS,
@@ -40,7 +35,10 @@ from .const import (
     CREDENTIAL_RULE_MAP,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_MAP,
-    ERR_INVALID_PIN_CODE,
+    CREDENTIAL_TYPE_REVERSE_MAP,
+    ERR_CREDENTIAL_TYPE_NOT_SUPPORTED,
+    ERR_INVALID_CREDENTIAL_DATA,
+    ERR_SET_CREDENTIAL_FAILED,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
     SET_CREDENTIAL_STATUS_MAP,
     USER_STATUS_MAP,
@@ -90,33 +88,6 @@ def lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
     if feature_map is None:
         return False
     return bool(feature_map & DoorLockFeature.kUser)
-
-
-@callback
-def lock_supports_week_day_schedules(endpoint: MatterEndpoint) -> bool:
-    """Check if lock endpoint supports Week Day Schedules (WDSCH) feature."""
-    feature_map = _get_feature_map(endpoint)
-    if feature_map is None:
-        return False
-    return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
-
-
-@callback
-def lock_supports_year_day_schedules(endpoint: MatterEndpoint) -> bool:
-    """Check if lock endpoint supports Year Day Schedules (YDSCH) feature."""
-    feature_map = _get_feature_map(endpoint)
-    if feature_map is None:
-        return False
-    return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
-
-
-@callback
-def lock_supports_holiday_schedules(endpoint: MatterEndpoint) -> bool:
-    """Check if lock endpoint supports Holiday Schedules (HDSCH) feature."""
-    feature_map = _get_feature_map(endpoint)
-    if feature_map is None:
-        return False
-    return bool(feature_map & DoorLockFeature.kHolidaySchedules)
 
 
 # --- Pure utility functions ---
@@ -189,87 +160,6 @@ def _format_user_response(user_data: Any) -> dict[str, Any] | None:
 # --- Credential management helpers ---
 
 
-def validate_pin_code(pin: str, min_len: int, max_len: int) -> str | None:
-    """Validate a PIN code against lock constraints.
-
-    Returns an error code string on failure, or None if valid.
-    """
-    if not pin.isdigit():
-        return ERR_INVALID_PIN_CODE
-    if len(pin) < min_len or len(pin) > max_len:
-        return ERR_INVALID_PIN_CODE
-    return None
-
-
-async def find_available_credential_slot(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    cred_type: int,
-    max_slots: int,
-) -> int | None:
-    """Find the first available credential slot by iterating GetCredentialStatus.
-
-    Returns the slot index, or None if all slots are occupied.
-    """
-    for idx in range(1, max_slots + 1):
-        cred_status = await matter_client.send_device_command(
-            node_id=node_id,
-            endpoint_id=endpoint_id,
-            command=clusters.DoorLock.Commands.GetCredentialStatus(
-                credential=clusters.DoorLock.Structs.CredentialStruct(
-                    credentialType=cred_type,
-                    credentialIndex=idx,
-                ),
-            ),
-        )
-        if not _get_attr(cred_status, "credentialExists"):
-            return idx
-    return None
-
-
-async def set_credential_for_user(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-    cred_type: int,
-    cred_data: bytes,
-    credential_index: int,
-    operation: clusters.DoorLock.Enums.DataOperationTypeEnum,
-) -> dict[str, Any]:
-    """Set a credential for a user at a specific credential slot.
-
-    Uses the given operation type (kAdd for new credentials, kModify for
-    existing ones) and writes credential data to the specified slot index.
-
-    Returns a dict with 'status' (str) and 'credential_index' (int|None).
-    """
-    response = await matter_client.send_device_command(
-        node_id=node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.DoorLock.Commands.SetCredential(
-            operationType=operation,
-            credential=clusters.DoorLock.Structs.CredentialStruct(
-                credentialType=cred_type,
-                credentialIndex=credential_index,
-            ),
-            credentialData=cred_data,
-            userIndex=user_index,
-            userStatus=None,
-            userType=None,
-        ),
-        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-    )
-
-    status_int = _get_attr(response, "status") or 0
-    next_index = _get_attr(response, "nextCredentialIndex")
-    return {
-        "status": SET_CREDENTIAL_STATUS_MAP.get(status_int, "unknown"),
-        "credential_index": next_index,
-    }
-
-
 async def clear_user_credentials(
     matter_client: MatterClient,
     node_id: int,
@@ -306,60 +196,6 @@ async def clear_user_credentials(
         )
 
 
-async def _get_existing_pin_credential_index(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-) -> int | None:
-    """Get the credential index of an existing PIN credential for a user."""
-    get_user_response = await matter_client.send_device_command(
-        node_id=node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=user_index),
-    )
-    creds = _get_attr(get_user_response, "credentials")
-    if creds:
-        pin_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-        for cred in creds:
-            if _get_attr(cred, "credentialType") == pin_type:
-                index: int | None = _get_attr(cred, "credentialIndex")
-                return index
-    return None
-
-
-async def _clear_pin_credentials_for_user(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-) -> None:
-    """Clear all PIN credentials for a specific user."""
-    get_user_response = await matter_client.send_device_command(
-        node_id=node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=user_index),
-    )
-    creds = _get_attr(get_user_response, "credentials")
-    if not creds:
-        return
-    pin_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-    for cred in creds:
-        if _get_attr(cred, "credentialType") == pin_type:
-            cred_index = _get_attr(cred, "credentialIndex")
-            await matter_client.send_device_command(
-                node_id=node_id,
-                endpoint_id=endpoint_id,
-                command=clusters.DoorLock.Commands.ClearCredential(
-                    credential=clusters.DoorLock.Structs.CredentialStruct(
-                        credentialType=pin_type,
-                        credentialIndex=cred_index,
-                    ),
-                ),
-                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-            )
-
-
 class LockEndpointNotFoundError(HomeAssistantError):
     """Lock endpoint not found on node."""
 
@@ -376,27 +212,20 @@ class NoAvailableUserSlotsError(ServiceValidationError):
     """No available user slots on the lock."""
 
 
-class InvalidPinCodeError(ServiceValidationError):
-    """PIN code is invalid."""
+class CredentialTypeNotSupportedError(ServiceValidationError):
+    """Lock does not support the requested credential type."""
 
 
-class PinCredentialNotSupportedError(ServiceValidationError):
-    """Lock does not support PIN credentials."""
+class CredentialDataInvalidError(ServiceValidationError):
+    """Credential data fails validation."""
 
 
-class CredentialSlotError(ServiceValidationError):
-    """No available credential slots."""
-
-
-class CredentialSetError(HomeAssistantError):
-    """SetCredential command failed."""
+class SetCredentialFailedError(HomeAssistantError):
+    """SetCredential command returned a non-success status."""
 
 
 def _get_lock_endpoint_or_raise(node: MatterNode) -> MatterEndpoint:
-    """Get the DoorLock endpoint from a node or raise an error.
-
-    This is a helper to reduce boilerplate in functions that need a lock endpoint.
-    """
+    """Get the DoorLock endpoint from a node or raise an error."""
     lock_endpoint = get_lock_endpoint_from_node(node)
     if lock_endpoint is None:
         raise LockEndpointNotFoundError("No lock endpoint found on this device")
@@ -412,76 +241,6 @@ def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
         raise UsrFeatureNotSupportedError(
             "Lock does not support user/credential management"
         )
-
-
-async def _handle_pin_credential(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-    pin_code: str | None,
-    has_pin_feature: bool,
-    lock_endpoint: Any,
-) -> None:
-    """Handle PIN credential set/clear/replace for a user.
-
-    Raises on failure so caller can roll back if needed.
-    """
-    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-
-    if pin_code is None:
-        # Clear existing PIN credentials for this user
-        if not has_pin_feature:
-            return
-        await _clear_pin_credentials_for_user(
-            matter_client, node_id, endpoint_id, user_index
-        )
-        return
-
-    # Set or replace PIN
-    # Check if user already has a PIN credential
-    existing_cred_index = await _get_existing_pin_credential_index(
-        matter_client, node_id, endpoint_id, user_index
-    )
-
-    if existing_cred_index is not None:
-        # Modify existing credential
-        await set_credential_for_user(
-            matter_client,
-            node_id,
-            endpoint_id,
-            user_index,
-            pin_cred_type,
-            pin_code.encode(),
-            credential_index=existing_cred_index,
-            operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
-        )
-    else:
-        # Find available slot and add new credential
-        max_pin_slots = (
-            lock_endpoint.get_attribute_value(
-                None, clusters.DoorLock.Attributes.NumberOfPINUsersSupported
-            )
-            or 0
-        )
-        slot = await find_available_credential_slot(
-            matter_client, node_id, endpoint_id, pin_cred_type, max_pin_slots
-        )
-        if slot is None:
-            raise CredentialSlotError("No available credential slots on the lock")
-
-        result = await set_credential_for_user(
-            matter_client,
-            node_id,
-            endpoint_id,
-            user_index,
-            pin_cred_type,
-            pin_code.encode(),
-            credential_index=slot,
-            operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
-        )
-        if result["status"] != "success":
-            raise CredentialSetError(result["status"])
 
 
 # --- High-level business logic functions ---
@@ -537,39 +296,6 @@ async def get_lock_info(
             None, clusters.DoorLock.Attributes.MaxRFIDCodeLength
         )
 
-    # Schedule feature support and capacity (informational)
-    result["supports_week_day_schedules"] = lock_supports_week_day_schedules(
-        lock_endpoint
-    )
-    result["supports_year_day_schedules"] = lock_supports_year_day_schedules(
-        lock_endpoint
-    )
-    result["supports_holiday_schedules"] = lock_supports_holiday_schedules(
-        lock_endpoint
-    )
-
-    result["max_week_day_schedules_per_user"] = (
-        lock_endpoint.get_attribute_value(
-            None, clusters.DoorLock.Attributes.NumberOfWeekDaySchedulesSupportedPerUser
-        )
-        if result["supports_week_day_schedules"]
-        else 0
-    )
-    result["max_year_day_schedules_per_user"] = (
-        lock_endpoint.get_attribute_value(
-            None, clusters.DoorLock.Attributes.NumberOfYearDaySchedulesSupportedPerUser
-        )
-        if result["supports_year_day_schedules"]
-        else 0
-    )
-    result["max_holiday_schedules"] = (
-        lock_endpoint.get_attribute_value(
-            None, clusters.DoorLock.Attributes.NumberOfHolidaySchedulesSupported
-        )
-        if result["supports_holiday_schedules"]
-        else 0
-    )
-
     return result
 
 
@@ -583,10 +309,8 @@ async def set_lock_user(
     user_status: str = "occupied_enabled",
     user_type: str = "unrestricted_user",
     credential_rule: str = "single",
-    pin_code: str | None = None,
-    pin_code_present: bool = False,
 ) -> dict[str, Any]:
-    """Add or update a user on the lock with optional PIN credential.
+    """Add or update a user on the lock.
 
     Returns dict with user_index on success.
     Raises HomeAssistantError on failure.
@@ -594,40 +318,8 @@ async def set_lock_user(
     lock_endpoint = _get_lock_endpoint_or_raise(node)
     _ensure_usr_support(lock_endpoint)
 
-    feature_map = (
-        lock_endpoint.get_attribute_value(None, clusters.DoorLock.Attributes.FeatureMap)
-        or 0
-    )
-    has_pin_feature = bool(feature_map & DoorLockFeature.kPinCredential)
-
-    # Validate PIN code if a non-null value was provided
-    if pin_code_present and pin_code is not None:
-        if not has_pin_feature:
-            raise PinCredentialNotSupportedError(
-                "Lock does not support PIN credentials"
-            )
-
-        min_pin = (
-            lock_endpoint.get_attribute_value(
-                None, clusters.DoorLock.Attributes.MinPINCodeLength
-            )
-            or 0
-        )
-        max_pin = (
-            lock_endpoint.get_attribute_value(
-                None, clusters.DoorLock.Attributes.MaxPINCodeLength
-            )
-            or 0
-        )
-        pin_error = validate_pin_code(pin_code, min_pin, max_pin)
-        if pin_error is not None:
-            raise InvalidPinCodeError(f"PIN code must be {min_pin}-{max_pin} digits")
-
-    is_new_user = False
-
     if user_index is None:
         # Adding new user - find first available slot
-        is_new_user = True
         max_users = (
             lock_endpoint.get_attribute_value(
                 None, clusters.DoorLock.Attributes.NumberOfTotalUsersSupported
@@ -713,45 +405,6 @@ async def set_lock_user(
             ),
             timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
-
-    # Handle PIN credential operations
-    if pin_code_present:
-        try:
-            await _handle_pin_credential(
-                matter_client,
-                node.node_id,
-                lock_endpoint.endpoint_id,
-                user_index,
-                pin_code,
-                has_pin_feature,
-                lock_endpoint,
-            )
-        except CredentialSlotError:
-            if is_new_user:
-                _LOGGER.debug(
-                    "No credential slots for new user at index %s, rolling back",
-                    user_index,
-                )
-                await matter_client.send_device_command(
-                    node_id=node.node_id,
-                    endpoint_id=lock_endpoint.endpoint_id,
-                    command=clusters.DoorLock.Commands.ClearUser(userIndex=user_index),
-                    timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-                )
-            raise
-        except CredentialSetError:
-            if is_new_user:
-                _LOGGER.debug(
-                    "SetCredential failed for new user at index %s, rolling back",
-                    user_index,
-                )
-                await matter_client.send_device_command(
-                    node_id=node.node_id,
-                    endpoint_id=lock_endpoint.endpoint_id,
-                    command=clusters.DoorLock.Commands.ClearUser(userIndex=user_index),
-                    timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-                )
-            raise
 
     return {ATTR_USER_INDEX: user_index}
 
@@ -845,3 +498,307 @@ async def clear_lock_user(
         ),
         timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
     )
+
+
+# --- Credential validation helpers ---
+
+# Map credential type strings to the feature bit that must be set
+_CREDENTIAL_TYPE_FEATURE_MAP: dict[str, int] = {
+    CRED_TYPE_PIN: DoorLockFeature.kPinCredential,
+    CRED_TYPE_RFID: DoorLockFeature.kRfidCredential,
+    CRED_TYPE_FINGERPRINT: DoorLockFeature.kFingerCredentials,
+    "finger_vein": DoorLockFeature.kFingerCredentials,
+    CRED_TYPE_FACE: DoorLockFeature.kFaceCredentials,
+}
+
+
+def _validate_credential_type_support(
+    lock_endpoint: MatterEndpoint, credential_type: str
+) -> None:
+    """Validate the lock supports the requested credential type.
+
+    Raises CredentialTypeNotSupportedError if not supported.
+    """
+    required_bit = _CREDENTIAL_TYPE_FEATURE_MAP.get(credential_type)
+    if required_bit is None:
+        raise CredentialTypeNotSupportedError(
+            translation_domain="matter",
+            translation_key=ERR_CREDENTIAL_TYPE_NOT_SUPPORTED,
+            translation_placeholders={"credential_type": credential_type},
+        )
+
+    feature_map = _get_feature_map(lock_endpoint) or 0
+    if not (feature_map & required_bit):
+        raise CredentialTypeNotSupportedError(
+            translation_domain="matter",
+            translation_key=ERR_CREDENTIAL_TYPE_NOT_SUPPORTED,
+            translation_placeholders={"credential_type": credential_type},
+        )
+
+
+def _validate_credential_data(
+    lock_endpoint: MatterEndpoint, credential_type: str, credential_data: str
+) -> None:
+    """Validate credential data against lock constraints.
+
+    For PIN: checks digits-only and length against Min/MaxPINCodeLength.
+    For RFID: checks valid hex and byte length against Min/MaxRFIDCodeLength.
+    Raises CredentialDataInvalidError on failure.
+    """
+    if credential_type == CRED_TYPE_PIN:
+        if not credential_data.isdigit():
+            raise CredentialDataInvalidError(
+                translation_domain="matter",
+                translation_key=ERR_INVALID_CREDENTIAL_DATA,
+                translation_placeholders={
+                    "reason": "PIN must contain only digits"
+                },
+            )
+        min_len = (
+            lock_endpoint.get_attribute_value(
+                None, clusters.DoorLock.Attributes.MinPINCodeLength
+            )
+            or 0
+        )
+        max_len = (
+            lock_endpoint.get_attribute_value(
+                None, clusters.DoorLock.Attributes.MaxPINCodeLength
+            )
+            or 255
+        )
+        if not min_len <= len(credential_data) <= max_len:
+            raise CredentialDataInvalidError(
+                translation_domain="matter",
+                translation_key=ERR_INVALID_CREDENTIAL_DATA,
+                translation_placeholders={
+                    "reason": (
+                        f"PIN length must be between {min_len} and {max_len}"
+                    )
+                },
+            )
+
+    elif credential_type == CRED_TYPE_RFID:
+        try:
+            rfid_bytes = bytes.fromhex(credential_data)
+        except ValueError as err:
+            raise CredentialDataInvalidError(
+                translation_domain="matter",
+                translation_key=ERR_INVALID_CREDENTIAL_DATA,
+                translation_placeholders={
+                    "reason": "RFID data must be valid hexadecimal"
+                },
+            ) from err
+        min_len = (
+            lock_endpoint.get_attribute_value(
+                None, clusters.DoorLock.Attributes.MinRFIDCodeLength
+            )
+            or 0
+        )
+        max_len = (
+            lock_endpoint.get_attribute_value(
+                None, clusters.DoorLock.Attributes.MaxRFIDCodeLength
+            )
+            or 255
+        )
+        if not min_len <= len(rfid_bytes) <= max_len:
+            raise CredentialDataInvalidError(
+                translation_domain="matter",
+                translation_key=ERR_INVALID_CREDENTIAL_DATA,
+                translation_placeholders={
+                    "reason": (
+                        f"RFID data length must be between"
+                        f" {min_len} and {max_len} bytes"
+                    )
+                },
+            )
+
+
+def _credential_data_to_bytes(credential_type: str, credential_data: str) -> bytes:
+    """Convert credential data string to bytes for the Matter command."""
+    if credential_type == CRED_TYPE_RFID:
+        return bytes.fromhex(credential_data)
+    # PIN and other types: encode as UTF-8
+    return credential_data.encode()
+
+
+# --- Credential business logic functions ---
+
+
+async def set_lock_credential(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    credential_type: str,
+    credential_data: str,
+    credential_index: int | None = None,
+    user_index: int | None = None,
+    user_status: str | None = None,
+    user_type: str | None = None,
+) -> dict[str, Any]:
+    """Add or modify a credential on the lock.
+
+    Returns dict with credential_index, user_index, and next_credential_index.
+    Raises ServiceValidationError for validation failures.
+    Raises HomeAssistantError for device communication failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
+    _validate_credential_type_support(lock_endpoint, credential_type)
+    _validate_credential_data(lock_endpoint, credential_type, credential_data)
+
+    cred_type_int = CREDENTIAL_TYPE_REVERSE_MAP[credential_type]
+    cred_data_bytes = _credential_data_to_bytes(credential_type, credential_data)
+
+    # Determine operation type and credential index
+    operation_type = clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
+
+    if credential_index is None:
+        # Auto-find first available credential slot
+        max_creds = (
+            lock_endpoint.get_attribute_value(
+                None,
+                clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser,
+            )
+            or 5
+        )
+        for idx in range(1, max_creds + 1):
+            status_response = await matter_client.send_device_command(
+                node_id=node.node_id,
+                endpoint_id=lock_endpoint.endpoint_id,
+                command=clusters.DoorLock.Commands.GetCredentialStatus(
+                    credential=clusters.DoorLock.Structs.CredentialStruct(
+                        credentialType=cred_type_int,
+                        credentialIndex=idx,
+                    ),
+                ),
+            )
+            if not _get_attr(status_response, "credentialExists"):
+                credential_index = idx
+                break
+
+        if credential_index is None:
+            raise NoAvailableUserSlotsError(
+                "No available credential slots on the lock"
+            )
+    else:
+        # Check if slot is occupied to determine Add vs Modify
+        status_response = await matter_client.send_device_command(
+            node_id=node.node_id,
+            endpoint_id=lock_endpoint.endpoint_id,
+            command=clusters.DoorLock.Commands.GetCredentialStatus(
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=cred_type_int,
+                    credentialIndex=credential_index,
+                ),
+            ),
+        )
+        if _get_attr(status_response, "credentialExists"):
+            operation_type = clusters.DoorLock.Enums.DataOperationTypeEnum.kModify
+
+    # Resolve optional user_status and user_type enums
+    resolved_user_status = (
+        USER_STATUS_REVERSE_MAP.get(user_status)
+        if user_status is not None
+        else None
+    )
+    resolved_user_type = (
+        USER_TYPE_REVERSE_MAP.get(user_type) if user_type is not None else None
+    )
+
+    set_cred_response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetCredential(
+            operationType=operation_type,
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=cred_type_int,
+                credentialIndex=credential_index,
+            ),
+            credentialData=cred_data_bytes,
+            userIndex=user_index,
+            userStatus=resolved_user_status,
+            userType=resolved_user_type,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+    status_code = _get_attr(set_cred_response, "status")
+    status_str = SET_CREDENTIAL_STATUS_MAP.get(status_code, f"unknown({status_code})")
+    if status_str != "success":
+        raise SetCredentialFailedError(
+            translation_domain="matter",
+            translation_key=ERR_SET_CREDENTIAL_FAILED,
+            translation_placeholders={"status": status_str},
+        )
+
+    return {
+        ATTR_CREDENTIAL_INDEX: credential_index,
+        ATTR_USER_INDEX: _get_attr(set_cred_response, "userIndex"),
+        "next_credential_index": _get_attr(
+            set_cred_response, "nextCredentialIndex"
+        ),
+    }
+
+
+async def clear_lock_credential(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    credential_type: str,
+    credential_index: int,
+) -> None:
+    """Clear a credential from the lock.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
+
+    cred_type_int = CREDENTIAL_TYPE_REVERSE_MAP[credential_type]
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearCredential(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=cred_type_int,
+                credentialIndex=credential_index,
+            ),
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_lock_credential_status(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    credential_type: str,
+    credential_index: int,
+) -> dict[str, Any]:
+    """Get the status of a credential slot on the lock.
+
+    Returns dict with credential_exists, user_index, next_credential_index.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_usr_support(lock_endpoint)
+
+    cred_type_int = CREDENTIAL_TYPE_REVERSE_MAP[credential_type]
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetCredentialStatus(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=cred_type_int,
+                credentialIndex=credential_index,
+            ),
+        ),
+    )
+
+    return {
+        "credential_exists": bool(_get_attr(response, "credentialExists")),
+        ATTR_USER_INDEX: _get_attr(response, "userIndex"),
+        "next_credential_index": _get_attr(response, "nextCredentialIndex"),
+    }

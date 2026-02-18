@@ -174,11 +174,14 @@
     }
   },
   "services": {
+    "clear_lock_credential": {
+      "service": "mdi:key-remove"
+    },
     "clear_lock_user": {
       "service": "mdi:account-remove"
     },
-    "clear_lock_usercode": {
-      "service": "mdi:lock-remove"
+    "get_lock_credential_status": {
+      "service": "mdi:key-chain"
     },
     "get_lock_info": {
       "service": "mdi:lock-question"
@@ -186,11 +189,11 @@
     "get_lock_users": {
       "service": "mdi:account-multiple"
     },
+    "set_lock_credential": {
+      "service": "mdi:key-plus"
+    },
     "set_lock_user": {
       "service": "mdi:account-lock"
-    },
-    "set_lock_usercode": {
-      "service": "mdi:lock-plus"
     },
     "water_heater_boost": {
       "service": "mdi:water-boiler"

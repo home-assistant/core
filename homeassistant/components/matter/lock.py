@@ -18,14 +18,17 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_CREDENTIAL_DATA,
+    ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
-    ATTR_PIN_CODE,
+    ATTR_CREDENTIAL_TYPE,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
+    ATTR_USER_STATUS,
     ATTR_USER_TYPE,
     DOOR_LOCK_OPERATION_SOURCE,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
@@ -35,24 +38,15 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .helpers_lock import (
     DoorLockFeature,
+    clear_lock_credential,
     clear_lock_user,
-    clear_user_credentials,
-    find_available_credential_slot,
+    get_lock_credential_status,
     get_lock_info,
     get_lock_users,
-    lock_supports_usr_feature,
-    set_credential_for_user,
+    set_lock_credential,
     set_lock_user,
-    validate_pin_code,
 )
 from .models import MatterDiscoverySchema
-
-
-def _get_attr(obj: Any, attr: str) -> Any:
-    """Get attribute from object or dict."""
-    if isinstance(obj, dict):
-        return obj.get(attr)
-    return getattr(obj, attr, None)
 
 
 async def async_setup_entry(
@@ -268,148 +262,6 @@ class MatterLock(MatterEntity, LockEntity):
 
     # --- Entity service methods ---
 
-    async def async_set_lock_usercode(self, code_slot: int, usercode: str) -> None:
-        """Set a user code on the lock (simplified PIN interface).
-
-        Creates user if needed, sets PIN in one call.
-        """
-        endpoint = self._endpoint
-        node = endpoint.node
-
-        if not lock_supports_usr_feature(endpoint):
-            raise ServiceValidationError(
-                "Lock does not support user/credential management"
-            )
-
-        # Validate PIN
-        min_pin = (
-            self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.MinPINCodeLength
-            )
-            or 0
-        )
-        max_pin = (
-            self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.MaxPINCodeLength
-            )
-            or 0
-        )
-        pin_error = validate_pin_code(usercode, int(min_pin), int(max_pin))
-        if pin_error is not None:
-            raise ServiceValidationError(f"PIN code must be {min_pin}-{max_pin} digits")
-
-        # Check if user exists at code_slot
-        get_user_response = await self.send_device_command(
-            command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
-        )
-
-        if _get_attr(get_user_response, "userStatus") is None:
-            # Create user at this slot
-            await self.send_device_command(
-                command=clusters.DoorLock.Commands.SetUser(
-                    operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
-                    userIndex=code_slot,
-                    userName=None,
-                    userUniqueID=None,
-                    userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
-                    userType=0,  # unrestricted_user
-                    credentialRule=0,  # single
-                ),
-                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-            )
-
-        # Set PIN credential
-        pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
-
-        # Check if user already has a PIN credential
-        check_response = await self.send_device_command(
-            command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
-        )
-        existing_cred_index = None
-        creds = _get_attr(check_response, "credentials")
-        if creds:
-            for cred in creds:
-                if _get_attr(cred, "credentialType") == pin_cred_type:
-                    existing_cred_index = _get_attr(cred, "credentialIndex")
-                    break
-
-        if existing_cred_index is not None:
-            await set_credential_for_user(
-                self.matter_client,
-                node.node_id,
-                endpoint.endpoint_id,
-                code_slot,
-                pin_cred_type,
-                usercode.encode(),
-                credential_index=existing_cred_index,
-                operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
-            )
-        else:
-            max_pin_slots = (
-                self.get_matter_attribute_value(
-                    clusters.DoorLock.Attributes.NumberOfPINUsersSupported
-                )
-                or 0
-            )
-            slot = await find_available_credential_slot(
-                self.matter_client,
-                node.node_id,
-                endpoint.endpoint_id,
-                pin_cred_type,
-                int(max_pin_slots),
-            )
-            if slot is None:
-                raise ServiceValidationError(
-                    "No available credential slots on the lock"
-                )
-
-            result = await set_credential_for_user(
-                self.matter_client,
-                node.node_id,
-                endpoint.endpoint_id,
-                code_slot,
-                pin_cred_type,
-                usercode.encode(),
-                credential_index=slot,
-                operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
-            )
-            if result["status"] != "success":
-                raise HomeAssistantError(
-                    f"Failed to set credential: {result['status']}"
-                )
-
-    async def async_clear_lock_usercode(self, code_slot: int) -> None:
-        """Clear user and all credentials at a slot."""
-        endpoint = self._endpoint
-        node = endpoint.node
-
-        if not lock_supports_usr_feature(endpoint):
-            raise ServiceValidationError(
-                "Lock does not support user/credential management"
-            )
-
-        # Check if user exists
-        get_user_response = await self.send_device_command(
-            command=clusters.DoorLock.Commands.GetUser(userIndex=code_slot),
-        )
-
-        if _get_attr(get_user_response, "userStatus") is None:
-            raise ServiceValidationError(f"User slot {code_slot} is empty")
-
-        # Clear all credentials for this user
-        await clear_user_credentials(
-            self.matter_client,
-            node.node_id,
-            endpoint.endpoint_id,
-            code_slot,
-        )
-
-        # Clear the user
-        await self.send_device_command(
-            command=clusters.DoorLock.Commands.ClearUser(userIndex=code_slot),
-            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
-
     async def async_set_lock_user(self, **kwargs: Any) -> None:
         """Set a lock user (full CRUD)."""
         try:
@@ -420,8 +272,6 @@ class MatterLock(MatterEntity, LockEntity):
                 user_name=kwargs.get(ATTR_USER_NAME),
                 user_type=kwargs.get(ATTR_USER_TYPE, "unrestricted_user"),
                 credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE, "single"),
-                pin_code=kwargs.get(ATTR_PIN_CODE),
-                pin_code_present=ATTR_PIN_CODE in kwargs,
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -463,6 +313,54 @@ class MatterLock(MatterEntity, LockEntity):
         except MatterError as err:
             raise HomeAssistantError(
                 f"Failed to get lock users for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_lock_credential(self, **kwargs: Any) -> dict[str, Any]:
+        """Set a credential on the lock."""
+        try:
+            return await set_lock_credential(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_data=kwargs[ATTR_CREDENTIAL_DATA],
+                credential_index=kwargs.get(ATTR_CREDENTIAL_INDEX),
+                user_index=kwargs.get(ATTR_USER_INDEX),
+                user_status=kwargs.get(ATTR_USER_STATUS),
+                user_type=kwargs.get(ATTR_USER_TYPE),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set lock credential on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_lock_credential(self, **kwargs: Any) -> None:
+        """Clear a credential from the lock."""
+        try:
+            await clear_lock_credential(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear lock credential on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_lock_credential_status(
+        self, **kwargs: Any
+    ) -> dict[str, Any]:
+        """Get the status of a credential slot on the lock."""
+        try:
+            return await get_lock_credential_status(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get credential status for {self.entity_id}: {err}"
             ) from err
 
 

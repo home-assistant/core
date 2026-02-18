@@ -607,6 +607,17 @@
       }
     }
   },
+  "exceptions": {
+    "credential_type_not_supported": {
+      "message": "The lock does not support credential type `{credential_type}`."
+    },
+    "invalid_credential_data": {
+      "message": "Invalid credential data: {reason}."
+    },
+    "set_credential_failed": {
+      "message": "Failed to set credential: lock returned status `{status}`."
+    }
+  },
   "issues": {
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
@@ -628,16 +639,6 @@
       },
       "name": "Clear lock user"
     },
-    "clear_lock_usercode": {
-      "description": "Clears the user and all credentials at the specified code slot.",
-      "fields": {
-        "code_slot": {
-          "description": "The user slot index (1-based) to clear.",
-          "name": "Code slot"
-        }
-      },
-      "name": "Clear lock user code"
-    },
     "get_lock_info": {
       "description": "Returns lock capabilities including supported credential types, user capacity, and PIN length constraints.",
       "name": "Get lock info"
@@ -657,15 +658,11 @@
       "name": "Open commissioning window"
     },
     "set_lock_user": {
-      "description": "Creates or updates a lock user with optional PIN credential.",
+      "description": "Creates or updates a lock user.",
       "fields": {
         "credential_rule": {
           "description": "The credential rule for the user.",
           "name": "Credential rule"
-        },
-        "pin_code": {
-          "description": "Optional PIN code to set for the user (digits only).",
-          "name": "PIN code"
         },
         "user_index": {
           "description": "The user slot index (1-based). Leave empty to auto-find an available slot.",
@@ -682,19 +679,63 @@
       },
       "name": "Set lock user"
     },
-    "set_lock_usercode": {
-      "description": "Sets a user code (PIN) on the lock at the specified code slot. Creates the user if the slot is empty.",
+    "set_lock_credential": {
+      "description": "Adds or updates a credential on the lock.",
       "fields": {
-        "code_slot": {
-          "description": "The user slot index (1-based) to set the code on.",
-          "name": "Code slot"
+        "credential_type": {
+          "description": "The type of credential (e.g., pin, rfid, fingerprint).",
+          "name": "Credential type"
         },
-        "usercode": {
-          "description": "The PIN code to set (digits only).",
-          "name": "User code"
+        "credential_data": {
+          "description": "The credential data. For PIN: digits only. For RFID: hexadecimal string.",
+          "name": "Credential data"
+        },
+        "credential_index": {
+          "description": "The credential slot index. Leave empty to auto-find an available slot.",
+          "name": "Credential index"
+        },
+        "user_index": {
+          "description": "The user index to associate the credential with. Leave empty for automatic assignment.",
+          "name": "User index"
+        },
+        "user_status": {
+          "description": "The user status to set when creating a new user for this credential.",
+          "name": "User status"
+        },
+        "user_type": {
+          "description": "The user type to set when creating a new user for this credential.",
+          "name": "User type"
         }
       },
-      "name": "Set lock user code"
+      "name": "Set lock credential"
+    },
+    "clear_lock_credential": {
+      "description": "Removes a credential from the lock.",
+      "fields": {
+        "credential_type": {
+          "description": "The type of credential to clear.",
+          "name": "Credential type"
+        },
+        "credential_index": {
+          "description": "The credential slot index to clear.",
+          "name": "Credential index"
+        }
+      },
+      "name": "Clear lock credential"
+    },
+    "get_lock_credential_status": {
+      "description": "Returns the status of a credential slot on the lock.",
+      "fields": {
+        "credential_type": {
+          "description": "The type of credential to query.",
+          "name": "Credential type"
+        },
+        "credential_index": {
+          "description": "The credential slot index to query.",
+          "name": "Credential index"
+        }
+      },
+      "name": "Get lock credential status"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

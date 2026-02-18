@@ -18,11 +18,7 @@ FEATUREMAP_ATTRIBUTE_ID = 65532
 
 # --- Lock domain constants ---
 
-# Event names
-EVENT_LOCK_OPERATION = f"{DOMAIN}_lock_operation"
-EVENT_LOCK_DISPOSABLE_USER_DELETED = f"{DOMAIN}_lock_disposable_user_deleted"
-
-# Shared field keys (used across lock.py and api_lock.py)
+# Shared field keys
 ATTR_USER_INDEX = "user_index"
 ATTR_USER_NAME = "user_name"
 ATTR_USER_UNIQUE_ID = "user_unique_id"
@@ -41,38 +37,24 @@ CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to cl
 # Timed request timeout (used by all lock commands that modify state)
 LOCK_TIMED_REQUEST_TIMEOUT_MS = 1000
 
-# Credential field keys
-ATTR_PIN_CODE = "pin_code"
-
-# Error codes
-ERR_LOCK_NOT_FOUND = "lock_not_found"
-ERR_USR_NOT_SUPPORTED = "usr_not_supported"
-ERR_USER_ALREADY_EXISTS = "user_already_exists"
-ERR_USER_NOT_FOUND = "user_not_found"
-ERR_NO_AVAILABLE_SLOTS = "no_available_slots"
-ERR_INVALID_PIN_CODE = "invalid_pin_code"
-ERR_CREDENTIAL_NOT_SUPPORTED = "credential_not_supported"
-ERR_NO_AVAILABLE_CREDENTIAL_SLOTS = "no_available_credential_slots"
-
 # Service names
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
-SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 SERVICE_SET_LOCK_USER = "set_lock_user"
 SERVICE_CLEAR_LOCK_USER = "clear_lock_user"
 SERVICE_GET_LOCK_INFO = "get_lock_info"
 SERVICE_GET_LOCK_USERS = "get_lock_users"
+SERVICE_SET_LOCK_CREDENTIAL = "set_lock_credential"
+SERVICE_CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
+SERVICE_GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
 
-# Service field keys
-ATTR_CODE_SLOT = "code_slot"
-ATTR_USERCODE = "usercode"
+# Credential field keys
+ATTR_CREDENTIAL_TYPE = "credential_type"
+ATTR_CREDENTIAL_INDEX = "credential_index"
+ATTR_CREDENTIAL_DATA = "credential_data"
 
-# SetCredential status mapping (Matter DlStatus)
-SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
-    0: "success",
-    1: "failure",
-    2: "duplicate",
-    3: "occupied",
-}
+# Error code constants
+ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
+ERR_CREDENTIAL_TYPE_NOT_SUPPORTED = "credential_type_not_supported"
+ERR_SET_CREDENTIAL_FAILED = "set_credential_failed"
 
 # Credential type strings
 CRED_TYPE_PIN = "pin"
@@ -93,15 +75,6 @@ DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
     8: "RFID",  # [RID]
     9: "Biometric",  # [USR]
     10: "Aliro",  # [Aliro]
-}
-
-# Door lock operation type mapping (Matter DoorLock LockOperationTypeEnum)
-DOOR_LOCK_OPERATION_TYPE: dict[int, str] = {
-    0: "lock",
-    1: "unlock",
-    2: "non_access_user_event",
-    3: "forced_user_event",
-    4: "unlatch",
 }
 
 # User status mapping (Matter DoorLock UserStatusEnum)
@@ -148,4 +121,26 @@ CREDENTIAL_RULE_MAP: dict[int, str] = {
 }
 CREDENTIAL_RULE_REVERSE_MAP: dict[str, int] = {
     v: k for k, v in CREDENTIAL_RULE_MAP.items()
+}
+
+# Reverse mapping for credential types (str -> int)
+CREDENTIAL_TYPE_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in CREDENTIAL_TYPE_MAP.items()
+}
+
+# Credential types allowed in set/clear services (excludes programming_pin, aliro_*)
+SERVICE_CREDENTIAL_TYPES = [
+    CRED_TYPE_PIN,
+    CRED_TYPE_RFID,
+    CRED_TYPE_FINGERPRINT,
+    "finger_vein",
+    CRED_TYPE_FACE,
+]
+
+# SetCredential response status mapping (Matter DlStatus)
+SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
+    0: "success",
+    1: "failure",
+    2: "duplicate",
+    3: "occupied",
 }

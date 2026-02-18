@@ -10,22 +10,27 @@ from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
-    ATTR_CODE_SLOT,
+    ATTR_CREDENTIAL_DATA,
+    ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
-    ATTR_PIN_CODE,
+    ATTR_CREDENTIAL_TYPE,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
+    ATTR_USER_STATUS,
     ATTR_USER_TYPE,
-    ATTR_USERCODE,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
+    CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    SERVICE_CLEAR_LOCK_CREDENTIAL,
     SERVICE_CLEAR_LOCK_USER,
-    SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_GET_LOCK_CREDENTIAL_STATUS,
     SERVICE_GET_LOCK_INFO,
     SERVICE_GET_LOCK_USERS,
+    SERVICE_SET_LOCK_CREDENTIAL,
     SERVICE_SET_LOCK_USER,
-    SERVICE_SET_LOCK_USERCODE,
+    SERVICE_CREDENTIAL_TYPES,
+    USER_STATUS_REVERSE_MAP,
     USER_TYPE_REVERSE_MAP,
 )
 
@@ -56,30 +61,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         func="async_set_boost",
     )
 
-    # Lock services - Simple PIN operations
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_SET_LOCK_USERCODE,
-        entity_domain=LOCK_DOMAIN,
-        schema={
-            vol.Required(ATTR_CODE_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Required(ATTR_USERCODE): cv.string,
-        },
-        func="async_set_lock_usercode",
-    )
-
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_CLEAR_LOCK_USERCODE,
-        entity_domain=LOCK_DOMAIN,
-        schema={
-            vol.Required(ATTR_CODE_SLOT): vol.All(vol.Coerce(int), vol.Range(min=1)),
-        },
-        func="async_clear_lock_usercode",
-    )
-
     # Lock services - Full user CRUD
     service.async_register_platform_entity_service(
         hass,
@@ -97,7 +78,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_CREDENTIAL_RULE, default="single"): vol.In(
                 CREDENTIAL_RULE_REVERSE_MAP.keys()
             ),
-            vol.Optional(ATTR_PIN_CODE): vol.Any(str, None),
         },
         func="async_set_lock_user",
     )
@@ -134,5 +114,62 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_get_lock_users",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    # Lock services - Credential management
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_LOCK_CREDENTIAL,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(SERVICE_CREDENTIAL_TYPES),
+            vol.Required(ATTR_CREDENTIAL_DATA): str,
+            vol.Optional(ATTR_CREDENTIAL_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+            vol.Optional(ATTR_USER_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1)
+            ),
+            vol.Optional(ATTR_USER_STATUS): vol.In(
+                USER_STATUS_REVERSE_MAP.keys()
+            ),
+            vol.Optional(ATTR_USER_TYPE): vol.In(
+                USER_TYPE_REVERSE_MAP.keys()
+            ),
+        },
+        func="async_set_lock_credential",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_CLEAR_LOCK_CREDENTIAL,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(SERVICE_CREDENTIAL_TYPES),
+            vol.Required(ATTR_CREDENTIAL_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+        },
+        func="async_clear_lock_credential",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_LOCK_CREDENTIAL_STATUS,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_CREDENTIAL_TYPE): vol.In(
+                CREDENTIAL_TYPE_REVERSE_MAP.keys()
+            ),
+            vol.Required(ATTR_CREDENTIAL_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+        },
+        func="async_get_lock_credential_status",
         supports_response=SupportsResponse.ONLY,
     )

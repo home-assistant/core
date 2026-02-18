@@ -280,9 +280,9 @@ class MatterEntity(Entity):
         self,
         command: ClusterCommand,
         **kwargs: Any,
-    ) -> Any:
+    ) -> None:
         """Send device command on the primary attribute's endpoint."""
-        return await self.matter_client.send_device_command(
+        await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=command,
