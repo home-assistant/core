@@ -10,6 +10,7 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.vacuum import (
+    Segment,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumActivity,
@@ -144,6 +145,62 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned.
+
+        Returns a list of segments containing their ids and names.
+        """
+        supported_areas: list[clusters.ServiceArea.Structs.AreaStruct] = (
+            self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SupportedAreas
+            )
+        )
+
+        segments: list[Segment] = []
+        for area in supported_areas:
+            # Get the area name from locationInfo if available
+            area_name = None
+            if area.areaInfo and area.areaInfo.locationInfo:
+                area_name = area.areaInfo.locationInfo.locationName
+
+            # Only add areas that have a valid name
+            if area_name:
+                segments.append(
+                    Segment(
+                        id=str(area.areaID),
+                        name=area_name,
+                        group=None,
+                    )
+                )
+
+        return segments
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified segments.
+
+        Args:
+            segment_ids: List of segment IDs to clean.
+            **kwargs: Additional arguments (unused).
+
+        """
+        # Convert string IDs to integers
+        area_ids = [int(segment_id) for segment_id in segment_ids]
+
+        # Send the SelectAreas command to the vacuum
+        await self.send_device_command(
+            clusters.ServiceArea.Commands.SelectAreas(newAreas=area_ids)
+        )
+        # Start cleaning using ChangeToMode with CLEANING tag
+        mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to start the vacuum cleaner."
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
+
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
@@ -212,6 +269,12 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             in accepted_operational_commands
         ):
             supported_features |= VacuumEntityFeature.RETURN_HOME
+
+        # Check if ServiceArea cluster is available for clean area support
+        if self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        ):
+            supported_features |= VacuumEntityFeature.CLEAN_AREA
 
         self._attr_supported_features = supported_features
 
