@@ -123,7 +123,7 @@ async def async_setup_platform(
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    state_class: str | None = config.get(CONF_STATE_CLASS)
+    state_class: SensorStateClass | None = config.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
@@ -155,7 +155,7 @@ async def async_setup_entry(
     sensor_type: str = entry.options[CONF_TYPE]
     coordinator = entry.runtime_data
     entity_id: str = entry.options[CONF_ENTITY_ID]
-    state_class: str | None = entry.options.get(CONF_STATE_CLASS)
+    state_class: SensorStateClass | None = entry.options.get(CONF_STATE_CLASS)
     async_add_entities(
         [
             HistoryStatsSensor(
@@ -215,7 +215,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         name: str,
         unique_id: str | None,
         source_entity_id: str,
-        state_class: str | None,
+        state_class: SensorStateClass | None,
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
