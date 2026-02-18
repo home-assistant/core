@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -137,7 +138,7 @@ class AirSensor(SensorEntity):
         return self.ICON
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated

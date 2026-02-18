@@ -43,13 +43,13 @@ ERROR_RATE_LIMIT = (
 )
 
 
-async def _get_pr_head_sha(client: GitHubAPI, pr_number: int) -> str:
-    """Get the head SHA for the PR."""
+async def _get_pr_shas(client: GitHubAPI, pr_number: int) -> tuple[str, str]:
+    """Get the head and base SHAs for a PR."""
     try:
         response = await client.generic(
             endpoint=f"/repos/home-assistant/frontend/pulls/{pr_number}",
         )
-        return str(response.data["head"]["sha"])
+        return str(response.data["head"]["sha"]), str(response.data["base"]["sha"])
     except GitHubAuthenticationException as err:
         raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
     except (GitHubRatelimitException, GitHubPermissionException) as err:
@@ -137,9 +137,9 @@ async def _download_artifact_data(
 def _extract_artifact(
     artifact_data: bytes,
     cache_dir: pathlib.Path,
-    head_sha: str,
+    cache_key: str,
 ) -> None:
-    """Extract artifact and save SHA (runs in executor)."""
+    """Extract artifact and save cache key (runs in executor)."""
     frontend_dir = cache_dir / "hass_frontend"
 
     if cache_dir.exists():
@@ -163,9 +163,8 @@ def _extract_artifact(
                 )
         zip_file.extractall(str(frontend_dir))
 
-    # Save the commit SHA for cache validation
     sha_file = cache_dir / ".sha"
-    sha_file.write_text(head_sha)
+    sha_file.write_text(cache_key)
 
 
 async def download_pr_artifact(
@@ -186,27 +185,29 @@ async def download_pr_artifact(
 
     client = GitHubAPI(token=github_token, session=session)
 
-    head_sha = await _get_pr_head_sha(client, pr_number)
+    head_sha, base_sha = await _get_pr_shas(client, pr_number)
+    cache_key = f"{head_sha}:{base_sha}"
 
     frontend_dir = tmp_dir / "hass_frontend"
     sha_file = tmp_dir / ".sha"
 
     if frontend_dir.exists() and sha_file.exists():
         try:
-            cached_sha = await hass.async_add_executor_job(sha_file.read_text)
-            if cached_sha.strip() == head_sha:
+            cached_key = await hass.async_add_executor_job(sha_file.read_text)
+            cached_key = cached_key.strip()
+            if cached_key == cache_key:
                 _LOGGER.info(
                     "Using cached PR #%s (commit %s) from %s",
                     pr_number,
-                    head_sha[:8],
+                    cache_key,
                     tmp_dir,
                 )
                 return tmp_dir
             _LOGGER.info(
-                "PR #%s has new commits (cached: %s, current: %s), re-downloading",
+                "PR #%s cache outdated (cached: %s, current: %s), re-downloading",
                 pr_number,
-                cached_sha[:8],
-                head_sha[:8],
+                cached_key,
+                cache_key,
             )
         except OSError as err:
             _LOGGER.debug("Failed to read cache SHA file: %s", err)
@@ -218,7 +219,7 @@ async def download_pr_artifact(
 
     try:
         await hass.async_add_executor_job(
-            _extract_artifact, artifact_data, tmp_dir, head_sha
+            _extract_artifact, artifact_data, tmp_dir, cache_key
         )
     except zipfile.BadZipFile as err:
         raise HomeAssistantError(

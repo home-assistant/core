@@ -275,6 +275,7 @@ homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
+homeassistant.components.hypontech.*
 homeassistant.components.ibeacon.*
 homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
@@ -366,6 +367,7 @@ homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
+homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
@@ -496,6 +498,7 @@ homeassistant.components.smtp.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
+homeassistant.components.spaceapi.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
