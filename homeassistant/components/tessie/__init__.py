@@ -23,8 +23,10 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
@@ -52,9 +54,17 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
 
 type TessieConfigEntry = ConfigEntry[TessieData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Tessie integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
@@ -226,7 +236,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         )
 
     entry.runtime_data = TessieData(vehicles, energysites)
-    async_setup_services(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
