@@ -1,7 +1,8 @@
 """Tests for the ness_alarm component."""
 
 from types import MappingProxyType
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
 import pytest
@@ -22,7 +23,7 @@ from homeassistant.components.ness_alarm.const import (
     SERVICE_PANIC,
     SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -37,6 +38,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
@@ -65,7 +67,8 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
 
     # Client keepalive and update should be called after startup
     assert mock_nessclient.keepalive.call_count == 1
-    assert mock_nessclient.update.call_count == 1
+    # update is called once during setup (connection test) and once after startup
+    assert mock_nessclient.update.call_count == 2
 
 
 async def test_config_entry_unload(hass: HomeAssistant, mock_nessclient) -> None:
@@ -86,6 +89,26 @@ async def test_config_entry_unload(hass: HomeAssistant, mock_nessclient) -> None
     await hass.async_block_till_done()
 
     # Client should be closed
+    mock_nessclient.close.assert_called_once()
+
+
+async def test_config_entry_not_ready(hass: HomeAssistant, mock_nessclient) -> None:
+    """Test config entry raises ConfigEntryNotReady on connection failure."""
+    mock_nessclient.update.side_effect = OSError("Connection refused")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     mock_nessclient.close.assert_called_once()
 
 
@@ -230,6 +253,29 @@ async def test_aux_service_with_state_false(
         service_data={ATTR_OUTPUT_ID: 2, ATTR_STATE: False},
     )
     mock_nessclient.aux.assert_awaited_once_with(2, False)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (SERVICE_PANIC, {ATTR_CODE: "1234"}),
+        (SERVICE_AUX, {ATTR_OUTPUT_ID: 1}),
+    ],
+)
+async def test_service_no_config_entry(
+    hass: HomeAssistant, service: str, service_data: dict[str, Any]
+) -> None:
+    """Test services raise when no config entry is loaded."""
+    # Register services without loading a config entry
+    await async_setup(hass, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            blocking=True,
+            service_data=service_data,
+        )
 
 
 async def test_alarm_panel_disarm(hass: HomeAssistant, mock_nessclient) -> None:
@@ -581,11 +627,20 @@ async def test_alarm_panel_home_mode_enabled_by_default(
 
 async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
     """Test that YAML configuration triggers import flow."""
-    with patch(
-        "homeassistant.components.ness_alarm.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.ness_alarm.config_flow.Client",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.ness_alarm.config_flow.POST_CONNECTION_DELAY",
+            0,
+        ),
+        patch(
+            "homeassistant.components.ness_alarm.async_setup_entry",
+            return_value=True,
+        ),
     ):
-        # Call async_setup with YAML config
         config = {
             DOMAIN: {
                 CONF_HOST: "192.168.1.100",
@@ -612,54 +667,3 @@ async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
         )
         assert issue is not None
         assert issue.severity == "warning"
-
-
-class MockClient:
-    """Mock nessclient.Client stub."""
-
-    async def panic(self, code):
-        """Handle panic."""
-
-    async def disarm(self, code):
-        """Handle disarm."""
-
-    async def arm_away(self, code):
-        """Handle arm_away."""
-
-    async def arm_home(self, code):
-        """Handle arm_home."""
-
-    async def aux(self, output_id, state):
-        """Handle auxiliary control."""
-
-    async def keepalive(self):
-        """Handle keepalive."""
-
-    async def update(self):
-        """Handle update."""
-
-    def on_zone_change(self):
-        """Handle on_zone_change."""
-
-    def on_state_change(self):
-        """Handle on_state_change."""
-
-    async def close(self):
-        """Handle close."""
-
-
-@pytest.fixture
-def mock_nessclient():
-    """Mock the nessclient Client constructor.
-
-    Replaces nessclient.Client with a Mock which always returns the same
-    MagicMock() instance.
-    """
-    _mock_instance = MagicMock(MockClient())
-    _mock_factory = MagicMock()
-    _mock_factory.return_value = _mock_instance
-
-    with patch(
-        "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
-    ):
-        yield _mock_instance

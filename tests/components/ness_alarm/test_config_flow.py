@@ -3,6 +3,8 @@
 from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
     CONF_INFER_ARMING_STATE,
@@ -23,93 +25,26 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form_user(hass: HomeAssistant) -> None:
-    """Test we get the user form."""
+@pytest.fixture(autouse=True)
+def mock_post_connection_delay():
+    """Patch the post-connection delay to zero for tests."""
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.POST_CONNECTION_DELAY", 0
+    ):
+        yield
+
+
+async def test_user_flow(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test successful user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_client = AsyncMock()
-    with (
-        patch(
-            "homeassistant.components.ness_alarm.config_flow.Client",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.ness_alarm.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Ness Alarm 192.168.1.100:1992"
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_PORT: 1992,
-        CONF_INFER_ARMING_STATE: False,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-    mock_client.close.assert_awaited_once()
-
-
-async def test_form_user_with_infer_arming_state(hass: HomeAssistant) -> None:
-    """Test user form with infer_arming_state enabled."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    mock_client = AsyncMock()
-    with (
-        patch(
-            "homeassistant.components.ness_alarm.config_flow.Client",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.ness_alarm.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-                CONF_INFER_ARMING_STATE: True,
-            },
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"][CONF_INFER_ARMING_STATE] is True
-
-
-async def test_form_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort if already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 1992,
-        },
-        unique_id="192.168.1.100:1992",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: "192.168.1.100",
@@ -118,86 +53,131 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Ness Alarm 192.168.1.100:1992"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 1992,
+        CONF_INFER_ARMING_STATE: False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+    mock_client.close.assert_awaited_once()
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle connection error."""
+async def test_user_flow_with_infer_arming_state(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test user flow with infer_arming_state enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_client = AsyncMock()
-    mock_client.update.side_effect = OSError("Connection refused")
-    with patch(
-        "homeassistant.components.ness_alarm.config_flow.Client",
-        return_value=mock_client,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+            CONF_INFER_ARMING_STATE: True,
+        },
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-    mock_client.close.assert_awaited_once()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_INFER_ARMING_STATE] is True
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we abort if already configured."""
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_client = AsyncMock()
-    mock_client.update.side_effect = RuntimeError("Unexpected")
-    with patch(
-        "homeassistant.components.ness_alarm.config_flow.Client",
-        return_value=mock_client,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+            CONF_INFER_ARMING_STATE: False,
+        },
+    )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (OSError("Connection refused"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_user_flow_connection_error_recovery(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test connection error handling and recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    # First attempt fails
+    mock_client.update.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+            CONF_INFER_ARMING_STATE: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
     mock_client.close.assert_awaited_once()
 
+    # Second attempt succeeds
+    mock_client.update.side_effect = None
+    mock_client.close.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+            CONF_INFER_ARMING_STATE: False,
+        },
+    )
 
-async def test_import_yaml_config(hass: HomeAssistant) -> None:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_import_yaml_config(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test importing YAML configuration."""
-    with patch(
-        "homeassistant.components.ness_alarm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: "192.168.1.72",
-                CONF_PORT: 4999,
-                CONF_INFER_ARMING_STATE: False,
-                CONF_ZONES: [
-                    {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
-                    {
-                        CONF_ZONE_NAME: "Front Door",
-                        CONF_ZONE_ID: 5,
-                        CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                    },
-                ],
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "192.168.1.72",
+            CONF_PORT: 4999,
+            CONF_INFER_ARMING_STATE: False,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
+                {
+                    CONF_ZONE_NAME: "Front Door",
+                    CONF_ZONE_ID: 5,
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                },
+            ],
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ness Alarm 192.168.1.72:4999"
@@ -219,19 +199,44 @@ async def test_import_yaml_config(hass: HomeAssistant) -> None:
     assert result["subentries"][1]["data"][CONF_ZONE_NAME] == "Front Door"
 
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_client.close.assert_awaited_once()
 
 
-async def test_import_already_configured(hass: HomeAssistant) -> None:
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we abort import if already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
         data={
-            CONF_HOST: "192.168.1.72",
+            CONF_HOST: "192.168.1.100",
             CONF_PORT: 4999,
+            CONF_ZONES: [],
         },
-        unique_id="192.168.1.72:4999",
     )
-    entry.add_to_hass(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (OSError("Connection refused"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_import_connection_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    side_effect: Exception,
+    expected_reason: str,
+) -> None:
+    """Test import aborts on connection errors."""
+    mock_client.update.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -244,23 +249,21 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == expected_reason
+    mock_client.close.assert_awaited_once()
 
 
 async def test_zone_subentry_flow(hass: HomeAssistant) -> None:
     """Test adding a zone through subentry flow."""
-    # Create main config entry
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
         },
-        unique_id="192.168.1.100:1992",
     )
     entry.add_to_hass(hass)
 
-    # Start zone subentry flow
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_ZONE),
         context={"source": SOURCE_USER},
@@ -269,8 +272,7 @@ async def test_zone_subentry_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Configure zone
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_ZONE_NUMBER: 1,
@@ -278,26 +280,23 @@ async def test_zone_subentry_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Zone 1"
-    assert result2["data"][CONF_ZONE_NUMBER] == 1
-    assert result2["data"][CONF_TYPE] == BinarySensorDeviceClass.DOOR
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Zone 1"
+    assert result["data"][CONF_ZONE_NUMBER] == 1
+    assert result["data"][CONF_TYPE] == BinarySensorDeviceClass.DOOR
 
 
 async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
     """Test adding a zone that already exists."""
-    # Create main config entry with existing zone
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
         },
-        unique_id="192.168.1.100:1992",
     )
     entry.add_to_hass(hass)
 
-    # Add existing zone subentry
     entry.subentries = {
         "zone_1_id": ConfigSubentry(
             subentry_type=SUBENTRY_TYPE_ZONE,
@@ -313,13 +312,12 @@ async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
         )
     }
 
-    # Try to add the same zone again
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_ZONE),
         context={"source": SOURCE_USER},
     )
 
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_ZONE_NUMBER: 1,
@@ -327,24 +325,21 @@ async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
 
 
 async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:
     """Test reconfiguring an existing zone."""
-    # Create main config entry with a zone
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
         },
-        unique_id="192.168.1.100:1992",
     )
     entry.add_to_hass(hass)
 
-    # Add zone subentry
     zone_subentry = ConfigSubentry(
         subentry_type=SUBENTRY_TYPE_ZONE,
         subentry_id="zone_1_id",
@@ -359,23 +354,21 @@ async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:
     )
     entry.subentries = {"zone_1_id": zone_subentry}
 
-    # Start reconfigure flow
     result = await entry.start_subentry_reconfigure_flow(hass, "zone_1_id")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["description_placeholders"][CONF_ZONE_NUMBER] == "1"
 
-    # Reconfigure zone type
-    result2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_TYPE: BinarySensorDeviceClass.DOOR,
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -386,7 +379,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 1992,
         },
-        unique_id="192.168.1.100:1992",
     )
     entry.add_to_hass(hass)
 
@@ -395,15 +387,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # Disable home mode
-    result2 = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
             CONF_SHOW_HOME_MODE: False,
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_SHOW_HOME_MODE] is False
 
 
@@ -416,17 +407,16 @@ async def test_options_flow_enable_home_mode(hass: HomeAssistant) -> None:
             CONF_PORT: 1992,
         },
         options={CONF_SHOW_HOME_MODE: False},
-        unique_id="192.168.1.100:1992",
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    result2 = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
             CONF_SHOW_HOME_MODE: True,
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_SHOW_HOME_MODE] is True

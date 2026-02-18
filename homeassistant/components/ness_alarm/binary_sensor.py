@@ -72,7 +72,7 @@ class NessZoneBinarySensor(BinarySensorEntity):
         self._attr_device_class = zone_type
         self._attr_is_on = False
         self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
-        self._attr_name = zone_name or f"Zone {zone_id}"
+        self._attr_name = f"Zone {zone_id}"
         self._attr_device_info = DeviceInfo(
             name=zone_name or f"Zone {zone_id}",
             identifiers={(DOMAIN, self._attr_unique_id)},

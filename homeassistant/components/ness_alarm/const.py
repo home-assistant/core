@@ -28,6 +28,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_INFER_ARMING_STATE = False
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 
+# Connection
+CONNECTION_TIMEOUT = 5
+POST_CONNECTION_DELAY = 1
+
 # Signals
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"

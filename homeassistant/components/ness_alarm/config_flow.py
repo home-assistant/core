@@ -32,10 +32,12 @@ from .const import (
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
+    CONNECTION_TIMEOUT,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_PORT,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
+    POST_CONNECTION_DELAY,
     SUBENTRY_TYPE_ZONE,
 )
 
@@ -67,6 +69,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ness Alarm."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     @classmethod
     @callback
@@ -86,6 +89,17 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return NessAlarmOptionsFlowHandler()
 
+    async def _test_connection(self, host: str, port: int) -> None:
+        """Test connection to the alarm panel.
+
+        Raises OSError on connection failure.
+        """
+        client = Client(host=host, port=port)
+        try:
+            await asyncio.wait_for(client.update(), timeout=CONNECTION_TIMEOUT)
+        finally:
+            await client.close()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,20 +114,17 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: host})
 
             # Test connection to the alarm panel
-            client = Client(host=host, port=port)
             try:
-                await asyncio.wait_for(client.update(), timeout=5)
+                await self._test_connection(host, port)
             except OSError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error connecting to %s:%s", host, port)
                 errors["base"] = "unknown"
-            finally:
-                await client.close()
 
             if not errors:
                 # Brief delay to ensure the panel releases the test connection
-                await asyncio.sleep(1)
+                await asyncio.sleep(POST_CONNECTION_DELAY)
                 return self.async_create_entry(
                     title=f"Ness Alarm {host}:{port}",
                     data=user_input,
@@ -133,7 +144,20 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if already configured
         self._async_abort_entries_match({CONF_HOST: host})
 
-        # Create main config entry
+        # Test connection to the alarm panel
+        try:
+            await self._test_connection(host, port)
+        except OSError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error connecting to %s:%s during import", host, port
+            )
+            return self.async_abort(reason="unknown")
+
+        # Brief delay to ensure the panel releases the test connection
+        await asyncio.sleep(POST_CONNECTION_DELAY)
+
         _LOGGER.info("Importing Ness Alarm YAML configuration for %s:%s", host, port)
 
         # Prepare subentries for zones
