@@ -229,7 +229,7 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
                 if self._device.speed.group_address
                 else str(self._device.switch.group_address)
             ),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         # FanSpeedMode.STEP if max_step is set

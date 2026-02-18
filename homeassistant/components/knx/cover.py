@@ -215,7 +215,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
                 f"{self._device.updown.group_address}_"
                 f"{self._device.position_target.group_address}"
             ),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self.init_base()

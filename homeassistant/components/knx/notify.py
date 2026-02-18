@@ -50,7 +50,7 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 

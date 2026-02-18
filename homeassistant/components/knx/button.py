@@ -45,7 +45,7 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 

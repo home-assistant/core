@@ -120,7 +120,7 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.sensor_value.group_address),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         dpt_string = self._device.sensor_value.dpt_class.dpt_number_str()

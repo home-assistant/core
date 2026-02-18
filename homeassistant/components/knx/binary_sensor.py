@@ -128,7 +128,7 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.remote_value.group_address_state),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 

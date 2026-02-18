@@ -89,7 +89,7 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device._temperature.group_address_state),  # noqa: SLF001
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 

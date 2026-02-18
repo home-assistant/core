@@ -123,7 +123,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         xknx,
-        name=f"{config.get(CONF_NAME, '')} Mode",
+        name=f"{config[CONF_NAME]} Mode",
         group_address_operation_mode=config.get(
             ClimateSchema.CONF_OPERATION_MODE_ADDRESS
         ),
@@ -655,7 +655,7 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
                 f"{self._device.target_temperature.group_address}_"
                 f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
             ),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]

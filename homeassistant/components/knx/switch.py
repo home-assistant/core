@@ -118,7 +118,7 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.switch.group_address),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
