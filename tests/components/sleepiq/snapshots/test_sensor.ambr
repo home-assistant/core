@@ -78,8 +78,11 @@
     'name': None,
     'object_id_base': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': 'mdi:bed',
     'original_name': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
     'platform': 'sleepiq',
@@ -88,16 +91,17 @@
     'supported_features': 0,
     'translation_key': 'hrv',
     'unique_id': '43219_hrv',
-    'unit_of_measurement': 'ms',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
       'icon': 'mdi:bed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ms',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability',
@@ -458,8 +462,11 @@
     'name': None,
     'object_id_base': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': 'mdi:bed',
     'original_name': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
     'platform': 'sleepiq',
@@ -468,16 +475,17 @@
     'supported_features': 0,
     'translation_key': 'hrv',
     'unique_id': '98765_hrv',
-    'unit_of_measurement': 'ms',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
       'icon': 'mdi:bed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ms',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability',

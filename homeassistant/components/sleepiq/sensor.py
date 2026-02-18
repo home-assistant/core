@@ -102,8 +102,9 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
     SleepIQSensorEntityDescription(
         key=HRV,
         translation_key="hrv",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="ms",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda sleeper: sleeper.sleep_data.hrv if sleeper.sleep_data else None,
     ),
 )
