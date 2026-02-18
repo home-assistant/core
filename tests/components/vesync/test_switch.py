@@ -143,3 +143,110 @@ async def test_turn_on_off_display_raises_error(
 
     await hass.async_block_till_done()
     method_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device_name", "switch_key", "action", "command"),
+    [
+        # device_status switch for outlet
+        (
+            "Outlet",
+            "device_status",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_on",
+        ),
+        (
+            "Outlet",
+            "device_status",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_off",
+        ),
+        # display switch for humidifier
+        (
+            "Humidifier 200s",
+            "display",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        (
+            "Humidifier 200s",
+            "display",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
+        ),
+        # auto_off_config switch for humidifier
+        (
+            "Humidifier 200s",
+            "auto_off_config",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
+        ),
+        (
+            "Humidifier 200s",
+            "auto_off_config",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
+        ),
+        # drying_mode_power_off switch for humidifier with drying mode
+        (
+            "Humidifier 6000s",
+            "drying_mode_power_off",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+        ),
+        (
+            "Humidifier 6000s",
+            "drying_mode_power_off",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+        ),
+    ],
+)
+async def test_switch_operations(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+    switch_key: str,
+    action: str,
+    command: str,
+) -> None:
+    """Test all switch operations with appropriate devices and parameters."""
+
+    # Configure the API devices call for the specific device
+    mock_devices_response(aioclient_mock, device_name)
+
+    # Setup platform
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Find the switch entity for the specific switch key
+    switch_entity_id = None
+    for entity in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if entity.domain == SWITCH_DOMAIN and entity.unique_id.endswith(switch_key):
+            switch_entity_id = entity.entity_id
+            break
+
+    assert switch_entity_id is not None, f"No switch entity found for key {switch_key}"
+
+    with (
+        patch(
+            command,
+            return_value=True,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.async_write_ha_state"
+        ) as update_mock,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: switch_entity_id},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()
+    update_mock.assert_called_once()
