@@ -105,4 +105,3 @@ class VeSyncButtonEntity(VeSyncBaseEntity[VeSyncBaseDevice], ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.device)
-        self.async_write_ha_state()

@@ -94,4 +94,4 @@ def get_timer_remaining_minutes(device: VeSyncBaseDevice) -> float:
     timer = getattr(device.state, "timer", None)
     if timer is None:
         return 0.0
-    return timer.remaining / 60 or 0.0
+    return timer.remaining / 60

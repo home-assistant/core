@@ -56,15 +56,11 @@ def _set_warm_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bo
     raise HomeAssistantError("Device does not support warm mist level adjustment.")
 
 
-async def _set_timer_async(device: VeSyncBaseDevice, value: float) -> bool:
-    """Set timer duration in minutes. Always returns True so HA does not fail when device returns False."""
-    await device.set_timer(int(value))
-    return True
-
-
 def _set_timer(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
-    """Set timer duration in minutes. Does not fail HA when device does not implement timer."""
-    return _set_timer_async(device, value)
+    """Set timer duration in minutes."""
+    if supports_timer(device):
+        return device.set_timer(int(value))
+    raise HomeAssistantError("Device does not support timer adjustment.")
 
 
 @dataclass(frozen=True, kw_only=True)
