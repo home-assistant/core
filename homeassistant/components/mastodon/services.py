@@ -1,7 +1,9 @@
 """Define services for the Mastodon integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 from functools import partial
+from math import isfinite
 from typing import Any
 
 from mastodon import Mastodon
@@ -22,7 +24,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import service
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_ACCOUNT_NAME,
@@ -40,6 +42,8 @@ from .const import (
 )
 from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
+
+MAX_DURATION_SECONDS = 315360000  # 10 years
 
 
 class StatusVisibility(StrEnum):
@@ -63,7 +67,10 @@ SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_ACCOUNT_NAME): str,
-        vol.Optional(ATTR_DURATION): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period,
+            vol.Range(min=timedelta(seconds=1)),
+        ),
         vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
 )
@@ -163,9 +170,19 @@ async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
     client = entry.runtime_data.client
 
     account_name: str = call.data[ATTR_ACCOUNT_NAME]
-    duration: int | None = call.data.get(ATTR_DURATION)
     hide_notifications: bool = call.data[ATTR_HIDE_NOTIFICATIONS]
-    duration_hours = duration * 3600 if duration is not None else None
+    duration: int | None = None
+    if call.data.get(ATTR_DURATION) is not None:
+        td: timedelta = call.data[ATTR_DURATION]
+        duration_seconds = td.total_seconds()
+
+        if not isfinite(duration_seconds) or duration_seconds > MAX_DURATION_SECONDS:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mute_duration_too_long",
+            )
+
+        duration = int(duration_seconds)
 
     try:
         account = await _async_account_lookup(call.hass, client, account_name)
@@ -174,7 +191,7 @@ async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
                 client.account_mute,
                 id=account.id,
                 notifications=hide_notifications,
-                duration=duration_hours,
+                duration=duration,
             )
         )
     except MastodonAPIError as err:

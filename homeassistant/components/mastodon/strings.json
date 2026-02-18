@@ -104,6 +104,9 @@
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
+    "mute_duration_too_long": {
+      "message": "Mute duration is too long."
+    },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
     },
@@ -160,7 +163,7 @@
           "name": "Mastodon instance"
         },
         "duration": {
-          "description": "The duration in hours to mute the account for (default: indefinitely).",
+          "description": "The duration to mute the account for (default: indefinitely).",
           "name": "Duration"
         },
         "hide_notifications": {

@@ -23,8 +23,8 @@ mute_account:
     duration:
       required: false
       selector:
-        number:
-          mode: box
+        duration:
+          enable_day: true
     hide_notifications:
       default: true
       required: false

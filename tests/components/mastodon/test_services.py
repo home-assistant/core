@@ -1,5 +1,6 @@
 """Tests for the Mastodon services."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 from mastodon.Mastodon import MastodonAPIError, MastodonNotFoundError, MediaAttachment
@@ -20,6 +21,7 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import (
+    MAX_DURATION_SECONDS,
     SERVICE_GET_ACCOUNT,
     SERVICE_MUTE_ACCOUNT,
     SERVICE_POST,
@@ -109,7 +111,7 @@ async def test_get_account_failure(
         (
             {
                 ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: 2,
+                ATTR_DURATION: timedelta(hours=2),
             },
             True,
             7200,
@@ -117,7 +119,7 @@ async def test_get_account_failure(
         (
             {
                 ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: 12,
+                ATTR_DURATION: timedelta(hours=12),
                 ATTR_HIDE_NOTIFICATIONS: False,
             },
             False,
@@ -163,6 +165,31 @@ async def test_mute_account_success(
     assert actual_id == account.id
     assert actual_notifications == expected_notifications
     assert actual_duration == expected_duration
+
+
+async def test_mute_account_duration_too_long(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test mute_account rejects overly long durations."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: timedelta(seconds=MAX_DURATION_SECONDS + 1),
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    assert err.value.translation_key == "mute_duration_too_long"
+    mock_mastodon_client.account_mute.assert_not_called()
 
 
 async def test_mute_account_failure_not_found(
