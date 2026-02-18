@@ -105,10 +105,14 @@ class PranaFan(PranaBaseEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set fan speed (0-100%) by converting to device-specific speed steps."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
         speed_value = (
             math.ceil(
                 percentage_to_ranged_value(
-                    self.entity_description.speed_range(self.coordinator), percentage
+                    self.entity_description.speed_range(self.coordinator),
+                    percentage,
                 )
             )
             * 10
