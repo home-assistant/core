@@ -69,7 +69,9 @@ SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
         vol.Required(ATTR_ACCOUNT_NAME): str,
         vol.Optional(ATTR_DURATION): vol.All(
             cv.time_period,
-            vol.Range(min=timedelta(seconds=1)),
+            vol.Range(
+                min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
+            ),
         ),
         vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
