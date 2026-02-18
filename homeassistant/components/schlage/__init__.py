@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: SchlageConfigEntry) -> bool:
     """Set up the Schlage component."""
     service.async_register_platform_entity_service(
         hass,
