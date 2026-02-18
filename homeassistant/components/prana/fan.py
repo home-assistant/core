@@ -96,7 +96,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
         )
 
     @property
-    def percentage(self) -> int:
+    def percentage(self) -> int | None:
         """Return the current fan speed percentage."""
         current_speed = self.entity_description.value_fn(self.coordinator).speed
         return ranged_value_to_percentage(
@@ -129,10 +129,14 @@ class PranaFan(PranaBaseEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn the fan on."""
+        """Turn the fan on and optionally set speed or preset mode."""
         await self.coordinator.api_client.set_speed_is_on(
             True, self.entity_description.key
         )
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
