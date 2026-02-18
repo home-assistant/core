@@ -2390,7 +2390,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.0.1
+pyrainbird==6.0.5
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0
