@@ -286,7 +286,7 @@ class AppleTvMediaPlayer(
 
         # Why would output_device_id would not have been set already?
         if not self._attr_extra_state_attributes.get("output_device_id", False):
-            _LOGGER.warning("%s output_device_id not set")
+            _LOGGER.warning("%s output_device_id not set", self.entity_id)
             self._attr_extra_state_attributes["output_device_id"] = (
                 atv.device_info.output_device_id
             )
@@ -299,7 +299,7 @@ class AppleTvMediaPlayer(
     async def _update_group_members(self, retry_count: int = 10) -> None:
         """Update group_members attr.
 
-        Find all media_player entities with an `output_devices_id` attr that is
+        Find all media_player entities with an `output_device_id` attr that is
         included in this player's atv.audio.output_devices.
         Retry if player entities cannot be found, e.g. during startup.
         """
@@ -336,7 +336,7 @@ class AppleTvMediaPlayer(
                 # We may not find entities for all output devices
                 # because they have not been loaded or integrated yet.
                 _LOGGER.warning(
-                    "%s unable to find entity for output_devices_id %s",
+                    "%s unable to find entity for output_device_id %s",
                     self.entity_id,
                     output_device_id,
                 )
@@ -346,7 +346,7 @@ class AppleTvMediaPlayer(
 
         if len(group_members) != len(output_device_ids) and retry_count > 0:
             _LOGGER.warning(
-                "%s unable to find entities for all output_devices, retring max %s times",
+                "%s unable to find entities for all output_devices, retrying max %s times",
                 self.entity_id,
                 retry_count,
             )
@@ -685,8 +685,7 @@ class AppleTvMediaPlayer(
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         if (atv := self.atv) is None:
-            # Should we only warn and retry later?
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s unable to join with %s because not connected to player",
                 self.entity_id,
                 group_members,
@@ -696,7 +695,9 @@ class AppleTvMediaPlayer(
         if (own_output_device_id := atv.device_info.output_device_id) is not None:
             output_devices = [own_output_device_id]
         else:
-            _LOGGER.warning("%s missing own output_device_id during joning")
+            _LOGGER.warning(
+                "%s missing own output_device_id during joining", self.entity_id
+            )
             output_devices = []
 
         for entity_id in group_members:
