@@ -37,6 +37,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert DOMAIN in hass.data
 
 
+@pytest.mark.usefixtures("mock_snapshot_payload")
 async def test_labs_feature_toggle(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
