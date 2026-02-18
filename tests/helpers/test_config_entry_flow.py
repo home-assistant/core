@@ -517,7 +517,12 @@ async def test_webhook_reconfigure_flow(
 ) -> None:
     """Test webhook reconfigure flow."""
     config_entry = MockConfigEntry(
-        domain="test_single", data={"webhook_id": "12345", "cloudhook": False}
+        domain="test_single",
+        data={
+            "webhook_id": "12345",
+            "cloudhook": False,
+            "other_entry_data": "not_changed",
+        },
     )
     config_entry.add_to_hass(hass)
 
@@ -546,6 +551,7 @@ async def test_webhook_reconfigure_flow(
     }
     assert config_entry.data["webhook_id"] == "12345"
     assert config_entry.data["cloudhook"] is False
+    assert config_entry.data["other_entry_data"] == "not_changed"
 
 
 async def test_webhook_reconfigure_cloudhook(

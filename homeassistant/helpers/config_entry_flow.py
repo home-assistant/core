@@ -265,7 +265,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if self.source == config_entries.SOURCE_RECONFIGURE:
             if self.hass.config_entries.async_update_entry(
                 entry=entry,
-                data={"webhook_id": webhook_id, "cloudhook": cloudhook},
+                data={**entry.data, "webhook_id": webhook_id, "cloudhook": cloudhook},
             ):
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(
