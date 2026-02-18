@@ -186,6 +186,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._enabled_wifi_numbers: set[int] | None = None
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -291,6 +292,21 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    def register_enabled_wifi_number(self, wifi_number: int) -> Callable[[], None]:
+        """Register a wifi number to be updated by coordinator."""
+
+        def unregister_enabled_wifi_number() -> None:
+            """Unregister a wifi number to be updated by coordinator."""
+            _LOGGER.debug("unregister wifi number %s from updates", wifi_number)
+            if self._enabled_wifi_numbers is not None:
+                self._enabled_wifi_numbers.discard(wifi_number)
+
+        _LOGGER.debug("register wifi number %s for updates", wifi_number)
+        if self._enabled_wifi_numbers is None:
+            self._enabled_wifi_numbers = set()
+        self._enabled_wifi_numbers.add(wifi_number)
+        return unregister_enabled_wifi_number
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -332,8 +348,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     if s.startswith("WLANConfiguration")
                 ]
             )
-            _LOGGER.debug("WiFi networks count: %s", wifi_count)
+            _LOGGER.debug(
+                "WiFi networks count: %s enabled wifi numbers to be updated: %s",
+                wifi_count,
+                self._enabled_wifi_numbers,
+            )
             for i in range(1, wifi_count + 1):
+                if (
+                    self._enabled_wifi_numbers is not None
+                    and i not in self._enabled_wifi_numbers
+                ):
+                    continue
+
                 network_info = await self.async_get_wlan_configuration(i)
                 # Devices with 4 WLAN services, use the 2nd for internal communications
                 if not (wifi_count == 4 and i == 2):
