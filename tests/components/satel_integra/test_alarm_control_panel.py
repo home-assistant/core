@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
+from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -59,7 +59,7 @@ async def test_alarm_control_panel(
     assert device_entry == snapshot(name="device")
 
 
-async def test_alarm_control_panel_initial_state_on(
+async def test_alarm_control_panel_initial_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
@@ -104,8 +104,7 @@ async def test_alarm_status_callback(
         == AlarmControlPanelState.DISARMED
     )
 
-    monitor_status_call = mock_satel.monitor_status.call_args_list[0][0]
-    alarm_panel_update_method = monitor_status_call[0]
+    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
 
     mock_satel.partition_states = {source_state: [1]}
 
