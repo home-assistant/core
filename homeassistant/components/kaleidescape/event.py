@@ -187,7 +187,7 @@ class KaleidescapeEventEntity(KaleidescapeEntity, EventEntity):
     def handle_user_defined_event(self, command: str, params: list[str]) -> None:
         """Handle custom user defined device events."""
         if command in kaleidescape_const.VOLUME_EVENTS:
-            # Ignore all volume related events
+            # Ignore all volume-related events
             return
 
         _LOGGER.debug("Received USER_DEFINED_EVENT: %s %s", command, params)
@@ -195,3 +195,10 @@ class KaleidescapeEventEntity(KaleidescapeEntity, EventEntity):
         self._trigger_event(TRIGGERED, {CONF_COMMAND: command, CONF_PARAMS: params})
 
         self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._debounce is not None:
+            self._debounce.cancel()
+            self._debounce = None
+        await super().async_will_remove_from_hass()
