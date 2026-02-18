@@ -32,7 +32,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'pressure',
     'unique_id': '43219_pressure',
     'unit_of_measurement': None,
   })
@@ -85,7 +85,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sleep_number',
     'unique_id': '43219_sleep_number',
     'unit_of_measurement': None,
   })
@@ -138,7 +138,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'pressure',
     'unique_id': '98765_pressure',
     'unit_of_measurement': None,
   })
@@ -191,7 +191,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sleep_number',
     'unique_id': '98765_sleep_number',
     'unit_of_measurement': None,
   })
