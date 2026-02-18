@@ -2990,6 +2990,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "hypontech": {
+      "name": "Hypontech Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ialarm": {
       "name": "Antifurto365 iAlarm",
       "integration_type": "device",
@@ -3107,6 +3113,12 @@
     "incomfort": {
       "name": "Intergas gateway",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "indevolt": {
+      "name": "Indevolt",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4348,6 +4360,12 @@
         }
       }
     },
+    "mta": {
+      "name": "MTA New York City Transit",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mullvad": {
       "name": "Mullvad VPN",
       "integration_type": "service",
@@ -5261,9 +5279,20 @@
     },
     "powerfox": {
       "name": "Powerfox",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "powerfox": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Powerfox"
+        },
+        "powerfox_local": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Powerfox Local"
+        }
+      }
     },
     "prana": {
       "name": "Prana",
@@ -6008,7 +6037,7 @@
     },
     "sensorpro": {
       "name": "SensorPro",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6016,7 +6045,7 @@
       "name": "SensorPush",
       "integrations": {
         "sensorpush": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "SensorPush"
@@ -6329,7 +6358,7 @@
     },
     "smhi": {
       "name": "SMHI",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6850,6 +6879,12 @@
       "name": "Telnet",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "teltonika": {
+      "name": "Teltonika",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "temper": {

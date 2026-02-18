@@ -781,7 +781,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -831,7 +831,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1031,7 +1031,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1181,7 +1181,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1531,7 +1531,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1780,7 +1780,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1830,7 +1830,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'self_test_request',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmSelfTestRequest-92-65529',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmSelfTestRequest-92-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -2575,7 +2575,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3067,7 +3067,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000018-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3117,7 +3117,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3167,7 +3167,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3217,7 +3217,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-0-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000026-MatterNodeDevice-0-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3367,7 +3367,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3417,7 +3417,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3467,7 +3467,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3517,7 +3517,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3764,7 +3764,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3814,7 +3814,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStatePauseButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -3863,7 +3863,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateResumeButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -3912,7 +3912,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateStartButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -3961,7 +3961,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateStopButton-96-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -4110,7 +4110,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cancel_boost',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementCancelBoost-148-65529',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementCancelBoost-148-65529',
     'unit_of_measurement': None,
   })
 # ---
@@ -4159,7 +4159,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4209,7 +4209,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-IdentifyButton-3-1',
     'unit_of_measurement': None,
   })
 # ---

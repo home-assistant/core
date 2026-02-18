@@ -40,6 +40,14 @@
         "name": "Issue hotplug"
       }
     },
+    "number": {
+      "oled_fade": {
+        "name": "OLED fade timer"
+      },
+      "reboot_timer": {
+        "name": "Restart timer"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",
@@ -164,10 +172,10 @@
         "name": "Relay"
       },
       "tx0plus5": {
-        "name": "TX0 force +5v"
+        "name": "TX0 force +5V"
       },
       "tx1plus5": {
-        "name": "TX1 force +5v"
+        "name": "TX1 force +5V"
       }
     }
   },
