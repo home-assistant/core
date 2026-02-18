@@ -115,6 +115,21 @@ async def test_climate_entities(
             HVACAction.FAN,
             id="fan",
         ),
+        pytest.param(
+            _make_climate_data(hvac_state="Idle"),
+            HVACAction.IDLE,
+            id="idle",
+        ),
+        pytest.param(
+            _make_climate_data(hvac_state="Stage 1 Heat"),
+            HVACAction.HEATING,
+            id="stage_1_heat",
+        ),
+        pytest.param(
+            _make_climate_data(hvac_state="Stage 2 Cool", hvac_mode="Cool"),
+            HVACAction.COOLING,
+            id="stage_2_cool",
+        ),
     ],
 )
 @pytest.mark.usefixtures(
