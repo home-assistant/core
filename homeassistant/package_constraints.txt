@@ -223,6 +223,9 @@ num2words==0.5.14
 # This ensures all use the same version
 pymodbus==3.11.2
 
+# gql 4.x is incompatible with aioaseko==1.0.0 used by aseko_pool_live
+# Keep gql < 4.0.0 until aioaseko supports gql 4 or the integration changes
+gql<4.0.0
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
 
