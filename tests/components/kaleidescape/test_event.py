@@ -13,50 +13,55 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_COMMAND, CONF_PARAMS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_SERIAL
+from . import MOCK_SERIAL, find_event_update_callback
 
-ENTITY_ID = f"event.kaleidescape_device_{MOCK_SERIAL}"
 FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"
 
 
 @pytest.mark.usefixtures("mock_integration")
 async def test_handle_user_defined_volume_event(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_device: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
 ) -> None:
     """Test test_handle_user_defined_volume_event callback."""
+    update_callback = find_event_update_callback(
+        mock_device.dispatcher.connect, event.EVENT_VOLUME_QUERY
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "kaleidescape", f"{MOCK_SERIAL}-volume_query"
+    )
+    assert entity_id is not None
 
     # Test initial state
-    entity = hass.states.get(f"{ENTITY_ID}_volume_state_queried")
-    entry = entity_registry.async_get(f"{ENTITY_ID}_volume_state_queried")
+    entity = hass.states.get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert (
-        entity.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"{FRIENDLY_NAME} Volume state queried"
-    )
+    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-volume_query"
 
     # Test event handling
-    mock_device.dispatcher.send(
+    update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_QUERY],
     )
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_volume_state_queried")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert re.match(r"^\d{4}-", entity.state)
     last_updated = entity.state
 
     # Test repeated event updates timestamp
-    mock_device.dispatcher.send(
+    update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_QUERY],
     )
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_volume_state_queried")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert re.match(r"^\d{4}-", entity.state)
     assert entity.state != last_updated
@@ -71,26 +76,31 @@ async def test_handle_user_defined_volume_set_event(
 ) -> None:
     """Test test_handle_user_defined_volume_set_event callback."""
     monkeypatch.setattr(event, "DEBOUNCE_TIME", 0)
+    update_callback = find_event_update_callback(
+        mock_device.dispatcher.connect, event.EVENT_VOLUME_SET
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "kaleidescape", f"{MOCK_SERIAL}-volume_set"
+    )
+    assert entity_id is not None
 
     # Test initial state
-    entity = hass.states.get(f"{ENTITY_ID}_volume_level_set")
-    entry = entity_registry.async_get(f"{ENTITY_ID}_volume_level_set")
+    entity = hass.states.get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert (
-        entity.attributes.get(ATTR_FRIENDLY_NAME) == f"{FRIENDLY_NAME} Volume level set"
-    )
+    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-volume_set"
 
     # Test event handling
-    mock_device.dispatcher.send(
+    update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL, "42"],
     )
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_volume_level_set")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert re.match(r"^\d{4}-", entity.state) is not None
     assert ATTR_MEDIA_VOLUME_LEVEL in entity.attributes
@@ -98,20 +108,20 @@ async def test_handle_user_defined_volume_set_event(
     last_updated = entity.state
 
     # Test with bad volume level
-    mock_device.dispatcher.send(
+    update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL, "bad"],
     )
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_volume_level_set")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == last_updated
 
     # Test debounce clears (for complete code coverage)
     monkeypatch.setattr(event, "DEBOUNCE_TIME", 1.0)
     for _ in range(2):
-        mock_device.dispatcher.send(
+        update_callback(
             kaleidescape_const.USER_DEFINED_EVENT,
             [kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL, "42"],
         )
@@ -121,29 +131,33 @@ async def test_handle_user_defined_volume_set_event(
 
 @pytest.mark.usefixtures("mock_integration")
 async def test_handle_user_defined_event(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_device: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
 ) -> None:
     """Test test_handle_user_defined_event callback."""
+    update_callback = find_event_update_callback(
+        mock_device.dispatcher.connect, event.EVENT_USER_DEFINED
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "kaleidescape", f"{MOCK_SERIAL}-user_defined"
+    )
+    assert entity_id is not None
 
     # Test initial state
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
-    entry = entity_registry.async_get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert (
-        entity.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"{FRIENDLY_NAME} User-defined event"
-    )
+    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-user_defined"
 
     # Test event handling
-    mock_device.dispatcher.send(
-        kaleidescape_const.USER_DEFINED_EVENT, ["custom_event", "42"]
-    )
+    update_callback(kaleidescape_const.USER_DEFINED_EVENT, ["custom_event", "42"])
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert re.match(r"^\d{4}-", entity.state) is not None
     assert CONF_COMMAND in entity.attributes
@@ -153,39 +167,48 @@ async def test_handle_user_defined_event(
     last_updated = entity.state
 
     # Test volume commands are ignored
-    mock_device.dispatcher.send(
+    update_callback(
         kaleidescape_const.USER_DEFINED_EVENT,
         [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_CAPABILITIES],
     )
     await hass.async_block_till_done()
     await asyncio.sleep(0)
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == last_updated
 
 
 @pytest.mark.usefixtures("mock_integration")
 async def test_handle_user_defined_event_empty_payload_ignored(
-    hass: HomeAssistant, mock_device: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
 ) -> None:
     """Test invalid/unsupported payloads are ignored."""
+    update_callback = find_event_update_callback(
+        mock_device.dispatcher.connect, event.EVENT_USER_DEFINED
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        "event", "kaleidescape", f"{MOCK_SERIAL}-user_defined"
+    )
+    assert entity_id is not None
 
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
 
-    mock_device.dispatcher.send("not_user_defined_event", [])
+    update_callback("not_user_defined_event", [])
     await hass.async_block_till_done()
     await asyncio.sleep(0)
 
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
 
-    mock_device.dispatcher.send(kaleidescape_const.USER_DEFINED_EVENT, [])
+    update_callback(kaleidescape_const.USER_DEFINED_EVENT, [])
     await hass.async_block_till_done()
     await asyncio.sleep(0)
 
-    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
