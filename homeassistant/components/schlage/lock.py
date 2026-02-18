@@ -69,11 +69,20 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         await self.hass.async_add_executor_job(self._lock.unlock)
         await self.coordinator.async_request_refresh()
 
+    @staticmethod
+    def _normalize_code_name(name: str) -> str:
+        """Normalize a code name for comparison."""
+        return name.lower().strip()
+
     def _validate_code_name(
         self, codes: dict[str, AccessCode] | None, name: str
     ) -> None:
         """Validate that the code name doesn't already exist."""
-        if codes and any(code.name.lower() == name.lower() for code in codes.values()):
+        normalized = self._normalize_code_name(name)
+        if codes and any(
+            self._normalize_code_name(code.name) == normalized
+            for code in codes.values()
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="schlage_name_exists",
@@ -109,18 +118,21 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         """Delete a lock code."""
         codes = self._lock.access_codes
         if not codes:
+            """No codes left to delete. Operation successful. Fast Pass"""
             return
 
+        normalized = self._normalize_code_name(name)
         code_id_to_delete = next(
             (
                 code_id
                 for code_id, code_data in codes.items()
-                if code_data.name.lower() == name.lower()
+                if self._normalize_code_name(code_data.name) == normalized
             ),
             None,
         )
 
         if not code_id_to_delete:
+            """Code not found in defined codes. Operation successful."""
             return
 
         if self._lock.access_codes:

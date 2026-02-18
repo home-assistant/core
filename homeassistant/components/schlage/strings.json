@@ -78,7 +78,7 @@
           "name": "PIN code"
         },
         "name": {
-          "description": "Name for PIN code. Must be unique to lock.",
+          "description": "Name for PIN code. Must be case insensitvely unique to lock.",
           "name": "PIN Name"
         }
       },
