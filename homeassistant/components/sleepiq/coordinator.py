@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from asyncsleepiq import AsyncSleepIQ
+from asyncsleepiq import AsyncSleepIQ, SleepIQAPIException, SleepIQTimeoutException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,13 +98,18 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch sleep health data from API via asyncsleepiq library."""
-        await asyncio.gather(
-            *[
-                sleeper.fetch_sleep_data()
-                for bed in self.client.beds.values()
-                for sleeper in bed.sleepers
-            ]
-        )
+        try:
+            await asyncio.gather(
+                *[
+                    sleeper.fetch_sleep_data()
+                    for bed in self.client.beds.values()
+                    for sleeper in bed.sleepers
+                ]
+            )
+        except SleepIQTimeoutException as err:
+            raise UpdateFailed(f"Timed out fetching SleepIQ sleep data: {err}") from err
+        except SleepIQAPIException as err:
+            raise UpdateFailed(f"Failed to fetch SleepIQ sleep data: {err}") from err
 
 
 @dataclass
