@@ -65,7 +65,6 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await asyncio.sleep(REFRESH_DELAY.total_seconds())

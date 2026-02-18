@@ -206,7 +206,7 @@ async def test_set_temperature_failure(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while communicating with the device: Connection failed",
+        match="An error occurred while communicating with the device",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
