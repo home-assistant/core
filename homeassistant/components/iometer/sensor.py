@@ -87,6 +87,22 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         value_fn=lambda data: data.status.device.core.pin_status or STATE_UNKNOWN,
     ),
     IOmeterEntityDescription(
+        key="consumption_tariff_t1",
+        translation_key="consumption_tariff_t1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.reading.get_consumption_tariff_T1(),
+    ),
+    IOmeterEntityDescription(
+        key="consumption_tariff_t2",
+        translation_key="consumption_tariff_t2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.reading.get_consumption_tariff_T2(),
+    ),
+    IOmeterEntityDescription(
         key="total_consumption",
         translation_key="total_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
