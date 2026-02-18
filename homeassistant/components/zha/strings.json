@@ -2009,7 +2009,7 @@
       },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
-        "title": "Reconfigure ZHA"
+        "title": "Change ZHA adapter settings"
       },
       "intent_migrate": {
         "description": "Before plugging in your new adapter, your old adapter needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?",
@@ -2051,16 +2051,16 @@
         "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {
-        "description": "Are you migrating to a new adapter or reconfiguring the current adapter?",
+        "description": "Are you migrating to a new adapter or changing the settings for your current adapter?",
         "menu_option_descriptions": {
           "intent_migrate": "This will help you migrate your Zigbee network from your old adapter to a new one.",
           "intent_reconfigure": "This will let you change the serial port for your current Zigbee adapter."
         },
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
-          "intent_reconfigure": "Reconfigure the current adapter"
+          "intent_reconfigure": "Change the current adapter's settings"
         },
-        "title": "Migrate or reconfigure"
+        "title": "Migrate or change adapter settings"
       },
       "restore_backup": {
         "title": "[%key:component::zha::config::step::restore_backup::title%]"
