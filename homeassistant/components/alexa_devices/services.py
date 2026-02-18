@@ -104,7 +104,7 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
                 translation_placeholders={"info_skill": value},
             )
         await coordinator.api.call_alexa_info_skill(
-            coordinator.data[device.serial_number], value
+            coordinator.data[device.serial_number], info_skill
         )
 
 

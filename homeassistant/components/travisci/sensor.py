@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from travispy import TravisPy
 from travispy.errors import TravisError
@@ -154,9 +155,9 @@ class TravisCISensor(SensorEntity):
         self._attr_name = f"{repo_name} {description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
 
         if self._build and self._attr_native_value is not None:
             if self._user and self.entity_description.key == "state":

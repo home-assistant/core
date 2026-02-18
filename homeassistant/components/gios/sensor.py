@@ -9,7 +9,7 @@ import logging
 from gios.model import GiosSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -72,9 +72,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         key=ATTR_CO,
         value=lambda sensors: sensors.co.value if sensors.co else None,
         suggested_display_precision=0,
+        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="co",
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO,
@@ -181,13 +181,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.gios.station_id}-pm2.5"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.gios.station_id}-{ATTR_PM25}"
         _LOGGER.debug(
