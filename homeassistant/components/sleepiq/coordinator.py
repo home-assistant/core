@@ -98,12 +98,13 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch sleep health data from API via asyncsleepiq library."""
-        tasks = []
-        for bed in self.client.beds.values():
-            for sleeper in bed.sleepers:
-                tasks.append(sleeper.fetch_sleep_data())
-
-        await asyncio.gather(*tasks)
+        await asyncio.gather(
+            *[
+                sleeper.fetch_sleep_data()
+                for bed in self.client.beds.values()
+                for sleeper in bed.sleepers
+            ]
+        )
 
 
 @dataclass
