@@ -31,7 +31,7 @@
             "name": "Command"
           },
           "params": {
-            "name": "Params"
+            "name": "Parameters"
           }
         }
       },
