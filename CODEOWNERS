@@ -1283,6 +1283,8 @@ build.json @home-assistant/supervisor
 /tests/components/portainer/ @erwindouna
 /homeassistant/components/powerfox/ @klaasnicolaas
 /tests/components/powerfox/ @klaasnicolaas
+/homeassistant/components/powerfox_local/ @klaasnicolaas
+/tests/components/powerfox_local/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/prana/ @prana-dev-official

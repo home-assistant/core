@@ -1784,6 +1784,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
+# homeassistant.components.powerfox_local
 powerfox==2.1.0
 
 # homeassistant.components.prana

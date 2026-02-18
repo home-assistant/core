@@ -1,0 +1,17 @@
+{
+  "domain": "powerfox_local",
+  "name": "Powerfox Local",
+  "codeowners": ["@klaasnicolaas"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/powerfox_local",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["powerfox==2.1.0"],
+  "zeroconf": [
+    {
+      "name": "powerfox*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}
