@@ -471,7 +471,7 @@ async def test_abort_discovered_multiple(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_body", "error_reason", "error_log"),
+    ("status_code", "error_body", "error_reason", "debug_log"),
     [
         (
             HTTPStatus.UNAUTHORIZED,
@@ -513,7 +513,7 @@ async def test_abort_if_oauth_token_error(
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
-    error_log: str,
+    debug_log: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -560,11 +560,12 @@ async def test_abort_if_oauth_token_error(
         json=error_body,
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with caplog.at_level(logging.DEBUG):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert debug_log in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error_reason
-    assert error_log in caplog.text
 
 
 @pytest.mark.usefixtures("current_request_with_host")
