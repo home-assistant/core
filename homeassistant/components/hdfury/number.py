@@ -90,7 +90,7 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
 
         try:
             await self.entity_description.set_value_fn(
-                self.coordinator.client, str(value)
+                self.coordinator.client, str(int(value))
             )
         except HDFuryError as error:
             raise HomeAssistantError(
