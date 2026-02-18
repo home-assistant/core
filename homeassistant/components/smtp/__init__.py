@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -47,6 +47,8 @@ from .const import (
 from .helpers import try_connect
 from .notify import MailNotificationService
 
+type SmtpConfigEntry = ConfigEntry[dict[str, Any]]
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 CONF_CONFIG_ENTRY = "config_entry"
@@ -73,13 +75,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle the send_message service call."""
         entry_id = call.data[CONF_CONFIG_ENTRY]
         config_entry = hass.config_entries.async_get_entry(entry_id)
-        if not config_entry or entry_id not in hass.data.get(DOMAIN, {}):
+        if not config_entry or config_entry.state != ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entry_not_found",
             )
 
-        data = hass.data[DOMAIN][entry_id]["config"]
+        data = config_entry.runtime_data
         verify_ssl = data[CONF_VERIFY_SSL]
         ssl_context = client_context() if verify_ssl else None
 
@@ -142,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool:
     """Set up SMTP from a config entry."""
     error = await hass.async_add_executor_job(
         try_connect,
@@ -160,15 +162,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if error:
         raise ConfigEntryNotReady(f"Unable to connect to SMTP server: {error}")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "config": entry.data,
-    }
+    entry.runtime_data = dict(entry.data)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
-
     return True
