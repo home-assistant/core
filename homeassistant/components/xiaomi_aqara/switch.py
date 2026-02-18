@@ -165,18 +165,16 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         return "mdi:power-socket"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._supports_power_consumption:
-            attrs = {
+            return {
                 ATTR_IN_USE: self._in_use,
                 ATTR_LOAD_POWER: self._load_power,
                 ATTR_POWER_CONSUMED: self._power_consumed,
+                **self._attr_extra_state_attributes,
             }
-        else:
-            attrs = {}
-        attrs.update(super().extra_state_attributes)
-        return attrs
+        return self._attr_extra_state_attributes
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
