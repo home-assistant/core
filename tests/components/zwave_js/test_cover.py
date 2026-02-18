@@ -1,6 +1,10 @@
 """Test the Z-Wave JS cover platform."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from zwave_js_server.const import (
@@ -42,6 +46,8 @@ from homeassistant.core import HomeAssistant
 
 from .common import replace_value_of_zwave_value
 
+from tests.common import MockConfigEntry
+
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
 BLIND_COVER_ENTITY = "cover.window_blind_controller"
@@ -60,7 +66,10 @@ def platforms() -> list[str]:
 
 
 async def test_window_cover(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test the cover entity."""
     node = chain_actuator_zws12
@@ -243,7 +252,10 @@ async def test_window_cover(
 
 
 async def test_fibaro_fgr222_shutter_cover(
-    hass: HomeAssistant, client, fibaro_fgr222_shutter, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    fibaro_fgr222_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_FGR_222_SHUTTER_COVER_ENTITY)
@@ -344,7 +356,10 @@ async def test_fibaro_fgr222_shutter_cover(
 
 
 async def test_fibaro_fgr223_shutter_cover(
-    hass: HomeAssistant, client, fibaro_fgr223_shutter, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    fibaro_fgr223_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_FGR_223_SHUTTER_COVER_ENTITY)
@@ -438,7 +453,10 @@ async def test_fibaro_fgr223_shutter_cover(
 
 
 async def test_shelly_wave_shutter_cover_with_tilt(
-    hass: HomeAssistant, client, qubino_shutter_firmware_14_2_0, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    qubino_shutter_firmware_14_2_0: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test tilt function of the Shelly Wave Shutter with firmware 14.2.0.
 
@@ -537,7 +555,10 @@ async def test_shelly_wave_shutter_cover_with_tilt(
 
 
 async def test_aeotec_nano_shutter_cover(
-    hass: HomeAssistant, client, aeotec_nano_shutter, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    aeotec_nano_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test movement of an Aeotec Nano Shutter cover entity. Useful to make sure the stop command logic is handled properly."""
     node = aeotec_nano_shutter
@@ -655,7 +676,10 @@ async def test_aeotec_nano_shutter_cover(
 
 
 async def test_blind_cover(
-    hass: HomeAssistant, client, iblinds_v2, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    iblinds_v2: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test a blind cover entity."""
     state = hass.states.get(BLIND_COVER_ENTITY)
@@ -665,7 +689,10 @@ async def test_blind_cover(
 
 
 async def test_shutter_cover(
-    hass: HomeAssistant, client, qubino_shutter, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    qubino_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test a shutter cover entity."""
     state = hass.states.get(SHUTTER_COVER_ENTITY)
@@ -675,7 +702,10 @@ async def test_shutter_cover(
 
 
 async def test_motor_barrier_cover(
-    hass: HomeAssistant, client, gdc_zw062, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    gdc_zw062: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test the cover entity."""
     node = gdc_zw062
@@ -853,7 +883,10 @@ async def test_motor_barrier_cover(
 
 
 async def test_motor_barrier_cover_no_primary_value(
-    hass: HomeAssistant, client, gdc_zw062_state, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    gdc_zw062_state: dict[str, Any],
+    integration: MockConfigEntry,
 ) -> None:
     """Test the cover entity where primary value value is None."""
     node_state = replace_value_of_zwave_value(
@@ -879,7 +912,10 @@ async def test_motor_barrier_cover_no_primary_value(
 
 
 async def test_fibaro_fgr222_shutter_cover_no_tilt(
-    hass: HomeAssistant, client, fibaro_fgr222_shutter_state, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    fibaro_fgr222_shutter_state: dict[str, Any],
+    integration: MockConfigEntry,
 ) -> None:
     """Test tilt function of the Fibaro Shutter devices with tilt value is None."""
     node_state = replace_value_of_zwave_value(
@@ -909,7 +945,10 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
 
 
 async def test_fibaro_fgr223_shutter_cover_no_tilt(
-    hass: HomeAssistant, client, fibaro_fgr223_shutter_state, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    fibaro_fgr223_shutter_state: dict[str, Any],
+    integration: MockConfigEntry,
 ) -> None:
     """Test absence of tilt function for Fibaro Shutter roller blind.
 
@@ -938,7 +977,10 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
 
 
 async def test_iblinds_v3_cover(
-    hass: HomeAssistant, client, iblinds_v3, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    iblinds_v3: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test iBlinds v3 cover which uses Window Covering CC."""
     entity_id = "cover.blind_west_bed_1_horizontal_slats_angle"
@@ -1042,7 +1084,10 @@ async def test_iblinds_v3_cover(
 
 
 async def test_nice_ibt4zwave_cover(
-    hass: HomeAssistant, client, nice_ibt4zwave, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    nice_ibt4zwave: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test Nice IBT4ZWAVE cover."""
     entity_id = "cover.portail"
@@ -1102,7 +1147,10 @@ async def test_nice_ibt4zwave_cover(
 
 
 async def test_window_covering_open_close(
-    hass: HomeAssistant, client, window_covering_outbound_bottom, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    window_covering_outbound_bottom: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test Window Covering device open and close commands.
 
@@ -1205,7 +1253,10 @@ async def test_window_covering_open_close(
 
 
 async def test_multilevel_switch_cover_moving_state_working(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test opening state with Supervision WORKING on Multilevel Switch cover."""
     node = chain_actuator_zws12
@@ -1295,7 +1346,10 @@ async def test_multilevel_switch_cover_moving_state_working(
 
 
 async def test_multilevel_switch_cover_moving_state_closing(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test closing state with Supervision WORKING on Multilevel Switch cover."""
     node = chain_actuator_zws12
@@ -1339,7 +1393,10 @@ async def test_multilevel_switch_cover_moving_state_closing(
 
 
 async def test_multilevel_switch_cover_moving_state_success_no_moving(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that SUCCESS does not set moving state on Multilevel Switch cover."""
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -1363,7 +1420,10 @@ async def test_multilevel_switch_cover_moving_state_success_no_moving(
 
 
 async def test_multilevel_switch_cover_moving_state_unsupervised(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test SUCCESS_UNSUPERVISED sets moving state on Multilevel Switch cover."""
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -1386,7 +1446,10 @@ async def test_multilevel_switch_cover_moving_state_unsupervised(
 
 
 async def test_multilevel_switch_cover_moving_state_stop_clears(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test stop_cover clears moving state on Multilevel Switch cover."""
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -1424,7 +1487,10 @@ async def test_multilevel_switch_cover_moving_state_stop_clears(
 
 
 async def test_multilevel_switch_cover_moving_state_set_position(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test moving state direction with set_cover_position on Multilevel Switch cover."""
     node = chain_actuator_zws12
@@ -1476,7 +1542,10 @@ async def test_multilevel_switch_cover_moving_state_set_position(
 
 
 async def test_window_covering_cover_moving_state(
-    hass: HomeAssistant, client, window_covering_outbound_bottom, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    window_covering_outbound_bottom: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test moving state for Window Covering CC (StartLevelChange commands)."""
     node = window_covering_outbound_bottom
@@ -1570,7 +1639,10 @@ async def test_window_covering_cover_moving_state(
 
 
 async def test_multilevel_switch_cover_moving_state_none_result(
-    hass: HomeAssistant, client, chain_actuator_zws12, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    chain_actuator_zws12: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test None result (node asleep) does not set moving state on Multilevel Switch cover."""
     state = hass.states.get(WINDOW_COVER_ENTITY)
