@@ -108,22 +108,14 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 
 
 def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
-    state_class: vol.Schemable = {}
-    if type != CONF_TYPE_RATIO:
-        state_class = {
-            vol.Required(
-                CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SensorStateClass.MEASUREMENT,
-                        SensorStateClass.TOTAL_INCREASING,
-                    ],
-                    translation_key=CONF_STATE_CLASS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                ),
-            ),
-        }
+    state_class_options = (
+        [SensorStateClass.MEASUREMENT]
+        if type == CONF_TYPE_RATIO
+        else [
+            SensorStateClass.MEASUREMENT,
+            SensorStateClass.TOTAL_INCREASING,
+        ]
+    )
     return vol.Schema(
         {
             vol.Optional(CONF_ENTITY_ID): EntitySelector(
@@ -149,8 +141,15 @@ def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
             vol.Optional(CONF_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False)
             ),
+            vol.Optional(CONF_STATE_CLASS): SelectSelector(
+                SelectSelectorConfig(
+                    options=state_class_options,
+                    translation_key=CONF_STATE_CLASS,
+                    mode=SelectSelectorMode.DROPDOWN,
+                ),
+            ),
         }
-    ).extend(state_class)
+    )
 
 
 CONFIG_FLOW = {
@@ -177,7 +176,7 @@ OPTIONS_FLOW = {
 class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

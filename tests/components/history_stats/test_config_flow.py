@@ -72,7 +72,6 @@ async def test_form(
         CONF_TYPE: "count",
         CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
         CONF_END: "{{ utcnow() }}",
-        CONF_STATE_CLASS: "measurement",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -185,7 +184,6 @@ async def test_validation_options(
         CONF_TYPE: "count",
         CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
         CONF_END: "{{ utcnow() }}",
-        CONF_STATE_CLASS: "measurement",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

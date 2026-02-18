@@ -97,7 +97,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(
                 CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
             ): vol.In(
-                [SensorStateClass.MEASUREMENT, SensorStateClass.TOTAL_INCREASING]
+                [None, SensorStateClass.MEASUREMENT, SensorStateClass.TOTAL_INCREASING]
             ),
         }
     ),
@@ -123,7 +123,9 @@ async def async_setup_platform(
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    state_class: SensorStateClass | None = config.get(CONF_STATE_CLASS)
+    state_class: SensorStateClass | None = config.get(
+        CONF_STATE_CLASS, SensorStateClass.MEASUREMENT
+    )
 
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
@@ -224,7 +226,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         ) = None
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
-        self._attr_state_class = state_class or SensorStateClass.MEASUREMENT
+        self._attr_state_class = state_class
         self._attr_unique_id = unique_id
         if source_entity_id:  # Guard against empty source_entity_id in preview mode
             self.device_entry = async_entity_id_to_device(
