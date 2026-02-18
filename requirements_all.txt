@@ -1855,7 +1855,7 @@ py-nightscout==1.2.2
 py-nymta==0.3.4
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.0.0
+py-opendisplay==5.1.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7

@@ -12,6 +12,11 @@ if TYPE_CHECKING:
 
 DOMAIN = "opendisplay"
 
+STORAGE_DIR = "opendisplay"
+
+# Brief delay after cancelling an in-flight BLE upload to let the device reset.
+CANCEL_SETTLE_DELAY = 0.5
+
 
 @dataclass
 class OpenDisplayRuntimeData:

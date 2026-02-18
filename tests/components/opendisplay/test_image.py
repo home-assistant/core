@@ -4,17 +4,20 @@ import io
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from opendisplay import BLEConnectionError, BLETimeoutError, OpenDisplayError
+from opendisplay import BLEConnectionError
 from PIL import Image as PILImage
 import pytest
 
 from homeassistant.components.opendisplay.const import DOMAIN
+from homeassistant.components.opendisplay.entity import OpenDisplayImageExtraStoredData
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
 ENTITY_ID = "image.opendisplay_1234"
+
+# Fake prepare_image result: (uncompressed, compressed, processed_pil)
+FAKE_PREPARED = (b"\x00" * 100, b"\x01" * 50, PILImage.new("RGB", (10, 10)))
 
 
 async def _setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
@@ -24,10 +27,10 @@ async def _setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def _mock_open_display_device() -> AsyncMock:
-    """Create a mock OpenDisplayDevice context manager."""
+def _mock_upload_device() -> AsyncMock:
+    """Create a mock OpenDisplayDevice for BLE upload (context manager)."""
     mock_device = AsyncMock()
-    mock_device.upload_image = AsyncMock(return_value=PILImage.new("RGB", (10, 10)))
+    mock_device.upload_prepared_image = AsyncMock()
     mock_device.__aenter__ = AsyncMock(return_value=mock_device)
     mock_device.__aexit__ = AsyncMock(return_value=False)
     return mock_device
@@ -58,7 +61,7 @@ async def test_image_entity_no_image_initially(
 async def test_upload_image_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
-    """Test successful image upload."""
+    """Test successful image upload updates entity immediately."""
     await _setup_entry(hass, mock_config_entry)
 
     # Create a test image file
@@ -66,9 +69,10 @@ async def test_upload_image_success(
     image_path = tmp_path / "test.png"
     test_image.save(image_path)
 
-    mock_device = _mock_open_display_device()
     mock_play_media = AsyncMock()
     mock_play_media.path = image_path
+
+    mock_upload_dev = _mock_upload_device()
 
     with (
         patch(
@@ -76,8 +80,12 @@ async def test_upload_image_success(
             return_value=mock_play_media,
         ),
         patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
             "homeassistant.components.opendisplay.image.OpenDisplayDevice",
-            return_value=mock_device,
+            return_value=mock_upload_dev,
         ),
     ):
         await hass.services.async_call(
@@ -92,8 +100,11 @@ async def test_upload_image_success(
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
+        # Let background upload task complete
+        await hass.async_block_till_done()
 
-    mock_device.upload_image.assert_awaited_once()
+    # Verify BLE upload was attempted (Phase 2)
+    mock_upload_dev.upload_prepared_image.assert_awaited_once()
 
     # Verify the preview image was updated
     entity = hass.data["image"].get_entity(ENTITY_ID)
@@ -125,7 +136,7 @@ async def test_upload_image_non_local_media(
     mock_session = AsyncMock()
     mock_session.get = AsyncMock(return_value=mock_response)
 
-    mock_device = _mock_open_display_device()
+    mock_upload_dev = _mock_upload_device()
 
     with (
         patch(
@@ -145,8 +156,12 @@ async def test_upload_image_non_local_media(
             return_value=mock_session,
         ),
         patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
             "homeassistant.components.opendisplay.image.OpenDisplayDevice",
-            return_value=mock_device,
+            return_value=mock_upload_dev,
         ),
     ):
         await hass.services.async_call(
@@ -161,8 +176,7 @@ async def test_upload_image_non_local_media(
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
-
-    mock_device.upload_image.assert_awaited_once()
+        await hass.async_block_till_done()
 
     # Verify the preview image was updated
     entity = hass.data["image"].get_entity(ENTITY_ID)
@@ -170,10 +184,69 @@ async def test_upload_image_non_local_media(
     assert image_bytes is not None
 
 
-async def test_upload_image_device_not_found(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+async def test_upload_ble_failure_keeps_preview(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test upload fails when BLE device is not found."""
+    """Test that BLE upload failure still keeps the preview image."""
+    await _setup_entry(hass, mock_config_entry)
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+
+    mock_upload_dev = _mock_upload_device()
+    mock_upload_dev.__aenter__.side_effect = BLEConnectionError("timeout")
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
+    ):
+        # Service call should NOT raise — BLE failure is in the background
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Preview should still be set despite BLE failure
+    entity = hass.data["image"].get_entity(ENTITY_ID)
+    image_bytes = await entity.async_image()
+    assert image_bytes is not None
+
+    assert "Failed to sync image" in caplog.text
+
+
+async def test_upload_device_not_found_keeps_preview(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that missing BLE device still keeps the preview image."""
     await _setup_entry(hass, mock_config_entry)
 
     test_image = PILImage.new("RGB", (100, 100), color="red")
@@ -187,12 +260,15 @@ async def test_upload_image_device_not_found(
         patch(
             "homeassistant.components.opendisplay.image.async_resolve_media",
             return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
         ),
         patch(
             "homeassistant.components.opendisplay.image.async_ble_device_from_address",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -206,30 +282,30 @@ async def test_upload_image_device_not_found(
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
+        await hass.async_block_till_done()
+
+    # Preview should still be set despite device not found
+    entity = hass.data["image"].get_entity(ENTITY_ID)
+    image_bytes = await entity.async_image()
+    assert image_bytes is not None
+
+    assert "not found" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [BLEConnectionError("timeout"), BLETimeoutError("timeout")],
-)
-async def test_upload_image_connection_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
-    exception: Exception,
+async def test_image_persisted_to_disk(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
-    """Test upload fails on BLE connection errors."""
+    """Test that the processed image is persisted to disk."""
     await _setup_entry(hass, mock_config_entry)
 
     test_image = PILImage.new("RGB", (100, 100), color="red")
     image_path = tmp_path / "test.png"
     test_image.save(image_path)
 
-    mock_device = _mock_open_display_device()
-    mock_device.__aenter__.side_effect = exception
-
     mock_play_media = AsyncMock()
     mock_play_media.path = image_path
+
+    mock_upload_dev = _mock_upload_device()
 
     with (
         patch(
@@ -237,10 +313,13 @@ async def test_upload_image_connection_error(
             return_value=mock_play_media,
         ),
         patch(
-            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
-            return_value=mock_device,
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
         ),
-        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -254,46 +333,55 @@ async def test_upload_image_connection_error(
             target={"entity_id": ENTITY_ID},
             blocking=True,
         )
+        await hass.async_block_till_done()
+
+    # Verify the image was persisted to storage
+    storage_path = Path(
+        hass.config.path(".storage", "opendisplay", "AA:BB:CC:DD:EE:FF.png")
+    )
+    assert storage_path.exists()
+    assert len(storage_path.read_bytes()) > 0
 
 
-async def test_upload_image_upload_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    tmp_path: Path,
+async def test_extra_restore_state_data(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test upload fails on OpenDisplay upload errors."""
+    """Test extra_restore_state_data returns correct metadata."""
     await _setup_entry(hass, mock_config_entry)
 
-    test_image = PILImage.new("RGB", (100, 100), color="red")
-    image_path = tmp_path / "test.png"
-    test_image.save(image_path)
+    entity = hass.data["image"].get_entity(ENTITY_ID)
 
-    mock_device = _mock_open_display_device()
-    mock_device.upload_image.side_effect = OpenDisplayError("upload failed")
+    # Initially no image
+    data = entity.extra_restore_state_data
+    assert data.has_stored_image is False
+    assert data.image_last_updated is None
 
-    mock_play_media = AsyncMock()
-    mock_play_media.path = image_path
+    # Simulate setting an image
+    entity._current_image = b"\x00"
+    entity._attr_image_last_updated = None
 
-    with (
-        patch(
-            "homeassistant.components.opendisplay.image.async_resolve_media",
-            return_value=mock_play_media,
-        ),
-        patch(
-            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
-            return_value=mock_device,
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "upload_image",
-            {
-                "image": {
-                    "media_content_id": "media-source://local/test.png",
-                    "media_content_type": "image/png",
-                },
-            },
-            target={"entity_id": ENTITY_ID},
-            blocking=True,
-        )
+    data = entity.extra_restore_state_data
+    assert data.has_stored_image is True
+
+
+async def test_extra_stored_data_roundtrip() -> None:
+    """Test ExtraStoredData serialization roundtrip."""
+    original = OpenDisplayImageExtraStoredData(
+        image_last_updated="2026-02-17T12:00:00+00:00",
+        has_stored_image=True,
+    )
+
+    as_dict = original.as_dict()
+    restored = OpenDisplayImageExtraStoredData.from_dict(as_dict)
+
+    assert restored is not None
+    assert restored.image_last_updated == "2026-02-17T12:00:00+00:00"
+    assert restored.has_stored_image is True
+
+
+async def test_extra_stored_data_from_dict_invalid() -> None:
+    """Test ExtraStoredData returns None for invalid data."""
+    assert OpenDisplayImageExtraStoredData.from_dict({}) is None
+    assert (
+        OpenDisplayImageExtraStoredData.from_dict({"image_last_updated": None}) is None
+    )
