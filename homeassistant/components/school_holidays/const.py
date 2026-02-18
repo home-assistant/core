@@ -2,6 +2,8 @@
 
 DOMAIN = "school_holidays"
 
+UPDATE_INTERVAL_HOURS = 1
+
 CONF_COUNTRY = "country"
 DEFAULT_COUNTRY = "The Netherlands"
 COUNTRIES = ["The Netherlands"]
