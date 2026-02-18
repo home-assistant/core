@@ -59,14 +59,15 @@ async def test_fans_actions(
 
     await async_init_integration(hass, mock_config_entry)
 
+    # Resolve the entity ID dynamically using the unique ID
     unique_id = f"{mock_config_entry.unique_id}_{type_key}"
-
     entity_entry = entity_registry.async_get_entity_id(FAN_DOMAIN, "prana", unique_id)
 
     assert entity_entry, f"Entity with unique_id {unique_id} not found in registry"
     target = entity_entry
 
     # --- Test Turn OFF ---
+    # Force state to ON so HA allows turning off
     hass.states.async_set(target, "on")
 
     await hass.services.async_call(
@@ -80,7 +81,7 @@ async def test_fans_actions(
     mock_prana_api.reset_mock()
 
     # --- Test Turn ON ---
-
+    # Force state to OFF so HA allows turning on
     hass.states.async_set(target, "off")
 
     await hass.services.async_call(
@@ -91,7 +92,9 @@ async def test_fans_actions(
     )
     mock_prana_api.set_speed_is_on.assert_called_with(True, type_key)
 
-    # --- Test Set Percentage (Speed) ---
+    mock_prana_api.reset_mock()
+
+    # --- Test Set Percentage (Speed 50%) ---
     hass.states.async_set(target, "on")
 
     await hass.services.async_call(
@@ -103,6 +106,22 @@ async def test_fans_actions(
 
     mock_prana_api.set_speed.assert_called()
     assert mock_prana_api.set_speed.call_args[0][1] == type_key
+
+    mock_prana_api.reset_mock()
+
+    # --- Test Set Percentage 0% (Should Turn OFF) ---
+    # Ensure it is ON before we test turning it off via percentage
+    hass.states.async_set(target, "on")
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+
+    # Verify that setting 0% called the turn_off API method, not set_speed
+    mock_prana_api.set_speed_is_on.assert_called_with(False, type_key)
 
     # --- Test Preset Mode ---
     await hass.services.async_call(

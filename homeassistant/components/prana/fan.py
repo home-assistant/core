@@ -108,17 +108,8 @@ class PranaFan(PranaBaseEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        speed_value = (
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range(self.coordinator),
-                    percentage,
-                )
-            )
-            * 10
-        )
         await self.coordinator.api_client.set_speed(
-            speed_value, self.entity_description.key
+            self.__get_speed_value(), self.entity_description.key
         )
         await self.coordinator.async_refresh()
 
@@ -141,7 +132,8 @@ class PranaFan(PranaBaseEntity, FanEntity):
             await self.async_set_percentage(percentage)
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-        await self.coordinator.async_refresh()
+        if percentage is None and preset_mode is None:
+            await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
@@ -154,6 +146,16 @@ class PranaFan(PranaBaseEntity, FanEntity):
         """Set the preset mode (e.g., night or boost)."""
         await self.coordinator.api_client.set_switch(preset_mode, True)
         await self.coordinator.async_refresh()
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        speed_value = self.__get_speed_value()
+        if speed_value == 1:
+            return "night"
+        if speed_value == self.entity_description.value_fn(self.coordinator).max_speed:
+            return "boost"
+        return None
 
     @property
     def available(self) -> bool:
@@ -169,3 +171,17 @@ class PranaFan(PranaBaseEntity, FanEntity):
         ):
             return self.coordinator.last_update_success
         return False
+
+    def __get_speed_value(self) -> int:
+        """Helper to get the current speed value from coordinator data."""
+        if self.percentage is None:
+            return 0
+        return (
+            math.ceil(
+                percentage_to_ranged_value(
+                    self.entity_description.speed_range(self.coordinator),
+                    self.percentage,
+                )
+            )
+            * 10
+        )
