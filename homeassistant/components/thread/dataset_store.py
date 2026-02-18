@@ -6,6 +6,7 @@ from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
 import logging
+from pprint import pformat
 from typing import Any, cast
 
 from propcache.api import cached_property
@@ -14,6 +15,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -28,6 +30,24 @@ STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _format_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[str, str]:
+    """Format a parsed Thread dataset for logging.
+
+    Returns a human-readable dict with enum field names as keys, redacting
+    NETWORKKEY and PSKC to avoid logging sensitive network credentials.
+    """
+    result = {}
+    for key, value in dataset.items():
+        name = key.name if isinstance(key, MeshcopTLVType) else str(key)
+        if key in (MeshcopTLVType.NETWORKKEY, MeshcopTLVType.PSKC):
+            result[name] = REDACTED
+        else:
+            result[name] = str(value)
+    return result
 
 
 class DatasetPreferredError(HomeAssistantError):
@@ -116,7 +136,8 @@ class DatasetStoreStore(Store):
                         or MeshcopTLVType.ACTIVETIMESTAMP not in entry.dataset
                     ):
                         _LOGGER.warning(
-                            "Dropped invalid Thread dataset '%s'", entry.tlv
+                            "Dropped invalid Thread dataset:\n%s",
+                            pformat(_format_dataset(entry.dataset)),
                         )
                         if entry.id == preferred_dataset:
                             preferred_dataset = None
@@ -125,12 +146,14 @@ class DatasetStoreStore(Store):
                     if entry.extended_pan_id in datasets:
                         if datasets[entry.extended_pan_id].id == preferred_dataset:
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of preferred dataset '%s')"
+                                "Dropped duplicated Thread dataset"
+                                " (duplicate of preferred dataset):\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         new_timestamp = cast(
@@ -148,21 +171,21 @@ class DatasetStoreStore(Store):
                             new_timestamp.ticks,
                         ):
                             _LOGGER.warning(
-                                (
-                                    "Dropped duplicated Thread dataset '%s' "
-                                    "(duplicate of '%s')"
+                                "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                                pformat(_format_dataset(entry.dataset)),
+                                pformat(
+                                    _format_dataset(
+                                        datasets[entry.extended_pan_id].dataset
+                                    )
                                 ),
-                                entry.tlv,
-                                datasets[entry.extended_pan_id].tlv,
                             )
                             continue
                         _LOGGER.warning(
-                            (
-                                "Dropped duplicated Thread dataset '%s' "
-                                "(duplicate of '%s')"
+                            "Dropped duplicated Thread dataset:\n%s\nkept:\n%s",
+                            pformat(
+                                _format_dataset(datasets[entry.extended_pan_id].dataset)
                             ),
-                            datasets[entry.extended_pan_id].tlv,
-                            entry.tlv,
+                            pformat(_format_dataset(entry.dataset)),
                         )
                     datasets[entry.extended_pan_id] = entry
                 data = {
@@ -261,22 +284,19 @@ class DatasetStore:
                 new_timestamp.ticks,
             ):
                 _LOGGER.warning(
-                    (
-                        "Got dataset with same extended PAN ID and same or older active"
-                        " timestamp, old dataset: '%s', new dataset: '%s'"
-                    ),
-                    entry.tlv,
-                    tlv,
+                    "Got dataset with same extended PAN ID and same or older"
+                    " active timestamp\nold:\n%s\nnew:\n%s",
+                    pformat(_format_dataset(entry.dataset)),
+                    pformat(_format_dataset(dataset)),
                 )
                 return
-            _LOGGER.debug(
-                (
-                    "Updating dataset with same extended PAN ID and newer active "
-                    "timestamp, old dataset: '%s', new dataset: '%s'"
-                ),
-                entry.tlv,
-                tlv,
-            )
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "Updating dataset with same extended PAN ID and newer"
+                    " active timestamp\nold:\n%s\nnew:\n%s",
+                    pformat(_format_dataset(entry.dataset)),
+                    pformat(_format_dataset(dataset)),
+                )
             self.datasets[entry.id] = dataclasses.replace(
                 self.datasets[entry.id], tlv=tlv
             )
