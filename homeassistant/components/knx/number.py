@@ -111,7 +111,7 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         """Initialize a KNX number."""
         self._device = NumericValue(
             knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(CONF_STATE_ADDRESS),
             respond_to_read=config[CONF_RESPOND_TO_READ],

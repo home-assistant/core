@@ -204,7 +204,7 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
         """Initialize of a KNX sensor."""
         self._device = XknxSensor(
             knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
             sync_state=config[CONF_SYNC_STATE],
             always_callback=True,

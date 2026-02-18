@@ -109,7 +109,7 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
         """Initialize of KNX switch."""
         self._device = XknxSwitch(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
             respond_to_read=config[CONF_RESPOND_TO_READ],

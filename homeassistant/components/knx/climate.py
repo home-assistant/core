@@ -164,7 +164,7 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
 
     return XknxClimate(
         xknx,
-        name=config.get(CONF_NAME, ""),
+        name=config[CONF_NAME],
         group_address_temperature=config[ClimateSchema.CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS

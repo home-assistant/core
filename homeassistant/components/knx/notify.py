@@ -33,7 +33,7 @@ def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotific
     """Return a KNX Notification to be used within XKNX."""
     return XknxNotification(
         xknx,
-        name=config.get(CONF_NAME, ""),
+        name=config[CONF_NAME],
         group_address=config[KNX_ADDRESS],
         value_type=config[CONF_TYPE],
     )

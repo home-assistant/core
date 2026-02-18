@@ -107,7 +107,7 @@ class KnxYamlDate(_KNXDate, KnxYamlEntity):
         """Initialize a KNX date."""
         self._device = XknxDateDevice(
             knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             localtime=False,
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(CONF_STATE_ADDRESS),

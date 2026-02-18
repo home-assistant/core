@@ -193,7 +193,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
         """Initialize the cover."""
         self._device = XknxCover(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
             group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
             group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),

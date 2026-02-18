@@ -85,7 +85,7 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
         """Initialize KNX scene."""
         self._device = XknxScene(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address=config[KNX_ADDRESS],
             scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
         )

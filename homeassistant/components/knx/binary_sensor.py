@@ -116,7 +116,7 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
         """Initialize of KNX binary sensor."""
         self._device = XknxBinarySensor(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address_state=config[CONF_STATE_ADDRESS],
             invert=config[CONF_INVERT],
             sync_state=config[CONF_SYNC_STATE],

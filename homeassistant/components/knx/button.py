@@ -37,7 +37,7 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
         """Initialize a KNX button."""
         self._device = XknxRawValue(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             payload_length=config[CONF_PAYLOAD_LENGTH],
             group_address=config[KNX_ADDRESS],
         )

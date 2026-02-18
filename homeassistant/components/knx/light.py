@@ -121,7 +121,7 @@ def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
 
     return XknxLight(
         xknx,
-        name=config.get(CONF_NAME, ""),
+        name=config[CONF_NAME],
         group_address_switch=config.get(KNX_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
