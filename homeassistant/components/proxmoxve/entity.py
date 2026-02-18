@@ -4,11 +4,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from yarl import URL
+
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import ProxmoxCoordinator, ProxmoxNodeData
+
+
+def _proxmox_base_url(coordinator: ProxmoxCoordinator) -> str:
+    """Return the base URL for the Proxmox VE."""
+    data = coordinator.config_entry.data
+    scheme = "https" if data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL) else "http"
+    return f"{scheme}://{data[CONF_HOST]}:{data[CONF_PORT]}"
 
 
 class ProxmoxCoordinatorEntity(CoordinatorEntity[ProxmoxCoordinator]):
@@ -36,6 +46,10 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
             },
             name=node_data.node.get("node", str(self.device_id)),
             model="Node",
+            configuration_url=URL(
+                _proxmox_base_url(coordinator)
+                + f"/#v1:0:=node%2F{node_data.node['node']}"
+            ),
         )
 
     @property
@@ -66,6 +80,9 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="VM",
+            configuration_url=URL(
+                _proxmox_base_url(coordinator) + f"/#v1:0:=qemu%2F{vm_data['vmid']}"
+            ),
             via_device=(
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
@@ -112,6 +129,10 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="Container",
+            configuration_url=URL(
+                _proxmox_base_url(coordinator)
+                + f"/#v1:0:=lxc%2F{container_data['vmid']}"
+            ),
             via_device=(
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
