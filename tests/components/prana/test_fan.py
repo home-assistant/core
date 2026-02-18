@@ -59,14 +59,8 @@ async def test_fans_actions(
 ) -> None:
     """Test turning fans on/off, setting speed and presets."""
 
-    # Set the bound mode in the mock state.
-    # This determines entity availability: 'bounded' is only available when bound=True.
+    # Set the bound mode in the mock, as this determines entity availability.
     mock_prana_api.get_state.return_value.bound = is_bound_mode
-
-    # Ensure the fan is initially ON in the mock.
-    # Home Assistant optimizes service calls and will not send a 'turn_off' command
-    # if it believes the entity is already off.
-    getattr(mock_prana_api.get_state.return_value, type_key).is_on = True
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -77,6 +71,8 @@ async def test_fans_actions(
     target = f"fan.prana_recuperator{entity_suffix}"
 
     # --- Test Turn OFF ---
+    hass.states.async_set(target, "on")
+
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_OFF,
@@ -85,13 +81,11 @@ async def test_fans_actions(
     )
     mock_prana_api.set_speed_is_on.assert_called_with(False, type_key)
 
-    # Reset the mock to clear the previous call history.
+    # Reset the mock to clear previous call history.
     mock_prana_api.reset_mock()
 
     # --- Test Turn ON ---
-    # Update the mock state to OFF.
-    # Home Assistant requires the entity to be off to process a 'turn_on' command.
-    getattr(mock_prana_api.get_state.return_value, type_key).is_on = False
+    hass.states.async_set(target, "off")
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -102,6 +96,8 @@ async def test_fans_actions(
     mock_prana_api.set_speed_is_on.assert_called_with(True, type_key)
 
     # --- Test Set Percentage (Speed) ---
+    hass.states.async_set(target, "on")
+
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
@@ -109,7 +105,6 @@ async def test_fans_actions(
         blocking=True,
     )
 
-    # Verify the API was called and the correct type key (e.g., 'supply') was passed.
     mock_prana_api.set_speed.assert_called()
     assert mock_prana_api.set_speed.call_args[0][1] == type_key
 
