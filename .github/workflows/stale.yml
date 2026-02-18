@@ -27,7 +27,7 @@ jobs:
       # - No PRs marked as no-stale
       # - No issues (-1)
       - name: 60 days stale PRs policy
-        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
+        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 60
@@ -67,7 +67,7 @@ jobs:
       # - No issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: 90 days stale issues
-        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
+        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           days-before-stale: 90
@@ -97,7 +97,7 @@ jobs:
       # - No Issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: Needs more information stale issues policy
-        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
+        uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
         with:
           repo-token: ${{ steps.token.outputs.token }}
           only-labels: "needs-more-information"
