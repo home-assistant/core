@@ -87,10 +87,10 @@ class EcovacsController:
                 mqtt_devices = [
                     Device(info, self._authenticator) for info in devices.mqtt
                 ]
+                self._devices.extend(mqtt_devices)
                 await asyncio.gather(
                     *(device.initialize(mqtt) for device in mqtt_devices)
                 )
-                self._devices.extend(mqtt_devices)
 
             for device_config in devices.xmpp:
                 bot = VacBot(
