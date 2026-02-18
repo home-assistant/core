@@ -92,10 +92,10 @@ async def async_setup_entry(
 
     try:
         api = await get_api(hass, dict(config_entry.data))
-    except TransmissionConnectError as err:
-        raise ConfigEntryNotReady from err
-    except (TransmissionAuthError, TransmissionError) as err:
+    except TransmissionAuthError as err:
         raise ConfigEntryAuthFailed from err
+    except (TransmissionConnectError, TransmissionError) as err:
+        raise ConfigEntryNotReady from err
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)

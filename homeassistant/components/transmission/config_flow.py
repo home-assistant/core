@@ -88,8 +88,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             except TransmissionAuthError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except (TransmissionConnectError, TransmissionError) as err:
-                _LOGGER.error(err)
+            except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -123,8 +122,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
             except TransmissionAuthError:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except (TransmissionConnectError, TransmissionError) as err:
-                _LOGGER.error(err)
+            except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
