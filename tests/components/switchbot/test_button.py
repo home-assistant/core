@@ -112,9 +112,24 @@ async def test_meter_pro_co2_sync_datetime_button(
         )
 
 
+@pytest.mark.parametrize(
+    ("tz", "expected_utc_offset_hours", "expected_utc_offset_minutes"),
+    [
+        (timezone(timedelta(hours=0, minutes=0)), 0, 0),
+        (timezone(timedelta(hours=0, minutes=30)), 0, 30),
+        (timezone(timedelta(hours=8, minutes=0)), 8, 0),
+        (timezone(timedelta(hours=-5, minutes=30)), -5, 30),
+        (timezone(timedelta(hours=5, minutes=30)), 5, 30),
+        (timezone(timedelta(hours=-5, minutes=-30)), -6, 30),  # -6h + 30m = -5:30
+        (timezone(timedelta(hours=-5, minutes=-45)), -6, 15),  # -6h + 15m = -5:45
+    ],
+)
 async def test_meter_pro_co2_sync_datetime_button_with_timezone(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    tz: timezone,
+    expected_utc_offset_hours: int,
+    expected_utc_offset_minutes: int,
 ) -> None:
     """Test sync datetime button with non-UTC timezone."""
     await async_setup_component(hass, DOMAIN, {})
@@ -125,8 +140,6 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
 
     mock_set_datetime = AsyncMock(return_value=True)
 
-    # Use a fixed datetime with UTC+5:30 offset (like India Standard Time)
-    tz = timezone(timedelta(hours=5, minutes=30))
     fixed_time = datetime(2025, 1, 9, 18, 0, 45, tzinfo=tz)
 
     with (
@@ -151,6 +164,6 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
 
         mock_set_datetime.assert_awaited_once_with(
             timestamp=int(fixed_time.timestamp()),
-            utc_offset_hours=5,
-            utc_offset_minutes=30,
+            utc_offset_hours=expected_utc_offset_hours,
+            utc_offset_minutes=expected_utc_offset_minutes,
         )
