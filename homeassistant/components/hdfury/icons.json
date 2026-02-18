@@ -5,6 +5,14 @@
         "default": "mdi:connection"
       }
     },
+    "number": {
+      "oled_fade": {
+        "default": "mdi:cellphone-information"
+      },
+      "reboot_timer": {
+        "default": "mdi:timer-refresh"
+      }
+    },
     "select": {
       "opmode": {
         "default": "mdi:cogs"
