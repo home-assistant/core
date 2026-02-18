@@ -16,13 +16,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, INITIAL_BACKOFF, MAX_RETRIES
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-MAX_RETRIES = 4
-INITIAL_BACKOFF = 2  # seconds
 
 
 @dataclass
