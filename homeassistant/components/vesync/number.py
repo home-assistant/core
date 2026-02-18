@@ -12,12 +12,13 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier
+from .common import is_humidifier, supports_timer
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -53,6 +54,28 @@ def _set_warm_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
     if is_humidifier(device) and device.supports_warm_mist:
         return device.set_warm_level(int(value))
     raise HomeAssistantError("Device does not support warm mist level adjustment.")
+
+
+def _timer_remain_value(device: VeSyncBaseDevice) -> float:
+    """Return current timer remaining in minutes from device state. Returns 0 when not set."""
+    state = getattr(device, "state", None)
+    if state is None:
+        return 0.0
+    remain = getattr(state, "timer_remain", None) or getattr(state, "timerRemain", None)
+    if remain is not None:
+        return float(remain)
+    return 0.0
+
+
+async def _set_timer_async(device: VeSyncBaseDevice, value: float) -> bool:
+    """Set timer duration in minutes. Always returns True so HA does not fail when device returns False."""
+    await device.set_timer(int(value))
+    return True
+
+
+def _set_timer(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
+    """Set timer duration in minutes. Does not fail HA when device does not implement timer."""
+    return _set_timer_async(device, value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -97,6 +120,18 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         exists_fn=lambda device: is_humidifier(device) and device.supports_warm_mist,
         set_value_fn=_set_warm_level,
         value_fn=_warm_mist_value,
+    ),
+    VeSyncNumberEntityDescription(
+        key="timer_duration",
+        translation_key="timer_duration",
+        native_min_value_fn=lambda _: 0.0,
+        native_max_value_fn=lambda _: 720.0,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        mode=NumberMode.BOX,
+        exists_fn=supports_timer,
+        set_value_fn=_set_timer,
+        value_fn=_timer_remain_value,
     ),
 ]
 

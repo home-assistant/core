@@ -73,3 +73,17 @@ def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
     """Check if the device represents an air fryer."""
 
     return device.product_type == ProductTypes.AIR_FRYER
+
+
+def supports_timer(device: VeSyncBaseDevice) -> bool:
+    """Check if the device has timer methods (get, set, clear).
+
+    All devices may have these methods; unsupported devices return None/False/False.
+    When True, we create timer entities and allow service calls; results are handled
+    without failing Home Assistant when the device does not implement timer.
+    """
+    return (
+        callable(getattr(device, "get_timer", None))
+        and callable(getattr(device, "set_timer", None))
+        and callable(getattr(device, "clear_timer", None))
+    )

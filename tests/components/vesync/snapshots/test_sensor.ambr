@@ -81,6 +81,45 @@
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_131s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'air-purifier-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.air_purifier_131s_filter_lifetime',
       'has_entity_name': True,
@@ -134,6 +173,22 @@
     'state': '25',
   })
 # ---
+# name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Air Purifier 131s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_131s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensor_state[Air Purifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -169,6 +224,45 @@
 # ---
 # name: test_sensor_state[Air Purifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_200s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -220,6 +314,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99',
+  })
+# ---
+# name: test_sensor_state[Air Purifier 200s][sensor.air_purifier_200s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Air Purifier 200s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_200s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Air Purifier 400s][devices]
@@ -340,6 +450,45 @@
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_400s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': '400s-purifier-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.air_purifier_400s_filter_lifetime',
       'has_entity_name': True,
@@ -407,6 +556,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Air Purifier 400s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_400s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Air Purifier 600s][devices]
@@ -527,6 +692,45 @@
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_600s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': '600s-purifier-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.air_purifier_600s_filter_lifetime',
       'has_entity_name': True,
@@ -594,6 +798,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Air Purifier 600s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_600s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
@@ -788,6 +1008,45 @@
       }),
       'area_id': None,
       'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'CS158Cooking-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
         'options': list([
           'cooking_end',
           'cooking',
@@ -914,6 +1173,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
@@ -1102,6 +1377,45 @@
       }),
       'area_id': None,
       'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'CS158Standby-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
         'options': list([
           'cooking_end',
           'cooking',
@@ -1228,6 +1542,22 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Standby Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -1263,7 +1593,62 @@
 # ---
 # name: test_sensor_state[Dimmable Light][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dimmable_light_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'dimmable-bulb-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[Dimmable Light][sensor.dimmable_light_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Dimmable Light Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dimmable_light_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
 # ---
 # name: test_sensor_state[Dimmer Switch][devices]
   list([
@@ -1300,7 +1685,62 @@
 # ---
 # name: test_sensor_state[Dimmer Switch][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dimmer_switch_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'dimmable-switch-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[Dimmer Switch][sensor.dimmer_switch_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Dimmer Switch Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dimmer_switch_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensor_state[Humidifier 200s][devices]
   list([
@@ -1337,6 +1777,45 @@
 # ---
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_200s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': '200s-humidifier4321-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -1389,6 +1868,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
+  })
+# ---
+# name: test_sensor_state[Humidifier 200s][sensor.humidifier_200s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Humidifier 200s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_200s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Humidifier 6000s][devices]
@@ -1514,6 +2009,45 @@
       'device_id': <ANY>,
       'disabled_by': None,
       'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_6000s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': '6000s-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
       'has_entity_name': True,
@@ -1586,6 +2120,22 @@
     'state': '17.7777777777778',
   })
 # ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Humidifier 6000s Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensor_state[Humidifier 600S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -1621,6 +2171,45 @@
 # ---
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_600s_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': '600s-humidifier-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -1673,6 +2262,22 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
+  })
+# ---
+# name: test_sensor_state[Humidifier 600S][sensor.humidifier_600s_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Humidifier 600S Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_600s_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Outlet][devices]
@@ -1919,6 +2524,45 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
+      'entity_id': 'sensor.outlet_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'outlet-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
       'entity_id': 'sensor.outlet_current_power',
       'has_entity_name': True,
       'hidden_by': None,
@@ -2042,6 +2686,22 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensor_state[Outlet][sensor.outlet_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Outlet Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.outlet_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensor_state[SmartTowerFan][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -2077,7 +2737,62 @@
 # ---
 # name: test_sensor_state[SmartTowerFan][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.smarttowerfan_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'smarttowerfan-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[SmartTowerFan][sensor.smarttowerfan_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'SmartTowerFan Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smarttowerfan_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensor_state[Temperature Light][devices]
   list([
@@ -2114,7 +2829,62 @@
 # ---
 # name: test_sensor_state[Temperature Light][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.temperature_light_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'tunable-bulb-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[Temperature Light][sensor.temperature_light_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Temperature Light Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_light_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
 # name: test_sensor_state[Wall Switch][devices]
   list([
@@ -2151,5 +2921,60 @@
 # ---
 # name: test_sensor_state[Wall Switch][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.wall_switch_timer_remaining',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Timer remaining',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Timer remaining',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'timer_remaining',
+      'unique_id': 'switch-timer_remaining',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[Wall Switch][sensor.wall_switch_timer_remaining]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Wall Switch Timer remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_switch_timer_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
 # ---
