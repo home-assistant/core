@@ -184,5 +184,5 @@ class PTDevicesSensorEntity(PTDevicesEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | int | str | None:
-        """Return the state of the senor."""
+        """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
