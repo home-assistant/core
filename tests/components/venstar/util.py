@@ -40,6 +40,12 @@ def mock_venstar_devices(f):
                     f"http://venstar-{model}.localdomain/query/alerts",
                     text=await async_load_fixture(hass, f"{model}_alerts.json", DOMAIN),
                 )
+                m.get(
+                    f"http://venstar-{model}.localdomain/query/runtimes",
+                    text=await async_load_fixture(
+                        hass, f"{model}_runtimes.json", DOMAIN
+                    ),
+                )
             await f(hass)
 
     return wrapper

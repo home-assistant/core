@@ -137,7 +137,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         translation_key="registrar",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrar if domain.registrar else None,
+        value_fn=lambda domain: domain.registrar or None,
     ),
     WhoisSensorEntityDescription(
         key="reseller",

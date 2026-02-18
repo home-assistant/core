@@ -471,7 +471,7 @@ async def async_setup_other_entry(
             )
             entities.append(device)
             hass.data[DATA_KEY][host] = device
-        elif model in ["lumi.acpartner.v3"]:
+        elif model == "lumi.acpartner.v3":
             ac_companion = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
                 name, ac_companion, config_entry, unique_id
