@@ -9,6 +9,8 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
+    ATTR_DURATION,
+    ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
@@ -84,33 +86,83 @@ async def test_get_account_failure(
         )
 
 
+@pytest.mark.parametrize(
+    (
+        "service_data",
+        "expected_notifications",
+        "expected_duration",
+    ),
+    [
+        (
+            {ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social"},
+            True,
+            None,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_HIDE_NOTIFICATIONS: False,
+            },
+            False,
+            None,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: 2,
+            },
+            True,
+            7200,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: 12,
+                ATTR_HIDE_NOTIFICATIONS: False,
+            },
+            False,
+            43200,
+        ),
+    ],
+)
 async def test_mute_account_success(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    service_data: dict[str, str | int | bool],
+    expected_notifications: bool,
+    expected_duration: int | None,
 ) -> None:
-    """Test the mute_account service mutes the target account."""
+    """Test the mute_account service mutes the target account with all options."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MUTE_ACCOUNT,
-        {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-        },
+        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | service_data,
         blocking=True,
         return_response=False,
     )
 
     mock_mastodon_client.account_lookup.assert_called_once_with(
-        acct="@trwnh@mastodon.social"
+        acct=service_data[ATTR_ACCOUNT_NAME]
     )
     account = mock_mastodon_client.account_lookup.return_value
-    mock_mastodon_client.account_mute.assert_called_once_with(
-        id=account.id, notifications=True, duration=None
-    )
+    assert mock_mastodon_client.account_mute.call_count == 1
+    call_args, call_kwargs = mock_mastodon_client.account_mute.call_args
+
+    if call_kwargs:
+        actual_id = call_kwargs["id"]
+        actual_notifications = call_kwargs["notifications"]
+        actual_duration = call_kwargs.get("duration")
+    else:
+        _, positional_args, _ = call_args
+        actual_id, actual_notifications, actual_duration = positional_args
+
+    assert actual_id == account.id
+    assert actual_notifications == expected_notifications
+    assert actual_duration == expected_duration
 
 
 async def test_mute_account_failure_not_found(

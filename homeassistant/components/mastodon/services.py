@@ -165,6 +165,7 @@ async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
     account_name: str = call.data[ATTR_ACCOUNT_NAME]
     duration: int | None = call.data.get(ATTR_DURATION)
     hide_notifications: bool = call.data[ATTR_HIDE_NOTIFICATIONS]
+    duration_hours = duration * 3600 if duration is not None else None
 
     try:
         account = await _async_account_lookup(call.hass, client, account_name)
@@ -173,7 +174,7 @@ async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
                 client.account_mute,
                 id=account.id,
                 notifications=hide_notifications,
-                duration=duration,
+                duration=duration_hours,
             )
         )
     except MastodonAPIError as err:

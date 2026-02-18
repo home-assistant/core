@@ -160,7 +160,7 @@
           "name": "Mastodon instance"
         },
         "duration": {
-          "description": "The duration in seconds to mute the account for (default: indefinitely).",
+          "description": "The duration in hours to mute the account for (default: indefinitely).",
           "name": "Duration"
         },
         "hide_notifications": {
