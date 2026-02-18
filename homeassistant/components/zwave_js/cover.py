@@ -166,11 +166,11 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             return
 
         if target_position > current_value.value:
-            self._is_opening = True
-            self._is_closing = False
+            self._attr_is_opening = True
+            self._attr_is_closing = False
         elif target_position < current_value.value:
-            self._is_opening = False
-            self._is_closing = True
+            self._attr_is_opening = False
+            self._attr_is_closing = True
         else:
             return
 
@@ -179,7 +179,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     @callback
     def on_value_update(self) -> None:
         """Clear moving state when current position reaches target."""
-        if not self._is_opening and not self._is_closing:
+        if not self._attr_is_opening and not self._attr_is_closing:
             return
 
         if (
@@ -189,8 +189,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
             and self._target_position_value.value is not None
             and self._current_position_value.value == self._target_position_value.value
         ):
-            self._is_opening = False
-            self._is_closing = False
+            self._attr_is_opening = False
+            self._attr_is_closing = False
 
     @property
     def current_cover_position(self) -> int | None:
@@ -249,8 +249,8 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         result = await self._async_set_value(self._stop_position_value, False)
         # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
         if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._is_opening = False
-            self._is_closing = False
+            self._attr_is_opening = False
+            self._attr_is_closing = False
             self.async_write_ha_state()
 
 
@@ -497,8 +497,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         result = await self._async_set_value(self._up_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
         if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._is_opening = True
-            self._is_closing = False
+            self._attr_is_opening = True
+            self._attr_is_closing = False
             self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -506,8 +506,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         result = await self._async_set_value(self._down_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
         if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._is_opening = False
-            self._is_closing = True
+            self._attr_is_opening = False
+            self._attr_is_closing = True
             self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -515,8 +515,8 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         result = await self._async_set_value(self._up_value, False)
         # StartLevelChange: SUCCESS means the device has stopped moving
         if result is not None and result.status in SET_VALUE_SUCCESS:
-            self._is_opening = False
-            self._is_closing = False
+            self._attr_is_opening = False
+            self._attr_is_closing = False
             self.async_write_ha_state()
 
 
