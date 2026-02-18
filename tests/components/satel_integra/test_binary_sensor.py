@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +16,12 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import get_monitor_callbacks, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -117,3 +123,30 @@ async def test_binary_sensor_callback(
     zone_update_method({"zones": {2: 1}})
     assert hass.states.get("binary_sensor.zone").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.output").state == STATE_UNKNOWN
+
+
+async def test_binary_sensor_last_reported(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensors update last_reported if same state is reported."""
+    events = async_capture_events(hass, "state_changed")
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    first_reported = hass.states.get("binary_sensor.zone").last_reported
+    assert first_reported is not None
+    # Initial 2 state change events for both zone and output
+    assert len(events) == 2
+
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+
+    # Run callbacks with same payload
+    _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
+    output_update_method({"outputs": {1: 0}})
+    zone_update_method({"zones": {1: 0}})
+
+    assert first_reported != hass.states.get("binary_sensor.zone").last_reported
+    assert len(events) == 2  # last_reported shall not fire state_changed
