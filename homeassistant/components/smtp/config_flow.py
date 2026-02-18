@@ -8,10 +8,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -23,7 +21,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -216,108 +213,21 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
             data=import_data,
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> SMTPOptionsFlow:
-        """Get the options flow for this handler."""
-        return SMTPOptionsFlow()
-
-
-UNCHANGED_PASSWORD = "__UNCHANGED__"
-
-
-def _build_options_schema(user_input: dict[str, Any], has_password: bool) -> vol.Schema:
-    """Build schema for options flow with password placeholder."""
-    return vol.Schema(
-        {
-            # Server settings (top section)
-            vol.Required(
-                CONF_SERVER,
-                default=user_input.get(CONF_SERVER, DEFAULT_HOST),
-            ): TextSelector(),
-            vol.Required(
-                CONF_PORT,
-                default=user_input.get(CONF_PORT, DEFAULT_PORT),
-            ): NumberSelector(
-                NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
-            ),
-            vol.Required(
-                CONF_ENCRYPTION,
-                default=user_input.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=ENCRYPTION_OPTIONS,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key=CONF_ENCRYPTION,
-                )
-            ),
-            # Authentication
-            vol.Optional(
-                CONF_USERNAME,
-                default=user_input.get(CONF_USERNAME, ""),
-            ): TextSelector(),
-            vol.Optional(
-                CONF_PASSWORD,
-                description={
-                    "suggested_value": UNCHANGED_PASSWORD if has_password else ""
-                },
-            ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-            # Email addresses
-            vol.Required(
-                CONF_SENDER,
-                default=user_input.get(CONF_SENDER, ""),
-            ): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL)),
-            vol.Optional(
-                CONF_SENDER_NAME,
-                default=user_input.get(CONF_SENDER_NAME, ""),
-            ): TextSelector(),
-            vol.Required(
-                CONF_RECIPIENT,
-                default=user_input.get(CONF_RECIPIENT, ""),
-            ): TextSelector(),
-            # Advanced settings
-            vol.Required(
-                CONF_TIMEOUT,
-                default=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    min=1, max=60, mode=NumberSelectorMode.BOX, unit_of_measurement="s"
-                )
-            ),
-            vol.Required(
-                CONF_VERIFY_SSL,
-                default=user_input.get(CONF_VERIFY_SSL, True),
-            ): BooleanSelector(),
-            vol.Required(
-                CONF_DEBUG,
-                default=user_input.get(CONF_DEBUG, DEFAULT_DEBUG),
-            ): BooleanSelector(),
-        }
-    )
-
-
-class SMTPOptionsFlow(OptionsFlow):
-    """Handle SMTP options."""
-
-    async def async_step_init(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Handle reconfiguration."""
         errors: dict[str, str] = {}
-        current = self.config_entry.data
-        has_password = bool(current.get(CONF_PASSWORD))
+        entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             # Convert port to int (NumberSelector returns float)
             user_input[CONF_PORT] = int(user_input[CONF_PORT])
             user_input[CONF_TIMEOUT] = int(user_input[CONF_TIMEOUT])
 
-            # Keep existing password if unchanged
-            password = user_input.get(CONF_PASSWORD)
-            if password == UNCHANGED_PASSWORD or not password:
-                user_input[CONF_PASSWORD] = current.get(CONF_PASSWORD, "")
+            # Keep existing password if empty
+            if not user_input.get(CONF_PASSWORD):
+                user_input[CONF_PASSWORD] = entry.data.get(CONF_PASSWORD, "")
 
             # Validate recipients
             recipients = _validate_recipients(user_input[CONF_RECIPIENT])
@@ -339,27 +249,23 @@ class SMTPOptionsFlow(OptionsFlow):
                 if error:
                     errors["base"] = error
                 else:
-                    new_data = {**user_input, CONF_RECIPIENT: recipients}
-
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry,
-                        data=new_data,
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**user_input, CONF_RECIPIENT: recipients},
                         title=_build_title(
                             user_input[CONF_SENDER],
                             user_input.get(CONF_SENDER_NAME),
                         ),
                     )
-                    await self.hass.config_entries.async_reload(
-                        self.config_entry.entry_id
-                    )
-                    return self.async_create_entry(title="", data={})
 
-        # Build current values for the form
+        # Pre-fill with current values
+        current = entry.data
         current_input = {
             CONF_SERVER: current.get(CONF_SERVER, DEFAULT_HOST),
             CONF_PORT: current.get(CONF_PORT, DEFAULT_PORT),
             CONF_ENCRYPTION: current.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
             CONF_USERNAME: current.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: "",
             CONF_SENDER: current.get(CONF_SENDER, ""),
             CONF_SENDER_NAME: current.get(CONF_SENDER_NAME, ""),
             CONF_RECIPIENT: ", ".join(current.get(CONF_RECIPIENT, [])),
@@ -369,7 +275,7 @@ class SMTPOptionsFlow(OptionsFlow):
         }
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=_build_options_schema(current_input, has_password),
+            step_id="reconfigure",
+            data_schema=_build_schema(current_input),
             errors=errors,
         )

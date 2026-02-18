@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This sender address is already configured."
+      "already_configured": "This sender address is already configured.",
+      "reconfigure_successful": "SMTP configuration updated successfully."
     },
     "error": {
       "cannot_connect": "Cannot connect to mail server. Verify the server address, port, and security settings.",
@@ -9,6 +10,36 @@
       "invalid_email": "Invalid email address. Check the format (e.g. user@example.com)."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "debug": "Enable debug logging",
+          "encryption": "Security",
+          "password": "Password",
+          "port": "Port",
+          "recipient": "To address",
+          "sender": "From address",
+          "sender_name": "From name",
+          "server": "Mail server",
+          "timeout": "Connection timeout",
+          "username": "Login",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "debug": "Log detailed SMTP communication for troubleshooting",
+          "encryption": "Security protocol for the connection",
+          "password": "Leave empty to keep current password.",
+          "port": "Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (unencrypted)",
+          "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
+          "sender": "The email address notifications will be sent from",
+          "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
+          "server": "e.g. smtp.gmail.com, smtp.office365.com, smtp.mail.yahoo.com",
+          "timeout": "How long to wait for server response",
+          "username": "Your email address or account username",
+          "verify_ssl": "Recommended to keep enabled for security"
+        },
+        "description": "Update your email server configuration.",
+        "title": "Reconfigure SMTP"
+      },
       "user": {
         "data": {
           "debug": "Enable debug logging",
@@ -56,40 +87,6 @@
     "deprecated_yaml": {
       "description": "Configuring SMTP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the SMTP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
       "title": "SMTP YAML configuration is being removed"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "debug": "Enable debug logging",
-          "encryption": "Security",
-          "password": "Password",
-          "port": "Port",
-          "recipient": "To address",
-          "sender": "From address",
-          "sender_name": "From name",
-          "server": "Mail server",
-          "timeout": "Connection timeout",
-          "username": "Login",
-          "verify_ssl": "Verify SSL certificate"
-        },
-        "data_description": {
-          "debug": "Log detailed SMTP communication for troubleshooting",
-          "encryption": "Security protocol for the connection",
-          "password": "Leave unchanged to keep current password. Enter new value to change.",
-          "port": "Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (unencrypted)",
-          "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
-          "sender": "The email address notifications will be sent from",
-          "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
-          "server": "e.g. smtp.gmail.com, smtp.office365.com, smtp.mail.yahoo.com",
-          "timeout": "How long to wait for server response",
-          "username": "Your email address or account username",
-          "verify_ssl": "Recommended to keep enabled for security"
-        },
-        "description": "Update your email server configuration.",
-        "title": "Edit SMTP Settings"
-      }
     }
   },
   "selector": {
