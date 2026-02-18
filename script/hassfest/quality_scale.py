@@ -1879,7 +1879,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "smarty",
     "smhi",
     "sms",
-    "smtp",
     "snapcast",
     "snmp",
     "snooz",
