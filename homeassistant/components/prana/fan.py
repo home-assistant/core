@@ -1,10 +1,10 @@
 """Fan platform for Prana integration."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import math
 from typing import Any
 
-from aioesphomeapi import dataclass
 from prana_local_api_client.models.prana_state import FanState
 
 from homeassistant.components.fan import (

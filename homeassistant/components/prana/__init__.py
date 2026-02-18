@@ -19,7 +19,6 @@ PLATFORMS = [Platform.FAN, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:
     """Set up Prana from a config entry."""
-    _LOGGER.info("Setting up Prana integration")
     coordinator = PranaCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
