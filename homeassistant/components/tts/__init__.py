@@ -527,6 +527,16 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
+        if self._result_cache.done():
+            if self._result_cache.cancelled():
+                # Client disconnected before result was set, recreate the future.
+                try:
+                    del self.__dict__["_result_cache"]
+                except KeyError:
+                    pass
+            else:
+                # Stream already set the result, skip.
+                return
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -543,6 +553,12 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
+        if self._result_cache.done():
+            # Previous result or cancelled future, recreate.
+            try:
+                del self.__dict__["_result_cache"]
+            except KeyError:
+                pass
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -562,7 +578,7 @@ class ResultStream:
             self.last_used = monotonic()
             return
 
-        cache = await self._result_cache
+        cache = await asyncio.shield(self._result_cache)
         async for chunk in cache.async_stream_data():
             yield chunk
 
