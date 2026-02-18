@@ -562,7 +562,7 @@ asyncinotify==4.2.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.6.0
+asyncsleepiq==1.7.0
 
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
