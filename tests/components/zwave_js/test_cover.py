@@ -1202,3 +1202,392 @@ async def test_window_covering_open_close(
     assert args["value"] is False
 
     client.async_send_command.reset_mock()
+
+
+async def test_multilevel_switch_cover_moving_state_working(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test opening state with Supervision WORKING on Multilevel Switch cover."""
+    node = chain_actuator_zws12
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Simulate Supervision WORKING response
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
+    # Open cover - should set OPENING state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Simulate intermediate position update (still moving)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 50,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Simulate targetValue update (driver sets this when command is sent)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "targetValue",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "targetValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    # Simulate reaching target position
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 99,
+                "prevValue": 50,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+
+
+async def test_multilevel_switch_cover_moving_state_closing(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test closing state with Supervision WORKING on Multilevel Switch cover."""
+    node = chain_actuator_zws12
+
+    # First set position to open
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+
+    # Simulate Supervision WORKING response
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
+    # Close cover - should set CLOSING state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+
+async def test_multilevel_switch_cover_moving_state_success_no_moving(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test that SUCCESS does not set moving state on Multilevel Switch cover."""
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Default mock already returns status 255 (SUCCESS)
+
+    # Open cover - SUCCESS means device already at target, no moving state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    # State should still be CLOSED since no value update has been received
+    # and SUCCESS means the command completed immediately
+    assert state.state == CoverState.CLOSED
+
+
+async def test_multilevel_switch_cover_moving_state_unsupervised(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test SUCCESS_UNSUPERVISED sets moving state on Multilevel Switch cover."""
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Simulate SUCCESS_UNSUPERVISED response
+    client.async_send_command.return_value = {"result": {"status": 254}}
+
+    # Open cover - should set OPENING state optimistically
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+
+async def test_multilevel_switch_cover_moving_state_stop_clears(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test stop_cover clears moving state on Multilevel Switch cover."""
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Simulate WORKING response
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
+    # Open cover to set OPENING state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Reset to SUCCESS for stop command
+    client.async_send_command.return_value = {"result": {"status": 255}}
+
+    # Stop cover - should clear opening state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    # Cover is still at position 0 (closed), so is_closed returns True
+    assert state.state == CoverState.CLOSED
+
+
+async def test_multilevel_switch_cover_moving_state_set_position(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test moving state direction with set_cover_position on Multilevel Switch cover."""
+    node = chain_actuator_zws12
+
+    # First set position to 50 (open)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": 50,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    # Simulate WORKING response
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
+    # Set position to 20 (closing direction)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 20},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+    # Set position to 80 (opening direction)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 80},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+
+async def test_window_covering_cover_moving_state(
+    hass: HomeAssistant, client, window_covering_outbound_bottom, integration
+) -> None:
+    """Test moving state for Window Covering CC (StartLevelChange commands)."""
+    node = window_covering_outbound_bottom
+    entity_id = "cover.node_2_outbound_bottom"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Default mock returns SUCCESS (255). For StartLevelChange,
+    # SUCCESS means the device started moving.
+
+    # Open cover - should set OPENING state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPENING
+
+    client.async_send_command.reset_mock()
+
+    # Stop cover - should clear moving state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state != CoverState.OPENING
+
+    client.async_send_command.reset_mock()
+
+    # Close cover - should set CLOSING state
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.CLOSING
+
+    # Simulate reaching target: currentValue matches targetValue
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Window Covering",
+                "commandClass": 106,
+                "endpoint": 0,
+                "property": "targetValue",
+                "propertyKey": 13,
+                "newValue": 0,
+                "prevValue": 52,
+                "propertyName": "targetValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Window Covering",
+                "commandClass": 106,
+                "endpoint": 0,
+                "property": "currentValue",
+                "propertyKey": 13,
+                "newValue": 0,
+                "prevValue": 52,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.CLOSED
+
+
+async def test_multilevel_switch_cover_moving_state_none_result(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
+    """Test None result (node asleep) does not set moving state on Multilevel Switch cover."""
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # Simulate None result (node asleep/command queued).
+    # When node.async_send_command returns None, async_set_value returns None.
+    client.async_send_command.return_value = None
+
+    # Open cover - should NOT set OPENING state since result is None
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
