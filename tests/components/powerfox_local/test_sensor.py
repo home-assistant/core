@@ -15,7 +15,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import MOCK_DEVICE_ID, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -42,17 +42,15 @@ async def test_update_failed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities become unavailable after failed update."""
+    entity_id = f"sensor.poweropti_{MOCK_DEVICE_ID[-5:]}_energy_usage"
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("sensor.poweropti_1_1_1_1_energy_usage").state is not None
+    assert hass.states.get(entity_id).state is not None
 
     mock_powerfox_local_client.value.side_effect = PowerfoxConnectionError
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.poweropti_1_1_1_1_energy_usage").state
-        == STATE_UNAVAILABLE
-    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

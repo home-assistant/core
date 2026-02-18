@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.powerfox_local.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from . import MOCK_API_KEY, MOCK_HOST
+from . import MOCK_API_KEY, MOCK_DEVICE_ID, MOCK_HOST
 
 from tests.common import MockConfigEntry
 
@@ -59,8 +59,8 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a Powerfox Local config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=f"Poweropti ({MOCK_HOST})",
-        unique_id=MOCK_API_KEY,
+        title=f"Poweropti ({MOCK_DEVICE_ID[-5:]})",
+        unique_id=MOCK_DEVICE_ID,
         data={
             CONF_HOST: MOCK_HOST,
             CONF_API_KEY: MOCK_API_KEY,

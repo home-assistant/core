@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import MOCK_API_KEY, MOCK_HOST
+from . import MOCK_API_KEY, MOCK_DEVICE_ID, MOCK_HOST
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     name="Powerfox",
     port=443,
     type="_http._tcp",
-    properties={"id": MOCK_API_KEY},
+    properties={"id": MOCK_DEVICE_ID},
 )
 
 
@@ -47,11 +47,12 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == f"Poweropti ({MOCK_HOST})"
+    assert result.get("title") == f"Poweropti ({MOCK_DEVICE_ID[-5:]})"
     assert result.get("data") == {
         CONF_HOST: MOCK_HOST,
         CONF_API_KEY: MOCK_API_KEY,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_ID
     assert len(mock_powerfox_local_client.value.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -77,11 +78,12 @@ async def test_zeroconf_discovery(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == f"Poweropti ({MOCK_HOST})"
+    assert result.get("title") == f"Poweropti ({MOCK_DEVICE_ID[-5:]})"
     assert result.get("data") == {
         CONF_HOST: MOCK_HOST,
         CONF_API_KEY: MOCK_API_KEY,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
