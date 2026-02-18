@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.touchline_sl.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +13,9 @@ from tests.common import MockConfigEntry
 ENTITY_ID = "climate.zone_1"
 
 
-def make_mock_zone(zone_id: int = 1, name: str = "Zone 1", alarm: str | None = None) -> MagicMock:
+def make_mock_zone(
+    zone_id: int = 1, name: str = "Zone 1", alarm: str | None = None
+) -> MagicMock:
     """Return a mock Zone with configurable alarm state."""
     zone = MagicMock()
     zone.id = zone_id
@@ -46,7 +47,9 @@ def make_mock_module(zones: list) -> MagicMock:
 
 
 @pytest.fixture
-def mock_touchlinesl_full_client(mock_config_entry: MockConfigEntry) -> Generator[MagicMock]:
+def mock_touchlinesl_full_client(
+    mock_config_entry: MockConfigEntry,
+) -> Generator[MagicMock]:
     """Mock a pytouchlinesl client with full module/zone support."""
     with patch(
         "homeassistant.components.touchline_sl.TouchlineSL",
