@@ -6,6 +6,9 @@ from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from multidict import MultiMapping
+
 from .util.event_type import EventType
 
 if TYPE_CHECKING:
@@ -216,6 +219,63 @@ class ConfigEntryNotReady(IntegrationError):
 
 class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
+
+
+class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
+    """Error to indicate that the OAuth 2.0 flow could not refresh token."""
+
+    def __init__(
+        self,
+        *,
+        request_info: RequestInfo,
+        history: tuple[ClientResponse, ...] = (),
+        status: int = 0,
+        message: str = "OAuth 2.0 token refresh failed",
+        headers: MultiMapping[str] | None = None,
+        domain: str,
+    ) -> None:
+        """Initialize OAuth2RefreshTokenFailed."""
+        ClientResponseError.__init__(
+            self,
+            request_info=request_info,
+            history=history,
+            status=status,
+            message=message,
+            headers=headers,
+        )
+        HomeAssistantError.__init__(self)
+        self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_failed"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
+class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
+    """Recoverable error to indicate flow could not refresh token."""
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenTransientError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
+class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
+    """Non recoverable error to indicate the flow could not refresh token.
+
+    Re-authentication is required.
+    """
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenReauthError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_reauth_required"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
 
 
 class InvalidStateError(HomeAssistantError):

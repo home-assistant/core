@@ -7,11 +7,15 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
@@ -478,7 +482,7 @@ async def test_abort_discovered_multiple(
         (
             HTTPStatus.NOT_FOUND,
             {},
-            "oauth_failed",
+            "oauth_unauthorized",
             "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
@@ -494,7 +498,7 @@ async def test_abort_discovered_multiple(
                 "error_description": "Request was missing the 'redirect_uri' parameter.",
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
-            "oauth_failed",
+            "oauth_unauthorized",
             "Token request for oauth2_test failed (invalid_request): Request was missing the",
         ),
     ],
@@ -979,16 +983,42 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
     }
 
 
-async def test_oauth_session_refresh_failure(
+@pytest.mark.parametrize(
+    ("status_code", "expected_exception"),
+    [
+        (
+            HTTPStatus.BAD_REQUEST,
+            OAuth2TokenRequestReauthError,
+        ),
+        (
+            HTTPStatus.TOO_MANY_REQUESTS,  # 429, odd one, but treated as transient
+            OAuth2TokenRequestTransientError,
+        ),
+        (
+            HTTPStatus.INTERNAL_SERVER_ERROR,  # 500 range, so treated as transient
+            OAuth2TokenRequestTransientError,
+        ),
+        (
+            600,  # Nonsense code, just to hit the generic error branch
+            OAuth2TokenRequestError,
+        ),
+    ],
+)
+async def test_oauth_session_refresh_failure_exceptions(
     hass: HomeAssistant,
     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
     aioclient_mock: AiohttpClientMocker,
+    status_code: int,
+    expected_exception: type[Exception],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the OAuth2 session helper when no refresh is needed."""
+    """Test OAuth2 session refresh failures raise mapped exceptions."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
     flow_handler.async_register_implementation(hass, local_impl)
 
-    aioclient_mock.post(TOKEN_URL, status=400)
+    aioclient_mock.post(TOKEN_URL, status=status_code, json={})
 
     config_entry = MockConfigEntry(
         domain=TEST_DOMAIN,
@@ -1005,10 +1035,17 @@ async def test_oauth_session_refresh_failure(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
-    with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
+    with (
+        caplog.at_level(logging.WARNING),
+        pytest.raises(expected_exception) as err,
+    ):
         await session.async_request("post", "https://example.com")
+
+    assert err.value.status == status_code
+    assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
 
 
 async def test_oauth2_without_secret_init(
