@@ -81,7 +81,7 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
 
     @property
     def native_value(self) -> float:
-        """Set Number Value."""
+        """Return the current number value."""
 
         return float(self.coordinator.data.config[self.entity_description.key])
 
