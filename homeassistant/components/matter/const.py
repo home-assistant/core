@@ -2,6 +2,8 @@
 
 import logging
 
+from chip.clusters import Objects as clusters
+
 ADDON_SLUG = "core_matter_server"
 
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
@@ -63,61 +65,66 @@ CRED_TYPE_PIN = "pin"
 CRED_TYPE_RFID = "rfid"
 
 # Door lock operation source mapping (Matter DoorLock OperationSourceEnum)
+_OperationSource = clusters.DoorLock.Enums.OperationSourceEnum
 DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
-    0: "Unspecified",
-    1: "Manual",  # [Optional]
-    2: "Proprietary Remote",  # [Optional]
-    3: "Keypad",  # [Optional]
-    4: "Auto",  # [Optional]
-    5: "Button",  # [Optional]
-    6: "Schedule",  # [HDSCH]
-    7: "Remote",  # [M]
-    8: "RFID",  # [RID]
-    9: "Biometric",  # [USR]
-    10: "Aliro",  # [Aliro]
+    _OperationSource.kUnspecified: "Unspecified",
+    _OperationSource.kManual: "Manual",
+    _OperationSource.kProprietaryRemote: "Proprietary Remote",
+    _OperationSource.kKeypad: "Keypad",
+    _OperationSource.kAuto: "Auto",
+    _OperationSource.kButton: "Button",
+    _OperationSource.kSchedule: "Schedule",
+    _OperationSource.kRemote: "Remote",
+    _OperationSource.kRfid: "RFID",
+    _OperationSource.kBiometric: "Biometric",
+    _OperationSource.kAliro: "Aliro",
 }
 
 # User status mapping (Matter DoorLock UserStatusEnum)
+_UserStatus = clusters.DoorLock.Enums.UserStatusEnum
 USER_STATUS_MAP: dict[int, str] = {
-    0: "available",
-    1: "occupied_enabled",
-    3: "occupied_disabled",
+    _UserStatus.kAvailable: "available",
+    _UserStatus.kOccupiedEnabled: "occupied_enabled",
+    _UserStatus.kOccupiedDisabled: "occupied_disabled",
 }
 USER_STATUS_REVERSE_MAP: dict[str, int] = {v: k for k, v in USER_STATUS_MAP.items()}
 
 # User type mapping (Matter DoorLock UserTypeEnum)
+_UserType = clusters.DoorLock.Enums.UserTypeEnum
 USER_TYPE_MAP: dict[int, str] = {
-    0: "unrestricted_user",
-    1: "year_day_schedule_user",
-    2: "week_day_schedule_user",
-    3: "programming_user",
-    4: "non_access_user",
-    5: "forced_user",
-    6: "disposable_user",
-    7: "expiring_user",
-    8: "schedule_restricted_user",
-    9: "remote_only_user",
+    _UserType.kUnrestrictedUser: "unrestricted_user",
+    _UserType.kYearDayScheduleUser: "year_day_schedule_user",
+    _UserType.kWeekDayScheduleUser: "week_day_schedule_user",
+    _UserType.kProgrammingUser: "programming_user",
+    _UserType.kNonAccessUser: "non_access_user",
+    _UserType.kForcedUser: "forced_user",
+    _UserType.kDisposableUser: "disposable_user",
+    _UserType.kExpiringUser: "expiring_user",
+    _UserType.kScheduleRestrictedUser: "schedule_restricted_user",
+    _UserType.kRemoteOnlyUser: "remote_only_user",
 }
 USER_TYPE_REVERSE_MAP: dict[str, int] = {v: k for k, v in USER_TYPE_MAP.items()}
 
 # Credential type mapping (Matter DoorLock CredentialTypeEnum)
+_CredentialType = clusters.DoorLock.Enums.CredentialTypeEnum
 CREDENTIAL_TYPE_MAP: dict[int, str] = {
-    0: "programming_pin",
-    1: CRED_TYPE_PIN,
-    2: CRED_TYPE_RFID,
-    3: CRED_TYPE_FINGERPRINT,
-    4: "finger_vein",
-    5: CRED_TYPE_FACE,
-    6: "aliro_credential_issuer_key",
-    7: "aliro_evictable_endpoint_key",
-    8: "aliro_non_evictable_endpoint_key",
+    _CredentialType.kProgrammingPIN: "programming_pin",
+    _CredentialType.kPin: CRED_TYPE_PIN,
+    _CredentialType.kRfid: CRED_TYPE_RFID,
+    _CredentialType.kFingerprint: CRED_TYPE_FINGERPRINT,
+    _CredentialType.kFingerVein: "finger_vein",
+    _CredentialType.kFace: CRED_TYPE_FACE,
+    _CredentialType.kAliroCredentialIssuerKey: "aliro_credential_issuer_key",
+    _CredentialType.kAliroEvictableEndpointKey: "aliro_evictable_endpoint_key",
+    _CredentialType.kAliroNonEvictableEndpointKey: "aliro_non_evictable_endpoint_key",
 }
 
 # Credential rule mapping (Matter DoorLock CredentialRuleEnum)
+_CredentialRule = clusters.DoorLock.Enums.CredentialRuleEnum
 CREDENTIAL_RULE_MAP: dict[int, str] = {
-    0: "single",
-    1: "dual",
-    2: "tri",
+    _CredentialRule.kSingle: "single",
+    _CredentialRule.kDual: "dual",
+    _CredentialRule.kTri: "tri",
 }
 CREDENTIAL_RULE_REVERSE_MAP: dict[str, int] = {
     v: k for k, v in CREDENTIAL_RULE_MAP.items()
@@ -138,9 +145,10 @@ SERVICE_CREDENTIAL_TYPES = [
 ]
 
 # SetCredential response status mapping (Matter DlStatus)
+_DlStatus = clusters.DoorLock.Enums.DlStatus
 SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
-    0: "success",
-    1: "failure",
-    2: "duplicate",
-    3: "occupied",
+    _DlStatus.kSuccess: "success",
+    _DlStatus.kFailure: "failure",
+    _DlStatus.kDuplicate: "duplicate",
+    _DlStatus.kOccupied: "occupied",
 }
