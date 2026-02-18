@@ -31,6 +31,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import configure_integration
 
@@ -819,3 +821,118 @@ async def test_blind_tilt_intermediate_target_not_finalized_early(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(cover_id).state == STATE_OPEN
+
+
+async def test_blind_tilt_poll_handles_refresh_error(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a coordinator refresh failure during polling finalizes state gracefully."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(cover_id).state == STATE_OPENING
+
+    # Simulate a network/API error during the poll refresh
+    mock_get_status.side_effect = UpdateFailed("API error")
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entity should finalize (not stuck in opening) after the error
+    state = hass.states.get(cover_id)
+    assert state.attributes.get("is_opening") is not True
+    assert state.attributes.get("is_closing") is not True
+
+
+async def test_blind_tilt_close_tilt_direction_none(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test that closing blind tilt raises an error when direction is not yet known."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    # No direction in status — entity initializes without a known direction
+    mock_get_status.return_value = {"slidePosition": 25}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("tilt_position", "expected_param"),
+    [
+        (0, "down;0"),
+        (49, "down;98"),
+        (50, "up;100"),
+        (51, "up;98"),
+        (100, "up;0"),
+    ],
+)
+async def test_blind_tilt_set_tilt_position_boundaries(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    tilt_position: int,
+    expected_param: str,
+) -> None:
+    """Test blind tilt SET_POSITION command at critical tilt position boundaries."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 25, "direction": "down"}
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    cover_id = "cover.cover_1"
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            {"tilt_position": tilt_position, ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+    mock_send_command.assert_called_once_with(
+        "cover-id-1", BlindTiltCommands.SET_POSITION, "command", expected_param
+    )

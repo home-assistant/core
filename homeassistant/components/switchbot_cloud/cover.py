@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Any
 
 from switchbot_api import (
@@ -21,13 +22,17 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.update_coordinator import UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
 from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, COVER_ENTITY_POLL_TIMEOUT, DOMAIN
 from .entity import SwitchBotCloudEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -83,7 +88,12 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
                 cancel_timer()
                 raise
             elapsed += COVER_ENTITY_AFTER_COMMAND_REFRESH
-            await self.coordinator.async_refresh()
+            try:
+                await self.coordinator.async_refresh()
+            except UpdateFailed as err:
+                _LOGGER.warning("Error refreshing cover state during polling: %s", err)
+                self._async_on_poll_stopped()
+                return
             if not (self.coordinator.data or {}).get("moving", True):
                 break
         self._async_on_poll_stopped()
@@ -301,18 +311,21 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._attr_direction is not None:
-            if "up" in self._attr_direction:
-                await self.send_api_command(BlindTiltCommands.CLOSE_UP)
-                self._target_tilt_position = 100
-            else:
-                await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
-                self._target_tilt_position = 0
-            self._attr_is_closing = True
-            self._attr_is_opening = False
-            self._command_in_flight = True
-            self.async_write_ha_state()
-            self._start_poll_task()
+        if self._attr_direction is None:
+            raise HomeAssistantError(
+                "Cannot close cover tilt: direction is not yet known"
+            )
+        if "up" in self._attr_direction:
+            await self.send_api_command(BlindTiltCommands.CLOSE_UP)
+            self._target_tilt_position = 100
+        else:
+            await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
+            self._target_tilt_position = 0
+        self._attr_is_closing = True
+        self._attr_is_opening = False
+        self._command_in_flight = True
+        self.async_write_ha_state()
+        self._start_poll_task()
 
 
 class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
