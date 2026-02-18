@@ -21,7 +21,6 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import (
-    MAX_DURATION_SECONDS,
     SERVICE_GET_ACCOUNT,
     SERVICE_MUTE_ACCOUNT,
     SERVICE_POST,
@@ -175,14 +174,17 @@ async def test_mute_account_duration_too_long(
     """Test mute_account rejects overly long durations."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(ServiceValidationError) as err:
+    with (
+        patch("homeassistant.components.mastodon.services.MAX_DURATION_SECONDS", 5),
+        pytest.raises(ServiceValidationError) as err,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MUTE_ACCOUNT,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: timedelta(seconds=MAX_DURATION_SECONDS + 1),
+                ATTR_DURATION: timedelta(seconds=10),
             },
             blocking=True,
             return_response=False,
