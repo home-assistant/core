@@ -66,6 +66,11 @@ BINARY_SENSORS = (
         translation_key="charging_connection",
     ),
     HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_INTERIOR_ILLUMINATION_ACTIVE,
+        translation_key="interior_illumination_active",
+        device_class=BinarySensorDeviceClass.LIGHT,
+    ),
+    HomeConnectBinarySensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_DUST_BOX_INSERTED,
         translation_key="dust_box_inserted",
     ),
@@ -164,6 +169,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect binary sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,

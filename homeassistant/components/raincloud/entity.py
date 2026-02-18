@@ -1,5 +1,7 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
+from typing import Any
+
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -58,7 +60,7 @@ class RainCloudEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"identifier": self.data.serial}
 

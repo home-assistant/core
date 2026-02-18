@@ -393,9 +393,7 @@ async def async_setup_entry(
             and is_valid_notification_binary_sensor(info)
         ):
             entities.extend(
-                ZWaveNotificationBinarySensor(
-                    config_entry, driver, info, state_key, info.entity_description
-                )
+                ZWaveNotificationBinarySensor(config_entry, driver, info, state_key)
                 for state_key in info.primary_value.metadata.states
                 if int(state_key) not in info.entity_description.not_states
                 and (
@@ -656,6 +654,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key=NOTIFICATION_SMOKE_ALARM,
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
+                0,
                 SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED_LOCATION_PROVIDED,
                 SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED,
                 SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,

@@ -11,6 +11,11 @@
         "default": "mdi:account"
       }
     },
+    "media_player": {
+      "xbox": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
     "sensor": {
       "follower": {
         "default": "mdi:account-arrow-left"
@@ -18,8 +23,24 @@
       "following": {
         "default": "mdi:account-arrow-right"
       },
+      "friends": {
+        "default": "mdi:account-heart"
+      },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
+      },
+      "in_party": {
+        "default": "mdi:headset",
+        "state": {
+          "0": "mdi:headset-off"
+        }
+      },
+      "join_restrictions": {
+        "default": "mdi:account-voice-off",
+        "state": {
+          "invite_only": "mdi:email-newsletter",
+          "joinable": "mdi:account-multiple-plus-outline"
+        }
       },
       "last_online": {
         "default": "mdi:account-clock"

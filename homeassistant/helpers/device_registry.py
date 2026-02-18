@@ -396,7 +396,7 @@ class DeviceEntry:
         try:
             dict_repr = self.dict_repr
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.id,
@@ -781,6 +781,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
 
     @callback
@@ -1562,10 +1563,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
+        # Create intermediate lists to allow this method to be called from a thread
+        # other than the event loop.
         return {
-            "devices": [entry.as_storage_fragment for entry in self.devices.values()],
+            "devices": [
+                entry.as_storage_fragment for entry in list(self.devices.values())
+            ],
             "deleted_devices": [
-                entry.as_storage_fragment for entry in self.deleted_devices.values()
+                entry.as_storage_fragment
+                for entry in list(self.deleted_devices.values())
             ],
         }
 

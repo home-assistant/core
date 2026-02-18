@@ -21,8 +21,8 @@
       'subentries': list([
       ]),
       'title': 'Portainer test',
-      'unique_id': None,
-      'version': 2,
+      'unique_id': 'test_api_token',
+      'version': 4,
     }),
     'coordinator': dict({
       'endpoints': list([

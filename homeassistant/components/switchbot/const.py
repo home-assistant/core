@@ -26,6 +26,7 @@ class SupportedModels(StrEnum):
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
+    PRESENCE_SENSOR = "presence_sensor"
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
     LOCK_PRO = "lock_pro"
@@ -58,6 +59,11 @@ class SupportedModels(StrEnum):
     K11_PLUS_VACUUM = "k11+_vacuum"
     GARAGE_DOOR_OPENER = "garage_door_opener"
     CLIMATE_PANEL = "climate_panel"
+    SMART_THERMOSTAT_RADIATOR = "smart_thermostat_radiator"
+    S20_VACUUM = "s20_vacuum"
+    ART_FRAME = "art_frame"
+    KEYPAD_VISION = "keypad_vision"
+    KEYPAD_VISION_PRO = "keypad_vision_pro"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -78,6 +84,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
+    SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
     SwitchbotModel.K10_VACUUM: SupportedModels.K10_VACUUM,
     SwitchbotModel.K10_PRO_VACUUM: SupportedModels.K10_PRO_VACUUM,
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
@@ -95,15 +102,20 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
+    SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
+    SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
     SwitchbotModel.LEAK: SupportedModels.LEAK,
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
@@ -132,6 +144,10 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME,
+    SwitchbotModel.KEYPAD_VISION,
+    SwitchbotModel.KEYPAD_VISION_PRO,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -153,6 +169,10 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
+    SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
+    SwitchbotModel.KEYPAD_VISION: switchbot.SwitchbotKeypadVision,
+    SwitchbotModel.KEYPAD_VISION_PRO: switchbot.SwitchbotKeypadVision,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
@@ -162,9 +182,13 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
+DEFAULT_CURTAIN_SPEED = 255
+CURTAIN_SPEED_MIN = 0
+CURTAIN_SPEED_MAX = 255
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
+CONF_CURTAIN_SPEED = "curtain_speed"

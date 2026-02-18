@@ -369,6 +369,7 @@ async def test_assist_api_tools(
         "HassTurnOn",
         "HassTurnOff",
         "HassSetPosition",
+        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
@@ -575,9 +576,9 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
@@ -1131,6 +1132,19 @@ async def test_selector_serializer(
             "metadata": {"type": "object", "additionalProperties": True},
         },
         "required": ["media_content_id", "media_content_type"],
+    }
+    assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_id": {"type": "string"},
+                "media_content_id": {"type": "string"},
+                "media_content_type": {"type": "string"},
+                "metadata": {"type": "object", "additionalProperties": True},
+            },
+            "required": ["media_content_id", "media_content_type"],
+        },
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Budget',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -32,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'budget',
-    'unique_id': 'firefly_iii_test_unique_id_123_budget_2_budget',
+    'unique_id': 'test_api_key_budget_2_budget',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -85,7 +87,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_balance',
+    'unique_id': 'test_api_key_account_4_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -136,7 +139,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_role',
+    'unique_id': 'test_api_key_account_4_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -174,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -184,7 +188,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_type',
+    'unique_id': 'test_api_key_account_4_account_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -225,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earned/Spent',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -235,7 +240,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'category',
-    'unique_id': 'firefly_iii_test_unique_id_123_category_2_category',
+    'unique_id': 'test_api_key_category_2_category',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -278,6 +283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -288,7 +294,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_balance',
+    'unique_id': 'test_api_key_account_2_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -329,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,7 +346,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_role',
+    'unique_id': 'test_api_key_account_2_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -377,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -387,7 +395,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_type',
+    'unique_id': 'test_api_key_account_2_account_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -428,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -438,7 +447,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_balance',
+    'unique_id': 'test_api_key_account_3_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -479,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -489,7 +499,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_role',
+    'unique_id': 'test_api_key_account_3_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -527,6 +537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -537,7 +548,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_type',
+    'unique_id': 'test_api_key_account_3_account_type',
     'unit_of_measurement': None,
   })
 # ---

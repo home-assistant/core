@@ -1,5 +1,10 @@
 """The tests for Satel Integra integration."""
 
+from collections.abc import Callable
+from unittest.mock import AsyncMock
+
+import pytest
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra import (
     CONF_ARM_HOME_MODE,
@@ -16,9 +21,15 @@ from homeassistant.components.satel_integra import (
 from homeassistant.components.satel_integra.const import DEFAULT_PORT
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
+MOCK_CODE = "1234"
 MOCK_CONFIG_DATA = {CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT}
-MOCK_CONFIG_OPTIONS = {CONF_CODE: "1234"}
+MOCK_CONFIG_OPTIONS = {CONF_CODE: MOCK_CODE}
+
+MOCK_ENTRY_ID = "1234567890"
 
 MOCK_PARTITION_SUBENTRY = ConfigSubentry(
     subentry_type=SUBENTRY_TYPE_PARTITION,
@@ -66,3 +77,27 @@ MOCK_SWITCHABLE_OUTPUT_SUBENTRY = ConfigSubentry(
         CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
     },
 )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
+    """Set up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def get_monitor_callbacks(
+    mock_satel: AsyncMock,
+) -> tuple[
+    Callable[[], None],
+    Callable[[dict[str, dict[int, int]]], None],
+    Callable[[dict[str, dict[int, int]]], None],
+]:
+    """Return (partitions_cb, zones_cb, outputs_cb) passed to monitor_status."""
+    if not mock_satel.monitor_status.call_args_list:
+        pytest.fail("monitor_status was not called")
+
+    call = mock_satel.monitor_status.call_args_list[-1]
+    partitions_cb, zones_cb, outputs_cb = call.args
+    return partitions_cb, zones_cb, outputs_cb

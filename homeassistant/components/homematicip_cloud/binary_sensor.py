@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -41,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -87,8 +89,11 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(hap, device, channel=channel)
-                for channel in range(1, 33)
+                HomematicipMultiContactInterface(
+                    hap, device, channel_real_index=channel.index
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, MultiModeInputChannel)
             )
         elif isinstance(device, FullFlushContactInterface6):
             entities.extend(
@@ -121,6 +126,8 @@ async def async_setup_entry(
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, SmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
+            if smoke_detector_channel_data_exists(device, "chamberDegraded"):
+                entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
         if isinstance(device, WaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
@@ -227,21 +234,24 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         device,
         channel=1,
         is_multi_channel=True,
+        channel_real_index=None,
     ) -> None:
         """Initialize the multi contact entity."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            channel_real_index=channel_real_index,
         )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
-        if self._device.functionalChannels[self._channel].windowState is None:
+        channel = self.get_channel_or_raise()
+        if channel.windowState is None:
             return None
-        return (
-            self._device.functionalChannels[self._channel].windowState
-            != WindowState.CLOSED
-        )
+        return channel.windowState != WindowState.CLOSED
 
 
 class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):
@@ -313,6 +323,23 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
                 == SmokeDetectorAlarmType.PRIMARY_ALARM
             )
         return False
+
+
+class HomematicipSmokeDetectorChamberDegraded(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP smoke detector chamber health."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize smoke detector chamber health sensor."""
+        super().__init__(hap, device, post="Chamber Degraded")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if smoke chamber is degraded."""
+        return self._device.chamberDegraded
 
 
 class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):

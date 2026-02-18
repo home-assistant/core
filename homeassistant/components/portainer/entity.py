@@ -1,14 +1,17 @@
 """Base class for Portainer entities."""
 
-from pyportainer.models.docker import DockerContainer
 from yarl import URL
 
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -39,7 +42,13 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             manufacturer=DEFAULT_NAME,
             model="Endpoint",
             name=device_info.endpoint.name,
+            entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.device_id in self.coordinator.data
 
 
 class PortainerContainerEntity(PortainerCoordinatorEntity):
@@ -47,25 +56,29 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
     def __init__(
         self,
-        device_info: DockerContainer,
+        device_info: PortainerContainerData,
         coordinator: PortainerCoordinator,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize a Portainer container."""
         super().__init__(coordinator)
         self._device_info = device_info
-        self.device_id = self._device_info.id
+        self.device_id = self._device_info.container.id
         self.endpoint_id = via_device.endpoint.id
 
         # Container ID's are ephemeral, so use the container name for the unique ID
         # The first one, should always be unique, it's fine if users have aliases
         # According to Docker's API docs, the first name is unique
-        assert self._device_info.names, "Container names list unexpectedly empty"
-        self.device_name = self._device_info.names[0].replace("/", " ").strip()
+        names = self._device_info.container.names
+        assert names, "Container names list unexpectedly empty"
+        self.device_name = names[0].replace("/", " ").strip()
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_name}")
+                (
+                    DOMAIN,
+                    f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}",
+                )
             },
             manufacturer=DEFAULT_NAME,
             configuration_url=URL(
@@ -78,4 +91,19 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
                 f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
+            entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.device_name in self.coordinator.data[self.endpoint_id].containers
+        )
+
+    @property
+    def container_data(self) -> PortainerContainerData:
+        """Return the coordinator data for this container."""
+        return self.coordinator.data[self.endpoint_id].containers[self.device_name]

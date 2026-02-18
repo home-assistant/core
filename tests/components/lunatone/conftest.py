@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, DEVICES_DATA, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -31,6 +31,8 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
 
     def build_devices_mock(devices: Devices):
         device_list = []
+        if devices.data is None:
+            return device_list
         for device_data in devices.data.devices:
             device = AsyncMock(spec=Device)
             device.data = device_data
@@ -48,7 +50,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         "homeassistant.components.lunatone.Devices", autospec=True
     ) as mock_devices:
         devices = mock_devices.return_value
-        devices.data = DEVICES_DATA
+        devices.data = build_devices_data()
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
         )
@@ -79,10 +81,22 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
+    """Mock a Lunatone DALI broadcast object."""
+    with patch(
+        "homeassistant.components.lunatone.DALIBroadcast",
+        autospec=True,
+    ) as mock_dali_broadcast:
+        dali_broadcast = mock_dali_broadcast.return_value
+        dali_broadcast.line = 0
+        yield dali_broadcast
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=f"Lunatone {SERIAL_NUMBER}",
+        title=BASE_URL,
         domain=DOMAIN,
         data={CONF_URL: BASE_URL},
         unique_id=str(SERIAL_NUMBER),

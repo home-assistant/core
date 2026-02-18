@@ -17,9 +17,7 @@ from switchbot import (
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
-    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
-    async_current_scanners,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
@@ -36,14 +34,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    CURTAIN_SPEED_MAX,
+    CURTAIN_SPEED_MIN,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -77,6 +80,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -132,13 +136,20 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         discovery = self._discovered_adv
         name = name_from_discovery(discovery)
         model_name = discovery.data["modelName"]
+        sensor_type = SUPPORTED_MODEL_TYPES[model_name]
+
+        options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
+        if sensor_type == SupportedModels.CURTAIN:
+            options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+
         return self.async_create_entry(
             title=name,
             data={
                 **user_input,
                 CONF_ADDRESS: discovery.address,
-                CONF_SENSOR_TYPE: str(SUPPORTED_MODEL_TYPES[model_name]),
+                CONF_SENSOR_TYPE: str(sensor_type),
             },
+            options=options,
         )
 
     async def async_step_confirm(
@@ -325,15 +336,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step to choose cloud login or direct discovery."""
-        # Check if all scanners are in active mode
-        # If so, skip the menu and go directly to device selection
-        scanners = async_current_scanners(self.hass)
-        if scanners and all(
-            scanner.current_mode == BluetoothScanningMode.ACTIVE for scanner in scanners
-        ):
-            # All scanners are active, skip the menu
-            return await self.async_step_select_device()
-
         return self.async_show_menu(
             step_id="user",
             menu_options=["cloud_login", "select_device"],
@@ -464,6 +466,27 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                             CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
                         ),
                     ): bool
+                }
+            )
+        if (
+            CONF_SENSOR_TYPE in self.config_entry.data
+            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.CURTAIN
+        ):
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_CURTAIN_SPEED,
+                        default=self.config_entry.options.get(
+                            CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+                        ),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=CURTAIN_SPEED_MIN,
+                            max=CURTAIN_SPEED_MAX,
+                            step=1,
+                            mode=selector.NumberSelectorMode.SLIDER,
+                        )
+                    )
                 }
             )
 

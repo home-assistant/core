@@ -19,7 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
+import homeassistant.util.dt as dt_util
 
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
@@ -42,8 +42,8 @@ class JewishCalendarSensorDescription(JewishCalendarBaseSensorDescription):
     value_fn: Callable[[HDateInfo], str | int]
     attr_fn: Callable[[HDateInfo], dict[str, str]] | None = None
     options_fn: Callable[[bool], list[str]] | None = None
-    next_update_fn: Callable[[Zmanim], dt.datetime | None] | None = (
-        lambda zmanim: zmanim.shkia.local
+    next_update_fn: Callable[[Zmanim], dt.datetime | None] | None = lambda zmanim: (
+        zmanim.shkia.local
     )
 
 
@@ -178,9 +178,9 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
         key="upcoming_shabbat_candle_lighting",
         translation_key="upcoming_shabbat_candle_lighting",
         entity_registry_enabled_default=False,
-        value_fn=lambda at_date, mz: mz(
-            at_date.upcoming_shabbat.previous_day.gdate
-        ).candle_lighting,
+        value_fn=lambda at_date, mz: (
+            mz(at_date.upcoming_shabbat.previous_day.gdate).candle_lighting
+        ),
         next_update_fn=lambda zmanim: zmanim.havdalah,
     ),
     JewishCalendarTimestampSensorDescription(
@@ -193,17 +193,19 @@ TIME_SENSORS: tuple[JewishCalendarTimestampSensorDescription, ...] = (
     JewishCalendarTimestampSensorDescription(
         key="upcoming_candle_lighting",
         translation_key="upcoming_candle_lighting",
-        value_fn=lambda at_date, mz: mz(
-            at_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
-        ).candle_lighting,
+        value_fn=lambda at_date, mz: (
+            mz(
+                at_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
+            ).candle_lighting
+        ),
         next_update_fn=lambda zmanim: zmanim.havdalah,
     ),
     JewishCalendarTimestampSensorDescription(
         key="upcoming_havdalah",
         translation_key="upcoming_havdalah",
-        value_fn=lambda at_date, mz: mz(
-            at_date.upcoming_shabbat_or_yom_tov.last_day.gdate
-        ).havdalah,
+        value_fn=lambda at_date, mz: (
+            mz(at_date.upcoming_shabbat_or_yom_tov.last_day.gdate).havdalah
+        ),
         next_update_fn=lambda zmanim: zmanim.havdalah,
     ),
 )
@@ -238,25 +240,18 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
             return []
         return [self.entity_description.next_update_fn(zmanim)]
 
-    def get_dateinfo(self, now: dt.datetime | None = None) -> HDateInfo:
+    def get_dateinfo(self) -> HDateInfo:
         """Get the next date info."""
-        if self.data.results is None:
-            self.create_results()
-        assert self.data.results is not None, "Results should be available"
-
-        if now is None:
-            now = dt_util.now()
-
-        today = now.date()
-        zmanim = self.make_zmanim(today)
+        now = dt_util.now()
         update = None
-        if self.entity_description.next_update_fn:
-            update = self.entity_description.next_update_fn(zmanim)
 
-        _LOGGER.debug("Today: %s, update: %s", today, update)
+        if self.entity_description.next_update_fn:
+            update = self.entity_description.next_update_fn(self.coordinator.zmanim)
+
+        _LOGGER.debug("Today: %s, update: %s", now.date(), update)
         if update is not None and now >= update:
-            return self.data.results.dateinfo.next_day
-        return self.data.results.dateinfo
+            return self.coordinator.dateinfo.next_day
+        return self.coordinator.dateinfo
 
 
 class JewishCalendarSensor(JewishCalendarBaseSensor):
@@ -273,7 +268,9 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
         super().__init__(config_entry, description)
         # Set the options for enumeration sensors
         if self.entity_description.options_fn is not None:
-            self._attr_options = self.entity_description.options_fn(self.data.diaspora)
+            self._attr_options = self.entity_description.options_fn(
+                self.coordinator.data.diaspora
+            )
 
     @property
     def native_value(self) -> str | int | dt.datetime | None:
@@ -297,9 +294,8 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     @property
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
-        if self.data.results is None:
-            self.create_results()
-        assert self.data.results is not None, "Results should be available"
         if self.entity_description.value_fn is None:
-            return self.data.results.zmanim.zmanim[self.entity_description.key].local
-        return self.entity_description.value_fn(self.get_dateinfo(), self.make_zmanim)
+            return self.coordinator.zmanim.zmanim[self.entity_description.key].local
+        return self.entity_description.value_fn(
+            self.get_dateinfo(), self.coordinator.make_zmanim
+        )

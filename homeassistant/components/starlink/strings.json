@@ -62,8 +62,8 @@
       "elevation": {
         "name": "[%key:common::config_flow::data::elevation%]"
       },
-      "last_boot_time": {
-        "name": "Last boot time"
+      "last_restart": {
+        "name": "Last restart"
       },
       "ping": {
         "name": "Ping"

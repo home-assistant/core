@@ -28,6 +28,9 @@
       }
     },
     "number": {
+      "bbw_dose": {
+        "default": "mdi:weight-gram"
+      },
       "coffee_temp": {
         "default": "mdi:thermometer-water"
       },
@@ -45,9 +48,20 @@
       },
       "smart_standby_time": {
         "default": "mdi:timer"
+      },
+      "steam_temp": {
+        "default": "mdi:kettle-steam"
       }
     },
     "select": {
+      "bbw_dose_mode": {
+        "default": "mdi:all-inclusive-box",
+        "state": {
+          "continuous": "mdi:all-inclusive-box",
+          "dose1": "mdi:numeric-1-box",
+          "dose2": "mdi:numeric-2-box"
+        }
+      },
       "prebrew_infusion_select": {
         "default": "mdi:water-pump-off",
         "state": {

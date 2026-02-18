@@ -278,7 +278,7 @@ async def test_config_flow_preview_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -298,7 +298,7 @@ async def test_config_flow_preview_success(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
@@ -401,7 +401,7 @@ async def test_options_flow_preview(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 
@@ -477,7 +477,7 @@ async def test_options_flow_preview_errors(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 
@@ -561,7 +561,7 @@ async def test_options_flow_sensor_preview_config_entry_removed(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 
