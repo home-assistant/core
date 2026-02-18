@@ -554,7 +554,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseCoordinatorSwitch):
         return self.data.get("enabled") is True
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device attributes."""
         return {
             "standard": self.data["standard"],
