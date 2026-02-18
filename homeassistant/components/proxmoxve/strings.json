@@ -58,7 +58,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while trying to connect to the Portainer instance: {error}"
+      "message": "An error occurred while trying to connect to the Proxmox VE instance: {error}"
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate: {error}"
@@ -70,7 +70,7 @@
       "message": "An SSL error occurred: {error}"
     },
     "timeout_connect": {
-      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
     }
   },
   "issues": {
