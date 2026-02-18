@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "switch": {
+      "container": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      },
+      "vm": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      }
+    }
+  }
+}

@@ -54,14 +54,28 @@
       "status": {
         "name": "Status"
       }
+    },
+    "switch": {
+      "container": {
+        "name": "Container"
+      },
+      "vm": {
+        "name": "Virtual Machine"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Proxmox VE instance: {error}"
     },
+    "cannot_connect_no_details": {
+      "message": "An error occurred while trying to connect to the Proxmox VE instance."
+    },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "invalid_auth_no_details": {
+      "message": "An error occurred while trying to authenticate."
     },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
@@ -71,6 +85,9 @@
     },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
+    },
+    "timeout_connect_no_details": {
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
     }
   },
   "issues": {
