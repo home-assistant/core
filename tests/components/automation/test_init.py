@@ -683,8 +683,6 @@ async def test_reload_config_handles_load_fails(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test the reload config service."""
-    # Set up the homeassistant integration to load translations
-    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
