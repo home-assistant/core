@@ -30,12 +30,9 @@ from tests.common import MockConfigEntry
 
 
 async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:
-    """Wait for the queue to be processed.
-
-    In the future we should refactor this away to not have
-    to access hass.data directly.
-    """
-    await hass.async_add_executor_job(hass.data[influxdb.DOMAIN].block_till_done)
+    """Wait for the queue to be processed."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.async_add_executor_job(entry.runtime_data.block_till_done)
 
 
 @dataclass
