@@ -155,7 +155,7 @@
       "description": "Mutes a Mastodon account.",
       "fields": {
         "account_name": {
-          "description": "The Mastodon account username (e.g. @user@instance).",
+          "description": "The Mastodon account username (e.g. @user@instance) to mute.",
           "name": "Account name"
         },
         "config_entry_id": {
@@ -219,7 +219,7 @@
       "description": "Unmutes a Mastodon account.",
       "fields": {
         "account_name": {
-          "description": "The Mastodon account username (e.g. @user@instance).",
+          "description": "The Mastodon account username (e.g. @user@instance) to unmute.",
           "name": "Account name"
         },
         "config_entry_id": {
