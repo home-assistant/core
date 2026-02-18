@@ -304,7 +304,7 @@ class AppleTvMediaPlayer(
         Retry if player entities cannot be found, e.g. during startup.
         """
         if (atv := self.atv) is None:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s unable to update group members, missing atv", self.entity_id
             )
             # Should we retry at a later point?
