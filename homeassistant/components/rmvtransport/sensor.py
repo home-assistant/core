@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import (
@@ -166,7 +167,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         try:
             return {
@@ -246,7 +247,7 @@ class RMVDepartureData:
                 max_journeys=50,
             )
 
-        except (RMVtransportApiConnectionError, RMVtransportDataError):
+        except RMVtransportApiConnectionError, RMVtransportDataError:
             self.departures = []
             _LOGGER.warning("Could not retrieve data from rmv.de")
             return
