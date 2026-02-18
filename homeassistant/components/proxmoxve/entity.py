@@ -10,14 +10,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DOMAIN
 from .coordinator import ProxmoxCoordinator, ProxmoxNodeData
 
 
 def _proxmox_base_url(coordinator: ProxmoxCoordinator) -> str:
     """Return the base URL for the Proxmox VE."""
     data = coordinator.config_entry.data
-    scheme = "https" if data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL) else "http"
+    scheme = "https" if data.get(CONF_VERIFY_SSL) else "http"
     return f"{scheme}://{data[CONF_HOST]}:{data[CONF_PORT]}"
 
 
