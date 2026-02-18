@@ -109,7 +109,14 @@ class PranaFan(PranaBaseEntity, FanEntity):
             await self.async_turn_off()
             return
         await self.coordinator.api_client.set_speed(
-            self.__get_speed_value(), self.entity_description.key
+            math.ceil(
+                percentage_to_ranged_value(
+                    self.entity_description.speed_range(self.coordinator),
+                    percentage,
+                )
+            )
+            * 10,
+            self.entity_description.key,
         )
         await self.coordinator.async_refresh()
 
@@ -144,16 +151,15 @@ class PranaFan(PranaBaseEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode (e.g., night or boost)."""
-        await self.coordinator.api_client.set_switch(preset_mode, True)
+        await self.coordinator.api_client.set_switch(preset_mode, value=True)
         await self.coordinator.async_refresh()
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        speed_value = self.__get_speed_value()
-        if speed_value == 1:
+        if self.coordinator.data.night:
             return "night"
-        if speed_value == self.entity_description.value_fn(self.coordinator).max_speed:
+        if self.coordinator.data.boost:
             return "boost"
         return None
 
@@ -169,19 +175,5 @@ class PranaFan(PranaBaseEntity, FanEntity):
             and self.entity_description.key
             in [PranaFanType.SUPPLY, PranaFanType.EXTRACT]
         ):
-            return self.coordinator.last_update_success
+            return super().available
         return False
-
-    def __get_speed_value(self) -> int:
-        """Helper to get the current speed value from coordinator data."""
-        if self.percentage is None:
-            return 0
-        return (
-            math.ceil(
-                percentage_to_ranged_value(
-                    self.entity_description.speed_range(self.coordinator),
-                    self.percentage,
-                )
-            )
-            * 10
-        )
