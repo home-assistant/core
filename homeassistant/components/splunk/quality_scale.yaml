@@ -48,9 +48,11 @@ rules:
   integration-owner: done
   reauthentication-flow: done
   runtime-data:
-    status: todo
+    status: exempt
     comment: |
-      Replace hass.data[DATA_FILTER] storage with entry.runtime_data. Create typed ConfigEntry in const.py as 'type SplunkConfigEntry = ConfigEntry[EntityFilter]', update async_setup_entry signature to use SplunkConfigEntry, replace hass.data[DATA_FILTER] assignments with entry.runtime_data, and update all references including line 236 in __init__.py.
+      Integration has no per-entry runtime state to store. The only data in
+      hass.data is a YAML entity filter bridged from async_setup to
+      async_setup_entry; no platforms or other code accesses it afterward.
   test-before-configure: done
   test-before-setup: done
   test-coverage: done
