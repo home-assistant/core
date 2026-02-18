@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, DOMAIN
+from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, COVER_ENTITY_POLL_TIMEOUT, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -55,6 +55,21 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
         self._attr_current_cover_position = 100 - position
         self._attr_current_cover_tilt_position = 100 - position
         self._attr_is_closed = position == 100
+
+    async def _async_poll_until_stopped(self) -> None:
+        """Poll the API until the device reports it has stopped moving."""
+        elapsed = 0
+        while elapsed < COVER_ENTITY_POLL_TIMEOUT:
+            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
+            elapsed += COVER_ENTITY_AFTER_COMMAND_REFRESH
+            await self.coordinator.async_request_refresh()
+            if not (self.coordinator.data or {}).get("moving", True):
+                break
+        self._async_on_poll_stopped()
+
+    @callback
+    def _async_on_poll_stopped(self) -> None:
+        """Called when polling has determined the device has stopped moving."""
 
 
 class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
@@ -135,11 +150,15 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
 
     _attr_direction: str | None = None
     _attr_device_class = CoverDeviceClass.BLIND
+    CLOSED_UP_THRESHOLD = 80
+    CLOSED_DOWN_THRESHOLD = 20
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.SET_TILT_POSITION
         | CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
     )
+    _command_in_flight: bool = False
+    _target_tilt_position: int | None = None
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
@@ -147,42 +166,101 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         position: int | None = self.coordinator.data.get("slidePosition")
         if position is None:
             return
-        self._attr_is_closed = position in [0, 100]
-        if position > 50:
-            percent = 100 - ((position - 50) * 2)
-        else:
-            percent = 100 - (50 - position) * 2
-        self._attr_current_cover_position = percent
-        self._attr_current_cover_tilt_position = percent
         direction = self.coordinator.data.get("direction")
         self._attr_direction = direction.lower() if direction else None
+        # slidePosition uses the same physical scale as the BT library:
+        # 0=closed down, 50=horizontal/open, 100=closed up. Pass through directly.
+        self._attr_current_cover_tilt_position = position
+        # While a command is in flight, don't touch is_closed or the opening/closing
+        # flags — the command methods set them immediately and _async_on_poll_stopped
+        # clears them once movement is confirmed done.
+        if self._command_in_flight:
+            # Fallback: if the position has reached the target, finalize immediately
+            # without waiting for the poll loop (handles API not reporting moving=False).
+            if (
+                self._target_tilt_position is not None
+                and position == self._target_tilt_position
+            ):
+                self._async_on_poll_stopped()
+        else:
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+            self._attr_is_closed = (position < self.CLOSED_DOWN_THRESHOLD) or (
+                position > self.CLOSED_UP_THRESHOLD
+            )
+
+    @callback
+    def _async_on_poll_stopped(self) -> None:
+        """Finalize state once movement is confirmed done."""
+        self._command_in_flight = False
+        self._target_tilt_position = None
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        if self._attr_current_cover_tilt_position is not None:
+            pos = self._attr_current_cover_tilt_position
+            self._attr_is_closed = (
+                pos < self.CLOSED_DOWN_THRESHOLD or pos > self.CLOSED_UP_THRESHOLD
+            )
+        self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        percent: int | None = kwargs.get("tilt_position")
-        if percent is not None:
+        tilt_position: int | None = kwargs.get("tilt_position")
+        if tilt_position is not None:
+            # setPosition uses a direction-relative scale where 0=closed end and
+            # 100=horizontal/open, per direction. Derive direction from the target:
+            # positions > 50 tilt up, positions < 50 tilt down, 50 uses "up".
+            # Convert physical position to per-direction command position:
+            #   up:   cmd = (100 - physical) * 2  (physical 100→0, physical 50→100)
+            #   down: cmd = physical * 2           (physical 0→0, physical 50→100)
+            if tilt_position >= 50:
+                direction = "up"
+                cmd_position = (100 - tilt_position) * 2
+            else:
+                direction = "down"
+                cmd_position = tilt_position * 2
             await self.send_api_command(
                 BlindTiltCommands.SET_POSITION,
-                parameters=f"{self._attr_direction};{percent}",
+                parameters=f"{direction};{cmd_position}",
             )
-            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
-            await self.coordinator.async_request_refresh()
+            current = self._attr_current_cover_tilt_position
+            # Opening means moving toward 50 (horizontal/open center).
+            # Compare distance to 50 to determine direction.
+            if current is None or abs(tilt_position - 50) < abs(current - 50):
+                self._attr_is_opening = True
+                self._attr_is_closing = False
+            else:
+                self._attr_is_closing = True
+                self._attr_is_opening = False
+            self._command_in_flight = True
+            self._target_tilt_position = tilt_position
+            self.async_write_ha_state()
+            self.hass.async_create_task(self._async_poll_until_stopped())
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
-        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
-        await self.coordinator.async_request_refresh()
+        self._attr_is_opening = True
+        self._attr_is_closing = False
+        self._command_in_flight = True
+        self._target_tilt_position = 50
+        self.async_write_ha_state()
+        self.hass.async_create_task(self._async_poll_until_stopped())
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._attr_direction is not None:
             if "up" in self._attr_direction:
                 await self.send_api_command(BlindTiltCommands.CLOSE_UP)
+                self._target_tilt_position = 100
             else:
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
-            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
-            await self.coordinator.async_request_refresh()
+                self._target_tilt_position = 0
+            self._attr_is_closing = True
+            self._attr_is_opening = False
+            self._command_in_flight = True
+            self.async_write_ha_state()
+            self.hass.async_create_task(self._async_poll_until_stopped())
 
 
 class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):

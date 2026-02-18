@@ -195,6 +195,49 @@ async def test_curtain_features(
     )
 
 
+@pytest.mark.parametrize(
+    ("slide_position", "expected_state", "expected_tilt"),
+    [
+        (0, STATE_CLOSED, 0),  # closed down
+        (19, STATE_CLOSED, 19),
+        (20, STATE_OPEN, 20),
+        (50, STATE_OPEN, 50),  # horizontal/open
+        (80, STATE_OPEN, 80),
+        (81, STATE_CLOSED, 81),
+        (100, STATE_CLOSED, 100),  # closed up
+    ],
+)
+async def test_blind_tilt_set_attributes_states(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    slide_position: int,
+    expected_state: str,
+    expected_tilt: int,
+) -> None:
+    """Test blind tilt state and tilt position at various slidePosition values.
+
+    slidePosition uses the physical scale: 0=closed down, 50=open, 100=closed up.
+    Passed through directly as HA tilt. is_closed: position < 20 or position > 80.
+    """
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    cover_id = "cover.cover_1"
+    mock_get_status.return_value = {"slidePosition": slide_position, "direction": "up"}
+    await configure_integration(hass)
+    state = hass.states.get(cover_id)
+    assert state.state == expected_state
+    assert state.attributes.get("current_tilt_position") == expected_tilt
+
+
 async def test_blind_tilt_features(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
@@ -243,11 +286,12 @@ async def test_blind_tilt_features(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
-            {"tilt_position": 25, ATTR_ENTITY_ID: cover_id},
+            # HA 75 = physical 75 (up half): direction "up", cmd (100-75)*2=50
+            {"tilt_position": 75, ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
-        "cover-id-1", BlindTiltCommands.SET_POSITION, "command", "up;25"
+        "cover-id-1", BlindTiltCommands.SET_POSITION, "command", "up;50"
     )
 
 
@@ -268,6 +312,7 @@ async def test_blind_tilt_features_close_down(
     mock_get_status.side_effect = [
         {"slidePosition": 25, "direction": "down"},
         {"slidePosition": 25, "direction": "down"},
+        {"slidePosition": 25, "direction": "down"},
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
@@ -282,6 +327,18 @@ async def test_blind_tilt_features_close_down(
         )
     mock_send_command.assert_called_once_with(
         "cover-id-1", BlindTiltCommands.CLOSE_DOWN, "command", "default"
+    )
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            # HA 25 = physical 25 (down half): direction "down", cmd 25*2=50
+            {"tilt_position": 25, ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+    mock_send_command.assert_called_once_with(
+        "cover-id-1", BlindTiltCommands.SET_POSITION, "command", "down;50"
     )
 
 
