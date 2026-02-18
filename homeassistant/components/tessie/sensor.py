@@ -53,15 +53,6 @@ def minutes_to_datetime(value: StateType) -> datetime | None:
     return None
 
 
-def minutes_to_time(value: StateType) -> str | None:
-    """Convert minutes after midnight to HH:MM format."""
-    if isinstance(value, (int, float)) and value >= 0:
-        hours = int(value) // 60
-        mins = int(value) % 60
-        return f"{hours:02d}:{mins:02d}"
-    return None
-
-
 @dataclass(frozen=True, kw_only=True)
 class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
@@ -288,22 +279,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
             "Off": "off",
             "StartAt": "start_at",
             "DepartBy": "depart_by",
-        }.get(cast(str, x)),
-    ),
-    TessieSensorEntityDescription(
-        key="charge_state_scheduled_charging_start_time_minutes",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=minutes_to_time,
-    ),
-    TessieSensorEntityDescription(
-        key="charge_state_scheduled_departure_time_minutes",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=minutes_to_time,
-    ),
-    TessieSensorEntityDescription(
-        key="charge_state_off_peak_hours_end_time",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=minutes_to_time,
+        }[cast(str, x)],
     ),
     TessieSensorEntityDescription(
         key="charge_state_off_peak_charging_times",
