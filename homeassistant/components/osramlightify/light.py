@@ -187,13 +187,8 @@ class Luminary(LightEntity):
         self._luminary = luminary
         self._changed = changed
 
-        self._unique_id = None
-        self._effect_list = []
-        self._is_on = False
-        self._available = True
-        self._brightness = None
+        self._attr_is_on = False
         self._rgb_color = None
-        self._device_attributes = None
 
         self.update_static_attributes()
         self.update_dynamic_attributes()
@@ -253,36 +248,6 @@ class Luminary(LightEntity):
         """Return last hs color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
-    @property
-    def brightness(self):
-        """Return brightness of the luminary (0..255)."""
-        return self._brightness
-
-    @property
-    def is_on(self):
-        """Return True if the device is on."""
-        return self._is_on
-
-    @property
-    def effect_list(self):
-        """List of supported effects."""
-        return self._effect_list
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._device_attributes
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
     def play_effect(self, effect, transition):
         """Play selected effect."""
         if effect == EFFECT_RANDOM:
@@ -313,19 +278,19 @@ class Luminary(LightEntity):
             self._attr_color_temp_kelvin = color_temp_kelvin
             self._luminary.set_temperature(color_temp_kelvin, transition)
 
-        self._is_on = True
+        self._attr_is_on = True
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._luminary.set_luminance(int(self._brightness / 2.55), transition)
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+            self._luminary.set_luminance(int(self._attr_brightness / 2.55), transition)
         else:
             self._luminary.set_onoff(True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._is_on = False
+        self._attr_is_on = False
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            self._brightness = DEFAULT_BRIGHTNESS
+            self._attr_brightness = DEFAULT_BRIGHTNESS
             self._luminary.set_luminance(0, transition)
         else:
             self._luminary.set_onoff(False)
@@ -337,10 +302,10 @@ class Luminary(LightEntity):
 
     def update_static_attributes(self) -> None:
         """Update static attributes of the luminary."""
-        self._unique_id = self._get_unique_id()
+        self._attr_unique_id = self._get_unique_id()
         self._attr_supported_color_modes = self._get_supported_color_modes()
         self._attr_supported_features = self._get_supported_features()
-        self._effect_list = self._get_effect_list()
+        self._attr_effect_list = self._get_effect_list()
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_max_color_temp_kelvin = (
                 self._luminary.max_temp() or DEFAULT_KELVIN
@@ -354,10 +319,12 @@ class Luminary(LightEntity):
 
     def update_dynamic_attributes(self):
         """Update dynamic attributes of the luminary."""
-        self._is_on = self._luminary.on()
-        self._available = self._luminary.reachable() and not self._luminary.deleted()
+        self._attr_is_on = self._luminary.on()
+        self._attr_available = (
+            self._luminary.reachable() and not self._luminary.deleted()
+        )
         if brightness_supported(self._attr_supported_color_modes):
-            self._brightness = int(self._luminary.lum() * 2.55)
+            self._attr_brightness = int(self._luminary.lum() * 2.55)
 
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_temp_kelvin = self._luminary.temp() or DEFAULT_KELVIN
@@ -399,7 +366,7 @@ class OsramLightifyLight(Luminary):
         if self._luminary.devicetype().name == "SENSOR":
             attrs["sensor_values"] = self._luminary.raw_values()
 
-        self._device_attributes = attrs
+        self._attr_extra_state_attributes = attrs
 
 
 class OsramLightifyGroup(Luminary):
@@ -444,4 +411,4 @@ class OsramLightifyGroup(Luminary):
     def update_static_attributes(self):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
-        self._device_attributes = {"lights": self._luminary.light_names()}
+        self._attr_extra_state_attributes = {"lights": self._luminary.light_names()}

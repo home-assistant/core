@@ -7,9 +7,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
+)
+from homeassistant.components.huum.const import (
+    CONFIG_DEFAULT_MAX_TEMP,
+    CONFIG_DEFAULT_MIN_TEMP,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
@@ -44,7 +49,7 @@ async def test_set_hvac_mode(
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
@@ -66,7 +71,7 @@ async def test_set_temperature(
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
-        Platform.CLIMATE,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -76,3 +81,39 @@ async def test_set_temperature(
     )
 
     mock_huum.turn_on.assert_called_once_with(60)
+
+
+async def test_temperature_range(
+    hass: HomeAssistant,
+    mock_huum: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the temperature range."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    # API response.
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["min_temp"] == 40
+    assert state.attributes["max_temp"] == 110
+
+    # Empty/unconfigured API response should return default values.
+    mock_huum.sauna_config.min_temp = 0
+    mock_huum.sauna_config.max_temp = 0
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["min_temp"] == CONFIG_DEFAULT_MIN_TEMP
+    assert state.attributes["max_temp"] == CONFIG_DEFAULT_MAX_TEMP
+
+    # Custom configured API response.
+    mock_huum.sauna_config.min_temp = 50
+    mock_huum.sauna_config.max_temp = 80
+
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["min_temp"] == 50
+    assert state.attributes["max_temp"] == 80

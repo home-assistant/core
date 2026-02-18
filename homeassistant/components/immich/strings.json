@@ -1,32 +1,15 @@
 {
   "common": {
-    "data_desc_url": "The full URL of your immich instance.",
-    "data_desc_api_key": "API key to connect to your immich instance.",
-    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your immich instance."
+    "data_desc_api_key": "API key to connect to your Immich instance.",
+    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your Immich instance.",
+    "data_desc_url": "The full URL of your Immich instance."
   },
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "url": "[%key:component::immich::common::data_desc_url%]",
-          "api_key": "[%key:component::immich::common::data_desc_api_key%]",
-          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
-        }
-      },
-      "reauth_confirm": {
-        "description": "Update the API key for {name}.",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::immich::common::data_desc_api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "This user is already configured for this Immich instance.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The provided API key does not match the configured user."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -34,39 +17,67 @@
       "invalid_url": "The provided URL is invalid.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The provided API key does not match the configured user.",
-      "already_configured": "This user is already configured for this immich instance."
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::immich::common::data_desc_api_key%]"
+        },
+        "description": "Update the API key for {name}."
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::immich::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::immich::common::data_desc_api_key%]",
+          "url": "[%key:component::immich::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
+        }
+      }
     }
   },
   "entity": {
     "sensor": {
-      "disk_size": {
-        "name": "Disk size"
-      },
       "disk_available": {
         "name": "Disk available"
       },
-      "disk_use": {
-        "name": "Disk used"
+      "disk_size": {
+        "name": "Disk size"
       },
       "disk_usage": {
         "name": "Disk usage"
       },
+      "disk_use": {
+        "name": "Disk used"
+      },
       "photos_count": {
         "name": "Photos count",
         "unit_of_measurement": "photos"
-      },
-      "videos_count": {
-        "name": "Videos count",
-        "unit_of_measurement": "videos"
       },
       "usage_by_photos": {
         "name": "Disk used by photos"
       },
       "usage_by_videos": {
         "name": "Disk used by videos"
+      },
+      "videos_count": {
+        "name": "Videos count",
+        "unit_of_measurement": "videos"
       }
     },
     "update": {
@@ -75,41 +86,53 @@
       }
     }
   },
-  "services": {
-    "upload_file": {
-      "name": "Upload file",
-      "description": "Uploads a file to your Immich instance.",
-      "fields": {
-        "config_entry_id": {
-          "name": "Immich instance",
-          "description": "The Immich instance where to upload the file."
-        },
-        "file": {
-          "name": "File",
-          "description": "The path to the file to be uploaded."
-        },
-        "album_id": {
-          "name": "Album ID",
-          "description": "The album in which the file should be placed after uploading."
-        }
-      }
-    }
-  },
   "exceptions": {
-    "config_entry_not_found": {
-      "message": "Config entry not found."
+    "album_not_found": {
+      "message": "Album with ID `{album_id}` not found ({error})."
     },
-    "config_entry_not_loaded": {
-      "message": "Config entry not loaded."
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to your Immich instance."
+    },
+    "identifier_no_mime_type_unresolvable": {
+      "message": "Could not resolve identifier that has no MIME type: {identifier}"
+    },
+    "identifier_unresolvable": {
+      "message": "Could not parse identifier: {identifier}"
+    },
+    "not_configured": {
+      "message": "Immich is not configured."
     },
     "only_local_media_supported": {
       "message": "Only local media files are currently supported."
     },
-    "album_not_found": {
-      "message": "Album with ID `{album_id}` not found ({error})."
+    "update_error": {
+      "message": "An error occurred while retrieving data from your Immich instance: {error}"
     },
     "upload_failed": {
       "message": "Upload of file `{file}` failed ({error})."
+    }
+  },
+  "services": {
+    "upload_file": {
+      "description": "Uploads a file to your Immich instance.",
+      "fields": {
+        "album_id": {
+          "description": "The album in which the file should be placed after uploading.",
+          "name": "Album ID"
+        },
+        "config_entry_id": {
+          "description": "The Immich instance where to upload the file.",
+          "name": "Immich instance"
+        },
+        "file": {
+          "description": "The path to the file to be uploaded.",
+          "name": "File"
+        }
+      },
+      "name": "Upload file"
     }
   }
 }

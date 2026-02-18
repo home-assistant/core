@@ -25,6 +25,8 @@ from . import (
     BULB_SERVICE_INFO,
     CEILING_LIGHT_SERVICE_INFO,
     FLOOR_LAMP_SERVICE_INFO,
+    RGBICWW_FLOOR_LAMP_SERVICE_INFO,
+    RGBICWW_STRIP_LIGHT_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
     WOSTRIP_SERVICE_INFO,
 )
@@ -343,10 +345,16 @@ async def test_strip_light_services_exception(
 
 
 @pytest.mark.parametrize(
-    ("sensor_type", "service_info"),
+    ("sensor_type", "service_info", "dev_cls"),
     [
-        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
-        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO),
+        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO, "SwitchbotStripLight3"),
+        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO, "SwitchbotStripLight3"),
+        (
+            "rgbicww_strip_light",
+            RGBICWW_STRIP_LIGHT_SERVICE_INFO,
+            "SwitchbotRgbicLight",
+        ),
+        ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
     ],
 )
 @pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
@@ -355,6 +363,7 @@ async def test_floor_lamp_services(
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     sensor_type: str,
     service_info: BluetoothServiceInfoBleak,
+    dev_cls: str,
     service: str,
     service_data: dict,
     mock_method: str,
@@ -370,7 +379,7 @@ async def test_floor_lamp_services(
     mocked_instance = AsyncMock(return_value=True)
 
     with patch.multiple(
-        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
+        f"homeassistant.components.switchbot.light.switchbot.{dev_cls}",
         **{mock_method: mocked_instance},
         update=AsyncMock(return_value=None),
     ):

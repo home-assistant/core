@@ -4,6 +4,20 @@
     'weather.met_office_wavertree': dict({
       'forecast': list([
         dict({
+          'apparent_temperature': 9.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T00:00:00+00:00',
+          'precipitation': None,
+          'precipitation_probability': 65,
+          'pressure': 987.5,
+          'temperature': 12.6,
+          'templow': 11.5,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
+        dict({
           'apparent_temperature': 9.2,
           'condition': 'cloudy',
           'datetime': '2024-11-24T00:00:00+00:00',
@@ -95,6 +109,19 @@
   dict({
     'weather.met_office_wavertree': dict({
       'forecast': list([
+        dict({
+          'apparent_temperature': 5.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T12:00:00+00:00',
+          'precipitation': 0.25,
+          'precipitation_probability': 61,
+          'pressure': 987.5,
+          'temperature': 9.3,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
         dict({
           'apparent_temperature': 6.8,
           'condition': 'rainy',
@@ -728,6 +755,36 @@
     'weather.met_office_wavertree': dict({
       'forecast': list([
         dict({
+          'apparent_temperature': 9.5,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation': None,
+          'precipitation_probability': 74,
+          'pressure': 984.9,
+          'temperature': 13.9,
+          'templow': 10.7,
+          'uv_index': None,
+          'wind_bearing': 171,
+          'wind_gust_speed': 50.69,
+          'wind_speed': 26.78,
+        }),
+        dict({
+          'apparent_temperature': 9.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation': None,
+          'precipitation_probability': 65,
+          'pressure': 987.5,
+          'temperature': 14.5,
+          'templow': 11.6,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
+        dict({
           'apparent_temperature': 4.8,
           'condition': 'cloudy',
           'datetime': '2024-11-24T00:00:00+00:00',
@@ -916,6 +973,20 @@
     'weather.met_office_wavertree': dict({
       'forecast': list([
         dict({
+          'apparent_temperature': 9.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T00:00:00+00:00',
+          'precipitation': None,
+          'precipitation_probability': 65,
+          'pressure': 987.5,
+          'temperature': 12.6,
+          'templow': 11.5,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
+        dict({
           'apparent_temperature': 9.2,
           'condition': 'cloudy',
           'datetime': '2024-11-24T00:00:00+00:00',
@@ -1007,6 +1078,19 @@
   dict({
     'weather.met_office_wavertree': dict({
       'forecast': list([
+        dict({
+          'apparent_temperature': 5.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T12:00:00+00:00',
+          'precipitation': 0.25,
+          'precipitation_probability': 61,
+          'pressure': 987.5,
+          'temperature': 9.3,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
         dict({
           'apparent_temperature': 6.8,
           'condition': 'rainy',
@@ -1640,6 +1724,36 @@
     'weather.met_office_wavertree': dict({
       'forecast': list([
         dict({
+          'apparent_temperature': 9.5,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation': None,
+          'precipitation_probability': 74,
+          'pressure': 984.9,
+          'temperature': 13.9,
+          'templow': 10.7,
+          'uv_index': None,
+          'wind_bearing': 171,
+          'wind_gust_speed': 50.69,
+          'wind_speed': 26.78,
+        }),
+        dict({
+          'apparent_temperature': 9.8,
+          'condition': 'rainy',
+          'datetime': '2024-11-23T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation': None,
+          'precipitation_probability': 65,
+          'pressure': 987.5,
+          'temperature': 14.5,
+          'templow': 11.6,
+          'uv_index': 1,
+          'wind_bearing': 176,
+          'wind_gust_speed': 55.55,
+          'wind_speed': 28.33,
+        }),
+        dict({
           'apparent_temperature': 4.8,
           'condition': 'cloudy',
           'datetime': '2024-11-24T00:00:00+00:00',
@@ -1825,6 +1939,19 @@
 # ---
 # name: test_forecast_subscription
   list([
+    dict({
+      'apparent_temperature': 5.8,
+      'condition': 'rainy',
+      'datetime': '2024-11-23T12:00:00+00:00',
+      'precipitation': 0.25,
+      'precipitation_probability': 61,
+      'pressure': 987.5,
+      'temperature': 9.3,
+      'uv_index': 1,
+      'wind_bearing': 176,
+      'wind_gust_speed': 55.55,
+      'wind_speed': 28.33,
+    }),
     dict({
       'apparent_temperature': 6.8,
       'condition': 'rainy',
@@ -2453,6 +2580,19 @@
 # ---
 # name: test_forecast_subscription.1
   list([
+    dict({
+      'apparent_temperature': 5.8,
+      'condition': 'rainy',
+      'datetime': '2024-11-23T12:00:00+00:00',
+      'precipitation': 0.25,
+      'precipitation_probability': 61,
+      'pressure': 987.5,
+      'temperature': 9.3,
+      'uv_index': 1,
+      'wind_bearing': 176,
+      'wind_gust_speed': 55.55,
+      'wind_speed': 28.33,
+    }),
     dict({
       'apparent_temperature': 6.8,
       'condition': 'rainy',

@@ -1,9 +1,16 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "{mac} ({ip})",
     "step": {
       "user": {
-        "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -11,16 +18,9 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Somfy MyLink hub."
-        }
+        },
+        "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
@@ -29,17 +29,17 @@
     },
     "step": {
       "init": {
-        "title": "Configure MyLink options",
         "data": {
           "target_id": "Configure options for a cover."
-        }
+        },
+        "title": "Configure MyLink options"
       },
       "target_config": {
-        "title": "Configure MyLink cover",
-        "description": "Configure options for `{target_name}`",
         "data": {
           "reverse": "Cover is reversed"
-        }
+        },
+        "description": "Configure options for `{target_name}`",
+        "title": "Configure MyLink cover"
       }
     }
   }

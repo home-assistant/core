@@ -16,15 +16,18 @@ from homeassistant.components.switcher_kis.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.util import slugify
 
 from . import init_integration
 from .consts import (
     DUMMY_AUTO_OFF_SET,
+    DUMMY_HEATER_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_TIMER_MINUTES_SET,
+    DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
     DUMMY_WATER_HEATER_DEVICE,
 )
 
@@ -69,6 +72,46 @@ async def test_turn_on_with_timer_service(
         assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
+async def test_turn_on_with_timer_service_token_needed(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test the turn on with timer service."""
+    await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    # Test initial state - off
+    monkeypatch.setattr(device, "device_state", DeviceState.OFF)
+    mock_bridge.mock_callbacks([DUMMY_HEATER_DEVICE])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
+    ) as mock_control_device:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+            },
+            blocking=True,
+        )
+
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(
+        Command.ON, int(DUMMY_TIMER_MINUTES_SET)
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) -> None:
     """Test the set auto off service."""
@@ -92,6 +135,31 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
         mock_set_auto_shutdown.assert_called_once_with(
             time_period_str(DUMMY_AUTO_OFF_SET)
         )
+
+
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
+async def test_set_auto_off_service_token_needed(
+    hass: HomeAssistant, mock_bridge, mock_api
+) -> None:
+    """Test the set auto off service."""
+    await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown"
+    ) as mock_set_auto_shutdown:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUTO_OFF_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True,
+        )
+
+    assert mock_api.call_count == 2
+    mock_set_auto_shutdown.assert_called_once_with(time_period_str(DUMMY_AUTO_OFF_SET))
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
@@ -125,6 +193,37 @@ async def test_set_auto_off_service_fail(
         assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
+async def test_set_auto_off_service_fail_token_needed(
+    hass: HomeAssistant, mock_bridge, mock_api
+) -> None:
+    """Test set auto off service failed."""
+    await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    with (
+        patch(
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown",
+            return_value=None,
+        ) as mock_set_auto_shutdown,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUTO_OFF_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True,
+        )
+
+    assert mock_api.call_count == 2
+    mock_set_auto_shutdown.assert_called_once_with(time_period_str(DUMMY_AUTO_OFF_SET))
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)
 async def test_plug_unsupported_services(
     hass: HomeAssistant, mock_bridge, mock_api, caplog: pytest.LogCaptureFixture
@@ -137,32 +236,26 @@ async def test_plug_unsupported_services(
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     # Turn on with timer
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON_WITH_TIMER_NAME,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
-        },
-        blocking=True,
-    )
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+            },
+            blocking=True,
+        )
 
     assert mock_api.call_count == 0
-    assert (
-        f"Service '{SERVICE_TURN_ON_WITH_TIMER_NAME}' is not supported by {device.name}"
-        in caplog.text
-    )
 
     # Auto off
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-        blocking=True,
-    )
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUTO_OFF_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True,
+        )
 
     assert mock_api.call_count == 0
-    assert (
-        f"Service '{SERVICE_SET_AUTO_OFF_NAME}' is not supported by {device.name}"
-        in caplog.text
-    )

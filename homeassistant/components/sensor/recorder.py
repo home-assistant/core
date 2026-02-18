@@ -27,6 +27,7 @@ from homeassistant.components.recorder.models import (
     StatisticResult,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
     UnitOfIrradiance,
@@ -43,12 +44,14 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.unit_conversion import BaseUnitConverter
 
 from .const import (
     AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN,
+    UNIT_CONVERTERS,
     SensorStateClass,
     UnitOfVolumeFlowRate,
 )
@@ -225,7 +228,7 @@ def _entity_history_to_float_and_state(
                 float_state
             ):
                 append((float_state, state))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
     return float_states
 
@@ -238,26 +241,68 @@ def _is_numeric(state: State) -> bool:
     return False
 
 
+def _get_unit_class(
+    device_class: str | None,
+    unit: str | None,
+) -> str | None:
+    """Return the unit class for the given device class and unit.
+
+    The unit class is determined from the device class and unit if possible,
+    otherwise from the unit.
+    """
+    if (
+        device_class
+        and (conv := UNIT_CONVERTERS.get(device_class))
+        and unit in conv.VALID_UNITS
+    ):
+        return conv.UNIT_CLASS
+    if conv := statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
+        return conv.UNIT_CLASS
+    return None
+
+
+def _get_unit_converter(
+    unit_class: str | None,
+) -> type[BaseUnitConverter] | None:
+    """Return the unit converter for the given unit class."""
+    if not unit_class:
+        return None
+    return statistics.UNIT_CLASS_TO_UNIT_CONVERTER[unit_class]
+
+
 def _normalize_states(
     hass: HomeAssistant,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
-) -> tuple[str | None, list[tuple[float, State]]]:
+) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     state_unit: str | None = None
     statistics_unit: str | None
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
         statistics_unit = state_unit
+        unit_class = _get_unit_class(device_class, state_unit)
     else:
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
+        unit_class = old_metadata["unit_class"]
+        # Check if the unit class has changed
+        if (
+            (new_unit_class := _get_unit_class(device_class, state_unit)) != unit_class
+            and (new_converter := _get_unit_converter(new_unit_class))
+            and state_unit in new_converter.VALID_UNITS
+            and statistics_unit in new_converter.VALID_UNITS
+        ):
+            # The new unit class supports conversion between the units in metadata
+            # and the unit in the state, so we can use the new unit class
+            unit_class = new_unit_class
 
-    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
+    if not (converter := _get_unit_converter(unit_class)):
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
@@ -283,11 +328,15 @@ def _normalize_states(
                     extra,
                     LINK_DEV_STATISTICS,
                 )
-            return None, []
+            return None, None, []
 
-        return state_unit, fstates
+        if state_unit != statistics_unit:
+            unit_class = _get_unit_class(
+                fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
+                state_unit,
+            )
+        return unit_class, state_unit, fstates
 
-    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float] | None = None
     last_unit: str | None | UndefinedType = UNDEFINED
@@ -330,7 +379,7 @@ def _normalize_states(
 
         valid_fstates.append((fstate, state))
 
-    return statistics_unit, valid_fstates
+    return unit_class, statistics_unit, valid_fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -345,7 +394,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state_class_total has a decreasing value.
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
     rounding issues with databases storing the state as a single precision float, which
@@ -366,12 +415,13 @@ def warn_dip(
             return
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is not"
-                " strictly increasing. Triggered by state %s (%s) with last_updated set"
-                " to %s. Please %s"
+                "Entity %s %shas state class %s, but its state is not"
+                " strictly increasing. Triggered by state %s (previous state: %s) with"
+                " last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             previous_fstate,
             state.last_updated.isoformat(),
@@ -380,7 +430,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state_class_total has a negative value."""
+    """Log a warning once if a sensor with state class TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
@@ -389,11 +439,12 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is "
+                "Entity %s %shas state class %s, but its state is "
                 "negative. Triggered by state %s with last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
@@ -516,13 +567,15 @@ def compile_statistics(  # noqa: C901
     old_metadatas = statistics.get_metadata_with_session(
         get_instance(hass), session, statistic_ids=set(entities_with_float_states)
     )
-    to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
+    to_process: list[
+        tuple[str, str | None, str | None, str, list[tuple[float, State]]]
+    ] = []
     to_query: set[str] = set()
     for _state in sensor_states:
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
             continue
-        statistics_unit, valid_float_states = _normalize_states(
+        unit_class, statistics_unit, valid_float_states = _normalize_states(
             hass,
             old_metadatas,
             maybe_float_states,
@@ -531,7 +584,9 @@ def compile_statistics(  # noqa: C901
         if not valid_float_states:
             continue
         state_class: str = _state.attributes[ATTR_STATE_CLASS]
-        to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
+        to_process.append(
+            (entity_id, unit_class, statistics_unit, state_class, valid_float_states)
+        )
         if "sum" in wanted_statistics[entity_id].types:
             to_query.add(entity_id)
 
@@ -540,6 +595,7 @@ def compile_statistics(  # noqa: C901
     )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
+        unit_class,
         statistics_unit,
         state_class,
         valid_float_states,
@@ -604,6 +660,7 @@ def compile_statistics(  # noqa: C901
             "name": None,
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
+            "unit_class": unit_class,
             "unit_of_measurement": statistics_unit,
         }
 
@@ -769,13 +826,17 @@ def list_statistic_ids(
         if "mean" in provided_statistics.types:
             mean_type = provided_statistics.mean_type
 
+        unit = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        unit_class = _get_unit_class(attributes.get(ATTR_DEVICE_CLASS), unit)
+
         result[entity_id] = {
             "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
-            "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+            "unit_class": unit_class,
+            "unit_of_measurement": unit,
         }
 
     return result
@@ -795,6 +856,10 @@ def _update_issues(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit_class = _get_unit_class(
+            state.attributes.get(ATTR_DEVICE_CLASS),
+            state_unit,
+        )
 
         if metadata := metadatas.get(entity_id):
             if numeric and state_class is None:
@@ -816,7 +881,9 @@ def _update_issues(
                         {
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
+                            "state_unit_class": state_unit_class,
                             "metadata_unit": metadata_unit,
+                            "metadata_unit_class": metadata[1]["unit_class"],
                             "supported_unit": metadata_unit,
                         },
                     )
@@ -830,7 +897,9 @@ def _update_issues(
                     {
                         "statistic_id": entity_id,
                         "state_unit": state_unit,
+                        "state_unit_class": state_unit_class,
                         "metadata_unit": metadata_unit,
+                        "metadata_unit_class": metadata[1]["unit_class"],
                         "supported_unit": valid_units_str,
                     },
                 )

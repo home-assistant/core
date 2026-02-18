@@ -10,8 +10,8 @@
     "step": {
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     }

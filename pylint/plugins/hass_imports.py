@@ -126,28 +126,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
 }
 
 _IGNORE_ROOT_IMPORT = (
-    "assist_pipeline",
-    "automation",
     "bluetooth",
-    "camera",
-    "cast",
-    "device_automation",
     "device_tracker",
-    "ffmpeg",
-    "ffmpeg_motion",
-    "google_assistant",
-    "hardware",
     "homeassistant",
     "homeassistant_hardware",
     "http",
-    "manual",
-    "plex",
     "recorder",
-    "rest",
-    "script",
-    "sensor",
-    "stream",
-    "zha",
 )
 
 
@@ -312,7 +296,7 @@ class HassImportsFormatChecker(BaseChecker):
 
         # Check for `from homeassistant.components.other import DOMAIN`
         for name, alias in node.names:
-            if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
+            if name == "DOMAIN" and (alias is None or not alias.endswith("_DOMAIN")):
                 self.add_message(
                     "hass-import-constant-alias",
                     node=node,

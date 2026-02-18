@@ -31,11 +31,7 @@ from homeassistant.components.fritzbox.climate import (
     PRESET_HOLIDAY,
     PRESET_SUMMER,
 )
-from homeassistant.components.fritzbox.const import (
-    ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_SUMMER_MODE,
-    DOMAIN,
-)
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
@@ -159,21 +155,21 @@ async def test_automatic_offset(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update with error."""
     device = FritzDeviceClimateMock()
-    fritz().update_devices.side_effect = HTTPError("Boom")
+    fritz().update_devices.side_effect = ["", HTTPError("Boom"), ""]
     entry = await setup_config_entry(
         hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert fritz().update_devices.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().update_devices.call_count == 1
+    assert fritz().login.call_count == 1
 
-    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    next_update = dt_util.utcnow() + timedelta(seconds=35)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert fritz().update_devices.call_count == 4
-    assert fritz().login.call_count == 4
+    assert fritz().update_devices.call_count == 3
+    assert fritz().login.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -588,8 +584,6 @@ async def test_holidy_summer_mode(
     # initial state
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [
@@ -607,8 +601,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE]
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLIDAY
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_HOLIDAY]
@@ -643,8 +635,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE]
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_SUMMER
     assert state.attributes[ATTR_PRESET_MODES] == [PRESET_SUMMER]
@@ -679,8 +669,6 @@ async def test_holidy_summer_mode(
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.attributes[ATTR_STATE_HOLIDAY_MODE] is False
-    assert state.attributes[ATTR_STATE_SUMMER_MODE] is False
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_PRESET_MODES] == [

@@ -63,7 +63,7 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
 
     controller = Controller(
         async_zeroconf_instance=async_zeroconf_instance,
-        bleak_scanner_instance=bleak_scanner_instance,  # type: ignore[arg-type]
+        bleak_scanner_instance=bleak_scanner_instance,
         char_cache=char_cache,
     )
 

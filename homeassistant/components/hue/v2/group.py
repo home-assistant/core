@@ -9,6 +9,7 @@ from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
 from aiohue.v2.models.feature import DynamicStatus
+from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -66,7 +67,11 @@ async def async_setup_entry(
 
     # add current items
     for item in api.groups.grouped_light.items:
-        await async_add_light(EventType.RESOURCE_ADDED, item)
+        if item.owner.rtype not in [
+            ResourceTypes.BRIDGE_HOME,
+            ResourceTypes.PRIVATE_GROUP,
+        ]:
+            await async_add_light(EventType.RESOURCE_ADDED, item)
 
     # register listener for new grouped_light
     config_entry.async_on_unload(
@@ -94,7 +99,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         controller = bridge.api.groups.grouped_light
         super().__init__(bridge, controller, resource)
         self.resource = resource
-        self.group = group
+        self.hue_group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= LightEntityFeature.FLASH
@@ -104,7 +109,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
+            identifiers={(DOMAIN, self.hue_group.id)},
         )
         self._dynamic_mode_active = False
         self._update_values()
@@ -115,7 +120,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # subscribe to group updates
         self.async_on_remove(
-            self.api.groups.subscribe(self._handle_event, self.group.id)
+            self.api.groups.subscribe(self._handle_event, self.hue_group.id)
         )
         # We need to watch the underlying lights too
         # if we want feedback about color/brightness changes
@@ -136,7 +141,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         scenes = {
-            x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
+            x.metadata.name for x in self.api.scenes if x.group.rid == self.hue_group.id
         }
         light_resource_ids = tuple(
             x.id for x in self.controller.get_lights(self.resource.id)
@@ -147,7 +152,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
-            "hue_type": self.group.type.value,
+            "hue_type": self.hue_group.type.value,
             "lights": light_names,
             "entity_id": light_entities,
             "dynamics": self._dynamic_mode_active,
@@ -157,7 +162,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            color_util.color_temperature_kelvin_to_mired(self.max_color_temp_kelvin),
+            color_util.color_temperature_kelvin_to_mired(self.min_color_temp_kelvin),
+        )
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
@@ -222,7 +231,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _update_values(self) -> None:
         """Set base values from underlying lights of a group."""
-        supported_color_modes: set[ColorMode | str] = set()
+        supported_color_modes: set[ColorMode] = set()
         lights_with_color_support = 0
         lights_with_color_temp_support = 0
         lights_with_dimming_support = 0

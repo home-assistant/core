@@ -36,6 +36,7 @@ from yalexs.manager.ratelimit import _RateLimitChecker
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -47,6 +48,13 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
+
+# Default capabilities for locks
+_DEFAULT_CAPABILITIES = {
+    "unlatch": False,
+    "doorSense": True,
+    "batteryType": "AA",
+}
 
 
 def _mock_get_config(
@@ -99,7 +107,7 @@ def mock_config_entry(jwt: str | None = None) -> MockConfigEntry:
 
 async def mock_client_credentials(hass: HomeAssistant) -> ClientCredential:
     """Mock client credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -114,9 +122,7 @@ def patch_august_setup():
     with (
         patch("yalexs.manager.gateway.ApiAsync") as api_mock,
         patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
-        patch(
-            "homeassistant.components.august.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ),
+        patch("homeassistant.components.august.async_get_config_entry_implementation"),
     ):
         yield api_mock, authenticate_mock
 
@@ -341,6 +347,15 @@ async def make_mock_api(
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
+
+    # Mock capabilities endpoint
+    async def mock_get_lock_capabilities(token, serial_number):
+        """Mock the capabilities endpoint response."""
+        return {"lock": _DEFAULT_CAPABILITIES}
+
+    api_instance.async_get_lock_capabilities = AsyncMock(
+        side_effect=mock_get_lock_capabilities
+    )
 
     return api_instance
 

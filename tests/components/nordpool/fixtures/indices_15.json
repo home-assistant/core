@@ -1,688 +1,688 @@
 {
-  "deliveryDateCET": "2025-07-06",
-  "version": 2,
-  "updatedAt": "2025-07-05T10:56:42.3755929Z",
+  "deliveryDateCET": "2025-10-01",
+  "version": 3,
+  "updatedAt": "2025-09-30T12:08:18.4894194Z",
   "market": "DayAhead",
   "indexNames": ["SE3"],
   "currency": "SEK",
   "resolutionInMinutes": 15,
   "areaStates": [
     {
-      "state": "Preliminary",
+      "state": "Final",
       "areas": ["SE3"]
     }
   ],
   "multiIndexEntries": [
     {
-      "deliveryStart": "2025-07-05T22:00:00Z",
-      "deliveryEnd": "2025-07-05T22:15:00Z",
+      "deliveryStart": "2025-09-30T22:00:00Z",
+      "deliveryEnd": "2025-09-30T22:15:00Z",
       "entryPerArea": {
-        "SE3": 43.57
+        "SE3": 556.68
       }
     },
     {
-      "deliveryStart": "2025-07-05T22:15:00Z",
-      "deliveryEnd": "2025-07-05T22:30:00Z",
+      "deliveryStart": "2025-09-30T22:15:00Z",
+      "deliveryEnd": "2025-09-30T22:30:00Z",
       "entryPerArea": {
-        "SE3": 43.57
+        "SE3": 519.88
       }
     },
     {
-      "deliveryStart": "2025-07-05T22:30:00Z",
-      "deliveryEnd": "2025-07-05T22:45:00Z",
+      "deliveryStart": "2025-09-30T22:30:00Z",
+      "deliveryEnd": "2025-09-30T22:45:00Z",
       "entryPerArea": {
-        "SE3": 43.57
+        "SE3": 508.28
       }
     },
     {
-      "deliveryStart": "2025-07-05T22:45:00Z",
-      "deliveryEnd": "2025-07-05T23:00:00Z",
+      "deliveryStart": "2025-09-30T22:45:00Z",
+      "deliveryEnd": "2025-09-30T23:00:00Z",
       "entryPerArea": {
-        "SE3": 43.57
+        "SE3": 509.93
       }
     },
     {
-      "deliveryStart": "2025-07-05T23:00:00Z",
-      "deliveryEnd": "2025-07-05T23:15:00Z",
+      "deliveryStart": "2025-09-30T23:00:00Z",
+      "deliveryEnd": "2025-09-30T23:15:00Z",
       "entryPerArea": {
-        "SE3": 36.47
+        "SE3": 501.64
       }
     },
     {
-      "deliveryStart": "2025-07-05T23:15:00Z",
-      "deliveryEnd": "2025-07-05T23:30:00Z",
+      "deliveryStart": "2025-09-30T23:15:00Z",
+      "deliveryEnd": "2025-09-30T23:30:00Z",
       "entryPerArea": {
-        "SE3": 36.47
+        "SE3": 509.05
       }
     },
     {
-      "deliveryStart": "2025-07-05T23:30:00Z",
-      "deliveryEnd": "2025-07-05T23:45:00Z",
+      "deliveryStart": "2025-09-30T23:30:00Z",
+      "deliveryEnd": "2025-09-30T23:45:00Z",
       "entryPerArea": {
-        "SE3": 36.47
+        "SE3": 491.03
       }
     },
     {
-      "deliveryStart": "2025-07-05T23:45:00Z",
-      "deliveryEnd": "2025-07-06T00:00:00Z",
+      "deliveryStart": "2025-09-30T23:45:00Z",
+      "deliveryEnd": "2025-10-01T00:00:00Z",
       "entryPerArea": {
-        "SE3": 36.47
+        "SE3": 442.07
       }
     },
     {
-      "deliveryStart": "2025-07-06T00:00:00Z",
-      "deliveryEnd": "2025-07-06T00:15:00Z",
+      "deliveryStart": "2025-10-01T00:00:00Z",
+      "deliveryEnd": "2025-10-01T00:15:00Z",
       "entryPerArea": {
-        "SE3": 35.57
+        "SE3": 504.08
       }
     },
     {
-      "deliveryStart": "2025-07-06T00:15:00Z",
-      "deliveryEnd": "2025-07-06T00:30:00Z",
+      "deliveryStart": "2025-10-01T00:15:00Z",
+      "deliveryEnd": "2025-10-01T00:30:00Z",
       "entryPerArea": {
-        "SE3": 35.57
+        "SE3": 504.85
       }
     },
     {
-      "deliveryStart": "2025-07-06T00:30:00Z",
-      "deliveryEnd": "2025-07-06T00:45:00Z",
+      "deliveryStart": "2025-10-01T00:30:00Z",
+      "deliveryEnd": "2025-10-01T00:45:00Z",
       "entryPerArea": {
-        "SE3": 35.57
+        "SE3": 504.3
       }
     },
     {
-      "deliveryStart": "2025-07-06T00:45:00Z",
-      "deliveryEnd": "2025-07-06T01:00:00Z",
+      "deliveryStart": "2025-10-01T00:45:00Z",
+      "deliveryEnd": "2025-10-01T01:00:00Z",
       "entryPerArea": {
-        "SE3": 35.57
+        "SE3": 506.29
       }
     },
     {
-      "deliveryStart": "2025-07-06T01:00:00Z",
-      "deliveryEnd": "2025-07-06T01:15:00Z",
+      "deliveryStart": "2025-10-01T01:00:00Z",
+      "deliveryEnd": "2025-10-01T01:15:00Z",
       "entryPerArea": {
-        "SE3": 30.73
+        "SE3": 442.07
       }
     },
     {
-      "deliveryStart": "2025-07-06T01:15:00Z",
-      "deliveryEnd": "2025-07-06T01:30:00Z",
+      "deliveryStart": "2025-10-01T01:15:00Z",
+      "deliveryEnd": "2025-10-01T01:30:00Z",
       "entryPerArea": {
-        "SE3": 30.73
+        "SE3": 441.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T01:30:00Z",
-      "deliveryEnd": "2025-07-06T01:45:00Z",
+      "deliveryStart": "2025-10-01T01:30:00Z",
+      "deliveryEnd": "2025-10-01T01:45:00Z",
       "entryPerArea": {
-        "SE3": 30.73
+        "SE3": 442.07
       }
     },
     {
-      "deliveryStart": "2025-07-06T01:45:00Z",
-      "deliveryEnd": "2025-07-06T02:00:00Z",
+      "deliveryStart": "2025-10-01T01:45:00Z",
+      "deliveryEnd": "2025-10-01T02:00:00Z",
       "entryPerArea": {
-        "SE3": 30.73
+        "SE3": 442.07
       }
     },
     {
-      "deliveryStart": "2025-07-06T02:00:00Z",
-      "deliveryEnd": "2025-07-06T02:15:00Z",
+      "deliveryStart": "2025-10-01T02:00:00Z",
+      "deliveryEnd": "2025-10-01T02:15:00Z",
       "entryPerArea": {
-        "SE3": 32.42
+        "SE3": 441.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T02:15:00Z",
-      "deliveryEnd": "2025-07-06T02:30:00Z",
+      "deliveryStart": "2025-10-01T02:15:00Z",
+      "deliveryEnd": "2025-10-01T02:30:00Z",
       "entryPerArea": {
-        "SE3": 32.42
+        "SE3": 483.3
       }
     },
     {
-      "deliveryStart": "2025-07-06T02:30:00Z",
-      "deliveryEnd": "2025-07-06T02:45:00Z",
+      "deliveryStart": "2025-10-01T02:30:00Z",
+      "deliveryEnd": "2025-10-01T02:45:00Z",
       "entryPerArea": {
-        "SE3": 32.42
+        "SE3": 484.29
       }
     },
     {
-      "deliveryStart": "2025-07-06T02:45:00Z",
-      "deliveryEnd": "2025-07-06T03:00:00Z",
+      "deliveryStart": "2025-10-01T02:45:00Z",
+      "deliveryEnd": "2025-10-01T03:00:00Z",
       "entryPerArea": {
-        "SE3": 32.42
+        "SE3": 574.7
       }
     },
     {
-      "deliveryStart": "2025-07-06T03:00:00Z",
-      "deliveryEnd": "2025-07-06T03:15:00Z",
+      "deliveryStart": "2025-10-01T03:00:00Z",
+      "deliveryEnd": "2025-10-01T03:15:00Z",
       "entryPerArea": {
-        "SE3": 38.73
+        "SE3": 543.31
       }
     },
     {
-      "deliveryStart": "2025-07-06T03:15:00Z",
-      "deliveryEnd": "2025-07-06T03:30:00Z",
+      "deliveryStart": "2025-10-01T03:15:00Z",
+      "deliveryEnd": "2025-10-01T03:30:00Z",
       "entryPerArea": {
-        "SE3": 38.73
+        "SE3": 578.01
       }
     },
     {
-      "deliveryStart": "2025-07-06T03:30:00Z",
-      "deliveryEnd": "2025-07-06T03:45:00Z",
+      "deliveryStart": "2025-10-01T03:30:00Z",
+      "deliveryEnd": "2025-10-01T03:45:00Z",
       "entryPerArea": {
-        "SE3": 38.73
+        "SE3": 774.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T03:45:00Z",
-      "deliveryEnd": "2025-07-06T04:00:00Z",
+      "deliveryStart": "2025-10-01T03:45:00Z",
+      "deliveryEnd": "2025-10-01T04:00:00Z",
       "entryPerArea": {
-        "SE3": 38.73
+        "SE3": 787.0
       }
     },
     {
-      "deliveryStart": "2025-07-06T04:00:00Z",
-      "deliveryEnd": "2025-07-06T04:15:00Z",
+      "deliveryStart": "2025-10-01T04:00:00Z",
+      "deliveryEnd": "2025-10-01T04:15:00Z",
       "entryPerArea": {
-        "SE3": 42.78
+        "SE3": 902.38
       }
     },
     {
-      "deliveryStart": "2025-07-06T04:15:00Z",
-      "deliveryEnd": "2025-07-06T04:30:00Z",
+      "deliveryStart": "2025-10-01T04:15:00Z",
+      "deliveryEnd": "2025-10-01T04:30:00Z",
       "entryPerArea": {
-        "SE3": 42.78
+        "SE3": 1079.32
       }
     },
     {
-      "deliveryStart": "2025-07-06T04:30:00Z",
-      "deliveryEnd": "2025-07-06T04:45:00Z",
+      "deliveryStart": "2025-10-01T04:30:00Z",
+      "deliveryEnd": "2025-10-01T04:45:00Z",
       "entryPerArea": {
-        "SE3": 42.78
+        "SE3": 1222.67
       }
     },
     {
-      "deliveryStart": "2025-07-06T04:45:00Z",
-      "deliveryEnd": "2025-07-06T05:00:00Z",
+      "deliveryStart": "2025-10-01T04:45:00Z",
+      "deliveryEnd": "2025-10-01T05:00:00Z",
       "entryPerArea": {
-        "SE3": 42.78
+        "SE3": 1394.63
       }
     },
     {
-      "deliveryStart": "2025-07-06T05:00:00Z",
-      "deliveryEnd": "2025-07-06T05:15:00Z",
+      "deliveryStart": "2025-10-01T05:00:00Z",
+      "deliveryEnd": "2025-10-01T05:15:00Z",
       "entryPerArea": {
-        "SE3": 54.71
+        "SE3": 1529.36
       }
     },
     {
-      "deliveryStart": "2025-07-06T05:15:00Z",
-      "deliveryEnd": "2025-07-06T05:30:00Z",
+      "deliveryStart": "2025-10-01T05:15:00Z",
+      "deliveryEnd": "2025-10-01T05:30:00Z",
       "entryPerArea": {
-        "SE3": 54.71
+        "SE3": 1724.53
       }
     },
     {
-      "deliveryStart": "2025-07-06T05:30:00Z",
-      "deliveryEnd": "2025-07-06T05:45:00Z",
+      "deliveryStart": "2025-10-01T05:30:00Z",
+      "deliveryEnd": "2025-10-01T05:45:00Z",
       "entryPerArea": {
-        "SE3": 54.71
+        "SE3": 1809.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T05:45:00Z",
-      "deliveryEnd": "2025-07-06T06:00:00Z",
+      "deliveryStart": "2025-10-01T05:45:00Z",
+      "deliveryEnd": "2025-10-01T06:00:00Z",
       "entryPerArea": {
-        "SE3": 54.71
+        "SE3": 1713.04
       }
     },
     {
-      "deliveryStart": "2025-07-06T06:00:00Z",
-      "deliveryEnd": "2025-07-06T06:15:00Z",
+      "deliveryStart": "2025-10-01T06:00:00Z",
+      "deliveryEnd": "2025-10-01T06:15:00Z",
       "entryPerArea": {
-        "SE3": 83.87
+        "SE3": 1925.9
       }
     },
     {
-      "deliveryStart": "2025-07-06T06:15:00Z",
-      "deliveryEnd": "2025-07-06T06:30:00Z",
+      "deliveryStart": "2025-10-01T06:15:00Z",
+      "deliveryEnd": "2025-10-01T06:30:00Z",
       "entryPerArea": {
-        "SE3": 83.87
+        "SE3": 1440.06
       }
     },
     {
-      "deliveryStart": "2025-07-06T06:30:00Z",
-      "deliveryEnd": "2025-07-06T06:45:00Z",
+      "deliveryStart": "2025-10-01T06:30:00Z",
+      "deliveryEnd": "2025-10-01T06:45:00Z",
       "entryPerArea": {
-        "SE3": 83.87
+        "SE3": 1183.32
       }
     },
     {
-      "deliveryStart": "2025-07-06T06:45:00Z",
-      "deliveryEnd": "2025-07-06T07:00:00Z",
+      "deliveryStart": "2025-10-01T06:45:00Z",
+      "deliveryEnd": "2025-10-01T07:00:00Z",
       "entryPerArea": {
-        "SE3": 83.87
+        "SE3": 962.95
       }
     },
     {
-      "deliveryStart": "2025-07-06T07:00:00Z",
-      "deliveryEnd": "2025-07-06T07:15:00Z",
+      "deliveryStart": "2025-10-01T07:00:00Z",
+      "deliveryEnd": "2025-10-01T07:15:00Z",
       "entryPerArea": {
-        "SE3": 78.8
+        "SE3": 1402.04
       }
     },
     {
-      "deliveryStart": "2025-07-06T07:15:00Z",
-      "deliveryEnd": "2025-07-06T07:30:00Z",
+      "deliveryStart": "2025-10-01T07:15:00Z",
+      "deliveryEnd": "2025-10-01T07:30:00Z",
       "entryPerArea": {
-        "SE3": 78.8
+        "SE3": 1060.65
       }
     },
     {
-      "deliveryStart": "2025-07-06T07:30:00Z",
-      "deliveryEnd": "2025-07-06T07:45:00Z",
+      "deliveryStart": "2025-10-01T07:30:00Z",
+      "deliveryEnd": "2025-10-01T07:45:00Z",
       "entryPerArea": {
-        "SE3": 78.8
+        "SE3": 949.13
       }
     },
     {
-      "deliveryStart": "2025-07-06T07:45:00Z",
-      "deliveryEnd": "2025-07-06T08:00:00Z",
+      "deliveryStart": "2025-10-01T07:45:00Z",
+      "deliveryEnd": "2025-10-01T08:00:00Z",
       "entryPerArea": {
-        "SE3": 78.8
+        "SE3": 841.82
       }
     },
     {
-      "deliveryStart": "2025-07-06T08:00:00Z",
-      "deliveryEnd": "2025-07-06T08:15:00Z",
+      "deliveryStart": "2025-10-01T08:00:00Z",
+      "deliveryEnd": "2025-10-01T08:15:00Z",
       "entryPerArea": {
-        "SE3": 92.09
+        "SE3": 1037.44
       }
     },
     {
-      "deliveryStart": "2025-07-06T08:15:00Z",
-      "deliveryEnd": "2025-07-06T08:30:00Z",
+      "deliveryStart": "2025-10-01T08:15:00Z",
+      "deliveryEnd": "2025-10-01T08:30:00Z",
       "entryPerArea": {
-        "SE3": 92.09
+        "SE3": 950.13
       }
     },
     {
-      "deliveryStart": "2025-07-06T08:30:00Z",
-      "deliveryEnd": "2025-07-06T08:45:00Z",
+      "deliveryStart": "2025-10-01T08:30:00Z",
+      "deliveryEnd": "2025-10-01T08:45:00Z",
       "entryPerArea": {
-        "SE3": 92.09
+        "SE3": 826.13
       }
     },
     {
-      "deliveryStart": "2025-07-06T08:45:00Z",
-      "deliveryEnd": "2025-07-06T09:00:00Z",
+      "deliveryStart": "2025-10-01T08:45:00Z",
+      "deliveryEnd": "2025-10-01T09:00:00Z",
       "entryPerArea": {
-        "SE3": 92.09
+        "SE3": 684.55
       }
     },
     {
-      "deliveryStart": "2025-07-06T09:00:00Z",
-      "deliveryEnd": "2025-07-06T09:15:00Z",
+      "deliveryStart": "2025-10-01T09:00:00Z",
+      "deliveryEnd": "2025-10-01T09:15:00Z",
       "entryPerArea": {
-        "SE3": 104.92
+        "SE3": 861.6
       }
     },
     {
-      "deliveryStart": "2025-07-06T09:15:00Z",
-      "deliveryEnd": "2025-07-06T09:30:00Z",
+      "deliveryStart": "2025-10-01T09:15:00Z",
+      "deliveryEnd": "2025-10-01T09:30:00Z",
       "entryPerArea": {
-        "SE3": 104.92
+        "SE3": 722.79
       }
     },
     {
-      "deliveryStart": "2025-07-06T09:30:00Z",
-      "deliveryEnd": "2025-07-06T09:45:00Z",
+      "deliveryStart": "2025-10-01T09:30:00Z",
+      "deliveryEnd": "2025-10-01T09:45:00Z",
       "entryPerArea": {
-        "SE3": 104.92
+        "SE3": 640.57
       }
     },
     {
-      "deliveryStart": "2025-07-06T09:45:00Z",
-      "deliveryEnd": "2025-07-06T10:00:00Z",
+      "deliveryStart": "2025-10-01T09:45:00Z",
+      "deliveryEnd": "2025-10-01T10:00:00Z",
       "entryPerArea": {
-        "SE3": 104.92
+        "SE3": 607.74
       }
     },
     {
-      "deliveryStart": "2025-07-06T10:00:00Z",
-      "deliveryEnd": "2025-07-06T10:15:00Z",
+      "deliveryStart": "2025-10-01T10:00:00Z",
+      "deliveryEnd": "2025-10-01T10:15:00Z",
       "entryPerArea": {
-        "SE3": 72.5
+        "SE3": 674.05
       }
     },
     {
-      "deliveryStart": "2025-07-06T10:15:00Z",
-      "deliveryEnd": "2025-07-06T10:30:00Z",
+      "deliveryStart": "2025-10-01T10:15:00Z",
+      "deliveryEnd": "2025-10-01T10:30:00Z",
       "entryPerArea": {
-        "SE3": 72.5
+        "SE3": 638.58
       }
     },
     {
-      "deliveryStart": "2025-07-06T10:30:00Z",
-      "deliveryEnd": "2025-07-06T10:45:00Z",
+      "deliveryStart": "2025-10-01T10:30:00Z",
+      "deliveryEnd": "2025-10-01T10:45:00Z",
       "entryPerArea": {
-        "SE3": 72.5
+        "SE3": 638.47
       }
     },
     {
-      "deliveryStart": "2025-07-06T10:45:00Z",
-      "deliveryEnd": "2025-07-06T11:00:00Z",
+      "deliveryStart": "2025-10-01T10:45:00Z",
+      "deliveryEnd": "2025-10-01T11:00:00Z",
       "entryPerArea": {
-        "SE3": 72.5
+        "SE3": 634.82
       }
     },
     {
-      "deliveryStart": "2025-07-06T11:00:00Z",
-      "deliveryEnd": "2025-07-06T11:15:00Z",
+      "deliveryStart": "2025-10-01T11:00:00Z",
+      "deliveryEnd": "2025-10-01T11:15:00Z",
       "entryPerArea": {
-        "SE3": 63.49
+        "SE3": 637.36
       }
     },
     {
-      "deliveryStart": "2025-07-06T11:15:00Z",
-      "deliveryEnd": "2025-07-06T11:30:00Z",
+      "deliveryStart": "2025-10-01T11:15:00Z",
+      "deliveryEnd": "2025-10-01T11:30:00Z",
       "entryPerArea": {
-        "SE3": 63.49
+        "SE3": 660.68
       }
     },
     {
-      "deliveryStart": "2025-07-06T11:30:00Z",
-      "deliveryEnd": "2025-07-06T11:45:00Z",
+      "deliveryStart": "2025-10-01T11:30:00Z",
+      "deliveryEnd": "2025-10-01T11:45:00Z",
       "entryPerArea": {
-        "SE3": 63.49
+        "SE3": 679.14
       }
     },
     {
-      "deliveryStart": "2025-07-06T11:45:00Z",
-      "deliveryEnd": "2025-07-06T12:00:00Z",
+      "deliveryStart": "2025-10-01T11:45:00Z",
+      "deliveryEnd": "2025-10-01T12:00:00Z",
       "entryPerArea": {
-        "SE3": 63.49
+        "SE3": 694.61
       }
     },
     {
-      "deliveryStart": "2025-07-06T12:00:00Z",
-      "deliveryEnd": "2025-07-06T12:15:00Z",
+      "deliveryStart": "2025-10-01T12:00:00Z",
+      "deliveryEnd": "2025-10-01T12:15:00Z",
       "entryPerArea": {
-        "SE3": 91.64
+        "SE3": 622.33
       }
     },
     {
-      "deliveryStart": "2025-07-06T12:15:00Z",
-      "deliveryEnd": "2025-07-06T12:30:00Z",
+      "deliveryStart": "2025-10-01T12:15:00Z",
+      "deliveryEnd": "2025-10-01T12:30:00Z",
       "entryPerArea": {
-        "SE3": 91.64
+        "SE3": 685.44
       }
     },
     {
-      "deliveryStart": "2025-07-06T12:30:00Z",
-      "deliveryEnd": "2025-07-06T12:45:00Z",
+      "deliveryStart": "2025-10-01T12:30:00Z",
+      "deliveryEnd": "2025-10-01T12:45:00Z",
       "entryPerArea": {
-        "SE3": 91.64
+        "SE3": 732.85
       }
     },
     {
-      "deliveryStart": "2025-07-06T12:45:00Z",
-      "deliveryEnd": "2025-07-06T13:00:00Z",
+      "deliveryStart": "2025-10-01T12:45:00Z",
+      "deliveryEnd": "2025-10-01T13:00:00Z",
       "entryPerArea": {
-        "SE3": 91.64
+        "SE3": 801.92
       }
     },
     {
-      "deliveryStart": "2025-07-06T13:00:00Z",
-      "deliveryEnd": "2025-07-06T13:15:00Z",
+      "deliveryStart": "2025-10-01T13:00:00Z",
+      "deliveryEnd": "2025-10-01T13:15:00Z",
       "entryPerArea": {
-        "SE3": 111.79
+        "SE3": 629.4
       }
     },
     {
-      "deliveryStart": "2025-07-06T13:15:00Z",
-      "deliveryEnd": "2025-07-06T13:30:00Z",
+      "deliveryStart": "2025-10-01T13:15:00Z",
+      "deliveryEnd": "2025-10-01T13:30:00Z",
       "entryPerArea": {
-        "SE3": 111.79
+        "SE3": 729.53
       }
     },
     {
-      "deliveryStart": "2025-07-06T13:30:00Z",
-      "deliveryEnd": "2025-07-06T13:45:00Z",
+      "deliveryStart": "2025-10-01T13:30:00Z",
+      "deliveryEnd": "2025-10-01T13:45:00Z",
       "entryPerArea": {
-        "SE3": 111.79
+        "SE3": 884.81
       }
     },
     {
-      "deliveryStart": "2025-07-06T13:45:00Z",
-      "deliveryEnd": "2025-07-06T14:00:00Z",
+      "deliveryStart": "2025-10-01T13:45:00Z",
+      "deliveryEnd": "2025-10-01T14:00:00Z",
       "entryPerArea": {
-        "SE3": 111.79
+        "SE3": 984.94
       }
     },
     {
-      "deliveryStart": "2025-07-06T14:00:00Z",
-      "deliveryEnd": "2025-07-06T14:15:00Z",
+      "deliveryStart": "2025-10-01T14:00:00Z",
+      "deliveryEnd": "2025-10-01T14:15:00Z",
       "entryPerArea": {
-        "SE3": 234.04
+        "SE3": 615.26
       }
     },
     {
-      "deliveryStart": "2025-07-06T14:15:00Z",
-      "deliveryEnd": "2025-07-06T14:30:00Z",
+      "deliveryStart": "2025-10-01T14:15:00Z",
+      "deliveryEnd": "2025-10-01T14:30:00Z",
       "entryPerArea": {
-        "SE3": 234.04
+        "SE3": 902.94
       }
     },
     {
-      "deliveryStart": "2025-07-06T14:30:00Z",
-      "deliveryEnd": "2025-07-06T14:45:00Z",
+      "deliveryStart": "2025-10-01T14:30:00Z",
+      "deliveryEnd": "2025-10-01T14:45:00Z",
       "entryPerArea": {
-        "SE3": 234.04
+        "SE3": 1043.85
       }
     },
     {
-      "deliveryStart": "2025-07-06T14:45:00Z",
-      "deliveryEnd": "2025-07-06T15:00:00Z",
+      "deliveryStart": "2025-10-01T14:45:00Z",
+      "deliveryEnd": "2025-10-01T15:00:00Z",
       "entryPerArea": {
-        "SE3": 234.04
+        "SE3": 1075.12
       }
     },
     {
-      "deliveryStart": "2025-07-06T15:00:00Z",
-      "deliveryEnd": "2025-07-06T15:15:00Z",
+      "deliveryStart": "2025-10-01T15:00:00Z",
+      "deliveryEnd": "2025-10-01T15:15:00Z",
       "entryPerArea": {
-        "SE3": 435.33
+        "SE3": 980.52
       }
     },
     {
-      "deliveryStart": "2025-07-06T15:15:00Z",
-      "deliveryEnd": "2025-07-06T15:30:00Z",
+      "deliveryStart": "2025-10-01T15:15:00Z",
+      "deliveryEnd": "2025-10-01T15:30:00Z",
       "entryPerArea": {
-        "SE3": 435.33
+        "SE3": 1162.66
       }
     },
     {
-      "deliveryStart": "2025-07-06T15:30:00Z",
-      "deliveryEnd": "2025-07-06T15:45:00Z",
+      "deliveryStart": "2025-10-01T15:30:00Z",
+      "deliveryEnd": "2025-10-01T15:45:00Z",
       "entryPerArea": {
-        "SE3": 435.33
+        "SE3": 1453.87
       }
     },
     {
-      "deliveryStart": "2025-07-06T15:45:00Z",
-      "deliveryEnd": "2025-07-06T16:00:00Z",
+      "deliveryStart": "2025-10-01T15:45:00Z",
+      "deliveryEnd": "2025-10-01T16:00:00Z",
       "entryPerArea": {
-        "SE3": 435.33
+        "SE3": 1955.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T16:00:00Z",
-      "deliveryEnd": "2025-07-06T16:15:00Z",
+      "deliveryStart": "2025-10-01T16:00:00Z",
+      "deliveryEnd": "2025-10-01T16:15:00Z",
       "entryPerArea": {
-        "SE3": 431.84
+        "SE3": 1423.48
       }
     },
     {
-      "deliveryStart": "2025-07-06T16:15:00Z",
-      "deliveryEnd": "2025-07-06T16:30:00Z",
+      "deliveryStart": "2025-10-01T16:15:00Z",
+      "deliveryEnd": "2025-10-01T16:30:00Z",
       "entryPerArea": {
-        "SE3": 431.84
+        "SE3": 1900.04
       }
     },
     {
-      "deliveryStart": "2025-07-06T16:30:00Z",
-      "deliveryEnd": "2025-07-06T16:45:00Z",
+      "deliveryStart": "2025-10-01T16:30:00Z",
+      "deliveryEnd": "2025-10-01T16:45:00Z",
       "entryPerArea": {
-        "SE3": 431.84
+        "SE3": 2611.11
       }
     },
     {
-      "deliveryStart": "2025-07-06T16:45:00Z",
-      "deliveryEnd": "2025-07-06T17:00:00Z",
+      "deliveryStart": "2025-10-01T16:45:00Z",
+      "deliveryEnd": "2025-10-01T17:00:00Z",
       "entryPerArea": {
-        "SE3": 431.84
+        "SE3": 3467.41
       }
     },
     {
-      "deliveryStart": "2025-07-06T17:00:00Z",
-      "deliveryEnd": "2025-07-06T17:15:00Z",
+      "deliveryStart": "2025-10-01T17:00:00Z",
+      "deliveryEnd": "2025-10-01T17:15:00Z",
       "entryPerArea": {
-        "SE3": 423.73
+        "SE3": 3828.03
       }
     },
     {
-      "deliveryStart": "2025-07-06T17:15:00Z",
-      "deliveryEnd": "2025-07-06T17:30:00Z",
+      "deliveryStart": "2025-10-01T17:15:00Z",
+      "deliveryEnd": "2025-10-01T17:30:00Z",
       "entryPerArea": {
-        "SE3": 423.73
+        "SE3": 3429.83
       }
     },
     {
-      "deliveryStart": "2025-07-06T17:30:00Z",
-      "deliveryEnd": "2025-07-06T17:45:00Z",
+      "deliveryStart": "2025-10-01T17:30:00Z",
+      "deliveryEnd": "2025-10-01T17:45:00Z",
       "entryPerArea": {
-        "SE3": 423.73
+        "SE3": 2934.38
       }
     },
     {
-      "deliveryStart": "2025-07-06T17:45:00Z",
-      "deliveryEnd": "2025-07-06T18:00:00Z",
+      "deliveryStart": "2025-10-01T17:45:00Z",
+      "deliveryEnd": "2025-10-01T18:00:00Z",
       "entryPerArea": {
-        "SE3": 423.73
+        "SE3": 2308.07
       }
     },
     {
-      "deliveryStart": "2025-07-06T18:00:00Z",
-      "deliveryEnd": "2025-07-06T18:15:00Z",
+      "deliveryStart": "2025-10-01T18:00:00Z",
+      "deliveryEnd": "2025-10-01T18:15:00Z",
       "entryPerArea": {
-        "SE3": 437.92
+        "SE3": 1997.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T18:15:00Z",
-      "deliveryEnd": "2025-07-06T18:30:00Z",
+      "deliveryStart": "2025-10-01T18:15:00Z",
+      "deliveryEnd": "2025-10-01T18:30:00Z",
       "entryPerArea": {
-        "SE3": 437.92
+        "SE3": 1424.03
       }
     },
     {
-      "deliveryStart": "2025-07-06T18:30:00Z",
-      "deliveryEnd": "2025-07-06T18:45:00Z",
+      "deliveryStart": "2025-10-01T18:30:00Z",
+      "deliveryEnd": "2025-10-01T18:45:00Z",
       "entryPerArea": {
-        "SE3": 437.92
+        "SE3": 1216.81
       }
     },
     {
-      "deliveryStart": "2025-07-06T18:45:00Z",
-      "deliveryEnd": "2025-07-06T19:00:00Z",
+      "deliveryStart": "2025-10-01T18:45:00Z",
+      "deliveryEnd": "2025-10-01T19:00:00Z",
       "entryPerArea": {
-        "SE3": 437.92
+        "SE3": 1070.15
       }
     },
     {
-      "deliveryStart": "2025-07-06T19:00:00Z",
-      "deliveryEnd": "2025-07-06T19:15:00Z",
+      "deliveryStart": "2025-10-01T19:00:00Z",
+      "deliveryEnd": "2025-10-01T19:15:00Z",
       "entryPerArea": {
-        "SE3": 416.42
+        "SE3": 1218.14
       }
     },
     {
-      "deliveryStart": "2025-07-06T19:15:00Z",
-      "deliveryEnd": "2025-07-06T19:30:00Z",
+      "deliveryStart": "2025-10-01T19:15:00Z",
+      "deliveryEnd": "2025-10-01T19:30:00Z",
       "entryPerArea": {
-        "SE3": 416.42
+        "SE3": 1135.8
       }
     },
     {
-      "deliveryStart": "2025-07-06T19:30:00Z",
-      "deliveryEnd": "2025-07-06T19:45:00Z",
+      "deliveryStart": "2025-10-01T19:30:00Z",
+      "deliveryEnd": "2025-10-01T19:45:00Z",
       "entryPerArea": {
-        "SE3": 416.42
+        "SE3": 959.96
       }
     },
     {
-      "deliveryStart": "2025-07-06T19:45:00Z",
-      "deliveryEnd": "2025-07-06T20:00:00Z",
+      "deliveryStart": "2025-10-01T19:45:00Z",
+      "deliveryEnd": "2025-10-01T20:00:00Z",
       "entryPerArea": {
-        "SE3": 416.42
+        "SE3": 913.66
       }
     },
     {
-      "deliveryStart": "2025-07-06T20:00:00Z",
-      "deliveryEnd": "2025-07-06T20:15:00Z",
+      "deliveryStart": "2025-10-01T20:00:00Z",
+      "deliveryEnd": "2025-10-01T20:15:00Z",
       "entryPerArea": {
-        "SE3": 414.39
+        "SE3": 1001.63
       }
     },
     {
-      "deliveryStart": "2025-07-06T20:15:00Z",
-      "deliveryEnd": "2025-07-06T20:30:00Z",
+      "deliveryStart": "2025-10-01T20:15:00Z",
+      "deliveryEnd": "2025-10-01T20:30:00Z",
       "entryPerArea": {
-        "SE3": 414.39
+        "SE3": 933.0
       }
     },
     {
-      "deliveryStart": "2025-07-06T20:30:00Z",
-      "deliveryEnd": "2025-07-06T20:45:00Z",
+      "deliveryStart": "2025-10-01T20:30:00Z",
+      "deliveryEnd": "2025-10-01T20:45:00Z",
       "entryPerArea": {
-        "SE3": 414.39
+        "SE3": 874.53
       }
     },
     {
-      "deliveryStart": "2025-07-06T20:45:00Z",
-      "deliveryEnd": "2025-07-06T21:00:00Z",
+      "deliveryStart": "2025-10-01T20:45:00Z",
+      "deliveryEnd": "2025-10-01T21:00:00Z",
       "entryPerArea": {
-        "SE3": 414.39
+        "SE3": 821.71
       }
     },
     {
-      "deliveryStart": "2025-07-06T21:00:00Z",
-      "deliveryEnd": "2025-07-06T21:15:00Z",
+      "deliveryStart": "2025-10-01T21:00:00Z",
+      "deliveryEnd": "2025-10-01T21:15:00Z",
       "entryPerArea": {
-        "SE3": 396.38
+        "SE3": 860.5
       }
     },
     {
-      "deliveryStart": "2025-07-06T21:15:00Z",
-      "deliveryEnd": "2025-07-06T21:30:00Z",
+      "deliveryStart": "2025-10-01T21:15:00Z",
+      "deliveryEnd": "2025-10-01T21:30:00Z",
       "entryPerArea": {
-        "SE3": 396.38
+        "SE3": 840.16
       }
     },
     {
-      "deliveryStart": "2025-07-06T21:30:00Z",
-      "deliveryEnd": "2025-07-06T21:45:00Z",
+      "deliveryStart": "2025-10-01T21:30:00Z",
+      "deliveryEnd": "2025-10-01T21:45:00Z",
       "entryPerArea": {
-        "SE3": 396.38
+        "SE3": 820.05
       }
     },
     {
-      "deliveryStart": "2025-07-06T21:45:00Z",
-      "deliveryEnd": "2025-07-06T22:00:00Z",
+      "deliveryStart": "2025-10-01T21:45:00Z",
+      "deliveryEnd": "2025-10-01T22:00:00Z",
       "entryPerArea": {
-        "SE3": 396.38
+        "SE3": 785.68
       }
     }
   ]

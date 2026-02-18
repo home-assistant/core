@@ -21,6 +21,21 @@ from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
 
+BLUETOOTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PIN): str,
+    }
+)
+
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_PIN): str,
+    }
+)
+
+REAUTH_SCHEMA = BLUETOOTH_SCHEMA
+
 
 def _is_supported(discovery_info: BluetoothServiceInfo):
     """Check if device is supported."""
@@ -47,6 +62,14 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         LOGGER.debug("Unsupported device: %s (%s)", manufacturer_data, discovery_info)
         return False
 
+    if not manufacturer_data.pairable:
+        LOGGER.error(
+            "The mower does not appear to be pairable. "
+            "Ensure the mower is in pairing mode before continuing. "
+            "If the mower isn't pariable you will receive authentication "
+            "errors and be unable to connect"
+        )
+
     LOGGER.debug("Supported device: %s", manufacturer_data)
     return True
 
@@ -55,7 +78,7 @@ def _pin_valid(pin: str) -> bool:
     """Check if the pin is valid."""
     try:
         int(pin)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
     return True
 
@@ -78,6 +101,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if not _is_supported(discovery_info):
             return self.async_abort(reason="no_devices_found")
 
+        self.context["title_placeholders"] = {
+            "name": discovery_info.name,
+            "address": discovery_info.address,
+        }
         self.address = discovery_info.address
         await self.async_set_unique_id(self.address)
         self._abort_if_unique_id_configured()
@@ -100,12 +127,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_PIN): str,
-                    },
-                ),
-                user_input,
+                BLUETOOTH_SCHEMA, user_input
             ),
             description_placeholders={"name": self.mower_name or self.address},
             errors=errors,
@@ -129,15 +151,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_ADDRESS): str,
-                        vol.Required(CONF_PIN): str,
-                    },
-                ),
-                user_input,
-            ),
+            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
         )
 
@@ -148,7 +162,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.address
 
         try:
-            (manufacturer, device_type, model) = await Mower(
+            (manufacturer, device_type, _model) = await Mower(
                 channel_id, self.address
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
@@ -184,7 +198,24 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         title = await self.probe_mower(device)
         if title is None:
-            return self.async_abort(reason="cannot_connect")
+            if self.source == SOURCE_BLUETOOTH:
+                return self.async_show_form(
+                    step_id="bluetooth_confirm",
+                    data_schema=BLUETOOTH_SCHEMA,
+                    description_placeholders={"name": self.address},
+                    errors={"base": "cannot_connect"},
+                )
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    USER_SCHEMA,
+                    {
+                        CONF_ADDRESS: self.address,
+                        CONF_PIN: self.pin,
+                    },
+                ),
+                errors={"base": "cannot_connect"},
+            )
         self.mower_name = title
 
         try:
@@ -209,11 +240,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_BLUETOOTH:
                     return self.async_show_form(
                         step_id="bluetooth_confirm",
-                        data_schema=vol.Schema(
-                            {
-                                vol.Required(CONF_PIN): str,
-                            },
-                        ),
+                        data_schema=BLUETOOTH_SCHEMA,
                         description_placeholders={
                             "name": self.mower_name or self.address
                         },
@@ -230,17 +257,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self.add_suggested_values_to_schema(
-                        vol.Schema(
-                            {
-                                vol.Required(CONF_ADDRESS): str,
-                                vol.Required(CONF_PIN): str,
-                            },
-                        ),
-                        suggested_values,
+                        USER_SCHEMA, suggested_values
                     ),
                     errors=errors,
                 )
-        except (TimeoutError, BleakError):
+        except TimeoutError, BleakError:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
@@ -304,7 +325,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=reauth_entry.data | {CONF_PIN: self.pin},
                     )
 
-            except (TimeoutError, BleakError):
+            except TimeoutError, BleakError:
                 # We don't want to abort a reauth flow when we can't connect, so
                 # we just show the form again with an error.
                 errors["base"] = "cannot_connect"
@@ -312,12 +333,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_PIN): str,
-                    },
-                ),
-                {CONF_PIN: self.pin},
+                REAUTH_SCHEMA, {CONF_PIN: self.pin}
             ),
             description_placeholders={"name": self.mower_name},
             errors=errors,

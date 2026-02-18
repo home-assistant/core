@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -35,7 +36,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
-    if isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
+    if isinstance(coordinator.device, switchbot.SwitchbotGarageDoorOpener):
+        async_add_entities([SwitchbotGarageDoorOpenerEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
         async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotRollerShade):
         async_add_entities([SwitchBotRollerShadeEntity(coordinator)])
@@ -62,6 +65,15 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    @callback
+    def _get_curtain_speed(self) -> int:
+        """Return the configured curtain speed."""
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+            )
+        )
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -81,7 +93,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        speed = self._get_curtain_speed()
+        self._last_run_success = bool(await self._device.open(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -91,7 +104,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        speed = self._get_curtain_speed()
+        self._last_run_success = bool(await self._device.close(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -294,4 +308,31 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_position = self.parsed_data["position"]
         self._attr_is_closed = self.parsed_data["position"] <= 20
 
+        self.async_write_ha_state()
+
+
+class SwitchbotGarageDoorOpenerEntity(SwitchbotEntity, CoverEntity):
+    """Representation of a Switchbot garage door."""
+
+    _device: switchbot.SwitchbotGarageDoorOpener
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_translation_key = "garage_door"
+    _attr_name = None
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, else False."""
+        return not self._device.door_open()
+
+    @exception_handler
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the garage door."""
+        await self._device.open()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the garage door."""
+        await self._device.close()
         self.async_write_ha_state()

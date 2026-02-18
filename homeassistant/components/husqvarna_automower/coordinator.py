@@ -28,7 +28,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
-SCAN_INTERVAL = timedelta(minutes=8)
+SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 PING_INTERVAL = 60
 
@@ -181,14 +181,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             _LOGGER.debug(
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
-            )
-        if not hass.is_stopping:
-            await asyncio.sleep(self.reconnect_time)
-            self.reconnect_time = min(self.reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-            entry.async_create_background_task(
-                hass,
-                self.client_listen(hass, entry, automower_client),
-                "reconnect_task",
             )
 
     def _should_poll(self) -> bool:

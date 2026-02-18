@@ -13,7 +13,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
-from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -76,6 +76,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
     devices = [
         ViCareDevice(config=device_config, api=get_device(entry, device_config))
         for device_config in device_config_list
+        if bool(device_config.isOnline())
     ]
     return ViCareData(client=client, devices=devices)
 
@@ -144,7 +145,7 @@ async def async_migrate_devices_and_entities(
                 # convert climate entity unique id
                 # from `<device_identifier>-<circuit_no>`
                 # to `<device_identifier>-heating-<circuit_no>`
-                if entity_entry.domain == DOMAIN_CLIMATE:
+                if entity_entry.domain == CLIMATE_DOMAIN:
                     unique_id_parts[len(unique_id_parts) - 1] = (
                         f"{entity_entry.translation_key}-"
                         f"{unique_id_parts[len(unique_id_parts) - 1]}"

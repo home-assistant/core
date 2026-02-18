@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from blinkpy.auth import UnauthorizedError
+
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -77,6 +79,9 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_arm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 
@@ -90,6 +95,9 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_disarm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 

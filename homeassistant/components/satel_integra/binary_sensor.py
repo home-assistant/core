@@ -6,128 +6,106 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
-    CONF_OUTPUTS,
-    CONF_ZONE_NAME,
+from .const import (
+    CONF_OUTPUT_NUMBER,
+    CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
-    DATA_SATEL,
-    SIGNAL_OUTPUTS_UPDATED,
-    SIGNAL_ZONES_UPDATED,
+    SUBENTRY_TYPE_OUTPUT,
+    SUBENTRY_TYPE_ZONE,
 )
+from .coordinator import SatelConfigEntry, SatelIntegraBaseCoordinator
+from .entity import SatelIntegraEntity
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
-    if not discovery_info:
-        return
 
-    configured_zones = discovery_info[CONF_ZONES]
-    controller = hass.data[DATA_SATEL]
+    runtime_data = config_entry.runtime_data
 
-    devices = []
+    zone_subentries = filter(
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
+        config_entry.subentries.values(),
+    )
 
-    for zone_num, device_config_data in configured_zones.items():
-        zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_ZONE_NAME]
-        device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, CONF_ZONES, SIGNAL_ZONES_UPDATED
+    for subentry in zone_subentries:
+        zone_num: int = subentry.data[CONF_ZONE_NUMBER]
+        zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+
+        async_add_entities(
+            [
+                SatelIntegraBinarySensor(
+                    runtime_data.coordinator_zones,
+                    config_entry.entry_id,
+                    subentry,
+                    zone_num,
+                    zone_type,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
-        devices.append(device)
 
-    configured_outputs = discovery_info[CONF_OUTPUTS]
+    output_subentries = filter(
+        lambda entry: entry.subentry_type == SUBENTRY_TYPE_OUTPUT,
+        config_entry.subentries.values(),
+    )
 
-    for zone_num, device_config_data in configured_outputs.items():
-        zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_ZONE_NAME]
-        device = SatelIntegraBinarySensor(
-            controller,
-            zone_num,
-            zone_name,
-            zone_type,
-            CONF_OUTPUTS,
-            SIGNAL_OUTPUTS_UPDATED,
+    for subentry in output_subentries:
+        output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
+        ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+
+        async_add_entities(
+            [
+                SatelIntegraBinarySensor(
+                    runtime_data.coordinator_outputs,
+                    config_entry.entry_id,
+                    subentry,
+                    output_num,
+                    ouput_type,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
-        devices.append(device)
-
-    async_add_entities(devices)
 
 
-class SatelIntegraBinarySensor(BinarySensorEntity):
-    """Representation of an Satel Integra binary sensor."""
-
-    _attr_should_poll = False
+class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
+    SatelIntegraEntity[_CoordinatorT], BinarySensorEntity
+):
+    """Base binary sensor for Satel Integra."""
 
     def __init__(
         self,
-        controller,
-        device_number,
-        device_name,
-        zone_type,
-        sensor_type,
-        react_to_signal,
-    ):
+        coordinator: _CoordinatorT,
+        config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        device_class: BinarySensorDeviceClass,
+    ) -> None:
         """Initialize the binary_sensor."""
-        self._device_number = device_number
-        self._attr_unique_id = f"satel_{sensor_type}_{device_number}"
-        self._name = device_name
-        self._zone_type = zone_type
-        self._state = 0
-        self._react_to_signal = react_to_signal
-        self._satel = controller
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            if self._device_number in self._satel.violated_outputs:
-                self._state = 1
-            else:
-                self._state = 0
-        elif self._device_number in self._satel.violated_zones:
-            self._state = 1
-        else:
-            self._state = 0
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self._react_to_signal, self._devices_updated
-            )
+        super().__init__(
+            coordinator,
+            config_entry_id,
+            subentry,
+            device_number,
         )
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
+        self._attr_device_class = device_class
 
-    @property
-    def icon(self) -> str | None:
-        """Icon for device by its type."""
-        if self._zone_type is BinarySensorDeviceClass.SMOKE:
-            return "mdi:fire"
-        return None
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state == 1
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
+        self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
-    def _devices_updated(self, zones):
-        """Update the zone's state, if needed."""
-        if self._device_number in zones and self._state != zones[self._device_number]:
-            self._state = zones[self._device_number]
-            self.async_write_ha_state()
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self._get_state_from_coordinator()
+        self.async_write_ha_state()
+
+    def _get_state_from_coordinator(self) -> bool | None:
+        """Method to get binary sensor state from coordinator data."""
+        return self.coordinator.data.get(self._device_number)
