@@ -47,6 +47,8 @@ from .const import (
 from .helpers import try_connect
 from .notify import MailNotificationService
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 CONF_CONFIG_ENTRY = "config_entry"
 
 SERVICE_SEND_MESSAGE_SCHEMA = vol.Schema(
