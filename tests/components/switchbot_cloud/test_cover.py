@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from switchbot_api import (
     BlindTiltCommands,
@@ -24,12 +25,16 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_cover_set_attributes_normal(
@@ -512,3 +517,305 @@ async def test_garage_door_features_open(
     await configure_integration(hass)
     state = hass.states.get(cover_id)
     assert state.state == STATE_OPEN
+
+
+async def test_blind_tilt_poll_stops_when_moving_false(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that polling stops and state finalizes when moving becomes False."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+    mock_get_status.side_effect = [
+        {"slidePosition": 70, "moving": True, "direction": "up"},
+        {"slidePosition": 50, "moving": False, "direction": "up"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    # First poll — still moving
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_OPENING
+
+    # Second poll — moving=False, finalizes as open
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_OPEN
+
+
+async def test_blind_tilt_poll_stops_when_target_zone_reached(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that polling finalizes early when position enters the target zone."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 50, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+
+    # Close up — target zone >= 80; API still reports moving=True but position is in zone
+    mock_get_status.side_effect = [
+        {"slidePosition": 85, "moving": True, "direction": "up"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(cover_id)
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get("is_closing") is not True
+
+
+async def test_blind_tilt_new_command_cancels_prior_poll(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a new command cancels any in-progress poll task."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+
+    # First command: open — poll returns moving=True
+    mock_get_status.side_effect = [
+        {"slidePosition": 70, "moving": True, "direction": "up"},
+        {"slidePosition": 95, "moving": False, "direction": "up"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_OPENING
+
+    # Second command: close — cancels the open poll, starts fresh
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(cover_id).state == STATE_CLOSING
+
+    # Poll for close — moving=False, finalizes as closed
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+
+async def test_blind_tilt_no_spurious_open_state_during_close(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that closing through the open zone does not produce a spurious opened state."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+    # Poll passes through position 50 (open zone) before reaching closed-down zone
+    mock_get_status.side_effect = [
+        {"slidePosition": 50, "moving": True, "direction": "down"},
+        {"slidePosition": 5, "moving": False, "direction": "down"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    # Mid-travel at position 50 — command in flight, cover is actively closing
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_CLOSING
+
+    # Final poll — moving=False at position 5 (closed-down zone)
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+
+async def test_blind_tilt_open_tilt_then_close_cancels_open_poll(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that open_cover_tilt uses _start_poll_task so close_cover_tilt cancels it."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+
+    # Open tilt — first poll still moving; open task is tracked via _start_poll_task
+    mock_get_status.side_effect = [
+        {"slidePosition": 70, "moving": True, "direction": "up"},
+        # This response belongs to the close poll (should not be consumed by open poll)
+        {"slidePosition": 95, "moving": False, "direction": "up"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_OPENING
+
+    # Immediately send close — _start_poll_task in open_cover_tilt means the open
+    # poll task is tracked and gets cancelled here, so only one poll runs for close.
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(cover_id).state == STATE_CLOSING
+
+    # Close poll finalizes
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_CLOSED
+
+
+async def test_blind_tilt_intermediate_target_not_finalized_early(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an intermediate tilt target is not finalized when only in the broad open zone."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"slidePosition": 95, "direction": "up"}
+    await configure_integration(hass)
+
+    cover_id = "cover.cover_1"
+
+    # Target is 60 (open zone); position 25 is in the open zone (20-80) but far from target.
+    # With zone-based logic this would finalize early — with tolerance it should not.
+    mock_get_status.side_effect = [
+        {"slidePosition": 25, "moving": True, "direction": "up"},
+        {"slidePosition": 60, "moving": False, "direction": "up"},
+    ]
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            {"tilt_position": 60, ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+
+    # First poll — position 25 is in open zone but not within tolerance of 60, still moving
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # Should still be in-flight (opening or closing), not finalized
+    assert hass.states.get(cover_id).state in (STATE_OPENING, STATE_CLOSING)
+
+    # Second poll — position 60 matches target within tolerance, moving=False → finalize
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(cover_id).state == STATE_OPEN

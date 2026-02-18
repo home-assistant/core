@@ -1,6 +1,7 @@
 """Support for the Switchbot BlindTilt, Curtain, Curtain3, RollerShade as Cover."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 
 from switchbot_api import (
@@ -21,6 +22,8 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
+import homeassistant.util.dt as dt_util
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
 from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, COVER_ENTITY_POLL_TIMEOUT, DOMAIN
@@ -60,9 +63,27 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
         """Poll the API until the device reports it has stopped moving."""
         elapsed = 0
         while elapsed < COVER_ENTITY_POLL_TIMEOUT:
-            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
+            done = asyncio.Event()
+
+            @callback
+            def _set_done(_now: Any, _e: asyncio.Event = done) -> None:
+                _e.set()
+
+            fire_at = dt_util.utcnow() + timedelta(
+                seconds=COVER_ENTITY_AFTER_COMMAND_REFRESH
+            )
+            cancel_timer = async_track_point_in_utc_time(
+                self.hass,
+                _set_done,
+                fire_at,
+            )
+            try:
+                await done.wait()
+            except asyncio.CancelledError:
+                cancel_timer()
+                raise
             elapsed += COVER_ENTITY_AFTER_COMMAND_REFRESH
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
             if not (self.coordinator.data or {}).get("moving", True):
                 break
         self._async_on_poll_stopped()
@@ -152,6 +173,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
     _attr_device_class = CoverDeviceClass.BLIND
     CLOSED_UP_THRESHOLD = 80
     CLOSED_DOWN_THRESHOLD = 20
+    POSITION_TOLERANCE = 3
     _attr_supported_features: CoverEntityFeature = (
         CoverEntityFeature.SET_TILT_POSITION
         | CoverEntityFeature.OPEN_TILT
@@ -176,12 +198,14 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         # flags — the command methods set them immediately and _async_on_poll_stopped
         # clears them once movement is confirmed done.
         if self._command_in_flight:
-            # Fallback: if the position has reached the target zone, finalize
-            # immediately without waiting for the poll loop. Uses zone membership
-            # rather than exact equality to handle API rounding or early stops.
+            # Fallback: if the position has reached the target, finalize
+            # immediately without waiting for the poll loop to finish.
             if self._target_tilt_position is not None and self._position_reached_target(
                 position
             ):
+                if self._poll_task and not self._poll_task.done():
+                    self._poll_task.cancel()
+                    self._poll_task = None
                 self._async_on_poll_stopped()
         else:
             self._attr_is_opening = False
@@ -194,7 +218,9 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         """Cancel any existing poll task and start a new one."""
         if self._poll_task and not self._poll_task.done():
             self._poll_task.cancel()
-        self._poll_task = self.hass.async_create_task(self._async_poll_until_stopped())
+        self._poll_task = self.hass.async_create_background_task(
+            self._async_poll_until_stopped(), "switchbot_cloud blind tilt poll"
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel poll task when entity is removed."""
@@ -202,7 +228,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
             self._poll_task.cancel()
 
     def _position_reached_target(self, position: int) -> bool:
-        """Return True if position has reached the target zone."""
+        """Return True if position has reached the target."""
         target = self._target_tilt_position
         assert target is not None
         if target >= self.CLOSED_UP_THRESHOLD:
@@ -211,8 +237,9 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         if target <= self.CLOSED_DOWN_THRESHOLD:
             # Closing down: done when position is in the closed-down zone
             return position <= self.CLOSED_DOWN_THRESHOLD
-        # Opening (target is in the open zone 20-80): done when position enters open zone
-        return self.CLOSED_DOWN_THRESHOLD <= position <= self.CLOSED_UP_THRESHOLD
+        # Intermediate target (open zone): use absolute tolerance so that
+        # e.g. target=60 is not considered reached when position is only 25.
+        return abs(position - target) <= self.POSITION_TOLERANCE
 
     @callback
     def _async_on_poll_stopped(self) -> None:
@@ -270,7 +297,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         self._command_in_flight = True
         self._target_tilt_position = 50
         self.async_write_ha_state()
-        self.hass.async_create_task(self._async_poll_until_stopped())
+        self._start_poll_task()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover."""
