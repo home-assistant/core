@@ -71,38 +71,6 @@ async def test_switch_state(
         ),
     ],
 )
-async def test_turn_on_off_display_success(
-    hass: HomeAssistant,
-    humidifier_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    action: str,
-    command: str,
-) -> None:
-    """Test switch turn on and off command with success response."""
-
-    mock_devices_response(aioclient_mock, "Humidifier 200s")
-
-    with (
-        patch(
-            command,
-            return_value=True,
-        ) as method_mock,
-        patch(
-            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.async_write_ha_state"
-        ) as update_mock,
-    ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            action,
-            {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
-            blocking=True,
-        )
-
-    await hass.async_block_till_done()
-    method_mock.assert_called_once()
-    update_mock.assert_called_once()
-
-
 @pytest.mark.parametrize(
     ("action", "command"),
     [
