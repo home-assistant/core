@@ -562,7 +562,7 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=self._device_unique_id(),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_color_mode = next(iter(self.supported_color_modes))

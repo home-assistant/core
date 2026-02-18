@@ -94,7 +94,7 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
             unique_id=(
                 f"{self._device.scene_value.group_address}_{self._device.scene_number}"
             ),
-            name=config.get(CONF_NAME),
+            name=config[CONF_NAME],
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
