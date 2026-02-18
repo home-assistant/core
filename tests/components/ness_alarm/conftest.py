@@ -92,3 +92,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock:
         yield mock
+
+
+@pytest.fixture(autouse=True)
+def post_connection_delay() -> Generator[None]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.POST_CONNECTION_DELAY",
+        0,
+    ):
+        yield

@@ -1,7 +1,7 @@
 """Test the Ness Alarm config flow."""
 
 from types import MappingProxyType
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -23,15 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-def mock_post_connection_delay():
-    """Patch the post-connection delay to zero for tests."""
-    with patch(
-        "homeassistant.components.ness_alarm.config_flow.POST_CONNECTION_DELAY", 0
-    ):
-        yield
 
 
 async def test_user_flow(
@@ -201,6 +192,45 @@ async def test_import_yaml_config(
 
     assert len(mock_setup_entry.mock_calls) == 1
     mock_client.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (OSError("Connection refused"), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_import_yaml_config_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_reason: str,
+) -> None:
+    """Test importing YAML configuration."""
+    mock_client.update.side_effect = side_effect
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "192.168.1.72",
+            CONF_PORT: 4999,
+            CONF_INFER_ARMING_STATE: False,
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Garage", CONF_ZONE_ID: 1},
+                {
+                    CONF_ZONE_NAME: "Front Door",
+                    CONF_ZONE_ID: 5,
+                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                },
+            ],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 async def test_import_already_configured(

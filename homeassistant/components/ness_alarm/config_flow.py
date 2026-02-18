@@ -159,8 +159,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         # Brief delay to ensure the panel releases the test connection
         await asyncio.sleep(POST_CONNECTION_DELAY)
 
-        _LOGGER.info("Importing Ness Alarm YAML configuration for %s:%s", host, port)
-
         # Prepare subentries for zones
         subentries: list[ConfigSubentryData] = []
         zones = import_data.get(CONF_ZONES, [])

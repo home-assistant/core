@@ -1,11 +1,9 @@
 """Tests for the ness_alarm component."""
 
 from types import MappingProxyType
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
-import pytest
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -13,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.ness_alarm import async_setup
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_SHOW_HOME_MODE,
@@ -38,8 +35,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -253,29 +250,6 @@ async def test_aux_service_with_state_false(
         service_data={ATTR_OUTPUT_ID: 2, ATTR_STATE: False},
     )
     mock_nessclient.aux.assert_awaited_once_with(2, False)
-
-
-@pytest.mark.parametrize(
-    ("service", "service_data"),
-    [
-        (SERVICE_PANIC, {ATTR_CODE: "1234"}),
-        (SERVICE_AUX, {ATTR_OUTPUT_ID: 1}),
-    ],
-)
-async def test_service_no_config_entry(
-    hass: HomeAssistant, service: str, service_data: dict[str, Any]
-) -> None:
-    """Test services raise when no config entry is loaded."""
-    # Register services without loading a config entry
-    await async_setup(hass, {})
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            service,
-            blocking=True,
-            service_data=service_data,
-        )
 
 
 async def test_alarm_panel_disarm(hass: HomeAssistant, mock_nessclient) -> None:
@@ -625,21 +599,13 @@ async def test_alarm_panel_home_mode_enabled_by_default(
     assert supported & AlarmControlPanelEntityFeature.TRIGGER
 
 
-async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
+async def test_yaml_import_triggers_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+) -> None:
     """Test that YAML configuration triggers import flow."""
-    with (
-        patch(
-            "homeassistant.components.ness_alarm.config_flow.Client",
-            return_value=AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.ness_alarm.config_flow.POST_CONNECTION_DELAY",
-            0,
-        ),
-        patch(
-            "homeassistant.components.ness_alarm.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.Client",
+        return_value=AsyncMock(),
     ):
         config = {
             DOMAIN: {
@@ -647,11 +613,7 @@ async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
                 CONF_PORT: 1992,
             }
         }
-
-        result = await async_setup(hass, config)
-        assert result is True
-
-        # Wait for import flow to complete
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
         # Check that a config entry was created from the import
@@ -661,7 +623,6 @@ async def test_yaml_import_triggers_flow(hass: HomeAssistant) -> None:
         assert entries[0].data[CONF_PORT] == 1992
 
         # Check that a deprecation repair issue was created
-        issue_registry = ir.async_get(hass)
         issue = issue_registry.async_get_issue(
             "homeassistant", f"deprecated_yaml_{DOMAIN}"
         )

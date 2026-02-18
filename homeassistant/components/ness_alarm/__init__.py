@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -87,34 +88,54 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
     async_setup_services(hass)
+    if DOMAIN not in config:
+        return True
 
-    if DOMAIN in config:
-        # Only import if no config entries exist yet
-        if not hass.config_entries.async_entries(DOMAIN):
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": "import"},
-                    data=config[DOMAIN],
-                )
-            )
+    hass.async_create_task(_async_setup(hass, config))
 
-        # Notify user that YAML config is deprecated
+    return True
+
+
+async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config[DOMAIN],
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
         async_create_issue(
             hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2026.8.0",
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.9.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": "Ness Alarm",
             },
         )
-    return True
+        return
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.9.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Ness Alarm",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
