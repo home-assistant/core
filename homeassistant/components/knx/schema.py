@@ -201,7 +201,7 @@ class KNXPlatformSchema(ABC):
 
 COMMON_ENTITY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=""): cv.string,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
     }
 )

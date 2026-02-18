@@ -49,7 +49,7 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     """Return a KNX RawValue to be used within XKNX."""
     return RawValue(
         xknx,
-        name=config.get(CONF_NAME, ""),
+        name=config[CONF_NAME],
         payload_length=config[CONF_PAYLOAD_LENGTH],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),

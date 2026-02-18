@@ -210,7 +210,7 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
         max_step = config.get(FanConf.MAX_STEP)
         self._device = XknxFan(
             xknx=knx_module.xknx,
-            name=config.get(CONF_NAME, ""),
+            name=config[CONF_NAME],
             group_address_speed=config.get(KNX_ADDRESS),
             group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
             group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),

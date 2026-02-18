@@ -43,7 +43,7 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
     """Return a KNX weather device to be used within XKNX."""
     return XknxWeather(
         xknx,
-        name=config.get(CONF_NAME, ""),
+        name=config[CONF_NAME],
         sync_state=config[WeatherSchema.CONF_SYNC_STATE],
         group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
         group_address_brightness_south=config.get(
