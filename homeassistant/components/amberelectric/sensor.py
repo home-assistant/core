@@ -153,6 +153,19 @@ class AmberForecastSensor(AmberSensor):
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
 
+            if interval.advanced_price is not None:
+                multiplier = -1 if interval.channel_type == ChannelType.FEEDIN else 1
+                datum["advanced_price_low"] = multiplier * format_cents_to_dollars(
+                    interval.advanced_price.low
+                )
+                datum["advanced_price_predicted"] = (
+                    multiplier
+                    * format_cents_to_dollars(interval.advanced_price.predicted)
+                )
+                datum["advanced_price_high"] = multiplier * format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
+
             data["forecasts"].append(datum)
 
         return data

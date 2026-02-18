@@ -20,6 +20,7 @@ from .helpers import (
     GENERAL_AND_CONTROLLED_SITE_ID,
     GENERAL_AND_FEED_IN_SITE_ID,
     GENERAL_CHANNEL,
+    GENERAL_CHANNEL_WITH_ADVANCED_PRICE,
     GENERAL_CHANNEL_WITH_RANGE,
     GENERAL_FORECASTS,
     GENERAL_ONLY_SITE_ID,
@@ -99,6 +100,12 @@ def general_channel_prices_with_range() -> list[Interval]:
 
 
 @pytest.fixture
+def general_channel_prices_with_advanced_price() -> list[Interval]:
+    """List containing general channel prices."""
+    return GENERAL_CHANNEL_WITH_ADVANCED_PRICE
+
+
+@pytest.fixture
 def controlled_load_channel_prices() -> list[Interval]:
     """List containing controlled load channel prices."""
     return CONTROLLED_LOAD_CHANNEL
@@ -139,6 +146,17 @@ def mock_amber_client_general_channel_with_range(
     """Fake general channel prices with a range."""
     client = mock_amber_client.return_value
     client.get_current_prices.return_value = general_channel_prices_with_range
+    return mock_amber_client
+
+
+@pytest.fixture
+def mock_amber_client_general_channel_with_advanced_price(
+    mock_amber_client: AsyncMock,
+    general_channel_prices_with_advanced_price: list[Interval],
+) -> Generator[AsyncMock]:
+    """Fake general channel prices with a advanced price."""
+    client = mock_amber_client.return_value
+    client.get_current_prices.return_value = general_channel_prices_with_advanced_price
     return mock_amber_client
 
 

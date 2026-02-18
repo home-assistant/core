@@ -147,6 +147,27 @@ GENERAL_CHANNEL_WITH_RANGE = [
     ),
 ]
 
+GENERAL_CHANNEL_WITH_ADVANCED_PRICE = [
+    generate_current_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T09:00:00+10:00"),
+        advanced_price=True,
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T09:30:00+10:00"),
+        advanced_price=True,
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T10:00:00+10:00"),
+        advanced_price=True,
+    ),
+]
+
 CONTROLLED_LOAD_CHANNEL = [
     generate_current_interval(
         ChannelType.CONTROLLEDLOAD, parser.parse("2021-09-21T08:30:00+10:00")
