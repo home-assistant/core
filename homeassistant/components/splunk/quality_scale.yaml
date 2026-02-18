@@ -12,10 +12,7 @@ rules:
   common-modules: done
   config-entry-unloading: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      Missing `data_description` for `token` in `config.step.reauth_confirm` in strings.json. Tests fail with: "Translation not found for splunk: config.step.reauth_confirm.data_description.token".
+  config-flow: done
   dependency-transparency:
     status: todo
     comment: |
