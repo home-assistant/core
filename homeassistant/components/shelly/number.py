@@ -11,7 +11,7 @@ from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
-    DOMAIN as NUMBER_PLATFORM,
+    DOMAIN as NUMBER_DOMAIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -210,7 +210,7 @@ RPC_NUMBERS: Final = {
         key="number",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, NUMBER_PLATFORM)
+            not is_view_for_platform(config, key, NUMBER_DOMAIN)
         ),
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -380,13 +380,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
     virtual_number_ids = get_virtual_component_ids(
-        coordinator.device.config, NUMBER_PLATFORM
+        coordinator.device.config, NUMBER_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        NUMBER_PLATFORM,
+        NUMBER_DOMAIN,
         virtual_number_ids,
         "number",
     )
