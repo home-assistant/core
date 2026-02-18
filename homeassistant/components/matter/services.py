@@ -24,13 +24,12 @@ from .const import (
     DOMAIN,
     SERVICE_CLEAR_LOCK_CREDENTIAL,
     SERVICE_CLEAR_LOCK_USER,
+    SERVICE_CREDENTIAL_TYPES,
     SERVICE_GET_LOCK_CREDENTIAL_STATUS,
     SERVICE_GET_LOCK_INFO,
     SERVICE_GET_LOCK_USERS,
     SERVICE_SET_LOCK_CREDENTIAL,
     SERVICE_SET_LOCK_USER,
-    SERVICE_CREDENTIAL_TYPES,
-    USER_STATUS_REVERSE_MAP,
     USER_TYPE_REVERSE_MAP,
 )
 
@@ -129,15 +128,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vol.Optional(ATTR_CREDENTIAL_INDEX): vol.All(
                 vol.Coerce(int), vol.Range(min=0)
             ),
-            vol.Optional(ATTR_USER_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
+            vol.Optional(ATTR_USER_INDEX): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(ATTR_USER_STATUS): vol.In(
-                USER_STATUS_REVERSE_MAP.keys()
+                ["occupied_enabled", "occupied_disabled"]
             ),
-            vol.Optional(ATTR_USER_TYPE): vol.In(
-                USER_TYPE_REVERSE_MAP.keys()
-            ),
+            vol.Optional(ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
         },
         func="async_set_lock_credential",
         supports_response=SupportsResponse.ONLY,

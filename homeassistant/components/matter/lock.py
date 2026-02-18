@@ -347,9 +347,7 @@ class MatterLock(MatterEntity, LockEntity):
                 f"Failed to clear lock credential on {self.entity_id}: {err}"
             ) from err
 
-    async def async_get_lock_credential_status(
-        self, **kwargs: Any
-    ) -> dict[str, Any]:
+    async def async_get_lock_credential_status(self, **kwargs: Any) -> dict[str, Any]:
         """Get the status of a credential slot on the lock."""
         try:
             return await get_lock_credential_status(

@@ -131,7 +131,6 @@ set_lock_credential:
       selector:
         select:
           options:
-            - available
             - occupied_enabled
             - occupied_disabled
     user_type:

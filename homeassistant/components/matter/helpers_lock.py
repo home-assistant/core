@@ -550,9 +550,7 @@ def _validate_credential_data(
             raise CredentialDataInvalidError(
                 translation_domain="matter",
                 translation_key=ERR_INVALID_CREDENTIAL_DATA,
-                translation_placeholders={
-                    "reason": "PIN must contain only digits"
-                },
+                translation_placeholders={"reason": "PIN must contain only digits"},
             )
         min_len = (
             lock_endpoint.get_attribute_value(
@@ -571,9 +569,7 @@ def _validate_credential_data(
                 translation_domain="matter",
                 translation_key=ERR_INVALID_CREDENTIAL_DATA,
                 translation_placeholders={
-                    "reason": (
-                        f"PIN length must be between {min_len} and {max_len}"
-                    )
+                    "reason": (f"PIN length must be between {min_len} and {max_len}")
                 },
             )
 
@@ -677,9 +673,7 @@ async def set_lock_credential(
                 break
 
         if credential_index is None:
-            raise NoAvailableUserSlotsError(
-                "No available credential slots on the lock"
-            )
+            raise NoAvailableUserSlotsError("No available credential slots on the lock")
     else:
         # Check if slot is occupied to determine Add vs Modify
         status_response = await matter_client.send_device_command(
@@ -697,9 +691,7 @@ async def set_lock_credential(
 
     # Resolve optional user_status and user_type enums
     resolved_user_status = (
-        USER_STATUS_REVERSE_MAP.get(user_status)
-        if user_status is not None
-        else None
+        USER_STATUS_REVERSE_MAP.get(user_status) if user_status is not None else None
     )
     resolved_user_type = (
         USER_TYPE_REVERSE_MAP.get(user_type) if user_type is not None else None
@@ -734,9 +726,7 @@ async def set_lock_credential(
     return {
         ATTR_CREDENTIAL_INDEX: credential_index,
         ATTR_USER_INDEX: _get_attr(set_cred_response, "userIndex"),
-        "next_credential_index": _get_attr(
-            set_cred_response, "nextCredentialIndex"
-        ),
+        "next_credential_index": _get_attr(set_cred_response, "nextCredentialIndex"),
     }
 
 

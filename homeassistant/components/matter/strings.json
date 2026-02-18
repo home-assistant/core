@@ -629,6 +629,20 @@
     }
   },
   "services": {
+    "clear_lock_credential": {
+      "description": "Removes a credential from the lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The credential slot index to clear.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential to clear.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Clear lock credential"
+    },
     "clear_lock_user": {
       "description": "Deletes a lock user and all associated credentials. Use index 65534 to clear all users.",
       "fields": {
@@ -638,6 +652,20 @@
         }
       },
       "name": "Clear lock user"
+    },
+    "get_lock_credential_status": {
+      "description": "Returns the status of a credential slot on the lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The credential slot index to query.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential to query.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Get lock credential status"
     },
     "get_lock_info": {
       "description": "Returns lock capabilities including supported credential types, user capacity, and PIN length constraints.",
@@ -656,6 +684,36 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_lock_credential": {
+      "description": "Adds or updates a credential on the lock.",
+      "fields": {
+        "credential_data": {
+          "description": "The credential data. For PIN: digits only. For RFID: hexadecimal string.",
+          "name": "Credential data"
+        },
+        "credential_index": {
+          "description": "The credential slot index. Leave empty to auto-find an available slot.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential (e.g., pin, rfid, fingerprint).",
+          "name": "Credential type"
+        },
+        "user_index": {
+          "description": "The user index to associate the credential with. Leave empty for automatic assignment.",
+          "name": "User index"
+        },
+        "user_status": {
+          "description": "The user status to set when creating a new user for this credential.",
+          "name": "User status"
+        },
+        "user_type": {
+          "description": "The user type to set when creating a new user for this credential.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock credential"
     },
     "set_lock_user": {
       "description": "Creates or updates a lock user.",
@@ -678,64 +736,6 @@
         }
       },
       "name": "Set lock user"
-    },
-    "set_lock_credential": {
-      "description": "Adds or updates a credential on the lock.",
-      "fields": {
-        "credential_type": {
-          "description": "The type of credential (e.g., pin, rfid, fingerprint).",
-          "name": "Credential type"
-        },
-        "credential_data": {
-          "description": "The credential data. For PIN: digits only. For RFID: hexadecimal string.",
-          "name": "Credential data"
-        },
-        "credential_index": {
-          "description": "The credential slot index. Leave empty to auto-find an available slot.",
-          "name": "Credential index"
-        },
-        "user_index": {
-          "description": "The user index to associate the credential with. Leave empty for automatic assignment.",
-          "name": "User index"
-        },
-        "user_status": {
-          "description": "The user status to set when creating a new user for this credential.",
-          "name": "User status"
-        },
-        "user_type": {
-          "description": "The user type to set when creating a new user for this credential.",
-          "name": "User type"
-        }
-      },
-      "name": "Set lock credential"
-    },
-    "clear_lock_credential": {
-      "description": "Removes a credential from the lock.",
-      "fields": {
-        "credential_type": {
-          "description": "The type of credential to clear.",
-          "name": "Credential type"
-        },
-        "credential_index": {
-          "description": "The credential slot index to clear.",
-          "name": "Credential index"
-        }
-      },
-      "name": "Clear lock credential"
-    },
-    "get_lock_credential_status": {
-      "description": "Returns the status of a credential slot on the lock.",
-      "fields": {
-        "credential_type": {
-          "description": "The type of credential to query.",
-          "name": "Credential type"
-        },
-        "credential_index": {
-          "description": "The credential slot index to query.",
-          "name": "Credential index"
-        }
-      },
-      "name": "Get lock credential status"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",
