@@ -781,14 +781,17 @@ _RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="async_get_last_state",
         return_type=["State", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="async_get_last_extra_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_restore_state_data",
         return_type=["ExtraStoredData", None],
+        mandatory=True,
     ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
@@ -2559,10 +2562,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="extra_restore_state_data",
                     return_type="SensorExtraStoredData",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_get_last_sensor_data",
                     return_type=["SensorExtraStoredData", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -3042,62 +3047,82 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="native_temperature",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_temperature_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_pressure",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_pressure_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="humidity",
                     return_type=["float", None],
+                    mandatory=True,
+                ),
+                TypeHintMatch(
+                    function_name="native_wind_gust_speed",
+                    return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_wind_speed",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_wind_speed_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="wind_bearing",
                     return_type=["float", "str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="ozone",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_visibility",
                     return_type=["float", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_visibility_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="forecast",
                     return_type=["list[Forecast]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_precipitation_unit",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="precision",
                     return_type="float",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="condition",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
             ],
         ),
