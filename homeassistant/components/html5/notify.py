@@ -28,14 +28,16 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
+    SERVICE_NOTIFY,
 )
 from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.const import ATTR_NAME, URL_ROOT
+from homeassistant.const import ATTR_NAME, CONF_DESCRIPTION, CONF_FIELDS, CONF_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json_object
@@ -458,6 +460,32 @@ class HTML5NotificationService(BaseNotificationService):
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
+
+    async def async_register_services(self) -> None:
+        """Create/update services and apply translatable metadata for notify.html5."""
+        await super().async_register_services()
+
+        # Override the dynamically generated English description with translation keys.
+        async_set_service_schema(
+            self.hass,
+            DOMAIN,
+            self._service_name,
+            {
+                CONF_NAME: "[%key:component::html5::services::notify::name%]",
+                CONF_DESCRIPTION: (
+                    "[%key:component::html5::services::notify::description%]"
+                ),
+                CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+            },
+        )
+
+    def dismiss(self, **kwargs: Any) -> None:
+        """Dismisses a notification."""
+        data: dict[str, Any] | None = kwargs.get(ATTR_DATA)
+        tag: str = data.get(ATTR_TAG, "") if data else ""
+        payload = {ATTR_TAG: tag, ATTR_DISMISS: True, ATTR_DATA: {}}
+
+        self._push_message(payload, **kwargs)
 
     async def async_dismiss(self, **kwargs: Any) -> None:
         """Dismisses a notification.

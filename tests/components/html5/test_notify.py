@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.helpers import service as service_helper
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -246,6 +247,25 @@ async def test_fcm_additional_data(mock_wp: AsyncMock, hass: HomeAssistant) -> N
     )
     # WebPusher constructor
     assert mock_wp.cls.call_args[0][0] == SUBSCRIPTION_5["subscription"]
+
+
+@pytest.mark.usefixtures("load_config")
+async def test_notify_service_description_is_translatable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test notify.html5 service uses translatable description keys."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    descriptions = await service_helper.async_get_all_descriptions(hass)
+    html5_desc = descriptions["notify"]["html5"]
+
+    assert html5_desc["name"] == "[%key:component::html5::services::notify::name%]"
+    assert html5_desc["description"] == (
+        "[%key:component::html5::services::notify::description%]"
+    )
 
 
 @pytest.mark.usefixtures("load_config")

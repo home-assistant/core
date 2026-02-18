@@ -27,6 +27,28 @@
     }
   },
   "services": {
+    "notify": {
+      "name": "Send a notification with HTML5",
+      "description": "Sends a notification message using the HTML5 service.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of targets."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag."
+        }
+      }
+    },
     "dismiss": {
       "description": "Dismisses an HTML5 notification.",
       "fields": {
