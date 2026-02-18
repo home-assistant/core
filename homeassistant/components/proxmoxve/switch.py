@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import functools
 from typing import Any
 
 from proxmoxer import AuthenticationError
@@ -42,13 +43,18 @@ class ProxmoxContainerSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[ProxmoxCoordinator, str, int], Coroutine[Any, Any, None]]
 
 
-def proxmox_errors(func) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Decorator to handle common Proxmox API errors."""
+def proxmox_action(func) -> Callable[..., Coroutine[Any, Any, None]]:
+    """Decorator to run a blocking Proxmox call in the executor and handle errors."""
 
-    async def wrapper(*args: Any, **kwargs: Any) -> None:
+    @functools.wraps(func)
+    async def wrapper(
+        coordinator: ProxmoxCoordinator, *args: Any, **kwargs: Any
+    ) -> None:
         """Wrap wrap, around it."""
         try:
-            return await func(*args, **kwargs)
+            await coordinator.hass.async_add_executor_job(
+                lambda: func(coordinator, *args, **kwargs)
+            )
         except AuthenticationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -73,44 +79,34 @@ def proxmox_errors(func) -> Callable[..., Coroutine[Any, Any, None]]:
     return wrapper
 
 
-@proxmox_errors
-async def perform_vm_start(
+@proxmox_action
+def perform_vm_start(
     coordinator: ProxmoxCoordinator, node_name: str, vmid: int
 ) -> None:
     """Start a Proxmox VM."""
-    await coordinator.hass.async_add_executor_job(
-        coordinator.proxmox.nodes(node_name).qemu(vmid).status.start.post
-    )
+    coordinator.proxmox.nodes(node_name).qemu(vmid).status.start.post()
 
 
-@proxmox_errors
-async def perform_vm_stop(
-    coordinator: ProxmoxCoordinator, node_name: str, vmid: int
-) -> None:
+@proxmox_action
+def perform_vm_stop(coordinator: ProxmoxCoordinator, node_name: str, vmid: int) -> None:
     """Stop a Proxmox VM."""
-    await coordinator.hass.async_add_executor_job(
-        coordinator.proxmox.nodes(node_name).qemu(vmid).status.stop.post
-    )
+    coordinator.proxmox.nodes(node_name).qemu(vmid).status.stop.post()
 
 
-@proxmox_errors
-async def perform_container_start(
+@proxmox_action
+def perform_container_start(
     coordinator: ProxmoxCoordinator, node_name: str, vmid: int
 ) -> None:
     """Start a Proxmox LXC container."""
-    await coordinator.hass.async_add_executor_job(
-        coordinator.proxmox.nodes(node_name).lxc(vmid).status.start.post
-    )
+    coordinator.proxmox.nodes(node_name).lxc(vmid).status.start.post()
 
 
-@proxmox_errors
-async def perform_container_stop(
+@proxmox_action
+def perform_container_stop(
     coordinator: ProxmoxCoordinator, node_name: str, vmid: int
 ) -> None:
     """Stop a Proxmox LXC container."""
-    await coordinator.hass.async_add_executor_job(
-        coordinator.proxmox.nodes(node_name).lxc(vmid).status.stop.post
-    )
+    coordinator.proxmox.nodes(node_name).lxc(vmid).status.stop.post()
 
 
 VM_SWITCHES: tuple[ProxmoxVMSwitchEntityDescription, ...] = (
