@@ -346,8 +346,7 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API storageData endpoint."""
         now = dt_util.now()
-        today = now.date()
-        midnight = datetime.combine(today, datetime.min.time())
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         try:
             data = await self.api.get_storage_data(self.site_id, midnight, now)

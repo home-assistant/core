@@ -272,6 +272,7 @@ class SolarEdgeSensorFactory:
             flow,
             energy,
         ]
+        self.inventory_service = inventory
 
         self.services: dict[
             str,
@@ -316,9 +317,7 @@ class SolarEdgeSensorFactory:
     def setup_storage_service(self) -> None:
         """Initialize the storage data service if batteries are detected."""
         hass, config_entry, api, site_id = self._storage_args
-        # Check the inventory service for battery count
-        inventory_svc = self.all_services[2]  # inventory is the 3rd service
-        battery_count = inventory_svc.data.get("batteries", 0)
+        battery_count = self.inventory_service.data.get("batteries", 0)
         if not battery_count:
             return
 
