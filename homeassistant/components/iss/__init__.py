@@ -21,8 +21,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-MAX_RETRIES = 5
-INITIAL_BACKOFF = 1  # seconds
+MAX_RETRIES = 4
+INITIAL_BACKOFF = 2  # seconds
 
 
 @dataclass
@@ -50,7 +50,7 @@ async def async_update_with_retry(hass: HomeAssistant, iss: pyiss.ISS) -> IssDat
             return await hass.async_add_executor_job(update, iss)
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             last_exception = ex
-            if attempt < MAX_RETRIES:
+            if attempt < MAX_RETRIES - 1:
                 # Doble wait time in seconds at every attempt
                 backoff = INITIAL_BACKOFF * (2**attempt)
                 _LOGGER.warning(
