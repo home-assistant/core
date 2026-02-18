@@ -22,11 +22,18 @@ from opendisplay import (
 )
 from PIL import Image as PILImage
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothCallbackMatcher,
+    BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
+    async_register_callback,
+)
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.image import ImageEntity
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -76,6 +83,9 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         self._entry = entry
         self._current_image: bytes | None = None
         self._upload_task: asyncio.Task[None] | None = None
+        self._pending_upload: (
+            tuple[tuple[bytes, bytes | None, PILImage.Image], RefreshMode] | None
+        ) = None
 
     def _get_storage_path(self) -> Path:
         """Return the path for storing the image on disk."""
@@ -86,6 +96,15 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore the last image state on startup."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_register_callback(
+                self.hass,
+                self._async_on_device_seen,
+                BluetoothCallbackMatcher(address=self._address, connectable=True),
+                BluetoothScanningMode.PASSIVE,
+            )
+        )
 
         if (extra_data := await self.async_get_last_extra_data()) is None:
             return
@@ -183,6 +202,9 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
         except OSError:
             _LOGGER.warning("Failed to persist image to storage")
 
+        # Track the prepared data for automatic retry on BLE failure
+        self._pending_upload = (prepared_data, refresh_mode)
+
         # Cancel any in-flight upload before starting the new one
         if self._upload_task and not self._upload_task.done():
             self._upload_task.cancel()
@@ -208,8 +230,8 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
             self.hass, self._address, connectable=True
         )
         if ble_device is None:
-            _LOGGER.warning(
-                "BLE device %s not found, image not synced to display",
+            _LOGGER.debug(
+                "BLE device %s not in range, will retry when device is seen",
                 self._address,
             )
             return
@@ -223,10 +245,37 @@ class OpenDisplayImageEntity(OpenDisplayEntity, ImageEntity, RestoreEntity):
                 await device.upload_prepared_image(
                     prepared_data, refresh_mode=refresh_mode
                 )
+            self._pending_upload = None
         except (BLEConnectionError, BLETimeoutError) as err:
-            _LOGGER.warning("Failed to sync image to %s: %s", self._address, err)
+            _LOGGER.warning(
+                "Failed to sync image to %s, will retry when device is seen: %s",
+                self._address,
+                err,
+            )
         except OpenDisplayError as err:
-            _LOGGER.warning("Upload error for %s: %s", self._address, err)
+            _LOGGER.warning(
+                "Upload error for %s, will retry when device is seen: %s",
+                self._address,
+                err,
+            )
+
+    @callback
+    def _async_on_device_seen(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        """Retry a pending upload when the device becomes connectable."""
+        if self._pending_upload is None:
+            return
+        if self._upload_task and not self._upload_task.done():
+            return
+        prepared_data, refresh_mode = self._pending_upload
+        self._upload_task = self._entry.async_create_background_task(
+            self.hass,
+            self._async_ble_upload(prepared_data, refresh_mode),
+            f"opendisplay_upload_{self._address}",
+        )
 
     async def _async_download_and_load_image(self, url: str) -> PILImage.Image:
         """Download an image from a HA internal URL and return a PIL Image."""

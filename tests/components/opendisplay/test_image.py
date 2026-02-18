@@ -2,15 +2,18 @@
 
 import io
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from opendisplay import BLEConnectionError
+from opendisplay import BLEConnectionError, RefreshMode
 from PIL import Image as PILImage
 import pytest
 
+from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.opendisplay.const import DOMAIN
 from homeassistant.components.opendisplay.entity import OpenDisplayImageExtraStoredData
 from homeassistant.core import HomeAssistant
+
+from . import make_service_info
 
 from tests.common import MockConfigEntry
 
@@ -244,9 +247,8 @@ async def test_upload_device_not_found_keeps_preview(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that missing BLE device still keeps the preview image."""
+    """Test that missing BLE device still keeps the preview and sets pending upload."""
     await _setup_entry(hass, mock_config_entry)
 
     test_image = PILImage.new("RGB", (100, 100), color="red")
@@ -284,12 +286,14 @@ async def test_upload_device_not_found_keeps_preview(
         )
         await hass.async_block_till_done()
 
-    # Preview should still be set despite device not found
     entity = hass.data["image"].get_entity(ENTITY_ID)
+
+    # Preview should still be set despite device not found
     image_bytes = await entity.async_image()
     assert image_bytes is not None
 
-    assert "not found" in caplog.text
+    # Upload is queued for retry when device comes back in range
+    assert entity._pending_upload is not None
 
 
 async def test_image_persisted_to_disk(
@@ -385,3 +389,130 @@ async def test_extra_stored_data_from_dict_invalid() -> None:
     assert (
         OpenDisplayImageExtraStoredData.from_dict({"image_last_updated": None}) is None
     )
+
+
+async def test_upload_success_clears_pending(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test that a successful BLE upload clears _pending_upload."""
+    await _setup_entry(hass, mock_config_entry)
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+
+    mock_upload_dev = _mock_upload_device()
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+            return_value=mock_upload_dev,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    entity = hass.data["image"].get_entity(ENTITY_ID)
+    # After a successful upload, no retry is needed
+    assert entity._pending_upload is None
+
+
+async def test_upload_retry_on_device_seen(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test that a pending upload retries when the device becomes connectable."""
+    await _setup_entry(hass, mock_config_entry)
+
+    test_image = PILImage.new("RGB", (100, 100), color="red")
+    image_path = tmp_path / "test.png"
+    test_image.save(image_path)
+
+    mock_play_media = AsyncMock()
+    mock_play_media.path = image_path
+    mock_upload_dev = _mock_upload_device()
+
+    # First call: device not in range → _pending_upload stays set
+    with (
+        patch(
+            "homeassistant.components.opendisplay.image.async_resolve_media",
+            return_value=mock_play_media,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.prepare_image",
+            return_value=FAKE_PREPARED,
+        ),
+        patch(
+            "homeassistant.components.opendisplay.image.async_ble_device_from_address",
+            return_value=None,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            target={"entity_id": ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    entity = hass.data["image"].get_entity(ENTITY_ID)
+    assert entity._pending_upload is not None
+
+    # Simulate the device coming back in range via Bluetooth callback
+    with patch(
+        "homeassistant.components.opendisplay.image.OpenDisplayDevice",
+        return_value=mock_upload_dev,
+    ):
+        entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
+        await hass.async_block_till_done()
+
+    # Upload should have been retried successfully
+    mock_upload_dev.upload_prepared_image.assert_awaited_once()
+    assert entity._pending_upload is None
+
+
+async def test_no_double_launch_while_uploading(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that the BT callback does not launch a second upload while one is running."""
+    await _setup_entry(hass, mock_config_entry)
+
+    entity = hass.data["image"].get_entity(ENTITY_ID)
+
+    # Simulate a pending upload with an in-progress task
+    entity._pending_upload = (FAKE_PREPARED, RefreshMode.FULL)
+    running_task = MagicMock()
+    running_task.done.return_value = False
+    entity._upload_task = running_task
+
+    entity._async_on_device_seen(make_service_info(), BluetoothChange.ADVERTISEMENT)
+
+    # Task reference should not have changed — no new task was launched
+    assert entity._upload_task is running_task
