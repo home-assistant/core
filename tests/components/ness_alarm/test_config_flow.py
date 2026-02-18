@@ -112,6 +112,7 @@ async def test_user_flow_already_configured(
     ("side_effect", "expected_error"),
     [
         (OSError("Connection refused"), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (RuntimeError("Unexpected"), "unknown"),
     ],
 )
@@ -226,6 +227,7 @@ async def test_import_already_configured(
     ("side_effect", "expected_reason"),
     [
         (OSError("Connection refused"), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (RuntimeError("Unexpected"), "unknown"),
     ],
 )

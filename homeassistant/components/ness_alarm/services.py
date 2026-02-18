@@ -5,7 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, ATTR_STATE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
@@ -20,7 +20,6 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 )
 
 
-@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register Ness Alarm services."""
 

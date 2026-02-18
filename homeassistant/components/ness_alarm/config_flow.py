@@ -69,7 +69,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ness Alarm."""
 
     VERSION = 1
-    MINOR_VERSION = 1
 
     @classmethod
     @callback
@@ -97,6 +96,8 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         client = Client(host=host, port=port)
         try:
             await asyncio.wait_for(client.update(), timeout=CONNECTION_TIMEOUT)
+        except TimeoutError as err:
+            raise OSError(f"Timed out connecting to {host}:{port}") from err
         finally:
             await client.close()
 
