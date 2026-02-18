@@ -115,18 +115,22 @@ DOCK_COMMAND_BUTTON_DESCRIPTIONS: list[RoborockDockCommandButtonDescription] = [
         translation_key="dock_empty",
         api_command=RoborockCommand.APP_START_COLLECT_DUST,
         availability_fn=lambda api: api.dust_collection_mode is not None,
+        entity_registry_enabled_default=False,
     ),
     RoborockDockCommandButtonDescription(
         key="dock_wash_mop",
         translation_key="dock_wash_mop",
         api_command=RoborockCommand.APP_START_WASH,
+        # wash_towel_mode being non-None is the API proxy for "has mop washing station"
         availability_fn=lambda api: api.wash_towel_mode is not None,
+        entity_registry_enabled_default=False,
     ),
     RoborockDockCommandButtonDescription(
         key="dock_stop_drying",
         translation_key="dock_stop_drying",
         api_command=RoborockCommand.APP_STOP_WASH,
         availability_fn=lambda api: api.wash_towel_mode is not None,
+        entity_registry_enabled_default=False,
     ),
 ]
 

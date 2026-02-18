@@ -205,9 +205,9 @@
       "mop_wash_mode": {
         "name": "Mop wash mode",
         "state": {
-          "light": "Light",
           "balanced": "Balanced",
           "deep": "Deep",
+          "light": "Light",
           "smart": "Smart"
         }
       },

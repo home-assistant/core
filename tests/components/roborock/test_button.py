@@ -295,6 +295,7 @@ async def test_press_a01_button_failure(
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_dock_command_button_success(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -317,6 +318,7 @@ async def test_press_dock_command_button_success(
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_dock_command_button_failure(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,

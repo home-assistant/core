@@ -184,9 +184,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             if api.wash_towel_mode is not None
             else None
         ),
-        parameter_lambda=lambda key, _: [
-            RoborockDockWashTowelModeCode.as_dict()[key]
-        ],
+        parameter_lambda=lambda key, _: [RoborockDockWashTowelModeCode.as_dict()[key]],
         is_dock_entity=True,
     ),
 ]
