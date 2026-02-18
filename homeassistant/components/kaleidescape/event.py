@@ -107,10 +107,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from a config entry."""
     async_add_entities(
-        [
-            KaleidescapeEventEntity(entry.runtime_data, description)
-            for description in EVENT_DESCRIPTIONS
-        ]
+        KaleidescapeEventEntity(entry.runtime_data, description)
+        for description in EVENT_DESCRIPTIONS
     )
 
 
@@ -126,7 +124,7 @@ class KaleidescapeEventEntity(KaleidescapeEntity, EventEntity):
     ) -> None:
         """Initialize the event entity."""
         super().__init__(device)
-        self.entity_description: KaleidescapeEventEntityDescription = entity_description
+        self.entity_description = entity_description
         self._attr_unique_id = f"{self._attr_unique_id}-{entity_description.key}"
         self._debounce: asyncio.TimerHandle | None = None
 
