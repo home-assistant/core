@@ -89,6 +89,12 @@
       }
     }
   },
+  "issues": {
+    "segments_changed": {
+      "description": "",
+      "title": "Vacuum segments have changed for {entity_id}"
+    }
+  },
   "selector": {
     "condition_behavior": {
       "options": {
@@ -105,6 +111,16 @@
     }
   },
   "services": {
+    "clean_area": {
+      "description": "Tells the vacuum cleaner to clean an area.",
+      "fields": {
+        "cleaning_area_id": {
+          "description": "Areas to clean.",
+          "name": "Areas"
+        }
+      },
+      "name": "Clean area"
+    },
     "clean_spot": {
       "description": "Tells the vacuum cleaner to do a spot clean-up.",
       "name": "Clean spot"
