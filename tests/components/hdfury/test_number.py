@@ -60,7 +60,7 @@ async def test_number_set_value(
         blocking=True,
     )
 
-    getattr(mock_hdfury_client, method).assert_awaited_once()
+    getattr(mock_hdfury_client, method).assert_awaited_once_with("50")
 
 
 @pytest.mark.parametrize(
