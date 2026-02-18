@@ -87,3 +87,11 @@ def supports_timer(device: VeSyncBaseDevice) -> bool:
         and callable(getattr(device, "set_timer", None))
         and callable(getattr(device, "clear_timer", None))
     )
+
+
+def get_timer_remaining_minutes(device: VeSyncBaseDevice) -> float:
+    """Return timer remaining in minutes from device.state.timer.remaining (seconds)."""
+    timer = getattr(device.state, "timer", None)
+    if timer is None:
+        return 0.0
+    return timer.remaining / 60 or 0.0

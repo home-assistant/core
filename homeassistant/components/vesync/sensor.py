@@ -30,7 +30,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr, supports_timer
+from .common import (
+    get_timer_remaining_minutes,
+    is_air_fryer,
+    is_humidifier,
+    is_outlet,
+    rgetattr,
+    supports_timer,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -38,14 +45,6 @@ from .entity import VeSyncBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-
-def _timer_remaining_minutes(device: VeSyncBaseDevice) -> float:
-    """Return timer remaining in minutes from device.state.timer.remaining (seconds)."""
-    timer = getattr(device.state, "timer", None)
-    if timer is None:
-        return 0.0
-    return timer.remaining / 60 or 0.0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -238,7 +237,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_timer_remaining_minutes,
+        value_fn=get_timer_remaining_minutes,
         exists_fn=supports_timer,
     ),
 )

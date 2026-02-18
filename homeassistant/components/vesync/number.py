@@ -18,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, supports_timer
+from .common import get_timer_remaining_minutes, is_humidifier, supports_timer
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -49,22 +49,11 @@ def _warm_mist_levels(device: VeSyncBaseDevice) -> list[int]:
     raise HomeAssistantError("Device does not support warm mist level adjustment.")
 
 
-def _set_warm_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
+def _set_warm_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
     """Set warm mist level on humidifier."""
     if is_humidifier(device) and device.supports_warm_mist:
         return device.set_warm_level(int(value))
     raise HomeAssistantError("Device does not support warm mist level adjustment.")
-
-
-def _timer_remain_value(device: VeSyncBaseDevice) -> float:
-    """Return current timer remaining in minutes from device state. Returns 0 when not set."""
-    state = getattr(device, "state", None)
-    if state is None:
-        return 0.0
-    remain = getattr(state, "timer_remain", None) or getattr(state, "timerRemain", None)
-    if remain is not None:
-        return float(remain)
-    return 0.0
 
 
 async def _set_timer_async(device: VeSyncBaseDevice, value: float) -> bool:
@@ -118,7 +107,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         native_step=1,
         mode=NumberMode.SLIDER,
         exists_fn=lambda device: is_humidifier(device) and device.supports_warm_mist,
-        set_value_fn=_set_warm_level,
+        set_value_fn=_set_warm_mist_level,
         value_fn=_warm_mist_value,
     ),
     VeSyncNumberEntityDescription(
@@ -131,7 +120,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         mode=NumberMode.BOX,
         exists_fn=supports_timer,
         set_value_fn=_set_timer,
-        value_fn=_timer_remain_value,
+        value_fn=get_timer_remaining_minutes,
     ),
 ]
 
