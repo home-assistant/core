@@ -397,14 +397,11 @@
           "weekdays": "Weekdays"
         }
       },
-      "charge_state_off_peak_hours_end_time": {
-        "name": "Off-peak charging end time"
-      },
       "charge_state_preconditioning_times": {
         "name": "Preconditioning schedule",
         "state": {
-          "all_week": "All week",
-          "weekdays": "Weekdays"
+          "all_week": "[%key:component::tessie::entity::sensor::charge_state_off_peak_charging_times::state::all_week%]",
+          "weekdays": "[%key:component::tessie::entity::sensor::charge_state_off_peak_charging_times::state::weekdays%]"
         }
       },
       "charge_state_scheduled_charging_mode": {
@@ -414,12 +411,6 @@
           "off": "[%key:common::state::off%]",
           "start_at": "Start at"
         }
-      },
-      "charge_state_scheduled_charging_start_time_minutes": {
-        "name": "Scheduled charging start time"
-      },
-      "charge_state_scheduled_departure_time_minutes": {
-        "name": "Scheduled departure time"
       },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
@@ -701,7 +692,7 @@
         },
         "enable": {
           "description": "Whether to enable or disable scheduled charging.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "time": {
           "description": "The time to start charging.",
@@ -723,7 +714,7 @@
         },
         "enable": {
           "description": "Whether to enable or disable scheduled departure.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "end_off_peak_time": {
           "description": "The time when off-peak hours end.",
