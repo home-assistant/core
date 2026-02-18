@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.components.tessie.services import (
@@ -27,16 +28,15 @@ from .common import TEST_RESPONSE, setup_platform
 TEST_RESPONSE_ERROR = {"result": False, "reason": "reason_why"}
 
 
-async def test_set_scheduled_charging(
+async def test_set_scheduled_charging_enable_with_time(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the set_scheduled_charging service."""
+    """Test enabling scheduled charging with a time."""
     await setup_platform(hass, [Platform.SENSOR])
 
     vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
 
-    # Test enable with time
     with patch(
         "homeassistant.components.tessie.services.set_scheduled_charging",
         return_value=TEST_RESPONSE,
@@ -56,7 +56,16 @@ async def test_set_scheduled_charging(
         assert call_kwargs.kwargs["timeMins"] == 600
         assert call_kwargs.kwargs["enable"] is True
 
-    # Test disable (no time needed)
+
+async def test_set_scheduled_charging_disable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling scheduled charging without a time."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with patch(
         "homeassistant.components.tessie.services.set_scheduled_charging",
         return_value=TEST_RESPONSE,
@@ -75,7 +84,16 @@ async def test_set_scheduled_charging(
         assert call_kwargs.kwargs["timeMins"] == 0
         assert call_kwargs.kwargs["enable"] is False
 
-    # Test enable without time raises validation error
+
+async def test_set_scheduled_charging_enable_without_time(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test enabling scheduled charging without a time raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -87,7 +105,16 @@ async def test_set_scheduled_charging(
             blocking=True,
         )
 
-    # Test command failure response
+
+async def test_set_scheduled_charging_command_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled charging command failure raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with (
         patch(
             "homeassistant.components.tessie.services.set_scheduled_charging",
@@ -107,16 +134,62 @@ async def test_set_scheduled_charging(
         )
 
 
-async def test_set_scheduled_departure(
+async def test_set_scheduled_charging_invalid_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduled charging with invalid device raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: "invalid_device_id",
+                ATTR_ENABLE: True,
+                ATTR_TIME: "10:00",
+            },
+            blocking=True,
+        )
+
+
+async def test_set_scheduled_charging_tesla_fleet_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the set_scheduled_departure service."""
+    """Test scheduled charging API error raises HomeAssistantError."""
     await setup_platform(hass, [Platform.SENSOR])
 
     vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
 
-    # Test full parameters
+    with (
+        patch(
+            "homeassistant.components.tessie.services.set_scheduled_charging",
+            side_effect=TeslaFleetError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+                ATTR_TIME: "10:00",
+            },
+            blocking=True,
+        )
+
+
+async def test_set_scheduled_departure_full_params(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled departure with all parameters."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with patch(
         "homeassistant.components.tessie.services.set_scheduled_departure",
         return_value=TEST_RESPONSE,
@@ -144,7 +217,16 @@ async def test_set_scheduled_departure(
         assert call_kwargs.kwargs["preconditioning_enabled"] is True
         assert call_kwargs.kwargs["off_peak_charging_enabled"] is True
 
-    # Test disable only
+
+async def test_set_scheduled_departure_disable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling scheduled departure."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with patch(
         "homeassistant.components.tessie.services.set_scheduled_departure",
         return_value=TEST_RESPONSE,
@@ -164,7 +246,16 @@ async def test_set_scheduled_departure(
         assert call_kwargs.kwargs["departure_time_mins"] == 0
         assert call_kwargs.kwargs["end_off_peak_time_mins"] == 0
 
-    # Test preconditioning enabled without departure_time raises error
+
+async def test_set_scheduled_departure_preconditioning_without_time(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test preconditioning without departure time raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -176,7 +267,16 @@ async def test_set_scheduled_departure(
             blocking=True,
         )
 
-    # Test off_peak enabled without end_off_peak_time raises error
+
+async def test_set_scheduled_departure_off_peak_without_time(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test off-peak charging without end time raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -188,11 +288,65 @@ async def test_set_scheduled_departure(
             blocking=True,
         )
 
-    # Test command failure response
+
+async def test_set_scheduled_departure_command_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled departure command failure raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
     with (
         patch(
             "homeassistant.components.tessie.services.set_scheduled_departure",
             return_value=TEST_RESPONSE_ERROR,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+
+
+async def test_set_scheduled_departure_invalid_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduled departure with invalid device raises error."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: "invalid_device_id",
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+
+
+async def test_set_scheduled_departure_tesla_fleet_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test scheduled departure API error raises HomeAssistantError."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_device = entity_registry.async_get("sensor.test_battery_level").device_id
+
+    with (
+        patch(
+            "homeassistant.components.tessie.services.set_scheduled_departure",
+            side_effect=TeslaFleetError,
         ),
         pytest.raises(HomeAssistantError),
     ):
