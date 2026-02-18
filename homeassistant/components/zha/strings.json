@@ -151,6 +151,9 @@
   "config_panel": {
     "zha_alarm_options": {
       "alarm_arm_requires_code": "Code required for arming actions",
+      "alarm_exit_delay_away": "Exit delay for away mode (seconds)",
+      "alarm_exit_delay_home": "Exit delay for home mode (seconds)",
+      "alarm_exit_delay_night": "Exit delay for night mode (seconds)",
       "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
       "alarm_master_code": "Master code for the alarm control panel(s)",
       "title": "Alarm control panel options"

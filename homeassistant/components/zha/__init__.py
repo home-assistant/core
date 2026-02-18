@@ -60,6 +60,16 @@ from .repairs.wrong_silabs_firmware import (
 )
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
+ALARM_CONTROL_PANEL_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional("master_code", default="1234"): cv.string,
+        vol.Optional("arm_requires_code", default=False): cv.boolean,
+        vol.Optional("failed_tries", default=3): cv.positive_int,
+        vol.Optional("exit_delay_away", default=30): cv.positive_int,
+        vol.Optional("exit_delay_home", default=0): cv.positive_int,
+        vol.Optional("exit_delay_night", default=0): cv.positive_int,
+    }
+)
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
     vol.Optional(CONF_DATABASE): cv.string,
@@ -71,6 +81,7 @@ ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
     vol.Optional(CONF_USB_PATH): cv.string,
     vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
+    vol.Optional("alarm_control_panel_options", default={}): ALARM_CONTROL_PANEL_OPTIONS_SCHEMA,
 }
 CONFIG_SCHEMA = vol.Schema(
     {
