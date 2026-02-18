@@ -17,12 +17,13 @@ from .const import (
     InputSource,
     ListeningMode,
 )
+from .coordinator import ChannelMutingCoordinator
 from .receiver import ReceiverManager, async_interview
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -65,6 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
     entry.runtime_data = OnkyoData(manager, sources, sound_modes)
+
+    ChannelMutingCoordinator(hass, entry, manager)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
