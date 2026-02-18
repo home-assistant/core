@@ -49,6 +49,30 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Portainer instance: {error}"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "no_nodes_found": {
+      "message": "No active nodes were found on the Proxmox VE server."
+    },
+    "ssl_error": {
+      "message": "An SSL error occurred: {error}"
+    },
+    "timeout_connect": {
+      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_connect_timeout": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection timeout occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",

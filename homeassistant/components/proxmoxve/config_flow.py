@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
+from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
@@ -22,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .common import ResourceException
 from .const import (
     CONF_CONTAINERS,
     CONF_NODE,
@@ -77,8 +77,6 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     except (ResourceException, requests.exceptions.ConnectionError) as err:
         raise ProxmoxNoNodesFound from err
 
-    _LOGGER.debug("Proxmox nodes: %s", nodes)
-
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
         try:
@@ -102,7 +100,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
 class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -5,11 +5,11 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from proxmoxer import AuthenticationError
+from proxmoxer.core import ResourceException
 import pytest
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
-from homeassistant.components.proxmoxve.common import ResourceException
 from homeassistant.components.proxmoxve.const import CONF_NODES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
