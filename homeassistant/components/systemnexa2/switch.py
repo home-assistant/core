@@ -85,10 +85,7 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
         setting: OnOffSetting,
     ) -> None:
         """Initialize the configuration switch."""
-        super().__init__(
-            coordinator=coordinator,
-            key=description.key,
-        )
+        super().__init__(coordinator, description.key)
         self.entity_description = description
         self._setting = setting
 

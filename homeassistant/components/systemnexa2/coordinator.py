@@ -139,7 +139,6 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         try:
             await coro
         except (TimeoutError, NotConnectedError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Device communication error: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_error",

@@ -93,7 +93,6 @@ async def test_connection_error_and_recovery(
     # Remove the side effect and retry - should succeed now
     device = mock_system_nexa_2_device.return_value
     device.get_info.side_effect = None
-    device.get_info.return_value = InformationUpdate(information=device.info_data)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
@@ -103,15 +102,8 @@ async def test_connection_error_and_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    ("host", "use_patch"),
-    [
-        ("", False),
-        ("invalid-hostname.local", True),
-    ],
-    ids=["empty_host", "unresolvable_hostname"],
-)
-async def test_invalid_host(hass: HomeAssistant, host: str, use_patch: bool) -> None:
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_empty_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -119,22 +111,43 @@ async def test_invalid_host(hass: HomeAssistant, host: str, use_patch: bool) -> 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    if use_patch:
-        # Mock socket.gethostbyname to raise gaierror for unresolvable hostname
-        with patch(
-            "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
-            side_effect=socket.gaierror(-2, "Name or service not known"),
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_HOST: host}
-            )
-    else:
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_invalid_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test invalid hostname/IP address handling."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror(-2, "Name or service not known"),
+    ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: host}
+            result["flow_id"], {CONF_HOST: "invalid-hostname.local"}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "10.0.0.131"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
