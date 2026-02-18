@@ -32,9 +32,9 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Teltonika device.",
-          "password": "The password to authenticate with the device.",
-          "username": "The username to authenticate with the device.",
-          "verify_ssl": "Whether to validate the SSL certificate when using HTTPS."
+          "password": "[%key:component::teltonika::config::step::dhcp_confirm::data_description::password%]",
+          "username": "[%key:component::teltonika::config::step::dhcp_confirm::data_description::username%]",
+          "verify_ssl": "Whether to validate the SSL certificate when using HTTPS. Most Teltonika devices use self-signed certificates, so you will need to disable this option unless you have installed a valid certificate on your device."
         },
         "description": "Enter the connection details for your Teltonika device.",
         "title": "Set up Teltonika device"
