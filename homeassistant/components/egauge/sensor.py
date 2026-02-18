@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from egauge_async.json.models import RegisterType
+from egauge_async.json.models import RegisterInfo, RegisterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import UnitOfElectricPotential, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,6 +27,7 @@ class EgaugeSensorEntityDescription(SensorEntityDescription):
 
     native_value_fn: Callable[[EgaugeData, str], float]
     available_fn: Callable[[EgaugeData, str], bool]
+    supported_fn: Callable[[RegisterInfo], bool]
 
 
 SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
@@ -37,6 +38,7 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         native_value_fn=lambda data, register: data.measurements[register],
         available_fn=lambda data, register: register in data.measurements,
+        supported_fn=lambda register_info: register_info.type == RegisterType.POWER,
     ),
     EgaugeSensorEntityDescription(
         key="energy",
@@ -46,6 +48,16 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         native_value_fn=lambda data, register: data.counters[register],
         available_fn=lambda data, register: register in data.counters,
+        supported_fn=lambda register_info: register_info.type == RegisterType.POWER,
+    ),
+    EgaugeSensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_value_fn=lambda data, register: data.measurements[register],
+        available_fn=lambda data, register: register in data.measurements,
+        supported_fn=lambda register_info: register_info.type == RegisterType.VOLTAGE,
     ),
 )
 
@@ -61,7 +73,7 @@ async def async_setup_entry(
         EgaugeSensor(coordinator, register_name, sensor)
         for sensor in SENSORS
         for register_name, register_info in coordinator.data.register_info.items()
-        if register_info.type == RegisterType.POWER
+        if sensor.supported_fn(register_info)
     )
 
 
