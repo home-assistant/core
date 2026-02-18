@@ -395,7 +395,7 @@ async def test_migrate_drop_bad_datasets(
     assert store.preferred_dataset == "id1"
 
     assert caplog.text.count("Dropped invalid Thread dataset") == 2
-    assert "'NETWORKKEY': 'REDACTED_KEY'" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_bad_datasets_preferred(
@@ -461,7 +461,7 @@ async def test_migrate_drop_duplicate_datasets(
     assert store.preferred_dataset is None
 
     assert "Dropped duplicated Thread dataset" in caplog.text
-    assert "'NETWORKKEY': 'REDACTED_KEY'" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_2(
@@ -496,7 +496,7 @@ async def test_migrate_drop_duplicate_datasets_2(
     assert store.preferred_dataset is None
 
     assert "Dropped duplicated Thread dataset" in caplog.text
-    assert "'NETWORKKEY': 'REDACTED_KEY'" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_preferred(
@@ -532,7 +532,7 @@ async def test_migrate_drop_duplicate_datasets_preferred(
 
     assert "Dropped duplicated Thread dataset" in caplog.text
     assert "duplicate of preferred dataset" in caplog.text
-    assert "'NETWORKKEY': 'REDACTED_KEY'" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_set_default_border_agent_id(

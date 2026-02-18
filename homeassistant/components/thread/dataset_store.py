@@ -15,6 +15,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -42,10 +43,8 @@ def _format_dataset(
     result = {}
     for key, value in dataset.items():
         name = key.name if isinstance(key, MeshcopTLVType) else str(key)
-        if key is MeshcopTLVType.NETWORKKEY:
-            result[name] = "REDACTED_KEY"
-        elif key is MeshcopTLVType.PSKC:
-            result[name] = "REDACTED_PSKC"
+        if key in (MeshcopTLVType.NETWORKKEY, MeshcopTLVType.PSKC):
+            result[name] = REDACTED
         else:
             result[name] = str(value)
     return result
