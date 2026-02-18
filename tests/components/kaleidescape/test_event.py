@@ -132,7 +132,7 @@ async def test_handle_user_defined_event(
     assert entity.state == "unknown"
     assert (
         entity.attributes.get(ATTR_FRIENDLY_NAME)
-        == f"{FRIENDLY_NAME} User defined event"
+        == f"{FRIENDLY_NAME} User-defined event"
     )
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-user_defined"
