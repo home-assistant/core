@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured."
+    },
+    "error": {
+      "invalid": "Invalid value selected.",
+      "required": "This field is required."
+    },
+    "step": {
+      "region": {
+        "data": {
+          "region": "Region"
+        },
+        "description": "Select a region."
+      },
+      "user": {
+        "data": {
+          "country": "Country",
+          "name": "Calendar name"
+        },
+        "description": "Choose a name for your new calendar and select a country."
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "school_holidays": {
+        "name": "School Holidays"
+      }
+    }
+  }
+}

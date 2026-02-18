@@ -1,0 +1,11 @@
+{
+  "domain": "school_holidays",
+  "name": "School Holidays",
+  "codeowners": ["@arievanderwende"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/school_holidays",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": []
+}
