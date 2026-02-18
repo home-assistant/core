@@ -159,6 +159,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
     )
     _command_in_flight: bool = False
     _target_tilt_position: int | None = None
+    _poll_task: asyncio.Task | None = None
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
@@ -175,11 +176,11 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
         # flags — the command methods set them immediately and _async_on_poll_stopped
         # clears them once movement is confirmed done.
         if self._command_in_flight:
-            # Fallback: if the position has reached the target, finalize immediately
-            # without waiting for the poll loop (handles API not reporting moving=False).
-            if (
-                self._target_tilt_position is not None
-                and position == self._target_tilt_position
+            # Fallback: if the position has reached the target zone, finalize
+            # immediately without waiting for the poll loop. Uses zone membership
+            # rather than exact equality to handle API rounding or early stops.
+            if self._target_tilt_position is not None and self._position_reached_target(
+                position
             ):
                 self._async_on_poll_stopped()
         else:
@@ -188,6 +189,30 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
             self._attr_is_closed = (position < self.CLOSED_DOWN_THRESHOLD) or (
                 position > self.CLOSED_UP_THRESHOLD
             )
+
+    def _start_poll_task(self) -> None:
+        """Cancel any existing poll task and start a new one."""
+        if self._poll_task and not self._poll_task.done():
+            self._poll_task.cancel()
+        self._poll_task = self.hass.async_create_task(self._async_poll_until_stopped())
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel poll task when entity is removed."""
+        if self._poll_task and not self._poll_task.done():
+            self._poll_task.cancel()
+
+    def _position_reached_target(self, position: int) -> bool:
+        """Return True if position has reached the target zone."""
+        target = self._target_tilt_position
+        assert target is not None
+        if target >= self.CLOSED_UP_THRESHOLD:
+            # Closing up: done when position is in the closed-up zone
+            return position >= self.CLOSED_UP_THRESHOLD
+        if target <= self.CLOSED_DOWN_THRESHOLD:
+            # Closing down: done when position is in the closed-down zone
+            return position <= self.CLOSED_DOWN_THRESHOLD
+        # Opening (target is in the open zone 20-80): done when position enters open zone
+        return self.CLOSED_DOWN_THRESHOLD <= position <= self.CLOSED_UP_THRESHOLD
 
     @callback
     def _async_on_poll_stopped(self) -> None:
@@ -235,7 +260,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
             self._command_in_flight = True
             self._target_tilt_position = tilt_position
             self.async_write_ha_state()
-            self.hass.async_create_task(self._async_poll_until_stopped())
+            self._start_poll_task()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -260,7 +285,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
             self._attr_is_opening = False
             self._command_in_flight = True
             self.async_write_ha_state()
-            self.hass.async_create_task(self._async_poll_until_stopped())
+            self._start_poll_task()
 
 
 class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
