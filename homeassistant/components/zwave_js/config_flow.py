@@ -193,7 +193,7 @@ def get_usb_ports() -> dict[str, str]:
     }
 
     # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
+    return non_na_ports or port_descriptions
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -1232,7 +1232,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Unload the config entry before stopping the add-on.
                 await self.hass.config_entries.async_unload(config_entry.entry_id)
                 addon_manager = get_addon_manager(self.hass)
-                _LOGGER.debug("Stopping Z-Wave JS add-on")
+                _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
@@ -1610,7 +1610,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             for addon_key, addon_val in self.original_addon_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
-        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
 
     async def _async_backup_network(self) -> None:
