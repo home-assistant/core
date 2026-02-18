@@ -112,8 +112,8 @@ INFLUXDB_V2_SCHEMA = vol.Schema(
 
 
 async def _validate_influxdb_connection(
-    hass: HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate connection to influxdb."""
     errors = {}
 
