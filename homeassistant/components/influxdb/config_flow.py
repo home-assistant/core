@@ -119,7 +119,7 @@ async def _validate_influxdb_connection(
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, data, True)
-        influx.close()
+        await hass.async_add_executor_job(influx.close)
     except ConnectionError as ex:
         _LOGGER.error(ex)
         if "SSLError" in ex.args[0]:
