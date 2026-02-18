@@ -76,12 +76,12 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
 
     _device: switchbot.SwitchbotMeterProCO2
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_translation_key = "sync_datetime_now"
+    _attr_translation_key = "sync_datetime"
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the sync time button."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}_sync_datetime_now"
+        self._attr_unique_id = f"{coordinator.base_unique_id}_sync_datetime"
 
     @exception_handler
     async def async_press(self) -> None:

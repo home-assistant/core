@@ -96,12 +96,12 @@ async def test_meter_pro_co2_sync_datetime_button(
         entity_ids = [
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
         ]
-        assert "button.test_name_sync_date_and_time_now" in entity_ids
+        assert "button.test_name_sync_date_and_time" in entity_ids
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time_now"},
+            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -145,7 +145,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time_now"},
+            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
