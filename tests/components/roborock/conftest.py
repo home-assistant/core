@@ -27,6 +27,7 @@ from roborock.data import (
     NamedRoomMapping,
     NetworkInfo,
     RoborockBase,
+    RoborockDockWashTowelModeCode,
     RoborockDyadStateCode,
     ValleyElectricityTimer,
     WorkStatusMapping,
@@ -374,6 +375,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
         trait_spec=DustCollectionModeTrait
     )
     v1_properties.wash_towel_mode = make_mock_trait(trait_spec=WashTowelModeTrait)
+    v1_properties.wash_towel_mode.wash_mode = RoborockDockWashTowelModeCode.light
     v1_properties.smart_wash_params = make_mock_trait(trait_spec=SmartWashParamsTrait)
     v1_properties.home = make_home_trait(
         map_info=MULTI_MAP_LIST.map_info,

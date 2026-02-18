@@ -84,6 +84,15 @@
       }
     },
     "button": {
+      "dock_empty": {
+        "name": "Empty"
+      },
+      "dock_stop_drying": {
+        "name": "Stop drying"
+      },
+      "dock_wash_mop": {
+        "name": "Wash mop"
+      },
       "pause": {
         "name": "Pause"
       },
@@ -191,6 +200,15 @@
           "fast": "Fast",
           "smart_mode": "SmartPlan",
           "standard": "Standard"
+        }
+      },
+      "mop_wash_mode": {
+        "name": "Mop wash mode",
+        "state": {
+          "light": "[%key:component::roborock::entity::select::dust_collection_mode::state::light%]",
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "deep": "[%key:component::roborock::entity::select::mop_mode::state::deep%]",
+          "smart": "[%key:component::roborock::entity::select::dust_collection_mode::state::smart%]"
         }
       },
       "program": {
