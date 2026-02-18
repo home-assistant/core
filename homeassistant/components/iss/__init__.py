@@ -49,7 +49,7 @@ async def async_update_with_retry(hass: HomeAssistant, iss: pyiss.ISS) -> IssDat
         except (HTTPError, requests.exceptions.ConnectionError) as ex:
             last_exception = ex
             if attempt < MAX_RETRIES - 1:
-                # Doble wait time in seconds at every attempt
+                # Double wait time in seconds at every attempt
                 backoff = INITIAL_BACKOFF * (2**attempt)
                 _LOGGER.warning(
                     "ISS update failed (attempt %d/%d), retrying in %d seconds: %s",
