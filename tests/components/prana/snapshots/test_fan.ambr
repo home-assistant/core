@@ -46,7 +46,7 @@
       'friendly_name': 'PRANA RECUPERATOR Bounded Air Flow',
       'percentage': 10,
       'percentage_step': 10.0,
-      'preset_mode': 'boost',
+      'preset_mode': None,
       'preset_modes': list([
         'night',
         'boost',
