@@ -20,6 +20,9 @@
         "data": {
           "token": "HTTP Event Collector token"
         },
+        "data_description": {
+          "token": "The HEC token configured in your Splunk instance"
+        },
         "description": "The Splunk token is no longer valid. Please enter a new HTTP Event Collector token.",
         "title": "Reauthenticate Splunk"
       },
