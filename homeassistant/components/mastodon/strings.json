@@ -167,7 +167,7 @@
           "name": "Duration"
         },
         "hide_notifications": {
-          "description": "Hide notifications from this account whilst muted.",
+          "description": "Hide notifications from this account while muted.",
           "name": "Hide notifications"
         }
       },
