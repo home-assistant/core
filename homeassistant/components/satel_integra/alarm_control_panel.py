@@ -102,11 +102,8 @@ class SatelIntegraAlarmPanel(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        state = self._read_alarm_state()
-
-        if state != self._attr_alarm_state:
-            self._attr_alarm_state = state
-            self.async_write_ha_state()
+        self._attr_alarm_state = self._read_alarm_state()
+        self.async_write_ha_state()
 
     def _read_alarm_state(self) -> AlarmControlPanelState | None:
         """Read current status of the alarm and translate it into HA status."""
