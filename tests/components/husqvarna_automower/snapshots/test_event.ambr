@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event_snapshot[event.test_mower_1_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

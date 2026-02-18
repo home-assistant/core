@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_state_attrs[sensor.i3_rex_ac_current_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -105,8 +107,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -155,8 +158,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -234,8 +238,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -287,8 +292,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -344,8 +350,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_battery_percent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -401,8 +408,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -458,8 +466,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel_percent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -514,8 +523,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_electric-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -571,8 +581,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_fuel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -628,8 +639,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -685,8 +697,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_ac_current_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -739,8 +752,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -789,8 +803,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -839,8 +854,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -918,8 +934,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -971,8 +988,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_climate_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1036,8 +1054,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_front_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1096,8 +1115,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_front_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1156,8 +1176,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_front_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1216,8 +1237,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_front_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1276,8 +1298,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1333,8 +1356,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1393,8 +1417,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1453,8 +1478,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1513,8 +1539,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1573,8 +1600,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_battery_percent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1630,8 +1658,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_electric-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1687,8 +1716,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1744,8 +1774,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_ac_current_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1798,8 +1829,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1848,8 +1880,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1898,8 +1931,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1977,8 +2011,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2030,8 +2065,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_climate_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2095,8 +2131,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2155,8 +2192,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2215,8 +2253,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2275,8 +2314,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2335,8 +2375,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2392,8 +2433,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2452,8 +2494,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2512,8 +2555,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2572,8 +2616,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2632,8 +2677,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_battery_percent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2689,8 +2735,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_electric-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2746,8 +2793,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2803,8 +2851,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_climate_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2868,8 +2917,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2928,8 +2978,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2988,8 +3039,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3048,8 +3100,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3108,8 +3161,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_mileage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3165,8 +3219,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3225,8 +3280,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3285,8 +3341,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_target_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3345,8 +3402,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_tire_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3405,8 +3463,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3462,8 +3521,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel_percent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3518,8 +3578,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_fuel-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3575,8 +3636,9 @@
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

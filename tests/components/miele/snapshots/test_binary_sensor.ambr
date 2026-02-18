@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +153,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +204,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -249,8 +254,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -298,8 +304,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -347,8 +354,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -397,8 +405,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -447,8 +456,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -496,8 +506,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.hood_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -545,8 +556,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -595,8 +607,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -644,8 +657,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -694,8 +708,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -744,8 +759,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -793,8 +809,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.oven_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -842,8 +859,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -892,8 +910,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -941,8 +960,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -991,8 +1011,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1041,8 +1062,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1090,8 +1112,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1139,8 +1162,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1189,8 +1213,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1238,8 +1263,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1288,8 +1314,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1338,8 +1365,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1387,8 +1415,9 @@
 # ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1436,8 +1465,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1486,8 +1516,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1535,8 +1566,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1585,8 +1617,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1635,8 +1668,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1684,8 +1718,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.freezer_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1733,8 +1768,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1782,8 +1818,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1832,8 +1869,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1882,8 +1920,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1931,8 +1970,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.hood_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1980,8 +2020,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2030,8 +2071,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2079,8 +2121,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2129,8 +2172,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2179,8 +2223,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2228,8 +2273,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.oven_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2277,8 +2323,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2327,8 +2374,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2376,8 +2424,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2426,8 +2475,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2476,8 +2526,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2525,8 +2576,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.refrigerator_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2574,8 +2626,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2624,8 +2677,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_mobile_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2673,8 +2727,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_notification_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2723,8 +2778,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_problem-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2773,8 +2829,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2822,8 +2879,9 @@
 # ---
 # name: test_binary_sensor_states_api_push[platforms0][binary_sensor.washing_machine_smart_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

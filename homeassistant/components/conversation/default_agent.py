@@ -992,18 +992,11 @@ class DefaultAgent(ConversationEntity):
                         continue
                     context[attr] = state.attributes[attr]
 
-            if (
-                entity := entity_registry.async_get(state.entity_id)
-            ) and entity.aliases:
-                for alias in entity.aliases:
-                    alias = alias.strip()
-                    if not alias:
-                        continue
-
-                    yield (alias, alias, context)
-
-            # Default name
-            yield (state.name, state.name, context)
+            entity_entry = entity_registry.async_get(state.entity_id)
+            for name in intent.async_get_entity_aliases(
+                self.hass, entity_entry, state=state
+            ):
+                yield (name, name, context)
 
     def _recognize_strict(
         self,

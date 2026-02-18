@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_air_purify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_energy_saving-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_switch_entities[air_conditioner][switch.test_air_conditioner_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,60 +152,11 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[washer][switch.test_washer_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.test_washer_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'lg_thinq',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operation_power',
-    'unique_id': 'MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689_main_washer_operation_mode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switch_entities[washer][switch.test_washer_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test washer Power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.test_washer_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switch_entities[dehumidifier][switch.test_dehumidifier_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -247,5 +201,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch_entities[washer][switch.test_washer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_washer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_power',
+    'unique_id': 'MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689_main_washer_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[washer][switch.test_washer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test washer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_washer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

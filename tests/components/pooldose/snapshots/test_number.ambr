@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -60,8 +61,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -119,8 +121,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_chlorine_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65535,
@@ -178,8 +181,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -238,8 +242,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -298,8 +303,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 850,
@@ -358,8 +364,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 14,
@@ -417,8 +424,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 14,
@@ -476,8 +484,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 8,

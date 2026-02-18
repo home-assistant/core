@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[envoy_eu_batt][number.envoy_1234_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -61,8 +62,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.enpower_654321_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -121,8 +123,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -180,8 +183,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -239,8 +243,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -298,8 +303,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -357,8 +363,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -416,8 +423,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,

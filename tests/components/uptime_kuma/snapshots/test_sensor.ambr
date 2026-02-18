@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.monitor_1_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,8 +56,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -172,8 +174,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -221,8 +224,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -275,8 +279,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -332,8 +337,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -389,8 +395,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -446,8 +453,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -509,8 +517,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -562,8 +571,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -615,8 +625,9 @@
 # ---
 # name: test_setup[sensor.monitor_1_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -668,8 +679,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -785,8 +797,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_hostname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -834,8 +847,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_monitored_port-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -883,8 +897,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -937,8 +952,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -994,8 +1010,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1051,8 +1068,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1108,8 +1126,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1171,8 +1190,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1224,8 +1244,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1277,8 +1298,9 @@
 # ---
 # name: test_setup[sensor.monitor_2_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1330,8 +1352,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_certificate_expiry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1384,8 +1407,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitor_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1501,8 +1525,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_monitored_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1550,8 +1575,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1604,8 +1630,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1661,8 +1688,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1718,8 +1746,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_response_time_o_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1775,8 +1804,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1838,8 +1868,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_1_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1891,8 +1922,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_30_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1944,8 +1976,9 @@
 # ---
 # name: test_setup[sensor.monitor_3_uptime_365_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

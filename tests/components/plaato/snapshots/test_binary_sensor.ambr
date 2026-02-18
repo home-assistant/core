@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_leaking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_binary_sensors[Keg][binary_sensor.plaato_plaatodevicetype_keg_device_name_pouring-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

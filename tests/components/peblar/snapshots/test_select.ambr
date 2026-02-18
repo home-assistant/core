@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[select][select.peblar_ev_charger_smart_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

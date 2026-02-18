@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[load_platforms0][sensor.bedroom_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.bedroom_pure_aqi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -112,8 +114,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.bedroom_pure_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,8 +164,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_high_temperature_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -226,8 +230,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_low_temperature_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -291,8 +296,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -340,8 +346,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -390,8 +397,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -447,8 +455,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -501,8 +510,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -555,8 +565,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -612,8 +623,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_temperature_feels_like-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -669,8 +681,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_timer_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -721,8 +734,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -771,8 +785,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_pure_aqi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -832,8 +847,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_pure_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
