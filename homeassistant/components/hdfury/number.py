@@ -33,7 +33,7 @@ class HDFuryNumberEntityDescription(NumberEntityDescription):
 NUMBERS: tuple[HDFuryNumberEntityDescription, ...] = (
     HDFuryNumberEntityDescription(
         key="oledfade",
-        translation_key="oledfade",
+        translation_key="oled_fade",
         mode=NumberMode.BOX,
         native_min_value=1,
         native_max_value=100,
@@ -45,7 +45,7 @@ NUMBERS: tuple[HDFuryNumberEntityDescription, ...] = (
     ),
     HDFuryNumberEntityDescription(
         key="reboottimer",
-        translation_key="reboottimer",
+        translation_key="reboot_timer",
         mode=NumberMode.BOX,
         native_min_value=0,
         native_max_value=100,

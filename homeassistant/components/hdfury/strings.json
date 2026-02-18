@@ -41,10 +41,10 @@
       }
     },
     "number": {
-      "oledfade": {
+      "oled_fade": {
         "name": "OLED fade timer"
       },
-      "reboottimer": {
+      "reboot_timer": {
         "name": "Restart timer"
       }
     },

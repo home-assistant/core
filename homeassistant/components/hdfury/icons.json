@@ -6,10 +6,10 @@
       }
     },
     "number": {
-      "oledfade": {
+      "oled_fade": {
         "default": "mdi:cellphone-information"
       },
-      "reboottimer": {
+      "reboot_timer": {
         "default": "mdi:timer-refresh"
       }
     },
