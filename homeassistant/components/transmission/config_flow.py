@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from transmission_rpc.error import (
@@ -54,8 +53,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
