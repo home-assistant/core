@@ -2594,10 +2594,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="available_tones",
                     return_type=["dict[int, str]", "list[int | str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_features",
                     return_type="SirenEntityFeature",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2609,31 +2611,38 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="supported_languages",
                     return_type="list[str]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_formats",
                     return_type="list[AudioFormats]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_codecs",
                     return_type="list[AudioCodecs]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_bit_rates",
                     return_type="list[AudioBitRates]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_sample_rates",
                     return_type="list[AudioSampleRates]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_channels",
                     return_type="list[AudioChannels]",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_process_audio_stream",
                     arg_types={1: "SpeechMetadata", 2: "AsyncIterable[bytes]"},
                     return_type="SpeechResult",
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2677,6 +2686,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="todo_items",
                     return_type=["list[TodoItem]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_create_todo_item",
@@ -2684,6 +2694,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_update_todo_item",
@@ -2691,6 +2702,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "TodoItem",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_delete_todo_items",
@@ -2698,6 +2710,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         1: "list[str]",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="async_move_todo_item",
@@ -2706,6 +2719,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         2: "str | None",
                     },
                     return_type="None",
+                    mandatory=True,
                 ),
             ],
         ),
