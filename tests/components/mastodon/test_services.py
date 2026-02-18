@@ -197,7 +197,7 @@ async def test_mute_account_failure_not_found(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test mute_account raises validation when account is missing."""
+    """Test mute_account raises validation when account does not exist."""
     await setup_integration(hass, mock_config_entry)
 
     mock_mastodon_client.account_lookup.side_effect = MastodonNotFoundError(
@@ -287,7 +287,7 @@ async def test_unmute_account_failure_not_found(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test unmute_account raises validation when account is missing."""
+    """Test unmute_account raises validation when account does not exist."""
     await setup_integration(hass, mock_config_entry)
 
     mock_mastodon_client.account_lookup.side_effect = MastodonNotFoundError(
