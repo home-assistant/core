@@ -88,7 +88,9 @@ class EcovacsController:
                     Device(info, self._authenticator) for info in devices.mqtt
                 ]
                 async with asyncio.TaskGroup() as tg:
+
                     async def _init(device: Device) -> None:
+                        """Initialize MQTT device."""
                         await device.initialize(mqtt)
                         self._devices.append(device)
 
@@ -106,7 +108,6 @@ class EcovacsController:
                     monitor=True,
                 )
                 self._legacy_devices.append(bot)
-
             for device_config in devices.not_supported:
                 _LOGGER.warning(
                     (
