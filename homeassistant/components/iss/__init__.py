@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -20,6 +21,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+MAX_RETRIES = 5
+INITIAL_BACKOFF = 1  # seconds
 
 
 @dataclass
@@ -38,6 +41,32 @@ def update(iss: pyiss.ISS) -> IssData:
     )
 
 
+async def async_update_with_retry(hass: HomeAssistant, iss: pyiss.ISS) -> IssData:
+    """Retrieve data from the pyiss API with retry logic."""
+    last_exception = None
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            return await hass.async_add_executor_job(update, iss)
+        except (HTTPError, requests.exceptions.ConnectionError) as ex:
+            last_exception = ex
+            if attempt <= MAX_RETRIES:
+                # Doble wait time in seconds at every attempt
+                backoff = INITIAL_BACKOFF * (2**attempt)
+                _LOGGER.warning(
+                    "ISS update failed (attempt %d/%d), retrying in %d seconds: %s",
+                    attempt + 1,
+                    MAX_RETRIES,
+                    backoff,
+                    ex,
+                )
+                await asyncio.sleep(backoff)
+            else:
+                _LOGGER.error("ISS update failed after %d attempts", MAX_RETRIES)
+
+    raise UpdateFailed("Unable to retrieve data") from last_exception
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
@@ -45,10 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     iss = pyiss.ISS()
 
     async def async_update() -> IssData:
-        try:
-            return await hass.async_add_executor_job(update, iss)
-        except (HTTPError, requests.exceptions.ConnectionError) as ex:
-            raise UpdateFailed("Unable to retrieve data") from ex
+        return await async_update_with_retry(hass, iss)
 
     coordinator = DataUpdateCoordinator(
         hass,
