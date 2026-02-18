@@ -1,0 +1,119 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration has no actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      * Remove integration setup from the config flow init test
+      * Make `mock_setup_entry` a separate fixture
+      * Use the mock_config_entry fixture in `test_duplicate_entry`
+      * `test_duplicate_entry`: Patch `homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list`
+      * Fix docstring and name for `test_form_invalid_auth` (does not only test auth)
+      * In `test_form_invalid_auth`, make sure the test run until CREATE_ENTRY to test that the flow is able to recover
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration has no actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Integration does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: todo
+    comment: |
+      To redesign deferred reloading.
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      Reevaluate exceptions for entity services.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: |
+      The API does not limit parallel updates.
+  reauthentication-flow: done
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  discovery:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  docs-data-update:
+    status: exempt
+    comment: |
+      No data updates.
+  docs-examples:
+    status: todo
+    comment: |
+      To give examples of how people use the integration
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: todo
+    comment: |
+      To write something about what models we support.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Service integration, no devices.
+  entity-category:
+    status: exempt
+    comment: |
+      No entities with categories.
+  entity-device-class:
+    status: exempt
+    comment: |
+      No entities with device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No entities disabled by default.
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      Service integration, no devices.
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+    comment: |
+      Uses `httpx` session.
+  strict-typing: done

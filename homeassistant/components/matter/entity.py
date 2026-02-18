@@ -124,8 +124,13 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
-            if self._platform_translation_key and not self.translation_key:
-                self._attr_translation_key = self._platform_translation_key
+        # Always set translation_key for state_attributes translations.
+        # For primary entities (no postfix), suppress the translated name,
+        # so only the device name is used.
+        if self._platform_translation_key and not self.translation_key:
+            self._attr_translation_key = self._platform_translation_key
+            if not self._name_postfix:
+                self._attr_name = None
 
         # Matter labels can be used to modify the entity name
         # by appending the text.
