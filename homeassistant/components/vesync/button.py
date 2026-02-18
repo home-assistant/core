@@ -11,6 +11,7 @@ from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,8 +34,16 @@ class VeSyncButtonEntityDescription(ButtonEntityDescription):
 
 
 async def _clear_timer(device: VeSyncBaseDevice) -> None:
-    """Clear the device timer. Does not raise when device returns False."""
-    await device.clear_timer()
+    """Clear the device timer."""
+    if not supports_timer(device):
+        raise HomeAssistantError("Device does not support timer adjustment.")
+    try:
+        timer_is_cleared = await device.clear_timer()
+    except Exception as e:
+        _LOGGER.error("Failed to clear timer: %s", e)
+        raise HomeAssistantError(f"Failed to clear timer: {e}") from e
+    if not timer_is_cleared:
+        raise HomeAssistantError("Failed to clear timer: Unknown error.")
 
 
 BUTTON_DESCRIPTIONS: tuple[VeSyncButtonEntityDescription, ...] = (

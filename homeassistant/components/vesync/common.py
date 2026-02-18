@@ -12,6 +12,8 @@ from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
 from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
+from homeassistant.exceptions import HomeAssistantError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -76,22 +78,22 @@ def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
 
 
 def supports_timer(device: VeSyncBaseDevice) -> bool:
-    """Check if the device has timer methods (get, set, clear).
+    """Check if the device has timer state.
 
-    All devices may have these methods; unsupported devices return None/False/False.
-    When True, we create timer entities and allow service calls; results are handled
-    without failing Home Assistant when the device does not implement timer.
+    Timer state can be present in the device.state.timer attribute.
     """
-    return (
-        callable(getattr(device, "get_timer", None))
-        and callable(getattr(device, "set_timer", None))
-        and callable(getattr(device, "clear_timer", None))
-    )
+    try:
+        _ = device.state.timer
+    except AttributeError:
+        return False
+    return True
 
 
 def get_timer_remaining_minutes(device: VeSyncBaseDevice) -> float:
     """Return timer remaining in minutes from device.state.timer.remaining (seconds)."""
-    timer = getattr(device.state, "timer", None)
+    if not supports_timer(device):
+        raise HomeAssistantError("Device does not support timer adjustment.")
+    timer = device.state.timer
     if timer is None:
         return 0.0
-    return timer.remaining / 60
+    return timer.remaining / 60.0

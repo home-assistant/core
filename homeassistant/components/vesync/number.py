@@ -58,9 +58,9 @@ def _set_warm_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bo
 
 def _set_timer(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
     """Set timer duration in minutes."""
-    if supports_timer(device):
-        return device.set_timer(int(value))
-    raise HomeAssistantError("Device does not support timer adjustment.")
+    if not supports_timer(device):
+        raise HomeAssistantError("Device does not support timer adjustment.")
+    return device.set_timer(int(value * 60.0))
 
 
 @dataclass(frozen=True, kw_only=True)
