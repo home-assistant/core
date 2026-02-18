@@ -249,7 +249,9 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             if resp.status >= 400:
                 try:
                     error_body = await resp.text()
-                except ClientError:
+                except (ClientError, UnicodeDecodeError):
+                    # Ensure the response body is consumed on decode/client errors
+                    await resp.read()
                     error_body = ""
                 _LOGGER.debug(
                     "Token request for %s failed (%s): %s",
