@@ -229,7 +229,10 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         # Stop the cover, will stop regardless of the actual direction of travel.
         result = await self._async_set_value(self._stop_position_value, False)
         # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
-        if result is not None and result.status in SET_VALUE_SUCCESS:
+        if result is not None and result.status in (
+            SetValueStatus.SUCCESS,
+            SetValueStatus.SUCCESS_UNSUPERVISED,
+        ):
             self._attr_is_opening = False
             self._attr_is_closing = False
             self.async_write_ha_state()
@@ -494,8 +497,11 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         result = await self._async_set_value(self._up_value, False)
-        # StartLevelChange: SUCCESS means the device has stopped moving
-        if result is not None and result.status in SET_VALUE_SUCCESS:
+        # When stopping is successful (or unsupervised), we can assume the cover has stopped moving.
+        if result is not None and result.status in (
+            SetValueStatus.SUCCESS,
+            SetValueStatus.SUCCESS_UNSUPERVISED,
+        ):
             self._attr_is_opening = False
             self._attr_is_closing = False
             self.async_write_ha_state()

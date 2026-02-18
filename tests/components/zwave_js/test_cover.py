@@ -11,6 +11,7 @@ from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
     CommandClass,
+    SetValueStatus,
 )
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -1265,7 +1266,9 @@ async def test_multilevel_switch_cover_moving_state_working(
     assert state.state == CoverState.CLOSED
 
     # Simulate Supervision WORKING response
-    client.async_send_command.return_value = {"result": {"status": 1}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.WORKING}
+    }
 
     # Open cover - should set OPENING state
     await hass.services.async_call(
@@ -1378,7 +1381,9 @@ async def test_multilevel_switch_cover_moving_state_closing(
     assert state.state == CoverState.OPEN
 
     # Simulate Supervision WORKING response
-    client.async_send_command.return_value = {"result": {"status": 1}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.WORKING}
+    }
 
     # Close cover - should set CLOSING state
     await hass.services.async_call(
@@ -1431,7 +1436,9 @@ async def test_multilevel_switch_cover_moving_state_unsupervised(
     assert state.state == CoverState.CLOSED
 
     # Simulate SUCCESS_UNSUPERVISED response
-    client.async_send_command.return_value = {"result": {"status": 254}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.SUCCESS_UNSUPERVISED}
+    }
 
     # Open cover - should set OPENING state optimistically
     await hass.services.async_call(
@@ -1457,7 +1464,9 @@ async def test_multilevel_switch_cover_moving_state_stop_clears(
     assert state.state == CoverState.CLOSED
 
     # Simulate WORKING response
-    client.async_send_command.return_value = {"result": {"status": 1}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.WORKING}
+    }
 
     # Open cover to set OPENING state
     await hass.services.async_call(
@@ -1471,7 +1480,9 @@ async def test_multilevel_switch_cover_moving_state_stop_clears(
     assert state.state == CoverState.OPENING
 
     # Reset to SUCCESS for stop command
-    client.async_send_command.return_value = {"result": {"status": 255}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.SUCCESS}
+    }
 
     # Stop cover - should clear opening state
     await hass.services.async_call(
@@ -1516,7 +1527,9 @@ async def test_multilevel_switch_cover_moving_state_set_position(
     node.receive_event(event)
 
     # Simulate WORKING response
-    client.async_send_command.return_value = {"result": {"status": 1}}
+    client.async_send_command.return_value = {
+        "result": {"status": SetValueStatus.WORKING}
+    }
 
     # Set position to 20 (closing direction)
     await hass.services.async_call(
@@ -1578,7 +1591,7 @@ async def test_window_covering_cover_moving_state(
     )
 
     state = hass.states.get(entity_id)
-    assert state.state != CoverState.OPENING
+    assert state.state not in (CoverState.OPENING, CoverState.CLOSING)
 
     client.async_send_command.reset_mock()
 
