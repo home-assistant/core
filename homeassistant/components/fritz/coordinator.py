@@ -360,9 +360,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 ):
                     continue
 
-                network_info = await self.async_get_wlan_configuration(i)
                 # Devices with 4 WLAN services, use the 2nd for internal communications
                 if not (wifi_count == 4 and i == 2):
+                    network_info = await self.async_get_wlan_configuration(i)
                     entity_data["wifi_networks"][i] = {
                         "ssid": network_info["NewSSID"],
                         "bssid": network_info["NewBSSID"],
