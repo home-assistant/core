@@ -57,8 +57,7 @@ def proxmox_errors(func) -> Callable[..., Coroutine[Any, Any, None]]:
         except SSLError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="ssl_error",
-                translation_placeholders={"error": repr(err)},
+                translation_key="ssl_error_no_details",
             ) from err
         except ConnectTimeout as err:
             raise HomeAssistantError(

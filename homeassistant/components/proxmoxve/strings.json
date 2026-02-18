@@ -83,6 +83,9 @@
     "ssl_error": {
       "message": "An SSL error occurred: {error}"
     },
+    "ssl_error_no_details": {
+      "message": "An SSL error occurred."
+    },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
     },
