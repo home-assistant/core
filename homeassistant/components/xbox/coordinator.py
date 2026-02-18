@@ -22,6 +22,8 @@ from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -115,6 +117,20 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
             "Found %d consoles: %s", len(consoles.result), consoles.model_dump()
         )
 
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, console.id) for console in consoles.result}
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if (
+                device.entry_type is not DeviceEntryType.SERVICE
+                and not set(device.identifiers) & identifiers
+            ):
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
+
         return {console.id: console for console in consoles.result}
 
 
@@ -152,35 +168,39 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
             _LOGGER.debug("%s status: %s", console.name, status.model_dump())
 
             # Setup focus app
-            app_details: Product | None = None
-            if (current_state := self.data.get(console.id)) is not None:
-                app_details = current_state.app_details
+            app_details = (
+                current_state.app_details
+                if (current_state := self.data.get(console.id)) is not None
+                and status.focus_app_aumid
+                else None
+            )
 
-            if status.focus_app_aumid:
-                if (
-                    not current_state
-                    or status.focus_app_aumid != current_state.status.focus_app_aumid
-                ):
-                    app_id = status.focus_app_aumid.split("!")[0]
-                    id_type = AlternateIdType.PACKAGE_FAMILY_NAME
-                    if app_id in SYSTEM_PFN_ID_MAP:
-                        id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
-                        app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
-
-                    catalog_result = (
-                        await self.client.catalog.get_product_from_alternate_id(
-                            app_id, id_type
-                        )
+            if status.focus_app_aumid and (
+                not current_state
+                or status.focus_app_aumid != current_state.status.focus_app_aumid
+            ):
+                catalog_result = (
+                    await self.client.catalog.get_product_from_alternate_id(
+                        *self._resolve_app_id(status.focus_app_aumid)
                     )
+                )
 
-                    if catalog_result.products:
-                        app_details = catalog_result.products[0]
-            else:
-                app_details = None
+                if catalog_result.products:
+                    app_details = catalog_result.products[0]
 
             data[console.id] = ConsoleData(status=status, app_details=app_details)
 
         return data
+
+    def _resolve_app_id(self, focus_app_aumid: str) -> tuple[str, AlternateIdType]:
+        app_id = focus_app_aumid.split("!", maxsplit=1)[0]
+        id_type = AlternateIdType.PACKAGE_FAMILY_NAME
+
+        if app_id in SYSTEM_PFN_ID_MAP:
+            id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+            app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
+
+        return app_id, id_type
 
 
 class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):

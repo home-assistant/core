@@ -37,15 +37,19 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[str, Portainer, int, str], Coroutine[Any, Any, None]]
 
 
+PARALLEL_UPDATES = 1
+
+
 async def perform_action(
     action: str, portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
-    """Stop a container."""
+    """Perform an action on a container."""
     try:
-        if action == "start":
-            await portainer.start_container(endpoint_id, container_id)
-        elif action == "stop":
-            await portainer.stop_container(endpoint_id, container_id)
+        match action:
+            case "start":
+                await portainer.start_container(endpoint_id, container_id)
+            case "stop":
+                await portainer.stop_container(endpoint_id, container_id)
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

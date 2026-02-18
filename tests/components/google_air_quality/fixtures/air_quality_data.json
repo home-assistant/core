@@ -81,6 +81,42 @@
         "value": 1.2,
         "units": "PARTS_PER_BILLION"
       }
+    },
+    {
+      "code": "nh3",
+      "displayName": "NH3",
+      "fullName": "Ammonia",
+      "concentration": {
+        "value": 81.41,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "no",
+      "displayName": "NO",
+      "fullName": "Nitrogen monoxide",
+      "concentration": {
+        "value": 0.62,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "nmhc",
+      "displayName": "NMHC",
+      "fullName": "Non-methane hydrocarbons",
+      "concentration": {
+        "value": 52.66,
+        "units": "PARTS_PER_BILLION"
+      }
+    },
+    {
+      "code": "c6h6",
+      "displayName": "C6H6",
+      "fullName": "Benzene",
+      "concentration": {
+        "value": 0.24,
+        "units": "MICROGRAMS_PER_CUBIC_METER"
+      }
     }
   ]
 }
