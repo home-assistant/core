@@ -2719,6 +2719,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hegel": {
+      "name": "Hegel Amplifier",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "heicko": {
       "name": "Heicko",
       "integration_type": "virtual",
@@ -2866,6 +2872,12 @@
         "zwave"
       ]
     },
+    "homevolt": {
+      "name": "Homevolt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "homewizard": {
       "name": "HomeWizard",
       "integration_type": "device",
@@ -2978,6 +2990,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "hypontech": {
+      "name": "Hypontech Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ialarm": {
       "name": "Antifurto365 iAlarm",
       "integration_type": "device",
@@ -2996,6 +3014,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "idrive_e2": {
+      "name": "IDrive e2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "idteck_prox": {
       "name": "IDTECK Proximity Reader",
@@ -3092,6 +3116,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "indevolt": {
+      "name": "Indevolt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "indianamichiganpower": {
       "name": "Indiana Michigan Power",
       "integration_type": "virtual",
@@ -3134,6 +3164,12 @@
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
+    },
+    "intelliclima": {
+      "name": "IntelliClima",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "intellifire": {
       "name": "IntelliFire",
@@ -4109,6 +4145,12 @@
           "iot_class": "cloud_polling",
           "name": "OneDrive"
         },
+        "onedrive_for_business": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "OneDrive for Business"
+        },
         "xbox": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4171,7 +4213,7 @@
       "iot_class": "local_push"
     },
     "mobile_app": {
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4317,6 +4359,12 @@
           "name": "MQTT Statestream"
         }
       }
+    },
+    "mta": {
+      "name": "MTA New York City Transit",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "mullvad": {
       "name": "Mullvad VPN",
@@ -5220,7 +5268,7 @@
     },
     "portainer": {
       "name": "Portainer",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6444,10 +6492,10 @@
       "iot_class": "local_polling"
     },
     "spaceapi": {
-      "name": "Space API",
-      "integration_type": "hub",
+      "name": "SpaceAPI",
+      "integration_type": "service",
       "config_flow": false,
-      "iot_class": "cloud_polling"
+      "iot_class": "calculated"
     },
     "spc": {
       "name": "Vanderbilt SPC",
@@ -6464,8 +6512,9 @@
     "splunk": {
       "name": "Splunk",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "spotify": {
       "name": "Spotify",
@@ -6819,6 +6868,12 @@
       "name": "Telnet",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "teltonika": {
+      "name": "Teltonika",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "temper": {

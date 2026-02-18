@@ -390,7 +390,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -628,7 +628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -1622,7 +1622,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1681,7 +1681,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -1739,7 +1739,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1798,7 +1798,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -1974,7 +1974,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2033,7 +2033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2092,7 +2092,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -2150,7 +2150,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2209,7 +2209,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2268,7 +2268,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -2620,7 +2620,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2679,7 +2679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -2737,7 +2737,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2796,7 +2796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2855,7 +2855,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -2914,7 +2914,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -2972,7 +2972,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3031,7 +3031,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3090,7 +3090,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-off_transition_time-8-19',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3149,7 +3149,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3207,7 +3207,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3266,7 +3266,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-on_transition_time-8-18',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3325,7 +3325,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3384,7 +3384,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3442,7 +3442,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_setpoint',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-pump_setpoint-8-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-pump_setpoint-8-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3620,7 +3620,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_configuration_and_control_default_open_duration',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3679,7 +3679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_level-8-17',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_level-8-17',
     'unit_of_measurement': None,
   })
 # ---
@@ -3737,7 +3737,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3796,7 +3796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-AutoRelockTimer-257-35',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3855,7 +3855,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -3914,7 +3914,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
     'unit_of_measurement': None,
   })
 # ---
@@ -3972,7 +3972,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-TemperatureControlTemperatureSetpoint-86-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

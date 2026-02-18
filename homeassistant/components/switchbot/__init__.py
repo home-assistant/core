@@ -63,6 +63,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER_CO2.value: [
         Platform.BUTTON,
         Platform.SENSOR,
+        Platform.SELECT
     ],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
