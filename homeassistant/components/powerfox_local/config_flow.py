@@ -68,7 +68,9 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
         except PowerfoxAuthenticationError, PowerfoxConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        self.context["title_placeholders"] = {"name": f"Poweropti ({self._host})"}
+        self.context["title_placeholders"] = {
+            "name": f"Poweropti ({self._device_id[-5:]})"
+        }
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -85,7 +87,7 @@ class PowerfoxLocalConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_create_entry(self) -> ConfigFlowResult:
         """Create a config entry."""
         return self.async_create_entry(
-            title=f"Poweropti ({self._host})",
+            title=f"Poweropti ({self._device_id[-5:]})",
             data={
                 CONF_HOST: self._host,
                 CONF_API_KEY: self._api_key,

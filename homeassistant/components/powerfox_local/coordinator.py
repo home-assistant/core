@@ -27,6 +27,7 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
             api_key=entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
         )
+        self.device_id: str = entry.data[CONF_API_KEY]
         super().__init__(
             hass,
             LOGGER,
