@@ -87,8 +87,6 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     _current_position_value: ZwaveValue | None = None
     _target_position_value: ZwaveValue | None = None
     _stop_position_value: ZwaveValue | None = None
-    _is_opening: bool = False
-    _is_closing: bool = False
 
     def _set_position_values(
         self,
@@ -148,16 +146,6 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         if not (value := self._current_position_value) or value.value is None:
             return None
         return bool(value.value == self._fully_closed_position)
-
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is opening."""
-        return self._is_opening
-
-    @property
-    def is_closing(self) -> bool:
-        """Return if the cover is closing."""
-        return self._is_closing
 
     def _set_moving_state_from_direction(self, target_position: int) -> None:
         """Set opening/closing state based on target vs current position."""
