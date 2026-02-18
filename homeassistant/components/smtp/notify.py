@@ -26,6 +26,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
@@ -38,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -90,7 +92,38 @@ async def async_get_service(
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     if discovery_info is None:
-        # YAML configuration - use legacy setup
+        # YAML configuration - create deprecation warning and trigger import
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2026.3.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "import"},
+                data={
+                    CONF_NAME: config.get(CONF_NAME, config[CONF_SENDER]),
+                    CONF_SERVER: config.get(CONF_SERVER, DEFAULT_HOST),
+                    CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_TIMEOUT: config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                    CONF_ENCRYPTION: config.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
+                    CONF_USERNAME: config.get(CONF_USERNAME),
+                    CONF_PASSWORD: config.get(CONF_PASSWORD),
+                    CONF_SENDER: config[CONF_SENDER],
+                    CONF_SENDER_NAME: config.get(CONF_SENDER_NAME),
+                    CONF_RECIPIENT: config[CONF_RECIPIENT],
+                    CONF_DEBUG: config.get(CONF_DEBUG, DEFAULT_DEBUG),
+                    CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL, True),
+                },
+            )
+        )
+        # Still set up legacy service so it works until restart
         return await hass.async_add_executor_job(
             get_service, hass, config, discovery_info
         )

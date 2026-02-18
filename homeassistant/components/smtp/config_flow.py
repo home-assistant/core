@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
@@ -123,6 +124,13 @@ def _build_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
+def _build_title(sender: str, sender_name: str | None = None) -> str:
+    """Build config entry title from sender name and email."""
+    if sender_name:
+        return f"{sender_name} ({sender})"
+    return sender
+
+
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 
@@ -182,7 +190,10 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
                     data = {**user_input, CONF_RECIPIENT: recipients}
 
                     return self.async_create_entry(
-                        title=user_input[CONF_SENDER],
+                        title=_build_title(
+                            user_input[CONF_SENDER],
+                            user_input.get(CONF_SENDER_NAME),
+                        ),
                         data=data,
                     )
 
@@ -194,11 +205,16 @@ class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
-        # Check if already configured with same sender
-        self._async_abort_entries_match({CONF_SENDER: import_data[CONF_SENDER]})
+        name = import_data.pop(CONF_NAME)
+        title = _build_title(import_data[CONF_SENDER], name)
+
+        # Check if already imported with the same name
+        for entry in self._async_current_entries():
+            if entry.title == title:
+                return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
-            title=import_data[CONF_SENDER],
+            title=title,
             data=import_data,
         )
 
@@ -330,7 +346,10 @@ class SMTPOptionsFlow(OptionsFlow):
                     self.hass.config_entries.async_update_entry(
                         self.config_entry,
                         data=new_data,
-                        title=user_input[CONF_SENDER],
+                        title=_build_title(
+                            user_input[CONF_SENDER],
+                            user_input.get(CONF_SENDER_NAME),
+                        ),
                     )
                     await self.hass.config_entries.async_reload(
                         self.config_entry.entry_id
