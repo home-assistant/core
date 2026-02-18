@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from enocean.utils import combine_hex
+from enocean_async.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -92,8 +93,11 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
+        if not self.address:
+            return
+
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -104,8 +108,10 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
+        if not self.address:
+            return
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -114,24 +120,24 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, telegram: ERP1Telegram):
         """Update the internal state of the switch."""
-        if packet.data[0] == 0xA5:
-            # power meter telegram, turn on if > 10 watts
-            packet.parse_eep(0x12, 0x01)
-            if packet.parsed["DT"]["raw_value"] == 1:
-                raw_val = packet.parsed["MR"]["raw_value"]
-                divisor = packet.parsed["DIV"]["raw_value"]
-                watts = raw_val / (10**divisor)
-                if watts > 1:
-                    self._attr_is_on = True
-                    self.schedule_update_ha_state()
-        elif packet.data[0] == 0xD2:
-            # actuator status telegram
-            packet.parse_eep(0x01, 0x01)
-            if packet.parsed["CMD"]["raw_value"] == 4:
-                channel = packet.parsed["IO"]["raw_value"]
-                output = packet.parsed["OV"]["raw_value"]
-                if channel == self.channel:
-                    self._attr_is_on = output > 0
-                    self.schedule_update_ha_state()
+        # if packet.data[0] == 0xA5:
+        #     # power meter telegram, turn on if > 10 watts
+        #     packet.parse_eep(0x12, 0x01)
+        #     if packet.parsed["DT"]["raw_value"] == 1:
+        #         raw_val = packet.parsed["MR"]["raw_value"]
+        #         divisor = packet.parsed["DIV"]["raw_value"]
+        #         watts = raw_val / (10**divisor)
+        #         if watts > 1:
+        #             self._attr_is_on = True
+        #             self.schedule_update_ha_state()
+        # elif packet.data[0] == 0xD2:
+        #     # actuator status telegram
+        #     packet.parse_eep(0x01, 0x01)
+        #     if packet.parsed["CMD"]["raw_value"] == 4:
+        #         channel = packet.parsed["IO"]["raw_value"]
+        #         output = packet.parsed["OV"]["raw_value"]
+        #         if channel == self.channel:
+        #             self._attr_is_on = output > 0
+        #             self.schedule_update_ha_state()

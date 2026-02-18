@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from enocean.utils import combine_hex
+from enocean_async.erp1.telegram import ERP1Telegram
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -86,14 +87,14 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self.send_command(command, [], 0x01)
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, telegram: ERP1Telegram):
         """Update the internal state of this device.
 
         Dimmer devices like Eltako FUD61 send telegram in different RORGs.
         We only care about the 4BS (0xA5).
         """
-        if packet.data[0] == 0xA5 and packet.data[1] == 0x02:
-            val = packet.data[2]
+        if telegram.rorg == 0xA5 and telegram.telegram_data[0] == 0x02:
+            val = telegram.telegram_data[1]
             self._attr_brightness = math.floor(val / 100.0 * 256.0)
             self._attr_is_on = bool(val != 0)
             self.schedule_update_ha_state()

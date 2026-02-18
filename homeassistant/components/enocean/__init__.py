@@ -1,17 +1,35 @@
 """Support for EnOcean devices."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from enocean_async.gateway import Gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .dongle import EnOceanDongle
+from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
-type EnOceanConfigEntry = ConfigEntry[EnOceanDongle]
+type EnOceanConfigEntry = ConfigEntry[Gateway]
+
+
+@dataclass
+class EnOceanHassData:
+    """Store gateway and dispatcher in hass.data.
+
+    This is required to make the gateway available in async_setup / setup_platform
+    in preparation for transitioning to UI-based config; also the dispatcher is legacy,
+    hence we store it in hass.data as well
+    """
+
+    gateway: Gateway
+    disconnect_handle: Callable | None
+
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -42,9 +60,24 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
-    usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
-    await usb_dongle.async_setup()
-    config_entry.runtime_data = usb_dongle
+    gateway = Gateway(port=config_entry.data[CONF_DEVICE])
+
+    gateway.add_erp1_received_callback(
+        lambda packet: dispatcher_send(hass, SIGNAL_RECEIVE_MESSAGE, packet)
+    )
+
+    await gateway.start()
+    config_entry.runtime_data = gateway
+
+    hass.data.setdefault(
+        DOMAIN,
+        EnOceanHassData(
+            gateway=gateway,
+            disconnect_handle=async_dispatcher_connect(
+                hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet
+            ),
+        ),
+    )
 
     return True
 
@@ -54,7 +87,12 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry."""
 
-    enocean_dongle = config_entry.runtime_data
-    enocean_dongle.unload()
+    gateway = config_entry.runtime_data
+    await gateway.stop()
+
+    hass_data: EnOceanHassData | None = hass.data.get(DOMAIN)
+    if hass_data is not None and hass_data.disconnect_handle is not None:
+        hass_data.disconnect_handle()
+        hass_data.disconnect_handle = None
 
     return True
