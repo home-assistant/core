@@ -40,7 +40,7 @@ class VictronBaseEntity(Entity):
         self._attr_device_info = device_info
         self._metric = metric
         self._device_info = device_info
-        self._attr_unique_id = metric.unique_id.lower()
+        self._attr_unique_id = metric.unique_id
         self._attr_suggested_display_precision = metric.precision
         self._attr_translation_key = metric.generic_short_id.replace("{", "").replace(
             "}", ""
@@ -108,7 +108,7 @@ class VictronBaseEntity(Entity):
             case MetricType.SPEED:
                 return SensorDeviceClass.SPEED
             case MetricType.LIQUID_VOLUME:
-                return SensorDeviceClass.VOLUME
+                return SensorDeviceClass.VOLUME_STORAGE
             case MetricType.DURATION:
                 return SensorDeviceClass.DURATION
             case MetricType.TIME:
