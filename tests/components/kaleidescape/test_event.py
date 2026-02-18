@@ -1,4 +1,4 @@
-"""Tests for Kaleidescape media player platform."""
+"""Tests for Kaleidescape event platform."""
 
 import asyncio
 import re
@@ -162,3 +162,30 @@ async def test_handle_user_defined_event(
     entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
     assert entity is not None
     assert entity.state == last_updated
+
+
+@pytest.mark.usefixtures("mock_integration")
+async def test_handle_user_defined_event_empty_payload_ignored(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test invalid/unsupported payloads are ignored."""
+
+    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    assert entity is not None
+    assert entity.state == "unknown"
+
+    mock_device.dispatcher.send("not_user_defined_event", [])
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+
+    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    assert entity is not None
+    assert entity.state == "unknown"
+
+    mock_device.dispatcher.send(kaleidescape_const.USER_DEFINED_EVENT, [])
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+
+    entity = hass.states.get(f"{ENTITY_ID}_user_defined_event")
+    assert entity is not None
+    assert entity.state == "unknown"
