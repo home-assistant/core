@@ -43,6 +43,8 @@ DOMAIN = "zwave_js"
 
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_ADDED = "value added"
+EVENT_VALUE_REMOVED = "value removed"
 EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)

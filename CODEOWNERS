@@ -755,6 +755,8 @@ build.json @home-assistant/supervisor
 /tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
 /homeassistant/components/hyperion/ @dermotduffy
 /tests/components/hyperion/ @dermotduffy
+/homeassistant/components/hypontech/ @jcisio
+/tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/iammeter/ @lewei50
@@ -788,6 +790,8 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
+/homeassistant/components/indevolt/ @xirtnl
+/tests/components/indevolt/ @xirtnl
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01
@@ -1070,6 +1074,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
+/homeassistant/components/mta/ @OnFreund
+/tests/components/mta/ @OnFreund
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
 /homeassistant/components/music_assistant/ @music-assistant @arturpragacz
@@ -1182,6 +1188,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
 /tests/components/onedrive/ @zweckj
+/homeassistant/components/onedrive_for_business/ @zweckj
+/tests/components/onedrive_for_business/ @zweckj
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
@@ -1665,6 +1673,8 @@ build.json @home-assistant/supervisor
 /tests/components/telegram_bot/ @hanwg
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
+/homeassistant/components/teltonika/ @karlbeecken
+/tests/components/teltonika/ @karlbeecken
 /homeassistant/components/template/ @Petro31 @home-assistant/core
 /tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
