@@ -131,7 +131,7 @@ async def test_binary_sensor_last_reported(
     mock_config_entry_with_subentries: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test binary sensors only update last_reported if same state is reported."""
+    """Test binary sensors update last_reported if same state is reported."""
     events = async_capture_events(hass, "state_changed")
     await setup_integration(hass, mock_config_entry_with_subentries)
 
