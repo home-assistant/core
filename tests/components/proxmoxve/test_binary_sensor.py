@@ -47,26 +47,11 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("exception"),
     [
-        (
-            AuthenticationError("Invalid credentials"),
-            "invalid_auth",
-        ),
-        (
-            SSLError("SSL handshake failed"),
-            "ssl_error",
-        ),
-        (
-            ConnectTimeout("Connection timed out"),
-            "connect_timeout",
-        ),
-        (
-            ResourceException,
-            "resource_exception",
-        ),
-        (
-            requests.exceptions.ConnectionError,
-            "connection_error",
-        ),
+        (AuthenticationError("Invalid credentials")),
+        (SSLError("SSL handshake failed")),
+        (ConnectTimeout("Connection timed out")),
+        (ResourceException),
+        (requests.exceptions.ConnectionError),
     ],
     ids=[
         "auth_error",
