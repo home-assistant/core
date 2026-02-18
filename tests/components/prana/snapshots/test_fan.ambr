@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fans[fan.prana_recuperator_bounded-entry]
+# name: test_fans[fan.prana_recuperator_bounded_air_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.prana_recuperator_bounded',
+    'entity_id': 'fan.prana_recuperator_bounded_air_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25,12 +25,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Bounded',
+    'object_id_base': 'Bounded Air Flow',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bounded',
+    'original_name': 'Bounded Air Flow',
     'platform': 'prana',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,10 +40,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[fan.prana_recuperator_bounded-state]
+# name: test_fans[fan.prana_recuperator_bounded_air_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Bounded',
+      'friendly_name': 'PRANA RECUPERATOR Bounded Air Flow',
       'percentage': 10,
       'percentage_step': 10.0,
       'preset_mode': None,
@@ -54,14 +54,14 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.prana_recuperator_bounded',
+    'entity_id': 'fan.prana_recuperator_bounded_air_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_fans[fan.prana_recuperator_extract-entry]
+# name: test_fans[fan.prana_recuperator_extract_air_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -79,7 +79,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.prana_recuperator_extract',
+    'entity_id': 'fan.prana_recuperator_extract_air_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,12 +87,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Extract',
+    'object_id_base': 'Extract Air Flow',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Extract',
+    'original_name': 'Extract Air Flow',
     'platform': 'prana',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -102,10 +102,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[fan.prana_recuperator_extract-state]
+# name: test_fans[fan.prana_recuperator_extract_air_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Extract',
+      'friendly_name': 'PRANA RECUPERATOR Extract Air Flow',
       'preset_modes': list([
         'night',
         'boost',
@@ -113,14 +113,14 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.prana_recuperator_extract',
+    'entity_id': 'fan.prana_recuperator_extract_air_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_fans[fan.prana_recuperator_supply-entry]
+# name: test_fans[fan.prana_recuperator_supply_air_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.prana_recuperator_supply',
+    'entity_id': 'fan.prana_recuperator_supply_air_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -146,12 +146,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Supply',
+    'object_id_base': 'Supply Air Flow',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Supply',
+    'original_name': 'Supply Air Flow',
     'platform': 'prana',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -161,10 +161,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[fan.prana_recuperator_supply-state]
+# name: test_fans[fan.prana_recuperator_supply_air_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Supply',
+      'friendly_name': 'PRANA RECUPERATOR Supply Air Flow',
       'preset_modes': list([
         'night',
         'boost',
@@ -172,7 +172,7 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.prana_recuperator_supply',
+    'entity_id': 'fan.prana_recuperator_supply_air_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
