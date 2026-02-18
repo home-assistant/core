@@ -394,11 +394,8 @@ async def test_migrate_drop_bad_datasets(
     assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
-    assert f"Dropped invalid Thread dataset '{DATASET_1_NO_EXTPANID}'" in caplog.text
-    assert (
-        f"Dropped invalid Thread dataset '{DATASET_1_NO_ACTIVETIMESTAMP}'"
-        in caplog.text
-    )
+    assert caplog.text.count("Dropped invalid Thread dataset") == 2
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_bad_datasets_preferred(
@@ -463,10 +460,8 @@ async def test_migrate_drop_duplicate_datasets(
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1}' "
-        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_2(
@@ -500,10 +495,8 @@ async def test_migrate_drop_duplicate_datasets_2(
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1}' "
-        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_preferred(
@@ -537,10 +530,9 @@ async def test_migrate_drop_duplicate_datasets_preferred(
     assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1_LARGER_TIMESTAMP}' "
-        f"(duplicate of preferred dataset '{DATASET_1}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "duplicate of preferred dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_set_default_border_agent_id(
