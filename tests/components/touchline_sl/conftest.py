@@ -81,18 +81,6 @@ def mock_touchlinesl_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_touchlinesl_full_client() -> Generator[MagicMock]:
-    """Mock a pytouchlinesl client with full module/zone support."""
-    with patch(
-        "homeassistant.components.touchline_sl.TouchlineSL",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.user_id = AsyncMock(return_value=12345)
-        yield client
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
