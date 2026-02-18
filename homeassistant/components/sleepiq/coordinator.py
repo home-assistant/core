@@ -78,6 +78,8 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ sleep health data coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,

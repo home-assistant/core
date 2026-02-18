@@ -12,6 +12,9 @@
       },
       "respiratory_rate_avg": {
         "default": "mdi:lungs"
+      },
+      "hrv": {
+        "default": "mdi:heart-flash"
       }
     }
   }
