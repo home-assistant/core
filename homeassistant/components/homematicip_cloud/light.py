@@ -22,6 +22,7 @@ from homematicip.device import (
     PluggableDimmer,
     SwitchMeasuring,
     WiredDimmer3,
+    WiredPushButton,
 )
 from packaging.version import Version
 
@@ -93,6 +94,20 @@ async def async_setup_entry(
             (Dimmer, PluggableDimmer, BrandDimmer, FullFlushDimmer),
         ):
             entities.append(HomematicipDimmer(hap, device))
+        elif isinstance(device, WiredPushButton):
+            optical_channels = sorted(
+                (
+                    ch
+                    for ch in device.functionalChannels
+                    if ch.functionalChannelType
+                    == FunctionalChannelType.OPTICAL_SIGNAL_CHANNEL
+                ),
+                key=lambda ch: ch.index,
+            )
+            for led_number, ch in enumerate(optical_channels, start=1):
+                entities.append(
+                    HomematicipOpticalSignalLight(hap, device, ch.index, led_number)
+                )
 
     async_add_entities(entities)
 
@@ -421,3 +436,129 @@ def _convert_color(color: tuple) -> RGBColorState:
     if 270 < hue <= 330:
         return RGBColorState.PURPLE
     return RGBColorState.RED
+
+
+class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
+    """Representation of HomematicIP WiredPushButton LED light."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
+    _attr_translation_key = "optical_signal_light"
+
+    _effect_to_behaviour: dict[str, OpticalSignalBehaviour] = {
+        "on": OpticalSignalBehaviour.ON,
+        "blinking": OpticalSignalBehaviour.BLINKING_MIDDLE,
+        "flash": OpticalSignalBehaviour.FLASH_MIDDLE,
+        "billow": OpticalSignalBehaviour.BILLOW_MIDDLE,
+    }
+    _behaviour_to_effect: dict[OpticalSignalBehaviour, str] = {
+        v: k for k, v in _effect_to_behaviour.items()
+    }
+
+    _attr_effect_list = list(_effect_to_behaviour)
+
+    _color_switcher: dict[str, tuple[float, float]] = {
+        RGBColorState.WHITE: (0.0, 0.0),
+        RGBColorState.RED: (0.0, 100.0),
+        RGBColorState.YELLOW: (60.0, 100.0),
+        RGBColorState.GREEN: (120.0, 100.0),
+        RGBColorState.TURQUOISE: (180.0, 100.0),
+        RGBColorState.BLUE: (240.0, 100.0),
+        RGBColorState.PURPLE: (300.0, 100.0),
+    }
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: WiredPushButton,
+        channel_index: int,
+        led_number: int,
+    ) -> None:
+        """Initialize the optical signal light entity."""
+        super().__init__(
+            hap,
+            device,
+            post=f"LED {led_number}",
+            channel=channel_index,
+            is_multi_channel=True,
+            channel_real_index=channel_index,
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        channel = self.get_channel_or_raise()
+        return channel.on is True
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        channel = self.get_channel_or_raise()
+        return int((channel.dimLevel or 0.0) * 255)
+
+    @property
+    def hs_color(self) -> tuple[float, float]:
+        """Return the hue and saturation color value [float, float]."""
+        channel = self.get_channel_or_raise()
+        simple_rgb_color = channel.simpleRGBColorState
+        return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        channel = self.get_channel_or_raise()
+        return self._behaviour_to_effect.get(channel.opticalSignalBehaviour)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the optical signal light."""
+        state_attr = super().extra_state_attributes
+        channel = self.get_channel_or_raise()
+
+        if self.is_on:
+            state_attr[ATTR_COLOR_NAME] = channel.simpleRGBColorState
+
+        return state_attr
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        # Use hs_color from kwargs, if not applicable use current hs_color.
+        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        simple_rgb_color = _convert_color(hs_color)
+
+        # If no kwargs, use default value.
+        brightness = 255
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+
+        # Minimum brightness is 10, otherwise the LED is disabled
+        brightness = max(10, brightness)
+        dim_level = round(brightness / 255.0, 2)
+
+        effect = self.effect
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+        elif effect is None:
+            effect = "on"
+
+        behaviour = self._effect_to_behaviour.get(effect, OpticalSignalBehaviour.ON)
+
+        await self._device.set_optical_signal_async(
+            channelIndex=self._channel,
+            opticalSignalBehaviour=behaviour,
+            rgb=simple_rgb_color,
+            dimLevel=dim_level,
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        channel = self.get_channel_or_raise()
+        simple_rgb_color = channel.simpleRGBColorState
+
+        await self._device.set_optical_signal_async(
+            channelIndex=self._channel,
+            opticalSignalBehaviour=OpticalSignalBehaviour.OFF,
+            rgb=simple_rgb_color,
+            dimLevel=0.0,
+        )
