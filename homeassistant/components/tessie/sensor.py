@@ -159,7 +159,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_charge_port_latch",
         options=list(TessieChargePortLatchStates.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda value: TessieChargePortLatchStates.get(cast(str, value)),
+        value_fn=lambda value: TessieChargePortLatchStates[cast(str, value)],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
