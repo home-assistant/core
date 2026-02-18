@@ -171,3 +171,29 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_dongle_path"
+
+
+async def test_manual_flow_with_rfc2217_url(hass: HomeAssistant) -> None:
+    """Test the manual flow with a valid RFC2217 network URL."""
+    NETWORK_URL = "rfc2217://192.168.1.100:3333"
+
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: NETWORK_URL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE] == NETWORK_URL
+
+
+async def test_manual_flow_with_socket_url(hass: HomeAssistant) -> None:
+    """Test the manual flow with a valid socket network URL."""
+    NETWORK_URL = "socket://localhost:5000"
+
+    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: NETWORK_URL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE] == NETWORK_URL

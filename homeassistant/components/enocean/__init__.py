@@ -43,6 +43,11 @@ async def async_setup_entry(
 ) -> bool:
     """Set up an EnOcean dongle for the given entry."""
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
+    # Create communicator in executor to avoid blocking the event loop
+    usb_dongle._communicator = await hass.async_add_executor_job(  # noqa: SLF001
+        usb_dongle._create_communicator,  # noqa: SLF001
+        config_entry.data[CONF_DEVICE],
+    )
     await usb_dongle.async_setup()
     config_entry.runtime_data = usb_dongle
 
