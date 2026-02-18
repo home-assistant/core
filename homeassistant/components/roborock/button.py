@@ -111,19 +111,19 @@ class RoborockDockCommandButtonDescription(ButtonEntityDescription):
 
 DOCK_COMMAND_BUTTON_DESCRIPTIONS: list[RoborockDockCommandButtonDescription] = [
     RoborockDockCommandButtonDescription(
-        key="empty",
+        key="dock_empty",
         translation_key="dock_empty",
         api_command=RoborockCommand.APP_START_COLLECT_DUST,
         availability_fn=lambda api: api.dust_collection_mode is not None,
     ),
     RoborockDockCommandButtonDescription(
-        key="wash_mop",
+        key="dock_wash_mop",
         translation_key="dock_wash_mop",
         api_command=RoborockCommand.APP_START_WASH,
         availability_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockDockCommandButtonDescription(
-        key="stop_drying",
+        key="dock_stop_drying",
         translation_key="dock_stop_drying",
         api_command=RoborockCommand.APP_STOP_WASH,
         availability_fn=lambda api: api.wash_towel_mode is not None,
@@ -294,6 +294,6 @@ class RoborockDockCommandButtonEntity(RoborockEntityV1, ButtonEntity):
         )
         self.entity_description = entity_description
 
-    async def async_press(self) -> None:
+    async def async_press(self, **kwargs: Any) -> None:
         """Send the dock command."""
         await self.send(self.entity_description.api_command)

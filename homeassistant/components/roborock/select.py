@@ -173,7 +173,10 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         translation_key="mop_wash_mode",
         api_command=RoborockCommand.SET_WASH_TOWEL_MODE,
         value_fn=lambda api: (
-            mode.name if (mode := api.wash_towel_mode.wash_mode) is not None else None  # type: ignore[union-attr]
+            mode.name
+            if api.wash_towel_mode is not None
+            and (mode := api.wash_towel_mode.wash_mode) is not None
+            else None
         ),
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
@@ -182,7 +185,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             else None
         ),
         parameter_lambda=lambda key, _: [
-            RoborockDockWashTowelModeCode.as_dict().get(key)
+            RoborockDockWashTowelModeCode.as_dict()[key]
         ],
         is_dock_entity=True,
     ),

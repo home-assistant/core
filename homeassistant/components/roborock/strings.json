@@ -205,10 +205,10 @@
       "mop_wash_mode": {
         "name": "Mop wash mode",
         "state": {
-          "light": "[%key:component::roborock::entity::select::dust_collection_mode::state::light%]",
-          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
-          "deep": "[%key:component::roborock::entity::select::mop_mode::state::deep%]",
-          "smart": "[%key:component::roborock::entity::select::dust_collection_mode::state::smart%]"
+          "light": "Light",
+          "balanced": "Balanced",
+          "deep": "Deep",
+          "smart": "Smart"
         }
       },
       "program": {
