@@ -103,8 +103,6 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        if (optimistic := self._optimistic_state) is not None:
-            return optimistic
         if TYPE_CHECKING:
             assert self.temperature_control is not None
         return self.entity_description.value_fn(self.temperature_control)
@@ -151,5 +149,4 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
                 target=int(value),
                 unit=unit,
             ),
-            int(value),
         )

@@ -161,8 +161,6 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        if (optimistic := self._optimistic_state) is not None:
-            return bool(optimistic)
         if TYPE_CHECKING:
             assert self._toggle_control is not None
         return self._toggle_control.value
@@ -190,7 +188,7 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
 
     async def _async_set_value(self, value: bool) -> None:
         """Set the switch value."""
-        await self._async_send_command(self._async_call_set_fn(value), value)
+        await self._async_send_command(self._async_call_set_fn(value))
 
 
 class LiebherrZoneSwitch(LiebherrDeviceSwitch):
