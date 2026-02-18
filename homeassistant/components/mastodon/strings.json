@@ -216,18 +216,18 @@
       "name": "Post"
     },
     "unmute_account": {
-      "description": "Un-mutes a Mastodon account.",
+      "description": "Unmutes a Mastodon account.",
       "fields": {
         "account_name": {
           "description": "The Mastodon account username (e.g. @user@instance).",
           "name": "Account name"
         },
         "config_entry_id": {
-          "description": "Select the Mastodon instance to un-mute this account on.",
+          "description": "Select the Mastodon instance to unmute this account on.",
           "name": "Mastodon instance"
         }
       },
-      "name": "Un-mute account"
+      "name": "Unmute account"
     }
   }
 }
