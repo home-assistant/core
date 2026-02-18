@@ -19,7 +19,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LoJackConfigEntry, LoJackCoordinator, LoJackVehicleData
+from . import LoJackConfigEntry
+from .coordinator import LoJackCoordinator, LoJackVehicleData
 from .const import DOMAIN
 
 
