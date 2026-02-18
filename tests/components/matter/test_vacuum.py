@@ -7,6 +7,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -291,3 +292,54 @@ async def test_vacuum_actions_no_supported_run_modes(
 
     # Ensure no commands were sent to the device
     assert matter_client.send_device_command.call_count == 0
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_clean_area(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum clean_area action."""
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
+    entity_id = "vacuum.mock_vacuum"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Verify CLEAN_AREA feature is supported
+    # Get the entity component to access entity
+    component = hass.data["vacuum"]
+    entity = component.get_entity(entity_id)
+    assert entity is not None
+    assert VacuumEntityFeature.CLEAN_AREA in entity.supported_features
+
+    # Get segments from the entity
+    segments = await entity.async_get_segments()
+    assert len(segments) == 3
+    assert segments[0].id == "7"
+    assert segments[0].name == "My Location A"
+    assert segments[1].id == "1234567"
+    assert segments[1].name == "My Location B"
+    assert segments[2].id == "2290649224"
+    assert segments[2].name == "My Location C"
+
+    # Test clean_segments method directly
+    await entity.async_clean_segments(["7", "1234567"])
+
+    # Verify both commands were sent: SelectAreas followed by ChangeToMode
+    assert matter_client.send_device_command.call_count == 2
+
+    # First call: SelectAreas with the area IDs
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ServiceArea.Commands.SelectAreas(newAreas=[7, 1234567]),
+    )
+
+    # Second call: ChangeToMode to start cleaning (mode 1 is the CLEANING mode)
+    assert matter_client.send_device_command.call_args_list[1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
+    )
