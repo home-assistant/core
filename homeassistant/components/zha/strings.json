@@ -2051,16 +2051,16 @@
         "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {
-        "description": "Are you migrating to a new adapter or re-configuring the current adapter?",
+        "description": "Are you migrating to a new adapter or reconfiguring the current adapter?",
         "menu_option_descriptions": {
           "intent_migrate": "This will help you migrate your Zigbee network from your old adapter to a new one.",
           "intent_reconfigure": "This will let you change the serial port for your current Zigbee adapter."
         },
         "menu_options": {
           "intent_migrate": "Migrate to a new adapter",
-          "intent_reconfigure": "Re-configure the current adapter"
+          "intent_reconfigure": "Reconfigure the current adapter"
         },
-        "title": "Migrate or re-configure"
+        "title": "Migrate or reconfigure"
       },
       "restore_backup": {
         "title": "[%key:component::zha::config::step::restore_backup::title%]"

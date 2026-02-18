@@ -3,7 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "another_device": "Reconfiguration was unsuccessful, the IP address/hostname of another Shelly device was used.",
       "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
       "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "custom_port_not_supported": "[%key:component::shelly::config::error::custom_port_not_supported%]",
