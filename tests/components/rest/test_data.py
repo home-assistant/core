@@ -260,6 +260,45 @@ async def test_rest_data_xml_converted_to_json_with_nonstandard_content_type(
     assert "REST request to http://example.com/api returned status" not in caplog.text
 
 
+async def test_rest_data_json_with_nonstandard_content_type_does_not_warn(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test JSON responses still work if the server uses a nonstandard content type."""
+    aioclient_mock.get(
+        "http://example.com/api",
+        status=200,
+        text='{"status": "ok"}',
+        headers={"Content-Type": "application/x-javascript"},
+    )
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "resource": "http://example.com/api",
+                "method": "GET",
+                "sensor": [
+                    {
+                        "name": "test_sensor",
+                        "value_template": "{{ value_json.status }}",
+                    }
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state
+    assert state.state == "ok"
+
+    assert "REST xml result could not be parsed and converted to JSON" not in caplog.text
+    assert "REST request to http://example.com/api returned status" not in caplog.text
+
+
 async def test_rest_data_warning_truncates_long_responses(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
