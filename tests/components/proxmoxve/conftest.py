@@ -40,11 +40,6 @@ MOCK_TEST_CONFIG = {
             CONF_VMS: [100, 101],
             CONF_CONTAINERS: [200, 201],
         },
-        {
-            CONF_NODE: "pve2",
-            CONF_VMS: [100, 101],
-            CONF_CONTAINERS: [200, 201],
-        },
     ],
 }
 
@@ -115,9 +110,9 @@ def mock_proxmox_client():
         node_mock.lxc.side_effect = _lxc_resource
 
         nodes_mock = MagicMock()
-        nodes_mock.get.return_value = load_json_array_fixture(
-            "nodes/nodes.json", DOMAIN
-        )
+        all_nodes = load_json_array_fixture("nodes/nodes.json", DOMAIN)
+        # Filter to only pve1 to match MOCK_TEST_CONFIG
+        nodes_mock.get.return_value = [n for n in all_nodes if n["node"] == "pve1"]
         nodes_mock.__getitem__.side_effect = lambda key: node_mock
         nodes_mock.return_value = node_mock
 
