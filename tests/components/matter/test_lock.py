@@ -39,8 +39,8 @@ from .common import (
 )
 
 # Feature map bits
-_FEATURE_USR = 256  # kUser (bit 8)
 _FEATURE_PIN = 1  # kPinCredential (bit 0)
+_FEATURE_USR = 256  # kUser (bit 8)
 _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
 
 
@@ -75,7 +75,7 @@ async def test_lock(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnlockDoor(),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
     matter_client.send_device_command.reset_mock()
 
@@ -93,7 +93,7 @@ async def test_lock(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
     matter_client.send_device_command.reset_mock()
 
@@ -196,7 +196,7 @@ async def test_lock_requires_pin(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(code.encode()),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
 
     # Lock door using default code
@@ -216,7 +216,7 @@ async def test_lock_requires_pin(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.LockDoor(default_code.encode()),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
 
 
@@ -246,7 +246,7 @@ async def test_lock_with_unbolt(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnboltDoor(),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
     matter_client.send_device_command.reset_mock()
     # test open / unlatch
@@ -263,7 +263,7 @@ async def test_lock_with_unbolt(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.DoorLock.Commands.UnlockDoor(),
-        timed_request_timeout_ms=1000,
+        timed_request_timeout_ms=10000,
     )
 
     await hass.async_block_till_done()

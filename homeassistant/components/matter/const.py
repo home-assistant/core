@@ -19,48 +19,48 @@ FEATUREMAP_ATTRIBUTE_ID = 65532
 # --- Lock domain constants ---
 
 # Shared field keys
-ATTR_USER_INDEX = "user_index"
-ATTR_USER_NAME = "user_name"
-ATTR_USER_UNIQUE_ID = "user_unique_id"
-ATTR_USER_STATUS = "user_status"
-ATTR_USER_TYPE = "user_type"
 ATTR_CREDENTIAL_RULE = "credential_rule"
-ATTR_SUPPORTS_USER_MGMT = "supports_user_management"
-ATTR_MAX_USERS = "max_users"
+ATTR_MAX_CREDENTIALS_PER_USER = "max_credentials_per_user"
 ATTR_MAX_PIN_USERS = "max_pin_users"
 ATTR_MAX_RFID_USERS = "max_rfid_users"
-ATTR_MAX_CREDENTIALS_PER_USER = "max_credentials_per_user"
+ATTR_MAX_USERS = "max_users"
+ATTR_SUPPORTS_USER_MGMT = "supports_user_management"
+ATTR_USER_INDEX = "user_index"
+ATTR_USER_NAME = "user_name"
+ATTR_USER_STATUS = "user_status"
+ATTR_USER_TYPE = "user_type"
+ATTR_USER_UNIQUE_ID = "user_unique_id"
 
 # Magic values
 CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
 
 # Timed request timeout (used by all lock commands that modify state)
-LOCK_TIMED_REQUEST_TIMEOUT_MS = 1000
+LOCK_TIMED_REQUEST_TIMEOUT_MS = 10000
 
 # Service names
-SERVICE_SET_LOCK_USER = "set_lock_user"
+SERVICE_CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
 SERVICE_CLEAR_LOCK_USER = "clear_lock_user"
+SERVICE_GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
 SERVICE_GET_LOCK_INFO = "get_lock_info"
 SERVICE_GET_LOCK_USERS = "get_lock_users"
 SERVICE_SET_LOCK_CREDENTIAL = "set_lock_credential"
-SERVICE_CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
-SERVICE_GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
+SERVICE_SET_LOCK_USER = "set_lock_user"
 
 # Credential field keys
-ATTR_CREDENTIAL_TYPE = "credential_type"
-ATTR_CREDENTIAL_INDEX = "credential_index"
 ATTR_CREDENTIAL_DATA = "credential_data"
+ATTR_CREDENTIAL_INDEX = "credential_index"
+ATTR_CREDENTIAL_TYPE = "credential_type"
 
 # Error code constants
-ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
 ERR_CREDENTIAL_TYPE_NOT_SUPPORTED = "credential_type_not_supported"
+ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
 ERR_SET_CREDENTIAL_FAILED = "set_credential_failed"
 
 # Credential type strings
+CRED_TYPE_FACE = "face"
+CRED_TYPE_FINGERPRINT = "fingerprint"
 CRED_TYPE_PIN = "pin"
 CRED_TYPE_RFID = "rfid"
-CRED_TYPE_FINGERPRINT = "fingerprint"
-CRED_TYPE_FACE = "face"
 
 # Door lock operation source mapping (Matter DoorLock OperationSourceEnum)
 DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {

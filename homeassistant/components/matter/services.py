@@ -67,9 +67,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_LOCK_USER,
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Optional(ATTR_USER_INDEX): vol.Any(
-                vol.All(vol.Coerce(int), vol.Range(min=1)), None
-            ),
+            vol.Optional(ATTR_USER_INDEX): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(ATTR_USER_NAME): vol.Any(str, None),
             vol.Optional(ATTR_USER_TYPE, default="unrestricted_user"): vol.In(
                 USER_TYPE_REVERSE_MAP.keys()

@@ -1,70 +1,27 @@
-water_heater_boost:
-  target:
-    entity:
-      domain: water_heater
-      integration: matter
-  fields:
-    duration:
-      selector:
-        number:
-          min: 60
-          max: 14400
-          step: 60
-          mode: box
-      default: 3600
-      required: true
-    emergency_boost:
-      selector:
-        boolean:
-      default: false
-    temporary_setpoint:
-      selector:
-        number:
-          min: 30
-          max: 65
-          step: 1
-          mode: slider
-      default: 65
-
-set_lock_user:
+clear_lock_credential:
   target:
     entity:
       domain: lock
       integration: matter
   fields:
-    user_index:
+    credential_type:
+      selector:
+        select:
+          options:
+            - pin
+            - rfid
+            - fingerprint
+            - finger_vein
+            - face
+      required: true
+    credential_index:
       selector:
         number:
-          min: 1
-          max: 255
+          min: 0
+          max: 65534
           step: 1
           mode: box
-    user_name:
-      selector:
-        text:
-    user_type:
-      selector:
-        select:
-          options:
-            - unrestricted_user
-            - year_day_schedule_user
-            - week_day_schedule_user
-            - programming_user
-            - non_access_user
-            - forced_user
-            - disposable_user
-            - expiring_user
-            - schedule_restricted_user
-            - remote_only_user
-      default: unrestricted_user
-    credential_rule:
-      selector:
-        select:
-          options:
-            - single
-            - dual
-            - tri
-      default: single
+      required: true
 
 clear_lock_user:
   target:
@@ -76,6 +33,35 @@ clear_lock_user:
       selector:
         number:
           min: 1
+          max: 65534
+          step: 1
+          mode: box
+      required: true
+
+get_lock_credential_status:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    credential_type:
+      selector:
+        select:
+          options:
+            - programming_pin
+            - pin
+            - rfid
+            - fingerprint
+            - finger_vein
+            - face
+            - aliro_credential_issuer_key
+            - aliro_evictable_endpoint_key
+            - aliro_non_evictable_endpoint_key
+      required: true
+    credential_index:
+      selector:
+        number:
+          min: 0
           max: 65534
           step: 1
           mode: box
@@ -148,56 +134,70 @@ set_lock_credential:
             - schedule_restricted_user
             - remote_only_user
 
-clear_lock_credential:
+set_lock_user:
   target:
     entity:
       domain: lock
       integration: matter
   fields:
-    credential_type:
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          mode: box
+    user_name:
+      selector:
+        text:
+    user_type:
       selector:
         select:
           options:
-            - pin
-            - rfid
-            - fingerprint
-            - finger_vein
-            - face
-      required: true
-    credential_index:
+            - unrestricted_user
+            - year_day_schedule_user
+            - week_day_schedule_user
+            - programming_user
+            - non_access_user
+            - forced_user
+            - disposable_user
+            - expiring_user
+            - schedule_restricted_user
+            - remote_only_user
+      default: unrestricted_user
+    credential_rule:
       selector:
-        number:
-          min: 0
-          max: 65534
-          step: 1
-          mode: box
-      required: true
+        select:
+          options:
+            - single
+            - dual
+            - tri
+      default: single
 
-get_lock_credential_status:
+water_heater_boost:
   target:
     entity:
-      domain: lock
+      domain: water_heater
       integration: matter
   fields:
-    credential_type:
-      selector:
-        select:
-          options:
-            - programming_pin
-            - pin
-            - rfid
-            - fingerprint
-            - finger_vein
-            - face
-            - aliro_credential_issuer_key
-            - aliro_evictable_endpoint_key
-            - aliro_non_evictable_endpoint_key
-      required: true
-    credential_index:
+    duration:
       selector:
         number:
-          min: 0
-          max: 65534
-          step: 1
+          min: 60
+          max: 14400
+          step: 60
           mode: box
+      default: 3600
       required: true
+    emergency_boost:
+      selector:
+        boolean:
+      default: false
+    temporary_setpoint:
+      selector:
+        number:
+          min: 30
+          max: 65
+          step: 1
+          mode: slider
+      default: 65
