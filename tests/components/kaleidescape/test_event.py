@@ -9,13 +9,11 @@ import pytest
 
 from homeassistant.components.kaleidescape import event
 from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_COMMAND, CONF_PARAMS
+from homeassistant.const import CONF_COMMAND, CONF_PARAMS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_SERIAL, find_event_update_callback
-
-FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"
 
 
 @pytest.mark.usefixtures("mock_integration")
@@ -38,8 +36,9 @@ async def test_handle_user_defined_volume_event(
     entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
+    assert entry.has_entity_name is True
+    assert entry.translation_key == event.EVENT_VOLUME_QUERY
     assert entry.unique_id == f"{MOCK_SERIAL}-volume_query"
 
     # Test event handling
@@ -89,8 +88,9 @@ async def test_handle_user_defined_volume_set_event(
     entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
+    assert entry.has_entity_name is True
+    assert entry.translation_key == event.EVENT_VOLUME_SET
     assert entry.unique_id == f"{MOCK_SERIAL}-volume_set"
 
     # Test event handling
@@ -149,8 +149,9 @@ async def test_handle_user_defined_event(
     entry = entity_registry.async_get(entity_id)
     assert entity is not None
     assert entity.state == "unknown"
-    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == FRIENDLY_NAME
     assert entry
+    assert entry.has_entity_name is True
+    assert entry.translation_key == event.EVENT_USER_DEFINED
     assert entry.unique_id == f"{MOCK_SERIAL}-user_defined"
 
     # Test event handling
