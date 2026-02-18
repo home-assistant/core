@@ -71,19 +71,6 @@ async def test_switch_state(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    ("action", "command"),
-    [
-        (
-            SERVICE_TURN_ON,
-            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
-        ),
-        (
-            SERVICE_TURN_OFF,
-            "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
-        ),
-    ],
-)
 async def test_turn_on_off_display_raises_error(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
