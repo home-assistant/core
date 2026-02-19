@@ -68,5 +68,5 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
 
     @property
     def available(self) -> bool:
-        """Returns whether entity is available."""
+        """Return if entity is available."""
         return super().available and self._controller.connected
