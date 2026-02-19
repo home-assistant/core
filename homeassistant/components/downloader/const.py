@@ -13,8 +13,6 @@ ATTR_URL = "url"
 ATTR_OVERWRITE = "overwrite"
 ATTR_HEADERS = "headers"
 
-CONF_DOWNLOAD_DIR = "download_dir"
-
 DOWNLOAD_FAILED_EVENT = "download_failed"
 DOWNLOAD_COMPLETED_EVENT = "download_completed"
 
