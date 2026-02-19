@@ -39,9 +39,9 @@ ZONE_MODE_TO_HA = {
 }
 
 HA_TO_FAN_MODE = {
-    "Auto": FanMode.AUTO,
-    "On": FanMode.ALWAYS_ON,
-    "Circulate": FanMode.CIRCULATE,
+    "auto": FanMode.AUTO,
+    "on": FanMode.ALWAYS_ON,
+    "circulate": FanMode.CIRCULATE,
 }
 
 FAN_MODE_TO_HA = {v: k for k, v in HA_TO_FAN_MODE.items()}
@@ -66,6 +66,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     """Climate entity for a Trane thermostat zone."""
 
     _attr_name = None
+    _attr_translation_key = "zone"
     _attr_fan_modes = list(HA_TO_FAN_MODE)
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -151,7 +152,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str:
         """Return the current fan mode."""
-        return FAN_MODE_TO_HA.get(self._conn.state.fan_mode, "Auto")
+        return FAN_MODE_TO_HA.get(self._conn.state.fan_mode, "auto")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -159,14 +160,8 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
             self._conn.set_zone_mode(self._zone_id, ZoneMode.OFF)
             return
 
-        if hvac_mode == HVACMode.AUTO:
-            self._conn.set_temperature_setpoint(
-                self._zone_id, hold_type=HoldType.SCHEDULE
-            )
-        else:
-            self._conn.set_temperature_setpoint(
-                self._zone_id, hold_type=HoldType.MANUAL
-            )
+        hold_type = HoldType.SCHEDULE if hvac_mode == HVACMode.AUTO else HoldType.MANUAL
+        self._conn.set_temperature_setpoint(self._zone_id, hold_type=hold_type)
 
         self._conn.set_zone_mode(self._zone_id, HA_TO_ZONE_MODE[hvac_mode])
 

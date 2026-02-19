@@ -25,6 +25,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "zone": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "on": "[%key:common::state::on%]",
+              "circulate": "Circulate"
+            }
+          }
+        }
+      }
+    },
     "switch": {
       "hold": {
         "name": "Hold"

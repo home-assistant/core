@@ -175,9 +175,9 @@ async def test_set_temperature_single(
 @pytest.mark.parametrize(
     ("fan_mode", "expected_fan_mode"),
     [
-        ("Auto", FanMode.AUTO),
-        ("On", FanMode.ALWAYS_ON),
-        ("Circulate", FanMode.CIRCULATE),
+        ("auto", FanMode.AUTO),
+        ("on", FanMode.ALWAYS_ON),
+        ("circulate", FanMode.CIRCULATE),
     ],
 )
 async def test_set_fan_mode(
