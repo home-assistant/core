@@ -381,7 +381,7 @@ async def test_setup_get_json_mislabeled_as_x_javascript(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup when JSON is mislabeled with an XML content type."""
+    """Test setup when JSON is mislabeled with a JavaScript content type."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
