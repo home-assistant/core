@@ -849,7 +849,7 @@ async def test_auth_error_while_updating_appliance(
         (
             [
                 TooManyRequestsError("rate-limit-error", retry_after=0.1),
-                Exception("error-to-stop-retryiung"),
+                Exception("error-to-stop-retrying"),
             ],
             "WARNING",
             r"Rate limit exceeded, retrying in 0.1 seconds.*rate-limit-error",
