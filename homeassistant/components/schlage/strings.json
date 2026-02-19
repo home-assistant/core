@@ -59,9 +59,6 @@
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock"
     },
-    "schlage_code_required": {
-      "message": "PIN code is required"
-    },
     "schlage_name_exists": {
       "message": "A PIN code with name of '{name}' already exists on the lock"
     },
@@ -78,7 +75,7 @@
           "name": "PIN code"
         },
         "name": {
-          "description": "Name for PIN code. Must be case insensitvely unique to lock.",
+          "description": "Name for PIN code. Must be case insensitively unique to lock.",
           "name": "PIN Name"
         }
       },
