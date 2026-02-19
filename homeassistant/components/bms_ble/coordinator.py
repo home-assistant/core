@@ -18,13 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER, LOW_RSSI, UPDATE_INTERVAL
 
 
 class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
     """Update coordinator for a battery management system."""
-
-    _LOW_RSSI: Final = -75  # dBm considered low signal strength
 
     def __init__(
         self,
@@ -76,10 +74,10 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         return service_info.rssi if service_info else None
 
     def _rssi_msg(self) -> str:
-        """Return check RSSI message if below _LOW_RSSI dBm."""
+        """Return check RSSI message if below LOW_RSSI dBm."""
         return (
             f", check signal strength ({self.rssi} dBm)"
-            if self.rssi and self.rssi < self._LOW_RSSI
+            if self.rssi and self.rssi < LOW_RSSI
             else ""
         )
 
