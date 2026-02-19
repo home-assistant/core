@@ -6,6 +6,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -25,6 +26,25 @@
         },
         "description": "The Splunk token is no longer valid. Please enter a new HTTP Event Collector token.",
         "title": "Reauthenticate Splunk"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "token": "HTTP Event Collector token",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::splunk::config::step::user::data_description::host%]",
+          "name": "[%key:component::splunk::config::step::user::data_description::name%]",
+          "port": "[%key:component::splunk::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::splunk::config::step::user::data_description::ssl%]",
+          "token": "[%key:component::splunk::config::step::user::data_description::token%]",
+          "verify_ssl": "[%key:component::splunk::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Update your Splunk HTTP Event Collector connection settings."
       },
       "user": {
         "data": {
