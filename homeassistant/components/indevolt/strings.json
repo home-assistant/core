@@ -255,6 +255,17 @@
       "total_ac_output_energy": {
         "name": "Total AC output energy"
       }
+    },
+    "switch": {
+      "bypass": {
+        "name": "Bypass socket"
+      },
+      "grid_charging": {
+        "name": "Allow grid charging"
+      },
+      "light": {
+        "name": "LED indicator"
+      }
     }
   }
 }
