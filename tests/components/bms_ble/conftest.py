@@ -141,7 +141,7 @@ def mock_config(
     """Return a Mock of the HA entity config (latest version)."""
     return MockConfigEntry(
         domain=DOMAIN,
-        version=2,
+        version=1,
         minor_version=0,
         unique_id=unique_id,
         data={"type": f"aiobmsble.bms.{bms}"},
