@@ -165,14 +165,14 @@ class SCSGateScenarioSwitch:
         self._hass = hass
 
     @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
     def scs_id(self):
         """Return the SCS ID."""
         return self._scs_id
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._name
 
     def process_event(self, message):
         """Handle a SCSGate message related with this switch."""
