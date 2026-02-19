@@ -91,7 +91,7 @@ def _async_create_update_entity(
         entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
             ApplicationType(firmware_type)
         ]
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         _LOGGER.debug(
             "Unknown firmware type %r, using default entity description", firmware_type
         )

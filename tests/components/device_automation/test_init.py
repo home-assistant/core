@@ -34,11 +34,6 @@ class MockDeviceEntry(dr.DeviceEntry):
     id: str = attr.ib(default="very_unique")
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""

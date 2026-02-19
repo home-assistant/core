@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from aiohttp.client_exceptions import ClientError
 import tibber
-from tibber.data_api import TibberDataAPI, TibberDevice
+from tibber.data_api import TibberDevice
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -230,28 +230,26 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             return device_sensors.get(sensor_id)
         return None
 
-    async def _async_get_client(self) -> TibberDataAPI:
-        """Get the Tibber Data API client with error handling."""
+    async def _async_get_client(self) -> tibber.Tibber:
+        """Get the Tibber client with error handling."""
         try:
             return await self._runtime_data.async_get_client(self.hass)
         except ConfigEntryAuthFailed:
             raise
         except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
-            raise UpdateFailed(
-                f"Unable to create Tibber Data API client: {err}"
-            ) from err
+            raise UpdateFailed(f"Unable to create Tibber client: {err}") from err
 
     async def _async_setup(self) -> None:
         """Initial load of Tibber Data API devices."""
         client = await self._async_get_client()
-        devices = await client.get_all_devices()
+        devices = await client.data_api.get_all_devices()
         self._build_sensor_lookup(devices)
 
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""
         client = await self._async_get_client()
         try:
-            devices: dict[str, TibberDevice] = await client.update_devices()
+            devices: dict[str, TibberDevice] = await client.data_api.update_devices()
         except tibber.exceptions.RateLimitExceededError as err:
             raise UpdateFailed(
                 f"Rate limit exceeded, retry after {err.retry_after} seconds",
