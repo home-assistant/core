@@ -5,6 +5,7 @@ import ctypes
 import logging
 import struct
 import threading
+from typing import Any
 
 import pyads
 
@@ -62,6 +63,15 @@ class AdsHub:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
+
+    def write_list_by_name(self, items: list[tuple[str, Any, Any]]) -> None:
+        """Write multiple values to the device by variable names."""
+        with self._lock:
+            try:
+                data = {name: value for (name, value, _dtype) in items}
+                self._client.write_list_by_name(data)
+            except pyads.ADSError as err:
+                _LOGGER.error("Error writing list: %s", err)
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""

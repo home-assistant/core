@@ -10,6 +10,9 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -28,23 +31,97 @@ from .entity import AdsEntity
 from .hub import AdsHub
 
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
+CONF_MIN_BRIGHTNESS = "min_brightness"
+CONF_MAX_BRIGHTNESS = "max_brightness"
 CONF_ADS_VAR_COLOR_TEMP_KELVIN = "adsvar_color_temp_kelvin"
 CONF_MIN_COLOR_TEMP_KELVIN = "min_color_temp_kelvin"
 CONF_MAX_COLOR_TEMP_KELVIN = "max_color_temp_kelvin"
+CONF_ADS_VAR_RED = "adsvar_red"
+CONF_ADS_VAR_GREEN = "adsvar_green"
+CONF_ADS_VAR_BLUE = "adsvar_blue"
+CONF_ADS_VAR_WHITE = "adsvar_white"
+CONF_ADS_VAR_HUE = "adsvar_hue"
+CONF_ADS_VAR_SATURATION = "adsvar_saturation"
+CONF_ADS_VAR_COLOR_MODE = "adsvar_color_mode"
+
 STATE_KEY_BRIGHTNESS = "brightness"
 STATE_KEY_COLOR_TEMP_KELVIN = "color_temp_kelvin"
+STATE_KEY_RED = "red"
+STATE_KEY_GREEN = "green"
+STATE_KEY_BLUE = "blue"
+STATE_KEY_WHITE = "white"
+STATE_KEY_HUE = "hue"
+STATE_KEY_SATURATION = "saturation"
+STATE_KEY_COLOR_MODE = "color_mode"
 
 DEFAULT_NAME = "ADS Light"
+DEFAULT_MIN_BRIGHTNESS = 0
+DEFAULT_MAX_BRIGHTNESS = 255
+
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
+        vol.Optional(CONF_MIN_BRIGHTNESS, default=DEFAULT_MIN_BRIGHTNESS): vol.Coerce(
+            int
+        ),
+        vol.Optional(CONF_MAX_BRIGHTNESS, default=DEFAULT_MAX_BRIGHTNESS): vol.Coerce(
+            int
+        ),
         vol.Optional(CONF_ADS_VAR_COLOR_TEMP_KELVIN): cv.string,
         vol.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
         vol.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+        vol.Optional(CONF_ADS_VAR_RED): cv.string,
+        vol.Optional(CONF_ADS_VAR_GREEN): cv.string,
+        vol.Optional(CONF_ADS_VAR_BLUE): cv.string,
+        vol.Optional(CONF_ADS_VAR_WHITE): cv.string,
+        vol.Optional(CONF_ADS_VAR_HUE): cv.string,
+        vol.Optional(CONF_ADS_VAR_SATURATION): cv.string,
+        vol.Optional(CONF_ADS_VAR_COLOR_MODE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+
+def _scale_value(
+    value: int, from_min: int, from_max: int, to_min: int, to_max: int
+) -> int:
+    """Scale a value linearly from one numeric range to another.
+
+    Returns to_min when from_min equals from_max to avoid a division by zero.
+    """
+    if from_max == from_min:
+        return to_min
+    return round(
+        to_min + (value - from_min) * (to_max - to_min) / (from_max - from_min)
+    )
+
+
+def _map_color_mode(raw: int) -> ColorMode:
+    """Map a TwinCAT bitmask value to a single Home Assistant ColorMode.
+
+    The PLC writes a bitmask where each bit represents one capability:
+      Bit 0 (1)  – on/off only
+      Bit 1 (2)  – brightness (dimmer)
+      Bit 2 (4)  – color temperature
+      Bit 3 (8)  – hue/saturation
+      Bit 4 (16) – RGB
+      Bit 5 (32) – white channel
+    RGBW is indicated by bits 4 and 5 set simultaneously (value 48).
+    """
+    if (raw & 16) and (raw & 32):
+        return ColorMode.RGBW
+    if raw & 16:
+        return ColorMode.RGB
+    if raw & 8:
+        return ColorMode.HS
+    if raw & 32:
+        return ColorMode.WHITE
+    if raw & 4:
+        return ColorMode.COLOR_TEMP
+    if raw & 2:
+        return ColorMode.BRIGHTNESS
+    return ColorMode.ONOFF
 
 
 def setup_platform(
@@ -58,9 +135,18 @@ def setup_platform(
 
     ads_var_enable: str = config[CONF_ADS_VAR]
     ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)
+    min_brightness: int = config[CONF_MIN_BRIGHTNESS]
+    max_brightness: int = config[CONF_MAX_BRIGHTNESS]
     ads_var_color_temp_kelvin: str | None = config.get(CONF_ADS_VAR_COLOR_TEMP_KELVIN)
     min_color_temp_kelvin: int | None = config.get(CONF_MIN_COLOR_TEMP_KELVIN)
     max_color_temp_kelvin: int | None = config.get(CONF_MAX_COLOR_TEMP_KELVIN)
+    ads_var_red: str | None = config.get(CONF_ADS_VAR_RED)
+    ads_var_green: str | None = config.get(CONF_ADS_VAR_GREEN)
+    ads_var_blue: str | None = config.get(CONF_ADS_VAR_BLUE)
+    ads_var_white: str | None = config.get(CONF_ADS_VAR_WHITE)
+    ads_var_hue: str | None = config.get(CONF_ADS_VAR_HUE)
+    ads_var_saturation: str | None = config.get(CONF_ADS_VAR_SATURATION)
+    ads_var_color_mode: str | None = config.get(CONF_ADS_VAR_COLOR_MODE)
     name: str = config[CONF_NAME]
 
     add_entities(
@@ -69,9 +155,18 @@ def setup_platform(
                 ads_hub,
                 ads_var_enable,
                 ads_var_brightness,
+                min_brightness,
+                max_brightness,
                 ads_var_color_temp_kelvin,
                 min_color_temp_kelvin,
                 max_color_temp_kelvin,
+                ads_var_red,
+                ads_var_green,
+                ads_var_blue,
+                ads_var_white,
+                ads_var_hue,
+                ads_var_saturation,
+                ads_var_color_mode,
                 name,
             )
         ]
@@ -86,29 +181,73 @@ class AdsLight(AdsEntity, LightEntity):
         ads_hub: AdsHub,
         ads_var_enable: str,
         ads_var_brightness: str | None,
+        min_brightness: int,
+        max_brightness: int,
         ads_var_color_temp_kelvin: str | None,
         min_color_temp_kelvin: int | None,
         max_color_temp_kelvin: int | None,
+        ads_var_red: str | None,
+        ads_var_green: str | None,
+        ads_var_blue: str | None,
+        ads_var_white: str | None,
+        ads_var_hue: str | None,
+        ads_var_saturation: str | None,
+        ads_var_color_mode: str | None,
         name: str,
     ) -> None:
         """Initialize AdsLight entity."""
         super().__init__(ads_hub, name, ads_var_enable)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None
         self._state_dict[STATE_KEY_COLOR_TEMP_KELVIN] = None
-        self._ads_var_brightness = ads_var_brightness
-        self._ads_var_color_temp_kelvin = ads_var_color_temp_kelvin
+        self._state_dict[STATE_KEY_RED] = None
+        self._state_dict[STATE_KEY_GREEN] = None
+        self._state_dict[STATE_KEY_BLUE] = None
+        self._state_dict[STATE_KEY_WHITE] = None
+        self._state_dict[STATE_KEY_HUE] = None
+        self._state_dict[STATE_KEY_SATURATION] = None
+        self._state_dict[STATE_KEY_COLOR_MODE] = None
 
-        # Determine supported color modes
+        self._ads_var_brightness = ads_var_brightness
+        self._min_brightness = min_brightness
+        self._max_brightness = max_brightness
+        self._ads_var_color_temp_kelvin = ads_var_color_temp_kelvin
+        self._ads_var_red = ads_var_red
+        self._ads_var_green = ads_var_green
+        self._ads_var_blue = ads_var_blue
+        self._ads_var_white = ads_var_white
+        self._ads_var_hue = ads_var_hue
+        self._ads_var_saturation = ads_var_saturation
+        self._ads_var_color_mode = ads_var_color_mode
+
+        # Determine supported color modes from the configured channel variables
         color_modes = {ColorMode.ONOFF}
         if ads_var_brightness is not None:
             color_modes.add(ColorMode.BRIGHTNESS)
         if ads_var_color_temp_kelvin is not None:
             color_modes.add(ColorMode.COLOR_TEMP)
+        if ads_var_hue is not None and ads_var_saturation is not None:
+            color_modes.add(ColorMode.HS)
+        if ads_var_red and ads_var_green and ads_var_blue and ads_var_white:
+            color_modes.add(ColorMode.RGBW)
+        elif ads_var_red and ads_var_green and ads_var_blue:
+            color_modes.add(ColorMode.RGB)
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
-        self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
-        # Set color temperature range (static config values take precedence over defaults)
+        # Pick the richest supported mode as the static default (used as fallback)
+        for preferred in (
+            ColorMode.RGBW,
+            ColorMode.RGB,
+            ColorMode.HS,
+            ColorMode.COLOR_TEMP,
+        ):
+            if preferred in self._attr_supported_color_modes:
+                self._attr_color_mode = preferred
+                break
+        else:
+            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
+
+        # Color temperature range is only relevant when the CT channel is configured
         if ads_var_color_temp_kelvin is not None:
             self._attr_min_color_temp_kelvin = (
                 min_color_temp_kelvin
@@ -120,6 +259,26 @@ class AdsLight(AdsEntity, LightEntity):
                 if max_color_temp_kelvin is not None
                 else DEFAULT_MAX_KELVIN
             )
+
+    def _scale_brightness_to_ads(self, hass_brightness: int) -> int:
+        """Scale brightness from the Home Assistant range (0–255) to the ADS range."""
+        return _scale_value(
+            hass_brightness,
+            0,
+            255,
+            self._min_brightness,
+            self._max_brightness,
+        )
+
+    def _scale_brightness_from_ads(self, ads_brightness: int) -> int:
+        """Scale brightness from the ADS range to the Home Assistant range (0–255)."""
+        return _scale_value(
+            ads_brightness,
+            self._min_brightness,
+            self._max_brightness,
+            0,
+            255,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
@@ -139,10 +298,66 @@ class AdsLight(AdsEntity, LightEntity):
                 STATE_KEY_COLOR_TEMP_KELVIN,
             )
 
+        if self._ads_var_red is not None:
+            await self.async_initialize_device(
+                self._ads_var_red,
+                pyads.PLCTYPE_USINT,
+                STATE_KEY_RED,
+            )
+
+        if self._ads_var_green is not None:
+            await self.async_initialize_device(
+                self._ads_var_green,
+                pyads.PLCTYPE_USINT,
+                STATE_KEY_GREEN,
+            )
+
+        if self._ads_var_blue is not None:
+            await self.async_initialize_device(
+                self._ads_var_blue,
+                pyads.PLCTYPE_USINT,
+                STATE_KEY_BLUE,
+            )
+
+        if self._ads_var_white is not None:
+            await self.async_initialize_device(
+                self._ads_var_white,
+                pyads.PLCTYPE_USINT,
+                STATE_KEY_WHITE,
+            )
+
+        if self._ads_var_hue is not None:
+            await self.async_initialize_device(
+                self._ads_var_hue,
+                pyads.PLCTYPE_UINT,
+                STATE_KEY_HUE,
+            )
+
+        if self._ads_var_saturation is not None:
+            await self.async_initialize_device(
+                self._ads_var_saturation,
+                pyads.PLCTYPE_UINT,
+                STATE_KEY_SATURATION,
+            )
+
+        if self._ads_var_color_mode is not None:
+            await self.async_initialize_device(
+                self._ads_var_color_mode,
+                pyads.PLCTYPE_UINT,
+                STATE_KEY_COLOR_MODE,
+            )
+
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of the light (0..255)."""
-        return self._state_dict[STATE_KEY_BRIGHTNESS]
+        """Return the brightness of the light (0–255).
+
+        The raw ADS value is scaled from the configured PLC range to the
+        Home Assistant range (0–255).
+        """
+        ads_brightness = self._state_dict[STATE_KEY_BRIGHTNESS]
+        if ads_brightness is not None:
+            return self._scale_brightness_from_ads(int(ads_brightness))
+        return None
 
     @property
     def color_temp_kelvin(self) -> int | None:
@@ -150,26 +365,127 @@ class AdsLight(AdsEntity, LightEntity):
         return self._state_dict[STATE_KEY_COLOR_TEMP_KELVIN]
 
     @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        hue = self._state_dict[STATE_KEY_HUE]
+        saturation = self._state_dict[STATE_KEY_SATURATION]
+        if hue is not None and saturation is not None:
+            return (float(hue), float(saturation))
+        return None
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color value [int, int, int]."""
+        red = self._state_dict[STATE_KEY_RED]
+        green = self._state_dict[STATE_KEY_GREEN]
+        blue = self._state_dict[STATE_KEY_BLUE]
+        if red is not None and green is not None and blue is not None:
+            return (int(red), int(green), int(blue))
+        return None
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the RGBW color value [int, int, int, int]."""
+        red = self._state_dict[STATE_KEY_RED]
+        green = self._state_dict[STATE_KEY_GREEN]
+        blue = self._state_dict[STATE_KEY_BLUE]
+        white = self._state_dict[STATE_KEY_WHITE]
+        if (
+            red is not None
+            and green is not None
+            and blue is not None
+            and white is not None
+        ):
+            return (int(red), int(green), int(blue), int(white))
+        return None
+
+    @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the active color mode of the light.
+
+        When adsvar_color_mode is configured, the PLC reports the active mode
+        as a bitmask (see _map_color_mode). Falls back to the statically
+        determined default when the variable is absent or its value is not
+        within the supported modes.
+        """
+        raw = self._state_dict.get(STATE_KEY_COLOR_MODE)
+        if raw is not None:
+            mapped = _map_color_mode(int(raw))
+            if (
+                self._attr_supported_color_modes
+                and mapped in self._attr_supported_color_modes
+            ):
+                return mapped
+        return self._attr_color_mode
+
+    @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on or set a specific dimmer value."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        """Turn the light on or set specific values."""
+        to_write: list[tuple[str, Any, Any]] = []
 
-        self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
+        to_write.append((self._ads_var, True, pyads.PLCTYPE_BOOL))
 
-        if self._ads_var_brightness is not None and brightness is not None:
-            self._ads_hub.write_by_name(
-                self._ads_var_brightness, brightness, pyads.PLCTYPE_UINT
+        if self._ads_var_brightness is not None and ATTR_BRIGHTNESS in kwargs:
+            ads_brightness = self._scale_brightness_to_ads(kwargs[ATTR_BRIGHTNESS])
+            to_write.append(
+                (self._ads_var_brightness, ads_brightness, pyads.PLCTYPE_UINT)
             )
 
-        if self._ads_var_color_temp_kelvin is not None and color_temp is not None:
-            self._ads_hub.write_by_name(
-                self._ads_var_color_temp_kelvin, color_temp, pyads.PLCTYPE_UINT
+        if (
+            self._ads_var_color_temp_kelvin is not None
+            and ATTR_COLOR_TEMP_KELVIN in kwargs
+        ):
+            to_write.append(
+                (
+                    self._ads_var_color_temp_kelvin,
+                    kwargs[ATTR_COLOR_TEMP_KELVIN],
+                    pyads.PLCTYPE_UINT,
+                )
             )
+
+        if (
+            self._ads_var_hue is not None
+            and self._ads_var_saturation is not None
+            and ATTR_HS_COLOR in kwargs
+        ):
+            h, s = kwargs[ATTR_HS_COLOR]
+            to_write.append((self._ads_var_hue, int(h), pyads.PLCTYPE_UINT))
+            to_write.append((self._ads_var_saturation, int(s), pyads.PLCTYPE_UINT))
+
+        if (
+            self._ads_var_red is not None
+            and self._ads_var_green is not None
+            and self._ads_var_blue is not None
+        ):
+            if self._ads_var_white is not None and ATTR_RGBW_COLOR in kwargs:
+                r, g, b, w = kwargs[ATTR_RGBW_COLOR]
+                to_write.extend(
+                    [
+                        (self._ads_var_red, int(r), pyads.PLCTYPE_UINT),
+                        (self._ads_var_green, int(g), pyads.PLCTYPE_UINT),
+                        (self._ads_var_blue, int(b), pyads.PLCTYPE_UINT),
+                        (self._ads_var_white, int(w), pyads.PLCTYPE_UINT),
+                    ]
+                )
+            elif ATTR_RGB_COLOR in kwargs:
+                r, g, b = kwargs[ATTR_RGB_COLOR]
+                to_write.extend(
+                    [
+                        (self._ads_var_red, int(r), pyads.PLCTYPE_UINT),
+                        (self._ads_var_green, int(g), pyads.PLCTYPE_UINT),
+                        (self._ads_var_blue, int(b), pyads.PLCTYPE_UINT),
+                    ]
+                )
+
+        if len(to_write) == 1:
+            var, value, plc_type = to_write[0]
+            self._ads_hub.write_by_name(var, value, plc_type)
+        else:
+            self._ads_hub.write_list_by_name(to_write)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
