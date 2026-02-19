@@ -249,7 +249,6 @@ class HistoryStats:
                 # We are entering a matching state.
                 # This marks the start of a new candidate block that may later
                 # qualify if it lasts at least min_state_duration.
-                match_count += 1
                 last_state_change_timestamp = max(
                     start_timestamp, state_change_timestamp
                 )
@@ -259,11 +258,10 @@ class HistoryStats:
                 # evaluate its total duration.
                 block_duration = state_change_timestamp - last_state_change_timestamp
                 if block_duration >= self._min_state_duration:
-                    # The block lasted long enough so we accumulate its duration.
+                    # The block lasted long enough so we increment match count
+                    # and accumulate its duration.
                     elapsed += block_duration
-                else:
-                    # The block was too short so we need to revert the increment.
-                    match_count -= 1
+                    match_count += 1
 
             previous_state_matches = current_state_matches
 
@@ -275,11 +273,10 @@ class HistoryStats:
             measure_end = min(end_timestamp, now_timestamp)
             last_state_duration = measure_end - last_state_change_timestamp
             if last_state_duration >= self._min_state_duration:
-                # The open block lasted long enough so we accumulate its duration.
+                # The open block lasted long enough so we increment match count
+                # and accumulate its duration.
                 elapsed += last_state_duration
-            else:
-                # The open block was too short so we need to revert the increment.
-                match_count -= 1
+                match_count += 1
 
         # Save value in seconds
         seconds_matched = elapsed
