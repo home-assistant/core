@@ -58,4 +58,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bo
     )
     LOGGER.debug("Unloaded config entry: %s, ok? %s!", entry.unique_id, str(unload_ok))
 
+    if unload_ok and getattr(entry, "runtime_data", None) is not None:
+        await entry.runtime_data.async_shutdown()
+
     return unload_ok
