@@ -1,5 +1,7 @@
 """Support for Free Mobile SMS platform."""
 
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -12,10 +14,11 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,12 +43,39 @@ async def async_get_service(
 ) -> FreeSMSNotificationService | None:
     """Get the Free Mobile SMS notification service."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+
+    if result.get("type") == "abort" and result.get("reason") != "already_configured":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Free Mobile",
+            },
+        )
+        await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+        return FreeSMSNotificationService(
+            config[CONF_USERNAME], config[CONF_ACCESS_TOKEN]
+        )
+
     ir.async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2026.7.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         translation_key="deprecated_yaml",
         severity=ir.IssueSeverity.WARNING,
         translation_placeholders={
@@ -76,8 +106,12 @@ class FreeSMSNotifyEntity(NotifyEntity):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the service."""
-        # Use the client from runtime_data
         self._config_entry = config_entry
+        self._attr_unique_id = config_entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name="Free Mobile",
+        )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to the Free Mobile user cell."""

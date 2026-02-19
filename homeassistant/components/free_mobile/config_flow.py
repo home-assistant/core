@@ -20,6 +20,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Free Mobile config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -44,7 +45,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(
                         client.send_sms, "Home Assistant test"
                     )
-                except Exception:
+                except AssertionError:
                     _LOGGER.exception("Failed to send test SMS")
                     errors["base"] = "test_sms_failed"
 
@@ -64,7 +65,10 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title="Free Mobile", data=user_input)
+            return self.async_create_entry(
+                title=f"Free Mobile ({user_input[CONF_USERNAME]})",
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -76,3 +80,8 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import config from YAML."""
+        self._async_abort_entries_match({CONF_USERNAME: import_data[CONF_USERNAME]})
+        return await self.async_step_user(import_data)

@@ -546,6 +546,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/foscam/ @Foscam-wangzhengyu
 /tests/components/foscam/ @Foscam-wangzhengyu
 /homeassistant/components/free_mobile/ @denics
+/tests/components/free_mobile/ @denics
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
