@@ -40,7 +40,7 @@ def download_file(service: ServiceCall) -> None:
     subdir: str | None = service.data.get(ATTR_SUBDIR)
     target_filename: str | None = service.data.get(ATTR_FILENAME)
     overwrite: bool = service.data[ATTR_OVERWRITE]
-    headers: dict = service.data[ATTR_HEADERS]
+    headers: dict[str, str] = service.data[ATTR_HEADERS]
 
     if subdir:
         # Check the path
