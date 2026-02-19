@@ -75,7 +75,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
 
     def _rssi_msg(self) -> str:
         """Return check RSSI message if below LOW_RSSI dBm."""
-        rssi = self.rssi
+        rssi: Final = self.rssi
         return (
             f", check signal strength ({rssi} dBm)"
             if rssi is not None and rssi < LOW_RSSI
@@ -144,7 +144,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
                 "%s: BMS communication timed out%s", self.name, self._rssi_msg()
             )
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key=("bms_timeout")
+                translation_domain=DOMAIN, translation_key="bms_timeout"
             ) from err
         except (BleakError, EOFError) as err:
             LOGGER.debug(
@@ -156,7 +156,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
             )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key=("bms_com_fail"),
+                translation_key="bms_com_fail",
                 translation_placeholders={
                     "err_msg": f"{err!s} ({type(err).__name__})",
                 },
