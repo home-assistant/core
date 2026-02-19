@@ -272,6 +272,13 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if current_val == pre_reset:
                     # Value equals yesterday's final value — the API is
                     # serving a stale cached response (bounce)
+                    _LOGGER.debug(
+                        "Suppressing midnight bounce for %s: stale value %s matches "
+                        "pre-reset value, keeping %s",
+                        variable,
+                        current_val,
+                        previous_value,
+                    )
                     return_value = previous_value
                 elif current_val > 0:
                     # Genuine new-day production — clear tracking
