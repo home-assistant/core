@@ -36,6 +36,7 @@ class AlertEntity(Entity):
     """
 
     _attr_should_poll = False
+    _attr_name: str
 
     def __init__(
         self,

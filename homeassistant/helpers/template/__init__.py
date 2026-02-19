@@ -410,19 +410,19 @@ class Template:
     def render(
         self,
         variables: TemplateVarsType = None,
-        parse_result: Literal[False] = False,
+        parse_result: Literal[True] = True,
         limited: bool = False,
         **kwargs: Any,
-    ) -> str: ...
+    ) -> Any: ...
 
     @overload
     def render(
         self,
         variables: TemplateVarsType = None,
-        parse_result: Literal[True] = True,
+        parse_result: Literal[False] = False,
         limited: bool = False,
         **kwargs: Any,
-    ) -> Any: ...
+    ) -> str: ...
 
     @overload
     def render(
@@ -459,23 +459,23 @@ class Template:
     def async_render(
         self,
         variables: TemplateVarsType = None,
-        parse_result: Literal[False] = False,
-        limited: bool = False,
-        strict: bool = False,
-        log_fn: Callable[[int, str], None] | None = None,
-        **kwargs: Any,
-    ) -> str: ...
-
-    @overload
-    def async_render(
-        self,
-        variables: TemplateVarsType = None,
         parse_result: Literal[True] = True,
         limited: bool = False,
         strict: bool = False,
         log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> Any: ...
+
+    @overload
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: Literal[False] = False,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+        **kwargs: Any,
+    ) -> str: ...
 
     @overload
     def async_render(
