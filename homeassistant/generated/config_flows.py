@@ -693,6 +693,7 @@ FLOWS = {
         "synology_dsm",
         "system_bridge",
         "systemmonitor",
+        "systemnexa2",
         "tado",
         "tailscale",
         "tailwind",

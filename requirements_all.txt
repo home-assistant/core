@@ -2524,7 +2524,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==4.2.0
+python-bsblan==4.2.1
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2631,6 +2631,9 @@ python-roborock==4.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
+
+# homeassistant.components.systemnexa2
+python-sn2==0.4.0
 
 # homeassistant.components.snoo
 python-snoo==0.8.3

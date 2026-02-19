@@ -82,10 +82,7 @@ rules:
       Integration does not create entities.
 
   # Gold
-  diagnostics:
-    status: todo
-    comment: |
-      Consider adding diagnostics support including config entry data with redacted token, connection status, event submission statistics, entity filter configuration, and recent error messages to help troubleshooting.
+  diagnostics: done
   discovery:
     status: exempt
     comment: |
