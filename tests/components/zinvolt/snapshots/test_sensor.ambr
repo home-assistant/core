@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.alg001124100107_battery-entry]
+# name: test_all_entities[sensor.zinvolt_batterij_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.alg001124100107_battery',
+    'entity_id': 'sensor.zinvolt_batterij_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,15 +35,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.alg001124100107_battery-state]
+# name: test_all_entities[sensor.zinvolt_batterij_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'ALG001124100107 Battery',
+      'friendly_name': 'Zinvolt Batterij Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.alg001124100107_battery',
+    'entity_id': 'sensor.zinvolt_batterij_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
