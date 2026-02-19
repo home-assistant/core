@@ -91,6 +91,15 @@
           "up": "Up"
         }
       },
+      "tags": {
+        "name": "Tags",
+        "state_attributes": {
+          "tags": {
+            "name": "[%key:component::uptime_kuma::entity::sensor::tags::name%]"
+          }
+        },
+        "unit_of_measurement": "tags"
+      },
       "type": {
         "name": "Monitor type",
         "state": {
