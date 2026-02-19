@@ -30,33 +30,17 @@ class EufyHomeSwitch(SwitchEntity):
     def __init__(self, device):
         """Initialize the light."""
 
-        self._state = None
-        self._name = device["name"]
-        self._address = device["address"]
-        self._code = device["code"]
-        self._type = device["type"]
-        self._switch = lakeside.switch(self._address, self._code, self._type)
+        self._attr_name = device["name"]
+        self._attr_unique_id = device["address"]
+        self._switch = lakeside.switch(
+            device["address"], device["code"], device["type"]
+        )
         self._switch.connect()
 
     def update(self) -> None:
         """Synchronise state from the switch."""
         self._switch.update()
-        self._state = self._switch.power
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
+        self._attr_is_on = self._switch.power
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified switch on."""
