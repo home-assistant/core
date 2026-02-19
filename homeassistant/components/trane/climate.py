@@ -94,22 +94,18 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current temperature.
-
-        indoor_temperature is a string from the protocol (e.g. "72.00")
-        or empty string if not yet received.
-        """
+        """Return the current temperature."""
+        # indoor_temperature is a string from the protocol (e.g. "72.00")
+        # or empty string if not yet received
         if temp := self._zone.indoor_temperature:
             return float(temp)
         return None
 
     @property
     def current_humidity(self) -> int | None:
-        """Return the current humidity.
-
-        relative_humidity is a string from the protocol (e.g. "45")
-        or empty string if not yet received.
-        """
+        """Return the current humidity."""
+        # relative_humidity is a string from the protocol (e.g. "45")
+        # or empty string if not yet received
         if humidity := self._conn.state.relative_humidity:
             return int(humidity)
         return None
@@ -124,11 +120,10 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction:
-        """Return the current HVAC action.
-
-        heating_active and cooling_active are strings from the protocol
-        ("1" for active, "0" for inactive).
-        """
+        """Return the current HVAC action."""
+        # heating_active and cooling_active are system-level strings from the
+        # protocol ("1" for active, "0" for inactive); per-zone demand is not
+        # available so multi-zone setups may over-report activity
         if self._zone.mode == ZoneMode.OFF:
             return HVACAction.OFF
         if self._conn.state.heating_active == "1":

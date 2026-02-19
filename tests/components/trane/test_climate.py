@@ -72,6 +72,40 @@ async def test_hvac_mode_auto(
     assert state.state == HVACMode.AUTO
 
 
+async def test_current_temperature_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test current temperature is None when not yet received."""
+    mock_connection.state.zones["1"].indoor_temperature = ""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room")
+    assert state is not None
+    assert state.attributes["current_temperature"] is None
+
+
+async def test_current_humidity_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test current humidity is None when not yet received."""
+    mock_connection.state.relative_humidity = ""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room")
+    assert state is not None
+    assert "current_humidity" not in state.attributes
+
+
 async def test_set_hvac_mode_off(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -144,7 +178,7 @@ async def test_set_temperature_range(
     )
 
 
-async def test_set_temperature_single(
+async def test_set_temperature_single_heat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
@@ -170,6 +204,35 @@ async def test_set_temperature_single(
         "1",
         heat_setpoint="70",
         cool_setpoint=None,
+    )
+
+
+async def test_set_temperature_single_cool(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test setting single temperature in cool mode."""
+    mock_connection.state.zones["1"].mode = ZoneMode.COOL
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room",
+            ATTR_TEMPERATURE: 78,
+        },
+        blocking=True,
+    )
+
+    mock_connection.set_temperature_setpoint.assert_called_once_with(
+        "1",
+        heat_setpoint=None,
+        cool_setpoint="78",
     )
 
 
