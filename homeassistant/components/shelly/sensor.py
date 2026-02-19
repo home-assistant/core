@@ -9,7 +9,7 @@ from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -1357,7 +1357,7 @@ RPC_SENSORS: Final = {
         key="text",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, SENSOR_PLATFORM)
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
@@ -1365,7 +1365,7 @@ RPC_SENSORS: Final = {
         key="number",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, SENSOR_PLATFORM)
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         unit=get_virtual_component_unit,
         role=ROLE_GENERIC,
@@ -1374,7 +1374,7 @@ RPC_SENSORS: Final = {
         key="enum",
         sub_key="value",
         removal_condition=lambda config, _, key: (
-            not is_view_for_platform(config, key, SENSOR_PLATFORM)
+            not is_view_for_platform(config, key, SENSOR_DOMAIN)
         ),
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
@@ -1792,7 +1792,7 @@ def _async_setup_rpc_entry(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            SENSOR_PLATFORM,
+            SENSOR_DOMAIN,
             coordinator.device.status,
         )
 
