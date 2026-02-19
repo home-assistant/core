@@ -251,6 +251,33 @@ def update_callback_query():
 
 
 @pytest.fixture
+def update_callback_inline_keyboard():
+    """Fixture for mocking an incoming update of type callback_query from inline keyboard button."""
+    return {
+        "update_id": 1,
+        "callback_query": {
+            "id": "4382bfdwdsb323b2d9",
+            "from": {
+                "id": 12345678,
+                "type": "private",
+                "is_bot": False,
+                "last_name": "Test Lastname",
+                "first_name": "Test Firstname",
+                "username": "Testusername",
+            },
+            "message": {
+                "message_id": 101,
+                "chat": {"id": 987654321, "type": "private"},
+                "date": 1708181000,
+                "text": "command",
+            },
+            "chat_instance": "aaa111",
+            "data": "/command arg1 arg2",
+        },
+    }
+
+
+@pytest.fixture
 def mock_broadcast_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
