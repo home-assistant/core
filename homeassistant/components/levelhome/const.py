@@ -3,6 +3,8 @@
 DOMAIN = "levelhome"
 
 COMMAND_STATE_TIMEOUT = 15.0  # Seconds to wait for state confirmation after command
+STATE_RETRY_MAX_ELAPSED = 60.0  # Max total seconds to retry state reads
+STATE_RETRY_INITIAL_DELAY = 2.0  # Initial retry delay in seconds
 
 # Config keys
 CONF_OAUTH2_BASE_URL = "oauth2_base_url"

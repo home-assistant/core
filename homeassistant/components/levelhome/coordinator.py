@@ -15,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COMMAND_STATE_TIMEOUT
+from .const import (
+    COMMAND_STATE_TIMEOUT,
+    STATE_RETRY_INITIAL_DELAY,
+    STATE_RETRY_MAX_ELAPSED,
+)
 
 LOGGER = logging.getLogger(__name__)
 FALLBACK_SCAN_INTERVAL = timedelta(minutes=5)
@@ -112,6 +116,7 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         self._client = _ClientAdapter(ws_manager)
         self._last_command_time: dict[str, float] = {}
         self._pending_confirmations: dict[str, asyncio.Task[None]] = {}
+        self._pending_reachability: dict[str, asyncio.Task[None]] = {}
         self._refreshing_devices: set[str] = set()
 
     def is_device_refreshing(self, lock_id: str) -> bool:
@@ -225,6 +230,10 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                 updated_device.state,
             )
             self.async_set_updated_data(current)
+            if not new_reachable and device.reachable:
+                self._schedule_reachability_recovery(device.lock_id)
+            elif new_reachable and not device.reachable:
+                self._cancel_reachability_recovery(device.lock_id)
             if (
                 new_state
                 and new_state.lower() in ("locked", "unlocked")
@@ -268,37 +277,35 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             return
         LOGGER.warning(
             "Timeout waiting for state confirmation for %s after %s command; "
-            "fetching latest state",
+            "fetching latest state with retries",
             lock_id,
             command,
         )
         self._refreshing_devices.add(lock_id)
         self.async_set_updated_data(dict(self.data))
-        device_state = await self._ws_manager.async_get_device_state(lock_id)
+        bolt_state = await self._async_fetch_state_with_retry(lock_id)
         self._refreshing_devices.discard(lock_id)
-        if device_state:
-            bolt_state = device_state.get("bolt_state")
-            if bolt_state:
-                is_locked = str(bolt_state).lower() == "locked"
-                new_state = str(bolt_state).lower()
-                current_data = dict(self.data or {})
-                if lock_id in current_data:
-                    updated_device = replace(
-                        current_data[lock_id],
-                        is_locked=is_locked,
-                        state=new_state,
-                    )
-                    current_data[lock_id] = updated_device
-                    LOGGER.info(
-                        "Updated device %s after timeout: is_locked=%s, state=%s",
-                        lock_id,
-                        is_locked,
-                        new_state,
-                    )
-                    self.async_set_updated_data(current_data)
-                    return
+        if bolt_state:
+            is_locked = str(bolt_state).lower() == "locked"
+            new_state = str(bolt_state).lower()
+            current_data = dict(self.data or {})
+            if lock_id in current_data:
+                updated_device = replace(
+                    current_data[lock_id],
+                    is_locked=is_locked,
+                    state=new_state,
+                )
+                current_data[lock_id] = updated_device
+                LOGGER.info(
+                    "Updated device %s after timeout: is_locked=%s, state=%s",
+                    lock_id,
+                    is_locked,
+                    new_state,
+                )
+                self.async_set_updated_data(current_data)
+                return
         LOGGER.warning(
-            "Failed to fetch state for %s after timeout; device may be unavailable",
+            "Failed to fetch state for %s after retries; device may be unavailable",
             lock_id,
         )
         current_data = dict(self.data or {})
@@ -310,6 +317,94 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             )
             current_data[lock_id] = updated_device
             self.async_set_updated_data(current_data)
+
+    async def _async_fetch_state_with_retry(self, lock_id: str) -> str | None:
+        """Fetch device state with exponential backoff retries."""
+        delay = STATE_RETRY_INITIAL_DELAY
+        elapsed = 0.0
+        attempt = 0
+        while elapsed < STATE_RETRY_MAX_ELAPSED:
+            attempt += 1
+            try:
+                device_state = await self._ws_manager.async_get_device_state(lock_id)
+            except (TimeoutError, ConnectionError, RuntimeError, OSError):
+                LOGGER.debug(
+                    "State fetch attempt %d for %s failed with exception",
+                    attempt,
+                    lock_id,
+                )
+                device_state = None
+            if device_state:
+                bolt_state = device_state.get("bolt_state")
+                if bolt_state:
+                    LOGGER.debug(
+                        "State fetch attempt %d for %s succeeded: %s",
+                        attempt,
+                        lock_id,
+                        bolt_state,
+                    )
+                    return str(bolt_state)
+            remaining = STATE_RETRY_MAX_ELAPSED - elapsed
+            if remaining <= 0:
+                break
+            sleep_time = min(delay, remaining)
+            LOGGER.debug(
+                "State fetch attempt %d for %s returned no bolt_state; "
+                "retrying in %.1fs",
+                attempt,
+                lock_id,
+                sleep_time,
+            )
+            try:
+                await asyncio.sleep(sleep_time)
+            except asyncio.CancelledError:
+                return None
+            elapsed += sleep_time
+            delay = min(delay * 2, STATE_RETRY_MAX_ELAPSED - elapsed)
+        LOGGER.debug(
+            "Exhausted %d state fetch attempts for %s over %.1fs",
+            attempt,
+            lock_id,
+            elapsed,
+        )
+        return None
+
+    def _schedule_reachability_recovery(self, lock_id: str) -> None:
+        """Schedule a background task to recover reachability for a device."""
+        self._cancel_reachability_recovery(lock_id)
+        LOGGER.debug("Scheduling reachability recovery for %s", lock_id)
+        self._pending_reachability[lock_id] = asyncio.create_task(
+            self._async_recover_reachability(lock_id)
+        )
+
+    def _cancel_reachability_recovery(self, lock_id: str) -> None:
+        """Cancel any pending reachability recovery task for a device."""
+        if task := self._pending_reachability.pop(lock_id, None):
+            task.cancel()
+
+    async def _async_recover_reachability(self, lock_id: str) -> None:
+        """Attempt to restore reachability by fetching state with retries."""
+        bolt_state = await self._async_fetch_state_with_retry(lock_id)
+        self._pending_reachability.pop(lock_id, None)
+        if bolt_state is None:
+            LOGGER.info("Reachability recovery for %s failed after retries", lock_id)
+            return
+        current_data = dict(self.data or {})
+        device = current_data.get(lock_id)
+        if device is None:
+            return
+        is_locked = str(bolt_state).lower() == "locked"
+        new_state = str(bolt_state).lower()
+        current_data[lock_id] = replace(
+            device, reachable=True, is_locked=is_locked, state=new_state
+        )
+        LOGGER.info(
+            "Reachability recovery for %s succeeded: is_locked=%s, state=%s",
+            lock_id,
+            is_locked,
+            new_state,
+        )
+        self.async_set_updated_data(current_data)
 
     async def async_handle_devices_update(self, devices: list[dict[str, Any]]) -> None:
         """Handle a device list update from the WebSocket."""
@@ -326,10 +421,32 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         current_device_ids = set(current.keys())
         added_ids = new_device_ids - current_device_ids
         removed_ids = current_device_ids - new_device_ids
+        existing_ids = new_device_ids & current_device_ids
+        changed = False
         if removed_ids:
             LOGGER.info("Removing devices: %s", removed_ids)
             for device_id in removed_ids:
                 current.pop(device_id, None)
+            changed = True
+        for device_id in existing_ids:
+            device = current[device_id]
+            if not device.reachable:
+                LOGGER.info(
+                    "Device %s is back in device list, marking reachable",
+                    device_id,
+                )
+                device_state = await self._ws_manager.async_get_device_state(device_id)
+                is_locked = device.is_locked
+                state = device.state
+                if device_state:
+                    bolt_state = device_state.get("bolt_state")
+                    if bolt_state:
+                        state = str(bolt_state)
+                        is_locked = str(bolt_state).lower() == "locked"
+                current[device_id] = replace(
+                    device, reachable=True, is_locked=is_locked, state=state
+                )
+                changed = True
         if added_ids:
             LOGGER.info("Adding new devices: %s", added_ids)
             for item in devices:
@@ -341,8 +458,8 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                     device_state = await self._ws_manager.async_get_device_state(
                         str(device_uuid)
                     )
-                    is_locked: bool | None = None
-                    state: str | None = None
+                    is_locked = None
+                    state = None
                     if device_state:
                         bolt_state = device_state.get("bolt_state")
                         if bolt_state:
@@ -363,5 +480,6 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                         is_locked,
                         state,
                     )
-        if added_ids or removed_ids:
+            changed = True
+        if changed:
             self.async_set_updated_data(current)
