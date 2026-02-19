@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from pysmarlaapi import Connection
+from pysmarlaapi.connection.exceptions import (
+    AuthenticationException,
+    ConnectionException,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -30,7 +34,9 @@ class SmarlaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "malformed_token"
             return errors, None
 
-        if not await conn.refresh_token():
+        try:
+            await conn.refresh_token()
+        except ConnectionException, AuthenticationException:
             errors["base"] = "invalid_auth"
             return errors, None
 

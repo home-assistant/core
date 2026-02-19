@@ -582,8 +582,28 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "hdfury",
+            "name": "diva-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vertex2-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vrroom-*",
+        },
+        {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
+        },
+        {
+            "domain": "liebherr",
+            "name": "liebherr*",
         },
         {
             "domain": "loqed",
@@ -605,6 +625,10 @@ ZEROCONF = {
         },
         {
             "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
+            "domain": "powerfox_local",
             "name": "powerfox*",
         },
         {
@@ -770,6 +794,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
@@ -813,6 +842,11 @@ ZEROCONF = {
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
+        },
+    ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
         },
     ],
     "_printer._tcp.local.": [
@@ -925,6 +959,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
         },
     ],
     "_technove-stations._tcp.local.": [

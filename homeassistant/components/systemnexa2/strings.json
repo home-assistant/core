@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "no_connection": "Could not establish connection to `{host}`",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown_connection_error": "Unknown error when accessing `{host}`",
+      "unsupported_model": "Unsupported device model `{model}` version `{sw_version}`",
+      "wrong_device": "The device at the new Hostname/IP address does not match the configured device identity"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}-({model})",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to add the device `{name}` to Home Assistant?",
+        "title": "Discovered Nexa System 2 device"
+      },
+      "user": {
+        "data": {
+          "host": "IP/Hostname"
+        },
+        "data_description": {
+          "host": "Hostname or IP Address of the device"
+        }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "433mhz": {
+        "name": "433 MHz"
+      },
+      "cloud_access": {
+        "name": "Cloud access"
+      },
+      "led": {
+        "name": "LED"
+      },
+      "physical_button": {
+        "name": "Physical button"
+      },
+      "relay_1": {
+        "name": "Relay 1"
+      }
+    }
+  },
+  "exceptions": {
+    "device_communication_error": {
+      "message": "Failed to communicate with the device. Please verify that the device is powered on and connected to the network"
+    },
+    "failed_to_initiate_connection": {
+      "message": "Failed to initialize device with IP/Hostname `{host}`, please verify that the device is powered on and reachable on port 3000"
+    }
+  }
+}

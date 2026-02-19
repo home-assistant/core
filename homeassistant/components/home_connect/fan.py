@@ -20,11 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -47,24 +43,19 @@ AIR_CONDITIONER_ENTITY_DESCRIPTION = FanEntityDescription(
 
 
 def _create_option_entities(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
     known_entity_unique_ids: dict[str, str],
-    get_option_entities_for_appliance: Callable[
-        [HomeConnectConfigEntry, HomeConnectApplianceData],
-        list[HomeConnectEntity],
-    ],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the required option entities for the appliances."""
     option_entities_to_add = [
         entity
-        for entity in get_option_entities_for_appliance(entry, appliance)
+        for entity in _get_entities_for_appliance(appliance_coordinator)
         if entity.unique_id not in known_entity_unique_ids
     ]
     known_entity_unique_ids.update(
         {
-            cast(str, entity.unique_id): appliance.info.ha_id
+            cast(str, entity.unique_id): appliance_coordinator.data.info.ha_id
             for entity in option_entities_to_add
         }
     )
@@ -74,10 +65,6 @@ def _create_option_entities(
 def _handle_paired_or_connected_appliance(
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
-    get_option_entities_for_appliance: Callable[
-        [HomeConnectConfigEntry, HomeConnectApplianceData],
-        list[HomeConnectEntity],
-    ],
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -88,11 +75,12 @@ def _handle_paired_or_connected_appliance(
     when they are turned off, so we need to check if the entities have been added
     already or it is the first time we see them when the appliance is connected.
     """
-    entities: list[HomeConnectEntity] = []
-    for appliance in entry.runtime_data.data.values():
+    entities: list[HomeConnectAirConditioningFanEntity] = []
+    for appliance_coordinator in entry.runtime_data.appliance_coordinators.values():
+        appliance_ha_id = appliance_coordinator.data.info.ha_id
         entities_to_add = [
             entity
-            for entity in get_option_entities_for_appliance(entry, appliance)
+            for entity in _get_entities_for_appliance(appliance_coordinator)
             if entity.unique_id not in known_entity_unique_ids
         ]
         for event_key in (
@@ -100,27 +88,22 @@ def _handle_paired_or_connected_appliance(
             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         ):
             changed_options_listener_remove_callback = (
-                entry.runtime_data.async_add_listener(
+                appliance_coordinator.async_add_listener(
                     partial(
                         _create_option_entities,
-                        entry,
-                        appliance,
+                        appliance_coordinator,
                         known_entity_unique_ids,
-                        get_option_entities_for_appliance,
                         async_add_entities,
                     ),
-                    (appliance.info.ha_id, event_key),
+                    event_key,
                 )
             )
             entry.async_on_unload(changed_options_listener_remove_callback)
-            changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
+            changed_options_listener_remove_callbacks[appliance_ha_id].append(
                 changed_options_listener_remove_callback
             )
         known_entity_unique_ids.update(
-            {
-                cast(str, entity.unique_id): appliance.info.ha_id
-                for entity in entities_to_add
-            }
+            {cast(str, entity.unique_id): appliance_ha_id for entity in entities_to_add}
         )
         entities.extend(entities_to_add)
     async_add_entities(entities)
@@ -133,7 +116,7 @@ def _handle_depaired_appliance(
 ) -> None:
     """Handle a removed appliance."""
     for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
-        if appliance_id not in entry.runtime_data.data:
+        if appliance_id not in entry.runtime_data.appliance_coordinators:
             known_entity_unique_ids.pop(entity_unique_id, None)
             if appliance_id in changed_options_listener_remove_callbacks:
                 for listener in changed_options_listener_remove_callbacks.pop(
@@ -143,15 +126,14 @@ def _handle_depaired_appliance(
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
-) -> list[HomeConnectEntity]:
+    appliance_coordinator: HomeConnectApplianceCoordinator,
+) -> list[HomeConnectAirConditioningFanEntity]:
     """Get a list of entities."""
     return (
-        [HomeConnectAirConditioningFanEntity(entry.runtime_data, appliance)]
-        if appliance.options
+        [HomeConnectAirConditioningFanEntity(appliance_coordinator)]
+        if appliance_coordinator.data.options
         and any(
-            option in appliance.options
+            option in appliance_coordinator.data.options
             for option in (
                 OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
                 OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
@@ -173,12 +155,11 @@ async def async_setup_entry(
     )
 
     entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
+        entry.runtime_data.async_add_global_listener(
             partial(
                 _handle_paired_or_connected_appliance,
                 entry,
                 known_entity_unique_ids,
-                _get_entities_for_appliance,
                 changed_options_listener_remove_callbacks,
                 async_add_entities,
             ),
@@ -189,7 +170,7 @@ async def async_setup_entry(
         )
     )
     entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
+        entry.runtime_data.async_add_global_listener(
             partial(
                 _handle_depaired_appliance,
                 entry,
@@ -206,19 +187,16 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        coordinator: HomeConnectApplianceCoordinator,
     ) -> None:
         """Initialize the entity."""
         self._attr_preset_modes = list(FAN_SPEED_MODE_OPTIONS.keys())
         self._original_speed_modes_keys = set(FAN_SPEED_MODE_OPTIONS_INVERTED)
         super().__init__(
             coordinator,
-            appliance,
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
             context_override=(
-                appliance.info.ha_id,
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
             ),
         )
         self.update_preset_mode()
@@ -239,10 +217,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update_preset_mode,
-                (
-                    self.appliance.info.ha_id,
-                    EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
-                ),
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             )
         )
 
@@ -271,7 +246,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         if event := self.appliance.events.get(EventKey(option_key)):
             option_value = event.value
         self._attr_preset_mode = (
-            FAN_SPEED_MODE_OPTIONS_INVERTED.get(cast(str, option_value), None)
+            FAN_SPEED_MODE_OPTIONS_INVERTED.get(cast(str, option_value))
             if option_value is not None
             else None
         )
