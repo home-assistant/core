@@ -31,7 +31,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival',
-    'unique_id': '01JBUS0000000000000000001-next_arrival',
+    'unique_id': 'bus_M15_400561-next_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -81,7 +81,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival_destination',
-    'unique_id': '01JBUS0000000000000000001-next_arrival_destination',
+    'unique_id': 'bus_M15_400561-next_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -130,7 +130,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival_route',
-    'unique_id': '01JBUS0000000000000000001-next_arrival_route',
+    'unique_id': 'bus_M15_400561-next_arrival_route',
     'unit_of_measurement': None,
   })
 # ---
@@ -179,7 +179,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival',
-    'unique_id': '01JBUS0000000000000000001-second_arrival',
+    'unique_id': 'bus_M15_400561-second_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -229,7 +229,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival_destination',
-    'unique_id': '01JBUS0000000000000000001-second_arrival_destination',
+    'unique_id': 'bus_M15_400561-second_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -278,7 +278,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival_route',
-    'unique_id': '01JBUS0000000000000000001-second_arrival_route',
+    'unique_id': 'bus_M15_400561-second_arrival_route',
     'unit_of_measurement': None,
   })
 # ---
@@ -327,7 +327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival',
-    'unique_id': '01JBUS0000000000000000001-third_arrival',
+    'unique_id': 'bus_M15_400561-third_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -377,7 +377,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival_destination',
-    'unique_id': '01JBUS0000000000000000001-third_arrival_destination',
+    'unique_id': 'bus_M15_400561-third_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -426,7 +426,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival_route',
-    'unique_id': '01JBUS0000000000000000001-third_arrival_route',
+    'unique_id': 'bus_M15_400561-third_arrival_route',
     'unit_of_measurement': None,
   })
 # ---
@@ -475,7 +475,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival',
-    'unique_id': '01JSUBWAY00000000000000001-next_arrival',
+    'unique_id': '1_127N-next_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -525,7 +525,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival_destination',
-    'unique_id': '01JSUBWAY00000000000000001-next_arrival_destination',
+    'unique_id': '1_127N-next_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -574,7 +574,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_arrival_route',
-    'unique_id': '01JSUBWAY00000000000000001-next_arrival_route',
+    'unique_id': '1_127N-next_arrival_route',
     'unit_of_measurement': None,
   })
 # ---
@@ -623,7 +623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival',
-    'unique_id': '01JSUBWAY00000000000000001-second_arrival',
+    'unique_id': '1_127N-second_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -673,7 +673,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival_destination',
-    'unique_id': '01JSUBWAY00000000000000001-second_arrival_destination',
+    'unique_id': '1_127N-second_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -722,7 +722,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'second_arrival_route',
-    'unique_id': '01JSUBWAY00000000000000001-second_arrival_route',
+    'unique_id': '1_127N-second_arrival_route',
     'unit_of_measurement': None,
   })
 # ---
@@ -771,7 +771,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival',
-    'unique_id': '01JSUBWAY00000000000000001-third_arrival',
+    'unique_id': '1_127N-third_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -821,7 +821,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival_destination',
-    'unique_id': '01JSUBWAY00000000000000001-third_arrival_destination',
+    'unique_id': '1_127N-third_arrival_destination',
     'unit_of_measurement': None,
   })
 # ---
@@ -870,7 +870,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'third_arrival_route',
-    'unique_id': '01JSUBWAY00000000000000001-third_arrival_route',
+    'unique_id': '1_127N-third_arrival_route',
     'unit_of_measurement': None,
   })
 # ---

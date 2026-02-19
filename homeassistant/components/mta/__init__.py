@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -19,9 +21,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MTAConfigEntry) -> bool:
         if subentry.subentry_type not in (SUBENTRY_TYPE_SUBWAY, SUBENTRY_TYPE_BUS):
             continue
 
-        coordinator = MTADataUpdateCoordinator(hass, entry, subentry)
-        await coordinator.async_config_entry_first_refresh()
-        coordinators[subentry_id] = coordinator
+        coordinators[subentry_id] = MTADataUpdateCoordinator(hass, entry, subentry)
+
+    # Refresh all coordinators in parallel
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        )
+    )
 
     entry.runtime_data = coordinators
 

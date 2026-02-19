@@ -163,7 +163,7 @@ async def test_sensor_no_arrivals(
     )
     await hass.async_block_till_done()
 
-    # All arrival sensors should return None
+    # All arrival sensors should have state "unknown" (native_value is None)
     state = hass.states.get("sensor.1_times_sq_42_st_n_direction_next_arrival")
     assert state is not None
     assert state.state == "unknown"

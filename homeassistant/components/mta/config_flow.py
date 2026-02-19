@@ -25,6 +25,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -74,7 +76,9 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_API_KEY): TextSelector(),
+                    vol.Optional(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
         )
@@ -116,7 +120,9 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_API_KEY): TextSelector(),
+                    vol.Optional(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
             errors=errors,
@@ -192,7 +198,7 @@ class SubwaySubentryFlowHandler(ConfigSubentryFlow):
         try:
             self.stops = await self._async_get_stops(self.data[CONF_LINE])
         except MTAFeedError:
-            _LOGGER.exception("Error fetching stops for line %s", self.data[CONF_LINE])
+            _LOGGER.debug("Error fetching stops for line %s", self.data[CONF_LINE])
             return self.async_abort(reason="cannot_connect")
 
         if not self.stops:
@@ -281,7 +287,7 @@ class BusSubentryFlowHandler(ConfigSubentryFlow):
                 else:
                     return await self.async_step_stop()
             except MTAFeedError:
-                _LOGGER.exception("Error fetching stops for route %s", route)
+                _LOGGER.debug("Error fetching stops for route %s", route)
                 errors["base"] = "invalid_route"
 
         return self.async_show_form(
