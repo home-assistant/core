@@ -108,7 +108,6 @@
       'max': 100000,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
-      'no_limit': True,
       'step': 1,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),

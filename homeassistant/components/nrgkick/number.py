@@ -148,15 +148,6 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
             assert data is not None
         return self.entity_description.value_fn(data)
 
-    @property
-    def extra_state_attributes(self) -> dict[str, bool | None] | None:
-        """Return optional state attributes."""
-        if self.entity_description.key != "energy_limit":
-            return None
-
-        value = self.native_value
-        return {"no_limit": None if value is None else value == 0}
-
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         await self._async_call_api(
