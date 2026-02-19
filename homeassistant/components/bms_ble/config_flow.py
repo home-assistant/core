@@ -113,7 +113,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         LOGGER.debug(
-            f"step user for {user_input[CONF_ADDRESS] if user_input else 'selection'}"
+            "step user for %s",
+            user_input[CONF_ADDRESS] if user_input else "selection",
         )
 
         if user_input is not None:
