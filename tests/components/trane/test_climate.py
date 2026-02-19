@@ -267,7 +267,9 @@ async def test_set_fan_mode(
     [
         ("0", "0", ZoneMode.OFF, HVACAction.OFF),
         ("0", "1", ZoneMode.AUTO, HVACAction.HEATING),
+        ("0", "2", ZoneMode.AUTO, HVACAction.HEATING),
         ("1", "0", ZoneMode.AUTO, HVACAction.COOLING),
+        ("2", "0", ZoneMode.AUTO, HVACAction.COOLING),
         ("0", "0", ZoneMode.AUTO, HVACAction.IDLE),
         ("0", "1", ZoneMode.COOL, HVACAction.IDLE),
         ("1", "0", ZoneMode.HEAT, HVACAction.IDLE),

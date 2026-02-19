@@ -63,6 +63,8 @@ def _make_state() -> ThermostatState:
         supported_modes=[ZoneMode.OFF, ZoneMode.AUTO, ZoneMode.COOL, ZoneMode.HEAT],
         fan_mode=FanMode.AUTO,
         relative_humidity="45",
+        heating_active="0",
+        cooling_active="0",
     )
 
 
