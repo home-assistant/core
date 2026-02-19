@@ -44,11 +44,11 @@ PARALLEL_UPDATES = 1
 def perform_action(
     func: Callable[[Portainer, int, str], Coroutine[Any, Any, None]],
 ) -> Callable[[Portainer, int, str], Coroutine[Any, Any, None]]:
-    """Decorator to perform actions. And action!"""
+    """Decorate a Portainer action with error handling."""
 
     @functools.wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> None:
-        """Wrap wrap, around it."""
+        """Call the wrapped action with Portainer exception handling."""
         try:
             await func(*args, **kwargs)
         except PortainerAuthenticationError as err:
