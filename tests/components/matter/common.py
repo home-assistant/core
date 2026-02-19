@@ -115,16 +115,21 @@ def load_and_parse_node_fixture(fixture: str) -> dict[str, Any]:
     return json.loads(load_node_fixture(fixture))
 
 
-async def setup_integration_with_node_fixture(
+async def _setup_integration_with_nodes(
     hass: HomeAssistant,
-    node_fixture: str,
     client: MagicMock,
-    override_attributes: dict[str, Any] | None = None,
+    nodes: list[MatterNode],
 ) -> MatterNode:
-    """Set up Matter integration with fixture as node."""
-    node = create_node_from_fixture(node_fixture, override_attributes)
-    client.get_nodes.return_value = [node]
-    client.get_node.return_value = node
+    """Set up Matter integration with nodes."""
+    client.get_nodes.return_value = nodes
+
+    def _get_node(node_id: int) -> MatterNode:
+        try:
+            next(node for node in nodes if node.node_id == node_id)
+        except StopIteration as err:
+            raise KeyError(f"Node with id {node_id} not found") from err
+
+    client.get_node.side_effect = _get_node
     config_entry = MockConfigEntry(
         domain="matter", data={"url": "http://mock-matter-server-url"}
     )
@@ -133,14 +138,45 @@ async def setup_integration_with_node_fixture(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+
+async def setup_integration_with_node_fixture(
+    hass: HomeAssistant,
+    node_fixture: str,
+    client: MagicMock,
+    override_attributes: dict[str, Any] | None = None,
+) -> MatterNode:
+    """Set up Matter integration with single fixture as node."""
+    node = create_node_from_fixture(node_fixture, override_attributes)
+
+    await _setup_integration_with_nodes(hass, client, [node])
+
     return node
 
 
+async def setup_integration_with_node_fixtures(
+    hass: HomeAssistant,
+    client: MagicMock,
+) -> None:
+    """Set up Matter integration with all fixtures as nodes."""
+    nodes = [
+        create_node_from_fixture(node_fixture, override_serial=True)
+        for node_fixture in FIXTURES
+    ]
+
+    await _setup_integration_with_nodes(hass, client, nodes)
+
+
 def create_node_from_fixture(
-    node_fixture: str, override_attributes: dict[str, Any] | None = None
+    node_fixture: str,
+    override_attributes: dict[str, Any] | None = None,
+    *,
+    override_serial: bool = False,
 ) -> MatterNode:
     """Create a node from a fixture."""
     node_data = load_and_parse_node_fixture(node_fixture)
+    # Override serial number to ensure uniqueness across fixtures
+    if override_serial and "0/40/15" in node_data["attributes"]:
+        node_data["attributes"]["0/40/15"] = f"serial_{node_data['node_id']}"
     if override_attributes:
         node_data["attributes"].update(override_attributes)
     return MatterNode(
@@ -179,6 +215,17 @@ async def trigger_subscription_callback(
     await hass.async_block_till_done()
 
 
+@cache
+def _get_fixture_name(node_id: int) -> dict[int, str]:
+    """Get the fixture name for a given node ID."""
+    for fixture_name in FIXTURES:
+        fixture_data = load_and_parse_node_fixture(fixture_name)
+        if fixture_data["node_id"] == node_id:
+            return fixture_name
+
+    raise KeyError(f"Fixture for node id {node_id} not found")
+
+
 def snapshot_matter_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -189,5 +236,11 @@ def snapshot_matter_entities(
     entities = hass.states.async_all(platform)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+        node_id = int(entity_entry.unique_id.split("-")[1], 16)
+        fixture_name = _get_fixture_name(node_id)
+        assert entity_entry == snapshot(
+            name=f"{fixture_name}][{entity_entry.entity_id}-entry"
+        )
+        assert entity_state == snapshot(
+            name=f"{fixture_name}][{entity_entry.entity_id}-state"
+        )
