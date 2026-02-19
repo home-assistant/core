@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[2][switch.cms_sf2000_bypass-entry]
+# name: test_switch[2][switch.cms_sf2000_bypass_socket-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.cms_sf2000_bypass',
+    'entity_id': 'switch.cms_sf2000_bypass_socket',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Bypass',
+    'object_id_base': 'Bypass socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Bypass',
+    'original_name': 'Bypass socket',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,14 +35,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[2][switch.cms_sf2000_bypass-state]
+# name: test_switch[2][switch.cms_sf2000_bypass_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'CMS-SF2000 Bypass',
+      'friendly_name': 'CMS-SF2000 Bypass socket',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.cms_sf2000_bypass',
+    'entity_id': 'switch.cms_sf2000_bypass_socket',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -120,12 +120,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Led indicator',
+    'object_id_base': 'LED indicator',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Led indicator',
+    'original_name': 'LED indicator',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -139,7 +139,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'CMS-SF2000 Led indicator',
+      'friendly_name': 'CMS-SF2000 LED indicator',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cms_sf2000_led_indicator',

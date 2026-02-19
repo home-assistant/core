@@ -64,7 +64,7 @@ async def test_switch(
             DEFAULT_STATE_ON,
         ),
         (
-            "switch.cms_sf2000_bypass",
+            "switch.cms_sf2000_bypass_socket",
             KEY_READ_BYPASS,
             KEY_WRITE_BYPASS,
             DEFAULT_STATE_ON,
@@ -123,7 +123,7 @@ async def test_switch_turn_on(
             DEFAULT_STATE_OFF,
         ),
         (
-            "switch.cms_sf2000_bypass",
+            "switch.cms_sf2000_bypass_socket",
             KEY_READ_BYPASS,
             KEY_WRITE_BYPASS,
             DEFAULT_STATE_OFF,
