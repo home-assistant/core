@@ -58,8 +58,6 @@ async def async_setup_entry(
 class NessZoneBinarySensor(BinarySensorEntity):
     """Representation of an Ness alarm zone as a binary sensor."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
@@ -74,6 +72,7 @@ class NessZoneBinarySensor(BinarySensorEntity):
         self._attr_device_class = zone_type
         self._attr_is_on = False
         self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
+        self._attr_name = f"Zone {zone_id}"
         self._attr_device_info = DeviceInfo(
             name=zone_name or f"Zone {zone_id}",
             identifiers={(DOMAIN, self._attr_unique_id)},
