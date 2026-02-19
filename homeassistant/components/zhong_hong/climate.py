@@ -216,7 +216,7 @@ class ZhongHongClimate(ClimateEntity):
         return 1
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self._device.is_on
 

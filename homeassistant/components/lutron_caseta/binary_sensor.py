@@ -63,7 +63,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 

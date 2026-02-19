@@ -53,6 +53,6 @@ class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
         self._attr_translation_key = translation_key
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the status of the sensor."""
         return getattr(self._thermostat, self._call)()

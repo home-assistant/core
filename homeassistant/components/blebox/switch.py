@@ -34,7 +34,7 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return whether switch is on."""
         return self._feature.is_on
 

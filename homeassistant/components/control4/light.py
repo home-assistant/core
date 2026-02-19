@@ -189,7 +189,7 @@ class Control4Light(Control4Entity, LightEntity):
         return C4Light(self.runtime_data.director, self._idx)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return whether this light is on or off."""
         if self._is_dimmer:
             for var in CONTROL4_DIMMER_VARS:

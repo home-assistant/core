@@ -121,7 +121,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         return self.coordinator.data["myThings"]["things"][self._id]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the thing is considered on."""
         return self._data["value"] > 0
 
