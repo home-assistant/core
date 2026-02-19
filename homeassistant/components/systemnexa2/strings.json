@@ -7,7 +7,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown_connection_error": "Unknown error when accessing `{host}`",
       "unsupported_model": "Unsupported device model `{model}` version `{sw_version}`",
-      "wrong_device": "The device at the new Hostname/IP address does not match the configured device identity"
+      "wrong_device": "The device at the new hostname/IP address does not match the configured device identity"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -22,7 +22,7 @@
       },
       "user": {
         "data": {
-          "host": "IP/Hostname"
+          "host": "IP/hostname"
         },
         "data_description": {
           "host": "Hostname or IP address of the device"
