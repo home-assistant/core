@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
     """Describes Cambridge Audio switch entity."""
 
-    load_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
+    exists_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
     value_fn: Callable[[StreamMagicClient], int]
     set_value_fn: Callable[[StreamMagicClient, int], Awaitable[None]]
 
@@ -41,7 +41,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioNumberEntityDescription, ...] = (
         native_min_value=-15,
         native_max_value=15,
         native_step=1,
-        load_fn=lambda client: client.audio.tilt_eq is not None,
+        exists_fn=lambda client: client.audio.tilt_eq is not None,
         value_fn=room_correction_intensity,
         set_value_fn=lambda client, value: client.set_room_correction_intensity(value),
     ),
@@ -54,11 +54,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio switch entities based on a config entry."""
-    client: StreamMagicClient = entry.runtime_data
+    client = entry.runtime_data
     async_add_entities(
         CambridgeAudioNumber(entry.runtime_data, description)
         for description in CONTROL_ENTITIES
-        if description.load_fn(client)
+        if description.exists_fn(client)
     )
 
 
