@@ -49,6 +49,7 @@ homeassistant.components.actiontec.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
+homeassistant.components.ai_task.*
 homeassistant.components.air_quality.*
 homeassistant.components.airgradient.*
 homeassistant.components.airly.*
@@ -209,6 +210,7 @@ homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
+homeassistant.components.folder_watcher.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
 homeassistant.components.fritzbox.*
@@ -298,6 +300,7 @@ homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.iron_os.*
+homeassistant.components.isal.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -308,6 +311,7 @@ homeassistant.components.knocki.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.kulersky.*
+homeassistant.components.labs.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lamarzocco.*
@@ -403,6 +407,7 @@ homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
+homeassistant.components.otp.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
@@ -438,10 +443,12 @@ homeassistant.components.radarr.*
 homeassistant.components.radio_browser.*
 homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
+homeassistant.components.random.*
 homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.recovery_mode.*
 homeassistant.components.redgtech.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
@@ -473,6 +480,7 @@ homeassistant.components.schlage.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
+homeassistant.components.season.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
@@ -566,6 +574,7 @@ homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptime_kuma.*
 homeassistant.components.uptimerobot.*
+homeassistant.components.usage_prediction.*
 homeassistant.components.usb.*
 homeassistant.components.uvc.*
 homeassistant.components.vacuum.*
@@ -584,6 +593,7 @@ homeassistant.components.water_heater.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
+homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*
 homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
