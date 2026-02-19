@@ -122,13 +122,15 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
         # heating_active and cooling_active are system-level strings from the
-        # protocol ("1" for active, "0" for inactive); per-zone demand is not
-        # available so multi-zone setups may over-report activity
-        if self._zone.mode == ZoneMode.OFF:
+        # protocol ("1" for active, "0" for inactive); filter by zone mode
+        # so a zone in COOL never reports HEATING and vice versa
+        zone_mode = self._zone.mode
+        if zone_mode == ZoneMode.OFF:
             return HVACAction.OFF
-        if self._conn.state.heating_active == "1":
+        state = self._conn.state
+        if zone_mode != ZoneMode.COOL and state.heating_active == "1":
             return HVACAction.HEATING
-        if self._conn.state.cooling_active == "1":
+        if zone_mode != ZoneMode.HEAT and state.cooling_active == "1":
             return HVACAction.COOLING
         return HVACAction.IDLE
 
