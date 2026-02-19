@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -530,10 +531,8 @@ class ResultStream:
         if self._result_cache.done():
             if self._result_cache.cancelled():
                 # Client disconnected before result was set, recreate the future.
-                try:
+                with contextlib.suppress(KeyError):
                     del self.__dict__["_result_cache"]
-                except KeyError:
-                    pass
             else:
                 # Stream already set the result, skip.
                 return
@@ -555,10 +554,8 @@ class ResultStream:
         """
         if self._result_cache.done():
             # Previous result or cancelled future, recreate.
-            try:
+            with contextlib.suppress(KeyError):
                 del self.__dict__["_result_cache"]
-            except KeyError:
-                pass
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
