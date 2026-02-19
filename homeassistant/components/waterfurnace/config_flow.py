@@ -53,7 +53,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not client.devices:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "no_devices"
 
             if not errors:
                 await self.async_set_unique_id(username)
@@ -89,7 +89,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         if not client.devices:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="no_devices")
 
         await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()

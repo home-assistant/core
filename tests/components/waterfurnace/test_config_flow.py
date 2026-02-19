@@ -104,7 +104,7 @@ async def test_user_flow_no_gwid(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "no_devices"}
 
     mock_waterfurnace_client.devices = [Mock(gwid="TEST_GWID_12345")]
 
@@ -221,4 +221,4 @@ async def test_import_flow_no_gwid(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "no_devices"
