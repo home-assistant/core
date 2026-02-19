@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from orvibo.s20 import S20, S20Exception
+from orvibo.s20 import S20
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 class S20Data:
     """S20 data class."""
 
-    exc: type[S20Exception]
     s20: S20
 
 

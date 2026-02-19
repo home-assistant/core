@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -104,17 +104,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup Entry."""
-    switch = []
-    switch.append(
-        S20Switch(
-            entry.title,
-            entry.data[CONF_HOST],
-            entry.data[CONF_MAC],
-            entry.runtime_data.exc,
-            entry.runtime_data.s20,
-        ),
+    async_add_entities(
+        [
+            S20Switch(
+                entry.title,
+                entry.data[CONF_HOST],
+                entry.data[CONF_MAC],
+                entry.runtime_data.s20,
+            )
+        ]
     )
-    async_add_entities(switch)
 
 
 class S20Switch(SwitchEntity):
@@ -122,47 +121,37 @@ class S20Switch(SwitchEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = True
 
-    def __init__(self, name, host, mac, exc: type[S20Exception], s20: S20) -> None:
+    def __init__(self, name, host, mac, s20: S20) -> None:
         """Initialize the S20 device."""
 
         self._name = name
         self._host = host
         self._mac = mac
         self._state = False
-        self._exc = exc
         self._s20 = s20
-        self._unique_id = self._mac
+        self._attr_unique_id = self._mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._attr_unique_id)
+            },
+            name=self._name,
+            manufacturer="Orvibo",
+            model="S20",
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+        )
 
     @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._unique_id)
-            },
-            name=self._name,
-            manufacturer="Orvibo",
-            model="S20",
-        )
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
             self._s20.on = True
-        except self._exc as err:
+        except S20Exception as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_error",
@@ -173,7 +162,7 @@ class S20Switch(SwitchEntity):
         """Turn the device off."""
         try:
             self._s20.on = False
-        except self._exc as err:
+        except S20Exception as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_error",
@@ -184,7 +173,7 @@ class S20Switch(SwitchEntity):
         """Update device state."""
         try:
             self._state = self._s20.on
-        except self._exc as err:
+        except S20Exception as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
