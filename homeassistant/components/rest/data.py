@@ -89,7 +89,7 @@ class RestData:
         self._resource = url
 
     def _is_expected_content_type(self, content_type: str) -> bool:
-        """Check if the content type is one we expect (JSON or XML)."""
+        """Check if the content type is one we expect (JSON, XML, or related types)."""
         return content_type.startswith(("application/json", "text/json", *XML_MIME_TYPES))
 
     def data_without_xml(self) -> str | None:
