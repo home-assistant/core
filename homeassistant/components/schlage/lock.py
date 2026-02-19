@@ -101,10 +101,15 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                 translation_key="schlage_code_exists",
             )
 
+    async def _async_fetch_access_codes(self) -> dict[str, AccessCode] | None:
+        """Fetch access codes from the lock on demand."""
+        await self.hass.async_add_executor_job(self._lock.refresh_access_codes)
+        return self._lock.access_codes
+
     async def add_code(self, name: str, code: str) -> None:
         """Add a lock code."""
 
-        codes = self._lock.access_codes
+        codes = await self._async_fetch_access_codes()
         self._validate_code_name(codes, name)
         self._validate_code_value(codes, code)
 
@@ -114,7 +119,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
 
     async def delete_code(self, name: str) -> None:
         """Delete a lock code."""
-        codes = self._lock.access_codes
+        codes = await self._async_fetch_access_codes()
         if not codes:
             # NOTE: codes is either `None` or a dict, return early if it's
             # `None` to avoid unnecessary processing
@@ -141,6 +146,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
 
     async def get_codes(self) -> ServiceResponse:
         """Get lock codes."""
+        await self._async_fetch_access_codes()
 
         if self._lock.access_codes:
             return {

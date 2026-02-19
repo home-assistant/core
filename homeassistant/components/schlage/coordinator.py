@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 
 from pyschlage import Lock, Schlage
 from pyschlage.exceptions import Error as SchlageError, NotAuthorizedError
@@ -66,9 +65,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
         try:
-            locks = await self.hass.async_add_executor_job(
-                partial(self.api.locks, include_access_codes=True)
-            )
+            locks = await self.hass.async_add_executor_job(self.api.locks)
         except NotAuthorizedError as ex:
             raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
