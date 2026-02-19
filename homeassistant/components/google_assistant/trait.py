@@ -2561,7 +2561,9 @@ def _verify_pin_challenge(data, state, challenge):
 
     if challenge.get("pin") != data.config.secure_devices_pin:
         # On passe pin_needed=True et on précise le type pour l'erreur de saisie
-        raise ChallengeNeeded(pin_needed=True, challenge_type="challengeFailedPinNeeded")
+        raise ChallengeNeeded(
+            pin_needed=True, challenge_type="challengeFailedPinNeeded"
+        )
 
 
 MEDIA_COMMAND_SUPPORT_MAPPING = {
