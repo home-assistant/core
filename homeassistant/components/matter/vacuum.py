@@ -155,11 +155,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
-    async def async_get_segments(self) -> list[Segment]:
-        """Get the segments that can be cleaned.
-
-        Returns a list of segments containing their ids and names.
-        """
+    def _current_segments(self) -> list[Segment]:
+        """Return the current cleanable segments reported by the device."""
         supported_areas: list[clusters.ServiceArea.Structs.AreaStruct] = (
             self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.SupportedAreas
@@ -168,12 +165,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         segments: list[Segment] = []
         for area in supported_areas:
-            # Get the area name from locationInfo if available
             area_name = None
             if area.areaInfo and area.areaInfo.locationInfo:
                 area_name = area.areaInfo.locationInfo.locationName
 
-            # Only add areas that have a valid name
             if area_name:
                 segments.append(
                     Segment(
@@ -183,6 +178,13 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 )
 
         return segments
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned.
+
+        Returns a list of segments containing their ids and names.
+        """
+        return self._current_segments()
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments.
@@ -199,6 +201,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         await self.send_device_command(
             clusters.ServiceArea.Commands.SelectAreas(newAreas=area_ids)
         )
+
         # Start cleaning using ChangeToMode with CLEANING tag
         mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
         if mode is None:
@@ -241,6 +244,14 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             elif ModeTag.MAPPING in tags:
                 state = VacuumActivity.CLEANING
         self._attr_activity = state
+
+        if (
+            VacuumEntityFeature.CLEAN_AREA in self.supported_features
+            and self.registry_entry is not None
+            and (last_seen_segments := self.last_seen_segments) is not None
+            and self._current_segments() != last_seen_segments
+        ):
+            self.async_create_segments_issue()
 
     @callback
     def _calculate_features(self) -> None:
