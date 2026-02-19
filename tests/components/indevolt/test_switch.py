@@ -52,7 +52,7 @@ async def test_switch(
     ("entity_id", "read_key", "write_key", "on_value"),
     [
         (
-            "switch.cms_sf2000_grid_charging",
+            "switch.cms_sf2000_allow_grid_charging",
             KEY_READ_GRID_CHARGING,
             KEY_WRITE_GRID_CHARGING,
             1001,
@@ -111,7 +111,7 @@ async def test_switch_turn_on(
     ("entity_id", "read_key", "write_key", "off_value"),
     [
         (
-            "switch.cms_sf2000_grid_charging",
+            "switch.cms_sf2000_allow_grid_charging",
             KEY_READ_GRID_CHARGING,
             KEY_WRITE_GRID_CHARGING,
             1000,
@@ -185,7 +185,7 @@ async def test_switch_set_value_error(
         await hass.services.async_call(
             Platform.SWITCH,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.cms_sf2000_grid_charging"},
+            {"entity_id": "switch.cms_sf2000_allow_grid_charging"},
             blocking=True,
         )
 
@@ -205,7 +205,7 @@ async def test_switch_availability(
         await setup_integration(hass, mock_config_entry)
 
     # Confirm current state is "on"
-    assert (state := hass.states.get("switch.cms_sf2000_grid_charging"))
+    assert (state := hass.states.get("switch.cms_sf2000_allow_grid_charging"))
     assert state.state == STATE_ON
 
     # Simulate fetch_data error
@@ -215,5 +215,5 @@ async def test_switch_availability(
     await hass.async_block_till_done()
 
     # Confirm current state is "unavailable"
-    assert (state := hass.states.get("switch.cms_sf2000_grid_charging"))
+    assert (state := hass.states.get("switch.cms_sf2000_allow_grid_charging"))
     assert state.state == STATE_UNAVAILABLE

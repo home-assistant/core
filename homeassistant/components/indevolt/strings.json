@@ -261,7 +261,7 @@
         "name": "Bypass socket"
       },
       "grid_charging": {
-        "name": "Grid charging"
+        "name": "Allow grid charging"
       },
       "light": {
         "name": "LED indicator"
