@@ -127,12 +127,19 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("endpoint_url"),
+    [
+        ("@@@"),
+        ("http://example.com"),
+    ],
+)
 async def test_flow_create_not_aws_endpoint(
-    hass: HomeAssistant,
+    hass: HomeAssistant, endpoint_url: str
 ) -> None:
     """Test config flow with a not aws endpoint should raise an error."""
     result = await _async_start_flow(
-        hass, USER_INPUT | {CONF_ENDPOINT_URL: "http://example.com"}
+        hass, USER_INPUT | {CONF_ENDPOINT_URL: endpoint_url}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -177,6 +184,22 @@ async def test_abort_if_already_configured_with_same_prefix(
     )
     entry.add_to_hass(hass)
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "my-prefix"})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_abort_if_entry_without_prefix(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+) -> None:
+    """Test we abort if an entry without prefix matches bucket and endpoint."""
+    # Entry without CONF_PREFIX in data (empty prefix is not persisted)
+    data_without_prefix = USER_INPUT.copy()
+    data_without_prefix.pop(CONF_PREFIX)
+    entry = MockConfigEntry(domain=DOMAIN, data=data_without_prefix)
+    entry.add_to_hass(hass)
+    # Try to configure the same bucket/endpoint with an empty prefix
+    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: ""})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
