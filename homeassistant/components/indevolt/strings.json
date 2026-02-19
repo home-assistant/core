@@ -264,7 +264,7 @@
         "name": "Grid charging"
       },
       "light": {
-        "name": "Led indicator"
+        "name": "LED indicator"
       }
     }
   }
