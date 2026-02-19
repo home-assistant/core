@@ -140,16 +140,18 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
 
     def _async_update_current_subentry(self, user_input: dict[str, str]) -> None:
         """Update the currently selected subentry."""
-        if self._current_entry_id is None or self._current_subentry_id is None:
-            raise HomeAssistantError("No current subentry to update")
-
-        entry = self.hass.config_entries.async_get_entry(self._current_entry_id)
-        if entry is None:
-            raise HomeAssistantError("Current entry not found")
-
-        subentry = entry.subentries.get(self._current_subentry_id)
-        if subentry is None:
-            raise HomeAssistantError("Current subentry not found")
+        if (
+            self._current_entry_id is None
+            or self._current_subentry_id is None
+            or (
+                entry := self.hass.config_entries.async_get_entry(
+                    self._current_entry_id
+                )
+            )
+            is None
+            or (subentry := entry.subentries.get(self._current_subentry_id)) is None
+        ):
+            raise HomeAssistantError("Subentry not found")
 
         updated_data = {
             **subentry.data,
