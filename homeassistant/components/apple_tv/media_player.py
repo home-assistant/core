@@ -38,7 +38,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -106,17 +106,6 @@ SUPPORT_FEATURE_MAPPING = {
 }
 
 
-def output_device_id_from_conf_entry(config_entry: ConfigEntry[Any]) -> str | None:
-    """Get the `congig_entry`s pyatv output device ID, or None if it cannot be retrieved."""
-    if (
-        (mgr := getattr(config_entry, "runtime_data", None))
-        and isinstance(mgr, AppleTVManager)
-        and (atv := mgr.atv) is not None
-    ):
-        return atv.device_info.output_device_id
-    return None
-
-
 def entity_ids_by_output_device_id(
     hass: HomeAssistant, output_device_ids: list[str]
 ) -> dict[str, str | None]:
@@ -138,7 +127,7 @@ def entity_ids_by_output_device_id(
                 MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
             )
             if (
-                output_device_id := output_device_id_from_conf_entry(config_entry)
+                output_device_id := config_entry.data.get("output_device_id", None)
             ) is not None and output_device_id in players:
                 players[output_device_id] = entity_id
 
@@ -167,7 +156,7 @@ def output_device_ids_by_entity_id(
                 )
             ) is not None:
                 if (
-                    output_device_id := output_device_id_from_conf_entry(config_entry)
+                    output_device_id := config_entry.data.get("output_device_id", None)
                 ) is not None:
                     output_devices[entity_id] = output_device_id
 
