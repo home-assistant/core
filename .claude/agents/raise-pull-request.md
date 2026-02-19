@@ -72,23 +72,16 @@ From the file paths, identify:
 
 ## Step 3: Run Code Quality Checks
 
-Run these checks and track results for checkbox states:
+Run `prek` to perform all code quality checks (formatting, linting, hassfest, etc.):
 
 ```bash
-# Format code with Ruff
-ruff format homeassistant/components/{integration} tests/components/{integration}
-
-# Check for linting issues
-ruff check homeassistant/components/{integration} tests/components/{integration}
-
-# Run hassfest to validate manifest and update generated files
-python -m script.hassfest --integration-path homeassistant/components/{integration}
+prek run --all-files
 ```
 
 **Track results:**
-- `RUFF_FORMAT_PASSED`: true if ruff format made no changes or only formatting changes that are now fixed
-- `RUFF_CHECK_PASSED`: true if ruff check reports no errors
-- `HASSFEST_PASSED`: true if hassfest completes without errors
+- `PREK_PASSED`: true if `prek run` exits with code 0
+
+**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation.**
 
 ## Step 4: Run Tests
 
@@ -139,19 +132,19 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 
 Based on the verification steps above, determine checkbox states:
 
-| Placeholder | Condition to tick |
-|-------------|-------------------|
-| `tested_checkbox` | Tick only if `TESTS_PASSED` is true |
-| `tests_pass_checkbox` | Tick only if `TESTS_PASSED` is true |
-| `no_comments_checkbox` | Tick after verifying in Step 5 |
-| `dev_checklist_checkbox` | Tick only if all Step 5 items pass |
-| `perfect_pr_checkbox` | Tick if PR is focused on single change |
-| `ruff_checkbox` | Tick only if `RUFF_FORMAT_PASSED` and `RUFF_CHECK_PASSED` |
-| `tests_added_checkbox` | Tick only if test files were added/modified with new test functions |
-| `docs_checkbox` | Tick if documentation PR created (or not applicable) |
-| `manifest_checkbox` | Tick if `HASSFEST_PASSED` is true (or not applicable) |
-| `requirements_checkbox` | Tick if requirements_all.txt updated (or not applicable) |
-| `changelog_checkbox` | Tick if dependency changelog linked in PR description (or not applicable) |
+| Checkbox | Condition to tick |
+|----------|-------------------|
+| The code change is tested and works locally | Tick only if `TESTS_PASSED` is true |
+| Local tests pass | Tick only if `TESTS_PASSED` is true |
+| There is no commented out code | Tick after verifying in Step 5 |
+| Development checklist | Tick only if all Step 5 items pass |
+| Perfect PR recommendations | Tick if PR is focused on single change |
+| Formatted using Ruff | Tick only if `PREK_PASSED` is true |
+| Tests have been added | Tick only if test files were added/modified with new test functions |
+| Documentation added/updated | Tick if documentation PR created (or not applicable) |
+| Manifest file fields filled out | Tick if `PREK_PASSED` is true (or not applicable) |
+| Dependencies in requirements_all.txt | Tick if requirements_all.txt updated (or not applicable) |
+| Dependency changelog linked | Tick if dependency changelog linked in PR description (or not applicable) |
 
 ## Step 8: Breaking Change Section
 
@@ -164,13 +157,13 @@ If it IS breaking or deprecation, keep the `## Breaking change` section and desc
 
 ## Step 9: Stage Any Changes from Checks
 
-If ruff or hassfest made changes, stage them:
+If `prek` made any formatting or generated file changes, stage and commit them as a separate commit:
 
 ```bash
 git status --porcelain
 # If changes exist:
 git add -A
-git commit --amend --no-edit
+git commit -m "Apply prek formatting and generated file updates"
 ```
 
 ## Step 10: Push Branch and Create PR
@@ -180,8 +173,8 @@ git commit --amend --no-edit
 BRANCH=$(git branch --show-current)
 GITHUB_USER=$(git remote get-url origin | sed -E 's/.*[:/]([^/]+)\/core.*/\1/')
 
-# Push branch (force if we amended)
-git push -u origin "$BRANCH" --force-with-lease
+# Push branch
+git push -u origin "$BRANCH"
 
 # Create PR
 gh pr create --repo home-assistant/core --base dev \
@@ -195,72 +188,17 @@ EOF
 
 ## PR Body Template
 
-Construct the body based on all verification results. **Important: Preserve all template options exactly as shown - only modify checkbox states, do not remove unselected items or reorder sections.**
+Read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and use it as the basis for the PR body. **Do not hardcode the template — always read it from the file to stay in sync with upstream changes.**
 
-```markdown
-## Breaking change
+Strip out all HTML comments (`<!-- ... -->`) from the template, then fill in the sections:
 
-[If type is "Breaking change" or "Deprecation", describe what breaks, how users can fix it, and why. Otherwise, REMOVE this entire section including the heading.]
+1. **Breaking change section**: If the type is NOT "Breaking change" or "Deprecation", remove the entire `## Breaking change` section (heading and body). Otherwise, describe what breaks, how users can fix it, and why.
+2. **Proposed change section**: Fill in a description of the change extracted from commit messages.
+3. **Type of change**: Check exactly ONE checkbox matching the determined type from Step 6. Leave all others unchecked.
+4. **Additional information**: Fill in any related issue numbers if known.
+5. **Checklist**: Check boxes based on the verification results from Steps 3-5 and the conditions in Step 7.
 
-## Proposed change
-
-[Describe the change and why - extract from commit messages]
-
-## Type of change
-
-- [{dependency_checkbox}] Dependency upgrade
-- [{bugfix_checkbox}] Bugfix (non-breaking change which fixes an issue)
-- [{new_integration_checkbox}] New integration (thank you!)
-- [{new_feature_checkbox}] New feature (which adds functionality to an existing integration)
-- [{deprecation_checkbox}] Deprecation (breaking change to happen in the future)
-- [{breaking_checkbox}] Breaking change (fix/feature causing existing functionality to break)
-- [{code_quality_checkbox}] Code quality improvements to existing code or addition of tests
-
-## Additional information
-
-- This PR fixes or closes issue: fixes #
-- This PR is related to issue:
-- Link to documentation pull request:
-- Link to developer documentation pull request:
-- Link to frontend pull request:
-
-## Checklist
-
-- [ ] I understand the code I am submitting and can explain how it works.
-- [{tested_checkbox}] The code change is tested and works locally.
-- [{tests_pass_checkbox}] Local tests pass. **Your PR cannot be merged unless tests pass**
-- [{no_comments_checkbox}] There is no commented out code in this PR.
-- [{dev_checklist_checkbox}] I have followed the [development checklist][dev-checklist]
-- [{perfect_pr_checkbox}] I have followed the [perfect PR recommendations][perfect-pr]
-- [{ruff_checkbox}] The code has been formatted using Ruff (`ruff format homeassistant tests`)
-- [{tests_added_checkbox}] Tests have been added to verify that the new code works.
-- [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
-
-If user exposed functionality or configuration variables are added/changed:
-
-- [{docs_checkbox}] Documentation added/updated for [www.home-assistant.io][docs-repository]
-
-If the code communicates with devices, web services, or third-party tools:
-
-- [{manifest_checkbox}] The [manifest file][manifest-docs] has all fields filled out correctly.
-      Updated and included derived files by running: `python3 -m script.hassfest`.
-- [{requirements_checkbox}] New or updated dependencies have been added to `requirements_all.txt`.
-      Updated by running `python3 -m script.gen_requirements_all`.
-- [{changelog_checkbox}] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
-
-To help with the load of incoming pull requests:
-
-- [ ] I have reviewed two other [open pull requests][prs] in this repository.
-
-[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
-[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
-[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
-[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
-[docs-repository]: https://github.com/home-assistant/home-assistant.io
-[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
-```
-
-**Note:** Replace each `{*_checkbox}` placeholder with `x` if the condition passed, or ` ` (space) if it did not. This applies to both the "Type of change" checkboxes (only one should be `x`) and the "Checklist" checkboxes (multiple can be `x` based on verification results).
+**Important:** Preserve all template structure, options, and link references exactly as they appear in the file — only modify checkbox states and fill in content sections.
 
 ## Step 11: Report Result
 
