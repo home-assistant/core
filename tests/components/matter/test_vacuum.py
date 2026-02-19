@@ -1,13 +1,13 @@
 """Test Matter vacuum."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -72,8 +72,13 @@ async def test_vacuum_actions(
         blocking=True,
     )
 
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[0] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ServiceArea.Commands.SelectAreas(newAreas=[]),
+    )
+    assert matter_client.send_device_command.call_args_list[1] == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
@@ -343,3 +348,37 @@ async def test_vacuum_clean_area(
         endpoint_id=1,
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_create_segments_issue_when_segments_changed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test segments issue callback is triggered when segments changed."""
+    entity_id = "vacuum.mock_vacuum"
+    component = hass.data["vacuum"]
+    entity = component.get_entity(entity_id)
+    assert entity is not None
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {
+                    "id": "7",
+                    "name": "Old location A",
+                    "group": None,
+                }
+            ]
+        },
+    )
+
+    with patch.object(entity, "async_create_segments_issue") as mock_create_issue:
+        set_node_attribute(matter_node, 1, 97, 4, 0x02)
+        await trigger_subscription_callback(hass, matter_client)
+
+    assert mock_create_issue.call_count >= 1
