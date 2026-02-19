@@ -155,6 +155,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
+    @property
     def _current_segments(self) -> list[Segment]:
         """Return the current cleanable segments reported by the device."""
         supported_areas: list[clusters.ServiceArea.Structs.AreaStruct] = (
@@ -184,7 +185,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         Returns a list of segments containing their ids and names.
         """
-        return self._current_segments()
+        return self._current_segments
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments.
@@ -255,7 +256,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             VacuumEntityFeature.CLEAN_AREA in self.supported_features
             and self.registry_entry is not None
             and (last_seen_segments := self.last_seen_segments) is not None
-            and self._current_segments() != last_seen_segments
+            and self._current_segments != last_seen_segments
         ):
             self.async_create_segments_issue()
 
