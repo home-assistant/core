@@ -68,18 +68,13 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
         super().__init__(*args)
         self._default_watering_timer = default_watering_timer
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._sensor_type == "manual_watering":
             self.data.watering_time = self._default_watering_timer
         elif self._sensor_type == "auto_watering":
             self.data.auto_watering = True
-        self._state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -87,15 +82,15 @@ class RainCloudSwitch(RainCloudEntity, SwitchEntity):
             self.data.watering_time = "off"
         elif self._sensor_type == "auto_watering":
             self.data.auto_watering = False
-        self._state = False
+        self._attr_is_on = False
 
     def update(self) -> None:
         """Update device state."""
-        _LOGGER.debug("Updating RainCloud switch: %s", self._name)
+        _LOGGER.debug("Updating RainCloud switch: %s", self.name)
         if self._sensor_type == "manual_watering":
-            self._state = bool(self.data.watering_time)
+            self._attr_is_on = bool(self.data.watering_time)
         elif self._sensor_type == "auto_watering":
-            self._state = self.data.auto_watering
+            self._attr_is_on = self.data.auto_watering
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
