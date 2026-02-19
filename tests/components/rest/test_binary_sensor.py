@@ -709,8 +709,8 @@ async def test_availability_blocks_value_template(
 async def test_setup_get_basic_auth_utf8(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test setup with basic auth using UTF-8 characters including Unicode char ‘."""
-    # Use a password with the Unicode character ‘ (left single quotation mark)
+    """Test setup with basic auth using UTF-8 characters including Unicode char \u2018."""
+    # Use a password with the Unicode character \u2018 (left single quotation mark)
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"key": "on"})
     assert await async_setup_component(
         hass,
@@ -726,7 +726,7 @@ async def test_setup_get_basic_auth_utf8(
                 "timeout": 30,
                 "authentication": "basic",
                 "username": "test_user",
-                "password": "test‘password",  # Password with Unicode char
+                "password": "test\u2018password",  # Password with Unicode char
                 "headers": {"Accept": CONTENT_TYPE_JSON},
             }
         },
