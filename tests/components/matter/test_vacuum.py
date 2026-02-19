@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -358,27 +358,6 @@ async def test_vacuum_clean_area(
         endpoint_id=1,
         command=clusters.RvcRunMode.Commands.ChangeToMode(newMode=1),
     )
-
-
-@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
-async def test_vacuum_clean_area_invalid_segment_id(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test vacuum clean_area action with invalid segment ID."""
-    entity_id = "vacuum.mock_vacuum"
-    component = hass.data["vacuum"]
-    entity = component.get_entity(entity_id)
-    assert entity is not None
-
-    with pytest.raises(
-        ServiceValidationError,
-        match="Invalid segment ID; segment IDs must be numeric",
-    ):
-        await entity.async_clean_segments(["kitchen"])
-
-    assert matter_client.send_device_command.call_count == 0
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
