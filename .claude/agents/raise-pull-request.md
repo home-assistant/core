@@ -95,6 +95,9 @@ pytest tests/components/{integration} \
   --durations-min=1 \
   --durations=0 \
   --numprocesses=auto \
+  --durations-min=1 \
+  --durations=0 \
+  --numprocesses=auto \
   -q
 ```
 
@@ -191,7 +194,7 @@ EOF
 )"
 ```
 
-## PR Body Template
+### PR Body Template
 
 Read the PR template from `.github/PULL_REQUEST_TEMPLATE.md` and use it as the basis for the PR body. **Do not hardcode the template — always read it from the file to stay in sync with upstream changes.**
 
