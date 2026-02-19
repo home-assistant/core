@@ -64,7 +64,7 @@
           'device': dict({
             'device_id': 'test_device_id',
             'device_name': 'CBNes1234',
-            'device_type': 'COMBI',
+            'device_type': 'combi',
             'image_url': None,
             'nickname': 'Test Fridge',
           }),
