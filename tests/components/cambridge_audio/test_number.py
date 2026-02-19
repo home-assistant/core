@@ -1,4 +1,4 @@
-"""Tests for the Cambridge Audio select platform."""
+"""Tests for the Cambridge Audio number platform."""
 
 from unittest.mock import AsyncMock, patch
 

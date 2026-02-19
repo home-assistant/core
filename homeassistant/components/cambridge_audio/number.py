@@ -1,4 +1,4 @@
-"""Support for Cambridge Audio switch entities."""
+"""Support for Cambridge Audio number entities."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -19,7 +19,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
-    """Describes Cambridge Audio switch entity."""
+    """Describes Cambridge Audio number entity."""
 
     exists_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
     value_fn: Callable[[StreamMagicClient], int]
@@ -53,7 +53,7 @@ async def async_setup_entry(
     entry: CambridgeAudioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Cambridge Audio switch entities based on a config entry."""
+    """Set up Cambridge Audio number entities based on a config entry."""
     client = entry.runtime_data
     async_add_entities(
         CambridgeAudioNumber(entry.runtime_data, description)
@@ -63,7 +63,7 @@ async def async_setup_entry(
 
 
 class CambridgeAudioNumber(CambridgeAudioEntity, NumberEntity):
-    """Defines a Cambridge Audio switch entity."""
+    """Defines a Cambridge Audio number entity."""
 
     entity_description: CambridgeAudioNumberEntityDescription
 
@@ -72,7 +72,7 @@ class CambridgeAudioNumber(CambridgeAudioEntity, NumberEntity):
         client: StreamMagicClient,
         description: CambridgeAudioNumberEntityDescription,
     ) -> None:
-        """Initialize Cambridge Audio switch."""
+        """Initialize Cambridge Audio number entity."""
         super().__init__(client)
         self.entity_description = description
         self._attr_unique_id = f"{client.info.unit_id}-{description.key}"
