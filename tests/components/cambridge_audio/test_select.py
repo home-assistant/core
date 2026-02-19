@@ -12,6 +12,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -112,26 +113,27 @@ async def test_equalizer_preset_setting(
     assert call_args == "movie"
 
 
-async def test_equalizer_preset_custom_ignored(
+async def test_equalizer_preset_custom_rejected(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that selecting custom preset does nothing."""
+    """Test that selecting the custom preset raises a ServiceValidationError."""
     await setup_integration(hass, mock_config_entry)
 
-    # Try to set custom preset
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.cambridge_audio_cxnv2_equalizer_preset",
-            ATTR_OPTION: "custom",
-        },
-        blocking=True,
-    )
+    # Try to set custom preset - should raise ServiceValidationError
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.cambridge_audio_cxnv2_equalizer_preset",
+                ATTR_OPTION: "custom",
+            },
+            blocking=True,
+        )
 
-    # Verify set_equalizer_preset was NOT called (custom is read-only)
+    # Verify set_equalizer_preset was NOT called (custom is not a selectable preset)
     mock_stream_magic_client.set_equalizer_preset.assert_not_called()
 
 

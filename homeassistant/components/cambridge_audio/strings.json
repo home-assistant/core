@@ -98,6 +98,9 @@
     "entry_cannot_connect": {
       "message": "Error while connecting to {host}"
     },
+    "equalizer_preset_custom_not_selectable": {
+      "message": "The 'Custom' equalizer preset cannot be selected directly. It is used when the current band gains do not match any known preset."
+    },
     "missing_preset": {
       "message": "Missing preset for media_id: {preset_id}"
     },

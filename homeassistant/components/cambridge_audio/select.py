@@ -10,10 +10,11 @@ from aiostreammagic.models import EQ_PRESETS, ControlBusMode, DisplayBrightness,
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CambridgeAudioConfigEntry
-from .const import EQ_PRESET_CUSTOM
+from .const import DOMAIN, EQ_PRESET_CUSTOM
 from .entity import CambridgeAudioEntity, command
 
 PARALLEL_UPDATES = 0
@@ -83,8 +84,11 @@ async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None
     if TYPE_CHECKING:
         assert client.audio.user_eq is not None
 
-    if value not in EQ_PRESETS:
-        return
+    if value == EQ_PRESET_CUSTOM:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="equalizer_preset_custom_not_selectable",
+        )
 
     await client.set_equalizer_preset(value)
 
