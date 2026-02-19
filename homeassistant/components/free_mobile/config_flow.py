@@ -83,5 +83,8 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from YAML."""
-        self._async_abort_entries_match({CONF_USERNAME: import_data[CONF_USERNAME]})
+        await self.async_set_unique_id(import_data[CONF_USERNAME])
+        abort_result = self._abort_if_unique_id_configured()
+        if abort_result:
+            return abort_result
         return await self.async_step_user(import_data)
