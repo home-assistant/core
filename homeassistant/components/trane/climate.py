@@ -46,6 +46,8 @@ HA_TO_FAN_MODE = {
 
 FAN_MODE_TO_HA = {v: k for k, v in HA_TO_FAN_MODE.items()}
 
+SINGLE_SETPOINT_MODES = frozenset({ZoneMode.COOL, ZoneMode.HEAT})
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -134,7 +136,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         zone = self._zone
-        if zone.mode in (ZoneMode.COOL, ZoneMode.HEAT):
+        if zone.mode in SINGLE_SETPOINT_MODES:
             return None
         return float(zone.cool_setpoint) if zone.cool_setpoint else None
 
@@ -142,7 +144,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         zone = self._zone
-        if zone.mode in (ZoneMode.COOL, ZoneMode.HEAT):
+        if zone.mode in SINGLE_SETPOINT_MODES:
             return None
         return float(zone.heat_setpoint) if zone.heat_setpoint else None
 
