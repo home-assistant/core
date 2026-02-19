@@ -86,8 +86,9 @@ async def test_bluetooth_discovery(
     )
     await hass.async_block_till_done()
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert (
-        result.get("title") == advertisement.name or advertisement.address
+    assert result.get("title") in (
+        advertisement.name,
+        advertisement.address,
     )  # address is used as name by Bleak if name is not available
 
     # BluetoothServiceInfoBleak contains BMS type as details to BLEDevice, see bms_advertisement

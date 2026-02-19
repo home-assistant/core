@@ -64,7 +64,7 @@ def _attr_pack(
 ) -> dict[str, list[int | float]]:
     """Return a dictionary with the given key and default value."""
     return (
-        {str(key): cast("list[int | float]", data.get(key, default))}
+        {str(key): cast(list[int | float], data.get(key, default))}
         if key in data
         else {}
     )

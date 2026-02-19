@@ -75,9 +75,10 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
 
     def _rssi_msg(self) -> str:
         """Return check RSSI message if below LOW_RSSI dBm."""
+        rssi = self.rssi
         return (
-            f", check signal strength ({self.rssi} dBm)"
-            if self.rssi and self.rssi < LOW_RSSI
+            f", check signal strength ({rssi} dBm)"
+            if rssi is not None and rssi < LOW_RSSI
             else ""
         )
 
