@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError, HomevoltError
 import pytest
 
 from homeassistant.components.homevolt.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -19,6 +23,8 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "init_integration"
 )
+
+SWITCH_UNIQUE_ID = "40580137858664_local_mode"
 
 
 @pytest.fixture
@@ -30,7 +36,7 @@ def platforms() -> list[Platform]:
 def _switch_entity_id(entity_registry: er.EntityRegistry) -> str:
     """Return the switch entity id."""
     entity_id = entity_registry.async_get_entity_id(
-        SWITCH_DOMAIN, DOMAIN, "40580137858664_local_mode"
+        SWITCH_DOMAIN, DOMAIN, SWITCH_UNIQUE_ID
     )
     assert entity_id is not None
     return entity_id
@@ -46,7 +52,7 @@ async def test_switch_state_off(
     entity_id = _switch_entity_id(entity_registry)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_switch_state_on(
@@ -64,14 +70,14 @@ async def test_switch_state_on(
     entity_id = _switch_entity_id(entity_registry)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
-    ("service", "client_method_name"),
+    ("service", "client_method_name", "expected_state"),
     [
-        ("turn_on", "enable_local_mode"),
-        ("turn_off", "disable_local_mode"),
+        (SERVICE_TURN_ON, "enable_local_mode", STATE_ON),
+        (SERVICE_TURN_OFF, "disable_local_mode", STATE_OFF),
     ],
 )
 async def test_switch_turn_on_off(
@@ -80,59 +86,66 @@ async def test_switch_turn_on_off(
     mock_homevolt_client: MagicMock,
     service: str,
     client_method_name: str,
+    expected_state: str,
 ) -> None:
-    """Test turning the switch on or off calls client and refreshes coordinator."""
-    entity_id = _switch_entity_id(entity_registry)
-    with patch(
-        "homeassistant.components.homevolt.switch.HomevoltDataUpdateCoordinator.async_request_refresh",
-        return_value=None,
-    ) as mock_refresh:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
+    """Test turning the switch on or off calls client, refreshes coordinator, and updates state."""
+    client_method = getattr(mock_homevolt_client, client_method_name)
 
-    getattr(mock_homevolt_client, client_method_name).assert_called_once()
-    mock_refresh.assert_called_once()
+    async def update_local_mode(*args: object, **kwargs: object) -> None:
+        mock_homevolt_client.local_mode_enabled = service == SERVICE_TURN_ON
+
+    client_method.side_effect = update_local_mode
+
+    entity_id = _switch_entity_id(entity_registry)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client_method.assert_called_once()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
     ("service", "client_method_name", "exception", "expected_exception"),
     [
         (
-            "turn_on",
+            SERVICE_TURN_ON,
             "enable_local_mode",
             HomevoltAuthenticationError("auth failed"),
             ConfigEntryAuthFailed,
         ),
         (
-            "turn_on",
+            SERVICE_TURN_ON,
             "enable_local_mode",
             HomevoltConnectionError("connection failed"),
             HomeAssistantError,
         ),
         (
-            "turn_on",
+            SERVICE_TURN_ON,
             "enable_local_mode",
             HomevoltError("unknown error"),
             HomeAssistantError,
         ),
         (
-            "turn_off",
+            SERVICE_TURN_OFF,
             "disable_local_mode",
             HomevoltAuthenticationError("auth failed"),
             ConfigEntryAuthFailed,
         ),
         (
-            "turn_off",
+            SERVICE_TURN_OFF,
             "disable_local_mode",
             HomevoltConnectionError("connection failed"),
             HomeAssistantError,
         ),
         (
-            "turn_off",
+            SERVICE_TURN_OFF,
             "disable_local_mode",
             HomevoltError("unknown error"),
             HomeAssistantError,
