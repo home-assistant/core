@@ -30,7 +30,6 @@ async def test_coordinator_update_data(
         hass, TEST_COUNTRY, TEST_REGION, mock_config_entry
     )
 
-    # Create mock response context manager
     class MockResponse:
         def __init__(self) -> None:
             self.status = 200
@@ -65,7 +64,6 @@ async def test_coordinator_update_data(
         async def __aexit__(self, *_):
             return None
 
-    # Create mock session
     class MockSession:
         def get(self, _url, timeout=None):
             return MockResponse()
@@ -85,7 +83,7 @@ async def test_coordinator_update_data(
         assert len(data) == 1
         assert data[0]["summary"] == TEST_SUMMER_HOLIDAY_NAME
         assert data[0]["start"].isoformat() == TEST_SUMMER_HOLIDAY_START
-        # Coordinator adds 1 day to end date to make it inclusive
+        # Add 1 day to the end date to make it inclusive, as done in the coordinator.
         end = date.fromisoformat(TEST_SUMMER_HOLIDAY_END) + timedelta(days=1)
         assert data[0]["end"] == end
 

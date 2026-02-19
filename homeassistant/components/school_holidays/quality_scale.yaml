@@ -1,26 +1,33 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
+    comment: Integration does not register custom actions.
   appropriate-polling:
     status: done
   brands:
-    status: done
+    status: exempt
+    comment: Integration is not for a commercial brand.
   common-modules:
     status: done
   config-flow-test-coverage:
     status: done
-  config-flow: done
+  config-flow:
+    status: done
   dependency-transparency:
     status: done
   docs-actions:
-    status: done
+    status: exempt
+    comment: Integration does not register custom actions.
   docs-high-level-description:
-    status: done
+    status: exempt
+    comment: todo
   docs-installation-instructions:
-    status: done
+    status: exempt
+    comment: todo
   docs-removal-instructions:
-    status: done
+    status: exempt
+    comment: todo
   entity-event-setup:
     status: done
   entity-unique-id:

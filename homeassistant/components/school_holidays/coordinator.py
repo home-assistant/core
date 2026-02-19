@@ -104,24 +104,15 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                     school_holidays.append((summary, region_data, notice))
 
             for summary, region_data, notice in school_holidays:
-                region = region_data.get("region")
                 start_date = region_data.get("startdate")
                 end_date = region_data.get("enddate")
                 if not start_date or not end_date:
                     continue
 
                 start = ensure_date(start_date)
-                # Add 1 day to end date to make it inclusive
+                # Add 1 day to end date to make it inclusive.
                 end = ensure_date(end_date) + timedelta(days=1)
                 description = clean_string(notice)
-
-                _LOGGER.debug(
-                    "Found school holiday '%s' for region '%s' from %s to %s",
-                    summary,
-                    region,
-                    start,
-                    end,
-                )
 
                 create_calendar_event(
                     events,

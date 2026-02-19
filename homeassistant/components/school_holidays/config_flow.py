@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
 
-from .const import CONF_COUNTRY, CONF_REGION, COUNTRIES, DOMAIN, REGIONS
+from .const import COUNTRIES, DOMAIN, REGIONS
 from .utils import generate_unique_id
 
 
@@ -71,7 +71,7 @@ class SchoolHolidaysConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not region:
                 errors[CONF_REGION] = "required"
             else:
-                # Case-insensitive region matching
+                # Perform case-insensitive region matching.
                 region_lower = region.lower()
                 matched_region = None
                 for valid_region in regions:
@@ -85,8 +85,9 @@ class SchoolHolidaysConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     region = matched_region
 
             if not errors:
-                # Assert that region is a string
-                assert isinstance(region, str)
+                # Assert that region is a string for type safety.
+                if TYPE_CHECKING:
+                    assert isinstance(region, str)
                 await self.async_set_unique_id(
                     generate_unique_id(self._country, region)
                 )

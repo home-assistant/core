@@ -5,10 +5,9 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_COUNTRY, CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_COUNTRY, CONF_REGION
 from .coordinator import SchoolHolidaysCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,8 +28,8 @@ async def async_setup_entry(
         entry,
     )
 
-    # Test the connection before setting up platforms
-    # This will raise ConfigEntryNotReady if the API is unavailable
+    # Test the connection before setting up platforms.
+    # This will raise ConfigEntryNotReady if the API is unavailable.
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

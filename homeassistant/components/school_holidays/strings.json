@@ -29,12 +29,5 @@
         "description": "Choose a name for your new calendar and select a country."
       }
     }
-  },
-  "entity": {
-    "calendar": {
-      "school_holidays": {
-        "name": "School Holidays"
-      }
-    }
   }
 }

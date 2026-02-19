@@ -3,18 +3,11 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    CONF_COUNTRY,
-    CONF_REGION,
-    DOMAIN,
-    TEST_CALENDAR_NAME,
-    TEST_COUNTRY,
-    TEST_REGION,
-)
+from .conftest import DOMAIN, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
 
 
 @pytest.mark.asyncio

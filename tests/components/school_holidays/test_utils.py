@@ -50,11 +50,11 @@ def test_ensure_date() -> None:
     assert utils.ensure_date("2026-01-01T22:59:00Z") == date(2026, 1, 1)
     assert utils.ensure_date(date(2026, 1, 1)) == date(2026, 1, 1)
 
-    # Test with invalid date string raises ValueError
+    # Testing with an invalid date string should raise a ValueError.
     with pytest.raises(ValueError):
         utils.ensure_date("invalid-date")
 
-    # Test with None raises TypeError
+    # Testing with None should raise a TypeError.
     with pytest.raises(TypeError):
         utils.ensure_date(None)
 

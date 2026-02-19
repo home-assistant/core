@@ -1,8 +1,11 @@
 """Utility functions for the School Holidays integration."""
 
 from datetime import date, datetime
+import logging
 import re
 from typing import Any
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def clean_string(value: str | None) -> str | None:
@@ -21,6 +24,13 @@ def create_calendar_event(
     description: str | None,
 ) -> None:
     """Create and append a calendar event."""
+    _LOGGER.debug(
+        "Adding school holiday '%s' from %s to %s",
+        summary,
+        start,
+        end,
+    )
+
     events.append(
         {
             "summary": summary,

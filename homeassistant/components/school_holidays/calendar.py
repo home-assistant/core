@@ -6,13 +6,12 @@ from datetime import date, datetime
 import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SchoolHolidaysConfigEntry
-from .const import CONF_COUNTRY, CONF_REGION
 from .coordinator import SchoolHolidaysCoordinator
 from .utils import generate_unique_id
 
