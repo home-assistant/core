@@ -48,10 +48,12 @@ def mock_dhw_config_missing_attributes(mock_bsblan: AsyncMock) -> None:
 
 @pytest.fixture
 def mock_dhw_config_missing_value_attribute(mock_bsblan: AsyncMock) -> None:
-    """Mock config with objects that don't have 'value' attribute."""
+    """Mock config with objects where value is None."""
     mock_config = MagicMock()
-    mock_reduced_setpoint = MagicMock(spec=[])  # Empty spec means no attributes
-    mock_nominal_setpoint_max = MagicMock(spec=[])  # Empty spec means no attributes
+    mock_reduced_setpoint = MagicMock()
+    mock_reduced_setpoint.value = None
+    mock_nominal_setpoint_max = MagicMock()
+    mock_nominal_setpoint_max.value = None
     mock_config.reduced_setpoint = mock_reduced_setpoint
     mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
     mock_bsblan.hot_water_config.return_value = mock_config
