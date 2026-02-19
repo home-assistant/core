@@ -55,17 +55,6 @@ async def test_climate_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-async def test_hvac_mode_heat_cool(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_connection: MagicMock,
-) -> None:
-    """Test HVAC mode is HEAT_COOL when AUTO with permanent hold."""
-    state = hass.states.get("climate.living_room")
-    assert state is not None
-    assert state.state == HVACMode.HEAT_COOL
-
-
 async def test_hvac_mode_auto(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -83,10 +72,26 @@ async def test_hvac_mode_auto(
     assert state.state == HVACMode.AUTO
 
 
+async def test_set_hvac_mode_off(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test setting HVAC mode to off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+
+    mock_connection.set_temperature_setpoint.assert_not_called()
+    mock_connection.set_zone_mode.assert_called_once_with("1", ZoneMode.OFF)
+
+
 @pytest.mark.parametrize(
     ("hvac_mode", "expected_hold", "expected_zone_mode"),
     [
-        (HVACMode.OFF, None, ZoneMode.OFF),
         (HVACMode.AUTO, HoldType.SCHEDULE, ZoneMode.AUTO),
         (HVACMode.HEAT_COOL, HoldType.MANUAL, ZoneMode.AUTO),
         (HVACMode.HEAT, HoldType.MANUAL, ZoneMode.HEAT),
@@ -98,7 +103,7 @@ async def test_set_hvac_mode(
     init_integration: MockConfigEntry,
     mock_connection: MagicMock,
     hvac_mode: HVACMode,
-    expected_hold: HoldType | None,
+    expected_hold: HoldType,
     expected_zone_mode: ZoneMode,
 ) -> None:
     """Test setting HVAC mode."""
@@ -109,13 +114,9 @@ async def test_set_hvac_mode(
         blocking=True,
     )
 
-    if expected_hold is not None:
-        mock_connection.set_temperature_setpoint.assert_called_once_with(
-            "1", hold_type=expected_hold
-        )
-    else:
-        mock_connection.set_temperature_setpoint.assert_not_called()
-
+    mock_connection.set_temperature_setpoint.assert_called_once_with(
+        "1", hold_type=expected_hold
+    )
     mock_connection.set_zone_mode.assert_called_once_with("1", expected_zone_mode)
 
 
@@ -230,34 +231,37 @@ async def test_hvac_action(
     assert state.attributes["hvac_action"] == expected_action
 
 
-@pytest.mark.parametrize(
-    ("service", "expected_hold", "expected_zone_mode"),
-    [
-        (SERVICE_TURN_ON, HoldType.MANUAL, ZoneMode.AUTO),
-        (SERVICE_TURN_OFF, None, ZoneMode.OFF),
-    ],
-)
-async def test_turn_on_off(
+async def test_turn_on(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_connection: MagicMock,
-    service: str,
-    expected_hold: HoldType | None,
-    expected_zone_mode: ZoneMode,
 ) -> None:
-    """Test turn on and turn off."""
+    """Test turn on defaults to heat_cool mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        service,
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "climate.living_room"},
         blocking=True,
     )
 
-    if expected_hold is not None:
-        mock_connection.set_temperature_setpoint.assert_called_once_with(
-            "1", hold_type=expected_hold
-        )
-    else:
-        mock_connection.set_temperature_setpoint.assert_not_called()
+    mock_connection.set_temperature_setpoint.assert_called_once_with(
+        "1", hold_type=HoldType.MANUAL
+    )
+    mock_connection.set_zone_mode.assert_called_once_with("1", ZoneMode.AUTO)
 
-    mock_connection.set_zone_mode.assert_called_once_with("1", expected_zone_mode)
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MagicMock,
+) -> None:
+    """Test turn off sets mode to off."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "climate.living_room"},
+        blocking=True,
+    )
+
+    mock_connection.set_temperature_setpoint.assert_not_called()
+    mock_connection.set_zone_mode.assert_called_once_with("1", ZoneMode.OFF)

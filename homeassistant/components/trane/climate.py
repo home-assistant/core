@@ -103,7 +103,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         if humidity := self._conn.state.relative_humidity:
-            return int(float(humidity))
+            return int(humidity)
         return None
 
     @property
