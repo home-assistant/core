@@ -169,7 +169,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                     Segment(
                         id=str(area.areaID),
                         name=area_name,
-                        group=None,
                     )
                 )
 
