@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiostreammagic.models import EQBand, UserEQ
+from aiostreammagic.models import EQBand
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -84,23 +84,15 @@ async def test_equalizer_preset_setting(
         blocking=True,
     )
 
-    # Verify set_equalizer_params was called
-    assert mock_stream_magic_client.set_equalizer_params.call_count == 1
-    call_args = mock_stream_magic_client.set_equalizer_params.call_args[0][0]
+    # Verify set_equalizer_preset was called
+    assert mock_stream_magic_client.set_equalizer_preset.call_count == 1
+    call_args = mock_stream_magic_client.set_equalizer_preset.call_args[0][0]
 
-    # Verify it's a UserEQ object with correct properties
-    assert isinstance(call_args, UserEQ)
-    assert call_args.enabled is True
-    assert len(call_args.bands) == 7
+    # Verify the argument is the preset name (string)
+    assert isinstance(call_args, str)
+    assert call_args == "bass_boost"
 
-    # Verify the gains match the bass_boost preset [3.0, 3.0, 1.0, 0.0, -1.0, -0.5, -0.3]
-    expected_gains = [3.0, 3.0, 1.0, 0.0, -1.0, -0.5, -0.3]
-    for i, band in enumerate(call_args.bands):
-        assert isinstance(band, EQBand)
-        assert band.index == i
-        assert band.gain == expected_gains[i]
-
-    mock_stream_magic_client.set_equalizer_params.reset_mock()
+    mock_stream_magic_client.set_equalizer_preset.reset_mock()
 
     # Test setting another preset (movie)
     await hass.services.async_call(
@@ -113,13 +105,11 @@ async def test_equalizer_preset_setting(
         blocking=True,
     )
 
-    assert mock_stream_magic_client.set_equalizer_params.call_count == 1
-    call_args = mock_stream_magic_client.set_equalizer_params.call_args[0][0]
+    assert mock_stream_magic_client.set_equalizer_preset.call_count == 1
+    call_args = mock_stream_magic_client.set_equalizer_preset.call_args[0][0]
 
-    # Verify the gains match the movie preset [0.0, 1.4, -0.4, -2.0, -0.6, 0.6, 1.1]
-    expected_gains = [0.0, 1.4, -0.4, -2.0, -0.6, 0.6, 1.1]
-    for i, band in enumerate(call_args.bands):
-        assert band.gain == expected_gains[i]
+    assert isinstance(call_args, str)
+    assert call_args == "movie"
 
 
 async def test_equalizer_preset_custom_ignored(
@@ -141,8 +131,8 @@ async def test_equalizer_preset_custom_ignored(
         blocking=True,
     )
 
-    # Verify set_equalizer_params was NOT called (custom is read-only)
-    mock_stream_magic_client.set_equalizer_params.assert_not_called()
+    # Verify set_equalizer_preset was NOT called (custom is read-only)
+    mock_stream_magic_client.set_equalizer_preset.assert_not_called()
 
 
 async def test_equalizer_preset_without_user_eq(
