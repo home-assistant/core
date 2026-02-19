@@ -121,7 +121,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
