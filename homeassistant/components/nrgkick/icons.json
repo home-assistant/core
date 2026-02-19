@@ -1,5 +1,16 @@
 {
   "entity": {
+    "number": {
+      "current_set": {
+        "default": "mdi:current-ac"
+      },
+      "energy_limit": {
+        "default": "mdi:battery-charging-100"
+      },
+      "phase_count": {
+        "default": "mdi:sine-wave"
+      }
+    },
     "sensor": {
       "charge_count": {
         "default": "mdi:counter"

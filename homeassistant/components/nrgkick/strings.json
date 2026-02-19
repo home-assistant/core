@@ -44,6 +44,17 @@
     }
   },
   "entity": {
+    "number": {
+      "current_set": {
+        "name": "Charging current"
+      },
+      "energy_limit": {
+        "name": "Energy limit"
+      },
+      "phase_count": {
+        "name": "Phase count"
+      }
+    },
     "sensor": {
       "cellular_mode": {
         "name": "Cellular mode",
