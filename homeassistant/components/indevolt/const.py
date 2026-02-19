@@ -2,6 +2,11 @@
 
 DOMAIN = "indevolt"
 
+# API write/read keys for energy and real-time control modes
+ENERGY_MODE_READ_KEY = "7101"
+ENERGY_MODE_WRITE_KEY = "47005"
+RT_MODE_KEY = "47015"
+
 # Config entry fields
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_GENERATION = "generation"
@@ -104,4 +109,9 @@ SENSOR_KEYS = {
         "6105",
         "1505",
     ],
+}
+
+POWER_LIMITS = {
+    1: {"max_discharge_power": 800, "max_charge_power": 1200},
+    2: {"max_discharge_power": 2400, "max_charge_power": 2400},
 }

@@ -1,0 +1,65 @@
+charge:
+  target:
+    entity:
+      integration: indevolt
+  fields:
+    target_soc:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    power:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2400
+          step: 1
+          unit_of_measurement: "W"
+
+discharge:
+  target:
+    entity:
+      integration: indevolt
+  fields:
+    target_soc:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    power:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2400
+          step: 1
+          unit_of_measurement: "W"
+
+stop:
+  target:
+    entity:
+      integration: indevolt
+
+change_mode:
+  target:
+    entity:
+      integration: indevolt
+  fields:
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - value: self_consumed_prioritized
+              label: Self-consumed prioritized
+            - value: real_time_control
+              label: Real-time control
+            - value: charge_discharge_schedule
+              label: Charge/discharge schedule

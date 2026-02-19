@@ -289,5 +289,81 @@
         "name": "LED indicator"
       }
     }
+  },
+  "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Config entry {entry_title} is not ready"
+    },
+    "failed_to_retrieve_current_energy_mode": {
+      "message": "Failed to retrieve current energy mode"
+    },
+    "failed_to_switch_energy_mode": {
+      "message": "Failed to switch to requested energy mode"
+    },
+    "no_matching_target_entries": {
+      "message": "No matching Indevolt found in selected target(s)"
+    },
+    "power_exceeds_max": {
+      "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
+    },
+    "real_time_control_unavailable_outdoor_portable": {
+      "message": "Real-Time Control cannot be activated when device is in Outdoor/Portable mode"
+    },
+    "soc_below_emergency": {
+      "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
+    }
+  },
+  "selector": {
+    "energy_mode": {
+      "options": {
+        "charge_discharge_schedule": "Charge/discharge schedule",
+        "real_time_control": "Real-time control",
+        "self_consumed_prioritized": "Self-consumed prioritized"
+      }
+    }
+  },
+  "services": {
+    "change_mode": {
+      "description": "Change the device energy mode.",
+      "fields": {
+        "mode": {
+          "description": "Energy mode to activate.",
+          "name": "Mode"
+        }
+      },
+      "name": "Change mode"
+    },
+    "charge": {
+      "description": "Real-time control: Start charging with target SOC and power.",
+      "fields": {
+        "power": {
+          "description": "Charging power in watts.",
+          "name": "Power"
+        },
+        "target_soc": {
+          "description": "Target state of charge percentage.",
+          "name": "Target SOC"
+        }
+      },
+      "name": "Charge"
+    },
+    "discharge": {
+      "description": "Real-time control: Start discharging with configured power.",
+      "fields": {
+        "power": {
+          "description": "Max. discharging power in watts.",
+          "name": "Power"
+        },
+        "target_soc": {
+          "description": "Target state of charge percentage.",
+          "name": "Target SOC"
+        }
+      },
+      "name": "Discharge"
+    },
+    "stop": {
+      "description": "Real-time control: Stop battery charging/discharging.",
+      "name": "Stop"
+    }
   }
 }
