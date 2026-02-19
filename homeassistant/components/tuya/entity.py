@@ -59,7 +59,33 @@ class TuyaEntity(Entity):
         updated_status_properties: list[str] | None,
         dp_timestamps: dict[str, int] | None,
     ) -> None:
-        self.async_write_ha_state()
+        """Called when Tuya device sends an update."""
+        if (
+            # If updated_status_properties is None, we should not skip,
+            # as we don't have information on what was updated
+            # This happens for example on online/offline updates, where
+            # we still want to update the entity state but we have nothing
+            # to process
+            updated_status_properties is None
+            # If we have data to process, we check if we should skip the
+            # state_write based on the dpcode wrapper logic
+            or await self._process_device_update(
+                updated_status_properties, dp_timestamps
+            )
+        ):
+            self.async_write_ha_state()
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return True
 
     async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
         """Send a list of commands to the device."""
