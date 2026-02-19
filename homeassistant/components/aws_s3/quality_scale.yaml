@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: Integration does not register custom actions.
-  appropriate-polling:
-    status: exempt
-    comment: This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -20,12 +18,8 @@ rules:
   entity-event-setup:
     status: exempt
     comment: Entities of this integration does not explicitly subscribe to events.
-  entity-unique-id:
-    status: exempt
-    comment: This integration does not have entities.
-  has-entity-name:
-    status: exempt
-    comment: This integration does not have entities.
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -40,21 +34,15 @@ rules:
     status: exempt
     comment: This integration does not have an options flow.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: This integration does not have entities.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates:
-    status: exempt
-    comment: This integration does not poll.
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: This integration does not have entities.
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt
@@ -62,15 +50,11 @@ rules:
   discovery:
     status: exempt
     comment: S3 is a cloud service that is not discovered on the network.
-  docs-data-update:
-    status: exempt
-    comment: This integration does not poll.
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: The integration extends core functionality and does not require examples.
-  docs-known-limitations:
-    status: exempt
-    comment: No known limitations.
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: This integration does not support physical devices.
@@ -81,19 +65,11 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: This integration does not have devices.
-  entity-category:
-    status: exempt
-    comment: This integration does not have entities.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not have entities.
-  entity-disabled-by-default:
-    status: exempt
-    comment: This integration does not have entities.
-  entity-translations:
-    status: exempt
-    comment: This integration does not have entities.
+    comment: This integration has a fixed set of devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: done
   icon-translations:
     status: exempt
@@ -104,7 +80,7 @@ rules:
     comment: There are no issues which can be repaired.
   stale-devices:
     status: exempt
-    comment: This integration does not have devices.
+    comment: This is a service type integration with a single device.
 
   # Platinum
   async-dependency: done

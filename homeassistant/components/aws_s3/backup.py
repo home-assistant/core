@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import S3ConfigEntry
 from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .helpers import async_list_backups_from_s3
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -93,7 +94,7 @@ class S3BackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: S3ConfigEntry) -> None:
         """Initialize the S3 agent."""
         super().__init__()
-        self._client = entry.runtime_data
+        self._client = entry.runtime_data.client
         self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
         self.unique_id = entry.entry_id
@@ -316,35 +317,8 @@ class S3BackupAgent(BackupAgent):
         if time() <= self._cache_expiration:
             return self._backup_cache
 
-        backups = {}
-        paginator = self._client.get_paginator("list_objects_v2")
-        metadata_files: list[dict[str, Any]] = []
-        async for page in paginator.paginate(Bucket=self._bucket):
-            metadata_files.extend(
-                obj
-                for obj in page.get("Contents", [])
-                if obj["Key"].endswith(".metadata.json")
-            )
-
-        for metadata_file in metadata_files:
-            try:
-                # Download and parse metadata file
-                metadata_response = await self._client.get_object(
-                    Bucket=self._bucket, Key=metadata_file["Key"]
-                )
-                metadata_content = await metadata_response["Body"].read()
-                metadata_json = json.loads(metadata_content)
-            except (BotoCoreError, json.JSONDecodeError) as err:
-                _LOGGER.warning(
-                    "Failed to process metadata file %s: %s",
-                    metadata_file["Key"],
-                    err,
-                )
-                continue
-            backup = AgentBackup.from_dict(metadata_json)
-            backups[backup.backup_id] = backup
-
-        self._backup_cache = backups
+        backups_list = await async_list_backups_from_s3(self._client, self._bucket)
+        self._backup_cache = {b.backup_id: b for b in backups_list}
         self._cache_expiration = time() + CACHE_TTL
 
         return self._backup_cache

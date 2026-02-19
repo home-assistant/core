@@ -387,7 +387,8 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    assert mock_client.get_object.call_count == 2  # One for metadata, one for tar file
+    # Coordinator first refresh reads metadata (1) + download reads metadata (1) + tar (1)
+    assert mock_client.get_object.call_count == 3
 
 
 async def test_error_during_delete(
@@ -431,10 +432,13 @@ async def test_cache_expiration(
         unique_id="test-unique-id",
         title="Test S3",
     )
-    mock_entry.runtime_data = mock_client
+    mock_entry.runtime_data = MagicMock(client=mock_client)
 
     # Create agent
     agent = S3BackupAgent(hass, mock_entry)
+
+    # Reset call counts from coordinator's initial refresh
+    mock_client.reset_mock()
 
     # Mock metadata response
     metadata_content = json.dumps(test_backup.as_dict())
@@ -542,7 +546,7 @@ async def test_list_backups_with_pagination(
     }
 
     # Setup mock client
-    mock_client = mock_config_entry.runtime_data
+    mock_client = mock_config_entry.runtime_data.client
     mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
