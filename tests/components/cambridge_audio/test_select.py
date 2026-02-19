@@ -10,7 +10,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -204,4 +204,4 @@ async def test_equalizer_preset_empty_bands(
     # Verify the entity exists but has no state (or unknown state)
     state = hass.states.get("select.cambridge_audio_cxnv2_equalizer_preset")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
