@@ -1456,6 +1456,7 @@ build.json @home-assistant/supervisor
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
 /homeassistant/components/school_holidays/ @arievanderwende
+/tests/components/school_holidays/ @arievanderwende
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST
 /tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco

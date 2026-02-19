@@ -8,13 +8,33 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_COUNTRY, CONF_REGION
+from .coordinator import SchoolHolidaysCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
+type SchoolHolidaysConfigEntry = ConfigEntry[SchoolHolidaysCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: SchoolHolidaysConfigEntry
+) -> bool:
     """Setup the School Holidays integration."""
     _LOGGER.debug("Starting setup of School Holidays integration")
+    coordinator = SchoolHolidaysCoordinator(
+        hass,
+        entry.data[CONF_COUNTRY],
+        entry.data[CONF_REGION],
+        entry,
+    )
+
+    # Test the connection before setting up platforms
+    # This will raise ConfigEntryNotReady if the API is unavailable
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 

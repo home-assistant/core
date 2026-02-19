@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator to update the calendar at the specified interval."""
 
-    def __init__(self, hass: HomeAssistant, country: str, region: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, country: str, region: str, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the data update coordinator."""
         self.country = country
         self.region = region
@@ -29,6 +32,7 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             logger=_LOGGER,
             name="School Holidays",
             update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> list[dict[str, Any]]:

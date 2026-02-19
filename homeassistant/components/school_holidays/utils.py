@@ -5,27 +5,12 @@ import re
 from typing import Any
 
 
-def ensure_date(value: str | date) -> date:
-    """Ensure a value is a date (without time)."""
-    if isinstance(value, date):
-        return value
-
-    if isinstance(value, str):
-        try:
-            # Parse as datetime, then get date
-            return datetime.fromisoformat(value).date()
-        except ValueError:
-            # Fallback to date string
-            return date.fromisoformat(value)
-    raise TypeError(f"Value {value} must be a string or date, but got {type(value)}")
-
-
 def clean_string(value: str | None) -> str | None:
-    """Clean a value by removing all HTML character entities."""
+    """Clean a value by removing all HTML character entities and stripping leading/trailing whitespace."""
     if value is None:
         return None
 
-    return re.sub(r"&[a-zA-Z0-9#]+;", "", value)
+    return re.sub(r"&[a-zA-Z0-9#]+;", "", value).strip()
 
 
 def create_calendar_event(
@@ -44,3 +29,23 @@ def create_calendar_event(
             "description": description,
         }
     )
+
+
+def ensure_date(value: str | date) -> date:
+    """Ensure a value is a date (without time)."""
+    if isinstance(value, date):
+        return value
+
+    if isinstance(value, str):
+        try:
+            # Parse as datetime, then get date
+            return datetime.fromisoformat(value).date()
+        except ValueError:
+            # Fallback to date string
+            return date.fromisoformat(value)
+    raise TypeError(f"Value {value} must be a string or date, but got {type(value)}")
+
+
+def generate_unique_id(country: str, region: str) -> str:
+    """Generate a normalized unique ID from country and region."""
+    return f"{country}_{region}".lower().replace(" ", "_")

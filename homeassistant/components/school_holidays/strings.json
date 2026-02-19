@@ -12,12 +12,19 @@
         "data": {
           "region": "Region"
         },
+        "data_description": {
+          "region": "The specific region within the selected country."
+        },
         "description": "Select a region."
       },
       "user": {
         "data": {
           "country": "Country",
           "name": "Calendar name"
+        },
+        "data_description": {
+          "country": "The country for which to show school holidays.",
+          "name": "The name for this school holidays calendar."
         },
         "description": "Choose a name for your new calendar and select a country."
       }

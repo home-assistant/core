@@ -6,30 +6,29 @@ from datetime import date, datetime
 import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SchoolHolidaysConfigEntry
 from .const import CONF_COUNTRY, CONF_REGION
 from .coordinator import SchoolHolidaysCoordinator
+from .utils import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SchoolHolidaysConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup the School Holidays calendar."""
+    coordinator = entry.runtime_data
     country = str(entry.data.get(CONF_COUNTRY))
     region = str(entry.data.get(CONF_REGION))
     name = str(entry.data.get(CONF_NAME))
-
-    coordinator = SchoolHolidaysCoordinator(hass, country, region)
-    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         [SchoolHolidaysCalendarEntity(coordinator, name, country, region)], True
@@ -56,11 +55,17 @@ class SchoolHolidaysCalendarEntity(
         super().__init__(coordinator)
         self._attr_name = name
         self._country = country
-        self._region = region.lower() if region else None
+        self._region = region
+        self._attr_unique_id = generate_unique_id(country, region)
 
     async def async_update(self) -> None:
         """Update the calendar events from the coordinator."""
         await self.coordinator.async_request_refresh()
+
+    @property
+    def events(self) -> list[dict]:
+        """Return all school holiday events."""
+        return self.coordinator.data or []
 
     @property
     def event(self) -> CalendarEvent | None:

@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 
 from .const import CONF_COUNTRY, CONF_REGION, COUNTRIES, DOMAIN, REGIONS
+from .utils import generate_unique_id
 
 
 class SchoolHolidaysConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,11 +70,26 @@ class SchoolHolidaysConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             region = user_input.get(CONF_REGION)
             if not region:
                 errors[CONF_REGION] = "required"
-            elif region not in regions:
-                errors[CONF_REGION] = "invalid"
+            else:
+                # Case-insensitive region matching
+                region_lower = region.lower()
+                matched_region = None
+                for valid_region in regions:
+                    if valid_region.lower() == region_lower:
+                        matched_region = valid_region
+                        break
+
+                if matched_region is None:
+                    errors[CONF_REGION] = "invalid"
+                else:
+                    region = matched_region
 
             if not errors:
-                await self.async_set_unique_id(f"{self._country}_{region}")
+                # Assert that region is a string
+                assert isinstance(region, str)
+                await self.async_set_unique_id(
+                    generate_unique_id(self._country, region)
+                )
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(

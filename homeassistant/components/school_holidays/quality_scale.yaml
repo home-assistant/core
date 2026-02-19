@@ -1,57 +1,40 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   appropriate-polling:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   brands:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   common-modules:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   config-flow-test-coverage:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   config-flow: done
   dependency-transparency:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   docs-actions:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   docs-high-level-description:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   docs-installation-instructions:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   docs-removal-instructions:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   entity-event-setup:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   entity-unique-id:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   has-entity-name:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   runtime-data:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   test-before-configure:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   test-before-setup:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
   unique-config-entry:
-    status: exempt
-    comment: This integration is being tested.
+    status: done
 
   # Silver
   action-exceptions: todo
