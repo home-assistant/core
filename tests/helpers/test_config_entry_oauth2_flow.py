@@ -17,6 +17,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
@@ -471,26 +472,11 @@ async def test_abort_discovered_multiple(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_body", "error_reason", "debug_log"),
+    ("status_code", "error_body", "error_reason"),
     [
-        (
-            HTTPStatus.UNAUTHORIZED,
-            {},
-            "oauth_unauthorized",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.NOT_FOUND,
-            {},
-            "oauth_unauthorized",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
-        (
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            {},
-            "oauth_failed",
-            "Token request for oauth2_test failed (unknown): unknown",
-        ),
+        (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed"),
         (
             HTTPStatus.BAD_REQUEST,
             {
@@ -499,7 +485,6 @@ async def test_abort_discovered_multiple(
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
             "oauth_unauthorized",
-            "Token request for oauth2_test failed (invalid_request): Request was missing the",
         ),
     ],
 )
@@ -513,7 +498,6 @@ async def test_abort_if_oauth_token_error(
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
-    debug_log: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -562,7 +546,10 @@ async def test_abort_if_oauth_token_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert debug_log in caplog.text
+    assert (
+        f"Token request for {TEST_DOMAIN} failed ({status_code}): {json_dumps(error_body)}"
+        in caplog.text
+    )
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error_reason
@@ -623,7 +610,7 @@ async def test_abort_if_oauth_token_closing_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert "Token request for oauth2_test failed (unknown): unknown" in caplog.text
+    assert "Token request for oauth2_test failed (401):" not in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
@@ -1040,7 +1027,7 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.WARNING),
+        caplog.at_level(logging.DEBUG),
         pytest.raises(expected_exception) as err,
     ):
         await session.async_request("post", "https://example.com")
