@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import setup_integration
 from .conftest import (
     HOMEE_ID,
     HOMEE_IP,
@@ -266,10 +267,7 @@ async def test_zeroconf_already_configured(
     """Test zeroconf discovery flow when already configured."""
     mock_config_entry.runtime_data = AsyncMock()
     mock_config_entry.runtime_data.connected = True
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_init(

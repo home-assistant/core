@@ -127,7 +127,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != self._host
         ):
             _LOGGER.debug(
-                "Aborting config flow for discovered homee with IP %s"
+                "Aborting config flow for discovered homee with IP %s "
                 "since it is already configured at IP %s",
                 self._host,
                 existing_entry.data[CONF_HOST],
