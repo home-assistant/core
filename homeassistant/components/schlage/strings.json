@@ -63,7 +63,7 @@
       "message": "PIN code is required"
     },
     "schlage_name_exists": {
-      "message": "A PIN code with this name already exists on the lock"
+      "message": "A PIN code with name of '{name}' already exists on the lock"
     },
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data"

@@ -86,6 +86,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="schlage_name_exists",
+                translation_placeholders={"name": name},
             )
 
     def _validate_code_value(
@@ -118,8 +119,11 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         """Delete a lock code."""
         codes = self._lock.access_codes
         if not codes:
-            """No codes left to delete. Operation successful. Fast Pass"""
+            # NOTE: codes is either `None` or a dict, return early if it's
+            # `None` to avoid unnecessary processing
             return
+
+        # NOTE: Past this line, codes is a non-empty dict
 
         normalized = self._normalize_code_name(name)
         code_id_to_delete = next(
@@ -132,12 +136,11 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         )
 
         if not code_id_to_delete:
-            """Code not found in defined codes. Operation successful."""
+            # Code not found in defined codes, operation successful
             return
 
-        if self._lock.access_codes:
-            await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
-            await self.coordinator.async_request_refresh()
+        await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
+        await self.coordinator.async_request_refresh()
 
     async def get_codes(self) -> ServiceResponse:
         """Get lock codes."""
