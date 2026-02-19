@@ -1,10 +1,13 @@
 {
   "domain": "influxdb",
   "name": "InfluxDB",
-  "codeowners": ["@mdegat01"],
+  "codeowners": ["@mdegat01", "@Robbie1221"],
+  "config_flow": true,
+  "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/influxdb",
   "iot_class": "local_push",
   "loggers": ["influxdb", "influxdb_client"],
   "quality_scale": "legacy",
-  "requirements": ["influxdb==5.3.1", "influxdb-client==1.50.0"]
+  "requirements": ["influxdb==5.3.1", "influxdb-client==1.50.0"],
+  "single_config_entry": true
 }

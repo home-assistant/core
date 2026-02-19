@@ -1,0 +1,58 @@
+{
+  "common": {
+    "ssl_ca_cert": "SSL CA certificate (Optional)"
+  },
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_config": "Invalid organization, bucket or token",
+      "invalid_database": "Invalid database",
+      "ssl_error": "SSL certificate error",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "configure_v1": {
+        "data": {
+          "database": "Database",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "database": "The name of the database.",
+          "ssl_ca_cert": "Path to the SSL certificate"
+        },
+        "title": "InfluxDB configuration"
+      },
+      "configure_v2": {
+        "data": {
+          "bucket": "Bucket",
+          "organization": "Organization",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "bucket": "The name of the bucket.",
+          "organization": "The name of the organization.",
+          "ssl_ca_cert": "Path to the SSL certificate"
+        },
+        "title": "InfluxDB configuration"
+      },
+      "import": {
+        "title": "Import configuration"
+      },
+      "user": {
+        "menu_options": {
+          "configure_v1": "InfluxDB v1.x",
+          "configure_v2": "InfluxDB v2.x / v3"
+        },
+        "title": "Choose InfluxDB version"
+      }
+    }
+  }
+}
