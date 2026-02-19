@@ -1,7 +1,7 @@
 """Support for Cambridge Audio number entities."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from aiostreammagic import StreamMagicClient
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
     """Describes Cambridge Audio number entity."""
 
-    exists_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
+    exists_fn: Callable[[StreamMagicClient], bool] = lambda _: True
     value_fn: Callable[[StreamMagicClient], int]
     set_value_fn: Callable[[StreamMagicClient, int], Awaitable[None]]
 
