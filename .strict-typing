@@ -367,6 +367,7 @@ homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
+homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
@@ -418,6 +419,7 @@ homeassistant.components.plugwise.*
 homeassistant.components.pooldose.*
 homeassistant.components.portainer.*
 homeassistant.components.powerfox.*
+homeassistant.components.powerfox_local.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*

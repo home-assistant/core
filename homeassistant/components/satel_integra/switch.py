@@ -74,10 +74,8 @@ class SatelIntegraSwitch(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        new_state = self._get_state_from_coordinator()
-        if new_state != self._attr_is_on:
-            self._attr_is_on = new_state
-            self.async_write_ha_state()
+        self._attr_is_on = self._get_state_from_coordinator()
+        self.async_write_ha_state()
 
     def _get_state_from_coordinator(self) -> bool | None:
         """Method to get switch state from coordinator data."""
