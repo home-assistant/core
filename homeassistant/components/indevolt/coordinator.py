@@ -21,6 +21,8 @@ from .const import (
     CONF_SERIAL_NUMBER,
     DEFAULT_PORT,
     DOMAIN,
+    ENERGY_MODE_READ_KEY,
+    ENERGY_MODE_WRITE_KEY,
     SENSOR_KEYS,
 )
 
@@ -33,6 +35,7 @@ type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
+    friendly_name: str | None = None
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
 
@@ -53,6 +56,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
+        self.friendly_name = entry.title
         self.serial_number = entry.data[CONF_SERIAL_NUMBER]
         self.device_model = entry.data[CONF_MODEL]
         self.generation = entry.data[CONF_GENERATION]
@@ -88,3 +92,36 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(f"Device push timed out: {err}") from err
         except (ClientError, ConnectionError, OSError) as err:
             raise HomeAssistantError(f"Device push failed: {err}") from err
+
+    async def switch_energy_mode(self, target_mode: int) -> bool:
+        """Attempt to switch device to given energy mode."""
+        current_mode = self.data.get(ENERGY_MODE_READ_KEY)
+
+        # Ensure current energy mode is known
+        if current_mode is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_retrieve_current_energy_mode",
+            )
+
+        # Ensure device is not in "Outdoor/Portable mode"
+        if current_mode == 0:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="real_time_control_unavailable_outdoor_portable",
+            )
+
+        # Switch energymode if required
+        if current_mode != target_mode:
+            try:
+                # Switch device to requested energy mode
+                await self.async_push_data(ENERGY_MODE_WRITE_KEY, target_mode)
+                await self.async_request_refresh()
+
+            except HomeAssistantError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_switch_energy_mode",
+                ) from err
+
+        return True
