@@ -40,8 +40,8 @@ from .const import (
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
-    SatelConfigEntry,
 )
+from .coordinator import SatelConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
