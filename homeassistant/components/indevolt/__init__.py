@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:

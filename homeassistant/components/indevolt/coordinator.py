@@ -6,12 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from aiohttp import ClientError
 from indevolt_api import IndevoltAPI, TimeOutException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -78,3 +79,12 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await self.api.fetch_data(sensor_keys)
         except TimeOutException as err:
             raise UpdateFailed(f"Device update timed out: {err}") from err
+
+    async def async_push_data(self, sensor_key: str, value: Any) -> bool:
+        """Push/write data values to given key on the device."""
+        try:
+            return await self.api.set_data(sensor_key, value)
+        except TimeOutException as err:
+            raise HomeAssistantError(f"Device push timed out: {err}") from err
+        except (ClientError, ConnectionError, OSError) as err:
+            raise HomeAssistantError(f"Device push failed: {err}") from err
