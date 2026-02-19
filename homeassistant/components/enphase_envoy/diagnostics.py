@@ -147,6 +147,8 @@ async def async_get_config_entry_diagnostics(
         "ctmeter_production_phases": envoy_data.ctmeter_production_phases,
         "ctmeter_consumption_phases": envoy_data.ctmeter_consumption_phases,
         "ctmeter_storage_phases": envoy_data.ctmeter_storage_phases,
+        "ctmeters": envoy_data.ctmeters,
+        "ctmeters_phases": envoy_data.ctmeters_phases,
         "dry_contact_status": envoy_data.dry_contact_status,
         "dry_contact_settings": envoy_data.dry_contact_settings,
         "inverters": envoy_data.inverters,
@@ -179,6 +181,7 @@ async def async_get_config_entry_diagnostics(
         "ct_consumption_meter": envoy.consumption_meter_type,
         "ct_production_meter": envoy.production_meter_type,
         "ct_storage_meter": envoy.storage_meter_type,
+        "ct_meters": list(envoy_data.ctmeters.keys()),
     }
 
     fixture_data: dict[str, Any] = {}

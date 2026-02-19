@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -187,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -313,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -369,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -423,6 +430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -472,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -521,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -572,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -628,6 +639,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -690,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -748,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -801,6 +815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -857,6 +872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -913,6 +929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -978,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1039,6 +1057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1095,6 +1114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1149,6 +1169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1198,6 +1219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1247,6 +1269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1298,6 +1321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1354,6 +1378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1416,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1474,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1530,6 +1557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1584,6 +1612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1633,6 +1662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1682,6 +1712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1733,6 +1764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1789,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1845,6 +1878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1901,6 +1935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1954,6 +1989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2010,6 +2046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2066,6 +2103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2131,6 +2169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2192,6 +2231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2248,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2304,6 +2345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2358,6 +2400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2407,6 +2450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2456,6 +2500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2505,6 +2550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2556,6 +2602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2612,6 +2659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2674,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2732,6 +2781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2788,6 +2838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2841,6 +2892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2897,6 +2949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2953,6 +3006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3018,6 +3072,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3079,6 +3134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3112,118 +3168,6 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_front_left_tyre_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.reg_twingo_iii_front_left_tyre_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Front left tyre pressure',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_left_pressure',
-    'unique_id': 'vf1twingoiiivin_front_left_pressure',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_front_left_tyre_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'REG-TWINGO-III Front left tyre pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.reg_twingo_iii_front_left_tyre_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2730',
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_front_right_tyre_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.reg_twingo_iii_front_right_tyre_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Front right tyre pressure',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'front_right_pressure',
-    'unique_id': 'vf1twingoiiivin_front_right_pressure',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_front_right_tyre_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'REG-TWINGO-III Front right tyre pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.reg_twingo_iii_front_right_tyre_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2790',
-  })
-# ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3245,6 +3189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3294,6 +3239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3343,6 +3289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3392,6 +3339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3443,6 +3391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3499,6 +3448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3561,6 +3511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3596,118 +3547,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_rear_left_tyre_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.reg_twingo_iii_rear_left_tyre_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Rear left tyre pressure',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_left_pressure',
-    'unique_id': 'vf1twingoiiivin_rear_left_pressure',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_rear_left_tyre_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'REG-TWINGO-III Rear left tyre pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.reg_twingo_iii_rear_left_tyre_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2340',
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_rear_right_tyre_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.reg_twingo_iii_rear_right_tyre_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Rear right tyre pressure',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'rear_right_pressure',
-    'unique_id': 'vf1twingoiiivin_rear_right_pressure',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-  })
-# ---
-# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_rear_right_tyre_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'REG-TWINGO-III Rear right tyre pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.reg_twingo_iii_rear_right_tyre_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2460',
-  })
-# ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3731,6 +3570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3784,6 +3624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3840,6 +3681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3896,6 +3738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3961,6 +3804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4022,6 +3866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4078,6 +3923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4132,6 +3978,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4181,6 +4028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4230,6 +4078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4281,6 +4130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4337,6 +4187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4399,6 +4250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4457,6 +4309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4513,6 +4366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -4566,6 +4420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4622,6 +4477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4678,6 +4534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4743,6 +4600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4804,6 +4662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4860,6 +4719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4916,6 +4776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4970,6 +4831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5019,6 +4881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5068,6 +4931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5117,6 +4981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5168,6 +5033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5224,6 +5090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5286,6 +5153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5344,6 +5212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5400,6 +5269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

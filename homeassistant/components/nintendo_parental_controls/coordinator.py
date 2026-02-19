@@ -5,13 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from pynintendoauth.exceptions import (
+    HttpException,
+    InvalidOAuthConfigurationException,
+    InvalidSessionTokenException,
+)
 from pynintendoparental import Authenticator, NintendoParental
-from pynintendoparental.exceptions import InvalidOAuthConfigurationException
+from pynintendoparental.exceptions import NoDevicesFoundException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -23,6 +28,8 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 
 class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Nintendo data update coordinator."""
+
+    config_entry: NintendoParentalControlsConfigEntry
 
     def __init__(
         self,
@@ -50,3 +57,18 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryError(
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
+        except NoDevicesFoundException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="no_devices_found",
+            ) from err
+        except InvalidSessionTokenException as err:
+            _LOGGER.debug("Session token invalid, will renew on next update")
+            raise UpdateFailed from err
+        except HttpException as err:
+            if err.error_code == "update_required":
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="update_required",
+                ) from err
+            raise UpdateFailed(retry_after=900) from err

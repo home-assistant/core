@@ -1,0 +1,92 @@
+{
+  "eco_mode_selection": {
+    "name": "DHW eco mode selection",
+    "error": 0,
+    "value": "1",
+    "desc": "Comfort",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "reduced_setpoint": {
+    "name": "DHW reduced setpoint",
+    "error": 0,
+    "value": "35.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "nominal_setpoint_max": {
+    "name": "DHW nominal setpoint maximum",
+    "error": 0,
+    "value": "65.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "dhw_charging_priority": {
+    "name": "DHW charging priority",
+    "error": 0,
+    "value": "1",
+    "desc": "High",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "operating_mode_changeover": {
+    "name": "DHW operating mode changeover",
+    "error": 0,
+    "value": "0",
+    "desc": "Manual",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "legionella_function": {
+    "name": "Legionella function fixed weekday",
+    "error": 0,
+    "value": "0",
+    "desc": "Off",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "legionella_setpoint": {
+    "name": "Legionella function setpoint",
+    "error": 0,
+    "value": "60.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "legionella_periodicity": {
+    "name": "Legionella function periodicity",
+    "error": 0,
+    "value": "7",
+    "desc": "Weekly",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_circulation_pump_release": {
+    "name": "DHW circulation pump release",
+    "error": 0,
+    "value": "1",
+    "desc": "Released",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  },
+  "dhw_circulation_setpoint": {
+    "name": "DHW circulation pump setpoint",
+    "error": 0,
+    "value": "45.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  }
+}

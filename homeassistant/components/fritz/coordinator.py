@@ -36,6 +36,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -47,9 +48,10 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
+    SCAN_INTERVAL,
     MeshRoles,
 )
-from .helpers import _ha_is_stopping
+from .helpers import ha_is_stopping
 from .models import (
     ConnectionInfo,
     Device,
@@ -90,10 +92,56 @@ class UpdateCoordinatorDataType(TypedDict):
     entity_states: dict[str, StateType | bool]
 
 
+class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
+    """FritzConnection with cached call action."""
+
+    _call_cache: dict[str, dict[str, Any]]
+
+    def clear_cache(self) -> None:
+        """Clear cached calls."""
+        self._call_cache = {}
+        _LOGGER.debug("Cleared FritzConnection call action cache")
+
+    def call_action(
+        self,
+        service_name: str,
+        action_name: str,
+        *,
+        arguments: dict | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Call action with cached services. Only get actions are cached."""
+        if not action_name.lower().startswith("get"):
+            return super().call_action(  # type: ignore[no-any-return]
+                service_name, action_name, arguments=arguments, **kwargs
+            )
+
+        if not hasattr(self, "_call_cache"):
+            self._call_cache = {}
+
+        kwargs_key = ",".join(f"{k}={v!r}" for k, v in sorted(kwargs.items()))
+
+        cache_key = slugify(f"{service_name}:{action_name}:{arguments}:{kwargs_key}")
+        if (result := self._call_cache.get(cache_key)) is not None:
+            _LOGGER.debug("Using cached result for %s %s", service_name, action_name)
+            return result
+
+        result = super().call_action(
+            service_name, action_name, arguments=arguments, **kwargs
+        )
+        self._call_cache[cache_key] = result
+        return result  # type: ignore[no-any-return]
+
+
 class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
 
     config_entry: FritzConfigEntry
+    connection: FritzConnectionCached
+    fritz_guest_wifi: FritzGuestWLAN
+    fritz_hosts: FritzHosts
+    fritz_status: FritzStatus
+    fritz_call: FritzCall
 
     def __init__(
         self,
@@ -112,17 +160,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
         self._devices: dict[str, FritzDevice] = {}
         self._options: Mapping[str, Any] | None = None
         self._unique_id: str | None = None
-        self.connection: FritzConnection = None
-        self.fritz_guest_wifi: FritzGuestWLAN = None
-        self.fritz_hosts: FritzHosts = None
-        self.fritz_status: FritzStatus = None
-        self.fritz_call: FritzCall = None
         self.host = host
         self.mesh_role = MeshRoles.NONE
         self.mesh_wifi_uplink = False
@@ -159,11 +202,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             name=self.config_entry.title,
             sw_version=self.current_firmware,
         )
+        self.connection.clear_cache()
 
     def setup(self) -> None:
         """Set up FritzboxTools class."""
 
-        self.connection = FritzConnection(
+        self.connection = FritzConnectionCached(
             address=self.host,
             port=self.port,
             user=self.username,
@@ -263,6 +307,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "call_deflections": {},
             "entity_states": {},
         }
+        self.connection.clear_cache()
         try:
             await self.async_update_device_info()
 
@@ -278,6 +323,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -467,8 +518,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._devices[dev_mac].update(dev_info, consider_home)
             return False
 
-        device = FritzDevice(dev_mac, dev_info.name)
-        device.update(dev_info, consider_home)
+        device = FritzDevice(dev_mac, dev_info, consider_home)
         self._devices[dev_mac] = device
 
         # manually register device entry for new connected device
@@ -502,7 +552,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Scan for new network devices."""
 
         if self.hass.is_stopping:
-            _ha_is_stopping("scan devices")
+            ha_is_stopping("scan devices")
             return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
@@ -677,7 +727,7 @@ class AvmWrapper(FritzBoxTools):
         """Return service details."""
 
         if self.hass.is_stopping:
-            _ha_is_stopping(f"{service_name}/{action_name}")
+            ha_is_stopping(f"{service_name}/{action_name}")
             return {}
 
         if f"{service_name}{service_suffix}" not in self.connection.services:
@@ -825,6 +875,21 @@ class AvmWrapper(FritzBoxTools):
             NewIPv4Address=ip_address,
             NewDisallow="0" if turn_on else "1",
         )
+
+    async def async_get_current_user_rights(self) -> dict[str, Any]:
+        """Call X_AVM-DE_GetCurrentUser service."""
+
+        result = await self._async_service_call(
+            "LANConfigSecurity",
+            "1",
+            "X_AVM-DE_GetCurrentUser",
+        )
+
+        user_rights = xmltodict.parse(result["NewX_AVM-DE_CurrentUserRights"])["rights"]
+
+        return {
+            k: user_rights["access"][idx] for idx, k in enumerate(user_rights["path"])
+        }
 
     async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
         """Call X_AVM-DE_WakeOnLANByMACAddress service."""

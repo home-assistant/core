@@ -79,7 +79,7 @@ def setup_mock_foscam_camera(mock_foscam_camera):
             0,
             {
                 "swCapabilities1": "100",
-                "swCapabilities2": "768",
+                "swCapabilities2": "896",
                 "swCapabilities3": "100",
                 "swCapabilities4": "100",
             },

@@ -52,7 +52,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle Tansmission config flow."""
+    """Handle Transmission config flow."""
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -81,7 +81,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             except AuthenticationError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except (CannotConnect, UnknownError):
+            except CannotConnect, UnknownError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -115,7 +115,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
             except AuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except (CannotConnect, UnknownError):
+            except CannotConnect, UnknownError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)

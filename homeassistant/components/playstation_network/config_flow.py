@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -131,7 +132,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 user = await psn.get_user()
             except PSNAWPAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except (PSNAWPNotFoundError, PSNAWPInvalidTokenError):
+            except PSNAWPNotFoundError, PSNAWPInvalidTokenError:
                 errors["base"] = "invalid_account"
             except PSNAWPError:
                 errors["base"] = "cannot_connect"
@@ -173,6 +174,8 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Subentry user flow."""
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_disabled")
         friends_list = config_entry.runtime_data.user_data.psn.friends_list
 
         if user_input is not None:

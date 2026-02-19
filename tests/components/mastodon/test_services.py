@@ -4,9 +4,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.const import (
+    ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
+    ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
@@ -14,7 +17,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
-from homeassistant.components.mastodon.services import SERVICE_POST
+from homeassistant.components.mastodon.services import SERVICE_GET_ACCOUNT, SERVICE_POST
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -22,6 +25,58 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+async def test_get_account_success(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get_account service successfully returns account data."""
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_ACCOUNT,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == snapshot
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+
+
+async def test_get_account_failure(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the get_account service handles API errors."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test API error (this is the only error type currently caught by the service)
+    mock_mastodon_client.account_lookup.side_effect = MastodonAPIError("API error")
+    with pytest.raises(
+        HomeAssistantError,
+        match='Unable to get account "@test@mastodon.social"',
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@test@mastodon.social",
+            },
+            blocking=True,
+            return_response=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -35,6 +90,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": None,
+                "idempotency_key": None,
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
@@ -46,6 +102,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": "private",
+                "idempotency_key": None,
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
@@ -61,6 +118,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": "private",
+                "idempotency_key": None,
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
@@ -77,6 +135,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
                 "language": "nl",
                 "media_ids": "1",
                 "sensitive": None,
@@ -94,6 +153,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
                 "language": "en",
                 "media_ids": "1",
                 "sensitive": None,
@@ -104,6 +164,22 @@ from tests.common import MockConfigEntry
             {
                 "status": "test toot",
                 "language": "invalid-lang",
+                "spoiler_text": None,
+                "visibility": None,
+                "idempotency_key": None,
+                "media_ids": None,
+                "sensitive": None,
+            },
+        ),
+        (
+            {
+                ATTR_STATUS: "test toot\nwith idempotency",
+                ATTR_IDEMPOTENCY_KEY: "post_once_only",
+            },
+            {
+                "status": "test toot\nwith idempotency",
+                "idempotency_key": "post_once_only",
+                "language": None,
                 "spoiler_text": None,
                 "visibility": None,
                 "media_ids": None,
@@ -164,6 +240,7 @@ async def test_service_post(
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "idempotency_key": None,
                 "media_ids": "1",
                 "media_description": None,
                 "sensitive": None,
@@ -249,6 +326,31 @@ async def test_post_path_not_whitelisted(
         )
 
 
+async def test_idempotency_key_too_short(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service raising an error because the idempotency key is too short."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot", "idempotency_key": "abc"}
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Idempotency key must be at least 4 characters long",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
+
+
 async def test_service_entry_availability(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
@@ -263,7 +365,7 @@ async def test_service_entry_availability(
 
     payload = {"status": "test toot"}
 
-    with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
@@ -271,10 +373,9 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=False,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
-    with pytest.raises(
-        ServiceValidationError, match='Integration "mastodon" not found in registry'
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
@@ -282,3 +383,4 @@ async def test_service_entry_availability(
             blocking=True,
             return_response=False,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"

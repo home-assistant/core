@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     FlowType,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
@@ -443,7 +443,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         mac_address = format_mac(discovery_info.macaddress)
-        await self.async_set_unique_id(format_mac(mac_address))
+        await self.async_set_unique_id(mac_address)
         await self._async_validate_mac_abort_configured(
             mac_address, discovery_info.ip, None
         )
@@ -918,7 +918,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for esphome."""
 
     async def async_step_init(

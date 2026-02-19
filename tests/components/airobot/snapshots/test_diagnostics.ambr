@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_capabilities': dict({
+      'fw_version': 300,
+      'has_co2_sensor': False,
+      'has_floor_sensor': False,
+      'hw_version': 256,
+    }),
+    'entry_data': dict({
+      'host': '**REDACTED**',
+      'mac': '**REDACTED**',
+      'password': '**REDACTED**',
+      'username': '**REDACTED**',
+    }),
+    'settings': dict({
+      'device_id': 'T01A1B2C3',
+      'device_name': 'Test Thermostat',
+      'hysteresis_band': 0.1,
+      'mode': 1,
+      'setpoint_temp': 22.0,
+      'setpoint_temp_away': 18.0,
+      'setting_flags': dict({
+        'actuator_exercise_disabled': False,
+        'boost_enabled': False,
+        'childlock_enabled': False,
+        'reboot': False,
+        'recalibrate_co2': False,
+      }),
+    }),
+    'status': dict({
+      'aqi': None,
+      'co2': None,
+      'device_id': 'T01A1B2C3',
+      'device_uptime': 10000,
+      'errors': 0,
+      'fw_version': 300,
+      'heating_uptime': 5000,
+      'hum_air': 45.0,
+      'hw_version': 256,
+      'setpoint_temp': 22.0,
+      'status_flags': dict({
+        'heating_on': False,
+        'window_open_detected': False,
+      }),
+      'temp_air': 22.0,
+      'temp_floor': None,
+    }),
+  })
+# ---

@@ -3,11 +3,11 @@
     "reload": {
       "service": "mdi:reload"
     },
-    "set": {
-      "service": "mdi:home-group-plus"
-    },
     "remove": {
       "service": "mdi:home-group-remove"
+    },
+    "set": {
+      "service": "mdi:home-group-plus"
     }
   }
 }
