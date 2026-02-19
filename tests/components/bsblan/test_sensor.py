@@ -1,4 +1,4 @@
-"""Tests for the BSB-Lan sensor platform."""
+"""Tests for the BSB-LAN sensor platform."""
 
 from unittest.mock import AsyncMock
 
