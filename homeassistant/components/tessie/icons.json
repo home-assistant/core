@@ -184,8 +184,14 @@
       "battery_power": {
         "default": "mdi:home-battery"
       },
+      "charge_state_charge_port_latch": {
+        "default": "mdi:ev-plug-tesla"
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
+      },
+      "charge_state_conn_charge_cable": {
+        "default": "mdi:ev-plug-ccs2"
       },
       "charge_state_energy_remaining": {
         "default": "mdi:battery-medium"

@@ -352,6 +352,14 @@
       "charge_state_charge_energy_added": {
         "name": "Charge energy added"
       },
+      "charge_state_charge_port_latch": {
+        "name": "Charge port latch",
+        "state": {
+          "blocking": "Blocking",
+          "disengaged": "Disengaged",
+          "engaged": "Engaged"
+        }
+      },
       "charge_state_charge_rate": {
         "name": "Charge rate"
       },
@@ -374,6 +382,9 @@
           "starting": "Starting",
           "stopped": "[%key:common::state::stopped%]"
         }
+      },
+      "charge_state_conn_charge_cable": {
+        "name": "Charge cable"
       },
       "charge_state_energy_remaining": {
         "name": "Energy remaining"

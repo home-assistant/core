@@ -100,6 +100,12 @@ TessieChargeStates = {
     "NoPower": "no_power",
 }
 
+TessieChargePortLatchStates = {
+    "Engaged": "engaged",
+    "Disengaged": "disengaged",
+    "Blocking": "blocking",
+}
+
 
 class TessieWallConnectorStates(IntEnum):
     """Tessie Wall Connector states."""
