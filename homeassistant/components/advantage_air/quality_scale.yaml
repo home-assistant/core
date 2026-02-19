@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: https://developers.home-assistant.io/blog/2025/09/25/entity-services-api-changes/
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
