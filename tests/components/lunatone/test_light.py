@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock
 from lunatone_rest_api_client.models import LineStatus
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -93,7 +97,7 @@ async def test_turn_on_off_with_brightness(
     expected_brightness = 128
     brightness_percentages = iter([50.0, 0.0, 50.0])
 
-    mock_lunatone_devices.set_is_dimmable(True)
+    mock_lunatone_devices.set_color_mode(ColorMode.BRIGHTNESS)
 
     await setup_integration(hass, mock_config_entry)
 

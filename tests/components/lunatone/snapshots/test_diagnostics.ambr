@@ -208,6 +208,7 @@
       'node_red': False,
       'startup_mode': 'normal',
       'tier': 'basic',
+      'uid': None,
       'version': 'v1.14.1/1.4.3',
     }),
   })

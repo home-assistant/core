@@ -101,22 +101,23 @@ class LunatoneLight(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._device is not None
+        return super().available
 
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self._device is not None and self._device.is_on
+        return self._device.is_on
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
+        assert self._device.brightness
         return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.is_dimmable:
+        if self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 

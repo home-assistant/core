@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from lunatone_rest_api_client import Device, Devices
 import pytest
 
+from homeassistant.components.light import ColorMode
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
@@ -27,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_lunatone_devices() -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
-    state = {"is_dimmable": False}
+    state = {"color_mode": ColorMode.ONOFF}
 
     def build_devices_mock(devices: Devices):
         device_list = []
@@ -39,9 +40,12 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
             device.id = device.data.id
             device.name = device.data.name
             device.is_on = device.data.features.switchable.status
-            device.brightness = device.data.features.dimmable.status
-            type(device).is_dimmable = PropertyMock(
-                side_effect=lambda s=state: s["is_dimmable"]
+            type(device).brightness = PropertyMock(
+                side_effect=lambda d=device, s=state: (
+                    d.data.features.dimmable.status
+                    if s["color_mode"] != ColorMode.ONOFF
+                    else None
+                )
             )
             device_list.append(device)
         return device_list
@@ -54,7 +58,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
         )
-        devices.set_is_dimmable = lambda value, s=state: s.update(is_dimmable=value)
+        devices.set_color_mode = lambda value, s=state: s.update(color_mode=value)
         yield devices
 
 
