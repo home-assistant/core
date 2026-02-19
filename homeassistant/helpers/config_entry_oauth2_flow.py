@@ -249,14 +249,14 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             if resp.status >= 400:
                 try:
                     error_body = await resp.text()
-                    _LOGGER.debug(
-                        "Token request for %s failed (%s): %s",
-                        self.domain,
-                        resp.status,
-                        error_body or "unknown",
-                    )
                 except ClientError, UnicodeDecodeError:
-                    pass
+                    error_body = ""
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self.domain,
+                    resp.status,
+                    error_body or "unknown",
+                )
             resp.raise_for_status()
         except ClientResponseError as err:
             if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
