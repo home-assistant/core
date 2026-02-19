@@ -486,3 +486,61 @@ async def test_multiple_devices(hass: HomeAssistant) -> None:
 
     # No more devices
     assert next(plug_it, None) is None
+
+
+async def test_missing_power_entity(hass: HomeAssistant) -> None:
+    """Test that missing power entity defaults to 0.0 power."""
+    # Config with a CONF_POWER_ENTITY that references a sensor which will be removed
+    ENTITY_SENSOR_TEMP = "sensor.temporary_power"
+    config_with_entity = {
+        DOMAIN: {
+            CONF_ENTITIES: {
+                ENTITY_LIGHT: {
+                    CONF_NAME: ENTITY_LIGHT_NAME,
+                    CONF_POWER_ENTITY: ENTITY_SENSOR_TEMP,
+                },
+            }
+        }
+    }
+    config = config_with_entity[DOMAIN][CONF_ENTITIES]
+
+    assert await async_setup_component(
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": "demo"}}
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": "demo"}},
+    )
+    with patch(
+        "sense_energy.SenseLink",
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config_with_entity) is True
+    await hass.async_block_till_done()
+
+    # Set up the power sensor entity
+    hass.states.async_set(ENTITY_SENSOR_TEMP, 100)
+    await emulated_kasa.validate_configs(hass, config)
+
+    # Verify CONF_POWER was set by validate_configs
+    assert CONF_POWER in config[ENTITY_LIGHT]
+
+    # Remove the sensor state to test the fallback behavior
+    hass.states.async_remove(ENTITY_SENSOR_TEMP)
+
+    # Turn light on
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get(ENTITY_LIGHT)
+    assert light.state == STATE_ON
+
+    # Light with removed power entity should report 0 power (not crash)
+    plug_it = emulated_kasa.get_plug_devices(hass, config)
+    plug = next(plug_it).generate_response()
+    assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_LIGHT_NAME
+    power = nested_value(plug, "emeter", "get_realtime", "power")
+    assert math.isclose(power, 0)

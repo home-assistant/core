@@ -1,6 +1,8 @@
 """Support for local power state reporting of entities by emulating TP-Link Kasa smart plugs."""
 
+from collections.abc import Iterator
 import logging
+from typing import Any
 
 from sense_energy import PlugInstance, SenseLink
 import voluptuous as vol
@@ -14,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.typing import ConfigType
@@ -54,16 +56,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
     entity_configs = conf[CONF_ENTITIES]
 
-    def devices():
+    def devices() -> Iterator[PlugInstance]:
         """Devices to be emulated."""
         yield from get_plug_devices(hass, entity_configs)
 
     server = SenseLink(devices)
 
-    async def stop_emulated_kasa(event):
+    async def stop_emulated_kasa(event: Event) -> None:
         await server.stop()
 
-    async def start_emulated_kasa(event):
+    async def start_emulated_kasa(event: Event) -> None:
         await validate_configs(hass, entity_configs)
         try:
             await server.start()
@@ -77,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def validate_configs(hass, entity_configs):
+async def validate_configs(hass: HomeAssistant, entity_configs: dict[str, Any]) -> None:
     """Validate that entities exist and ensure templates are ready to use."""
     entity_registry = er.async_get(hass)
     for entity_id, entity_config in entity_configs.items():
@@ -106,12 +108,14 @@ async def validate_configs(hass, entity_configs):
             _LOGGER.debug("No power value defined for: %s", entity_id)
 
 
-def get_system_unique_id(entity: er.RegistryEntry):
+def get_system_unique_id(entity: er.RegistryEntry) -> str:
     """Determine the system wide unique_id for an entity."""
     return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
 
 
-def get_plug_devices(hass, entity_configs):
+def get_plug_devices(
+    hass: HomeAssistant, entity_configs: dict[str, Any]
+) -> Iterator[PlugInstance]:
     """Produce list of plug devices from config entities."""
     for entity_id, entity_config in entity_configs.items():
         if (state := hass.states.get(entity_id)) is None:
@@ -124,11 +128,18 @@ def get_plug_devices(hass, entity_configs):
                 if isinstance(power_val, (float, int)):
                     power = float(power_val)
                 elif isinstance(power_val, str):
-                    power = float(hass.states.get(power_val).state)
+                    if (power_state := hass.states.get(power_val)) is not None:
+                        power = float(power_state.state)
+                    else:
+                        power = 0.0
                 elif isinstance(power_val, Template):
                     power = float(power_val.async_render())
+                else:
+                    power = 0.0
             elif state.domain == SENSOR_DOMAIN:
                 power = float(state.state)
+            else:
+                power = 0.0
         else:
             power = 0.0
         last_changed = state.last_changed.timestamp()
