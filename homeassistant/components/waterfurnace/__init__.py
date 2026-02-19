@@ -138,15 +138,10 @@ async def async_setup_entry(
             "Authentication failed. Please update your credentials."
         ) from err
 
-    if not client.devices:
-        raise ConfigEntryNotReady(
-            "Failed to connect to WaterFurnace service: No devices found"
-        )
-
     results = await asyncio.gather(
         *[
             _async_setup_coordinator(hass, username, password, index, entry)
-            for index in range(len(client.devices))
+            for index in range(len(client.devices) if client.devices else 0)
         ]
     )
     entry.runtime_data = dict(results)
