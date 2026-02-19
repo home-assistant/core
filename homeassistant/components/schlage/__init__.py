@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, service
 
+from .config_flow import STEP_USER_DATA_SCHEMA
 from .const import DOMAIN, SERVICE_ADD_CODE, SERVICE_DELETE_CODE, SERVICE_GET_CODES
 from .coordinator import SchlageConfigEntry, SchlageDataUpdateCoordinator
 
@@ -22,6 +23,8 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = STEP_USER_DATA_SCHEMA
 
 
 async def async_setup(hass: HomeAssistant, config: SchlageConfigEntry) -> bool:
