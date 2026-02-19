@@ -146,9 +146,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             await self.send_device_command(
                 clusters.ServiceArea.Commands.SelectAreas(newAreas=[])
             )
-            _LOGGER.debug(
-                "Reset selected areas before start with unconstrained selection"
-            )
 
         await self.send_device_command(
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
