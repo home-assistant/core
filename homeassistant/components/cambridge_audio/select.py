@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import ControlBusMode, DisplayBrightness, EQBand, UserEQ
+from aiostreammagic.models import EQ_PRESETS, ControlBusMode, DisplayBrightness, EQBand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CambridgeAudioConfigEntry
-from .const import EQ_PRESET_CUSTOM, EQ_PRESET_GAINS
+from .const import EQ_PRESET_CUSTOM
 from .entity import CambridgeAudioEntity, command
 
 PARALLEL_UPDATES = 0
@@ -70,7 +70,7 @@ def _eq_preset_value_fn(client: StreamMagicClient) -> str | None:
         return None
 
     # Check if current gain settings match any preset
-    for preset_name, preset_gains in EQ_PRESET_GAINS.items():
+    for preset_name, preset_gains in EQ_PRESETS.items():
         if _eq_gains_match(current_bands, preset_gains):
             return preset_name
 
@@ -83,19 +83,10 @@ async def _eq_preset_set_value_fn(client: StreamMagicClient, value: str) -> None
     if TYPE_CHECKING:
         assert client.audio.user_eq is not None
 
-    # Don't apply custom preset - it's read-only
-    if value == EQ_PRESET_CUSTOM:
+    if value not in EQ_PRESETS:
         return
 
-    if (preset_gains := EQ_PRESET_GAINS.get(value)) is None:
-        return
-
-    # Build EQ bands using current device settings but with new gains
-    bands = [EQBand(index=i, gain=preset_gains[i]) for i in range(len(preset_gains))]
-
-    # Create UserEQ with current enabled state and new bands
-    user_eq = UserEQ(enabled=client.audio.user_eq.enabled, bands=bands)
-    await client.set_equalizer_params(user_eq)
+    await client.set_equalizer_preset(value)
 
 
 CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
@@ -142,7 +133,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
     CambridgeAudioSelectEntityDescription(
         key="equalizer_preset",
         translation_key="equalizer_preset",
-        options=[*EQ_PRESET_GAINS.keys(), EQ_PRESET_CUSTOM],
+        options=[*EQ_PRESETS.keys(), EQ_PRESET_CUSTOM],
         entity_category=EntityCategory.CONFIG,
         load_fn=lambda client: client.audio.user_eq is not None,
         value_fn=_eq_preset_value_fn,
