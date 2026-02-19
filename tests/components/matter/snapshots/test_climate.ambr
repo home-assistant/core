@@ -103,7 +103,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'thermostat',
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-MatterThermostat-513-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -438,7 +438,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'thermostat',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-1-MatterThermostat-513-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -581,7 +581,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'thermostat',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-1-MatterThermostat-513-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -648,7 +648,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'thermostat',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-MatterThermostat-513-0',
     'unit_of_measurement': None,
   })
 # ---

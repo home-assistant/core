@@ -47,11 +47,13 @@ def mock_dhw_config_missing_attributes(mock_bsblan: AsyncMock) -> None:
 
 
 @pytest.fixture
-def mock_dhw_config_missing_value_attribute(mock_bsblan: AsyncMock) -> None:
-    """Mock config with objects that don't have 'value' attribute."""
+def mock_dhw_config_none_values(mock_bsblan: AsyncMock) -> None:
+    """Mock config with temperature setpoint objects where value is None."""
     mock_config = MagicMock()
-    mock_reduced_setpoint = MagicMock(spec=[])  # Empty spec means no attributes
-    mock_nominal_setpoint_max = MagicMock(spec=[])  # Empty spec means no attributes
+    mock_reduced_setpoint = MagicMock()
+    mock_reduced_setpoint.value = None
+    mock_nominal_setpoint_max = MagicMock()
+    mock_nominal_setpoint_max.value = None
     mock_config.reduced_setpoint = mock_reduced_setpoint
     mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
     mock_bsblan.hot_water_config.return_value = mock_config
@@ -306,8 +308,8 @@ async def test_water_heater_no_sensors(
             "DHW config with missing temperature attributes",
         ),
         (
-            "mock_dhw_config_missing_value_attribute",
-            "DHW config with objects missing value attribute",
+            "mock_dhw_config_none_values",
+            "DHW config with None temperature values",
         ),
     ],
 )

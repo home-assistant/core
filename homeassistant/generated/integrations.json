@@ -257,7 +257,7 @@
         "aws_s3": {
           "integration_type": "service",
           "config_flow": true,
-          "iot_class": "cloud_push",
+          "iot_class": "cloud_polling",
           "name": "AWS S3"
         },
         "fire_tv": {
@@ -3116,6 +3116,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "indevolt": {
+      "name": "Indevolt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "indianamichiganpower": {
       "name": "Indiana Michigan Power",
       "integration_type": "virtual",
@@ -3131,8 +3137,9 @@
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "inkbird": {
       "name": "INKBIRD",
@@ -4475,7 +4482,7 @@
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "netatmo": {
@@ -5273,9 +5280,20 @@
     },
     "powerfox": {
       "name": "Powerfox",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "powerfox": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Powerfox"
+        },
+        "powerfox_local": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Powerfox Local"
+        }
+      }
     },
     "prana": {
       "name": "Prana",
@@ -6020,7 +6038,7 @@
     },
     "sensorpro": {
       "name": "SensorPro",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6028,7 +6046,7 @@
       "name": "SensorPush",
       "integrations": {
         "sensorpush": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "SensorPush"
@@ -6175,7 +6193,7 @@
     },
     "simplepush": {
       "name": "Simplepush",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6273,7 +6291,7 @@
     },
     "slimproto": {
       "name": "SlimProto (Squeezebox players)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6341,7 +6359,7 @@
     },
     "smhi": {
       "name": "SMHI",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6746,6 +6764,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "systemnexa2": {
+      "name": "System Nexa 2",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "tado": {
       "name": "Tado",
       "integration_type": "hub",
@@ -6862,6 +6886,12 @@
       "name": "Telnet",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "teltonika": {
+      "name": "Teltonika",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "temper": {
