@@ -1,5 +1,7 @@
 """Support for Lutron Caseta Occupancy/Vacancy Sensors."""
 
+from typing import Any
+
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from homeassistant.components.binary_sensor import (
@@ -61,7 +63,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
@@ -83,6 +85,6 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         return f"occupancygroup_{self._bridge_unique_id}_{self.device_id}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"device_id": self.device_id}
