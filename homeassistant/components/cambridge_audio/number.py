@@ -27,7 +27,7 @@ class CambridgeAudioNumberEntityDescription(NumberEntityDescription):
 
 
 def room_correction_intensity(client: StreamMagicClient) -> int:
-    """Check if room correction is enabled."""
+    """Get room correction intensity."""
     if TYPE_CHECKING:
         assert client.audio.tilt_eq is not None
     return client.audio.tilt_eq.intensity
