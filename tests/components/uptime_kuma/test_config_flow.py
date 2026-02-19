@@ -157,6 +157,7 @@ async def test_flow_reauth(
     [
         (UptimeKumaConnectionException, "cannot_connect"),
         (UptimeKumaAuthenticationException, "invalid_auth"),
+        (UptimeKumaParseException, "invalid_data"),
         (ValueError, "unknown"),
     ],
 )
@@ -235,6 +236,7 @@ async def test_flow_reconfigure(
     [
         (UptimeKumaConnectionException, "cannot_connect"),
         (UptimeKumaAuthenticationException, "invalid_auth"),
+        (UptimeKumaParseException, "invalid_data"),
         (ValueError, "unknown"),
     ],
 )
@@ -387,6 +389,7 @@ async def test_hassio_addon_discovery_already_configured(
     [
         (UptimeKumaConnectionException, "cannot_connect"),
         (UptimeKumaAuthenticationException, "invalid_auth"),
+        (UptimeKumaParseException, "invalid_data"),
         (ValueError, "unknown"),
     ],
 )

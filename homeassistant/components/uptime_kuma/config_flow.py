@@ -65,7 +65,6 @@ async def validate_connection(
         errors["base"] = "invalid_data"
     except UptimeKumaException:
         errors["base"] = "cannot_connect"
-
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
