@@ -29,7 +29,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
     NotifyEntity,
-    NotifyEntityDescription,
     NotifyEntityFeature,
 )
 from homeassistant.components.websocket_api import ActiveConnection
@@ -618,11 +617,9 @@ class HTML5NotifyEntity(NotifyEntity):
     """Representation of a notification entity."""
 
     _attr_has_entity_name = True
-    entity_description = NotifyEntityDescription(
-        key="device",
-        translation_key="device",
-        name=None,
-    )
+    _attr_translation_key = "device"
+    _attr_name = None
+
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(
@@ -641,14 +638,12 @@ class HTML5NotifyEntity(NotifyEntity):
         self.session = session
         self.json_path = json_path
 
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_{target}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{config_entry.entry_id}_{target}_device"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=target,
             model=self.registration["browser"].capitalize(),
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{target}")},
         )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:

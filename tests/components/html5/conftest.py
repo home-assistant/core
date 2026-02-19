@@ -96,19 +96,6 @@ def mock_uuid() -> Generator[MagicMock]:
         yield mock_client
 
 
-# @pytest.fixture
-# def mock_session() -> Generator[MagicMock]:
-#     """Mock UUID."""
-
-#     with (
-#         patch(
-#             "homeassistant.components.html5.notify.async_get_clientsession",
-#         ) as mock_client,
-#     ):
-#         # mock_client.return_value = MagicMock(name="async_get_clientsession")
-#         yield mock_client
-
-
 @pytest.fixture
 def mock_vapid() -> Generator[MagicMock]:
     """Mock VAPID headers."""
