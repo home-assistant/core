@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_key": "The API key (device ID) of your Poweropti device.",
+          "host": "The hostname or IP address of your Poweropti device."
+        },
+        "description": "Set up your Poweropti device to poll locally."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up the Poweropti device found at {host}?",
+        "title": "Discovered Poweropti"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_return": {
+        "name": "Energy return"
+      },
+      "energy_usage": {
+        "name": "Energy usage"
+      },
+      "energy_usage_high_tariff": {
+        "name": "Energy usage high tariff"
+      },
+      "energy_usage_low_tariff": {
+        "name": "Energy usage low tariff"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error while updating the device: {error}"
+    }
+  }
+}
