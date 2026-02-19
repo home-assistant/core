@@ -70,6 +70,7 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         monitor_response_time_seconds_1d=0.10920649819494585,
         monitor_response_time_seconds_30d=0.0993296843901052,
         monitor_response_time_seconds_365d=0.1043971646081903,
+        monitor_tags=["tag1", "tag2:value"],
     )
     monitor_2 = UptimeKumaMonitor(
         monitor_id=2,
@@ -88,6 +89,7 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         monitor_response_time_seconds_1d=0.16390272373540857,
         monitor_response_time_seconds_30d=0.3371273224043715,
         monitor_response_time_seconds_365d=0.34270098747886596,
+        monitor_tags=["tag1", "tag2:value"],
     )
     monitor_3 = UptimeKumaMonitor(
         monitor_id=3,
@@ -106,6 +108,7 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         monitor_response_time_seconds_1d=None,
         monitor_response_time_seconds_30d=None,
         monitor_response_time_seconds_365d=None,
+        monitor_tags=[],
     )
 
     with (

@@ -64,6 +64,7 @@ async def test_migrate_unique_id(
             monitor_port="null",
             monitor_status=MonitorStatus.UP,
             monitor_url="test",
+            monitor_tags=["tag1", "tag2:value"],
         )
     }
     mock_pythonkuma.version = UptimeKumaVersion(
@@ -86,6 +87,7 @@ async def test_migrate_unique_id(
             monitor_port="null",
             monitor_status=MonitorStatus.UP,
             monitor_url="test",
+            monitor_tags=["tag1", "tag2:value"],
         )
     }
     mock_pythonkuma.version = UptimeKumaVersion(
