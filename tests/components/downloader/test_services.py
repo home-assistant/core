@@ -4,6 +4,7 @@ import asyncio
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 
 import pytest
+from requests_mock import Mocker
 import voluptuous as vol
 
 from homeassistant.components.downloader.const import DOMAIN
@@ -53,6 +54,29 @@ async def test_download_invalid_subdir(
 
     with expected_result:
         await call_service()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_download_headers_passed_through(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    download_completed: asyncio.Event,
+    download_url: str,
+) -> None:
+    """Test that custom headers are passed to the HTTP request."""
+    await hass.services.async_call(
+        DOMAIN,
+        "download_file",
+        {
+            "url": download_url,
+            "headers": {"Authorization": "Bearer token123", "X-Custom": "value"},
+        },
+        blocking=True,
+    )
+    await download_completed.wait()
+
+    assert requests_mock.last_request.headers["Authorization"] == "Bearer token123"
+    assert requests_mock.last_request.headers["X-Custom"] == "value"
 
 
 @pytest.mark.usefixtures("setup_integration")
