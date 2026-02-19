@@ -25,7 +25,7 @@
           "host": "IP/Hostname"
         },
         "data_description": {
-          "host": "Hostname or IP Address of the device"
+          "host": "Hostname or IP address of the device"
         }
       }
     }
@@ -54,7 +54,7 @@
       "message": "Failed to communicate with the device. Please verify that the device is powered on and connected to the network"
     },
     "failed_to_initiate_connection": {
-      "message": "Failed to initialize device with IP/Hostname `{host}`, please verify that the device is powered on and reachable on port 3000"
+      "message": "Failed to initialize device with IP/hostname `{host}`, please verify that the device is powered on and reachable on port 3000"
     }
   }
 }
