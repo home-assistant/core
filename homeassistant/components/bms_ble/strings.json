@@ -54,7 +54,7 @@
       "message": "BMS communication timed out."
     },
     "device_not_found": {
-      "message": "Could not find BMS ({MAC}) via Bluetooth."
+      "message": "Could not find BMS ({mac}) via Bluetooth."
     },
     "missing_unique_id": {
       "message": "Missing unique ID for device."

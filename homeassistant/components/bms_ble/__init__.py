@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> boo
             translation_domain=DOMAIN,
             translation_key="device_not_found",
             translation_placeholders={
-                "MAC": entry.unique_id,
+                "mac": entry.unique_id,
             },
         )
 
