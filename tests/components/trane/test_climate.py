@@ -233,7 +233,7 @@ async def test_hvac_action(
 @pytest.mark.parametrize(
     ("service", "expected_hold", "expected_zone_mode"),
     [
-        (SERVICE_TURN_ON, HoldType.SCHEDULE, ZoneMode.AUTO),
+        (SERVICE_TURN_ON, HoldType.MANUAL, ZoneMode.AUTO),
         (SERVICE_TURN_OFF, None, ZoneMode.OFF),
     ],
 )

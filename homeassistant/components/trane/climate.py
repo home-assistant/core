@@ -83,11 +83,13 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         super().__init__(conn, entry_id, zone_id, "zone")
         modes: list[HVACMode] = []
         for zone_mode in conn.state.supported_modes:
-            if ha_mode := ZONE_MODE_TO_HA.get(zone_mode):
-                modes.append(ha_mode)
-                # AUTO in steamloop maps to both AUTO (schedule) and HEAT_COOL (manual hold)
-                if zone_mode == ZoneMode.AUTO:
-                    modes.append(HVACMode.HEAT_COOL)
+            ha_mode = ZONE_MODE_TO_HA.get(zone_mode)
+            if ha_mode is None:
+                continue
+            modes.append(ha_mode)
+            # AUTO in steamloop maps to both AUTO (schedule) and HEAT_COOL (manual hold)
+            if zone_mode == ZoneMode.AUTO:
+                modes.append(HVACMode.HEAT_COOL)
         self._attr_hvac_modes = modes
 
     @property
@@ -186,11 +188,3 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         self._conn.set_fan_mode(HA_TO_FAN_MODE[fan_mode])
-
-    async def async_turn_on(self) -> None:
-        """Turn on the zone."""
-        await self.async_set_hvac_mode(HVACMode.AUTO)
-
-    async def async_turn_off(self) -> None:
-        """Turn off the zone."""
-        await self.async_set_hvac_mode(HVACMode.OFF)
