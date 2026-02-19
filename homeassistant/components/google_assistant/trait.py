@@ -1755,11 +1755,12 @@ class FanSpeedTrait(_Trait):
             speed_count = round(
                 100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
             )
-            self._ordered_speed = (
-                [f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)]
-                if 0 < speed_count <= FAN_SPEED_MAX_SPEED_COUNT
-                else []
-            )
+            if speed_count <= FAN_SPEED_MAX_SPEED_COUNT:
+                self._ordered_speed = [
+                    f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
+                ]
+            else:
+                self._ordered_speed = []
 
     @staticmethod
     def supported(domain, features, device_class, _):
