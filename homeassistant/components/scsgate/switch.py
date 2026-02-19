@@ -159,10 +159,15 @@ class SCSGateScenarioSwitch:
 
     def __init__(self, scs_id, name, logger, hass):
         """Initialize the scenario."""
-        self._attr_name = name
+        self._name = name
         self._scs_id = scs_id
         self._logger = logger
         self._hass = hass
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._name
 
     @property
     def scs_id(self):
