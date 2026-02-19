@@ -333,7 +333,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -394,7 +394,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -710,7 +710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -949,7 +949,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -1010,7 +1010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -2401,7 +2401,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -2471,7 +2471,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-6-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -2542,7 +2542,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -2664,7 +2664,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'door_lock_operating_mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
     'unit_of_measurement': None,
   })
 # ---
@@ -2724,7 +2724,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -2786,7 +2786,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'door_lock_sound_volume',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
     'unit_of_measurement': None,
   })
 # ---
@@ -2846,7 +2846,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'door_lock_operating_mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
     'unit_of_measurement': None,
   })
 # ---
@@ -2906,7 +2906,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -2968,7 +2968,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'door_lock_sound_volume',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
     'unit_of_measurement': None,
   })
 # ---
@@ -3346,7 +3346,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -3408,7 +3408,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -3470,7 +3470,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -3532,7 +3532,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -3599,7 +3599,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-MatterOvenMode-73-1',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-MatterOvenMode-73-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3665,7 +3665,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -3726,7 +3726,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_operation_mode',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpConfigurationAndControlOperationMode-512-32',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpConfigurationAndControlOperationMode-512-32',
     'unit_of_measurement': None,
   })
 # ---
@@ -3788,7 +3788,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -3972,7 +3972,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -4033,7 +4033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'door_lock_operating_mode',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
     'unit_of_measurement': None,
   })
 # ---
@@ -4218,7 +4218,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_number_of_rinses',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -4278,7 +4278,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_spin_speed',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4339,7 +4339,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -4461,7 +4461,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_energy_management_mode',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -4588,7 +4588,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---

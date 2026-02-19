@@ -69,6 +69,19 @@ clean_spot:
     entity:
       domain: vacuum
 
+clean_area:
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.CLEAN_AREA
+  fields:
+    cleaning_area_id:
+      required: true
+      selector:
+        area:
+          multiple: true
+
 send_command:
   target:
     entity:

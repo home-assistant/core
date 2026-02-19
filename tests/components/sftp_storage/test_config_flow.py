@@ -1,6 +1,7 @@
 """Tests config_flow."""
 
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
@@ -23,6 +24,7 @@ from homeassistant.components.sftp_storage.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .conftest import USER_INPUT, SSHClientConnectionMock
 
@@ -32,8 +34,10 @@ type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture
-def mock_process_uploaded_file():
+def mock_process_uploaded_file(hass: HomeAssistant):
     """Mocks ability to process uploaded private key."""
+    # Ensure .storage directory exists, as it would in a real HA instance
+    Path(hass.config.path(STORAGE_DIR)).mkdir(parents=True, exist_ok=True)
     with (
         patch(
             "homeassistant.components.sftp_storage.config_flow.process_uploaded_file"

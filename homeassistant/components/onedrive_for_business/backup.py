@@ -81,6 +81,7 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
+            self._entry.async_start_reauth(self._hass)
             raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
@@ -254,7 +255,7 @@ class OneDriveBackupAgent(BackupAgent):
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
-                backup_filename = item.name.replace(".metadata.json", ".tar")
+                backup_filename = f"{item.name[: -len('.metadata.json')]}.tar"
                 if backup_filename not in backup_filenames:
                     _LOGGER.warning(
                         "Backup file %s not found for metadata %s",
