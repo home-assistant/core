@@ -395,7 +395,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.12.1
+aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.0
@@ -1052,7 +1052,7 @@ hanna-cloud==0.0.7
 hass-nabucasa==1.15.0
 
 # homeassistant.components.splunk
-hass-splunk==0.1.1
+hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1539,6 +1539,7 @@ plugwise==1.11.2
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
+# homeassistant.components.powerfox_local
 powerfox==2.1.0
 
 # homeassistant.components.prana
