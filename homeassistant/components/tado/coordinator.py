@@ -93,7 +93,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
-        def _load_tado_data() -> tuple[dict, list, list, dict[str, int]]:
+        def _load_tado_data() -> tuple[dict, list, list, dict[str, str]]:
             """Load Tado data in one call."""
             _LOGGER.debug("Preloading Tado data")
             return (
