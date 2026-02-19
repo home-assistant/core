@@ -8822,7 +8822,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1568.087',
+    'state': '1446.085',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_difference-entry]
@@ -8879,7 +8879,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.007',
+    'state': '0.021',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_energy_saved-entry]
@@ -9099,8 +9099,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Refrigerator Power',
-      'power_consumption_end': '2025-02-09T17:49:00Z',
-      'power_consumption_start': '2025-02-09T17:38:01Z',
+      'power_consumption_end': '2026-02-14T14:51:07Z',
+      'power_consumption_start': '2026-02-14T14:35:06Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -9109,7 +9109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '74',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_power_energy-entry]
@@ -9166,7 +9166,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0135559777781698',
+    'state': '0.0205731166644229',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][sensor.refrigerator_water_filter_usage-entry]

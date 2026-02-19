@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from satel_integra.satel_integra import AlarmState
 from syrupy.assertion import SnapshotAssertion
@@ -26,7 +27,12 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -163,3 +169,29 @@ async def test_alarm_control_panel_disarming(
     mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
 
     mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
+
+
+async def test_alarm_panel_last_reported(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test alarm panels update last_reported if same state is reported."""
+    events = async_capture_events(hass, "state_changed")
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    first_reported = hass.states.get("alarm_control_panel.home").last_reported
+    assert first_reported is not None
+    # Initial state change event
+    assert len(events) == 1
+
+    freezer.tick(1)
+    async_fire_time_changed(hass)
+
+    # Run callbacks with same payload
+    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method()
+
+    assert first_reported != hass.states.get("alarm_control_panel.home").last_reported
+    assert len(events) == 1  # last_reported shall not fire state_changed

@@ -24,7 +24,7 @@ from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -122,11 +122,13 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DEVICES): vol.Any(
                     DEVICE_SCHEMA, vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
                 ),
-                vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER_DOMAIN),
+                vol.Optional(CONF_PLATFORM): vol.Any(
+                    SWITCH_DOMAIN, MEDIA_PLAYER_DOMAIN
+                ),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_DISPLAY_NAME): cv.string,
                 vol.Optional(CONF_TYPES, default={}): vol.Schema(
-                    {cv.entity_id: vol.Any(MEDIA_PLAYER_DOMAIN, SWITCH)}
+                    {cv.entity_id: vol.Any(MEDIA_PLAYER_DOMAIN, SWITCH_DOMAIN)}
                 ),
             }
         )
@@ -170,7 +172,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     device_aliases.update(parse_mapping(devices))
     _LOGGER.debug("Parsed devices: %s", device_aliases)
 
-    platform = base_config[DOMAIN].get(CONF_PLATFORM, SWITCH)
+    platform = base_config[DOMAIN].get(CONF_PLATFORM, SWITCH_DOMAIN)
 
     loop = (
         # Create own thread if more than 1 CPU

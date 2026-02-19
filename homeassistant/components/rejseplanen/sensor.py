@@ -10,6 +10,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
+from typing import Any
 
 import rjpl
 import voluptuous as vol
@@ -124,7 +125,7 @@ class RejseplanenTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self._times:
             return {ATTR_STOP_ID: self._stop_id}

@@ -58,7 +58,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
         return self.device.dim_level
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self.device.is_on
 
