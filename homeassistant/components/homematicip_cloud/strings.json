@@ -28,6 +28,20 @@
     }
   },
   "entity": {
+    "light": {
+      "optical_signal_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "billow": "Billow",
+              "blinking": "Blinking",
+              "flash": "Flash",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
