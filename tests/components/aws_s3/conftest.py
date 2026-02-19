@@ -13,7 +13,7 @@ from homeassistant.components.aws_s3.backup import (
 from homeassistant.components.aws_s3.const import DOMAIN
 from homeassistant.components.backup import AgentBackup
 
-from .const import USER_INPUT
+from .const import CONFIG_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -82,5 +82,5 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
+        data=CONFIG_ENTRY_DATA,
     )

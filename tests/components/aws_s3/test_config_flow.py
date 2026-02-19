@@ -19,7 +19,7 @@ from homeassistant.components.aws_s3.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import USER_INPUT
+from .const import CONFIG_ENTRY_DATA, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -48,7 +48,7 @@ async def test_flow(hass: HomeAssistant) -> None:
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == CONFIG_ENTRY_DATA
 
 
 @pytest.mark.parametrize(
@@ -88,7 +88,7 @@ async def test_flow_create_client_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == CONFIG_ENTRY_DATA
 
 
 async def test_flow_head_bucket_error(
@@ -113,7 +113,7 @@ async def test_flow_head_bucket_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == CONFIG_ENTRY_DATA
 
 
 async def test_abort_if_already_configured(
@@ -152,7 +152,7 @@ async def test_flow_create_not_aws_endpoint(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == CONFIG_ENTRY_DATA
 
 
 async def test_flow_with_prefix(hass: HomeAssistant) -> None:
@@ -170,7 +170,7 @@ async def test_flow_with_empty_prefix(hass: HomeAssistant) -> None:
     result = await _async_start_flow(hass, user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == CONFIG_ENTRY_DATA
 
 
 async def test_abort_if_already_configured_with_same_prefix(
@@ -180,7 +180,7 @@ async def test_abort_if_already_configured_with_same_prefix(
     """Test we abort if same bucket, endpoint, and prefix are already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=USER_INPUT | {CONF_PREFIX: "my-prefix"},
+        data=CONFIG_ENTRY_DATA | {CONF_PREFIX: "my-prefix"},
     )
     entry.add_to_hass(hass)
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "my-prefix"})
@@ -194,12 +194,10 @@ async def test_abort_if_entry_without_prefix(
 ) -> None:
     """Test we abort if an entry without prefix matches bucket and endpoint."""
     # Entry without CONF_PREFIX in data (empty prefix is not persisted)
-    data_without_prefix = USER_INPUT.copy()
-    data_without_prefix.pop(CONF_PREFIX)
-    entry = MockConfigEntry(domain=DOMAIN, data=data_without_prefix)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     entry.add_to_hass(hass)
     # Try to configure the same bucket/endpoint with an empty prefix
-    result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: ""})
+    result = await _async_start_flow(hass, USER_INPUT)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -211,7 +209,7 @@ async def test_no_abort_if_different_prefix(
     """Test we do not abort when same bucket+endpoint but a different prefix is used."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=USER_INPUT | {CONF_PREFIX: "prefix-a"},
+        data=CONFIG_ENTRY_DATA | {CONF_PREFIX: "prefix-a"},
     )
     entry.add_to_hass(hass)
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: "prefix-b"})
@@ -237,4 +235,7 @@ async def test_flow_prefix_normalization(
     result = await _async_start_flow(hass, USER_INPUT | {CONF_PREFIX: input_prefix})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    assert result["data"][CONF_PREFIX] == expected_prefix
+    if expected_prefix:
+        assert result["data"][CONF_PREFIX] == expected_prefix
+    else:
+        assert CONF_PREFIX not in result["data"]
