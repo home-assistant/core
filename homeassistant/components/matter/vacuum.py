@@ -71,6 +71,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     """Representation of a Matter Vacuum cleaner entity."""
 
     _last_accepted_commands: list[int] | None = None
+    _last_service_area_feature_map: int | None = None
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
@@ -266,10 +267,20 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         accepted_operational_commands: list[int] = self.get_matter_attribute_value(
             clusters.RvcOperationalState.Attributes.AcceptedCommandList
         )
-        # in principle the feature set should not change, except for the accepted commands
-        if self._last_accepted_commands == accepted_operational_commands:
+        service_area_feature_map: int | None = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.FeatureMap
+        )
+
+        # In principle the feature set should not change, except for accepted
+        # commands and service area feature map.
+        if (
+            self._last_accepted_commands == accepted_operational_commands
+            and self._last_service_area_feature_map == service_area_feature_map
+        ):
             return
+
         self._last_accepted_commands = accepted_operational_commands
+        self._last_service_area_feature_map = service_area_feature_map
         supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
         supported_features |= VacuumEntityFeature.START
         supported_features |= VacuumEntityFeature.STATE
@@ -298,12 +309,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             supported_features |= VacuumEntityFeature.RETURN_HOME
         # Check if Map feature is enabled for clean area support
         if (
-            (
-                service_area_feature_map := self.get_matter_attribute_value(
-                    clusters.ServiceArea.Attributes.FeatureMap
-                )
-            )
-            is not None
+            service_area_feature_map is not None
             and service_area_feature_map & clusters.ServiceArea.Bitmaps.Feature.kMaps
         ):
             supported_features |= VacuumEntityFeature.CLEAN_AREA
