@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_URL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
@@ -74,6 +75,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
             lambda m: m.monitor_response_time if m.monitor_response_time > -1 else None
         ),
         create_entity=lambda _: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.STATUS,
@@ -131,6 +133,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.UPTIME_RATIO_30D,
@@ -143,6 +146,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.UPTIME_RATIO_365D,
@@ -155,6 +159,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
@@ -164,6 +169,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
@@ -173,6 +179,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
@@ -182,6 +189,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.TAGS,
