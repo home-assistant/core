@@ -3,7 +3,11 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from pythonkuma import UptimeKumaAuthenticationException, UptimeKumaConnectionException
+from pythonkuma import (
+    UptimeKumaAuthenticationException,
+    UptimeKumaConnectionException,
+    UptimeKumaParseException,
+)
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
@@ -49,6 +53,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     [
         (UptimeKumaConnectionException, "cannot_connect"),
         (UptimeKumaAuthenticationException, "invalid_auth"),
+        (UptimeKumaParseException, "invalid_data"),
         (ValueError, "unknown"),
     ],
 )
