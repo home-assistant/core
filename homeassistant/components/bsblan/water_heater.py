@@ -110,27 +110,28 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-        if self.coordinator.data.dhw.operating_mode is None:
+        if (operating_mode := self.coordinator.data.dhw.operating_mode) is None:
             return None
         # The operating_mode.value is an integer (0=Off, 1=On, 2=Eco)
-        current_mode_value = self.coordinator.data.dhw.operating_mode.value
-        if isinstance(current_mode_value, int):
-            return BSBLAN_TO_HA_OPERATION_MODE.get(current_mode_value)
+        if isinstance(operating_mode.value, int):
+            return BSBLAN_TO_HA_OPERATION_MODE.get(operating_mode.value)
         return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
+        if (
+            current_temp := self.coordinator.data.dhw.dhw_actual_value_top_temperature
+        ) is None:
             return None
-        return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
+        return current_temp.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.dhw.nominal_setpoint is None:
+        if (target_temp := self.coordinator.data.dhw.nominal_setpoint) is None:
             return None
-        return self.coordinator.data.dhw.nominal_setpoint.value
+        return target_temp.value
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
