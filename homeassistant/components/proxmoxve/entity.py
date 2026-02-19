@@ -17,9 +17,8 @@ from .coordinator import ProxmoxCoordinator, ProxmoxNodeData
 def _proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
     """Return the base URL for the Proxmox VE."""
     data = coordinator.config_entry.data
-    scheme = "https" if data.get(CONF_VERIFY_SSL) else "http"
     return URL.build(
-        scheme=scheme,
+        scheme="https",
         host=data[CONF_HOST],
         port=data[CONF_PORT],
     )
