@@ -135,7 +135,8 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         """Return the maximum value."""
         if self.entity_description.max_value_fn is not None:
             data = self.coordinator.data
-            assert data is not None
+            if TYPE_CHECKING:
+                assert data is not None
             return self.entity_description.max_value_fn(data)
         return super().native_max_value
 
