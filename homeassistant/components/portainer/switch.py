@@ -54,20 +54,17 @@ def perform_action(
         except PortainerAuthenticationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
+                translation_key="invalid_auth_no_details",
             ) from err
         except PortainerConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
+                translation_key="timeout_connect_no_details",
             ) from err
 
     return wrapper
