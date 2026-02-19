@@ -191,8 +191,8 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
         self._conn.set_temperature_setpoint(
             self._zone_id,
-            heat_setpoint=str(int(heat_temp)) if heat_temp is not None else None,
-            cool_setpoint=str(int(cool_temp)) if cool_temp is not None else None,
+            heat_setpoint=str(round(heat_temp)) if heat_temp is not None else None,
+            cool_setpoint=str(round(cool_temp)) if cool_temp is not None else None,
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

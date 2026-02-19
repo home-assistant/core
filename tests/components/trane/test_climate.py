@@ -94,7 +94,7 @@ async def test_current_humidity_not_available(
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
 ) -> None:
-    """Test current humidity is None when not yet received."""
+    """Test current humidity is omitted when not yet received."""
     mock_connection.state.relative_humidity = ""
 
     mock_config_entry.add_to_hass(hass)
