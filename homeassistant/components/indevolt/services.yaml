@@ -56,10 +56,8 @@ change_energy_mode:
       required: true
       selector:
         select:
+          translation_key: energy_mode
           options:
-            - value: self_consumed_prioritized
-              label: Self-consumed prioritized
-            - value: real_time_control
-              label: Real-time control
-            - value: charge_discharge_schedule
-              label: Charge/discharge schedule
+            - self_consumed_prioritized
+            - real_time_control
+            - charge_discharge_schedule

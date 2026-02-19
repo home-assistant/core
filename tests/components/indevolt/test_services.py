@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.indevolt.const import (
     DOMAIN,
+    ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     REALTIME_ACTION_KEY,
 )
@@ -16,7 +17,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
-TARGET_ENTITY = "switch.cms_sf2000_allow_grid_charging"
+TARGET_ENTITY_GEN1 = "sensor.bk1600_energy_mode"
+TARGET_ENTITY_GEN2 = "switch.cms_sf2000_allow_grid_charging"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -36,7 +38,7 @@ async def test_service_change_mode(
         DOMAIN,
         "change_energy_mode",
         {
-            "entity_id": TARGET_ENTITY,
+            "entity_id": TARGET_ENTITY_GEN2,
             "energy_mode": "real_time_control",
         },
         blocking=True,
@@ -63,7 +65,7 @@ async def test_service_charge(
         DOMAIN,
         "charge",
         {
-            "entity_id": TARGET_ENTITY,
+            "entity_id": TARGET_ENTITY_GEN2,
             "power": 1200,
             "target_soc": 60,
         },
@@ -93,7 +95,7 @@ async def test_service_discharge(
         DOMAIN,
         "discharge",
         {
-            "entity_id": TARGET_ENTITY,
+            "entity_id": TARGET_ENTITY_GEN2,
             "power": 1200,
             "target_soc": 40,
         },
@@ -122,7 +124,7 @@ async def test_service_stop(
     await hass.services.async_call(
         DOMAIN,
         "stop",
-        {"entity_id": TARGET_ENTITY},
+        {"entity_id": TARGET_ENTITY_GEN2},
         blocking=True,
     )
 
@@ -132,7 +134,7 @@ async def test_service_stop(
     )
 
 
-@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("generation", [1], indirect=True)
 async def test_service_charge_power_too_high(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
@@ -147,14 +149,13 @@ async def test_service_charge_power_too_high(
             DOMAIN,
             "charge",
             {
-                "entity_id": TARGET_ENTITY,
-                "power": 2500,
+                "entity_id": TARGET_ENTITY_GEN1,
+                "power": 1300,
                 "target_soc": 60,
             },
             blocking=True,
         )
 
-    # Check for presence of expected error message
     assert "exceeds maximum" in str(exc_info.value)
 
 
@@ -173,7 +174,7 @@ async def test_service_charge_target_soc_below_emergency(
             DOMAIN,
             "charge",
             {
-                "entity_id": TARGET_ENTITY,
+                "entity_id": TARGET_ENTITY_GEN2,
                 "power": 1000,
                 "target_soc": 1,
             },
@@ -204,3 +205,59 @@ async def test_service_missing_target(
 
     # Check for presence of expected error message
     assert "No matching Indevolt" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_service_change_mode_current_mode_unavailable(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test change_energy_mode fails when current mode cannot be retrieved."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Remove current energy mode key from coordinator data
+    mock_indevolt.fetch_data.return_value.pop(ENERGY_MODE_READ_KEY, None)
+
+    # Mock call with current energy mode unavailable
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "change_energy_mode",
+            {
+                "entity_id": TARGET_ENTITY_GEN2,
+                "energy_mode": "real_time_control",
+            },
+            blocking=True,
+        )
+
+    # Check for presence of expected error message
+    assert "Failed to retrieve current energy mode" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_service_change_mode_outdoor_portable(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test change_energy_mode fails when device is in outdoor/portable mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Force outdoor/portable mode
+    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = 0
+
+    # Mock call with current energy mode unavailable
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "change_energy_mode",
+            {
+                "entity_id": TARGET_ENTITY_GEN2,
+                "energy_mode": "real_time_control",
+            },
+            blocking=True,
+        )
+
+    # Check for presence of expected error message key
+    assert "Outdoor/Portable mode" in str(exc_info.value)

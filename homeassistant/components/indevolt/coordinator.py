@@ -108,7 +108,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if current_mode == 0:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="real_time_control_unavailable_outdoor_portable",
+                translation_key="energy_mode_change_unavailable_outdoor_portable",
             )
 
         # Switch energymode if required

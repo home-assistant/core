@@ -34,8 +34,14 @@ ENERGY_MODE_MAP = {
 CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
         **cv.TARGET_SERVICE_FIELDS,
-        vol.Required("target_soc"): cv.positive_int,
-        vol.Required("power"): cv.positive_int,
+        vol.Required("target_soc"): vol.All(
+            vol.Coerce(int),
+            vol.Range(min=0, max=100),
+        ),
+        vol.Required("power"): vol.All(
+            vol.Coerce(int),
+            vol.Range(min=1, max=2400),
+        ),
     }
 )
 
