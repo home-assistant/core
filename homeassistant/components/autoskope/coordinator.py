@@ -44,15 +44,17 @@ class AutoskopeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
             vehicles = await self.api.get_vehicles()
             return {vehicle.id: vehicle for vehicle in vehicles}
 
-        except InvalidAuth as err:
+        except InvalidAuth:
             # Attempt to re-authenticate using stored credentials
             try:
                 await self.api.authenticate()
                 # Retry the request after successful re-authentication
                 vehicles = await self.api.get_vehicles()
                 return {vehicle.id: vehicle for vehicle in vehicles}
-            except InvalidAuth:
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            except InvalidAuth as reauth_err:
+                raise ConfigEntryAuthFailed(
+                    f"Authentication failed: {reauth_err}"
+                ) from reauth_err
 
         except CannotConnect as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

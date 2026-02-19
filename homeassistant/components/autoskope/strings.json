@@ -11,16 +11,25 @@
     "step": {
       "user": {
         "data": {
-          "host": "Host (optional)",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Autoskope API endpoint. Defaults to the standard Autoskope cloud service if left blank.",
           "password": "The password for your Autoskope account.",
-          "username": "The username for your Autoskope account"
+          "username": "The username for your Autoskope account."
         },
         "description": "Enter your Autoskope credentials.",
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "host": "API endpoint"
+            },
+            "data_description": {
+              "host": "The URL of your Autoskope API endpoint. Only change this if you use a white-label portal."
+            },
+            "name": "Advanced settings"
+          }
+        },
         "title": "Connect to Autoskope"
       }
     }

@@ -7,6 +7,7 @@ from autoskope_client.models import Vehicle
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -60,14 +61,30 @@ class AutoskopeDeviceTracker(
         self._vehicle_id = vehicle_id
         self._attr_unique_id = vehicle_id
 
-        # Set device info from coordinator data
-        vehicle_data = coordinator.data[vehicle_id]
-        self._attr_device_info = DeviceInfo(  # type: ignore[assignment]
-            identifiers={(DOMAIN, str(vehicle_data.id))},
-            name=vehicle_data.name,
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if (
+            self._vehicle_id in self.coordinator.data
+            and (device_entry := self.device_entry) is not None
+            and device_entry.name != self._vehicle_data.name
+        ):
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_update_device(
+                device_entry.id, name=self._vehicle_data.name
+            )
+        super()._handle_coordinator_update()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for the vehicle."""
+        vehicle = self.coordinator.data[self._vehicle_id]
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(vehicle.id))},
+            name=vehicle.name,
             manufacturer=MANUFACTURER,
-            model=vehicle_data.model,
-            serial_number=vehicle_data.imei,  # IMEI is the device serial number
+            model=vehicle.model,
+            serial_number=vehicle.imei,
         )
 
     @property
@@ -80,9 +97,9 @@ class AutoskopeDeviceTracker(
         )
 
     @property
-    def _vehicle_data(self) -> Vehicle | None:
+    def _vehicle_data(self) -> Vehicle:
         """Return the vehicle data for the current entity."""
-        return self.coordinator.data.get(self._vehicle_id)
+        return self.coordinator.data[self._vehicle_id]
 
     @property
     def latitude(self) -> float | None:
@@ -104,19 +121,22 @@ class AutoskopeDeviceTracker(
         return SourceType.GPS
 
     @property
-    def location_accuracy(self) -> int:
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device in meters."""
         if (vehicle := self._vehicle_data) and vehicle.gps_quality:
             if vehicle.gps_quality > 0:
                 # HDOP to estimated accuracy in meters
                 # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
-                return max(5, int(vehicle.gps_quality * 5.0))
-        return 0
+                return float(max(5, int(vehicle.gps_quality * 5.0)))
+        return 0.0
 
     @property
     def icon(self) -> str:
         """Return the icon based on the vehicle's activity."""
-        if (vehicle := self._vehicle_data) and vehicle.position:
+        if self._vehicle_id not in self.coordinator.data:
+            return "mdi:car-clock"
+        vehicle = self._vehicle_data
+        if vehicle.position:
             if vehicle.position.park_mode:
                 return "mdi:car-brake-parking"
             if vehicle.position.speed > 5:  # Moving threshold: 5 km/h

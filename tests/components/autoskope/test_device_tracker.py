@@ -1,311 +1,233 @@
 """Test Autoskope device tracker."""
 
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import AsyncMock
 
-from autoskope_client.models import Vehicle, VehiclePosition
+from autoskope_client.models import CannotConnect, InvalidAuth, Vehicle, VehiclePosition
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.autoskope.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_device_tracker_setup(
+async def test_all_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vehicles_list,
-    mock_autoskope_api,
+    mock_autoskope_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device tracker setup."""
-    mock_config_entry.add_to_hass(hass)
+    """Test all entities with snapshot."""
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
 
-        # Setup entry
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Check device tracker entity was created
-        entity_registry = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+@pytest.mark.parametrize(
+    ("speed", "park_mode", "has_position", "expected_icon"),
+    [
+        (50, False, True, "mdi:car-arrow-right"),
+        (0, True, True, "mdi:car-brake-parking"),
+        (2, False, True, "mdi:car"),
+        (0, False, False, "mdi:car-clock"),
+    ],
+    ids=["moving", "parked", "idle", "no_position"],
+)
+async def test_vehicle_icons(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_autoskope_client: AsyncMock,
+    speed: int,
+    park_mode: bool,
+    has_position: bool,
+    expected_icon: str,
+) -> None:
+    """Test device tracker icon for different vehicle states."""
+    position = (
+        VehiclePosition(
+            latitude=50.1109221,
+            longitude=8.6821267,
+            speed=speed,
+            timestamp="2025-05-28T10:00:00Z",
+            park_mode=park_mode,
         )
-
-        tracker_entries = [e for e in entries if e.domain == DEVICE_TRACKER_DOMAIN]
-        assert len(tracker_entries) == 1
-        entity = tracker_entries[0]
-        assert entity.unique_id == f"{mock_vehicles_list[0].id}"
-
-
-async def test_device_tracker_location(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vehicles_list,
-    mock_autoskope_api,
-) -> None:
-    """Test device tracker location attributes."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        vehicle = mock_vehicles_list[0]
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-
-        # Check coordinates - these are still device_tracker attributes
-        if vehicle.position:
-            assert state.attributes["latitude"] == vehicle.position.latitude
-            assert state.attributes["longitude"] == vehicle.position.longitude
-            assert "gps_accuracy" in state.attributes
-
-        # Check that extra attributes are NOT present (they are separate sensors now)
-        assert "battery_voltage" not in state.attributes
-        assert "external_voltage" not in state.attributes
-        assert "speed" not in state.attributes
-        assert "imei" not in state.attributes
-
-
-async def test_device_tracker_moving_vehicle(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_autoskope_api,
-) -> None:
-    """Test device tracker with moving vehicle."""
-    # Create moving vehicle data
-    moving_position = VehiclePosition(
-        latitude=50.1109221,
-        longitude=8.6821267,
-        speed=50,  # Moving fast
-        timestamp="2025-05-28T10:00:00Z",
-        park_mode=False,
+        if has_position
+        else None
     )
 
-    moving_vehicle = Vehicle(
-        id="12345",
-        name="Test Vehicle",
-        position=moving_position,
-        external_voltage=12.5,
-        battery_voltage=3.7,
-        gps_quality=1.2,
-        imei="123456789012345",
-        model="Autoskope",
-    )
+    mock_autoskope_client.get_vehicles.return_value = [
+        Vehicle(
+            id="12345",
+            name="Test Vehicle",
+            position=position,
+            external_voltage=12.5,
+            battery_voltage=3.7,
+            gps_quality=1.2,
+            imei="123456789012345",
+            model="Autoskope",
+        )
+    ]
 
-    mock_config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = [moving_vehicle]
-
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-
-        # Check icon for moving vehicle
-        assert state.attributes["icon"] == "mdi:car-arrow-right"
-
-        # Speed sensor is removed in minimal version
-        # Just verify device tracker works
-        assert state.attributes["latitude"] == 50.1109221
-        assert state.attributes["longitude"] == 8.6821267
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state is not None
+    assert state.attributes["icon"] == expected_icon
 
 
-async def test_device_tracker_parked_vehicle(
+async def test_entity_unavailable_on_coordinator_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_autoskope_api,
+    mock_autoskope_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device tracker with parked vehicle."""
-    # Create parked vehicle data
-    parked_position = VehiclePosition(
-        latitude=50.1109221,
-        longitude=8.6821267,
-        speed=0,
-        timestamp="2025-05-28T10:00:00Z",
-        park_mode=True,  # Explicitly parked
-    )
+    """Test entity becomes unavailable when coordinator update fails."""
+    await setup_integration(hass, mock_config_entry)
 
-    parked_vehicle = Vehicle(
-        id="12345",
-        name="Test Vehicle",
-        position=parked_position,
-        external_voltage=12.5,
-        battery_voltage=3.7,
-        gps_quality=1.2,
-        imei="123456789012345",
-        model="Autoskope",
-    )
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
-    mock_config_entry.add_to_hass(hass)
+    # Simulate connection error on next update
+    mock_autoskope_client.get_vehicles.side_effect = CannotConnect("Connection lost")
 
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = [parked_vehicle]
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-
-        # Check icon for parked vehicle
-        assert state.attributes["icon"] == "mdi:car-brake-parking"
-
-        # Sensors removed in minimal version
-        # Just verify device tracker works with parked vehicle
-        assert state.attributes["latitude"] == 50.1109221
-        assert state.attributes["longitude"] == 8.6821267
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
-async def test_device_tracker_no_position(
+async def test_entity_recovers_after_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_autoskope_api,
+    mock_autoskope_client: AsyncMock,
+    mock_vehicles: list[Vehicle],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device tracker with vehicle that has no position data."""
-    vehicle_no_position = Vehicle(
-        id="12345",
-        name="Test Vehicle",
-        position=None,  # No position data
-        external_voltage=12.5,
-        battery_voltage=3.7,
-        gps_quality=1.2,
-        imei="123456789012345",
-        model="Autoskope",
-    )
+    """Test entity recovers after a transient coordinator error."""
+    await setup_integration(hass, mock_config_entry)
 
-    mock_config_entry.add_to_hass(hass)
+    # Simulate error
+    mock_autoskope_client.get_vehicles.side_effect = CannotConnect("Connection lost")
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = [vehicle_no_position]
+    assert hass.states.get("device_tracker.test_vehicle").state == STATE_UNAVAILABLE
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Recover
+    mock_autoskope_client.get_vehicles.side_effect = None
+    mock_autoskope_client.get_vehicles.return_value = mock_vehicles
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-
-        # Check that position attributes are None or not present
-        assert state.attributes.get("latitude") is None
-        assert state.attributes.get("longitude") is None
-        # Check icon when no position data
-        assert state.attributes["icon"] == "mdi:car-clock"
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state.state != STATE_UNAVAILABLE
 
 
-async def test_device_tracker_gps_accuracy(
+async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vehicles_list,
-    mock_autoskope_api,
+    mock_autoskope_client: AsyncMock,
+    mock_vehicles: list[Vehicle],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test GPS accuracy calculation."""
-    mock_config_entry.add_to_hass(hass)
+    """Test entity stays available after successful re-authentication."""
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.autoskope.AutoskopeApi",
-        return_value=mock_autoskope_api,
-    ):
-        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
+    # First get_vehicles raises InvalidAuth, retry after authenticate succeeds
+    mock_autoskope_client.get_vehicles.side_effect = [
+        InvalidAuth("Token expired"),
+        mock_vehicles,
+    ]
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-
-        # GPS accuracy should be calculated from HDOP
-        gps_accuracy = state.attributes.get("gps_accuracy")
-        assert gps_accuracy is not None
-        assert isinstance(gps_accuracy, int)
-        assert gps_accuracy >= 5  # Minimum accuracy
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
-async def test_device_tracker_device_info(
+async def test_reauth_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vehicles_list,
+    mock_autoskope_client: AsyncMock,
+    mock_vehicles: list[Vehicle],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device tracker device info."""
-    mock_config_entry.add_to_hass(hass)
+    """Test entity becomes unavailable on permanent auth failure."""
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
-    ):
-        mock_get_vehicles.return_value = mock_vehicles_list
+    # get_vehicles raises InvalidAuth, and re-authentication also fails
+    mock_autoskope_client.get_vehicles.side_effect = InvalidAuth("Token expired")
+    mock_autoskope_client.authenticate.side_effect = InvalidAuth("Invalid credentials")
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        # Get device registry entry
-        device_registry = dr.async_get(hass)
-        devices = device_registry.devices
+    state = hass.states.get("device_tracker.test_vehicle")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
-        vehicle = mock_vehicles_list[0]
-        vehicle_device = None
-        for device in devices.values():
-            if vehicle.id in str(device.identifiers):
-                vehicle_device = device
-                break
-
-        assert vehicle_device is not None
-        assert vehicle_device.name == vehicle.name
-        assert "Autoskope" in str(vehicle_device.manufacturer)
+    # Clean up side effects to prevent teardown errors
+    mock_autoskope_client.get_vehicles.side_effect = None
+    mock_autoskope_client.authenticate.side_effect = None
+    mock_autoskope_client.get_vehicles.return_value = mock_vehicles
 
 
-async def test_device_tracker_entity_availability(
+async def test_vehicle_name_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_vehicles_list,
+    mock_autoskope_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device tracker entity availability logic."""
-    mock_config_entry.add_to_hass(hass)
+    """Test device name updates in device registry when vehicle is renamed."""
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
-    ):
-        # Initially have vehicle
-        mock_get_vehicles.return_value = mock_vehicles_list
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    assert device_entry is not None
+    assert device_entry.name == "Test Vehicle"
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Simulate vehicle rename on Autoskope side
+    mock_autoskope_client.get_vehicles.return_value = [
+        Vehicle(
+            id="12345",
+            name="Renamed Vehicle",
+            position=VehiclePosition(
+                latitude=50.1109221,
+                longitude=8.6821267,
+                speed=0,
+                timestamp="2025-05-28T10:00:00Z",
+                park_mode=True,
+            ),
+            external_voltage=12.5,
+            battery_voltage=3.7,
+            gps_quality=1.2,
+            imei="123456789012345",
+            model="Autoskope",
+        )
+    ]
 
-        # Verify entity exists and is available
-        state = hass.states.get("device_tracker.test_vehicle")
-        assert state is not None
-        assert state.state != "unavailable"
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        # Update to empty vehicles list
-        mock_get_vehicles.return_value = []
-
-        # Trigger coordinator update
-        coordinator = mock_config_entry.runtime_data
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
-
-        # Check entity availability behavior
-        state = hass.states.get("device_tracker.test_vehicle")
-        # Entity should still exist but may be unavailable
-        assert state is not None
+    # Device registry should reflect the new name
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    assert device_entry is not None
+    assert device_entry.name == "Renamed Vehicle"
