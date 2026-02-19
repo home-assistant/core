@@ -279,18 +279,26 @@ class DatasetStore:
                 tlv_parser.Timestamp,
                 entry.dataset[MeshcopTLVType.ACTIVETIMESTAMP],
             )
-            if (old_timestamp.seconds, old_timestamp.ticks) >= (
-                new_timestamp.seconds,
-                new_timestamp.ticks,
-            ):
-                _LOGGER.warning(
-                    "Got dataset with same extended PAN ID and same or older"
-                    " active timestamp\nold:\n%s\nnew:\n%s",
-                    pformat(_format_dataset(entry.dataset)),
-                    pformat(_format_dataset(dataset)),
-                )
-                return
-            if _LOGGER.isEnabledFor(logging.DEBUG):
+            old_ts = (old_timestamp.seconds, old_timestamp.ticks)
+            new_ts = (new_timestamp.seconds, new_timestamp.ticks)
+            if old_ts >= new_ts:
+                # Silently accept if the only addition is WAKEUP_CHANNEL:
+                # it was added in OpenThread but the wake-up protocol isn't
+                # defined yet, so we treat it as if it were always present.
+                dataset_without_wakeup = {
+                    k: v
+                    for k, v in dataset.items()
+                    if k != MeshcopTLVType.WAKEUP_CHANNEL
+                }
+                if old_ts > new_ts or dataset_without_wakeup != entry.dataset:
+                    _LOGGER.warning(
+                        "Got dataset with same extended PAN ID and same or older"
+                        " active timestamp\nold:\n%s\nnew:\n%s",
+                        pformat(_format_dataset(entry.dataset)),
+                        pformat(_format_dataset(dataset)),
+                    )
+                    return
+            elif _LOGGER.isEnabledFor(logging.DEBUG):
                 _LOGGER.debug(
                     "Updating dataset with same extended PAN ID and newer"
                     " active timestamp\nold:\n%s\nnew:\n%s",

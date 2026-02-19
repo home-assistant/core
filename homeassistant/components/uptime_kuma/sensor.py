@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
@@ -43,6 +44,7 @@ class UptimeKumaSensor(StrEnum):
     AVG_RESPONSE_TIME_1D = "avg_response_time_1d"
     AVG_RESPONSE_TIME_30D = "avg_response_time_30d"
     AVG_RESPONSE_TIME_365D = "avg_response_time_365d"
+    TAGS = "tags"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -51,6 +53,7 @@ class UptimeKumaSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[UptimeKumaMonitor], StateType]
     create_entity: Callable[[MonitorType], bool]
+    attributes_fn: Callable[[UptimeKumaMonitor], Mapping[str, Any]] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
@@ -180,6 +183,15 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
     ),
+    UptimeKumaSensorEntityDescription(
+        key=UptimeKumaSensor.TAGS,
+        translation_key=UptimeKumaSensor.TAGS,
+        value_fn=lambda m: len(m.monitor_tags),
+        create_entity=lambda t: True,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        attributes_fn=lambda m: {"tags": m.monitor_tags or None},
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -256,3 +268,10 @@ class UptimeKumaSensorEntity(
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.monitor in self.coordinator.data
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        if (fn := self.entity_description.attributes_fn) is not None:
+            return fn(self.coordinator.data[self.monitor])
+        return super().extra_state_attributes

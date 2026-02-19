@@ -137,7 +137,7 @@ class DecoraWifiLight(LightEntity):
         return int(self._switch.brightness * 255 / 100)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
