@@ -60,23 +60,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: LevelHomeConfigEntry) ->
     async def _get_token() -> str:
         return await config_auth.async_get_access_token()
 
+    coordinator: LevelLocksCoordinator | None = None
+
     async def _on_state(
         lock_id: str, is_locked: bool | None, payload: dict | None
     ) -> None:
-        await coordinator.async_handle_push_update(lock_id, is_locked, payload)
+        if coordinator is not None:
+            await coordinator.async_handle_push_update(lock_id, is_locked, payload)
 
     async def _on_devices(devices: list[dict]) -> None:
-        await coordinator.async_handle_devices_update(devices)
+        if coordinator is not None:
+            await coordinator.async_handle_devices_update(devices)
 
     ws_manager = LevelWebsocketManager(
         client_session, base_url, _get_token, _on_state, _on_devices
     )
+    coordinator = LevelLocksCoordinator(hass, ws_manager, config_entry=entry)
+
     _LOGGER.info("Starting WebSocket manager")
     await ws_manager.async_start()
-    _LOGGER.info("WebSocket manager started")
-
-    coordinator = LevelLocksCoordinator(hass, ws_manager, config_entry=entry)
-    _LOGGER.info("Starting coordinator first refresh")
+    _LOGGER.info("WebSocket manager started, starting coordinator first refresh")
     await coordinator.async_config_entry_first_refresh()
     _LOGGER.info(
         "Coordinator first refresh completed with %d devices: %s",

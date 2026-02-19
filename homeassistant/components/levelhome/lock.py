@@ -9,7 +9,8 @@ from typing import Any
 from homeassistant.components import logbook, persistent_notification
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,22 +30,52 @@ async def async_setup_entry(
 ) -> None:
     """Set up Level Lock entities from a config entry."""
     coordinator = entry.runtime_data
-    lock_ids = list(coordinator.data.keys()) if coordinator.data else []
-    _LOGGER.info("Setting up lock entities for %d devices: %s", len(lock_ids), lock_ids)
-    entities: list[LevelLockEntity] = [
-        LevelLockEntity(coordinator, lock_id) for lock_id in lock_ids
-    ]
-    async_add_entities(entities)
+    known_device_ids: set[str] = set()
 
-    def _add_new_devices(new_lock_ids: list[str]) -> None:
-        """Add entities for newly discovered devices."""
-        new_entities = [
-            LevelLockEntity(coordinator, lock_id) for lock_id in new_lock_ids
-        ]
-        _LOGGER.info("Adding %d new lock entities: %s", len(new_entities), new_lock_ids)
-        async_add_entities(new_entities)
+    @callback
+    def _check_devices() -> None:
+        """Add entities for any newly discovered devices."""
+        current_device_ids = set(coordinator.data) if coordinator.data else set()
+        new_device_ids = current_device_ids - known_device_ids
+        if new_device_ids:
+            known_device_ids.update(new_device_ids)
+            _LOGGER.info("Adding lock entities for devices: %s", new_device_ids)
+            async_add_entities(
+                [LevelLockEntity(coordinator, lock_id) for lock_id in new_device_ids]
+            )
 
-    coordinator.register_new_device_callback(_add_new_devices)
+    @callback
+    def _async_on_entity_registry_updated(
+        event: Event[er.EventEntityRegistryUpdatedData],
+    ) -> None:
+        """Re-add entities immediately when a device is re-enabled."""
+        if event.data["action"] != "update":
+            return
+        if "disabled_by" not in event.data.get("changes", {}):
+            return
+        ent_reg = er.async_get(hass)
+        entity_entry = ent_reg.async_get(event.data["entity_id"])
+        if (
+            entity_entry is None
+            or entity_entry.disabled
+            or entity_entry.config_entry_id != entry.entry_id
+            or entity_entry.platform != DOMAIN
+        ):
+            return
+        lock_id = entity_entry.unique_id.removeprefix(f"{DOMAIN}_")
+        if lock_id not in (coordinator.data or {}):
+            return
+        _LOGGER.info("Re-adding re-enabled entity for device %s", lock_id)
+        async_add_entities([LevelLockEntity(coordinator, lock_id)])
+
+    _check_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_check_devices))
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            _async_on_entity_registry_updated,
+        )
+    )
 
 
 class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):

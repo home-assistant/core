@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
@@ -19,8 +18,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import COMMAND_STATE_TIMEOUT
 
 LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL: timedelta | None = None  # Use push updates; no periodic polling
-COMMAND_IGNORE_WINDOW = 2.0  # Seconds to ignore push updates after sending a command
+FALLBACK_SCAN_INTERVAL = timedelta(minutes=5)
+COMMAND_IGNORE_WINDOW = 2.0
 
 
 @dataclass(slots=True)
@@ -106,23 +105,14 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             hass,
             logger=LOGGER,
             name="Level Lock devices",
-            update_interval=SCAN_INTERVAL,
+            update_interval=FALLBACK_SCAN_INTERVAL,
             config_entry=config_entry,
         )
         self._ws_manager = ws_manager
         self._client = _ClientAdapter(ws_manager)
         self._last_command_time: dict[str, float] = {}
-        self._known_device_ids: set[str] = set()
-        self._new_device_callbacks: list[Callable[[list[str]], None]] = []
         self._pending_confirmations: dict[str, asyncio.Task[None]] = {}
         self._refreshing_devices: set[str] = set()
-
-    def register_new_device_callback(
-        self, callback: Callable[[list[str]], None]
-    ) -> None:
-        """Register a callback to be called when new devices are added."""
-        self._known_device_ids = set(self.data.keys()) if self.data else set()
-        self._new_device_callbacks.append(callback)
 
     def is_device_refreshing(self, lock_id: str) -> bool:
         """Check if a device is currently refreshing state after a timeout."""
@@ -375,7 +365,3 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                     )
         if added_ids or removed_ids:
             self.async_set_updated_data(current)
-            self._known_device_ids = set(current.keys())
-        if added_ids:
-            for callback in self._new_device_callbacks:
-                callback(list(added_ids))
