@@ -31,8 +31,8 @@
           "fan_mode": {
             "state": {
               "auto": "[%key:common::state::auto%]",
-              "on": "[%key:common::state::on%]",
-              "circulate": "Circulate"
+              "circulate": "Circulate",
+              "on": "[%key:common::state::on%]"
             }
           }
         }
