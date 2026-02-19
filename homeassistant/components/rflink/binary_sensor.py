@@ -125,6 +125,6 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
             )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state
