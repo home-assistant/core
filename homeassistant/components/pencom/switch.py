@@ -82,18 +82,7 @@ class PencomRelay(SwitchEntity):
         self._hub = hub
         self._board = board
         self._addr = addr
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Relay name."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return a relay's state."""
-        return self._state
+        self._attr_name = name
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn a relay on."""
@@ -105,7 +94,7 @@ class PencomRelay(SwitchEntity):
 
     def update(self) -> None:
         """Refresh a relay's state."""
-        self._state = self._hub.get(self._board, self._addr)
+        self._attr_is_on = self._hub.get(self._board, self._addr)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
