@@ -568,7 +568,7 @@ async def test_single_instance(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api", "db_name", CONF_HOST),
+    ("mock_client", "config_base", "get_write_api", "db_name", "host"),
     [
         (
             DEFAULT_API_VERSION,
