@@ -40,21 +40,26 @@ class TraneZoneEntity(TraneEntity):
         self,
         conn: ThermostatConnection,
         entry_id: str,
-        zone: Zone,
+        zone_id: str,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(conn)
-        self._zone_id = zone.zone_id
-        self._attr_unique_id = f"{entry_id}_{zone.zone_id}_{unique_id_suffix}"
-        zone_name = zone.name or f"Zone {zone.zone_id}"
+        self._zone_id = zone_id
+        self._attr_unique_id = f"{entry_id}_{zone_id}_{unique_id_suffix}"
+        zone_name = self._zone.name or f"Zone {zone_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry_id}_{zone.zone_id}")},
+            identifiers={(DOMAIN, f"{entry_id}_{zone_id}")},
             manufacturer=MANUFACTURER,
             name=zone_name,
             suggested_area=zone_name,
             via_device=(DOMAIN, entry_id),
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the zone is available."""
+        return self._zone_id in self._conn.state.zones
 
     @property
     def _zone(self) -> Zone:

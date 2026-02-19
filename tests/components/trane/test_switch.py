@@ -12,7 +12,6 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -29,17 +28,6 @@ async def test_switch_entities(
 ) -> None:
     """Snapshot all switch entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
-
-
-async def test_hold_switch_on(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_connection: MagicMock,
-) -> None:
-    """Test hold switch reports on when in permanent hold."""
-    state = hass.states.get("switch.living_room_hold")
-    assert state is not None
-    assert state.state == STATE_ON
 
 
 async def test_hold_switch_off(
@@ -59,37 +47,28 @@ async def test_hold_switch_off(
     assert state.state == STATE_OFF
 
 
-async def test_turn_on(
+@pytest.mark.parametrize(
+    ("service", "expected_hold_type"),
+    [
+        (SERVICE_TURN_ON, HoldType.MANUAL),
+        (SERVICE_TURN_OFF, HoldType.SCHEDULE),
+    ],
+)
+async def test_hold_switch_service(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_connection: MagicMock,
+    service: str,
+    expected_hold_type: HoldType,
 ) -> None:
-    """Test turning on the hold switch."""
+    """Test turning on and off the hold switch."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "switch.living_room_hold"},
         blocking=True,
     )
 
     mock_connection.set_temperature_setpoint.assert_called_once_with(
-        "1", hold_type=HoldType.MANUAL
-    )
-
-
-async def test_turn_off(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_connection: MagicMock,
-) -> None:
-    """Test turning off the hold switch."""
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.living_room_hold"},
-        blocking=True,
-    )
-
-    mock_connection.set_temperature_setpoint.assert_called_once_with(
-        "1", hold_type=HoldType.SCHEDULE
+        "1", hold_type=expected_hold_type
     )

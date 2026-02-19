@@ -36,8 +36,7 @@ class TraneHoldSwitch(TraneZoneEntity, SwitchEntity):
 
     def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
         """Initialize the hold switch."""
-        zone = conn.state.zones[zone_id]
-        super().__init__(conn, entry_id, zone, "hold")
+        super().__init__(conn, entry_id, zone_id, "hold")
 
     @property
     def is_on(self) -> bool:
