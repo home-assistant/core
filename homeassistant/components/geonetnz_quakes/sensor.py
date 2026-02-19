@@ -105,7 +105,7 @@ class GeonetnzQuakesSensor(SensorEntity):
         else:
             self._last_update_successful = None
         self._last_timestamp = status_info.last_timestamp
-        self._attr_native_unit_of_measurement = status_info.total
+        self._attr_native_value = status_info.total
         self._created = status_info.created
         self._updated = status_info.updated
         self._removed = status_info.removed
