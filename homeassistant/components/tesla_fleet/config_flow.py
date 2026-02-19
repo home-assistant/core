@@ -10,11 +10,7 @@ from typing import Any, cast
 import jwt
 from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import SERVERS
-from tesla_fleet_api.exceptions import (
-    InvalidResponse,
-    PreconditionFailed,
-    TeslaFleetError,
-)
+from tesla_fleet_api.exceptions import PreconditionFailed, TeslaFleetError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -41,12 +37,9 @@ class OAuth2FlowHandler(
         """Initialize config flow."""
         super().__init__()
         self.domain: str | None = None
-        self.registration_status: dict[str, bool] = {}
-        self.tesla_apis: dict[str, TeslaFleetApi] = {}
-        self.failed_regions: list[str] = []
         self.data: dict[str, Any] = {}
         self.uid: str | None = None
-        self.api: TeslaFleetApi | None = None
+        self.apis: list[TeslaFleetApi] = []
 
     @property
     def logger(self) -> logging.Logger:
@@ -64,7 +57,6 @@ class OAuth2FlowHandler(
 
         self.data = data
         self.uid = token["sub"]
-        server = SERVERS[token["ou_code"].lower()]
 
         await self.async_set_unique_id(self.uid)
         if self.source == SOURCE_REAUTH:
@@ -74,24 +66,28 @@ class OAuth2FlowHandler(
             )
         self._abort_if_unique_id_configured()
 
-        # OAuth done, setup a Partner API connection
+        # OAuth done, setup Partner API connections for all regions
         implementation = cast(TeslaUserImplementation, self.flow_impl)
-
         session = async_get_clientsession(self.hass)
-        self.api = TeslaFleetApi(
-            access_token="",
-            session=session,
-            server=server,
-            partner_scope=True,
-            charging_scope=False,
-            energy_scope=False,
-            user_scope=False,
-            vehicle_scope=False,
-        )
-        await self.api.get_private_key(self.hass.config.path("tesla_fleet.key"))
-        await self.api.partner_login(
-            implementation.client_id, implementation.client_secret
-        )
+
+        for region, server_url in SERVERS.items():
+            if region == "cn":
+                continue
+            api = TeslaFleetApi(
+                session=session,
+                access_token="",
+                server=server_url,
+                partner_scope=True,
+                charging_scope=False,
+                energy_scope=False,
+                user_scope=False,
+                vehicle_scope=False,
+            )
+            await api.get_private_key(self.hass.config.path("tesla_fleet.key"))
+            await api.partner_login(
+                implementation.client_id, implementation.client_secret
+            )
+            self.apis.append(api)
 
         return await self.async_step_domain_input()
 
@@ -130,44 +126,67 @@ class OAuth2FlowHandler(
     async def async_step_domain_registration(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle domain registration for both regions."""
+        """Handle domain registration for all regions."""
 
-        assert self.api
-        assert self.api.private_key
+        assert self.apis
+        assert self.apis[0].private_key
         assert self.domain
 
-        errors = {}
+        errors: dict[str, str] = {}
         description_placeholders = {
             "public_key_url": f"https://{self.domain}/.well-known/appspecific/com.tesla.3p.public-key.pem",
-            "pem": self.api.public_pem,
+            "pem": self.apis[0].public_pem,
         }
 
-        try:
-            register_response = await self.api.partner.register(self.domain)
-        except PreconditionFailed:
-            return await self.async_step_domain_input(
-                errors={CONF_DOMAIN: "precondition_failed"}
-            )
-        except InvalidResponse:
+        successful_response: dict[str, Any] | None = None
+        failed_regions: list[str] = []
+
+        for api in self.apis:
+            try:
+                register_response = await api.partner.register(self.domain)
+            except PreconditionFailed:
+                return await self.async_step_domain_input(
+                    errors={CONF_DOMAIN: "precondition_failed"}
+                )
+            except TeslaFleetError as e:
+                LOGGER.warning(
+                    "Partner registration failed for %s: %s",
+                    api.server,
+                    e.message,
+                )
+                failed_regions.append(api.server or "unknown")
+            else:
+                if successful_response is None:
+                    successful_response = register_response
+
+        if successful_response is None:
             errors["base"] = "invalid_response"
-        except TeslaFleetError as e:
-            errors["base"] = "unknown_error"
-            description_placeholders["error"] = e.message
-        else:
-            # Get public key from response
-            registered_public_key = register_response.get("response", {}).get(
-                "public_key"
+            return self.async_show_form(
+                step_id="domain_registration",
+                description_placeholders=description_placeholders,
+                errors=errors,
             )
 
-            if not registered_public_key:
-                errors["base"] = "public_key_not_found"
-            elif (
-                registered_public_key.lower()
-                != self.api.public_uncompressed_point.lower()
-            ):
-                errors["base"] = "public_key_mismatch"
-            else:
-                return await self.async_step_registration_complete()
+        if failed_regions:
+            LOGGER.warning(
+                "Partner registration succeeded on some regions but failed on: %s",
+                ", ".join(failed_regions),
+            )
+
+        # Verify public key from the successful response
+        registered_public_key = successful_response.get("response", {}).get(
+            "public_key"
+        )
+
+        if not registered_public_key:
+            errors["base"] = "public_key_not_found"
+        elif (
+            registered_public_key.lower()
+            != self.apis[0].public_uncompressed_point.lower()
+        ):
+            errors["base"] = "public_key_mismatch"
+        else:
+            return await self.async_step_registration_complete()
 
         return self.async_show_form(
             step_id="domain_registration",
