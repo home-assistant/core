@@ -19,6 +19,11 @@
       }
     }
   },
+  "device": {
+    "thermostat": {
+      "name": "Thermostat ({host})"
+    }
+  },
   "entity": {
     "switch": {
       "hold": {
