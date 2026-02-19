@@ -25,7 +25,7 @@
           "database": "The name of the database.",
           "ssl_ca_cert": "Path to the SSL certificate"
         },
-        "title": "InfluxDB Configuration"
+        "title": "InfluxDB configuration"
       },
       "configure_v2": {
         "data": {
@@ -41,17 +41,17 @@
           "organization": "The name of the organization.",
           "ssl_ca_cert": "Path to the SSL certificate"
         },
-        "title": "InfluxDB Configuration"
+        "title": "InfluxDB configuration"
       },
       "import": {
-        "title": "Import Configuration"
+        "title": "Import configuration"
       },
       "user": {
         "menu_options": {
           "configure_v1": "InfluxDB v1.x",
           "configure_v2": "InfluxDB v2.x / v3"
         },
-        "title": "Choose InfluxDB Version"
+        "title": "Choose InfluxDB version"
       }
     }
   }

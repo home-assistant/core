@@ -101,7 +101,7 @@ INFLUXDB_V2_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_TOKEN): TextSelector(
             TextSelectorConfig(
-                type=TextSelectorType.TEXT,
+                type=TextSelectorType.PASSWORD,
             ),
         ),
         vol.Optional(CONF_SSL_CA_CERT): FileSelector(
@@ -113,13 +113,17 @@ INFLUXDB_V2_SCHEMA = vol.Schema(
 
 async def _validate_influxdb_connection(
     hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Validate connection to influxdb."""
+
+    def _test_connection() -> None:
+        influx = get_influx_connection(data, test_write=True)
+        influx.close()
+
     errors = {}
 
     try:
-        influx = await hass.async_add_executor_job(get_influx_connection, data, True)
-        await hass.async_add_executor_job(influx.close)
+        await hass.async_add_executor_job(_test_connection)
     except ConnectionError as ex:
         _LOGGER.error(ex)
         if "SSLError" in ex.args[0]:
@@ -160,7 +164,7 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step when user initializes a integration."""
+        """Step when user initializes an integration."""
         return self.async_show_menu(
             step_id="user",
             menu_options=["configure_v1", "configure_v2"],
