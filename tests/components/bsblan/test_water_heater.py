@@ -13,9 +13,11 @@ from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ECO,
     STATE_OFF,
-    STATE_ON,
+    STATE_PERFORMANCE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
@@ -133,9 +135,9 @@ async def test_water_heater_entity_properties(
 @pytest.mark.parametrize(
     ("mode", "bsblan_mode"),
     [
-        (STATE_ECO, "Eco"),
-        (STATE_OFF, "Off"),
-        (STATE_ON, "On"),
+        (STATE_ECO, "2"),  # Eco maps to numeric value 2
+        (STATE_OFF, "0"),  # Off maps to numeric value 0
+        (STATE_PERFORMANCE, "1"),  # Performance/comfort maps to numeric value 1
     ],
 )
 async def test_set_operation_mode(
@@ -177,7 +179,7 @@ async def test_set_invalid_operation_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: eco, off, on",
+        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: off, performance, eco",
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
@@ -357,3 +359,103 @@ async def test_water_heater_custom_temperature_limits_from_config(
     assert (
         state.attributes.get("max_temp") == 75.0
     )  # Custom maximum from nominal_setpoint_max
+
+
+async def test_turn_on(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning on the water heater."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: ENTITY_ID,
+        },
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_called_once_with(
+        SetHotWaterParam(
+            operating_mode="1"
+        )  # Performance/comfort maps to numeric value 1
+    )
+
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning off the water heater."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_TURN_OFF,
+        service_data={
+            ATTR_ENTITY_ID: ENTITY_ID,
+        },
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_called_once_with(
+        SetHotWaterParam(operating_mode="0")  # Off maps to numeric value 0
+    )
+
+
+async def test_turn_on_error(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning on the water heater with API failure."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the operation mode"
+    ):
+        await hass.services.async_call(
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_TURN_ON,
+            service_data={
+                ATTR_ENTITY_ID: ENTITY_ID,
+            },
+            blocking=True,
+        )
+
+
+async def test_turn_off_error(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test turning off the water heater with API failure."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the operation mode"
+    ):
+        await hass.services.async_call(
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_TURN_OFF,
+            service_data={
+                ATTR_ENTITY_ID: ENTITY_ID,
+            },
+            blocking=True,
+        )

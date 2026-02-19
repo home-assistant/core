@@ -594,6 +594,10 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -621,6 +625,10 @@ ZEROCONF = {
         },
         {
             "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
+            "domain": "powerfox_local",
             "name": "powerfox*",
         },
         {

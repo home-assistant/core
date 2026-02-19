@@ -2872,6 +2872,12 @@
         "zwave"
       ]
     },
+    "homevolt": {
+      "name": "Homevolt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "homewizard": {
       "name": "HomeWizard",
       "integration_type": "device",
@@ -2984,6 +2990,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "hypontech": {
+      "name": "Hypontech Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ialarm": {
       "name": "Antifurto365 iAlarm",
       "integration_type": "device",
@@ -3002,6 +3014,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "idrive_e2": {
+      "name": "IDrive e2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "idteck_prox": {
       "name": "IDTECK Proximity Reader",
@@ -3095,6 +3113,12 @@
     "incomfort": {
       "name": "Intergas gateway",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "indevolt": {
+      "name": "Indevolt",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4121,6 +4145,12 @@
           "iot_class": "cloud_polling",
           "name": "OneDrive"
         },
+        "onedrive_for_business": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "OneDrive for Business"
+        },
         "xbox": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4183,7 +4213,7 @@
       "iot_class": "local_push"
     },
     "mobile_app": {
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4330,6 +4360,12 @@
         }
       }
     },
+    "mta": {
+      "name": "MTA New York City Transit",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "mullvad": {
       "name": "Mullvad VPN",
       "integration_type": "service",
@@ -4445,7 +4481,7 @@
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "netatmo": {
@@ -5243,9 +5279,20 @@
     },
     "powerfox": {
       "name": "Powerfox",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "powerfox": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Powerfox"
+        },
+        "powerfox_local": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Powerfox Local"
+        }
+      }
     },
     "prana": {
       "name": "Prana",
@@ -5990,7 +6037,7 @@
     },
     "sensorpro": {
       "name": "SensorPro",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5998,7 +6045,7 @@
       "name": "SensorPush",
       "integrations": {
         "sensorpush": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "SensorPush"
@@ -6145,7 +6192,7 @@
     },
     "simplepush": {
       "name": "Simplepush",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6311,7 +6358,7 @@
     },
     "smhi": {
       "name": "SMHI",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6456,10 +6503,10 @@
       "iot_class": "local_polling"
     },
     "spaceapi": {
-      "name": "Space API",
-      "integration_type": "hub",
+      "name": "SpaceAPI",
+      "integration_type": "service",
       "config_flow": false,
-      "iot_class": "cloud_polling"
+      "iot_class": "calculated"
     },
     "spc": {
       "name": "Vanderbilt SPC",
@@ -6476,8 +6523,9 @@
     "splunk": {
       "name": "Splunk",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "spotify": {
       "name": "Spotify",
@@ -6831,6 +6879,12 @@
       "name": "Telnet",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "teltonika": {
+      "name": "Teltonika",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "temper": {
