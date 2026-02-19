@@ -39,7 +39,7 @@ class DiscoveredDevice:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Battery Management System."""
 
-    VERSION = 3
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
