@@ -298,6 +298,7 @@ async def test_press_a01_button_failure(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_dock_command_button_success(
     hass: HomeAssistant,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
     expected_command: RoborockCommand,
@@ -321,6 +322,7 @@ async def test_press_dock_command_button_success(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_dock_command_button_failure(
     hass: HomeAssistant,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:

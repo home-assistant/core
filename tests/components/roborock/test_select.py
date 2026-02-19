@@ -394,7 +394,9 @@ async def test_mop_wash_mode_state(
     """Test that the mop wash mode select shows the correct current mode."""
     assert fake_vacuum.v1_properties
     assert fake_vacuum.v1_properties.wash_towel_mode
-    fake_vacuum.v1_properties.wash_towel_mode.wash_mode = RoborockDockWashTowelModeCode.deep
+    fake_vacuum.v1_properties.wash_towel_mode.wash_mode = (
+        RoborockDockWashTowelModeCode.deep
+    )
 
     await async_setup_component(hass, DOMAIN, {})
 
