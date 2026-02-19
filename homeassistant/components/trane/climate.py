@@ -128,10 +128,10 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         if zone_mode == ZoneMode.OFF:
             return HVACAction.OFF
         state = self._conn.state
-        if zone_mode != ZoneMode.COOL and state.heating_active == "1":
-            return HVACAction.HEATING
         if zone_mode != ZoneMode.HEAT and state.cooling_active == "1":
             return HVACAction.COOLING
+        if zone_mode != ZoneMode.COOL and state.heating_active == "1":
+            return HVACAction.HEATING
         return HVACAction.IDLE
 
     @property
