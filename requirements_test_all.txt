@@ -1889,7 +1889,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.2.1
+pyliebherrhomeapi==0.3.0
 
 # homeassistant.components.litejet
 pylitejet==0.6.3

@@ -65,29 +65,29 @@ async def test_switches(
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_ON,
-            "set_supercool",
+            "set_super_cool",
             {"device_id": "test_device_id", "zone_id": 1, "value": True},
         ),
         (
             "switch.test_fridge_top_zone_supercool",
             SERVICE_TURN_OFF,
-            "set_supercool",
+            "set_super_cool",
             {"device_id": "test_device_id", "zone_id": 1, "value": False},
         ),
         (
             "switch.test_fridge_bottom_zone_superfrost",
             SERVICE_TURN_ON,
-            "set_superfrost",
+            "set_super_frost",
             {"device_id": "test_device_id", "zone_id": 2, "value": True},
         ),
         (
-            "switch.test_fridge_party_mode",
+            "switch.test_fridge_partymode",
             SERVICE_TURN_ON,
             "set_party_mode",
             {"device_id": "test_device_id", "value": True},
         ),
         (
-            "switch.test_fridge_night_mode",
+            "switch.test_fridge_nightmode",
             SERVICE_TURN_OFF,
             "set_night_mode",
             {"device_id": "test_device_id", "value": False},
@@ -122,8 +122,8 @@ async def test_switch_service_calls(
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("switch.test_fridge_top_zone_supercool", "set_supercool"),
-        ("switch.test_fridge_party_mode", "set_party_mode"),
+        ("switch.test_fridge_top_zone_supercool", "set_super_cool"),
+        ("switch.test_fridge_partymode", "set_party_mode"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")

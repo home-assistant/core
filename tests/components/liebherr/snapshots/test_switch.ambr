@@ -30,8 +30,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'supercool',
-    'unique_id': 'single_zone_id_supercool_1',
+    'translation_key': 'super_cool',
+    'unique_id': 'single_zone_id_super_cool_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,8 +79,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'superfrost_bottom_zone',
-    'unique_id': 'test_device_id_superfrost_2',
+    'translation_key': 'super_frost_bottom_zone',
+    'unique_id': 'test_device_id_super_frost_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -97,7 +97,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.test_fridge_night_mode-entry]
+# name: test_switches[switch.test_fridge_nightmode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_fridge_night_mode',
+    'entity_id': 'switch.test_fridge_nightmode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,12 +118,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Night mode',
+    'object_id_base': 'NightMode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Night mode',
+    'original_name': 'NightMode',
     'platform': 'liebherr',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -133,20 +133,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_fridge_night_mode-state]
+# name: test_switches[switch.test_fridge_nightmode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Night mode',
+      'friendly_name': 'Test Fridge NightMode',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_fridge_night_mode',
+    'entity_id': 'switch.test_fridge_nightmode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[switch.test_fridge_party_mode-entry]
+# name: test_switches[switch.test_fridge_partymode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_fridge_party_mode',
+    'entity_id': 'switch.test_fridge_partymode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -167,12 +167,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Party mode',
+    'object_id_base': 'PartyMode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Party mode',
+    'original_name': 'PartyMode',
     'platform': 'liebherr',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -182,13 +182,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_fridge_party_mode-state]
+# name: test_switches[switch.test_fridge_partymode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Party mode',
+      'friendly_name': 'Test Fridge PartyMode',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_fridge_party_mode',
+    'entity_id': 'switch.test_fridge_partymode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -226,8 +226,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'supercool_top_zone',
-    'unique_id': 'test_device_id_supercool_1',
+    'translation_key': 'super_cool_top_zone',
+    'unique_id': 'test_device_id_super_cool_1',
     'unit_of_measurement': None,
   })
 # ---

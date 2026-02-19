@@ -136,8 +136,8 @@ def mock_liebherr_client() -> Generator[MagicMock]:
             MOCK_DEVICE_STATE
         )
         client.set_temperature = AsyncMock()
-        client.set_supercool = AsyncMock()
-        client.set_superfrost = AsyncMock()
+        client.set_super_cool = AsyncMock()
+        client.set_super_frost = AsyncMock()
         client.set_party_mode = AsyncMock()
         client.set_night_mode = AsyncMock()
         yield client
