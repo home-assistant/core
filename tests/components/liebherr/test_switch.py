@@ -81,13 +81,13 @@ async def test_switches(
             {"device_id": "test_device_id", "zone_id": 2, "value": True},
         ),
         (
-            "switch.test_fridge_party_mode",
+            "switch.test_fridge_partymode",
             SERVICE_TURN_ON,
             "set_party_mode",
             {"device_id": "test_device_id", "value": True},
         ),
         (
-            "switch.test_fridge_night_mode",
+            "switch.test_fridge_nightmode",
             SERVICE_TURN_OFF,
             "set_night_mode",
             {"device_id": "test_device_id", "value": False},
@@ -123,7 +123,7 @@ async def test_switch_service_calls(
     ("entity_id", "method"),
     [
         ("switch.test_fridge_top_zone_supercool", "set_super_cool"),
-        ("switch.test_fridge_party_mode", "set_party_mode"),
+        ("switch.test_fridge_partymode", "set_party_mode"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
