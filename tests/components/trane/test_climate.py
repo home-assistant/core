@@ -266,14 +266,14 @@ async def test_set_fan_mode(
     ("cooling_active", "heating_active", "zone_mode", "expected_action"),
     [
         ("0", "0", ZoneMode.OFF, HVACAction.OFF),
-        ("0", "1", ZoneMode.AUTO, HVACAction.HEATING),
         ("0", "2", ZoneMode.AUTO, HVACAction.HEATING),
-        ("1", "0", ZoneMode.AUTO, HVACAction.COOLING),
         ("2", "0", ZoneMode.AUTO, HVACAction.COOLING),
         ("0", "0", ZoneMode.AUTO, HVACAction.IDLE),
-        ("0", "1", ZoneMode.COOL, HVACAction.IDLE),
-        ("1", "0", ZoneMode.HEAT, HVACAction.IDLE),
-        ("1", "1", ZoneMode.AUTO, HVACAction.COOLING),
+        ("0", "1", ZoneMode.AUTO, HVACAction.IDLE),
+        ("1", "0", ZoneMode.AUTO, HVACAction.IDLE),
+        ("0", "2", ZoneMode.COOL, HVACAction.IDLE),
+        ("2", "0", ZoneMode.HEAT, HVACAction.IDLE),
+        ("2", "2", ZoneMode.AUTO, HVACAction.COOLING),
     ],
 )
 async def test_hvac_action(
