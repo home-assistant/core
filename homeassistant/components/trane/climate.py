@@ -119,9 +119,9 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         """Return the current HVAC action."""
         if self._zone.mode == ZoneMode.OFF:
             return HVACAction.OFF
-        if self._conn.state.heating_active:
+        if self._conn.state.heating_active == "1":
             return HVACAction.HEATING
-        if self._conn.state.cooling_active:
+        if self._conn.state.cooling_active == "1":
             return HVACAction.COOLING
         return HVACAction.IDLE
 

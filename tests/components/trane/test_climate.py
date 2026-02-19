@@ -201,10 +201,10 @@ async def test_set_fan_mode(
 @pytest.mark.parametrize(
     ("cooling_active", "heating_active", "zone_mode", "expected_action"),
     [
-        ("", "", ZoneMode.OFF, HVACAction.OFF),
-        ("", "1", ZoneMode.AUTO, HVACAction.HEATING),
-        ("1", "", ZoneMode.AUTO, HVACAction.COOLING),
-        ("", "", ZoneMode.AUTO, HVACAction.IDLE),
+        ("0", "0", ZoneMode.OFF, HVACAction.OFF),
+        ("0", "1", ZoneMode.AUTO, HVACAction.HEATING),
+        ("1", "0", ZoneMode.AUTO, HVACAction.COOLING),
+        ("0", "0", ZoneMode.AUTO, HVACAction.IDLE),
     ],
 )
 async def test_hvac_action(
