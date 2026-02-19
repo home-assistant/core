@@ -22,17 +22,11 @@
       "container_status": {
         "default": "mdi:server"
       },
-      "container_uptime": {
-        "default": "mdi:clock"
-      },
       "node_cpu": {
         "default": "mdi:cpu-64-bit"
       },
       "node_disk": {
         "default": "mdi:harddisk"
-      },
-      "node_level": {
-        "default": "mdi:server"
       },
       "node_max_cpu": {
         "default": "mdi:cpu-64-bit"
@@ -48,12 +42,6 @@
       },
       "node_status": {
         "default": "mdi:server"
-      },
-      "node_type": {
-        "default": "mdi:server"
-      },
-      "node_uptime": {
-        "default": "mdi:clock"
       },
       "vm_cpu": {
         "default": "mdi:cpu-64-bit"
@@ -75,9 +63,6 @@
       },
       "vm_status": {
         "default": "mdi:server"
-      },
-      "vm_uptime": {
-        "default": "mdi:clock"
       }
     }
   }

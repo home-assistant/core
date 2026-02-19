@@ -82,17 +82,11 @@
           "suspended": "Suspended"
         }
       },
-      "container_uptime": {
-        "name": "Uptime"
-      },
       "node_cpu": {
         "name": "CPU usage"
       },
       "node_disk": {
         "name": "Disk usage"
-      },
-      "node_level": {
-        "name": "Node level"
       },
       "node_max_cpu": {
         "name": "Max CPU"
@@ -112,12 +106,6 @@
           "offline": "Offline",
           "online": "Online"
         }
-      },
-      "node_type": {
-        "name": "Node type"
-      },
-      "node_uptime": {
-        "name": "Uptime"
       },
       "vm_cpu": {
         "name": "CPU usage"
@@ -144,9 +132,6 @@
           "stopped": "Stopped",
           "suspended": "Suspended"
         }
-      },
-      "vm_uptime": {
-        "name": "Uptime"
       }
     }
   },

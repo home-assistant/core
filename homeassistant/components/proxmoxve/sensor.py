@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -109,39 +109,9 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["online", "offline"],
     ),
-    ProxmoxNodeSensorEntityDescription(
-        key="node_uptime",
-        translation_key="node_uptime",
-        value_fn=lambda data: data.node["uptime"],
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ProxmoxNodeSensorEntityDescription(
-        key="node_level",
-        translation_key="node_level",
-        value_fn=lambda data: data.node["level"],
-    ),
-    ProxmoxNodeSensorEntityDescription(
-        key="node_type",
-        translation_key="node_type",
-        value_fn=lambda data: data.node["type"],
-    ),
 )
 
 VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
-    ProxmoxVMSensorEntityDescription(
-        key="vm_uptime",
-        translation_key="vm_uptime",
-        value_fn=lambda data: data["uptime"],
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     ProxmoxVMSensorEntityDescription(
         key="vm_max_cpu",
         translation_key="vm_max_cpu",
@@ -210,16 +180,6 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
 )
 
 CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
-    ProxmoxContainerSensorEntityDescription(
-        key="container_uptime",
-        translation_key="container_uptime",
-        value_fn=lambda data: data["uptime"],
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     ProxmoxContainerSensorEntityDescription(
         key="container_max_cpu",
         translation_key="container_max_cpu",
