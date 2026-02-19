@@ -20,5 +20,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while updating the Zinvolt integration."
+    }
   }
 }

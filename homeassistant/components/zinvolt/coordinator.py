@@ -11,6 +11,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type ZinvoltConfigEntry = ConfigEntry[dict[str, ZinvoltDeviceCoordinator]]
@@ -42,4 +44,7 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[BatteryState]):
         try:
             return await self._client.get_battery_status(self._battery_id)
         except ZinvoltError as err:
-            raise UpdateFailed("Could not update battery status") from err
+            raise UpdateFailed(
+                translation_key="update_failed",
+                translation_domain=DOMAIN,
+            ) from err

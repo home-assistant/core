@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from zinvolt import ZinvoltClient
 from zinvolt.exceptions import ZinvoltError
 
@@ -26,10 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> b
         raise ConfigEntryNotReady from err
 
     coordinators: dict[str, ZinvoltDeviceCoordinator] = {}
+    tasks = []
     for battery in batteries:
         coordinator = ZinvoltDeviceCoordinator(hass, entry, client, battery.identifier)
-        await coordinator.async_config_entry_first_refresh()
+        tasks.append(coordinator.async_config_entry_first_refresh())
         coordinators[battery.identifier] = coordinator
+    await asyncio.gather(*tasks)
 
     entry.runtime_data = coordinators
 

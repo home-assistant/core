@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 class ZinvoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Zinvolt."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
