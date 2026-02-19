@@ -37,14 +37,4 @@ class ChallengeNeeded(SmartHomeError):
 
     def to_response(self):
         """Convert to a response format."""
-        # Le errorCode doit être exactement 'challengeNeeded'
-        response = {"errorCode": "challengeNeeded"}
-
-        # L'objet de défi doit être 'challengeNeeded' (majuscule au N)
-        # et le type doit être 'ackNeeded' pour la voix
-        if self.ack_needed or self.challenge_type == CHALLENGE_ACK_NEEDED:
-            response["challengeNeeded"] = {"type": CHALLENGE_ACK_NEEDED}
-        elif self.pin_needed or self.challenge_type == CHALLENGE_PIN_NEEDED:
-            response["challengeNeeded"] = {"type": CHALLENGE_PIN_NEEDED}
-
-        return response
+        return {"errorCode": self.code, "challengeNeeded": {"type": self.challenge_type}}

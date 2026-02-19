@@ -89,6 +89,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
+    CHALLENGE_FAILED_PIN_NEEDED,
     CONF_REQUIRE_ACK,
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
@@ -294,7 +295,8 @@ class _Trait(ABC):
         """Verify if acknowledgment is required and present."""
         entity_config = self.config.entity_config.get(self.state.entity_id, {})
         if entity_config.get(CONF_REQUIRE_ACK):
-            if not challenge:
+            ack_ok = isinstance(challenge, dict) and challenge.get("ack") is True
+            if not ack_ok:
                 raise ChallengeNeeded(ack_needed=True)
 
     def sync_attributes(self) -> dict[str, Any]:
@@ -2560,9 +2562,9 @@ def _verify_pin_challenge(data, state, challenge):
         raise ChallengeNeeded(pin_needed=True)
 
     if challenge.get("pin") != data.config.secure_devices_pin:
-        # On passe pin_needed=True et on précise le type pour l'erreur de saisie
+        # Pass pin_needed=True and specify the challenge type for input error
         raise ChallengeNeeded(
-            pin_needed=True, challenge_type="challengeFailedPinNeeded"
+            pin_needed=True, challenge_type=CHALLENGE_FAILED_PIN_NEEDED
         )
 
 
