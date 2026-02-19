@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum
+from functools import lru_cache
 import json
 import pathlib
+import re
 from typing import Any, Literal
 
 
@@ -255,3 +257,22 @@ class ScaledQualityScaleTiers(IntEnum):
     SILVER = 2
     GOLD = 3
     PLATINUM = 4
+
+
+_STRICT_TYPING_FILE = pathlib.Path(".strict-typing")
+_COMPONENT_REGEX = r"homeassistant\.components\.([^.]+).*"
+
+
+@lru_cache
+def get_strict_typing_components(strict_typing_file: pathlib.Path) -> set[str]:
+    """Get set of domains that have strict typing enabled."""
+    if not strict_typing_file.is_file():
+        return set()
+
+    return set(
+        {
+            match.group(1)
+            for line in strict_typing_file.read_text(encoding="utf-8").splitlines()
+            if (match := re.match(_COMPONENT_REGEX, line)) is not None
+        }
+    )
