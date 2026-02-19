@@ -617,7 +617,6 @@ class HTML5NotifyEntity(NotifyEntity):
     """Representation of a notification entity."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "device"
     _attr_name = None
 
     _attr_supported_features = NotifyEntityFeature.TITLE
