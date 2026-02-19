@@ -48,6 +48,23 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to Splunk at {host}:{port}."
+    },
+    "connection_error": {
+      "message": "Unable to connect to Splunk at {host}:{port}: {error}."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "timeout_connect": {
+      "message": "Connection to Splunk at {host}:{port} timed out."
+    },
+    "unexpected_error": {
+      "message": "Unexpected error while connecting to Splunk at {host}:{port}: {error}."
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the connection settings from your `{domain}:` configuration and configure the integration via the UI.\n\nNote: Entity filtering via YAML (`filter:`) will continue to work.",
