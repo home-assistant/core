@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 import logging
 from typing import Any
@@ -39,9 +38,11 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -105,6 +106,74 @@ SUPPORT_FEATURE_MAPPING = {
 }
 
 
+def output_device_id_from_conf_entry(config_entry: ConfigEntry[Any]) -> str | None:
+    """Get the `congig_entry`s pyatv output device ID, or None if it cannot be retrieved."""
+    if (
+        (mgr := getattr(config_entry, "runtime_data", None))
+        and isinstance(mgr, AppleTVManager)
+        and (atv := mgr.atv) is not None
+    ):
+        return atv.device_info.output_device_id
+    return None
+
+
+def entity_ids_by_output_device_id(
+    hass: HomeAssistant, output_device_ids: list[str]
+) -> dict[str, str | None]:
+    """Map pyatv output device IDs to MediaPlayer entity IDs.
+
+    Return a fict with the keys being the output device ID, and the values being
+    the mapped entity ID or None, if not entity could be found.
+    """
+    players = dict.fromkeys(output_device_ids, None)
+
+    entity_registry = er.async_get(hass)
+
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            config_entry.state == ConfigEntryState.LOADED
+            and config_entry.unique_id is not None
+        ):
+            entity_id = entity_registry.async_get_entity_id(
+                MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
+            )
+            if (
+                output_device_id := output_device_id_from_conf_entry(config_entry)
+            ) is not None and output_device_id in players:
+                players[output_device_id] = entity_id
+
+    return players
+
+
+def output_device_ids_by_entity_id(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> dict[str, str | None]:
+    """Map MediaPlayer entity IDs to pyatv output device IDs.
+
+    Return a dict with the keys being the entity IDs, and the values being the mapped
+    output device ID or `None`, if no output device ID could not be found.
+    """
+    output_devices = dict.fromkeys(entity_ids, None)
+
+    entity_registry = er.async_get(hass)
+
+    for entity_id in entity_ids:
+        if (
+            entity_entry := entity_registry.async_get(entity_id)
+        ) is not None and entity_entry.config_entry_id is not None:
+            if (
+                config_entry := hass.config_entries.async_get_entry(
+                    entity_entry.config_entry_id
+                )
+            ) is not None:
+                if (
+                    output_device_id := output_device_id_from_conf_entry(config_entry)
+                ) is not None:
+                    output_devices[entity_id] = output_device_id
+
+    return output_devices
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AppleTvConfigEntry,
@@ -132,13 +201,6 @@ class AppleTvMediaPlayer(
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
         self._attr_group_members = []
-        self._attr_extra_state_attributes = {}
-
-        # When do we not have an atv instance?
-        if atv := manager.atv:
-            self._attr_extra_state_attributes = {
-                "output_device_id": atv.device_info.output_device_id
-            }
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
@@ -169,13 +231,8 @@ class AppleTvMediaPlayer(
         # Listen to volume updates
         atv.audio.listener = self
 
-        # The output_device_id should have been set in the constructor already.
-        # Is there any chance it wasn't or that it changes between reconnects?
-        self._attr_extra_state_attributes["output_device_id"] = (
-            atv.device_info.output_device_id
-        )
         self.manager.config_entry.async_create_task(
-            self.hass, self._update_group_members(), eager_start=True
+            self.hass, self._update_group_members(), eager_start=False
         )
 
         if atv.features.in_state(FeatureState.Available, FeatureName.AppList):
@@ -200,6 +257,45 @@ class AppleTvMediaPlayer(
                 if (app_name := app.name) is not None
             }
             self.async_write_ha_state()
+
+    async def _update_group_members(self) -> None:
+        """Update group_members attr.
+
+        Find all apple_tv media_player entities that match the current list of `output_devices`.
+        Some of these devices may not be managed by homeassistant, so only
+        the best effort is made to map them to entities, which are then captured
+        in the `group_members` state attribute.
+        """
+
+        if (atv := self.atv) is None:
+            _LOGGER.debug(
+                "%s unable to update group members, missing atv", self.entity_id
+            )
+            # Should we retry at a later point?
+            return
+
+        output_device_ids = [dev.identifier for dev in atv.audio.output_devices]
+
+        players = entity_ids_by_output_device_id(self.hass, output_device_ids)
+
+        group_members = [
+            entity_id for entity_id in players.values() if entity_id is not None
+        ]
+        unmapped_device_ids = [
+            output_device_id
+            for (output_device_id, entity_id) in players.items()
+            if entity_id is None
+        ]
+
+        self._attr_group_members = group_members
+        self.async_write_ha_state()
+
+        if unmapped_device_ids:
+            _LOGGER.debug(
+                "%s unable to find entities for output_devices %s",
+                self.entity_id,
+                unmapped_device_ids,
+            )
 
     @callback
     def async_device_disconnected(self) -> None:
@@ -282,74 +378,9 @@ class AppleTvMediaPlayer(
 
         This is a callback function from pyatv.interface.AudioListener.
         """
-
-        if (atv := self.manager.atv) is None:
-            return
-
-        # Why would output_device_id would not have been set already?
-        if not self._attr_extra_state_attributes.get("output_device_id", False):
-            _LOGGER.warning("%s output_device_id not set", self.entity_id)
-            self._attr_extra_state_attributes["output_device_id"] = (
-                atv.device_info.output_device_id
-            )
-            self.async_write_ha_state()
-
         self.manager.config_entry.async_create_task(
-            self.hass, self._update_group_members(), eager_start=True
+            self.hass, self._update_group_members(), eager_start=False
         )
-
-    async def _update_group_members(self, retry_count: int = 10) -> None:
-        """Update group_members attr.
-
-        Find all media_player entities with an `output_device_id` attr that is
-        included in this player's atv.audio.output_devices.
-        Retry if player entities cannot be found, e.g. during startup.
-        """
-        if (atv := self.atv) is None:
-            _LOGGER.debug(
-                "%s unable to update group members, missing atv", self.entity_id
-            )
-            # Should we retry at a later point?
-            return
-
-        states = self.hass.states
-
-        players = {}
-        # sometimes the own output_device_id is not in the states data yet
-        if (own_output_device_id := atv.device_info.output_device_id) is not None:
-            players[own_output_device_id] = self.entity_id
-
-        output_device_ids = [dev.identifier for dev in atv.audio.output_devices]
-
-        for entity_id in states.async_entity_ids(MEDIA_PLAYER_DOMAIN):
-            if (state := states.get(entity_id)) is not None and (
-                output_id := state.attributes.get("output_device_id", None)
-            ) is not None:
-                players[output_id] = entity_id
-
-        group_members = []
-        unmapped_device_ids = []
-
-        for output_device_id in output_device_ids:
-            if (member_entity_id := players.get(output_device_id)) is not None:
-                group_members.append(member_entity_id)
-            else:
-                unmapped_device_ids.append(output_device_id)
-
-        self._attr_group_members = group_members
-        self.async_write_ha_state()
-
-        if unmapped_device_ids and retry_count > 0:
-            _LOGGER.warning(
-                "%s unable to find entities for output_devices %s, retrying max %s times",
-                self.entity_id,
-                unmapped_device_ids,
-                retry_count,
-            )
-            await asyncio.sleep(5.0)
-            self.manager.config_entry.async_create_task(
-                self.hass, self._update_group_members(retry_count - 1)
-            )
 
     @property
     def app_id(self) -> str | None:
@@ -680,31 +711,27 @@ class AppleTvMediaPlayer(
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
+
         if (atv := self.atv) is None:
             _LOGGER.debug(
-                "%s unable to join with %s because not connected to player",
+                "%s unable to join with %s, not connected to player",
                 self.entity_id,
                 group_members,
             )
             return
 
-        if (own_output_device_id := atv.device_info.output_device_id) is not None:
-            output_devices = [own_output_device_id]
-        else:
-            _LOGGER.warning(
-                "%s missing own output_device_id during joining", self.entity_id
-            )
-            output_devices = []
+        output_devices = output_device_ids_by_entity_id(
+            self.hass, [self.entity_id, *group_members]
+        )
 
-        unmapped_entities = []
         mapped_entities = []
+        unmapped_entities = []
+        output_device_ids = []
 
-        for entity_id in group_members:
-            if (state := self.hass.states.get(entity_id)) is not None and (
-                output_device_id := state.attributes.get("output_device_id", None)
-            ) is not None:
-                output_devices.append(output_device_id)
+        for entity_id, output_device_id in output_devices.items():
+            if output_device_id is not None:
                 mapped_entities.append(entity_id)
+                output_device_ids.append(output_device_id)
             else:
                 unmapped_entities.append(entity_id)
 
@@ -720,7 +747,7 @@ class AppleTvMediaPlayer(
             #   set_output_devices(*devices: str)
             # mypy docs seem to suggest atv is wrong:
             # https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html#functions
-            *output_devices  # type: ignore[arg-type]
+            *output_device_ids  # type: ignore[arg-type]
         )
 
         if unmapped_entities:
