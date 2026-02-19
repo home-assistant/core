@@ -101,12 +101,7 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
         if raw_value is None:
             return None
 
-        # If on_value is specified, check for exact match
-        if self.entity_description.read_on_value is not None:
-            return raw_value == self.entity_description.read_on_value
-
-        # Otherwise, ON means anything except off_value
-        return raw_value != self.entity_description.read_off_value
+        return raw_value == self.entity_description.read_on_value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
