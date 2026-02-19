@@ -43,6 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     except SaunumConnectionError as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 
+    entry.async_on_unload(client.async_close)
+
     coordinator = LeilSaunaCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -55,7 +57,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.async_close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

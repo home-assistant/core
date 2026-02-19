@@ -24,6 +24,8 @@
       'mutetx0': '1',
       'mutetx1': '1',
       'oled': '1',
+      'oledfade': '30',
+      'reboottimer': '0',
       'relay': '0',
       'tx0plus5': '1',
       'tx1plus5': '1',

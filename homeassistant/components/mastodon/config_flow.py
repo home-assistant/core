@@ -51,6 +51,19 @@ REAUTH_SCHEMA = vol.Schema(
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
+STEP_RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_CLIENT_ID,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_CLIENT_SECRET,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_ACCESS_TOKEN,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+    }
+)
 
 EXAMPLE_URL = "https://mastodon.social"
 
@@ -191,6 +204,44 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "account_name": remove_email_link(account_name),
+            },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input:
+            self.base_url = reconfigure_entry.data[CONF_BASE_URL]
+            self.client_id = user_input[CONF_CLIENT_ID]
+            self.client_secret = user_input[CONF_CLIENT_SECRET]
+            self.access_token = user_input[CONF_ACCESS_TOKEN]
+            instance, account, errors = await self.hass.async_add_executor_job(
+                self.check_connection
+            )
+            if not errors:
+                name = construct_mastodon_username(instance, account)
+                await self.async_set_unique_id(slugify(name))
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
+                        CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
+                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                    },
+                )
+        account_name = reconfigure_entry.title
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_RECONFIGURE_SCHEMA,
             errors=errors,
             description_placeholders={
                 "account_name": remove_email_link(account_name),
