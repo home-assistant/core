@@ -628,6 +628,10 @@ ZEROCONF = {
             "name": "powerfox*",
         },
         {
+            "domain": "powerfox_local",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },
@@ -955,6 +959,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
         },
     ],
     "_technove-stations._tcp.local.": [

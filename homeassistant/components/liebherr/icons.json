@@ -13,49 +13,49 @@
           "off": "mdi:glass-cocktail-off"
         }
       },
-      "supercool": {
+      "super_cool": {
         "default": "mdi:snowflake",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "supercool_bottom_zone": {
+      "super_cool_bottom_zone": {
         "default": "mdi:snowflake",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "supercool_middle_zone": {
+      "super_cool_middle_zone": {
         "default": "mdi:snowflake",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "supercool_top_zone": {
+      "super_cool_top_zone": {
         "default": "mdi:snowflake",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "superfrost": {
+      "super_frost": {
         "default": "mdi:snowflake-alert",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "superfrost_bottom_zone": {
+      "super_frost_bottom_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "superfrost_middle_zone": {
+      "super_frost_middle_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
           "off": "mdi:snowflake-off"
         }
       },
-      "superfrost_top_zone": {
+      "super_frost_top_zone": {
         "default": "mdi:snowflake-alert",
         "state": {
           "off": "mdi:snowflake-off"

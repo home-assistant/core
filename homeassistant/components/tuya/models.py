@@ -46,7 +46,7 @@ class DeviceWrapper[T]:
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Determine if the wrapper should skip an update.
@@ -85,7 +85,7 @@ class DPCodeWrapper(DeviceWrapper):
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Determine if the wrapper should skip an update.
@@ -252,20 +252,13 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     def skip_update(
         self,
         device: CustomerDevice,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Override skip_update to process delta updates.
 
         Processes delta accumulation before determining if update should be skipped.
         """
-        # If updated_status_properties is None, we should not skip,
-        # as we don't have information on what was updated
-        # This happens for example on online/offline updates, where
-        # we still want to update the entity state but we have nothing
-        # to accumulate, so we return False to not skip the update
-        if updated_status_properties is None:
-            return False
         if (
             super().skip_update(device, updated_status_properties, dp_timestamps)
             or dp_timestamps is None
