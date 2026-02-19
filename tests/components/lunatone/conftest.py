@@ -96,7 +96,7 @@ def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=f"Lunatone {SERIAL_NUMBER}",
+        title=BASE_URL,
         domain=DOMAIN,
         data={CONF_URL: BASE_URL},
         unique_id=str(SERIAL_NUMBER),
