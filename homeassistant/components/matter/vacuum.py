@@ -256,7 +256,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             return
         self._last_accepted_commands = accepted_operational_commands
         supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
-        supported_features |= VacuumEntityFeature.
+        supported_features |= VacuumEntityFeature.START
         supported_features |= VacuumEntityFeature.STATE
         supported_features |= VacuumEntityFeature.STOP
 
