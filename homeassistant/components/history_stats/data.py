@@ -266,13 +266,6 @@ class HistoryStats:
                     match_count -= 1
 
             previous_state_matches = current_state_matches
-            if not current_state_matches:
-                # We are now in a non-matching state.
-                # Update the reference timestamp so that if we later re-enter
-                # a matching state, the new block starts from that point.
-                last_state_change_timestamp = max(
-                    start_timestamp, state_change_timestamp
-                )
 
         # Count time elapsed between last history state and end of measure
         if previous_state_matches:
