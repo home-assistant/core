@@ -19,7 +19,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -197,12 +197,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         """
         # Convert string IDs to integers
-        try:
-            area_ids = [int(segment_id) for segment_id in segment_ids]
-        except (TypeError, ValueError) as err:
-            raise ServiceValidationError(
-                "Invalid segment ID; segment IDs must be numeric"
-            ) from err
+        area_ids = [int(segment_id) for segment_id in segment_ids]
 
         # Ensure a CLEANING run mode is available before changing device state
         mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
