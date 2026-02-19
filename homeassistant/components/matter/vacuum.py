@@ -197,18 +197,19 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         # Convert string IDs to integers
         area_ids = [int(segment_id) for segment_id in segment_ids]
 
-        # Send the SelectAreas command to the vacuum
-        await self.send_device_command(
-            clusters.ServiceArea.Commands.SelectAreas(newAreas=area_ids)
-        )
-
-        # Start cleaning using ChangeToMode with CLEANING tag
+        # Ensure a CLEANING run mode is available before changing device state
         mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
         if mode is None:
             raise HomeAssistantError(
                 "No supported run mode found to start the vacuum cleaner."
             )
 
+        # Send the SelectAreas command to the vacuum
+        await self.send_device_command(
+            clusters.ServiceArea.Commands.SelectAreas(newAreas=area_ids)
+        )
+
+        # Start cleaning using ChangeToMode with CLEANING tag
         await self.send_device_command(
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
         )
