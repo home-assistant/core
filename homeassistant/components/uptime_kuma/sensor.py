@@ -190,6 +190,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         create_entity=lambda t: True,
         entity_category=EntityCategory.DIAGNOSTIC,
         attributes_fn=lambda m: {"tags": m.monitor_tags or None},
+        entity_registry_enabled_default=False,
     ),
 )
 
