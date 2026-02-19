@@ -19,6 +19,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
@@ -320,6 +322,84 @@ async def test_refresh_fail_unknown(
     assert crd.data == 1  # value from previous fetch
     assert crd.last_update_success is False
     assert "Unexpected error fetching test data" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [(OAuth2TokenRequestReauthError, ConfigEntryAuthFailed)],
+)
+async def test_oauth_token_request_refresh_errors(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors are mapped during refresh."""
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.update_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        # Raise on auth failed, needs to be set
+        await crd._async_refresh(raise_on_auth_failed=True)
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [
+        (OAuth2TokenRequestReauthError, ConfigEntryAuthFailed),
+        (OAuth2TokenRequestError, ConfigEntryNotReady),
+    ],
+)
+async def test_token_request_setup_errors(
+    hass: HomeAssistant,
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors raised from setup."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing, duh"
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+
+    # Patch the underlying request info to raise ClientResponseError
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.setup_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
 
 
 async def test_refresh_no_update_method(
@@ -720,12 +800,13 @@ async def test_async_config_entry_first_refresh_invalid_state(
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     crd.setup_method = AsyncMock()
     with pytest.raises(
-        RuntimeError,
-        match="Detected code that uses `async_config_entry_first_refresh`, which "
-        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED. Please report this issue",
+        config_entries.ConfigEntryError,
+        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
+        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
     ):
         await crd.async_config_entry_first_refresh()
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     assert crd.last_update_success is True
     crd.setup_method.assert_not_called()
@@ -735,21 +816,20 @@ async def test_async_config_entry_first_refresh_invalid_state(
 async def test_async_config_entry_first_refresh_invalid_state_in_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test first refresh successfully, despite wrong state."""
+    """Test first refresh fails, because of wrong state."""
     entry = MockConfigEntry()
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     crd.setup_method = AsyncMock()
 
-    await crd.async_config_entry_first_refresh()
+    with pytest.raises(
+        config_entries.ConfigEntryError,
+        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
+        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
+    ):
+        await crd.async_config_entry_first_refresh()
+
     assert crd.last_update_success is True
-    crd.setup_method.assert_called()
-    assert (
-        "Detected that integration 'hue' uses `async_config_entry_first_refresh`, which "
-        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED at "
-        "homeassistant/components/hue/light.py, line 23: self.light.is_on. "
-        "This will stop working in Home Assistant 2025.11"
-    ) in caplog.text
+    crd.setup_method.assert_not_called()
 
 
 async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) -> None:

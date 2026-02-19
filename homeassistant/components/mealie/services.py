@@ -2,7 +2,6 @@
 
 from dataclasses import asdict
 from datetime import date
-from typing import cast
 
 from aiomealie import (
     MealieConnectionError,
@@ -10,9 +9,10 @@ from aiomealie import (
     MealieValidationError,
     MealplanEntryType,
 )
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
@@ -22,7 +22,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_END_DATE,
@@ -64,6 +64,8 @@ SERVICE_GET_RECIPES_SCHEMA = vol.Schema(
         vol.Optional(ATTR_RESULT_LIMIT): int,
     }
 )
+
+SERVICE_GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
 
 SERVICE_IMPORT_RECIPE = "import_recipe"
 SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
@@ -109,27 +111,32 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
 )
 
 
-def _async_get_entry(call: ServiceCall) -> MealieConfigEntry:
-    """Get the Mealie config entry."""
-    config_entry_id: str = call.data[ATTR_CONFIG_ENTRY_ID]
-    if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
+def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
+    """Validate mealplan entry type, if prior to 3.7.0."""
+
+    if (
+        version.valid
+        and version < AwesomeVersion("v3.7.0")
+        and entry_type
+        not in {
+            MealplanEntryType.BREAKFAST.value,
+            MealplanEntryType.DINNER.value,
+            MealplanEntryType.LUNCH.value,
+            MealplanEntryType.SIDE.value,
+        }
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
+            translation_key="invalid_mealplan_entry_type",
+            translation_placeholders={"mealplan_type": entry_type},
         )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_loaded",
-            translation_placeholders={"target": entry.title},
-        )
-    return cast(MealieConfigEntry, entry)
 
 
 async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     """Get the mealplan for a specific range."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     start_date = call.data.get(ATTR_START_DATE, date.today())
     end_date = call.data.get(ATTR_END_DATE, date.today())
     if end_date < start_date:
@@ -150,7 +157,9 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
 
 async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
     """Get a recipe."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     recipe_id = call.data[ATTR_RECIPE_ID]
     client = entry.runtime_data.client
     try:
@@ -171,7 +180,9 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
 
 async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     """Get recipes."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     search_terms = call.data.get(ATTR_SEARCH_TERMS)
     result_limit = call.data.get(ATTR_RESULT_LIMIT, 10)
     client = entry.runtime_data.client
@@ -192,7 +203,9 @@ async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
 
 async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
     """Import a recipe."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     url = call.data[ATTR_URL]
     include_tags = call.data.get(ATTR_INCLUDE_TAGS, False)
     client = entry.runtime_data.client
@@ -215,10 +228,15 @@ async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
 
 async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     """Set a random mealplan."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
     try:
         mealplan = await client.random_mealplan(mealplan_date, entry_type)
     except MealieConnectionError as err:
@@ -233,10 +251,15 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
 
 async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     """Set a mealplan."""
-    entry = _async_get_entry(call)
+    entry: MealieConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
     try:
         mealplan = await client.set_mealplan(
             mealplan_date,
@@ -300,4 +323,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
+        entity_domain=TODO_DOMAIN,
+        schema=None,
+        func="async_get_shopping_list_items",
+        supports_response=SupportsResponse.ONLY,
     )

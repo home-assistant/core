@@ -279,9 +279,14 @@
   dict({
     'data': dict({
       'batteries': dict({
+        'battery_count': 2,
         'max_consumption_w': 1600.0,
         'max_production_w': 800.0,
         'mode': 'zero',
+        'permissions': list([
+          'charge_allowed',
+          'discharge_allowed',
+        ]),
         'power_w': -404.0,
         'target_power_w': -400.0,
       }),

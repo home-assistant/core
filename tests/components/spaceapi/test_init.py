@@ -131,7 +131,7 @@ async def mock_client(
     return await hass_client()
 
 
-async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
@@ -175,7 +175,7 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
-async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_state_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response if the state entity was set."""
     hass.states.async_set("test.test_door", True)
 
@@ -186,7 +186,9 @@ async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
     assert data["state"]["open"] == bool(1)
 
 
-async def test_spaceapi_sensors_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_sensors_get(
+    hass: HomeAssistant, mock_client: TestClient
+) -> None:
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK

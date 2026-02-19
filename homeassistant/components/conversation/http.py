@@ -165,11 +165,7 @@ async def websocket_list_sentences(
     """List custom registered sentences."""
     manager = get_agent_manager(hass)
 
-    sentences = []
-    for trigger_details in manager.triggers_details:
-        sentences.extend(trigger_details.sentences)
-
-    connection.send_result(msg["id"], {"trigger_sentences": sentences})
+    connection.send_result(msg["id"], {"trigger_sentences": manager.trigger_sentences})
 
 
 @websocket_api.websocket_command(

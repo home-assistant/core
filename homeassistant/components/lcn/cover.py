@@ -1,6 +1,5 @@
 """Support for LCN covers."""
 
-import asyncio
 from collections.abc import Coroutine, Iterable
 from datetime import timedelta
 from functools import partial
@@ -10,7 +9,7 @@ import pypck
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as DOMAIN_COVER,
+    DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -28,7 +27,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -61,14 +60,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_COVER: add_entities}
+        {COVER_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_COVER
+            if entity_config[CONF_DOMAIN] == COVER_DOMAIN
         ),
     )
 
@@ -134,14 +133,14 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         """Update the state of the entity."""
         if not self.device_connection.is_group:
             self._attr_available = any(
-                await asyncio.gather(
-                    self.device_connection.request_status_output(
+                [
+                    await self.device_connection.request_status_output(
                         pypck.lcn_defs.OutputPort["OUTPUTUP"], SCAN_INTERVAL.seconds
                     ),
-                    self.device_connection.request_status_output(
+                    await self.device_connection.request_status_output(
                         pypck.lcn_defs.OutputPort["OUTPUTDOWN"], SCAN_INTERVAL.seconds
                     ),
-                )
+                ]
             )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -274,7 +273,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
                     self.motor, self.positioning_mode, SCAN_INTERVAL.seconds
                 )
             )
-        self._attr_available = any(await asyncio.gather(*coros))
+        self._attr_available = any([await coro for coro in coros])
 
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""

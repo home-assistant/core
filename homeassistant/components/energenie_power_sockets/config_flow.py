@@ -35,7 +35,7 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         currently_configured = self._async_current_ids(include_ignore=True)
         try:
             found_devices = await self.hass.async_add_executor_job(search_for_devices)
-        except (MissingLibrary, UsbError):
+        except MissingLibrary, UsbError:
             LOGGER.exception("Unable to access USB devices")
             return self.async_abort(reason="usb_error")
 

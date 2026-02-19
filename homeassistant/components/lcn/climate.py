@@ -1,6 +1,5 @@
 """Support for LCN climate control."""
 
-import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
@@ -9,7 +8,7 @@ from typing import Any, cast
 import pypck
 
 from homeassistant.components.climate import (
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -37,7 +36,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -67,14 +66,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_CLIMATE: add_entities}
+        {CLIMATE_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+            if entity_config[CONF_DOMAIN] == CLIMATE_DOMAIN
         ),
     )
 
@@ -172,14 +171,14 @@ class LcnClimate(LcnEntity, ClimateEntity):
     async def async_update(self) -> None:
         """Update the state of the entity."""
         self._attr_available = any(
-            await asyncio.gather(
-                self.device_connection.request_status_variable(
+            [
+                await self.device_connection.request_status_variable(
                     self.variable, SCAN_INTERVAL.seconds
                 ),
-                self.device_connection.request_status_variable(
+                await self.device_connection.request_status_variable(
                     self.setpoint, SCAN_INTERVAL.seconds
                 ),
-            )
+            ]
         )
 
     def input_received(self, input_obj: InputType) -> None:
