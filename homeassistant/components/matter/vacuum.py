@@ -289,10 +289,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             in accepted_operational_commands
         ):
             supported_features |= VacuumEntityFeature.RETURN_HOME
-
-        # Check if ServiceArea cluster is available for clean area support
-        if self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.SupportedAreas
+        # Check if Map feature is enabled for clean area support
+        if (
+            (
+                service_area_feature_map := self.get_matter_attribute_value(
+                    clusters.ServiceArea.Attributes.FeatureMap
+                )
+            )
+            is not None
+            and service_area_feature_map & clusters.ServiceArea.Bitmaps.Feature.kMaps
         ):
             supported_features |= VacuumEntityFeature.CLEAN_AREA
 
@@ -311,7 +316,10 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
-        optional_attributes=(clusters.ServiceArea.Attributes.SupportedAreas,),
+        optional_attributes=(
+            clusters.ServiceArea.Attributes.FeatureMap,
+            clusters.ServiceArea.Attributes.SupportedAreas,
+        ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),
