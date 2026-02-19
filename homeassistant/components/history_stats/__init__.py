@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID, CONF_STATE
 from homeassistant.core import HomeAssistant
@@ -104,6 +105,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=2
+        )
+        if config_entry.minor_version < 3:
+            # Set the state class to measurement for backward compatibility
+            options[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(
