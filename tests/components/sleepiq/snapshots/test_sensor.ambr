@@ -1,4 +1,116 @@
 # serializer version: 1
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_heart_rate_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_heart_rate_average',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Heart Rate Average',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Heart Rate Average',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heart_rate_avg',
+    'unique_id': '43219_heart_rate',
+    'unit_of_measurement': 'bpm',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_heart_rate_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Heart Rate Average',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'bpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_heart_rate_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hrv',
+    'unique_id': '43219_hrv',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Heart Rate Variability',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_heart_rate_variability',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '72',
+  })
+# ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -50,6 +162,172 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1400',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_respiratory_rate_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_respiratory_rate_average',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Respiratory Rate Average',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Respiratory Rate Average',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'respiratory_rate_avg',
+    'unique_id': '43219_respiratory_rate',
+    'unit_of_measurement': 'brpm',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_respiratory_rate_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Respiratory Rate Average',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'brpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_respiratory_rate_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleep_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleep_duration',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Sleep Duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Sleep Duration',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_duration',
+    'unique_id': '43219_sleep_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleep_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Sleep Duration',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleep_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleep_score-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleep_score',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed Sleeper R Sleep Score',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed Sleeper R Sleep Score',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_score',
+    'unique_id': '43219_sleep_score',
+    'unit_of_measurement': 'score',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleep_score-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed Sleeper R Sleep Score',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'score',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeper_r_sleep_score',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '78',
   })
 # ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeper_r_sleepnumber-entry]
@@ -105,6 +383,118 @@
     'state': '80',
   })
 # ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_heart_rate_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_heart_rate_average',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Heart Rate Average',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Heart Rate Average',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heart_rate_avg',
+    'unique_id': '98765_heart_rate',
+    'unit_of_measurement': 'bpm',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_heart_rate_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed SleeperL Heart Rate Average',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'bpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_heart_rate_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hrv',
+    'unique_id': '98765_hrv',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'SleepNumber Test Bed SleeperL Heart Rate Variability',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_heart_rate_variability',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '68',
+  })
+# ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -156,6 +546,172 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1000',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_respiratory_rate_average-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_respiratory_rate_average',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Respiratory Rate Average',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Respiratory Rate Average',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'respiratory_rate_avg',
+    'unique_id': '98765_respiratory_rate',
+    'unit_of_measurement': 'brpm',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_respiratory_rate_average-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed SleeperL Respiratory Rate Average',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'brpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_respiratory_rate_average',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleep_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleep_duration',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Sleep Duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Sleep Duration',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_duration',
+    'unique_id': '98765_sleep_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleep_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'SleepNumber Test Bed SleeperL Sleep Duration',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleep_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleep_score-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleep_score',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SleepNumber Test Bed SleeperL Sleep Score',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bed',
+    'original_name': 'SleepNumber Test Bed SleeperL Sleep Score',
+    'platform': 'sleepiq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_score',
+    'unique_id': '98765_sleep_score',
+    'unit_of_measurement': 'score',
+  })
+# ---
+# name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleep_score-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SleepNumber Test Bed SleeperL Sleep Score',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'score',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleepnumber_test_bed_sleeperl_sleep_score',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '85',
   })
 # ---
 # name: test_sensors[sensor.sleepnumber_test_bed_sleeperl_sleepnumber-entry]
