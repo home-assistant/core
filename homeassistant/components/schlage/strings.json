@@ -57,13 +57,13 @@
   },
   "exceptions": {
     "schlage_code_exists": {
-      "message": "A PIN code with this value already exists on the lock"
+      "message": "A PIN code with this value already exists on the lock."
     },
     "schlage_name_exists": {
-      "message": "A PIN code with the name '{name}' already exists on the lock"
+      "message": "A PIN code with the name '{name}' already exists on the lock."
     },
     "schlage_refresh_failed": {
-      "message": "Failed to refresh Schlage data"
+      "message": "Failed to refresh Schlage data."
     }
   },
   "services": {

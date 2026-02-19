@@ -7,13 +7,12 @@ import pyschlage
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import STEP_USER_DATA_SCHEMA
 from .const import DOMAIN, SERVICE_ADD_CODE, SERVICE_DELETE_CODE, SERVICE_GET_CODES
 from .coordinator import SchlageConfigEntry, SchlageDataUpdateCoordinator
 
@@ -25,10 +24,10 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-CONFIG_SCHEMA = STEP_USER_DATA_SCHEMA
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Schlage component."""
     service.async_register_platform_entity_service(
         hass,

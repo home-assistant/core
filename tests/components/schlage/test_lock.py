@@ -131,16 +131,14 @@ async def test_add_code_service_duplicate_name(
     mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
     """Test add_code service with duplicate name."""
+
     # Mock existing access code
     existing_code = Mock()
     existing_code.name = "test_user"
     existing_code.code = "5678"
     mock_lock.access_codes = {"1": existing_code}
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="A PIN code with the name 'test_user' already exists on the lock",
-    ):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_CODE,
@@ -151,6 +149,8 @@ async def test_add_code_service_duplicate_name(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "schlage_name_exists"
+    assert exc_info.value.translation_placeholders == {"name": "test_user"}
 
 
 async def test_add_code_service_duplicate_code(
@@ -160,15 +160,13 @@ async def test_add_code_service_duplicate_code(
 ) -> None:
     """Test add_code service with duplicate code."""
     # Mock existing access code
+
     existing_code = Mock()
     existing_code.name = "existing_user"
     existing_code.code = "1234"
     mock_lock.access_codes = {"1": existing_code}
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="A PIN code with this value already exists on the lock",
-    ):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_CODE,
@@ -179,6 +177,7 @@ async def test_add_code_service_duplicate_code(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "schlage_code_exists"
 
 
 async def test_delete_code_service(
