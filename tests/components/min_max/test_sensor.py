@@ -7,8 +7,13 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -378,6 +383,39 @@ async def test_different_unit_of_measurement(hass: HomeAssistant) -> None:
 
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("unit_of_measurement") == "ERR"
+
+
+async def test_device_class(hass: HomeAssistant) -> None:
+    """Test for setting the device class."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_device_class",
+            "type": "max",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(
+            entity_id,
+            value,
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_device_class")
+
+    assert state.state == str(float(MAX_VALUE))
+    assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
 
 
 async def test_last_sensor(hass: HomeAssistant) -> None:
