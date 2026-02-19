@@ -137,6 +137,19 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 "No supported run mode found to start the vacuum cleaner."
             )
 
+        # Reset selected areas to an unconstrained selection to ensure start
+        # performs a full clean and does not reuse a previous area-targeted
+        # selection.
+        if VacuumEntityFeature.CLEAN_AREA in self.supported_features:
+            # Matter ServiceArea: an empty NewAreas list means unconstrained
+            # operation (full clean).
+            await self.send_device_command(
+                clusters.ServiceArea.Commands.SelectAreas(newAreas=[])
+            )
+            _LOGGER.debug(
+                "Reset selected areas before start with unconstrained selection"
+            )
+
         await self.send_device_command(
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
         )
@@ -243,7 +256,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             return
         self._last_accepted_commands = accepted_operational_commands
         supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
-        supported_features |= VacuumEntityFeature.START
+        supported_features |= VacuumEntityFeature.
         supported_features |= VacuumEntityFeature.STATE
         supported_features |= VacuumEntityFeature.STOP
 
