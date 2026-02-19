@@ -8,9 +8,9 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from .conftest import make_mock_module, make_mock_zone
+
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.zone_1"
 
