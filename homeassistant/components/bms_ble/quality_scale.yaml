@@ -46,7 +46,7 @@ rules:
   parallel-updates: done
   reauthentication-flow:
     status: exempt
-    comment: This integrations does not require any authentication information
+    comment: This integration does not require any authentication information
   test-coverage: done
 
   # Gold
