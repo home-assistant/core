@@ -11,6 +11,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 env:
   DEFAULT_PYTHON: "3.14.2"
 

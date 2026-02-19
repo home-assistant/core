@@ -136,7 +136,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -187,7 +187,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -239,7 +239,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
     'unit_of_measurement': None,
   })
 # ---
@@ -291,7 +291,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
