@@ -1,6 +1,6 @@
 {
   "services": {
-    "change_mode": {
+    "change_energy_mode": {
       "service": "mdi:swap-horizontal"
     },
     "charge": {
