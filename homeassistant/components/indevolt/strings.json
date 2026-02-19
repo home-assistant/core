@@ -294,6 +294,9 @@
     "config_entry_not_ready": {
       "message": "Config entry {entry_title} is not ready"
     },
+    "energy_mode_change_unavailable_outdoor_portable": {
+      "message": "Energy mode cannot be changed when device is in Outdoor/Portable mode"
+    },
     "failed_to_retrieve_current_energy_mode": {
       "message": "Failed to retrieve current energy mode"
     },
@@ -305,9 +308,6 @@
     },
     "power_exceeds_max": {
       "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
-    },
-    "real_time_control_unavailable_outdoor_portable": {
-      "message": "Real-Time Control cannot be activated when device is in Outdoor/Portable mode"
     },
     "soc_below_emergency": {
       "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
@@ -334,10 +334,10 @@
       "name": "Change mode"
     },
     "charge": {
-      "description": "Real-time control: Start charging with target SOC and power.",
+      "description": "Real-time control: Start charging with configured power till the target SOC is reached.",
       "fields": {
         "power": {
-          "description": "Charging power in watts.",
+          "description": "Maximum charging power in watts.",
           "name": "Max. Power"
         },
         "target_soc": {
@@ -348,10 +348,10 @@
       "name": "Charge"
     },
     "discharge": {
-      "description": "Real-time control: Start discharging with configured power.",
+      "description": "Real-time control: Start discharging with configured power till the target SOC is reached.",
       "fields": {
         "power": {
-          "description": "Max. discharging power in watts.",
+          "description": "Maximum discharging power in watts.",
           "name": "Max. Power"
         },
         "target_soc": {
