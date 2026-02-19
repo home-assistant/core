@@ -109,6 +109,7 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
+    TYPE_POWER_STRIP,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
@@ -263,6 +264,7 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                 (
                     TYPE_FAUCET,
                     TYPE_OUTLET,
+                    TYPE_POWER_STRIP,
                     TYPE_SHOWER,
                     TYPE_SPRINKLER,
                     TYPE_SWITCH,

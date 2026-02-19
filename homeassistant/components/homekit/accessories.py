@@ -89,6 +89,7 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
+    TYPE_POWER_STRIP,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
@@ -113,6 +114,7 @@ SWITCH_TYPES = {
     TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "ValveSwitch",
+    TYPE_POWER_STRIP: "PowerStrip",
 }
 FAN_TYPES = {
     TYPE_AIR_PURIFIER: "AirPurifier",

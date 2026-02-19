@@ -549,3 +549,115 @@ class SelectSwitch(HomeAccessory):
         current_option = cleanup_name_for_homekit(new_state.state)
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)
+
+
+@TYPES.register("PowerStrip")
+class PowerStrip(HomeAccessory):
+    """Generate a PowerStrip accessory with multiple independently controllable outlets."""
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a PowerStrip accessory object."""
+        super().__init__(*args, category=CATEGORY_OUTLET)
+        state = self.hass.states.get(self.entity_id)
+        assert state
+
+        self.outlet_chars: dict[str, Characteristic] = {}
+        self.outlet_states: dict[str, bool] = {}
+
+        # Get the entity IDs from the group's attributes
+        entity_ids = state.attributes.get(ATTR_ENTITY_ID, [])
+        _LOGGER.debug("%s: entity_ids = %s", self.entity_id, entity_ids)
+        if not entity_ids:
+            _LOGGER.error(
+                "%s: PowerStrip requires a switch group with entity_id attribute containing member switches",
+                self.entity_id,
+            )
+            return
+
+        # Create outlet services for each member switch
+        for i, entity_id in enumerate(entity_ids, 1):
+            member_state = self.hass.states.get(entity_id)
+            if not member_state:
+                _LOGGER.warning(
+                    "%s: Member switch %s not found", self.entity_id, entity_id
+                )
+                continue
+
+            # Create a unique service for this outlet
+            serv_outlet = self.add_preload_service(
+                SERV_OUTLET,
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_ON, CHAR_OUTLET_IN_USE],
+                unique_id=entity_id,
+            )
+
+            # Set outlet name
+            outlet_name = cleanup_name_for_homekit(
+                member_state.attributes.get("friendly_name", f"Outlet {i}")
+            )
+            serv_outlet.configure_char(CHAR_NAME, value=outlet_name)
+            serv_outlet.configure_char(CHAR_CONFIGURED_NAME, value=outlet_name)
+            serv_outlet.configure_char(CHAR_OUTLET_IN_USE, value=True)
+
+            # Configure the on/off characteristic with callback
+            self.outlet_chars[entity_id] = serv_outlet.configure_char(
+                CHAR_ON,
+                value=member_state.state == STATE_ON,
+                setter_callback=lambda value, eid=entity_id: self.set_outlet_state(
+                    eid, value
+                ),
+            )
+
+            # Track initial state
+            self.outlet_states[entity_id] = member_state.state == STATE_ON
+
+        _LOGGER.debug(
+            "%s: outlet_chars configured = %s",
+            self.entity_id,
+            list(self.outlet_chars.keys()),
+        )
+
+        # Set the primary service to the first outlet
+        if self.outlet_chars:
+            self.set_primary_service(self.services[0])
+
+        # Set initial states
+        self.async_update_state(state)
+
+    def set_outlet_state(self, entity_id: str, value: bool) -> None:
+        """Set individual outlet state from HomeKit."""
+        _LOGGER.debug("%s: Set outlet %s to %s", self.entity_id, entity_id, value)
+
+        # Call the appropriate service on the individual switch
+        service_name = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        self.async_call_service(
+            SWITCH_DOMAIN, service_name, {ATTR_ENTITY_ID: entity_id}
+        )
+
+        # Update our tracking
+        self.outlet_states[entity_id] = value
+
+    @callback
+    def async_update_state(self, new_state: State) -> None:
+        """Update outlet states when group or member states change."""
+        # Get current member entity IDs
+        entity_ids = new_state.attributes.get(ATTR_ENTITY_ID, [])
+
+        # Update each outlet's state based on its individual entity state
+        for entity_id in entity_ids:
+            if entity_id not in self.outlet_chars:
+                continue
+
+            member_state = self.hass.states.get(entity_id)
+            if not member_state:
+                continue
+
+            current_state = member_state.state == STATE_ON
+            if self.outlet_states.get(entity_id) != current_state:
+                _LOGGER.debug(
+                    "%s: Update outlet %s state to %s",
+                    self.entity_id,
+                    entity_id,
+                    current_state,
+                )
+                self.outlet_chars[entity_id].set_value(current_state)
+                self.outlet_states[entity_id] = current_state
