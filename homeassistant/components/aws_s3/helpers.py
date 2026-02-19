@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_list_backups_from_s3(
     client: S3Client,
     bucket: str,
-    prefix: str = "",
+    prefix: str,
 ) -> list[AgentBackup]:
     """List backups from an S3 bucket by reading metadata files."""
     paginator = client.get_paginator("list_objects_v2")

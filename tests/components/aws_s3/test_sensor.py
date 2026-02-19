@@ -9,6 +9,7 @@ from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.aws_s3.const import CONF_PREFIX
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
 from homeassistant.components.backup import AgentBackup
 from homeassistant.const import STATE_UNAVAILABLE
@@ -111,3 +112,29 @@ async def test_calculate_backups_size(
 
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert float(state.state) > 0
+
+
+async def test_sensor_with_prefix(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    test_backup: AgentBackup,
+) -> None:
+    """Test the AWS S3 sensor with prefix configuration."""
+    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+        {"Contents": []}
+    ]
+    await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_PREFIX: "backups/home"}
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
+    assert state.state == "0.0"
+
+    # Verify that paginate was called with the prefix
+    call_args = mock_client.get_paginator.return_value.paginate.call_args
+    assert call_args[1]["Prefix"] == "backups/home/"
