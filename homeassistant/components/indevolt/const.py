@@ -5,7 +5,7 @@ DOMAIN = "indevolt"
 # API write/read keys for energy and real-time control modes
 ENERGY_MODE_READ_KEY = "7101"
 ENERGY_MODE_WRITE_KEY = "47005"
-RT_MODE_KEY = "47015"
+REALTIME_ACTION_KEY = "47015"
 
 # Config entry fields
 CONF_SERIAL_NUMBER = "serial_number"

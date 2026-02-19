@@ -47,12 +47,12 @@ stop:
     entity:
       integration: indevolt
 
-change_mode:
+change_energy_mode:
   target:
     entity:
       integration: indevolt
   fields:
-    mode:
+    energy_mode:
       required: true
       selector:
         select:

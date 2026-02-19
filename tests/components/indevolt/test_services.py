@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.indevolt.const import (
     DOMAIN,
     ENERGY_MODE_WRITE_KEY,
-    RT_MODE_KEY,
+    REALTIME_ACTION_KEY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -25,19 +25,19 @@ async def test_service_change_mode(
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test change_mode service."""
+    """Test change_energy_mode service."""
     await setup_integration(hass, mock_config_entry)
 
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Call the service to change mode
+    # Call the service to change energy mode
     await hass.services.async_call(
         DOMAIN,
-        "change_mode",
+        "change_energy_mode",
         {
             "entity_id": TARGET_ENTITY,
-            "mode": "real_time_control",
+            "energy_mode": "real_time_control",
         },
         blocking=True,
     )
@@ -72,7 +72,7 @@ async def test_service_charge(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(RT_MODE_KEY, [1, 1200, 60])]
+        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [1, 1200, 60])]
     )
 
 
@@ -102,7 +102,7 @@ async def test_service_discharge(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(RT_MODE_KEY, [2, 1200, 40])]
+        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [2, 1200, 40])]
     )
 
 
@@ -128,7 +128,7 @@ async def test_service_stop(
 
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_has_calls(
-        [call(ENERGY_MODE_WRITE_KEY, 4), call(RT_MODE_KEY, [0, 0, 0])]
+        [call(ENERGY_MODE_WRITE_KEY, 4), call(REALTIME_ACTION_KEY, [0, 0, 0])]
     )
 
 

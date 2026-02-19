@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, POWER_LIMITS, RT_MODE_KEY
+from .const import DOMAIN, POWER_LIMITS, REALTIME_ACTION_KEY
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -24,14 +24,14 @@ PLATFORMS: list[Platform] = [
 ]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# The map of working Modes and associated API data points
-MODE_MAP = {
+# The map of Energy Modes and associated API values
+ENERGY_MODE_MAP = {
     "self_consumed_prioritized": 1,
     "real_time_control": 4,
     "charge_discharge_schedule": 5,
 }
 
-SERVICE_SCHEMA = vol.Schema(
+CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
         **cv.TARGET_SERVICE_FIELDS,
         vol.Required("target_soc"): cv.positive_int,
@@ -48,7 +48,7 @@ STOP_SERVICE_SCHEMA = vol.Schema(
 CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
     {
         **cv.TARGET_SERVICE_FIELDS,
-        vol.Required("mode"): vol.In(list(MODE_MAP.keys())),
+        vol.Required("energy_mode"): vol.In(list(ENERGY_MODE_MAP.keys())),
     }
 )
 
@@ -72,8 +72,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def set_mode(call: ServiceCall) -> None:
         """Handle the service call to change the energy mode."""
 
-        mode_str = call.data["mode"]
-        mode = MODE_MAP[mode_str]
+        mode_str = call.data["energy_mode"]
+        mode = ENERGY_MODE_MAP[mode_str]
 
         errors: list[str] = []
 
@@ -110,9 +110,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
                 # Ensure device is in Real-time Control mode and start charging
-                if await coordinator.switch_energy_mode(MODE_MAP["real_time_control"]):
+                if await coordinator.switch_energy_mode(
+                    ENERGY_MODE_MAP["real_time_control"]
+                ):
                     await coordinator.async_push_data(
-                        RT_MODE_KEY, [1, power, target_soc]
+                        REALTIME_ACTION_KEY, [1, power, target_soc]
                     )
                     await coordinator.async_request_refresh()
 
@@ -144,9 +146,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
                 # Ensure device is in Real-time Control mode and start discharging
-                if await coordinator.switch_energy_mode(MODE_MAP["real_time_control"]):
+                if await coordinator.switch_energy_mode(
+                    ENERGY_MODE_MAP["real_time_control"]
+                ):
                     await coordinator.async_push_data(
-                        RT_MODE_KEY, [2, power, target_soc]
+                        REALTIME_ACTION_KEY, [2, power, target_soc]
                     )
                     await coordinator.async_request_refresh()
 
@@ -165,8 +169,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for coordinator in coordinators:
             try:
                 # Ensure device is in Real-time Control mode and execute stop command
-                if await coordinator.switch_energy_mode(MODE_MAP["real_time_control"]):
-                    await coordinator.async_push_data(RT_MODE_KEY, [0, 0, 0])
+                if await coordinator.switch_energy_mode(
+                    ENERGY_MODE_MAP["real_time_control"]
+                ):
+                    await coordinator.async_push_data(REALTIME_ACTION_KEY, [0, 0, 0])
                     await coordinator.async_request_refresh()
 
             except (ServiceValidationError, HomeAssistantError) as err:
@@ -175,11 +181,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if errors:
             raise ServiceValidationError("; ".join(errors))
 
-    hass.services.async_register(DOMAIN, "charge", charge, schema=SERVICE_SCHEMA)
-    hass.services.async_register(DOMAIN, "discharge", discharge, schema=SERVICE_SCHEMA)
+    hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, "discharge", discharge, schema=CHARGE_SERVICE_SCHEMA
+    )
     hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, "change_mode", set_mode, schema=CHANGE_MODE_SERVICE_SCHEMA
+        DOMAIN, "change_energy_mode", set_mode, schema=CHANGE_MODE_SERVICE_SCHEMA
     )
 
     return True

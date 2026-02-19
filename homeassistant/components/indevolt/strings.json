@@ -323,10 +323,10 @@
     }
   },
   "services": {
-    "change_mode": {
+    "change_energy_mode": {
       "description": "Change the device energy mode.",
       "fields": {
-        "mode": {
+        "energy_mode": {
           "description": "Energy mode to activate.",
           "name": "Mode"
         }
@@ -338,7 +338,7 @@
       "fields": {
         "power": {
           "description": "Charging power in watts.",
-          "name": "Power"
+          "name": "Max. Power"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
@@ -352,7 +352,7 @@
       "fields": {
         "power": {
           "description": "Max. discharging power in watts.",
-          "name": "Power"
+          "name": "Max. Power"
         },
         "target_soc": {
           "description": "Target state of charge percentage.",
