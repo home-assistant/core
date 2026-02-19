@@ -55,7 +55,7 @@ git diff dev..HEAD --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANG
 
 From the file paths, identify:
 - **Integration domain**: Extract from `homeassistant/components/{integration}/` or `tests/components/{integration}/`
-- **PR title format**: Write a release-note-style summary of the change. The title becomes the release notes entry, so it should be a complete sentence fragment describing what changed.
+- **PR title format**: Write a release-note-style summary of the change. The title becomes the release notes entry, so it should be a complete sentence fragment describing what changed in imperative mood.
 
 **PR Title Examples by Type:**
 | Type | Example titles |
