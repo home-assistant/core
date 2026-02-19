@@ -85,8 +85,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "rate_limit": TadoRateLimit(limit=0, remaining=0),
         }
 
-        self.rate_limit: TadoRateLimit | None = None
-
     @property
     def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
@@ -115,11 +113,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except RequestException as err:
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
-        self.rate_limit = TadoRateLimit(
-            limit=int(rate_limit_info.get("per-day") or 0),
-            remaining=int(rate_limit_info.get("remaining") or 0),
-        )
-
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
@@ -133,8 +126,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
         self.data["rate_limit"] = TadoRateLimit(
-            limit=self.rate_limit.limit,
-            remaining=self.rate_limit.remaining,
+            limit=int(rate_limit_info.get("per-day") or 0),
+            remaining=int(rate_limit_info.get("remaining") or 0),
         )
 
         refresh_token = await self.hass.async_add_executor_job(
