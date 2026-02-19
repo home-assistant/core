@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyschlage.code import AccessCode
 
@@ -103,9 +103,6 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
 
     async def add_code(self, name: str, code: str) -> None:
         """Add a lock code."""
-
-        if TYPE_CHECKING:
-            assert code is not None
 
         codes = self._lock.access_codes
         self._validate_code_name(codes, name)

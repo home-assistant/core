@@ -139,7 +139,7 @@ async def test_add_code_service_duplicate_name(
 
     with pytest.raises(
         ServiceValidationError,
-        match="A PIN code with this name already exists on the lock",
+        match="A PIN code with the name 'test_user' already exists on the lock",
     ):
         await hass.services.async_call(
             DOMAIN,

@@ -60,7 +60,7 @@
       "message": "A PIN code with this value already exists on the lock"
     },
     "schlage_name_exists": {
-      "message": "A PIN code with name of '{name}' already exists on the lock"
+      "message": "A PIN code with the name '{name}' already exists on the lock"
     },
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data"
@@ -92,7 +92,7 @@
       "name": "Delete PIN code"
     },
     "get_codes": {
-      "description": "Retrieve all PIN codes from the lock",
+      "description": "Retrieve all PIN codes from the lock.",
       "name": "Get PIN codes"
     }
   }

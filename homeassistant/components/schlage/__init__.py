@@ -7,6 +7,7 @@ import pyschlage
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -27,7 +28,7 @@ PLATFORMS: list[Platform] = [
 CONFIG_SCHEMA = STEP_USER_DATA_SCHEMA
 
 
-async def async_setup(hass: HomeAssistant, config: SchlageConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the Schlage component."""
     service.async_register_platform_entity_service(
         hass,
