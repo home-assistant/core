@@ -255,7 +255,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         """Initialize."""
         # Don't set config_entry attribute to avoid default behavior.
         # HomeConnectApplianceCoordinator doesn't follow the
-        # config entry lifecycle so we can't use the default behavior. 
+        # config entry lifecycle so we can't use the default behavior.
         self._config_entry = config_entry
         super().__init__(
             hass,
@@ -412,9 +412,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
                 await asyncio_sleep(delay)
             except UnauthorizedError as error:
-                                # Reauth flow need to be started explicitly as
-                                # we don't use the default config entry coordinator.
-                                self._config_entry.async_start_reauth(self.hass)
+                # Reauth flow need to be started explicitly as
+                # we don't use the default config entry coordinator.
+                self._config_entry.async_start_reauth(self.hass)
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="auth_error",
