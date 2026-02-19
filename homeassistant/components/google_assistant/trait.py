@@ -1753,14 +1753,10 @@ class FanSpeedTrait(_Trait):
         super().__init__(hass, state, config)
         if state.domain == fan.DOMAIN:
             speed_count = round(
-                100
-                / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
+                100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
             )
             self._ordered_speed = (
-                [
-                    f"{speed}/{speed_count}"
-                    for speed in range(1, speed_count + 1)
-                ]
+                [f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)]
                 if 0 < speed_count <= FAN_SPEED_MAX_SPEED_COUNT
                 else []
             )
@@ -1840,8 +1836,8 @@ class FanSpeedTrait(_Trait):
         if domain == fan.DOMAIN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             if self._ordered_speed:
-                response["currentFanSpeedSetting"] = (
-                    percentage_to_ordered_list_item(self._ordered_speed, percent)
+                response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
+                    self._ordered_speed, percent
                 )
             else:
                 response["currentFanSpeedPercent"] = percent
@@ -1864,10 +1860,7 @@ class FanSpeedTrait(_Trait):
             )
 
         if domain == fan.DOMAIN:
-            if (
-                self._ordered_speed
-                and (fan_speed := params.get("fanSpeed"))
-            ):
+            if self._ordered_speed and (fan_speed := params.get("fanSpeed")):
                 fan_speed_percent = ordered_list_item_to_percentage(
                     self._ordered_speed, fan_speed
                 )
