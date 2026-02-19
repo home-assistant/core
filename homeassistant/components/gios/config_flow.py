@@ -38,14 +38,18 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             station_id = user_input[CONF_STATION_ID]
 
-            try:
-                await self.async_set_unique_id(station_id, raise_on_progress=False)
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(station_id, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
 
+            try:
                 async with asyncio.timeout(API_TIMEOUT):
                     gios = await Gios.create(websession, int(station_id))
                     await gios.async_update()
-
+            except ApiError, ClientConnectorError, TimeoutError:
+                errors["base"] = "cannot_connect"
+            except InvalidSensorsDataError:
+                errors[CONF_STATION_ID] = "invalid_sensors_data"
+            else:
                 # GIOS treats station ID as int
                 user_input[CONF_STATION_ID] = int(station_id)
 
@@ -54,16 +58,16 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=gios.station_name,
-                    data=user_input,
+                    # CONF_NAME is still used, but its value is preserved
+                    # primarily for backward compatibility. This allows older
+                    # versions of the software to read the entry data without
+                    # raising errors.
+                    data={**user_input, CONF_NAME: gios.station_name},
                 )
-            except (ApiError, ClientConnectorError, TimeoutError):
-                errors["base"] = "cannot_connect"
-            except InvalidSensorsDataError:
-                errors[CONF_STATION_ID] = "invalid_sensors_data"
 
         try:
             gios = await Gios.create(websession)
-        except (ApiError, ClientConnectorError, NoStationError):
+        except ApiError, ClientConnectorError, NoStationError:
             return self.async_abort(reason="cannot_connect")
 
         options: list[SelectOptionDict] = [
@@ -79,8 +83,7 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
                         sort=True,
                         mode=SelectSelectorMode.DROPDOWN,
                     ),
-                ),
-                vol.Optional(CONF_NAME, default=self.hass.config.location_name): str,
+                )
             }
         )
 

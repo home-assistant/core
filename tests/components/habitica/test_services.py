@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from freezegun.api import freeze_time
 from habiticalib import (
     Checklist,
     Direction,
@@ -323,10 +322,7 @@ async def test_get_config_entry(
 ) -> None:
     """Test Habitica config entry exceptions."""
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="The selected character is not configured in Home Assistant",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
@@ -338,13 +334,11 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="The selected character is currently not loaded or disabled in Home Assistant",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
@@ -356,6 +350,7 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize(
@@ -1845,7 +1840,7 @@ async def test_create_todo(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2023,7 +2018,7 @@ async def test_update_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_create_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2064,7 +2059,7 @@ async def test_create_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily_service_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

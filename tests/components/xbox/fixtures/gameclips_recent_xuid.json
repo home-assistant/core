@@ -1,0 +1,107 @@
+{
+  "gameClips": [
+    {
+      "gameClipId": "44b7e94d-b3e9-4b97-be73-417be9091e93",
+      "state": 6,
+      "datePublished": "2017-11-10T07:12:27.4353527Z",
+      "dateRecorded": "2017-11-10T06:29:39Z",
+      "lastModified": "2017-11-10T07:12:27.4353527Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 28,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 822567888,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 102,
+      "titleData": "",
+      "systemProperties": "6a7e1238-2f7b-4c66-835e-c7c799e310490;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t3017.xboxlive.com/xuid-2669321029139235-public/44b7e94d-b3e9-4b97-be73-417be9091e93_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t3017.xboxlive.com/xuid-2669321029139235-public/44b7e94d-b3e9-4b97-be73-417be9091e93_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d3017.xboxlive.com/xuid-2669321029139235-private/44b7e94d-b3e9-4b97-be73-417be9091e93.MP4?sv=2015-12-11&sr=b&si=DefaultAccess&sig=lRkjf6USrukD5PCVp3PonFdwX5fD%2FmuLPWpRkIS2ydw%3D&__gda__=1522241341_d651111247d5ca9c1bb8b9244a8cd361",
+          "fileSize": 43595475,
+          "uriType": 2,
+          "expiration": "2018-03-28T12:49:01.5001828Z"
+        }
+      ],
+      "xuid": "2669321029139235",
+      "clipName": "",
+      "titleName": "Danger Zone",
+      "gameClipLocale": "en-US",
+      "clipContentAttributes": 0,
+      "deviceType": "Scorpio",
+      "commentCount": 0,
+      "likeCount": 2,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+    {
+      "gameClipId": "f87cc6ac-c291-4998-9124-d8b36c059b6a",
+      "state": 6,
+      "datePublished": "2016-08-16T05:51:40.1354298Z",
+      "dateRecorded": "2016-08-16T05:40:30Z",
+      "lastModified": "2016-08-16T05:51:40.1354298Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 27,
+      "scid": "f9d30100-7748-4d1a-b508-524805a3c308",
+      "titleId": 94618376,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 653,
+      "titleData": "",
+      "systemProperties": "56d4ac4e-efcd-4808-8d53-7583859558a4;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t2015.xboxlive.com/00097bbbbbbbbb23-f87cc6ac-c291-4998-9124-d8b36c059b6a-public/Thumbnail_Small.PNG?sv=2015-12-11&sr=b&si=DefaultAccess&sig=ikXCzETBJSBPvS8W%2FxoWTCJL%2FGY6PxKpQ0VG6qktnCQ%3D",
+          "fileSize": 159667,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t2015.xboxlive.com/00097bbbbbbbbb23-f87cc6ac-c291-4998-9124-d8b36c059b6a-public/Thumbnail_Large.PNG?sv=2015-12-11&sr=b&si=DefaultAccess&sig=y1S%2BxzFVrgmTql2ZuYDpe6EtL5Jxu%2BhBVMnb%2Ff7ZTMA%3D",
+          "fileSize": 522262,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d2015.xboxlive.com/asset-d5448dbd-f45e-46ab-ae4e-a2e205a70e7c/GameClip-Original.MP4?sv=2015-12-11&sr=b&si=DefaultAccess&sig=ArSoLvy9EnQeBthGW6%2FbasedHHk0Jb6iXjI3EMq8oh8%3D&__gda__=1522241341_69f67a7a3533626ae90b52845664dc0c",
+          "fileSize": 12662239,
+          "uriType": 2,
+          "expiration": "2018-03-28T12:49:01.5001828Z"
+        }
+      ],
+      "xuid": "2669321029139235",
+      "clipName": "",
+      "titleName": "Overwatch: Origins Edition",
+      "gameClipLocale": "en-US",
+      "clipContentAttributes": 0,
+      "deviceType": "XboxOne",
+      "commentCount": 5,
+      "likeCount": 62,
+      "shareCount": 2,
+      "partialViews": 0
+    }
+  ],
+  "pagingInfo": {
+    "continuationToken": "abcde_vwxyzGQAAAA2"
+  }
+}

@@ -3,7 +3,6 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 from google.genai.types import File, FileState, GenerateContentResponse
 import pytest
 import voluptuous as vol
@@ -223,7 +222,7 @@ async def test_generate_data(
 
 
 @pytest.mark.usefixtures("mock_init_component")
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

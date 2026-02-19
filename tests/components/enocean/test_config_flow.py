@@ -106,7 +106,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "detect"
+    assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
 
 

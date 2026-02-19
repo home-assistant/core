@@ -24,6 +24,7 @@ from unittest.mock import (
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from securetar import SecureTarFile
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -70,6 +71,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 _EXPECTED_FILES = [
     "test.txt",
     ".storage",
+    ".storage/hacs.hacs",
     "another_subdir",
     "another_subdir/backups",
     "another_subdir/backups/backup.tar",
@@ -112,12 +114,10 @@ def mock_read_backup(backup_path: Path) -> AgentBackup:
     return mock_backups[backup_path.stem]
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.usefixtures("mock_ha_version")
 async def test_create_backup_service(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
 ) -> None:
     """Test create backup service."""
     await setup_backup_integration(hass)
@@ -161,7 +161,7 @@ async def test_create_backup_service(
     )
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
     ("manager_kwargs", "expected_writer_kwargs"),
     [
@@ -312,8 +312,6 @@ async def test_create_backup_service(
 async def test_async_create_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
     manager_kwargs: dict[str, Any],
     expected_writer_kwargs: dict[str, Any],
 ) -> None:
@@ -342,7 +340,6 @@ async def test_async_create_backup(
     assert create_backup.call_args == call(**expected_writer_kwargs)
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_create_backup_when_busy(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -419,7 +416,7 @@ async def test_create_backup_wrong_parameters(
     assert result["error"]["message"] == expected_error
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
     (
         "agent_ids",
@@ -519,9 +516,7 @@ async def test_initiate_backup(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
@@ -540,7 +535,6 @@ async def test_initiate_backup(
 
     include_database = params.get("include_database", True)
     password = params.get("password")
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -664,26 +658,31 @@ async def test_initiate_backup(
         "with_automatic_settings": False,
     }
 
-    outer_tar = mocked_tarfile.return_value
-    core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
-    expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
-        call(file, arcname=f"data/{file}", recursive=False)
-        for file in _EXPECTED_FILES_WITH_DATABASE[include_database]
-    ]
-    assert core_tar.add.call_args_list == expected_files
+    expected_files = {
+        f"data/{file}" for file in _EXPECTED_FILES_WITH_DATABASE[include_database]
+    }
+    expected_files.add("data")
 
-    tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
-    backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{expected_filename}"
+    with tarfile.TarFile(
+        hass.config.path(f"{backup_directory}/{expected_filename}"), mode="r"
+    ) as outer_tar:
+        core_tar_io = outer_tar.extractfile("homeassistant.tar.gz")
+        assert core_tar_io is not None
+        with SecureTarFile(
+            fileobj=core_tar_io,
+            gzip=True,
+            key=password_to_key(password) if password is not None else None,
+            mode="r",
+        ) as core_tar:
+            assert set(core_tar.getnames()) == expected_files
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize("exception", [BackupAgentError("Boom!"), Exception("Boom!")])
 async def test_initiate_backup_with_agent_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     hass_storage: dict[str, Any],
     exception: Exception,
 ) -> None:
@@ -781,8 +780,6 @@ async def test_initiate_backup_with_agent_error(
 
     ws_client = await hass_ws_client(hass)
 
-    path_glob.return_value = []
-
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
 
@@ -861,7 +858,7 @@ async def test_initiate_backup_with_agent_error(
 
     new_expected_backup_data = {
         "addons": [],
-        "agents": {"backup.local": {"protected": False, "size": 123}},
+        "agents": {"backup.local": {"protected": False, "size": 10240}},
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
@@ -911,7 +908,6 @@ async def test_initiate_backup_with_agent_error(
     assert mock_agents["test.remote"].async_delete_backup.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("create_backup_command", "issues_after_create_backup"),
     [
@@ -1332,7 +1328,6 @@ async def test_create_backup_failure_raises_issue(
         assert issue.translation_placeholders == issue_data["translation_placeholders"]
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), BaseException("Boom!")]
 )
@@ -1340,7 +1335,6 @@ async def test_initiate_backup_non_agent_upload_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     hass_storage: dict[str, Any],
     exception: Exception,
 ) -> None:
@@ -1349,8 +1343,6 @@ async def test_initiate_backup_non_agent_upload_error(
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -1425,7 +1417,6 @@ async def test_initiate_backup_non_agent_upload_error(
     assert DOMAIN not in hass_storage
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), Exception("Boom!")]
 )
@@ -1433,7 +1424,6 @@ async def test_initiate_backup_with_task_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     create_backup: AsyncMock,
     exception: Exception,
 ) -> None:
@@ -1446,8 +1436,6 @@ async def test_initiate_backup_with_task_error(
     await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -1503,7 +1491,6 @@ async def test_initiate_backup_with_task_error(
     assert backup_id == generate_backup_id.return_value
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     (
         "open_call_count",
@@ -1526,7 +1513,6 @@ async def test_initiate_backup_file_error_upload_to_agents(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     open_call_count: int,
     open_exception: Exception | None,
     read_call_count: int,
@@ -1542,8 +1528,6 @@ async def test_initiate_backup_file_error_upload_to_agents(
     await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -1629,7 +1613,6 @@ async def test_initiate_backup_file_error_upload_to_agents(
     assert unlink_mock.call_count == unlink_call_count
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     (
         "mkdir_call_count",
@@ -1650,7 +1633,6 @@ async def test_initiate_backup_file_error_create_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    path_glob: MagicMock,
     caplog: pytest.LogCaptureFixture,
     mkdir_call_count: int,
     mkdir_exception: Exception | None,
@@ -1666,8 +1648,6 @@ async def test_initiate_backup_file_error_create_backup(
     await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -1879,7 +1859,6 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_exception_platform_post(
     hass: HomeAssistant,
     unhandled_error: Exception | None,
@@ -2004,7 +1983,6 @@ async def test_receive_backup(
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_receive_backup_busy_manager(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -2068,13 +2046,11 @@ async def test_receive_backup_busy_manager(
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize("exception", [BackupAgentError("Boom!"), Exception("Boom!")])
 async def test_receive_backup_agent_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    path_glob: MagicMock,
     hass_storage: dict[str, Any],
     exception: Exception,
 ) -> None:
@@ -2171,8 +2147,6 @@ async def test_receive_backup_agent_error(
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -2294,13 +2268,11 @@ async def test_receive_backup_agent_error(
     assert mock_agents["test.remote"].async_delete_backup.call_count == 0
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize("exception", [asyncio.CancelledError("Boom!")])
 async def test_receive_backup_non_agent_upload_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    path_glob: MagicMock,
     hass_storage: dict[str, Any],
     exception: Exception,
 ) -> None:
@@ -2309,8 +2281,6 @@ async def test_receive_backup_non_agent_upload_error(
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -2388,7 +2358,6 @@ async def test_receive_backup_non_agent_upload_error(
     assert unlink_mock.call_count == 0
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     (
         "open_call_count",
@@ -2408,7 +2377,6 @@ async def test_receive_backup_file_write_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    path_glob: MagicMock,
     open_call_count: int,
     open_exception: Exception | None,
     write_call_count: int,
@@ -2421,8 +2389,6 @@ async def test_receive_backup_file_write_error(
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -2495,7 +2461,6 @@ async def test_receive_backup_file_write_error(
     assert open_mock.return_value.close.call_count == close_call_count
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     "exception",
     [
@@ -2509,7 +2474,6 @@ async def test_receive_backup_read_tar_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    path_glob: MagicMock,
     exception: Exception,
 ) -> None:
     """Test read tar error during backup receive."""
@@ -2517,8 +2481,6 @@ async def test_receive_backup_read_tar_error(
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -2590,7 +2552,6 @@ async def test_receive_backup_read_tar_error(
     assert read_backup.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     (
         "open_call_count",
@@ -2664,7 +2625,6 @@ async def test_receive_backup_file_read_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
-    path_glob: MagicMock,
     open_call_count: int,
     open_exception: list[Exception | None],
     read_call_count: int,
@@ -2682,8 +2642,6 @@ async def test_receive_backup_file_read_error(
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -2771,7 +2729,9 @@ async def test_receive_backup_file_read_error(
     assert unlink_mock.call_count == unlink_call_count
 
 
-@pytest.mark.usefixtures("path_glob")
+@pytest.mark.parametrize(
+    "available_backups", [[TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456]]
+)
 @pytest.mark.parametrize(
     (
         "agent_id",
@@ -2921,7 +2881,7 @@ async def test_restore_backup(
     assert mocked_service_call.called
 
 
-@pytest.mark.usefixtures("path_glob")
+@pytest.mark.parametrize("available_backups", [[TEST_BACKUP_PATH_ABC123]])
 @pytest.mark.parametrize(
     ("agent_id", "dir"), [(LOCAL_AGENT_ID, "backups"), ("test.remote", "tmp_backups")]
 )
@@ -3001,7 +2961,7 @@ async def test_restore_backup_wrong_password(
     mocked_service_call.assert_not_called()
 
 
-@pytest.mark.usefixtures("path_glob")
+@pytest.mark.parametrize("available_backups", [[TEST_BACKUP_PATH_ABC123]])
 @pytest.mark.parametrize(
     ("parameters", "expected_error", "expected_reason"),
     [
@@ -3093,7 +3053,6 @@ async def test_restore_backup_wrong_parameters(
     mocked_service_call.assert_not_called()
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_restore_backup_when_busy(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -3123,7 +3082,6 @@ async def test_restore_backup_when_busy(
     assert result["error"]["message"] == "Backup manager busy: create_backup"
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("exception", "error_code", "error_message", "expected_reason"),
     [
@@ -3208,7 +3166,6 @@ async def test_restore_backup_agent_error(
     assert mocked_service_call.call_count == 0
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     (
         "open_call_count",
@@ -3353,6 +3310,7 @@ async def test_restore_backup_file_error(
     assert mocked_service_call.call_count == 0
 
 
+@pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
     ("commands", "agent_ids", "password", "protected_backup", "inner_tar_key"),
     [
@@ -3477,13 +3435,10 @@ async def test_restore_backup_file_error(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_initiate_backup_per_agent_encryption(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
-    mocked_tarfile: Mock,
-    path_glob: MagicMock,
     commands: dict[str, Any],
     agent_ids: list[str],
     password: str | None,
@@ -3494,8 +3449,6 @@ async def test_initiate_backup_per_agent_encryption(
     await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
-
-    path_glob.return_value = []
 
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
@@ -3526,6 +3479,7 @@ async def test_initiate_backup_per_agent_encryption(
 
     with (
         patch("pathlib.Path.open", mock_open(read_data=b"test")),
+        patch("securetar.SecureTarFile.create_inner_tar") as mock_create_inner_tar,
     ):
         await ws_client.send_json_auto_id(
             {
@@ -3550,9 +3504,7 @@ async def test_initiate_backup_per_agent_encryption(
 
         await hass.async_block_till_done()
 
-    mocked_tarfile.return_value.create_inner_tar.assert_called_once_with(
-        ANY, gzip=True, key=inner_tar_key
-    )
+    mock_create_inner_tar.assert_called_once_with(ANY, gzip=True, key=inner_tar_key)
 
     result = await ws_client.receive_json()
     assert result["event"] == {

@@ -222,7 +222,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
             configuration_url="https://teslemetry.com/console",
             name="Wall Connector",
             via_device=(DOMAIN, str(data.id)),
-            serial_number=din.split("-")[-1],
+            serial_number=din.rsplit("-", maxsplit=1)[-1],
             model=model,
         )
 

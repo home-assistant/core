@@ -176,6 +176,12 @@ def climate_eurotronic_spirit_z_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_eurotronic_spirit_z_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z_state", scope="package")
+def climate_eurotronic_comet_z_state_fixture() -> dict[str, Any]:
+    """Load the climate Eurotronic Comet Z thermostat node state fixture data."""
+    return load_json_object_fixture("climate_eurotronic_comet_z_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm6_state", scope="package")
 def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
@@ -278,6 +284,14 @@ def qubino_shutter_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("cover_qubino_shutter_state.json", DOMAIN)
 
 
+@pytest.fixture(name="qubino_shutter_state_firmware_14_2_0", scope="package")
+def qubino_shutter_state_firmware_14_2_0_fixture() -> dict[str, Any]:
+    """Load the Qubino Shutter node state fixture data with firmware 14.2.0."""
+    return load_json_object_fixture(
+        "cover_qubino_shutter_state_firmware_14_2_0.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="aeotec_nano_shutter_state", scope="package")
 def aeotec_nano_shutter_state_fixture() -> dict[str, Any]:
     """Load the Aeotec Nano Shutter node state fixture data."""
@@ -324,6 +338,12 @@ def aeon_smart_switch_6_state_fixture() -> dict[str, Any]:
 def ge_12730_state_fixture() -> dict[str, Any]:
     """Load the GE 12730 node state fixture data."""
     return load_json_object_fixture("fan_ge_12730_state.json", DOMAIN)
+
+
+@pytest.fixture(name="jasco_14314_state", scope="package")
+def jasco_14314_state_fixture() -> dict[str, Any]:
+    """Load the Jasco 14314 node state fixture data."""
+    return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
 
 
 @pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
@@ -837,6 +857,16 @@ def climate_eurotronic_spirit_z_fixture(
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z")
+def climate_eurotronic_comet_z_fixture(
+    client: MagicMock, climate_eurotronic_comet_z_state: dict[str, Any]
+) -> Node:
+    """Mock a climate Eurotronic Comet Z node."""
+    node = Node(client, copy.deepcopy(climate_eurotronic_comet_z_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm6")
 def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     """Mock a climate radio HEATIT Z-TRM6 node."""
@@ -1043,6 +1073,16 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state) -> Node:
     return node
 
 
+@pytest.fixture(name="qubino_shutter_firmware_14_2_0")
+def qubino_shutter_firmware_14_2_0_cover_fixture(
+    client, qubino_shutter_state_firmware_14_2_0
+) -> Node:
+    """Mock a Qubino flush shutter node with firmware 14.2.0."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state_firmware_14_2_0))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeotec_nano_shutter")
 def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state) -> Node:
     """Mock a Aeotec Nano Shutter node."""
@@ -1105,6 +1145,14 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state) -> Node:
 def ge_12730_fixture(client, ge_12730_state) -> Node:
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="jasco_14314")
+def jasco_14314_fixture(client, jasco_14314_state) -> Node:
+    """Mock a Jasco 14314 fan controller node."""
+    node = Node(client, copy.deepcopy(jasco_14314_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

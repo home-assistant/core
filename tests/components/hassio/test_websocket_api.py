@@ -18,6 +18,7 @@ from homeassistant.components.hassio.const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_PARAMS,
     ATTR_WS_EVENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
@@ -196,6 +197,37 @@ async def test_websocket_supervisor_api(
         "X-Hass-Source": "core.websocket_api",
         "Authorization": "Bearer 123456",
     }
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_with_params(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api with query params."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/backups/backup_id/info",
+        json={"result": "ok", "data": {"slug": "backup_id"}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/backups/backup_id/info",
+            ATTR_METHOD: "get",
+            ATTR_PARAMS: {"extra_info": "true"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "backup_id"
+
+    # Verify the params were passed to the request URL
+    assert aioclient_mock.mock_calls[-1][1].query == {"extra_info": "true"}
 
 
 @pytest.mark.usefixtures("hassio_env")
