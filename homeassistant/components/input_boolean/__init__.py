@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self
+from typing import Any, Self, cast
 
 import voluptuous as vol
 
@@ -66,14 +66,14 @@ class InputBooleanStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return self.CREATE_UPDATE_SCHEMA(data)
+        return cast(dict[str, Any], self.CREATE_UPDATE_SCHEMA(data))
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return cast(str, info[CONF_NAME])
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
