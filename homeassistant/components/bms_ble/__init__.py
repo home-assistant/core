@@ -1,9 +1,6 @@
 """The BLE Battery Management System integration."""
 
-from types import ModuleType
 from typing import Final
-
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
@@ -30,9 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> boo
             translation_key="missing_unique_id",
         )
 
-    ble_device: Final[BLEDevice | None] = async_ble_device_from_address(
-        hass, entry.unique_id, True
-    )
+    ble_device = async_ble_device_from_address(hass, entry.unique_id, True)
 
     if ble_device is None:
         LOGGER.debug("Failed to discover device %s via Bluetooth", entry.unique_id)
@@ -44,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> boo
             },
         )
 
-    plugin: ModuleType = await async_import_module(hass, entry.data["type"])
+    plugin = await async_import_module(hass, entry.data["type"])
     coordinator = BTBmsCoordinator(hass, ble_device, plugin.BMS(ble_device), entry)
 
     # Query the device the first time, initialise coordinator.data

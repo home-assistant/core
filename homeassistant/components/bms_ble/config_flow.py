@@ -23,29 +23,29 @@ from homeassistant.helpers.selector import (
 from .const import DOMAIN, LOGGER
 
 
+@dataclass
+class DiscoveredDevice:
+    """A discovered Bluetooth device."""
+
+    name: str
+    discovery_info: BluetoothServiceInfoBleak
+    type: str
+
+    def model(self) -> str:
+        """Return BMS type in capital letters, e.g. 'DUMMY BMS'."""
+        return self.type.rsplit(".", 1)[1].replace("_", " ").upper()
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Battery Management System."""
 
-    VERSION = 2
-    MINOR_VERSION = 0
-
-    @dataclass
-    class DiscoveredDevice:
-        """A discovered Bluetooth device."""
-
-        name: str
-        discovery_info: BluetoothServiceInfoBleak
-        type: str
-
-        def model(self) -> str:
-            """Return BMS type in capital letters, e.g. 'DUMMY BMS'."""
-            return self.type.rsplit(".", 1)[1].replace("_", " ").upper()
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
 
-        self._disc_dev: ConfigFlow.DiscoveredDevice | None = None
-        self._disc_devs: dict[str, ConfigFlow.DiscoveredDevice] = {}
+        self._disc_dev: DiscoveredDevice | None = None
+        self._disc_devs: dict[str, DiscoveredDevice] = {}
 
     async def _async_device_supported(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not (bms_module := await self._async_device_supported(discovery_info)):
             return self.async_abort(reason="not_supported")
 
-        self._disc_dev = ConfigFlow.DiscoveredDevice(
+        self._disc_dev = DiscoveredDevice(
             discovery_info.name, discovery_info, bms_module
         )
         self.context["title_placeholders"] = {
@@ -127,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={"type": self._disc_dev.type},
             )
 
-        current_addresses: Final = self._async_current_ids(include_ignore=False)
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):
@@ -137,7 +137,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (bms_module := await self._async_device_supported(discovery_info)):
                 continue
 
-            self._disc_devs[address] = ConfigFlow.DiscoveredDevice(
+            self._disc_devs[address] = DiscoveredDevice(
                 discovery_info.name, discovery_info, bms_module
             )
 
