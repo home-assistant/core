@@ -90,9 +90,7 @@ class RestData:
 
     def _is_expected_content_type(self, content_type: str) -> bool:
         """Check if the content type is one we expect (JSON or XML)."""
-        return content_type.startswith(
-            ("application/json", "text/json", *XML_MIME_TYPES)
-        )
+        return content_type.startswith(("application/json", "text/json", *XML_MIME_TYPES))
 
     def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
@@ -106,9 +104,7 @@ class RestData:
         ):
             # `application/x-javascript` is commonly used for JSON/JS/JSONP payloads.
             # Only attempt XML conversion if the payload itself looks like XML.
-            if content_type.startswith("application/x-javascript") and not _payload_looks_like_xml(
-                value
-            ):
+            if content_type.startswith("application/x-javascript") and not _payload_looks_like_xml(value):
                 return value
 
             value = json_dumps(xmltodict.parse(value))
