@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -127,6 +128,8 @@ class LunatoneLight(
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
+        if self._device.rgbw_color is not None:
+            return ColorMode.RGBW
         if self._device.rgb_color is not None:
             return ColorMode.RGB
         if self._device.color_temperature is not None:
@@ -153,6 +156,13 @@ class LunatoneLight(
         r, g, b = self._device.rgb_color
         return (round(r * 255), round(g * 255), round(b * 255))
 
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int]:
+        """Return the RGBW color of this light."""
+        assert self._device.rgbw_color
+        r, g, b, w = self._device.rgbw_color
+        return (round(r * 255), round(g * 255), round(b * 255), round(w * 255))
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -176,6 +186,12 @@ class LunatoneLight(
                         (color / 255 for color in kwargs[ATTR_RGB_COLOR]),
                     )
                 )
+            if ATTR_RGBW_COLOR in kwargs:
+                status_update_delay *= 7.5
+                rgbw_color = tuple(
+                    (color / 255 for color in kwargs[ATTR_RGBW_COLOR]),
+                )
+                await self._device.fade_to_rgbw_color(rgbw_color[:-1], rgbw_color[-1])
             if ATTR_BRIGHTNESS in kwargs or not self.is_on:
                 await self._device.fade_to_brightness(
                     brightness_to_value(
