@@ -144,7 +144,8 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the current value."""
         data = self.coordinator.data
-        assert data is not None
+        if TYPE_CHECKING:
+            assert data is not None
         return self.entity_description.value_fn(data)
 
     @property
