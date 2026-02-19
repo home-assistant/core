@@ -1743,6 +1743,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
+/homeassistant/components/trane/ @bdraco
+/tests/components/trane/ @bdraco
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede

@@ -1,0 +1,12 @@
+{
+  "domain": "trane",
+  "name": "Trane Local",
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/trane",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["steamloop"],
+  "quality_scale": "bronze",
+  "requirements": ["steamloop==1.2.0"]
+}
