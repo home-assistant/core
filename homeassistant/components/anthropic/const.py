@@ -23,8 +23,6 @@ CONF_WEB_SEARCH_REGION = "region"
 CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 
-DATA_REPAIR_DEFER_RELOAD = "repair_defer_reload"
-
 DEFAULT = {
     CONF_CHAT_MODEL: "claude-haiku-4-5",
     CONF_MAX_TOKENS: 3000,

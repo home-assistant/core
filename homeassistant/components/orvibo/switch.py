@@ -83,25 +83,15 @@ class S20Switch(SwitchEntity):
     def __init__(self, name, s20):
         """Initialize the S20 device."""
 
-        self._name = name
+        self._attr_name = name
         self._s20 = s20
-        self._state = False
+        self._attr_is_on = False
         self._exc = S20Exception
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     def update(self) -> None:
         """Update device state."""
         try:
-            self._state = self._s20.on
+            self._attr_is_on = self._s20.on
         except self._exc:
             _LOGGER.exception("Error while fetching S20 state")
 
