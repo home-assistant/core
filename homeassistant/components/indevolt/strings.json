@@ -23,6 +23,20 @@
     }
   },
   "entity": {
+    "number": {
+      "discharge_limit": {
+        "name": "Discharge limit"
+      },
+      "feedin_power_limit": {
+        "name": "Feed-in power limit"
+      },
+      "inverter_input_limit": {
+        "name": "Inverter input limit"
+      },
+      "max_ac_output_power": {
+        "name": "Max AC output power"
+      }
+    },
     "sensor": {
       "ac_input_power": {
         "name": "AC input power"
