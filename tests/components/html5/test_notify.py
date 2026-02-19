@@ -2,18 +2,29 @@
 
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
 
+from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
+from pywebpush import WebPushException
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.html5 import notify as html5
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
@@ -732,3 +743,207 @@ async def test_send_fcm_expired_save_fails(
         )
     # "device" should still exist if save fails.
     assert "Error saving registration" in caplog.text
+
+
+async def test_notify_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    load_config: MagicMock,
+) -> None:
+    """Test setup of the notify platform."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+) -> None:
+    """Test sending a message."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.my_desktop",
+            ATTR_MESSAGE: "World",
+            ATTR_TITLE: "Hello",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == "2009-02-13T23:31:30+00:00"
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    assert webpush_async.await_args.args == (
+        {
+            "endpoint": "https://googleapis.com",
+            "keys": {"auth": "auth", "p256dh": "p256dh"},
+        },
+        '{"badge": "/static/images/notification-badge.png", "body": "World", "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Hello", "timestamp": 1234567890000, "data": {"jwt": "JWT"}}',
+        "h6acSRds8_KR8hT9djD8WucTL06Gfe29XXyZ1KcUjN8",
+        {
+            "sub": "mailto:test@example.com",
+            "aud": "https://googleapis.com",
+            "exp": 1234611090,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (
+            WebPushException("", response=Mock(status=HTTPStatus.IM_A_TEAPOT)),
+            "request_error",
+        ),
+        (
+            WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+            "channel_expired",
+        ),
+        (
+            ClientError,
+            "connection_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test sending a message with exceptions."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_save_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending a message with channel expired but saving registration fails."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = (
+        WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+    )
+    with (
+        patch(
+            "homeassistant.components.html5.notify.save_json",
+            side_effect=HomeAssistantError,
+        ),
+        pytest.raises(HomeAssistantError) as e,
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == "channel_expired"
+
+    assert "Error saving registration" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_send_message_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+) -> None:
+    """Test sending a message with channel expired and entity goes unavailable."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webpush_async.side_effect = (
+        WebPushException("", response=Mock(status=HTTPStatus.GONE)),
+    )
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.my_desktop",
+                ATTR_MESSAGE: "World",
+                ATTR_TITLE: "Hello",
+            },
+            blocking=True,
+        )
+    assert e.value.translation_key == "channel_expired"
+
+    state = hass.states.get("notify.my_desktop")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

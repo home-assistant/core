@@ -7,6 +7,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pyliebherrhomeapi import ToggleControl, ZonePosition
+from pyliebherrhomeapi.const import (
+    CONTROL_NIGHT_MODE,
+    CONTROL_PARTY_MODE,
+    CONTROL_SUPER_COOL,
+    CONTROL_SUPER_FROST,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -16,12 +22,6 @@ from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import ZONE_POSITION_MAP, LiebherrEntity
 
 PARALLEL_UPDATES = 1
-
-# Control names from the API
-CONTROL_SUPERCOOL = "supercool"
-CONTROL_SUPERFROST = "superfrost"
-CONTROL_PARTY_MODE = "partymode"
-CONTROL_NIGHT_MODE = "nightmode"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,21 +46,21 @@ class LiebherrDeviceSwitchEntityDescription(LiebherrSwitchEntityDescription):
 
 
 ZONE_SWITCH_TYPES: dict[str, LiebherrZoneSwitchEntityDescription] = {
-    CONTROL_SUPERCOOL: LiebherrZoneSwitchEntityDescription(
-        key="supercool",
-        translation_key="supercool",
-        control_name=CONTROL_SUPERCOOL,
-        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_supercool(
+    CONTROL_SUPER_COOL: LiebherrZoneSwitchEntityDescription(
+        key="super_cool",
+        translation_key="super_cool",
+        control_name=CONTROL_SUPER_COOL,
+        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_super_cool(
             device_id=coordinator.device_id,
             zone_id=zone_id,
             value=value,
         ),
     ),
-    CONTROL_SUPERFROST: LiebherrZoneSwitchEntityDescription(
-        key="superfrost",
-        translation_key="superfrost",
-        control_name=CONTROL_SUPERFROST,
-        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_superfrost(
+    CONTROL_SUPER_FROST: LiebherrZoneSwitchEntityDescription(
+        key="super_frost",
+        translation_key="super_frost",
+        control_name=CONTROL_SUPER_FROST,
+        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_super_frost(
             device_id=coordinator.device_id,
             zone_id=zone_id,
             value=value,
@@ -118,7 +118,7 @@ async def async_setup_entry(
                     )
                 )
 
-            # Device-wide switches (Party Mode, Night Mode)
+            # Device-wide switches (PartyMode, NightMode)
             elif device_desc := DEVICE_SWITCH_TYPES.get(control.name):
                 entities.append(
                     LiebherrDeviceSwitch(
