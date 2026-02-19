@@ -135,6 +135,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return target temperature for single-setpoint modes."""
+        # Setpoints are strings from the protocol or empty string if not yet received
         zone = self._zone
         if zone.mode == ZoneMode.COOL:
             return float(zone.cool_setpoint) if zone.cool_setpoint else None
