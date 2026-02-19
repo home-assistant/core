@@ -115,11 +115,13 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     ),
     BmsEntityDescription(
         attr_fn=lambda data: (
-            {"balance_current": [data.get("balance_current", 0.0)]}
-            if "balance_current" in data
-            else {}
-        )
-        | _attr_pack(data, "pack_currents", [0.0]),
+            (
+                {"balance_current": [data.get("balance_current", 0.0)]}
+                if "balance_current" in data
+                else {}
+            )
+            | _attr_pack(data, "pack_currents", [0.0])
+        ),
         device_class=SensorDeviceClass.CURRENT,
         key=ATTR_CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
