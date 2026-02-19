@@ -1,7 +1,7 @@
 """Setup fixtures for ScreenLogic integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -45,14 +45,8 @@ def mock_disconnect() -> Generator[None]:
         """Mock subscribe client."""
         return Mock()
 
-    with (
-        patch(
-            "homeassistant.components.screenlogic.ScreenLogicGateway.async_disconnect",
-            AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.screenlogic.ScreenLogicGateway.async_subscribe_client",
-            _subscribe_client,
-        ),
+    with patch(
+        "homeassistant.components.screenlogic.ScreenLogicGateway.async_subscribe_client",
+        _subscribe_client,
     ):
         yield

@@ -390,6 +390,7 @@ async def test_service_config_entry_not_loaded(
             async_connect=lambda *args, **kwargs: stub_async_connect(
                 DATA_MIN_ENTITY_CLEANUP, *args, **kwargs
             ),
+            async_disconnect=DEFAULT,
             is_connected=True,
             _async_connected_request=DEFAULT,
             async_set_color_lights=mock_set_color_lights,
