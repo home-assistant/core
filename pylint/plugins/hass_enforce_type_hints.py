@@ -798,6 +798,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
         return_type=["bool", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="turn_on",
@@ -939,6 +940,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="is_on",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
             ],
         ),
