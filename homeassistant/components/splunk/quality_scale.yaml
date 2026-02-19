@@ -13,10 +13,7 @@ rules:
   config-entry-unloading: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: |
-      The hass-splunk library needs a public CI/CD pipeline. Add GitHub Actions workflow to https://github.com/Bre77/hass_splunk to automate lint, test, build, and publish to PyPI.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |

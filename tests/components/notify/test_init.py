@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import (
     MockConfigEntry,
@@ -50,6 +51,17 @@ class MockNotifyEntityNonAsync(MockEntity, NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification message."""
         self.send_message_mock_calls(message, title=title)
+
+
+class MockNotifyEntityWithException(MockEntity, NotifyEntity):
+    """Mock Email notitier entity to use in tests."""
+
+    send_message_mock_calls = MagicMock()
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message, title=title)
+        raise HomeAssistantError
 
 
 async def help_async_setup_entry_init(
@@ -186,6 +198,53 @@ async def test_send_message_service_with_title(
         TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
         title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
     )
+
+
+async def test_send_message_exception(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test send_message service."""
+
+    entity = MockNotifyEntityWithException(
+        name="test",
+        entity_id="notify.test",
+        supported_features=NotifyEntityFeature.TITLE,
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            copy.deepcopy(TEST_KWARGS_TITLE) | {"entity_id": "notify.test"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    entity.send_message_mock_calls.assert_called_once_with(
+        TEST_KWARGS_TITLE[notify.ATTR_MESSAGE],
+        title=TEST_KWARGS_TITLE[notify.ATTR_TITLE],
+    )
+
+    # assert last notification timestamp has not been updated
+    state = hass.states.get("notify.test")
+    assert state.state is STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
