@@ -1,4 +1,4 @@
-"""Tests for the Zinvol sensor."""
+"""Tests for the Zinvolt sensor."""
 
 from unittest.mock import AsyncMock, patch
 
