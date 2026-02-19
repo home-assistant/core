@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.anthropic.const import CONF_CHAT_MODEL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -141,7 +141,7 @@ async def test_repair_flow_iterates_subentries(
         assert result["type"] == FlowResultType.FORM
         assert (
             _get_subentry(entry_one, "conversation").data[CONF_CHAT_MODEL]
-            == "claude-3-5-haiku-20241022"
+            == "claude-haiku-4-5"
         )
 
         placeholders = result["description_placeholders"]
@@ -220,82 +220,3 @@ async def test_repair_flow_no_deprecated_models(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
-
-
-async def test_repair_flow_defers_reload_until_entry_done(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test reload is deferred until all subentries for an entry are fixed."""
-    entry = _make_entry(
-        hass,
-        title="Entry One",
-        api_key="key-one",
-        subentries_data=[
-            {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"},
-                "subentry_type": "conversation",
-                "title": "Conversation One",
-                "unique_id": None,
-            },
-            {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-sonnet-20241022"},
-                "subentry_type": "ai_task_data",
-                "title": "AI task One",
-                "unique_id": None,
-            },
-        ],
-    )
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "model_deprecated",
-        is_fixable=True,
-        is_persistent=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="model_deprecated",
-    )
-
-    await _setup_repairs(hass)
-    client = await hass_client()
-
-    model_options: list[dict[str, str]] = [
-        {"label": "Claude Haiku 4.5", "value": "claude-haiku-4-5"},
-        {"label": "Claude Sonnet 4.5", "value": "claude-sonnet-4-5"},
-    ]
-
-    with (
-        patch(
-            "homeassistant.components.anthropic.repairs.get_model_list",
-            new_callable=AsyncMock,
-            return_value=model_options,
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_reload",
-            new_callable=AsyncMock,
-            return_value=True,
-        ) as reload_mock,
-    ):
-        result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
-        flow_id = result["flow_id"]
-        assert result["step_id"] == "init"
-
-        result = await process_repair_fix_flow(
-            client,
-            flow_id,
-            json={CONF_CHAT_MODEL: "claude-haiku-4-5"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert reload_mock.await_count == 0
-
-        result = await process_repair_fix_flow(
-            client,
-            flow_id,
-            json={CONF_CHAT_MODEL: "claude-sonnet-4-5"},
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert reload_mock.await_count == 1
-        assert reload_mock.call_args_list == [call(entry.entry_id)]

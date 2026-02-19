@@ -4019,7 +4019,6 @@ async def test_parallel_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test parallel action failure handling."""
-    await async_setup_component(hass, "homeassistant", {})
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
         {
@@ -4073,7 +4072,6 @@ async def test_last_triggered(hass: HomeAssistant) -> None:
 
 async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     """Test that a script aborts when a service is not found."""
-    await async_setup_component(hass, "homeassistant", {})
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
@@ -6291,7 +6289,6 @@ async def test_continue_on_error_with_stop(hass: HomeAssistant) -> None:
 
 async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
     """Test continue on error doesn't block action automation errors."""
-    await async_setup_component(hass, "homeassistant", {})
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
@@ -6328,7 +6325,6 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
 
 async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     """Test continue on error doesn't block unknown errors from e.g., libraries."""
-    await async_setup_component(hass, "homeassistant", {})
 
     class MyLibraryError(Exception):
         """My custom library error."""
@@ -6424,7 +6420,6 @@ async def test_disabled_actions(
 
 async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
     """Test that a script aborts when an action enabled uses non-limited template."""
-    await async_setup_component(hass, "homeassistant", {})
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
