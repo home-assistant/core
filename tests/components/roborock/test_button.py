@@ -345,6 +345,7 @@ async def test_dock_command_buttons_not_created_without_traits(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that dock command buttons are not created when traits are unavailable."""
     assert fake_vacuum.v1_properties
@@ -353,6 +354,6 @@ async def test_dock_command_buttons_not_created_without_traits(
 
     await async_setup_component(hass, DOMAIN, {})
 
-    assert hass.states.get("button.roborock_s7_maxv_dock_empty") is None
-    assert hass.states.get("button.roborock_s7_maxv_dock_wash_mop") is None
-    assert hass.states.get("button.roborock_s7_maxv_dock_stop_drying") is None
+    assert entity_registry.async_get("button.roborock_s7_maxv_dock_empty") is None
+    assert entity_registry.async_get("button.roborock_s7_maxv_dock_wash_mop") is None
+    assert entity_registry.async_get("button.roborock_s7_maxv_dock_stop_drying") is None
