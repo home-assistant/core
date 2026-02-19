@@ -701,14 +701,14 @@ class HTML5NotifyEntity(NotifyEntity):
                     translation_placeholders={"target": self.target},
                 ) from e
 
-            _LOGGER.debug("Request error: ", exc_info=True)
+            _LOGGER.debug("Full exception", exc_info=True)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="request_error",
                 translation_placeholders={"target": self.target},
             ) from e
         except ClientError as e:
-            _LOGGER.debug("Connection error", exc_info=True)
+            _LOGGER.debug("Full exception", exc_info=True)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
