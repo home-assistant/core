@@ -311,6 +311,7 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
+        optional_attributes=(clusters.ServiceArea.Attributes.SupportedAreas,),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),
