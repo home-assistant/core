@@ -1,6 +1,7 @@
 """Support for Wireless Sensor Tags."""
 
 import logging
+from typing import Any
 
 from wirelesstagpy import SensorTag
 
@@ -77,7 +78,7 @@ class WirelessTagBaseSensor(Entity):
         self._state = self.updated_state_value()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
