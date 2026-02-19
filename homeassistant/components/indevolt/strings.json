@@ -258,7 +258,7 @@
     },
     "switch": {
       "bypass": {
-        "name": "Bypass"
+        "name": "Bypass socket"
       },
       "grid_charging": {
         "name": "Grid charging"
