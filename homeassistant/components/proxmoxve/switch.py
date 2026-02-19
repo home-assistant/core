@@ -43,7 +43,9 @@ class ProxmoxContainerSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[ProxmoxCoordinator, str, int], Coroutine[Any, Any, None]]
 
 
-def proxmox_action(func) -> Callable[..., Coroutine[Any, Any, None]]:
+def proxmox_action(
+    func: Callable[[ProxmoxCoordinator, str, int], None],
+) -> Callable[[ProxmoxCoordinator, str, int], Coroutine[Any, Any, None]]:
     """Decorator to run a blocking Proxmox call in the executor and handle errors."""
 
     @functools.wraps(func)
@@ -53,7 +55,7 @@ def proxmox_action(func) -> Callable[..., Coroutine[Any, Any, None]]:
         """Wrap wrap, around it."""
         try:
             await coordinator.hass.async_add_executor_job(
-                lambda: func(coordinator, *args, **kwargs)
+                functools.partial(func, coordinator, *args, **kwargs)
             )
         except AuthenticationError as err:
             raise HomeAssistantError(
@@ -79,44 +81,22 @@ def proxmox_action(func) -> Callable[..., Coroutine[Any, Any, None]]:
     return wrapper
 
 
-@proxmox_action
-def perform_vm_start(
-    coordinator: ProxmoxCoordinator, node_name: str, vmid: int
-) -> None:
-    """Start a Proxmox VM."""
-    coordinator.proxmox.nodes(node_name).qemu(vmid).status.start.post()
-
-
-@proxmox_action
-def perform_vm_stop(coordinator: ProxmoxCoordinator, node_name: str, vmid: int) -> None:
-    """Stop a Proxmox VM."""
-    coordinator.proxmox.nodes(node_name).qemu(vmid).status.stop.post()
-
-
-@proxmox_action
-def perform_container_start(
-    coordinator: ProxmoxCoordinator, node_name: str, vmid: int
-) -> None:
-    """Start a Proxmox LXC container."""
-    coordinator.proxmox.nodes(node_name).lxc(vmid).status.start.post()
-
-
-@proxmox_action
-def perform_container_stop(
-    coordinator: ProxmoxCoordinator, node_name: str, vmid: int
-) -> None:
-    """Stop a Proxmox LXC container."""
-    coordinator.proxmox.nodes(node_name).lxc(vmid).status.stop.post()
-
-
 VM_SWITCHES: tuple[ProxmoxVMSwitchEntityDescription, ...] = (
     ProxmoxVMSwitchEntityDescription(
         key="vm",
         translation_key="vm",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
-        turn_on_fn=perform_vm_start,
-        turn_off_fn=perform_vm_stop,
+        turn_on_fn=proxmox_action(
+            lambda coordinator, node_name, vmid: (
+                coordinator.proxmox.nodes(node_name).qemu(vmid).status.start.post()
+            )
+        ),
+        turn_off_fn=proxmox_action(
+            lambda coordinator, node_name, vmid: (
+                coordinator.proxmox.nodes(node_name).qemu(vmid).status.stop.post()
+            )
+        ),
     ),
 )
 
@@ -126,8 +106,16 @@ CONTAINER_SWITCHES: tuple[ProxmoxContainerSwitchEntityDescription, ...] = (
         translation_key="container",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
-        turn_on_fn=perform_container_start,
-        turn_off_fn=perform_container_stop,
+        turn_on_fn=proxmox_action(
+            lambda coordinator, node_name, vmid: (
+                coordinator.proxmox.nodes(node_name).lxc(vmid).status.start.post()
+            )
+        ),
+        turn_off_fn=proxmox_action(
+            lambda coordinator, node_name, vmid: (
+                coordinator.proxmox.nodes(node_name).lxc(vmid).status.stop.post()
+            )
+        ),
     ),
 )
 
