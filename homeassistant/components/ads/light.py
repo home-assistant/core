@@ -465,19 +465,19 @@ class AdsLight(AdsEntity, LightEntity):
                 r, g, b, w = kwargs[ATTR_RGBW_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r), pyads.PLCTYPE_UINT),
-                        (self._ads_var_green, int(g), pyads.PLCTYPE_UINT),
-                        (self._ads_var_blue, int(b), pyads.PLCTYPE_UINT),
-                        (self._ads_var_white, int(w), pyads.PLCTYPE_UINT),
+                        (self._ads_var_red, int(r), pyads.PLCTYPE_USINT),
+                        (self._ads_var_green, int(g), pyads.PLCTYPE_USINT),
+                        (self._ads_var_blue, int(b), pyads.PLCTYPE_USINT),
+                        (self._ads_var_white, int(w), pyads.PLCTYPE_USINT),
                     ]
                 )
             elif ATTR_RGB_COLOR in kwargs:
                 r, g, b = kwargs[ATTR_RGB_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r), pyads.PLCTYPE_UINT),
-                        (self._ads_var_green, int(g), pyads.PLCTYPE_UINT),
-                        (self._ads_var_blue, int(b), pyads.PLCTYPE_UINT),
+                        (self._ads_var_red, int(r), pyads.PLCTYPE_USINT),
+                        (self._ads_var_green, int(g), pyads.PLCTYPE_USINT),
+                        (self._ads_var_blue, int(b), pyads.PLCTYPE_USINT),
                     ]
                 )
 
