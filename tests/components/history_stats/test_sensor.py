@@ -2389,7 +2389,7 @@ async def test_async_around_min_state_duration_sliding_window(
 async def test_measure_multiple_with_min_state_duration(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test the history statistics sensor measure for multiple ."""
+    """Test measure for multiple states with min state duration."""
     start_time = dt_util.utcnow() - timedelta(minutes=40)
     t0 = start_time + timedelta(minutes=10)
     t1 = t0 + timedelta(minutes=10)

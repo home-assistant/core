@@ -42,15 +42,18 @@ async def async_setup_entry(
     end: str | None = entry.options.get(CONF_END)
 
     duration: timedelta | None = None
-    min_state_duration: timedelta = entry.options.get(
-        CONF_MIN_STATE_DURATION, timedelta(0)
-    )
-
+    min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
-
-    if min_state_duration_dict := entry.options.get(CONF_MIN_STATE_DURATION):
-        min_state_duration = timedelta(**min_state_duration_dict)
+    if min_state_duration_opt := entry.options.get(CONF_MIN_STATE_DURATION):
+        if isinstance(min_state_duration_opt, dict):
+            min_state_duration = timedelta(**min_state_duration_opt)
+        elif isinstance(min_state_duration_opt, timedelta):
+            min_state_duration = min_state_duration_opt
+        else:
+            min_state_duration = timedelta(0)
+    else:
+        min_state_duration = timedelta(0)
 
     history_stats = HistoryStats(
         hass,
