@@ -6,7 +6,7 @@ from typing import Any
 
 from yarl import URL
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
