@@ -120,15 +120,14 @@ class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
-    def __init__(self, name, host, mac, s20: S20) -> None:
+    def __init__(self, name: str, host: str, mac: str, s20: S20) -> None:
         """Initialize the S20 device."""
 
-        self._name = name
+        self._attr_name = name
+        self._attr_is_on = False
         self._host = host
         self._mac = mac
-        self._state = False
         self._s20 = s20
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
@@ -136,16 +135,11 @@ class S20Switch(SwitchEntity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self._attr_unique_id)
             },
-            name=self._name,
+            name=self._attr_name,
             manufacturer="Orvibo",
             model="S20",
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
         )
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -155,7 +149,7 @@ class S20Switch(SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_error",
-                translation_placeholders={"name": self._name},
+                translation_placeholders={"name": str(self._attr_name)},
             ) from err
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -166,16 +160,16 @@ class S20Switch(SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_error",
-                translation_placeholders={"name": self._name},
+                translation_placeholders={"name": str(self._attr_name)},
             ) from err
 
     def update(self) -> None:
         """Update device state."""
         try:
-            self._state = self._s20.on
+            self._attr_is_on = self._s20.on
         except S20Exception as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"name": self._name},
+                translation_placeholders={"name": str(self._attr_name)},
             ) from err
