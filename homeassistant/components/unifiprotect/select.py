@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -23,7 +22,6 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
-    PTZPreset,
     RecordingMode,
     Sensor,
     Viewer,
@@ -102,14 +100,7 @@ MOTION_MODE_TO_LIGHT_MODE = [
     {"id": LightModeType.MANUAL.value, "name": LIGHT_MODE_OFF},
 ]
 
-# PTZ constants - IDs must match state keys in strings.json for translation
-PTZ_PRESET_HOME_SLOT = -1
-PTZ_PRESET_HOME = "home"
 PTZ_PATROL_STOP = "stop"
-PTZ_PRESET_IDLE = "idle"
-_PTZ_PRESET_RESET_DELAY = 0.5  # Seconds to wait before resetting preset to Idle
-
-_KEY_PTZ_PRESET = "ptz_preset"
 _KEY_PTZ_PATROL = "ptz_patrol"
 
 DEVICE_RECORDING_MODES = [
@@ -201,12 +192,6 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     liveview = obj.api.bootstrap.liveviews[liveview_id]
     await obj.set_liveview(liveview)
-
-
-async def _set_ptz_preset(obj: Camera, preset_slot: str) -> None:
-    """Set PTZ camera to preset position."""
-    slot = int(preset_slot)
-    await obj.ptz_goto_preset_public(slot=slot)
 
 
 async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
@@ -359,55 +344,47 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[BaseProtectEntity] = async_all_device_entities(
-            data,
-            ProtectSelects,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=device,
+        entities = list(
+            async_all_device_entities(
+                data,
+                ProtectSelects,
+                model_descriptions=_MODEL_DESCRIPTIONS,
+                ufp_device=device,
+            )
         )
-        # Add PTZ select entities for cameras
         if isinstance(device, Camera) and device.feature_flags.is_ptz:
-            # Load PTZ data for newly adopted camera, then add all entities together
             hass.async_create_task(
-                _async_add_new_ptz_camera(data, device, entities),
-                name="unifiprotect_add_ptz_entities",
+                _async_add_ptz_patrol(data, device, entities),
+                name="unifiprotect_add_ptz_patrol",
             )
         else:
             async_add_entities(entities)
 
-    async def _async_add_new_ptz_camera(
-        protect_data: ProtectData, camera: Camera, entities: list[BaseProtectEntity]
+    async def _async_add_ptz_patrol(
+        protect_data: ProtectData,
+        camera: Camera,
+        entities: list[BaseProtectEntity],
     ) -> None:
-        """Load PTZ data and add all entities for newly adopted camera."""
-        await protect_data.async_load_ptz_data_for_camera(camera)
-        entities.extend(_create_ptz_entities(protect_data, camera))
+        """Load PTZ patrol data and add all entities for newly adopted camera."""
+        await protect_data.async_load_ptz_patrols_for_camera(camera)
+        patrols = protect_data.ptz_patrols.get(camera.id, [])
+        entities.append(ProtectPTZPatrolSelect(protect_data, camera, patrols))
         async_add_entities(entities)
 
     data.async_subscribe_adopt(_add_new_device)
 
-    # Collect all entities in a single list
-    entities: list[BaseProtectEntity] = async_all_device_entities(
-        data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
+    entities = list(
+        async_all_device_entities(
+            data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
+        )
     )
 
-    # Add PTZ entities for existing cameras (data already cached in __init__.py)
     for camera in data.api.bootstrap.cameras.values():
         if camera.feature_flags.is_ptz and camera.is_adopted_by_us:
-            entities.extend(_create_ptz_entities(data, camera))
+            patrols = data.ptz_patrols.get(camera.id, [])
+            entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
 
     async_add_entities(entities)
-
-
-def _create_ptz_entities(
-    data: ProtectData, camera: Camera
-) -> list[ProtectPTZPresetSelect | ProtectPTZPatrolSelect]:
-    """Create PTZ select entities for a camera."""
-    entities: list[ProtectPTZPresetSelect | ProtectPTZPatrolSelect] = []
-    presets = data.ptz_presets.get(camera.id, [])
-    patrols = data.ptz_patrols.get(camera.id, [])
-    entities.append(ProtectPTZPresetSelect(data, camera, presets))
-    entities.append(ProtectPTZPatrolSelect(data, camera, patrols))
-    return entities
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
@@ -474,86 +451,6 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
-
-
-class ProtectPTZPresetSelect(ProtectDeviceEntity, SelectEntity):
-    """A UniFi Protect PTZ Preset Select Entity."""
-
-    device: Camera
-    _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
-    _reset_timer: asyncio.TimerHandle | None = None
-
-    def __init__(
-        self,
-        data: ProtectData,
-        device: Camera,
-        presets: list[PTZPreset],
-    ) -> None:
-        """Initialize the PTZ preset select entity."""
-        # Build options from cached presets
-        self._hass_to_unifi_options: dict[str, str] = {
-            PTZ_PRESET_IDLE: PTZ_PRESET_IDLE,
-            PTZ_PRESET_HOME: str(PTZ_PRESET_HOME_SLOT),
-        }
-        self._hass_to_unifi_options.update(
-            {preset.name: str(preset.slot) for preset in presets}
-        )
-        self._unifi_to_hass_options = {
-            v: k for k, v in self._hass_to_unifi_options.items()
-        }
-        self._attr_options = list(self._hass_to_unifi_options)
-        self._attr_current_option = PTZ_PRESET_IDLE
-
-        description = ProtectSelectEntityDescription[Camera](
-            key=_KEY_PTZ_PRESET,
-            translation_key="ptz_preset",
-            entity_category=EntityCategory.CONFIG,
-            ufp_required_field="feature_flags.is_ptz",
-            ufp_set_method_fn=_set_ptz_preset,
-            ufp_perm=PermRequired.WRITE,
-        )
-        super().__init__(data, device, description)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel any pending timers when entity is removed."""
-        if self._reset_timer is not None:
-            self._reset_timer.cancel()
-            self._reset_timer = None
-        await super().async_will_remove_from_hass()
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        super()._async_update_device_from_protect(device)
-        # Always reset preset to Idle - it's a command, not a state
-        self._attr_current_option = PTZ_PRESET_IDLE
-
-    @async_ufp_instance_command
-    async def async_select_option(self, option: str) -> None:
-        """Change the PTZ preset."""
-        unifi_value = self._hass_to_unifi_options.get(option)
-        if unifi_value is None or unifi_value == PTZ_PRESET_IDLE:
-            return
-
-        await _set_ptz_preset(self.device, unifi_value)
-
-        # Set to selected option first, then schedule reset
-        # This forces the frontend to see a state change
-        self._attr_current_option = option
-        self.async_write_ha_state()
-
-        @callback
-        def _reset_to_idle() -> None:
-            """Reset preset to Idle after delay."""
-            self._reset_timer = None
-            self._attr_current_option = PTZ_PRESET_IDLE
-            self.async_write_ha_state()
-
-        # Cancel any existing timer before scheduling new one
-        if self._reset_timer is not None:
-            self._reset_timer.cancel()
-        self._reset_timer = self.hass.loop.call_later(
-            _PTZ_PRESET_RESET_DELAY, _reset_to_idle
-        )
 
 
 class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):

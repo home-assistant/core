@@ -161,8 +161,8 @@ async def _async_setup_entry(
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
 
-    # Load PTZ data before loading platforms to avoid async loading during entity setup
-    await data_service.async_load_ptz_data()
+    # Load PTZ patrol data before loading platforms
+    await data_service.async_load_ptz_patrols()
 
     # Create the NVR device before loading platforms
     # This ensures via_device references work for all device entities

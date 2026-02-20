@@ -290,6 +290,7 @@ def ptz_camera_fixture(camera: Camera):
     ptz_cam.channels = [c.model_copy() for c in ptz_cam.channels]
     ptz_cam.name = "PTZ Camera"
     ptz_cam.feature_flags.is_ptz = True
+    ptz_cam.active_patrol_slot = None
 
     # Disable pydantic validation on this instance so we can mock methods
     object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
