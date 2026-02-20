@@ -70,23 +70,23 @@
   },
   "title": "Timer",
   "triggers": {
-    "cancel": {
+    "canceled": {
       "description": "Triggers when the timer gets canceled.",
       "name": "Timer canceled"
     },
-    "finish": {
+    "finished": {
       "description": "Triggers when the timer finishes.",
       "name": "Timer finished"
     },
-    "pause": {
+    "paused": {
       "description": "Triggers when the timer pauses.",
       "name": "Timer paused"
     },
-    "restart": {
+    "restarted": {
       "description": "Triggers when the timer restarts.",
       "name": "Timer restarted"
     },
-    "start": {
+    "started": {
       "description": "Triggers when the timer starts.",
       "name": "Timer started"
     }

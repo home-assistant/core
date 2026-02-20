@@ -33,7 +33,7 @@ def automation_test_calls(hass: HomeAssistant) -> Callable[[], list[dict[str, An
     return get_trigger_data
 
 
-async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
+async def config_setup(hass: HomeAssistant, triggers: list[str]) -> None:
     """Common initialization for timer and automation."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test": {CONF_DURATION: 10}}}
@@ -41,9 +41,9 @@ async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
 
     automations = [
         {
-            "alias": f"test_{event}",
+            "alias": f"test_{trigger}",
             "trigger": {
-                "platform": f"{DOMAIN}.{event}",
+                "platform": f"{DOMAIN}.{trigger}",
                 "target": {
                     "entity_id": "timer.test",
                 },
@@ -58,7 +58,7 @@ async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
                 },
             },
         }
-        for event in events
+        for trigger in triggers
     ]
 
     assert await async_setup_component(
@@ -72,17 +72,17 @@ async def config_setup(hass: HomeAssistant, events: list[str]) -> None:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "timer.start",
-        "timer.finish",
-        "timer.pause",
-        "timer.cancel",
-        "timer.restart",
+        "timer.started",
+        "timer.finished",
+        "timer.paused",
+        "timer.canceled",
+        "timer.restarted",
     ],
 )
-async def test_light_triggers_gated_by_labs_flag(
+async def test_timer_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
-    """Test the light triggers are gated by the labs flag."""
+    """Test the timer triggers are gated by the labs flag."""
     await arm_trigger(hass, trigger_key, None, {})
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
@@ -96,12 +96,12 @@ async def test_light_triggers_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("timer", "steps", "timer_event"),
     [
-        ("start", [SERVICE_START], "timer.started"),
-        ("finish", [SERVICE_START, SERVICE_FINISH], "timer.finished"),
-        ("pause", [SERVICE_START, SERVICE_PAUSE], "timer.paused"),
-        ("cancel", [SERVICE_START, SERVICE_CANCEL], "timer.cancelled"),
-        ("restart", [SERVICE_START, SERVICE_PAUSE, SERVICE_START], "timer.restarted"),
-        ("restart", [SERVICE_START, SERVICE_START], "timer.restarted"),
+        ("started", [SERVICE_START], "timer.started"),
+        ("finished", [SERVICE_START, SERVICE_FINISH], "timer.finished"),
+        ("paused", [SERVICE_START, SERVICE_PAUSE], "timer.paused"),
+        ("canceled", [SERVICE_START, SERVICE_CANCEL], "timer.cancelled"),
+        ("restarted", [SERVICE_START, SERVICE_PAUSE, SERVICE_START], "timer.restarted"),
+        ("restarted", [SERVICE_START, SERVICE_START], "timer.restarted"),
     ],
 )
 async def test_timer_type_event(
@@ -130,9 +130,9 @@ async def test_timer_type_event(
 async def test_full_usage(
     hass: HomeAssistant, automation_test_calls, service_calls: list[ServiceCall]
 ) -> None:
-    """Test timer triggers."""
+    """Test timer triggers by attaching to all kind of events."""
 
-    await config_setup(hass, ["start", "pause", "finish", "cancel", "restart"])
+    await config_setup(hass, ["started", "paused", "finished", "canceled", "restarted"])
 
     steps = [
         {"call": SERVICE_START},
@@ -162,10 +162,21 @@ async def test_full_usage(
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
-async def test_exception_bad_trigger(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "trigger_key",
+    [
+        DOMAIN,
+        "timer.started",
+        "timer.finished",
+        "timer.paused",
+        "timer.canceled",
+        "timer.restarted",
+    ],
+)
+async def test_exception_bad_timer_trigger(
+    hass: HomeAssistant, trigger_key, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test for exception on event triggers firing."""
+    """Test bad timer configuration."""
 
     await async_setup_component(
         hass,
@@ -173,7 +184,7 @@ async def test_exception_bad_trigger(
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"trigger": {"platform": DOMAIN, "oops": "abc123"}},
+                    "trigger": {"trigger": {"platform": trigger_key, "oops": "abc123"}},
                     "action": {
                         "service": "test.automation",
                         "data": {"message": "service called"},

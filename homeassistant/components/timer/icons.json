@@ -20,19 +20,19 @@
     }
   },
   "triggers": {
-    "cancel": {
+    "canceled": {
       "trigger": "mdi:timer-cancel-outline"
     },
-    "finish": {
+    "finished": {
       "trigger": "mdi:timer-check-outline"
     },
-    "pause": {
+    "paused": {
       "trigger": "mdi:timer-pause-outline"
     },
-    "restart": {
+    "restarted": {
       "trigger": "mdi:timer-refresh-outline"
     },
-    "start": {
+    "started": {
       "trigger": "mdi:timer-play-outline"
     }
   }

@@ -44,7 +44,6 @@ class BaseTimerEventTrigger(Trigger):
         super().__init__(hass, config)
         assert config.target is not None
         self._target = config.target
-        self._unsub_listener: CALLBACK_TYPE | None = None
 
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
@@ -52,12 +51,6 @@ class BaseTimerEventTrigger(Trigger):
         """Attach the trigger."""
 
         tracked_entities = self._target[CONF_ENTITY_ID]
-
-        @callback
-        def async_remove() -> None:
-            """Remove trigger."""
-            if self._unsub_listener:
-                self._unsub_listener()
 
         @callback
         def async_on_event(event: Event) -> None:
@@ -75,13 +68,11 @@ class BaseTimerEventTrigger(Trigger):
             entity_id = data.get("entity_id")
             return isinstance(entity_id, str) and entity_id in tracked_entities
 
-        self._unsub_listener = self._hass.bus.async_listen(
+        return self._hass.bus.async_listen(
             event_type=self._event_type,
             event_filter=filter_event,
             listener=async_on_event,
         )
-
-        return async_remove
 
 
 class TimerStartEventTrigger(BaseTimerEventTrigger):
@@ -115,11 +106,11 @@ class TimerRestartEventTrigger(BaseTimerEventTrigger):
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "start": TimerStartEventTrigger,
-    "finish": TimerFinishEventTrigger,
-    "pause": TimerPauseEventTrigger,
-    "cancel": TimerCancelEventTrigger,
-    "restart": TimerRestartEventTrigger,
+    "started": TimerStartEventTrigger,
+    "finished": TimerFinishEventTrigger,
+    "paused": TimerPauseEventTrigger,
+    "canceled": TimerCancelEventTrigger,
+    "restarted": TimerRestartEventTrigger,
 }
 
 

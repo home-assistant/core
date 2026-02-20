@@ -3,8 +3,8 @@
     entity:
       domain: timer
 
-start: *trigger_common
-finish: *trigger_common
-pause: *trigger_common
-cancel: *trigger_common
-restart: *trigger_common
+started: *trigger_common
+finished: *trigger_common
+paused: *trigger_common
+canceled: *trigger_common
+restarted: *trigger_common
