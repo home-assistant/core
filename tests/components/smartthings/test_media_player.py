@@ -346,12 +346,12 @@ async def test_select_source(
 
 
 @pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
-async def test_tv_select_source(
+async def test_vd_capability_select_source(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test TV media player select source command using Samsung VD capability."""
+    """Test media player select source command using Samsung VD capability."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("media_player.tv_samsung_8_series_49")
@@ -379,12 +379,12 @@ async def test_tv_select_source(
 
 
 @pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
-async def test_tv_source_update(
+async def test_vd_capability_source_update(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test TV source state update."""
+    """Test source state update using Samsung VD capability."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("media_player.tv_samsung_8_series_49")
