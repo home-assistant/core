@@ -324,7 +324,7 @@
   },
   "services": {
     "change_energy_mode": {
-      "description": "Change the device energy mode.",
+      "description": "Changes the device energy mode.",
       "fields": {
         "energy_mode": {
           "description": "Energy mode to activate.",
@@ -334,7 +334,7 @@
       "name": "Change mode"
     },
     "charge": {
-      "description": "Real-time control: Start charging with configured power till the target SOC is reached.",
+      "description": "Real-time control: Starts charging with configured power till the target SOC is reached.",
       "fields": {
         "power": {
           "description": "Maximum charging power in watts.",
@@ -348,7 +348,7 @@
       "name": "Charge"
     },
     "discharge": {
-      "description": "Real-time control: Start discharging with configured power till the target SOC is reached.",
+      "description": "Real-time control: Starts discharging with configured power till the target SOC is reached.",
       "fields": {
         "power": {
           "description": "Maximum discharging power in watts.",
@@ -362,7 +362,7 @@
       "name": "Discharge"
     },
     "stop": {
-      "description": "Real-time control: Stop battery charging/discharging.",
+      "description": "Real-time control: Stops battery charging/discharging.",
       "name": "Stop"
     }
   }
