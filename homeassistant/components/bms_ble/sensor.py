@@ -291,7 +291,6 @@ class RSSISensor(SensorEntity):
 
     LIMIT: Final = 127  # limit to +/- this range
     _attr_has_entity_name = True
-    _attr_native_value = -LIMIT
 
     def __init__(
         self, bms: BTBmsCoordinator, descr: SensorEntityDescription, unique_id: str
