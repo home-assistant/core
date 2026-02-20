@@ -25,17 +25,6 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser) -> None:
-    """Add custom command-line option for max_examples."""
-    parser.addoption(
-        "--max-examples",
-        action="store",
-        type=int,
-        default=1000,
-        help="Set the maximum number of examples for Hypothesis tests.",
-    )
-
-
 @pytest.fixture(params=[False, True])
 def bool_fixture(request: pytest.FixtureRequest) -> bool:
     """Return False, True for tests."""
