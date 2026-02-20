@@ -6869,7 +6869,7 @@
           "name": "Telegram"
         },
         "telegram_bot": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Telegram bot"
