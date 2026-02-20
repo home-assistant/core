@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyrainbird"],
-  "requirements": ["pyrainbird==6.0.1"]
+  "requirements": ["pyrainbird==6.0.5"]
 }

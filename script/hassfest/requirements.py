@@ -203,11 +203,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
-    "tami4": {
-        # https://github.com/SeleniumHQ/selenium/issues/16943
-        # tami4 > selenium > types*
-        "selenium": {"types-certifi", "types-urllib3"},
-    },
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
