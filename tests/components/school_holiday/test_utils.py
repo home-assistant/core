@@ -9,7 +9,7 @@ from homeassistant.components.school_holiday import utils
 SUMMARY = "Spring Break"
 START = "2026-02-14"
 END = "2026-02-22"
-DESCRIPTION = "Spring Break for the region Midden."
+DESCRIPTION = "A week's holiday for school and college students in March or April."
 
 
 def test_clean_string() -> None:
