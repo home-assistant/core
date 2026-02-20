@@ -83,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self.context["title_placeholders"] = {
             CONF_NAME: self._disc_dev.name,
-            CONF_ID: address[8:],  # remove OUI
+            CONF_ID: address[-9:],  # remove OUI
             CONF_MODEL: self._disc_dev.model(),
         }
         return await self.async_step_bluetooth_confirm()
