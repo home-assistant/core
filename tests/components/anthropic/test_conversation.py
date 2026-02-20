@@ -771,8 +771,10 @@ async def test_web_search(
     ]
     mock_create_stream.return_value = [
         (
+            # Anthropic API sometimes adds this, not sure why. We remove it.
+            *create_content_block(0, ["\n\n"]),
             *create_thinking_block(
-                0,
+                1,
                 [
                     "The user is",
                     " asking about today's news, which",
@@ -785,20 +787,25 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                1, ["To get today's news, I'll perform a web search"]
+                2, ["To get today's news, I'll perform a web search"]
             ),
             *create_web_search_block(
-                2,
+                3,
                 "srvtoolu_12345ABC",
                 ["", '{"que', 'ry"', ": \"today's", ' news"}'],
             ),
-            *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
+            *create_web_search_result_block(4, "srvtoolu_12345ABC", web_search_results),
+            # Test interleaved thinking (a thinking content after a tool call):
+            *create_thinking_block(
+                5,
+                ["Great! All clear, let's reply to the user!"],
+            ),
             *create_content_block(
-                4,
+                6,
                 ["Here's what I found on the web about today's news:\n", "1. "],
             ),
             *create_content_block(
-                5,
+                7,
                 ["New Home Assistant release"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -810,9 +817,9 @@ async def test_web_search(
                     )
                 ],
             ),
-            *create_content_block(6, ["\n2. "]),
+            *create_content_block(8, ["\n2. "]),
             *create_content_block(
-                7,
+                9,
                 ["Something incredible happened"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -832,7 +839,7 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                8, ["\nThose are the main headlines making news today."]
+                10, ["\nThose are the main headlines making news today."]
             ),
         )
     ]

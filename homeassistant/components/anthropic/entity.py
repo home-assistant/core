@@ -420,7 +420,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 ):
                     if content_details.has_citations():
                         content_details.delete_empty()
-                        yield {"native": content_details}
+                        if has_native:  # ...unless there is already a native block
+                            yield {"role": "assistant", "native": content_details}
+                        else:
+                            yield {"native": content_details}
                     content_details = ContentDetails()
                     yield {"role": "assistant"}
                     has_native = False
@@ -435,7 +438,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 if first_block or has_native:
                     if content_details.has_citations():
                         content_details.delete_empty()
-                        yield {"native": content_details}
+                        if has_native:
+                            yield {"role": "assistant", "native": content_details}
+                        else:
+                            yield {"native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
@@ -450,7 +456,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 if has_native:
                     if content_details.has_citations():
                         content_details.delete_empty()
-                        yield {"native": content_details}
+                        yield {"role": "assistant", "native": content_details}
                     content_details = ContentDetails()
                     content_details.add_citation_detail()
                     yield {"role": "assistant"}
@@ -469,7 +475,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             elif isinstance(response.content_block, WebSearchToolResultBlock):
                 if content_details.has_citations():
                     content_details.delete_empty()
-                    yield {"native": content_details}
+                    if has_native:
+                        yield {"role": "assistant", "native": content_details}
+                    else:
+                        yield {"native": content_details}
                 content_details = ContentDetails()
                 content_details.add_citation_detail()
                 yield {
@@ -510,8 +519,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 else:
                     current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
-                content_details.citation_details[-1].length += len(response.delta.text)
-                yield {"content": response.delta.text}
+                if response.index or response.delta.text.strip():
+                    content_details.citation_details[-1].length += len(
+                        response.delta.text
+                    )
+                    yield {"content": response.delta.text}
             elif isinstance(response.delta, ThinkingDelta):
                 yield {"thinking_content": response.delta.thinking}
             elif isinstance(response.delta, SignatureDelta):
@@ -551,7 +563,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         elif isinstance(response, RawMessageStopEvent):
             if content_details.has_citations():
                 content_details.delete_empty()
-                yield {"native": content_details}
+                if has_native:
+                    yield {
+                        "role": "assistant",
+                        "native": content_details,
+                        "content": "\n",
+                    }
+                else:
+                    yield {"native": content_details}
             content_details = ContentDetails()
             content_details.add_citation_detail()
 
