@@ -189,9 +189,6 @@ class MockBMS(BaseBMS):
     ) -> None:
         """Retrieve BMS data update."""
 
-    # async def disconnect(self) -> None:
-    #     """Disconnect connection to BMS if active."""
-
     async def _async_update(self) -> BMSSample:
         """Update battery status information."""
         await self._connect()
