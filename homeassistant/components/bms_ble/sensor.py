@@ -256,6 +256,8 @@ async def async_setup_entry(
 
     if entities:
         async_add_entities(entities)
+
+
 class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     """The generic BMS sensor implementation."""
 
