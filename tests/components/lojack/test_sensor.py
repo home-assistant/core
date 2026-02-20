@@ -116,5 +116,5 @@ async def test_diagnostic_sensors_disabled_by_default(
     make_entity = entity_registry.async_get(
         f"sensor.{TEST_YEAR}_{TEST_MAKE}_{TEST_MODEL}_make".lower()
     )
-    if make_entity:
-        assert make_entity.disabled_by is not None
+    assert make_entity is not None
+    assert make_entity.disabled_by is not None

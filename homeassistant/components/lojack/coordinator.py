@@ -47,6 +47,17 @@ class LoJackVehicleData:
     timestamp: datetime | str | None
 
 
+def get_device_name(vehicle: LoJackVehicleData) -> str:
+    """Get a human-readable name for a vehicle."""
+    if vehicle.year and vehicle.make and vehicle.model:
+        return f"{vehicle.year} {vehicle.make} {vehicle.model}"
+    if vehicle.make and vehicle.model:
+        return f"{vehicle.make} {vehicle.model}"
+    if vehicle.name:
+        return vehicle.name
+    return "Vehicle"
+
+
 def _safe_float(value: Any) -> float | None:
     """Safely convert a value to float."""
     if value is None:
@@ -120,13 +131,13 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         if retry_after:
             new_interval = timedelta(seconds=retry_after)
             LOGGER.warning(
-                "LoJack API rate limited: respecting Retry-After=%s seconds",
+                "API rate limited: respecting Retry-After=%s seconds",
                 retry_after,
             )
         else:
             new_interval = min(self.update_interval * 2, MAX_UPDATE_INTERVAL)
             LOGGER.warning(
-                "LoJack API rate limited: increasing update interval to %s",
+                "API rate limited: increasing update interval to %s",
                 new_interval,
             )
 
