@@ -75,7 +75,7 @@ async def test_vehicle_connected_since_none_when_standby(
         ChargingStatus.STANDBY
     )
 
-    await setup_integration(hass, mock_config_entry, platforms=[Platform.SENSOR])
+    await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get("sensor.nrgkick_test_vehicle_connected_since"))
     assert state.state == STATE_UNKNOWN
