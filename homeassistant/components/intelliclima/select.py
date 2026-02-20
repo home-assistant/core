@@ -55,7 +55,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         """Class initializer."""
         super().__init__(coordinator, device)
 
-        self._attr_unique_id = device.id
+        self._attr_unique_id = f"{device.id}_fan_mode"
 
     @property
     def options(self) -> list[str]:
