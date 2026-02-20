@@ -50,23 +50,6 @@ async def test_switch_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-async def test_switch_state_on(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_homevolt_client: MagicMock,
-    snapshot: SnapshotAssertion,
-    switch_entity_id: str,
-) -> None:
-    """Test switch state when local mode is enabled."""
-    mock_homevolt_client.local_mode_enabled = True
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_request_refresh()
-
-    state = hass.states.get(switch_entity_id)
-    assert state is not None
-    assert state == snapshot(name="switch-state-on")
-
-
 @pytest.mark.parametrize(
     ("service", "client_method_name"),
     [

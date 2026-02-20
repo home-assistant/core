@@ -48,19 +48,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_state_on[switch-state-on]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Homevolt EMS Local mode',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.homevolt_ems_local_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_switch_turn_on_off[turn_off-disable_local_mode][state-after-turn_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
