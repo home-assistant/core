@@ -477,6 +477,12 @@ async def test_abort_discovered_multiple(
         (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
         (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
+            HTTPStatus.UNAUTHORIZED,
+            {"error_description": "The token has expired."},
+            "oauth_unauthorized",
+            "The token has expired.",
+        ),
+        (
             HTTPStatus.BAD_REQUEST,
             {
                 "error": "invalid_request",
