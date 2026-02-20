@@ -184,9 +184,9 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
             options = appliance_data.get_feature_state_string_options(
                 description.feature_name
             )
-            camel_case_options = [_convert_to_snake_case(option) for option in options]
-            if len(camel_case_options) > 0:
-                self._attr_options = camel_case_options
+            snake_case_options = [_convert_to_snake_case(option) for option in options]
+            if len(snake_case_options) > 0:
+                self._attr_options = snake_case_options
 
         self.entity_description = description
         self._attr_unique_id = (
