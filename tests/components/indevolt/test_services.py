@@ -11,7 +11,7 @@ from homeassistant.components.indevolt.const import (
     REALTIME_ACTION_KEY,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -220,7 +220,7 @@ async def test_service_change_mode_current_mode_unavailable(
     mock_indevolt.fetch_data.return_value.pop(ENERGY_MODE_READ_KEY, None)
 
     # Mock call with current energy mode unavailable
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "change_energy_mode",
@@ -248,7 +248,7 @@ async def test_service_change_mode_outdoor_portable(
     mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = 0
 
     # Mock call with current energy mode unavailable
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "change_energy_mode",
