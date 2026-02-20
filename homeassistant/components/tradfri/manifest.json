@@ -1,6 +1,6 @@
 {
   "domain": "tradfri",
-  "name": "IKEA TRÅDFRI",
+  "name": "IKEA TR\u00c5DFRI",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
