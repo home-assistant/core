@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
+    BackupAgentSupportedFeature,
     BackupNotFound,
     Folder,
 )
@@ -103,6 +104,7 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
     mock_agent.name = name
     mock_agent.unique_id = name
     type(mock_agent).agent_id = BackupAgent.agent_id
+    type(mock_agent).upload_progress = BackupAgent.upload_progress
     mock_agent.async_delete_backup = AsyncMock(
         side_effect=delete_backup, spec_set=[BackupAgent.async_delete_backup]
     )
@@ -119,6 +121,9 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
         side_effect=upload_backup,
         spec_set=[BackupAgent.async_upload_backup],
     )
+    mock_agent.supported_features = BackupAgentSupportedFeature(0)
+    mock_agent._upload_backup_size = 0
+    mock_agent._attr_upload_bytes_done = 0
     return mock_agent
 
 

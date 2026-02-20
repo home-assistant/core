@@ -582,10 +582,15 @@ class BackupManager:
                 _backup = replace(
                     backup, protected=should_encrypt, size=streamer.size()
                 )
-            await self.backup_agents[agent_id].async_upload_backup(
-                open_stream=open_stream_func,
-                backup=_backup,
-            )
+            agent = self.backup_agents[agent_id]
+            agent.start_upload_progress(_backup.size)
+            try:
+                await agent.async_upload_backup(
+                    open_stream=open_stream_func,
+                    backup=_backup,
+                )
+            finally:
+                agent.reset_upload_progress()
             if streamer:
                 await streamer.wait()
 

@@ -22,6 +22,7 @@ from .models import BackupNotFound, Folder
 def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) -> None:
     """Register websocket commands."""
     websocket_api.async_register_command(hass, backup_agents_info)
+    websocket_api.async_register_command(hass, handle_agents_upload_progress)
 
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
@@ -313,10 +314,36 @@ async def backup_agents_info(
         msg["id"],
         {
             "agents": [
-                {"agent_id": agent.agent_id, "name": agent.name}
+                {
+                    "agent_id": agent.agent_id,
+                    "name": agent.name,
+                    "supported_features": agent.supported_features,
+                }
                 for agent in manager.backup_agents.values()
             ],
         },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): "backup/agents/upload_progress"}
+)
+@websocket_api.async_response
+async def handle_agents_upload_progress(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return upload progress for all agents currently uploading."""
+    manager = hass.data[DATA_MANAGER]
+    progress: dict[str, float] = {}
+    for agent in manager.backup_agents.values():
+        if (upload_progress := agent.upload_progress) is not None:
+            progress[agent.agent_id] = upload_progress
+    connection.send_result(
+        msg["id"],
+        {"agent_upload_progress": progress},
     )
 
 

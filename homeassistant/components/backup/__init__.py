@@ -16,6 +16,7 @@ from .agent import (
     BackupAgent,
     BackupAgentError,
     BackupAgentPlatformProtocol,
+    BackupAgentSupportedFeature,
     LocalBackupAgent,
 )
 from .config import BackupConfig, CreateBackupParametersDict
@@ -55,6 +56,7 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupAgentSupportedFeature",
     "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",

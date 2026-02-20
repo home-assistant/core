@@ -18,10 +18,12 @@
         dict({
           'agent_id': 'test.remote',
           'name': 'remote',
+          'supported_features': 0,
         }),
         dict({
           'agent_id': 'backup.local',
           'name': 'local',
+          'supported_features': 0,
         }),
       ]),
     }),
