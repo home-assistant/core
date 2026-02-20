@@ -33,5 +33,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_api": {
+      "description": "Your version of Libre Hardware Monitor is deprecated. Please update to v0.9.5 or later for full support.",
+      "title": "Deprecated Libre Hardware Monitor version"
+    }
   }
 }
