@@ -203,12 +203,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_available = False
         self._source_check_task = None
 
-        # Command timeout tracking
-        self._last_command_time = None
-        self._command_timeout_task = None
-        self._pending_command = None
-        self._command_timeout_seconds = 30
-
         # State tracking
         self._attr_state = MediaPlayerState.OFF
         self._attr_volume_level = 0.5
@@ -263,9 +257,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         await self._query_all_state_with_timeout()
 
     async def _query_all_state_with_timeout(self) -> None:
-        """Query device for current state with timeout handling."""
-        _LOGGER.debug("Querying initial state from device")
-        self._start_command_timeout("POWER_QUERY")
+        """Query device for current state."""
+        _LOGGER.info("Querying initial state from device")
         await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
         await asyncio.sleep(0.3)  # Wait for power state response
         await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
@@ -285,12 +278,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             with contextlib.suppress(asyncio.CancelledError):
                 await self._source_check_task
 
-        # Cancel command timeout task
-        if self._command_timeout_task:
-            self._command_timeout_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._command_timeout_task
-
         # Close serial connection
         await self.disconnect()
 
@@ -309,7 +296,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug("Device is not ON, skipping input source query")
             return
         _LOGGER.info("Querying input source from device")
-        self._start_command_timeout("INPUT_QUERY")
         await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
         # Wait a bit for response to be processed
         await asyncio.sleep(0.2)
@@ -353,9 +339,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     def handle_response(self, response: str):
         """Parse incoming data."""
         _LOGGER.debug("RX: %s", response)
-
-        # Response received, clear any pending timeout
-        self._cancel_command_timeout()
 
         # Parse power status
         if (power := TonewinnerProtocol.parse_power_status(response)) is not None:
@@ -401,31 +384,44 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             if source_name == "eARC/ARC":
                 self._attr_source = "ARC"
 
-            # Map source code to custom name
-            source_code = self._custom_name_to_source_code.get(source_name)
-            if source_code:
-                _LOGGER.info("Source updated: '%s' -> '%s'", source_code, source_name)
-                self._attr_source = source_name
-            elif audio_source:
-                custom_name_from_audio_source = self._source_code_to_custom_name.get(
-                    audio_source
-                )
-                _LOGGER.info(
-                    "Source updated from audio source: '%s' -> '%s'",
-                    audio_source,
-                    custom_name_from_audio_source,
-                )
-                self._attr_source = custom_name_from_audio_source
+            # Try to map the device's source name to our custom name
+            # The device sends the default name (e.g., "HDMI 1" or "COAXIAL 1"), we need to find
+            # the source code (e.g., "HD1" or "CO1") and then look up the custom name
+            source_display_name = None
+
+            # First, check if source_name is already a custom name we configured
+            if source_name in self._custom_name_to_source_code:
+                source_display_name = source_name
             else:
-                _LOGGER.warning(
-                    "Unknown source code received: '%s', mapping it directly",
-                    source_name,
-                )
-                _LOGGER.warning(
-                    "Available source codes: %s",
-                    list(self._source_code_to_custom_name.keys()),
-                )
-                self._attr_source = source_name
+                # Not a custom name, try to find the source code that has this as its default name
+                # INPUT_SOURCES maps default names to source codes
+                # Try case-insensitive match since device might send "COAXIAL 1" vs "Coaxial 1"
+                source_code = None
+                for default_name, code in INPUT_SOURCES.items():
+                    if default_name.lower() == source_name.lower():
+                        source_code = code
+                        break
+
+                if source_code:
+                    # Found the source code, now look up the custom name
+                    source_display_name = self._source_code_to_custom_name.get(
+                        source_code
+                    )
+
+                # If we still haven't found it, try the audio_source as a fallback
+                if not source_display_name and audio_source:
+                    source_display_name = self._source_code_to_custom_name.get(
+                        audio_source
+                    )
+
+                # Last resort: use the device name directly
+                if not source_display_name:
+                    source_display_name = source_name
+
+            _LOGGER.info(
+                "Source updated: '%s' -> '%s'", source_name, source_display_name
+            )
+            self._attr_source = source_display_name
 
         # Parse sound mode
         if (mode := TonewinnerProtocol.parse_sound_mode(response)) is not None:
@@ -469,13 +465,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     async def send_raw_command(self, command: str):
         """Service handler: send raw command."""
-        _LOGGER.debug("Preparing to send command: %s", command)
+        _LOGGER.info("Sending command: %s", command)
         if not self._transport:
             raise TonewinnerError("Not connected")
-
-        # If command is not a query, start timeout tracking
-        if not command.endswith("?"):
-            self._start_command_timeout(f"CMD:{command[:10]}")
 
         # Handle hex strings like "0x21 0x50" or plain ASCII
         if command.startswith("0x"):
@@ -489,21 +481,13 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("TX bytes: %s", data.hex())
         self._transport.write(data)
         _LOGGER.debug("Command sent successfully")
-        _LOGGER.debug("Pending commands: %s", self._pending_command)
 
     # --- Media player controls ---
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        _LOGGER.debug("Turning on receiver")
-        self._start_command_timeout("POWER_ON")
+        _LOGGER.info("Turning on receiver")
         await self.send_raw_command(TonewinnerCommands.POWER_ON)
-        # Set optimistic state - command sent successfully, receiver should be turning on
-        self._attr_state = MediaPlayerState.ON
-        self.async_write_ha_state()
-        # Note: The device will respond to POWER_ON with the actual power state,
-        # which will trigger the input source query in handle_response
-        # when it receives "POWER ON"
 
     async def async_turn_off(self):
         """Turn the media player off."""
@@ -536,13 +520,12 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
         command = TonewinnerCommands.MUTE_ON if mute else TonewinnerCommands.MUTE_OFF
-        _LOGGER.debug("Setting mute: %s", mute)
+        _LOGGER.info("Setting mute: %s (command: %s)", mute, command)
         await self.send_raw_command(command)
-        self.async_write_ha_state()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        _LOGGER.debug("async_select_source called with: %s", source)
+        _LOGGER.info("Selecting source: %s", source)
         _LOGGER.debug(
             "Available sources in _custom_name_to_source_code: %s",
             self._custom_name_to_source_code,
@@ -563,59 +546,18 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             raise ValueError(f"Unknown source: {source}")
         source_code = self._custom_name_to_source_code.get(source, source)
         command = f"SI {source_code}"
-        _LOGGER.debug(
-            "Selecting source: %s -> %s (command: %s)", source, source_code, command
+        _LOGGER.info(
+            "Sending source command: %s -> %s (command: %s)",
+            source,
+            source_code,
+            command,
         )
         await self.send_raw_command(command)
-        self.async_write_ha_state()
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:
             raise ValueError(f"Unknown sound mode: {sound_mode}")
         command = f"{TonewinnerCommands.MODE_PREFIX} {SOUND_MODES[sound_mode]}"
-        _LOGGER.debug("Selecting sound mode: %s (command: %s)", sound_mode, command)
+        _LOGGER.info("Selecting sound mode: %s (command: %s)", sound_mode, command)
         await self.send_raw_command(command)
-        self.async_write_ha_state()
-
-    def _start_command_timeout(self, command: str) -> None:
-        """Start timeout tracking for a command."""
-        _LOGGER.debug("Starting timeout for command: %s", command)
-        self._pending_command = command
-        self._last_command_time = asyncio.get_event_loop().time()
-
-        # Cancel existing timeout task
-        if self._command_timeout_task:
-            self._command_timeout_task.cancel()
-
-        # Create new timeout task
-        self._command_timeout_task = asyncio.create_task(
-            self._command_timeout_handler(command)
-        )
-
-    def _cancel_command_timeout(self) -> None:
-        """Cancel pending command timeout."""
-        if self._command_timeout_task:
-            _LOGGER.debug("Cancelling command timeout")
-            self._command_timeout_task.cancel()
-            self._command_timeout_task = None
-        self._pending_command = None
-
-    async def _command_timeout_handler(self, command: str) -> None:
-        """Handle command timeout by marking device unavailable."""
-        await asyncio.sleep(self._command_timeout_seconds)
-
-        # Check if still pending (response may have arrived)
-        if self._pending_command == command:
-            if self._attr_state == MediaPlayerState.OFF:
-                _LOGGER.info("Device is off, ignoring timeout")
-            else:
-                _LOGGER.warning(
-                    "Command '%s' timed out after %d seconds, marking unavailable",
-                    command,
-                    self._command_timeout_seconds,
-                )
-                self._attr_available = False
-                self.async_write_ha_state()
-            self._command_timeout_task = None
-            self._pending_command = None

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.tonewinner.media_player import TonewinnerProtocol
+from homeassistant.components.tonewinner.media_player import TonewinnerSerialProtocol
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def mock_entity():
 @pytest.fixture
 def protocol(mock_entity):
     """Create a protocol instance for testing."""
-    return TonewinnerProtocol(mock_entity)
+    return TonewinnerSerialProtocol(mock_entity)
 
 
 def test_single_complete_message(protocol, mock_entity) -> None:

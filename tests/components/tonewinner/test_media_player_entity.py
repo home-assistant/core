@@ -217,15 +217,9 @@ async def test_media_player_handle_power_off(
         # Handle power off response
         entity.handle_response("POWER OFF")
 
-        # Note: State is not updated when power is off due to bug in handle_response
-        # The `if power :=` condition is falsy for False, so the block doesn't execute
-        # For now, just verify power off is processed (state change happens elsewhere)
-        # This test documents the current behavior
-        assert (
-            entity.state == MediaPlayerState.OFF
-        )  # This works because _attr_state is set in __init__
-        # Source is NOT currently cleared due to the bug mentioned above
-        assert entity._attr_source == "HDMI 1"  # Current (buggy) behavior
+        # Power off should clear the source
+        assert entity.state == MediaPlayerState.OFF
+        assert entity._attr_source is None  # Source is cleared when powered off
 
 
 async def test_media_player_handle_volume_response(
@@ -325,14 +319,13 @@ async def test_media_player_handle_custom_source_name(
     # Mock async task creation to avoid task cleanup issues
     with patch("asyncio.create_task"):
         # Handle input source response
-        # Note: Protocol returns the name field ("HDMI 1") not the V= code ("HD1")
-        # This is a bug in the protocol - it should return the video source code
-        # The media_player tries to map this using _source_code_to_custom_name
-        # which has codes like "HD1", not "HDMI 1"
+        # Device returns the default name "HDMI 1", but we have a custom mapping
+        # to "Living Room TV", so the integration should map it correctly
         entity.handle_response("SI 01 HDMI 1 V=HD1 A=HDMI")
 
-        # Current (buggy) behavior: returns the name field directly since it's not in the mapping
-        assert entity.source == "HDMI 1"
+        # The device sends "HDMI 1" (default name), which maps to source code "HD1",
+        # which then maps to the custom name "Living Room TV"
+        assert entity.source == "Living Room TV"
 
 
 async def test_media_player_handle_sound_mode(
@@ -349,6 +342,106 @@ async def test_media_player_handle_sound_mode(
     entity.handle_response("MODE DIRECT")
 
     assert entity.sound_mode == "Direct"
+
+
+async def test_media_player_handle_uppercase_source_with_custom_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test handling uppercase source name with custom mapping."""
+    # Custom source mapping - COAXIAL 1 (uppercase from device) -> Sonos
+    source_mappings = {
+        "CO1": {"enabled": True, "name": "Sonos"},
+    }
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: source_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_config_entry.data)
+    entity.entity_id = "media_player.test"
+
+    # Mock async task creation to avoid task cleanup issues
+    with patch("asyncio.create_task"):
+        # Device sends "COAXIAL 1" in uppercase, but INPUT_SOURCES has "Coaxial 1"
+        # The integration should do case-insensitive matching
+        entity.handle_response("SI 09 COAXIAL 1 V=NO A=CO1")
+
+        # Should map: "COAXIAL 1" -> "CO1" -> "Sonos"
+        assert entity.source == "Sonos"
+
+
+async def test_media_player_handle_custom_name_from_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test when device sends custom name that matches our HA config."""
+    # User configured "Sonos" as custom name in HA AND on the device
+    source_mappings = {
+        "CO1": {"enabled": True, "name": "Sonos"},
+    }
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: source_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_config_entry.data)
+    entity.entity_id = "media_player.test"
+
+    # Mock async task creation to avoid task cleanup issues
+    with patch("asyncio.create_task"):
+        # Device sends "Sonos" (custom name set on device)
+        entity.handle_response("SI 09 Sonos V=NO A=CO1")
+
+        # Should match directly: "Sonos" is in _custom_name_to_source_code
+        assert entity.source == "Sonos"
+
+
+async def test_media_player_handle_unknown_name_with_audio_source_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test when device name is unknown but audio source maps to custom name."""
+    # User configured custom name, but device sends something we don't recognize
+    source_mappings = {
+        "CO1": {"enabled": True, "name": "Sonos Connect"},
+    }
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: source_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_config_entry.data)
+    entity.entity_id = "media_player.test"
+
+    # Mock async task creation to avoid task cleanup issues
+    with patch("asyncio.create_task"):
+        # Device sends unknown name "My Device", but audio_source is CO1 which we know
+        entity.handle_response("SI 09 My Device V=NO A=CO1")
+
+        # Should fallback to audio source: "My Device" -> "CO1" (from A=) -> "Sonos Connect"
+        assert entity.source == "Sonos Connect"
 
 
 async def test_media_player_turn_on(
@@ -578,20 +671,18 @@ async def test_media_player_cleanup_on_removal(
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_config_entry.data)
 
-    # Create mock tasks with proper behavior
+    # Create mock task with proper behavior
     # Use asyncio.create_task to create real tasks that can be cancelled
     async def dummy_task():
         """A dummy async task that can be cancelled."""
         await asyncio.sleep(10)
 
-    entity._refresh_task = asyncio.create_task(dummy_task())
     entity._source_check_task = asyncio.create_task(dummy_task())
 
     # Cleanup
     await entity.async_will_remove_from_hass()
 
-    # Verify tasks were cancelled (they should be done)
-    assert entity._refresh_task.cancelled()
+    # Verify task was cancelled (it should be done)
     assert entity._source_check_task.cancelled()
 
 
