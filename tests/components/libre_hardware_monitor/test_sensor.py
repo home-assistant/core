@@ -131,7 +131,7 @@ async def test_sensor_invalid_auth_during_startup(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "sensor_id", "new_value", "state_value"),
+    ("object_id", "sensor_id", "new_value", "state_value"),
     [
         (
             "gaming_pc_amd_ryzen_7_7800x3d_package_temperature",
@@ -152,7 +152,7 @@ async def test_sensors_are_updated(
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    entity_id: str,
+    object_id: str,
     sensor_id: str,
     new_value: str,
     state_value: str,
@@ -171,7 +171,7 @@ async def test_sensors_are_updated(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.{entity_id}")
+    state = hass.states.get(f"sensor.{object_id}")
 
     assert state
     assert state.state != STATE_UNAVAILABLE
