@@ -136,10 +136,11 @@ class MTASensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
 
         stop_name = subentry.data.get(CONF_STOP_NAME, subentry.subentry_id)
 
-        self._attr_unique_id = f"{subentry.unique_id}-{description.key}"
+        unique_id = subentry.unique_id or subentry.subentry_id
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, subentry.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             name=f"{route} - {stop_name}",
             manufacturer="MTA",
             model=model,

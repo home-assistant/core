@@ -65,8 +65,7 @@ class MTADataUpdateCoordinator(DataUpdateCoordinator[MTAData]):
         session = async_get_clientsession(hass)
 
         if subentry.subentry_type == SUBENTRY_TYPE_BUS:
-            # Bus feed requires API key, use space as fallback
-            api_key = config_entry.data.get(CONF_API_KEY) or " "
+            api_key = config_entry.data.get(CONF_API_KEY) or ""
             self.feed: BusFeed | SubwayFeed = BusFeed(api_key=api_key, session=session)
             self.route_id = subentry.data[CONF_ROUTE]
         else:

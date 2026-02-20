@@ -266,8 +266,8 @@ class BusSubentryFlowHandler(ConfigSubentryFlow):
         self.stops: dict[str, str] = {}
 
     def _get_api_key(self) -> str:
-        """Get API key from parent entry, or space as fallback."""
-        return self._get_entry().data.get(CONF_API_KEY) or " "
+        """Get API key from parent entry."""
+        return self._get_entry().data.get(CONF_API_KEY) or ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
