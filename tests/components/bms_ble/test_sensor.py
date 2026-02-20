@@ -102,7 +102,7 @@ async def test_update(
         f"{DEV_NAME}_highest_cell_voltage": "unknown",
         f"{DEV_NAME}_lowest_cell_voltage": "unknown",
         f"{DEV_NAME}_{ATTR_POWER}": "18.0",
-        f"{DEV_NAME}_signal_strength": "-127",
+        f"{DEV_NAME}_signal_strength": "unknown",
         f"{DEV_NAME}_{ATTR_RUNTIME}": "unknown",
     }
 
