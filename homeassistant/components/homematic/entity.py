@@ -45,15 +45,16 @@ class HMDevice(Entity):
         entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a generic HomeMatic device."""
-        self._name = config.get(ATTR_NAME)
+        self._attr_name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
-        self._unique_id = config.get(ATTR_UNIQUE_ID)
+        if unique_id := config.get(ATTR_UNIQUE_ID):
+            self._attr_unique_id = unique_id.replace(" ", "_")
         self._data: dict[str, Any] = {}
         self._connected = False
-        self._available = False
+        self._attr_available = False
         self._channel_map: dict[str, str] = {}
 
         if entity_description is not None:
@@ -66,21 +67,6 @@ class HMDevice(Entity):
     async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
-
-    @property
-    def unique_id(self):
-        """Return unique ID. HomeMatic entity IDs are unique by default."""
-        return self._unique_id.replace(" ", "_")
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return true if device is available."""
-        return self._available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -116,7 +102,7 @@ class HMDevice(Entity):
             self._load_data_from_hm()
 
             # Link events from pyhomematic
-            self._available = not self._hmdevice.UNREACH
+            self._attr_available = not self._hmdevice.UNREACH
         except Exception as err:  # noqa: BLE001
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s", self._address, str(err))
@@ -132,7 +118,7 @@ class HMDevice(Entity):
 
         # Availability has changed
         if self.available != (not self._hmdevice.UNREACH):
-            self._available = not self._hmdevice.UNREACH
+            self._attr_available = not self._hmdevice.UNREACH
             has_changed = True
 
         # If it has changed data point, update Home Assistant
