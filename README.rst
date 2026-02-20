@@ -3,6 +3,15 @@ Home Assistant |Chat Status|
 
 Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
 
+Install Claude Code plugin
+--------------------------
+
+.. code-block:: bash
+
+    curl -fsSL https://raw.githubusercontent.com/rygwdn/ha-core/main/install.sh | bash
+
+This installs `Claude Code <https://docs.anthropic.com/claude-code>`__ if it isn't already present, then registers the ha-claude MCP plugin for your user.
+
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
