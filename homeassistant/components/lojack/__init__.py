@@ -68,6 +68,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
         try:
             await entry.runtime_data.client.close()
         except Exception:  # noqa: BLE001 - Cleanup during unload should not fail
-            LOGGER.debug("Error closing LoJack client during unload")
+            LOGGER.debug("Error closing LoJack client during unload", exc_info=True)
 
     return unload_ok

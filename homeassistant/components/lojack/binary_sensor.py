@@ -16,19 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry
-from .coordinator import LoJackCoordinator, LoJackVehicleData
+from .coordinator import LoJackCoordinator, LoJackVehicleData, get_device_name
 from .const import DOMAIN, MOVEMENT_SPEED_THRESHOLD
-
-
-def _get_device_name(vehicle: LoJackVehicleData) -> str:
-    """Get device name for entity naming."""
-    if vehicle.year and vehicle.make and vehicle.model:
-        return f"{vehicle.year} {vehicle.make} {vehicle.model}"
-    if vehicle.make and vehicle.model:
-        return f"{vehicle.make} {vehicle.model}"
-    if vehicle.name:
-        return vehicle.name
-    return "Vehicle"
 
 
 def _is_active(vehicle: LoJackVehicleData) -> bool:
@@ -83,7 +72,7 @@ async def async_setup_entry(
 
     if coordinator.data:
         for vehicle in coordinator.data.values():
-            device_name = _get_device_name(vehicle)
+            device_name = get_device_name(vehicle)
             entities.extend(
                 LoJackBinarySensor(coordinator, vehicle, device_name, description)
                 for description in BINARY_SENSOR_DESCRIPTIONS
