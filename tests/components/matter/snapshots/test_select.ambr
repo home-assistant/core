@@ -3431,7 +3431,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3451,7 +3451,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3474,7 +3474,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-state]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
@@ -3486,7 +3486,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

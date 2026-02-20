@@ -683,14 +683,17 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="capability_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="state_attributes",
         return_type=["dict[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="device_info",
@@ -798,6 +801,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
         return_type=["bool", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="turn_on",
@@ -939,6 +943,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="is_on",
                     return_type=["bool", None],
+                    mandatory=True,
                 ),
             ],
         ),

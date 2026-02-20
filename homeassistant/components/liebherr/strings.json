@@ -60,33 +60,33 @@
     },
     "switch": {
       "night_mode": {
-        "name": "Night mode"
+        "name": "NightMode"
       },
       "party_mode": {
-        "name": "Party mode"
+        "name": "PartyMode"
       },
-      "supercool": {
+      "super_cool": {
         "name": "SuperCool"
       },
-      "supercool_bottom_zone": {
+      "super_cool_bottom_zone": {
         "name": "Bottom zone SuperCool"
       },
-      "supercool_middle_zone": {
+      "super_cool_middle_zone": {
         "name": "Middle zone SuperCool"
       },
-      "supercool_top_zone": {
+      "super_cool_top_zone": {
         "name": "Top zone SuperCool"
       },
-      "superfrost": {
+      "super_frost": {
         "name": "SuperFrost"
       },
-      "superfrost_bottom_zone": {
+      "super_frost_bottom_zone": {
         "name": "Bottom zone SuperFrost"
       },
-      "superfrost_middle_zone": {
+      "super_frost_middle_zone": {
         "name": "Middle zone SuperFrost"
       },
-      "superfrost_top_zone": {
+      "super_frost_top_zone": {
         "name": "Top zone SuperFrost"
       }
     }
