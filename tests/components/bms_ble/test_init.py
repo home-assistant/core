@@ -88,7 +88,7 @@ async def test_unload_entry(
     monkeypatch.setattr(f"{bms_module}.BMS.device_info", mock_devinfo_min)
     monkeypatch.setattr(f"{bms_module}.BMS.async_update", mock_update_min)
 
-    def mock_coord_shutdown(_self) -> None:
+    async def mock_coord_shutdown(_self) -> None:
         trace_fct["shutdown_called"] = True
 
     async def mock_unload_platforms(_self, _entry, _platforms) -> bool:
