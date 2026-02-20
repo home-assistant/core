@@ -11,6 +11,7 @@ from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
+from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,3 +41,15 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(title=title, data=data)
+
+    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+        """Import config from yaml."""
+
+        self._async_abort_entries_match({CONF_LANG: import_info[CONF_LANG]})
+        result = await self.async_step_user(import_info)
+        if errors := result.get("errors"):
+            deprecate_yaml_issue(self.hass, import_success=False)
+            return self.async_abort(reason=errors["base"])
+
+        deprecate_yaml_issue(self.hass, import_success=True)
+        return result
