@@ -64,7 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     async def check_for_new_devices_callback() -> None:
         """Trigger _check_for_new_devices asynchronously."""
-        await _check_for_new_devices(hass, entry, client)
+        await _check_for_new_devices(
+            hass, entry, client, on_livestream_opening_callback_list
+        )
 
     on_livestream_opening_callback_list.append(check_for_new_devices_callback)
 
@@ -144,7 +146,10 @@ class ElectroluxTokenManager(TokenManager):
 
 
 async def _check_for_new_devices(
-    hass: HomeAssistant, entry: ElectroluxConfigEntry, client: ElectroluxApiClient
+    hass: HomeAssistant,
+    entry: ElectroluxConfigEntry,
+    client: ElectroluxApiClient,
+    on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]],
 ) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
@@ -169,6 +174,7 @@ async def _check_for_new_devices(
 
             client.add_listener(appliance_id, coordinator.callback_handle_event)
             data.coordinators[appliance_id] = coordinator
+            on_livestream_opening_callback_list.append(coordinator.async_refresh)
 
             # Notify all platforms
             async_dispatcher_send(hass, f"{NEW_APPLIANCE}_{entry.entry_id}", appliance)
@@ -180,8 +186,9 @@ async def _check_for_new_devices(
         _LOGGER.warning("Appliance %s no longer found, removing", missing_id)
 
         # Remove coordinator
-        coordinators.pop(missing_id, None)
+        coordinator = coordinators.pop(missing_id)
         client.remove_all_listeners_by_appliance_id(missing_id)
+        on_livestream_opening_callback_list.remove(coordinator.async_refresh)
 
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get_device(
