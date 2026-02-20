@@ -281,7 +281,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stack',
-    'unique_id': 'portainer_test_entry_123_1_webstack_stack',
+    'unique_id': 'portainer_test_entry_123_1_stack',
     'unit_of_measurement': None,
   })
 # ---

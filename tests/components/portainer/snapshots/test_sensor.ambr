@@ -2439,7 +2439,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stack_containers_count',
-    'unique_id': 'portainer_test_entry_123_1_stack_webstack_stack_containers_count',
+    'unique_id': 'portainer_test_entry_123_1_stack_containers_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -2495,7 +2495,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stack_status',
-    'unique_id': 'portainer_test_entry_123_1_stack_webstack_stack_status',
+    'unique_id': 'portainer_test_entry_123_1_stack_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -2557,7 +2557,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stack_type',
-    'unique_id': 'portainer_test_entry_123_1_stack_webstack_stack_type',
+    'unique_id': 'portainer_test_entry_123_1_stack_type',
     'unit_of_measurement': None,
   })
 # ---
