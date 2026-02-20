@@ -1,0 +1,11 @@
+{
+  "domain": "aurorawatch",
+  "name": "AuroraWatch UK",
+  "codeowners": ["@agentgonzo"],
+  "config_flow": true,
+  "documentation": "https://github.com/aurorawatch/homeassistant-aurorawatch",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "1.0.0"
+}

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "aurora_status": {
+        "default": "mdi:weather-night"
+      },
+      "geomagnetic_activity": {
+        "default": "mdi:chart-line"
+      }
+    }
+  }
+}
