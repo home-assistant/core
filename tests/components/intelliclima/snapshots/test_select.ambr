@@ -77,7 +77,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
-    'unique_id': '56789',
+    'unique_id': '56789_fan_mode',
     'unit_of_measurement': None,
   })
 # ---
