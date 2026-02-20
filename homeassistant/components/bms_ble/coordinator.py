@@ -9,9 +9,11 @@ from aiobmsble import BMSSample
 from aiobmsble.basebms import BaseBMS
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
-from habluetooth import BluetoothServiceInfoBleak
 
-from homeassistant.components.bluetooth import async_last_service_info
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_last_service_info,
+)
 from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
