@@ -1,10 +1,12 @@
 """Test the aiohttp client helper."""
 
+from collections.abc import AsyncGenerator
 import socket
 from unittest.mock import Mock, patch
 
 import aiohttp
-from aiohttp.test_utils import TestClient
+from aiohttp import web
+from aiohttp.test_utils import TestClient, TestServer
 import pytest
 
 from homeassistant.components.mjpeg import (
@@ -440,3 +442,179 @@ async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None
         mock_client_context_no_verify.assert_called_once_with(
             SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
         )
+
+
+@pytest.fixture
+async def redirect_server() -> AsyncGenerator[TestServer]:
+    """Start a test server that redirects based on query parameters."""
+
+    async def handle_redirect(request: web.Request) -> web.Response:
+        """Redirect to the URL specified in the 'to' query parameter."""
+        location = request.query["to"]
+        return web.Response(status=307, headers={"Location": location})
+
+    async def handle_ok(request: web.Request) -> web.Response:
+        """Return a 200 OK response."""
+        return web.Response(text="ok")
+
+    app = web.Application()
+    app.router.add_get("/redirect", handle_redirect)
+    app.router.add_get("/ok", handle_ok)
+
+    async def _mock_resolve_host(
+        self: aiohttp.TCPConnector,
+        host: str,
+        port: int,
+        traces: object = None,
+    ) -> list[dict[str, object]]:
+        return [
+            {
+                "hostname": host,
+                "host": "127.0.0.1",
+                "port": port,
+                "family": socket.AF_INET,
+                "proto": 6,
+                "flags": 0,
+            }
+        ]
+
+    server = TestServer(app)
+    await server.start_server()
+    # Route all TCP connections to the local test server
+    # This allows us to test redirect behavior of external URLs
+    # without actually making network requests
+    with patch.object(aiohttp.TCPConnector, "_resolve_host", _mock_resolve_host):
+        yield server
+    await server.close()
+
+
+def _resolve_result(host: str, addr: str) -> list[dict[str, object]]:
+    """Build a mock DNS resolve result for the SSRF check."""
+    return [
+        {
+            "hostname": host,
+            "host": addr,
+            "port": 0,
+            "family": socket.AF_INET,
+            "proto": 6,
+            "flags": 0,
+        }
+    ]
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_redirect_loopback_to_loopback_allowed(
+    hass: HomeAssistant, redirect_server: TestServer
+) -> None:
+    """Test that redirects from loopback to loopback are allowed."""
+    session = client.async_get_clientsession(hass)
+    target = str(redirect_server.make_url("/ok"))
+    redirect_url = redirect_server.make_url(f"/redirect?to={target}")
+
+    # Both origin and target are on 127.0.0.1 — should be allowed
+    resp = await session.get(redirect_url)
+    assert resp.status == 200
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_redirect_relative_url_allowed(
+    hass: HomeAssistant, redirect_server: TestServer
+) -> None:
+    """Test that relative redirects are allowed (they stay on the same host)."""
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    # Redirect from an external origin to a relative path
+    redirect_url = f"http://external.example.com:{server_port}/redirect?to=/ok"
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Return public IPs for all hosts."""
+        return _resolve_result(host, "93.184.216.34")
+
+    connector = session.connector
+    with patch.object(connector, "async_resolve_host", mock_async_resolve_host):
+        resp = await session.get(redirect_url)
+        assert resp.status == 200
+
+
+@pytest.mark.usefixtures("socket_enabled")
+@pytest.mark.parametrize(
+    "target",
+    [
+        "http://other.example.com:{port}/ok",
+        "http://safe.example.com:{port}/ok",
+        "http://notlocalhost:{port}/ok",
+    ],
+)
+async def test_redirect_to_non_loopback_allowed(
+    hass: HomeAssistant, redirect_server: TestServer, target: str
+) -> None:
+    """Test that redirects to non-loopback addresses are allowed."""
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    location = target.format(port=server_port)
+    redirect_url = f"http://external.example.com:{server_port}/redirect?to={location}"
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Return public IPs for all hosts."""
+        return _resolve_result(host, "93.184.216.34")
+
+    connector = session.connector
+    with patch.object(connector, "async_resolve_host", mock_async_resolve_host):
+        resp = await session.get(redirect_url)
+        assert resp.status == 200
+
+
+@pytest.mark.usefixtures("socket_enabled")
+@pytest.mark.parametrize(
+    ("location", "target_resolved_addr"),
+    [
+        # Loopback IPs and hostnames — blocked before DNS resolution
+        ("http://127.0.0.1/evil", None),
+        ("http://[::1]/evil", None),
+        ("http://localhost/evil", None),
+        ("http://localhost./evil", None),
+        ("http://example.localhost/evil", None),
+        ("http://example.localhost./evil", None),
+        ("http://app.localhost/evil", None),
+        ("http://sub.domain.localhost/evil", None),
+        # Benign hostnames resolving to blocked IPs — blocked after DNS
+        ("http://evil.example.com:{port}/steal", "127.0.0.1"),
+        ("http://evil.example.com:{port}/steal", "127.0.0.2"),
+        ("http://evil.example.com:{port}/steal", "::1"),
+        ("http://evil.example.com:{port}/steal", "0.0.0.0"),
+        ("http://evil.example.com:{port}/steal", "::"),
+    ],
+)
+async def test_redirect_to_blocked_address(
+    hass: HomeAssistant,
+    redirect_server: TestServer,
+    location: str,
+    target_resolved_addr: str | None,
+) -> None:
+    """Test that redirects to blocked addresses are blocked.
+
+    Covers both cases: targets blocked by hostname/IP (before DNS) and
+    targets blocked after DNS resolution reveals a loopback/unspecified IP.
+    """
+    session = client.async_create_clientsession(hass)
+    server_port = redirect_server.port
+
+    target = location.format(port=server_port)
+    redirect_url = f"http://external.example.com:{server_port}/redirect?to={target}"
+
+    async def mock_async_resolve_host(host: str) -> list[dict[str, object]]:
+        """Return public IP for origin, optional blocked IP for target."""
+        if host == "external.example.com":
+            return _resolve_result(host, "93.184.216.34")
+        if target_resolved_addr is not None:
+            return _resolve_result(host, target_resolved_addr)
+        return []
+
+    connector = session.connector
+    with (
+        patch.object(connector, "async_resolve_host", mock_async_resolve_host),
+        pytest.raises(client.SSRFRedirectError),
+    ):
+        await session.get(redirect_url)
