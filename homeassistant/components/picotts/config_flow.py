@@ -35,6 +35,9 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         language = user_input[CONF_LANG]
+
+        self._async_abort_entries_match({CONF_LANG: language})
+
         title = f"Pico TTS {language}"
         data = {
             CONF_LANG: language,
