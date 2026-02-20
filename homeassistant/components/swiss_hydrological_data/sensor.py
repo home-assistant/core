@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
@@ -67,8 +67,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Swiss hydrological sensor."""
-    station = config[CONF_STATION]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    station: int = config[CONF_STATION]
+    monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
 
     hydro_data = HydrologicalData(station)
     hydro_data.update()
@@ -93,37 +93,23 @@ class SwissHydrologicalDataSensor(SensorEntity):
         "Data provided by the Swiss Federal Office for the Environment FOEN"
     )
 
-    def __init__(self, hydro_data, station, condition):
+    def __init__(
+        self, hydro_data: HydrologicalData, station: int, condition: str
+    ) -> None:
         """Initialize the Swiss hydrological sensor."""
         self.hydro_data = hydro_data
+        data = hydro_data.data
+        if TYPE_CHECKING:
+            # Setup will fail in setup_platform if the data is None.
+            assert data is not None
+
         self._condition = condition
-        self._data = self._state = self._unit_of_measurement = None
-        self._icon = CONDITIONS[condition]
+        self._data: dict[str, Any] | None = data
+        self._attr_icon = CONDITIONS[condition]
+        self._attr_name = f"{data['water-body-name']} {condition}"
+        self._attr_native_unit_of_measurement = data["parameters"][condition]["unit"]
+        self._attr_unique_id = f"{station}_{condition}"
         self._station = station
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._data['water-body-name']} {self._condition}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, friendly identifier for this entity."""
-        return f"{self._station}_{self._condition}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        if self._state is not None:
-            return self.hydro_data.data["parameters"][self._condition]["unit"]
-        return None
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if isinstance(self._state, (int, float)):
-            return round(self._state, 2)
-        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -146,32 +132,28 @@ class SwissHydrologicalDataSensor(SensorEntity):
 
         return attrs
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
     def update(self) -> None:
         """Get the latest data and update the state."""
         self.hydro_data.update()
         self._data = self.hydro_data.data
 
-        if self._data is None:
-            self._state = None
-        else:
-            self._state = self._data["parameters"][self._condition]["value"]
+        self._attr_native_value = None
+        if self._data is not None:
+            state = self._data["parameters"][self._condition]["value"]
+            if isinstance(state, (int, float)):
+                self._attr_native_value = round(state, 2)
 
 
 class HydrologicalData:
     """The Class for handling the data retrieval."""
 
-    def __init__(self, station):
+    def __init__(self, station: int) -> None:
         """Initialize the data object."""
         self.station = station
-        self.data = None
+        self.data: dict[str, Any] | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
 
         shd = SwissHydroData()
