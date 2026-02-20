@@ -23,6 +23,8 @@ from .const import (
     DOMAIN,
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
+    ENERGY_MODES,
+    REALTIME_ACTION_KEY,
     SENSOR_KEYS,
 )
 
@@ -125,3 +127,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ) from err
 
         return True
+
+    async def async_execute_realtime_action(self, action: list[int]) -> None:
+        """Switch mode, execute action, and refresh for real-time control."""
+
+        if await self.switch_energy_mode(ENERGY_MODES["real_time_control"]):
+            await self.async_push_data(REALTIME_ACTION_KEY, action)
+            await self.async_request_refresh()

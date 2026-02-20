@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Never
 
 import voluptuous as vol
@@ -13,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, POWER_LIMITS, REALTIME_ACTION_KEY
+from .const import DOMAIN, ENERGY_MODES, POWER_LIMITS
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -23,13 +24,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-# The map of Energy Modes and associated API values
-ENERGY_MODE_MAP = {
-    "self_consumed_prioritized": 1,
-    "real_time_control": 4,
-    "charge_discharge_schedule": 5,
-}
 
 CHARGE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -54,7 +48,7 @@ STOP_SERVICE_SCHEMA = vol.Schema(
 CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
     {
         **cv.TARGET_SERVICE_FIELDS,
-        vol.Required("energy_mode"): vol.In(list(ENERGY_MODE_MAP.keys())),
+        vol.Required("energy_mode"): vol.In(list(ENERGY_MODES.keys())),
     }
 )
 
@@ -77,13 +71,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def set_mode(call: ServiceCall) -> None:
         """Handle the service call to change the energy mode."""
+        coordinators = await _async_get_coordinators_from_call(hass, call)
 
         mode_str = call.data["energy_mode"]
-        mode = ENERGY_MODE_MAP[mode_str]
+        mode = ENERGY_MODES[mode_str]
 
-        coordinators = await _async_get_coordinators_from_call(hass, call)
-        for coordinator in coordinators:
-            await coordinator.switch_energy_mode(mode)
+        await asyncio.gather(
+            *(coordinator.switch_energy_mode(mode) for coordinator in coordinators)
+        )
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
@@ -114,14 +109,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("; ".join(errors))
 
         # Perform actions
-        for coordinator in coordinators:
-            if await coordinator.switch_energy_mode(
-                ENERGY_MODE_MAP["real_time_control"]
-            ):
-                await coordinator.async_push_data(
-                    REALTIME_ACTION_KEY, [1, power, target_soc]
-                )
-                await coordinator.async_request_refresh()
+        await asyncio.gather(
+            *(
+                coordinator.async_execute_realtime_action([1, power, target_soc])
+                for coordinator in coordinators
+            )
+        )
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
@@ -152,26 +145,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("; ".join(errors))
 
         # Perform actions
-        for coordinator in coordinators:
-            if await coordinator.switch_energy_mode(
-                ENERGY_MODE_MAP["real_time_control"]
-            ):
-                await coordinator.async_push_data(
-                    REALTIME_ACTION_KEY, [2, power, target_soc]
-                )
-                await coordinator.async_request_refresh()
+        await asyncio.gather(
+            *(
+                coordinator.async_execute_realtime_action([2, power, target_soc])
+                for coordinator in coordinators
+            )
+        )
 
     async def stop(call: ServiceCall) -> None:
         """Handle the service call to stop the battery."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
         # Perform actions
-        for coordinator in coordinators:
-            if await coordinator.switch_energy_mode(
-                ENERGY_MODE_MAP["real_time_control"]
-            ):
-                await coordinator.async_push_data(REALTIME_ACTION_KEY, [0, 0, 0])
-                await coordinator.async_request_refresh()
+        await asyncio.gather(
+            *(
+                coordinator.async_execute_realtime_action([0, 0, 0])
+                for coordinator in coordinators
+            )
+        )
 
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
