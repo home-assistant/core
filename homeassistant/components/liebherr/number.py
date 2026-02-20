@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from pyliebherrhomeapi import (
-    LiebherrConnectionError,
-    LiebherrTimeoutError,
-    TemperatureControl,
-    TemperatureUnit,
-)
+from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -21,10 +17,8 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrZoneEntity
 
@@ -109,10 +103,9 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        # temperature_control is guaranteed to exist when entity is available
-        return self.entity_description.value_fn(
-            self.temperature_control  # type: ignore[arg-type]
-        )
+        if TYPE_CHECKING:
+            assert self.temperature_control is not None
+        return self.entity_description.value_fn(self.temperature_control)
 
     @property
     def native_min_value(self) -> float:
@@ -139,27 +132,21 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        # temperature_control is guaranteed to exist when entity is available
+        if TYPE_CHECKING:
+            assert self.temperature_control is not None
         temp_control = self.temperature_control
 
         unit = (
             TemperatureUnit.FAHRENHEIT
-            if temp_control.unit == TemperatureUnit.FAHRENHEIT  # type: ignore[union-attr]
+            if temp_control.unit == TemperatureUnit.FAHRENHEIT
             else TemperatureUnit.CELSIUS
         )
 
-        try:
-            await self.coordinator.client.set_temperature(
+        await self._async_send_command(
+            self.coordinator.client.set_temperature(
                 device_id=self.coordinator.device_id,
                 zone_id=self._zone_id,
                 target=int(value),
                 unit=unit,
-            )
-        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        await self.coordinator.async_request_refresh()
+            ),
+        )
