@@ -1,13 +1,17 @@
 """API for xbox bound to Home Assistant OAuth."""
 
-from http import HTTPStatus
-
-from aiohttp.client_exceptions import ClientResponseError
-from httpx import AsyncClient
+from aiohttp import ClientError
+from httpx import AsyncClient, HTTPStatusError, RequestError
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
+from pythonxbox.common.exceptions import AuthenticationException
 
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -30,16 +34,12 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         if not self._oauth_session.valid_token:
             try:
                 await self._oauth_session.async_ensure_token_valid()
-            except ClientResponseError as e:
-                if (
-                    HTTPStatus.BAD_REQUEST
-                    <= e.status
-                    < HTTPStatus.INTERNAL_SERVER_ERROR
-                ):
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="auth_exception",
-                    ) from e
+            except OAuth2TokenRequestReauthError as e:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_exception",
+                ) from e
+            except (OAuth2TokenRequestTransientError, ClientError) as e:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
@@ -47,7 +47,18 @@ class AsyncConfigEntryAuth(AuthenticationManager):
             self.oauth = self._get_oauth_token()
 
         # This will skip the OAuth refresh and only refresh User and XSTS tokens
-        await super().refresh_tokens()
+        try:
+            await super().refresh_tokens()
+        except AuthenticationException as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
 
     def _get_oauth_token(self) -> OAuth2TokenResponse:
         tokens = {**self._oauth_session.token}

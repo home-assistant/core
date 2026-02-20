@@ -1,16 +1,24 @@
 """Tests for the Xbox integration."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from http import HTTPStatus
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectTimeout, HTTPStatusError, ProtocolError
+from httpx import ConnectTimeout, HTTPStatusError, ProtocolError, RequestError, Response
 import pytest
 from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
+from pythonxbox.common.exceptions import AuthenticationException
+import respx
 
-from homeassistant.components.xbox.const import DOMAIN
+from homeassistant.components.xbox.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -80,6 +88,76 @@ async def test_config_implementation_not_available(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("state", "exception"),
+    [
+        (
+            ConfigEntryState.SETUP_ERROR,
+            OAuth2TokenRequestReauthError(domain=DOMAIN, request_info=Mock()),
+        ),
+        (
+            ConfigEntryState.SETUP_RETRY,
+            OAuth2TokenRequestTransientError(domain=DOMAIN, request_info=Mock()),
+        ),
+        (
+            ConfigEntryState.SETUP_RETRY,
+            ClientError,
+        ),
+    ],
+)
+@respx.mock
+async def test_oauth_session_refresh_failure_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    state: ConfigEntryState,
+    exception: Exception | type[Exception],
+    oauth2_session: AsyncMock,
+) -> None:
+    """Test OAuth2 session refresh failures."""
+
+    oauth2_session.async_ensure_token_valid.side_effect = exception
+    oauth2_session.valid_token = False
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("state", "exception"),
+    [
+        (
+            ConfigEntryState.SETUP_RETRY,
+            HTTPStatusError(
+                "", request=MagicMock(), response=Response(HTTPStatus.IM_A_TEAPOT)
+            ),
+        ),
+        (ConfigEntryState.SETUP_RETRY, RequestError("", request=Mock())),
+        (ConfigEntryState.SETUP_ERROR, AuthenticationException),
+    ],
+)
+@respx.mock
+async def test_oauth_session_refresh_user_and_xsts_token_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    state: ConfigEntryState,
+    exception: Exception | type[Exception],
+    oauth2_session: AsyncMock,
+) -> None:
+    """Test OAuth2 user and XSTS token refresh failures."""
+    oauth2_session.valid_token = True
+
+    respx.post(OAUTH2_TOKEN).mock(side_effect=exception)
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
 
 
 @pytest.mark.parametrize(
