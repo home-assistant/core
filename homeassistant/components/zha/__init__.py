@@ -81,7 +81,9 @@ ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
     vol.Optional(CONF_USB_PATH): cv.string,
     vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
-    vol.Optional("alarm_control_panel_options", default={}): ALARM_CONTROL_PANEL_OPTIONS_SCHEMA,
+    vol.Optional(
+        "alarm_control_panel_options", default={}
+    ): ALARM_CONTROL_PANEL_OPTIONS_SCHEMA,
 }
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -35,19 +35,14 @@ remove:
         text:
 
 set_entry_delay:
-  name: Set entry delay
-  description: Start entry delay countdown on IAS ACE alarm keypad
+  target:
   fields:
     ieee:
-      name: IEEE address
-      description: IEEE address of the alarm keypad device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     duration:
-      name: Duration
-      description: Entry delay duration in seconds
       required: true
       example: 30
       selector:
@@ -57,19 +52,14 @@ set_entry_delay:
           unit_of_measurement: seconds
 
 set_exit_delay:
-  name: Set exit delay
-  description: Start exit delay countdown on IAS ACE alarm keypad
+  target:
   fields:
     ieee:
-      name: IEEE address
-      description: IEEE address of the alarm keypad device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     duration:
-      name: Duration
-      description: Exit delay duration in seconds
       required: true
       example: 30
       selector:
@@ -78,8 +68,6 @@ set_exit_delay:
           max: 255
           unit_of_measurement: seconds
     arm_mode:
-      name: Arm mode
-      description: Which arm mode to activate after delay
       required: true
       example: "away"
       selector:

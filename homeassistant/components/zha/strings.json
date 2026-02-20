@@ -2230,6 +2230,38 @@
       },
       "name": "Remove"
     },
+    "set_entry_delay": {
+      "description": "Starts entry delay countdown on IAS ACE alarm keypad.",
+      "fields": {
+        "duration": {
+          "description": "Entry delay duration in seconds.",
+          "name": "Duration"
+        },
+        "ieee": {
+          "description": "IEEE address of the alarm keypad device.",
+          "name": "IEEE address"
+        }
+      },
+      "name": "Set entry delay"
+    },
+    "set_exit_delay": {
+      "description": "Starts exit delay countdown on IAS ACE alarm keypad.",
+      "fields": {
+        "arm_mode": {
+          "description": "Which arm mode to activate after delay.",
+          "name": "Arm mode"
+        },
+        "duration": {
+          "description": "Exit delay duration in seconds.",
+          "name": "Duration"
+        },
+        "ieee": {
+          "description": "IEEE address of the alarm keypad device.",
+          "name": "IEEE address"
+        }
+      },
+      "name": "Set exit delay"
+    },
     "set_lock_user_code": {
       "description": "Sets a user code on a lock.",
       "fields": {
