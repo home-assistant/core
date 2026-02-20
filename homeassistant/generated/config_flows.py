@@ -736,6 +736,7 @@ FLOWS = {
         "trafikverket_ferry",
         "trafikverket_train",
         "trafikverket_weatherstation",
+        "trane",
         "transmission",
         "triggercmd",
         "tuya",
