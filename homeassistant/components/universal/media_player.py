@@ -308,7 +308,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
             )
-            return master_state if master_state else MediaPlayerState.OFF
+            return master_state or MediaPlayerState.OFF
 
         return None
 
@@ -332,14 +332,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if active_child := self._child_state:
             return active_child.state
 
-        return master_state if master_state else MediaPlayerState.OFF
+        return master_state or MediaPlayerState.OFF
 
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
         try:
             return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @property
@@ -533,7 +533,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return flags
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}

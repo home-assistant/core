@@ -22,11 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -65,16 +61,13 @@ AIR_CONDITIONER_ENTITY_DESCRIPTION = ClimateEntityDescription(
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return (
-        [HomeConnectAirConditioningEntity(entry.runtime_data, appliance)]
-        if appliance.programs
-        and any(
-            program.key in PROGRAMS_HVAC_MODES_MAP for program in appliance.programs
-        )
+        [HomeConnectAirConditioningEntity(appliance_coordinator)]
+        if (programs := appliance_coordinator.data.programs)
+        and any(program.key in PROGRAMS_HVAC_MODES_MAP for program in programs)
         else []
     )
 
@@ -86,6 +79,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect select entities."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -102,20 +96,15 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        coordinator: HomeConnectApplianceCoordinator,
     ) -> None:
         """Initialize the entity."""
         self._attr_fan_modes = list(FAN_MODES_OPTIONS.keys())
         self._original_option_keys = set(FAN_MODES_OPTIONS_INVERTED)
         super().__init__(
             coordinator,
-            appliance,
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
-            context_override=(
-                appliance.info.ha_id,
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-            ),
+            context_override=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         )
         self._attr_supported_features |= (
             ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
@@ -175,16 +164,13 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self.refresh_options,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_CONNECTED),
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
             )
         )
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update_fan_mode,
-                (
-                    self.appliance.info.ha_id,
-                    EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
-                ),
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             )
         )
 
@@ -212,7 +198,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         ):
             option_value = event.value
         self._attr_fan_mode = (
-            FAN_MODES_OPTIONS_INVERTED.get(cast(str, option_value), None)
+            FAN_MODES_OPTIONS_INVERTED.get(cast(str, option_value))
             if option_value is not None
             else None
         )

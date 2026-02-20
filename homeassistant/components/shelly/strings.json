@@ -3,7 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "another_device": "Reconfiguration was unsuccessful, the IP address/hostname of another Shelly device was used.",
       "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
       "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "custom_port_not_supported": "[%key:component::shelly::config::error::custom_port_not_supported%]",
@@ -679,6 +679,26 @@
         }
       },
       "title": "{device_name} is running unsupported firmware"
+    },
+    "coiot_unconfigured": {
+      "fix_flow": {
+        "abort": {
+          "cannot_configure": "Failed to configure CoIoT on the device. Ensure the device is powered on and reachable.",
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has CoIoT disabled or wrongly configured. To enable push updates, CoIoT must be enabled with Home Assistant's IP address and CoIoT port.",
+            "menu_options": {
+              "confirm": "Configure CoIoT",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::coiot_unconfigured::title%]"
+          }
+        }
+      },
+      "title": "CoIoT is disabled or wrongly configured on {device_name}"
     },
     "deprecated_firmware": {
       "fix_flow": {
