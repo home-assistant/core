@@ -36,6 +36,18 @@
       },
       "total_consumption": {
         "name": "Total consumption"
+      },
+      "fault_status": {
+        "name": "Fault status"
+      },
+      "serial_number": {
+        "name": "Serial number"
+      },
+      "manufacturer_code": {
+        "name": "Manufacturer code"
+      },
+      "echonet_version": {
+        "name": "ECHONET Lite version"
       }
     }
   }

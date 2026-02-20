@@ -1,6 +1,7 @@
 """Common fixtures for the Smart Meter B-route tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -23,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_momonga(exception=None) -> Generator[Mock]:
+def mock_momonga() -> Generator[Mock]:
     """Mock for Momonga class."""
 
     with (
@@ -44,6 +45,15 @@ def mock_momonga(exception=None) -> Generator[Mock]:
         }
         client.get_instantaneous_power.return_value = 3
         client.get_measured_cumulative_energy.return_value = 4
+        client.get_serial_number.return_value = "TEST_SERIAL"
+        client.get_manufacturer_code.return_value = b"\x00\x00\x16"
+        client.get_standard_version.return_value = "F.0"
+        client.get_fault_status.return_value = False
+        client.get_cumulative_energy_measured_at_fixed_time.return_value = {
+            "timestamp": datetime(2025, 1, 1, 0, 0, 0),
+            "cumulative energy": 4,
+        }
+        client.internal_xmit_interval = 0
         yield mock_momonga
 
 
