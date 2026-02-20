@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/kaleidescape",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pykaleidescape==1.0.2"],
+  "requirements": ["pykaleidescape==1.1.1"],
   "ssdp": [
     {
       "deviceType": "schemas-upnp-org:device:Basic:1",

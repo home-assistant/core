@@ -107,6 +107,20 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
