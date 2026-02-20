@@ -6411,7 +6411,7 @@
     },
     "snooz": {
       "name": "Snooz",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6440,7 +6440,7 @@
     },
     "solax": {
       "name": "SolaX Power",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6463,7 +6463,7 @@
     },
     "sonarr": {
       "name": "Sonarr",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6495,7 +6495,7 @@
           "name": "Sony Projector"
         },
         "songpal": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Sony Songpal"
@@ -6510,7 +6510,7 @@
     },
     "soundtouch": {
       "name": "Bose SoundTouch",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6534,7 +6534,7 @@
     },
     "splunk": {
       "name": "Splunk",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -6553,7 +6553,7 @@
     },
     "srp_energy": {
       "name": "SRP Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6571,7 +6571,7 @@
     },
     "starlink": {
       "name": "Starlink",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6595,13 +6595,13 @@
     },
     "steamist": {
       "name": "Steamist",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6613,7 +6613,7 @@
     },
     "streamlabswater": {
       "name": "StreamLabs",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6625,7 +6625,7 @@
     },
     "suez_water": {
       "name": "Suez Water",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6678,7 +6678,7 @@
     },
     "swiss_public_transport": {
       "name": "Swiss public transport",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6729,7 +6729,7 @@
     },
     "syncthing": {
       "name": "Syncthing",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
