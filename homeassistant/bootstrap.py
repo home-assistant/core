@@ -474,21 +474,19 @@ async def async_from_config_dict(
     This method is a coroutine.
     """
     start = monotonic()
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        # Track whether we've logged already; async_at_started may invoke immediately and via event.
-        started_state = {"logged": False}
+    started_state = {"logged": False}
 
-        @core.callback
-        def _log_started(_: core.HomeAssistant) -> None:
-            if started_state["logged"]:
-                return
-            started_state["logged"] = True
-            _LOGGER.debug(
-                "Home Assistant started in %.2fs",
-                monotonic() - start,
-            )
+    @core.callback
+    def _log_started(_: core.HomeAssistant) -> None:
+        if not _LOGGER.isEnabledFor(logging.DEBUG):
+            return
+        started_state["logged"] = True
+        _LOGGER.debug(
+            "Home Assistant started in %.2fs",
+            monotonic() - start,
+        )
 
-        async_at_started(hass, _log_started)
+    async_at_started(hass, _log_started)
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     # Prime custom component cache early so we know if registry entries are tied
