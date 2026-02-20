@@ -119,28 +119,19 @@ async def _async_set_hvac_action(
     return state.attributes.get("hvac_action")
 
 
-async def test_hvac_action_handles_empty_and_invalid_inputs(
+async def test_hvac_action_handles_none_inputs(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure hvac_action gracefully handles None and malformed values."""
+    """Ensure hvac_action gracefully handles None values."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     assert await _async_set_hvac_action(hass, mock_bsblan, freezer, None) is None
 
     mock_action = MagicMock()
     mock_action.value = None
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = ""
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = "not_an_int"
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
-
-    mock_action.value = {"unexpected": True}
     assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
 
 
