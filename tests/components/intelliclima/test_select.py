@@ -1,4 +1,4 @@
-"""Test IntelliClima Sensors."""
+"""Test IntelliClima Select."""
 
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
