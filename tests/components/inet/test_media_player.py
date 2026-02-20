@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import MOCK_NAME, _create_mock_station
 
@@ -350,5 +350,23 @@ async def test_select_source_invalid(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Nonexistent Radio"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_action_communication_error(
+    hass: HomeAssistant,
+    mock_manager: AsyncMock,
+    mock_radio: MagicMock,
+) -> None:
+    """Test that OSError during an action raises HomeAssistantError."""
+    mock_manager.turn_on.side_effect = OSError("Network unreachable")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

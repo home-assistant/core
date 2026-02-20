@@ -30,6 +30,9 @@
     }
   },
   "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the radio."
+    },
     "invalid_source": {
       "message": "The source \"{source}\" is not available on this radio."
     }

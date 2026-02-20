@@ -37,12 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: INetConfigEntry) -> bool
 
     try:
         await manager.connect(host, timeout=5.0)
-    except TimeoutError as err:
+    except (TimeoutError, OSError) as err:
         hass.data[DOMAIN]["entry_count"] -= 1
         if hass.data[DOMAIN]["entry_count"] <= 0:
             await manager.stop()
             hass.data.pop(DOMAIN, None)
-        raise ConfigEntryNotReady(f"Timeout connecting to radio at {host}") from err
+        raise ConfigEntryNotReady(f"Cannot connect to radio at {host}") from err
 
     entry.runtime_data = manager
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

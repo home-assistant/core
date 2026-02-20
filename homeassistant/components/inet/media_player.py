@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from functools import wraps
 import logging
+from typing import Any, Concatenate
 
 from inet_control import VOLUME_MAX, Radio, RadioManager
 
@@ -14,7 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -27,6 +30,27 @@ PARALLEL_UPDATES = 0
 
 SOURCE_AUX = "AUX"
 SOURCE_UPNP = "UPnP"
+
+
+def _handle_errors[
+    _R,
+    **_P,
+](
+    func: Callable[Concatenate[INetMediaPlayer, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[INetMediaPlayer, _P], Coroutine[Any, Any, _R]]:
+    """Wrap entity action to raise HomeAssistantError on OSError."""
+
+    @wraps(func)
+    async def wrapper(self: INetMediaPlayer, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except OSError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+
+    return wrapper
 
 
 async def async_setup_entry(
@@ -132,18 +156,22 @@ class INetMediaPlayer(MediaPlayerEntity):
         unsub = self._radio.register_callback(self._handle_state_update)
         self.async_on_remove(unsub)
 
+    @_handle_errors
     async def async_turn_on(self) -> None:
         """Turn the radio on."""
         await self._manager.turn_on(self._radio)
 
+    @_handle_errors
     async def async_turn_off(self) -> None:
         """Turn the radio off."""
         await self._manager.turn_off(self._radio)
 
+    @_handle_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (0.0 to 1.0)."""
         await self._manager.set_volume(self._radio, round(volume * VOLUME_MAX))
 
+    @_handle_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the radio."""
         if mute:
@@ -151,14 +179,17 @@ class INetMediaPlayer(MediaPlayerEntity):
         else:
             await self._manager.unmute(self._radio)
 
+    @_handle_errors
     async def async_volume_up(self) -> None:
         """Increase volume by one step."""
         await self._manager.volume_up(self._radio)
 
+    @_handle_errors
     async def async_volume_down(self) -> None:
         """Decrease volume by one step."""
         await self._manager.volume_down(self._radio)
 
+    @_handle_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source == SOURCE_AUX:
