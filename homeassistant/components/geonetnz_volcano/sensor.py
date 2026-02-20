@@ -64,7 +64,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
 
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
-        self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
         self._attr_unique_id = f"{config_entry_id}_{external_id}"
@@ -73,7 +72,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._distance = None
         self._latitude = None
         self._longitude = None
-        self._attribution = None
         self._activity = None
         self._hazards = None
         self._feed_last_update = None
