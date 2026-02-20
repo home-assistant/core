@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.typing import ConfigType
@@ -81,18 +81,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         mode_str = call.data["energy_mode"]
         mode = ENERGY_MODE_MAP[mode_str]
 
-        errors: list[str] = []
-
         coordinators = await _async_get_coordinators_from_call(hass, call)
         for coordinator in coordinators:
-            try:
-                await coordinator.switch_energy_mode(mode)
-
-            except (ServiceValidationError, HomeAssistantError) as err:
-                errors.append(f"{coordinator.friendly_name}: {err}")
-
-        if errors:
-            raise ServiceValidationError("; ".join(errors))
+            await coordinator.switch_energy_mode(mode)
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
@@ -103,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         errors: list[str] = []
 
+        # Perform validations
         for coordinator in coordinators:
             try:
                 # Validate charge power based on device generation
@@ -115,20 +107,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
-                # Ensure device is in Real-time Control mode and start charging
-                if await coordinator.switch_energy_mode(
-                    ENERGY_MODE_MAP["real_time_control"]
-                ):
-                    await coordinator.async_push_data(
-                        REALTIME_ACTION_KEY, [1, power, target_soc]
-                    )
-                    await coordinator.async_request_refresh()
-
-            except (ServiceValidationError, HomeAssistantError) as err:
+            except ServiceValidationError as err:
                 errors.append(f"{coordinator.friendly_name}: {err}")
 
         if errors:
             raise ServiceValidationError("; ".join(errors))
+
+        # Perform actions
+        for coordinator in coordinators:
+            if await coordinator.switch_energy_mode(
+                ENERGY_MODE_MAP["real_time_control"]
+            ):
+                await coordinator.async_push_data(
+                    REALTIME_ACTION_KEY, [1, power, target_soc]
+                )
+                await coordinator.async_request_refresh()
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
@@ -139,6 +132,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         errors: list[str] = []
 
+        # Perform validations
         for coordinator in coordinators:
             try:
                 # Validate discharge power based on device generation
@@ -151,41 +145,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
-                # Ensure device is in Real-time Control mode and start discharging
-                if await coordinator.switch_energy_mode(
-                    ENERGY_MODE_MAP["real_time_control"]
-                ):
-                    await coordinator.async_push_data(
-                        REALTIME_ACTION_KEY, [2, power, target_soc]
-                    )
-                    await coordinator.async_request_refresh()
-
-            except (ServiceValidationError, HomeAssistantError) as err:
+            except ServiceValidationError as err:
                 errors.append(f"{coordinator.friendly_name}: {err}")
 
         if errors:
             raise ServiceValidationError("; ".join(errors))
+
+        # Perform actions
+        for coordinator in coordinators:
+            if await coordinator.switch_energy_mode(
+                ENERGY_MODE_MAP["real_time_control"]
+            ):
+                await coordinator.async_push_data(
+                    REALTIME_ACTION_KEY, [2, power, target_soc]
+                )
+                await coordinator.async_request_refresh()
 
     async def stop(call: ServiceCall) -> None:
         """Handle the service call to stop the battery."""
         coordinators = await _async_get_coordinators_from_call(hass, call)
 
-        errors: list[str] = []
-
+        # Perform actions
         for coordinator in coordinators:
-            try:
-                # Ensure device is in Real-time Control mode and execute stop command
-                if await coordinator.switch_energy_mode(
-                    ENERGY_MODE_MAP["real_time_control"]
-                ):
-                    await coordinator.async_push_data(REALTIME_ACTION_KEY, [0, 0, 0])
-                    await coordinator.async_request_refresh()
-
-            except (ServiceValidationError, HomeAssistantError) as err:
-                errors.append(f"{coordinator.friendly_name}: {err}")
-
-        if errors:
-            raise ServiceValidationError("; ".join(errors))
+            if await coordinator.switch_energy_mode(
+                ENERGY_MODE_MAP["real_time_control"]
+            ):
+                await coordinator.async_push_data(REALTIME_ACTION_KEY, [0, 0, 0])
+                await coordinator.async_request_refresh()
 
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
