@@ -202,7 +202,7 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     "additional_service_data",
     [
