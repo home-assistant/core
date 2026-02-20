@@ -203,6 +203,15 @@ async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
         await obj.ptz_patrol_start_public(slot=slot)
 
 
+PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
+    key=_KEY_PTZ_PATROL,
+    translation_key="ptz_patrol",
+    entity_category=EntityCategory.CONFIG,
+    ufp_required_field="feature_flags.is_ptz",
+    ufp_set_method_fn=_set_ptz_patrol,
+    ufp_perm=PermRequired.WRITE,
+)
+
 CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="recording_mode",
@@ -457,6 +466,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
     """A UniFi Protect PTZ Patrol Select Entity."""
 
     device: Camera
+    _attr_current_option: str | None = None
     _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
 
     def __init__(
@@ -475,17 +485,8 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
             v: k for k, v in self._hass_to_unifi_options.items()
         }
         self._attr_options = list(self._hass_to_unifi_options)
-        self._attr_current_option: str | None = None
 
-        description = ProtectSelectEntityDescription[Camera](
-            key=_KEY_PTZ_PATROL,
-            translation_key="ptz_patrol",
-            entity_category=EntityCategory.CONFIG,
-            ufp_required_field="feature_flags.is_ptz",
-            ufp_set_method_fn=_set_ptz_patrol,
-            ufp_perm=PermRequired.WRITE,
-        )
-        super().__init__(data, device, description)
+        super().__init__(data, device, PTZ_PATROL_DESCRIPTION)
         # Set initial state based on active patrol
         self._update_patrol_state()
 
