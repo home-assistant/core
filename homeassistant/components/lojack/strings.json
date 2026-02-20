@@ -36,49 +36,5 @@
         "title": "LoJack account"
       }
     }
-  },
-  "entity": {
-    "binary_sensor": {
-      "active": {
-        "name": "Active"
-      },
-      "moving": {
-        "name": "Moving"
-      }
-    },
-    "button": {
-      "refresh_location": {
-        "name": "Refresh location"
-      }
-    },
-    "sensor": {
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "license_plate": {
-        "name": "License plate"
-      },
-      "location_last_reported": {
-        "name": "Location last reported"
-      },
-      "make": {
-        "name": "Make"
-      },
-      "model": {
-        "name": "Model"
-      },
-      "odometer": {
-        "name": "Odometer"
-      },
-      "speed": {
-        "name": "Speed"
-      },
-      "vin": {
-        "name": "VIN"
-      },
-      "year": {
-        "name": "Year"
-      }
-    }
   }
 }

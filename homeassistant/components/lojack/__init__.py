@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
-
 from lojack_api import ApiError, AuthenticationError, LoJackClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,24 +12,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import LOGGER
 from .coordinator import LoJackCoordinator
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
-
-@dataclass
-class LoJackData:
-    """Data class for LoJack runtime data."""
-
-    client: LoJackClient
-    coordinator: LoJackCoordinator
-    devices: dict[str, Any]  # Device ID -> LoJack API device object
-
-
-type LoJackConfigEntry = ConfigEntry[LoJackData]
+type LoJackConfigEntry = ConfigEntry[LoJackCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
@@ -47,13 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
     except ApiError as err:
         raise ConfigEntryNotReady(f"API error during setup: {err}") from err
 
-    devices: dict[str, Any] = {}
-    coordinator = LoJackCoordinator(hass, client, entry, devices)
+    coordinator = LoJackCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = LoJackData(
-        client=client, coordinator=coordinator, devices=devices
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -68,6 +47,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
         try:
             await entry.runtime_data.client.close()
         except Exception:  # noqa: BLE001 - Cleanup during unload should not fail
-            LOGGER.debug("Error closing LoJack client during unload")
+            LOGGER.debug("Error closing LoJack client during unload", exc_info=True)
 
     return unload_ok

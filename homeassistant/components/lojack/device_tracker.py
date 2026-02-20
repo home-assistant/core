@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from typing import Any
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
@@ -15,7 +14,6 @@ from . import LoJackConfigEntry
 from .coordinator import LoJackCoordinator, LoJackVehicleData
 from .const import (
     ATTR_ADDRESS,
-    ATTR_GPS_ACCURACY,
     ATTR_HEADING,
     ATTR_LAST_POLLED,
     DOMAIN,
@@ -39,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LoJack device tracker from a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     entities: list[LoJackDeviceTracker] = []
 
@@ -66,14 +64,13 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         """Initialize the device tracker."""
         super().__init__(coordinator)
         self._device_id = vehicle.device_id
-        self._device_name = _get_device_name(vehicle)
 
         self._attr_unique_id = vehicle.device_id
 
         # Device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.device_id)},
-            name=self._device_name,
+            name=_get_device_name(vehicle),
             manufacturer="Spireon LoJack",
             model=f"{vehicle.make} {vehicle.model}"
             if vehicle.make and vehicle.model
@@ -136,11 +133,6 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         # Last polled timestamp (from vehicle's location timestamp)
         if vehicle.timestamp is not None:
             attrs[ATTR_LAST_POLLED] = vehicle.timestamp
-
-        # GPS accuracy
-        if vehicle.accuracy is not None:
-            with contextlib.suppress(ValueError, TypeError):
-                attrs[ATTR_GPS_ACCURACY] = int(vehicle.accuracy)
 
         # Address
         if vehicle.address:

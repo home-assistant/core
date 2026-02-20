@@ -35,15 +35,11 @@ class LoJackVehicleData:
     make: str | None
     model: str | None
     year: str | None
-    license_plate: str | None
-    odometer: float | None
     latitude: float | None
     longitude: float | None
     accuracy: float | None
     address: dict[str, Any] | str | None
-    speed: float | None
     heading: float | None
-    battery_voltage: float | None
     timestamp: datetime | str | None
 
 
@@ -67,7 +63,6 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         hass: HomeAssistant,
         client: LoJackClient,
         entry: ConfigEntry,
-        devices_dict: dict[str, Any],
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
@@ -75,7 +70,6 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         self._password = entry.data[CONF_PASSWORD]
         self._default_update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
         self._last_rate_limit: datetime | None = None
-        self._devices = devices_dict  # Shared dict to store API device objects
 
         super().__init__(
             hass,
@@ -120,13 +114,13 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         if retry_after:
             new_interval = timedelta(seconds=retry_after)
             LOGGER.warning(
-                "LoJack API rate limited: respecting Retry-After=%s seconds",
+                "API rate limited: respecting Retry-After=%s seconds",
                 retry_after,
             )
         else:
             new_interval = min(self.update_interval * 2, MAX_UPDATE_INTERVAL)
             LOGGER.warning(
-                "LoJack API rate limited: increasing update interval to %s",
+                "API rate limited: increasing update interval to %s",
                 new_interval,
             )
 
@@ -170,16 +164,10 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
 
         vehicles_data: dict[str, LoJackVehicleData] = {}
 
-        # Clear and rebuild the devices dict
-        self._devices.clear()
-
         for device in devices:
             device_id = getattr(device, "id", None)
             if not device_id:
                 continue
-
-            # Store the device object for direct access (e.g., by button entity)
-            self._devices[str(device_id)] = device
 
             # Get latest location
             try:
@@ -195,8 +183,6 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 make=getattr(device, "make", None),
                 model=getattr(device, "model", None),
                 year=str(getattr(device, "year", "") or ""),
-                license_plate=getattr(device, "license_plate", None),
-                odometer=_safe_float(getattr(device, "odometer", None)),
                 latitude=_safe_float(getattr(location, "latitude", None))
                 if location
                 else None,
@@ -207,13 +193,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 if location
                 else None,
                 address=getattr(location, "address", None) if location else None,
-                speed=_safe_float(getattr(location, "speed", None))
-                if location
-                else None,
                 heading=_safe_float(getattr(location, "heading", None))
-                if location
-                else None,
-                battery_voltage=_safe_float(getattr(location, "battery_voltage", None))
                 if location
                 else None,
                 timestamp=getattr(location, "timestamp", None) if location else None,
@@ -222,16 +202,14 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
             vehicles_data[str(device_id)] = vehicle
 
             LOGGER.debug(
-                "Location data for device %s: lat=%s, lon=%s, accuracy=%s, speed=%s, "
-                "battery_voltage=%s, timestamp=%s, heading=%s",
+                "Location data for device %s: lat=%s, lon=%s, accuracy=%s, "
+                "heading=%s, timestamp=%s",
                 device_id,
                 vehicle.latitude,
                 vehicle.longitude,
                 vehicle.accuracy,
-                vehicle.speed,
-                vehicle.battery_voltage,
-                vehicle.timestamp,
                 vehicle.heading,
+                vehicle.timestamp,
             )
 
         return vehicles_data

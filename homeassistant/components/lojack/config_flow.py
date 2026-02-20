@@ -47,6 +47,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LoJack."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     _username: str | None = None
 
