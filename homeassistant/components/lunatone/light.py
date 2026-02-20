@@ -111,8 +111,11 @@ class LunatoneLight(
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        assert self._device.brightness
-        return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+        return (
+            value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+            if self._device.brightness is not None
+            else 0
+        )
 
     @property
     def color_mode(self) -> ColorMode:
