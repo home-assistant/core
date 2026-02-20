@@ -81,6 +81,9 @@
       "dhw_top_temperature": {
         "name": "DHW top temperature"
       },
+      "electricity_used": {
+        "name": "Electricity used"
+      },
       "electricity_used_cooling": {
         "name": "Electricity used cooling"
       },
@@ -92,6 +95,9 @@
       },
       "electricity_used_heating": {
         "name": "Electricity used heating"
+      },
+      "energy_output": {
+        "name": "Total energy output"
       },
       "energy_output_cooling": {
         "name": "Energy output cooling"
