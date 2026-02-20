@@ -1294,14 +1294,21 @@ class TwistButtonEventV2:
         timestamp_raw = int.from_bytes(slot_data[0:6], byteorder="little")
         timestamp_ms = timestamp_raw * 1000 // 32768
 
-        # Byte 6: bits 0-3 = eventEncoded, bit 4 = wasQueued, bit 5 = wasQueuedLast
+        # V2 bitfield layout (packed uint64_t, little-endian):
+        #   bits 0-47:  timestamp (bytes 0-5)
+        #   bits 48-51: event_encoded (byte 6, bits 0-3)
+        #   bit 52:     was_queued (byte 6, bit 4)
+        #   bit 53:     was_queued_last (byte 6, bit 5)
+        #   bits 54-57: twist_mode_index (byte 6 bits 6-7 + byte 7 bits 0-1)
+        #   bits 58-63: padding (byte 7, bits 2-7)
         flags_byte = slot_data[6]
         event_type = flags_byte & 0x0F
         was_queued = bool(flags_byte & 0x10)
         was_queued_last = bool(flags_byte & 0x20)
 
-        # Byte 7: twist_mode_index (4 bits)
-        twist_mode_index = slot_data[7] & 0x0F
+        # twist_mode_index spans bytes 6-7: lower 2 bits in byte 6 bits 6-7,
+        # upper 2 bits in byte 7 bits 0-1
+        twist_mode_index = ((flags_byte >> 6) & 0x03) | ((slot_data[7] & 0x03) << 2)
 
         return cls(
             timestamp_ms=timestamp_ms,
@@ -1381,6 +1388,52 @@ class TwistEventNotification:
 
 
 @dataclass
+class InitButtonEventsResponseV2:
+    """Twist InitButtonEvents response (V2 format).
+
+    Per spec:
+    - opcode (1 byte)
+    - has_queued_events: 1 bit
+    - timestamp: 47 bits (RTC ticks at 32768 Hz)
+    - event_count: u32
+    - boot_id: u32
+    - api_version: u8
+    """
+
+    has_queued_events: bool
+    timestamp: int  # RTC ticks at 32768 Hz
+    event_count: int
+    boot_id: int
+    api_version: int
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> InitButtonEventsResponseV2:
+        """Parse from bytes (includes opcode)."""
+        # Minimum: opcode(1) + flags+timestamp(6) + event_count(4) + boot_id(4) + api_version(1) = 16
+        if len(data) < 16:
+            raise ValueError(
+                f"Invalid InitButtonEventsResponseV2 length: {len(data)} (expected 16)"
+            )
+
+        # Bytes 1-6: packed 48-bit field (1 bit has_queued + 47 bits timestamp)
+        packed = int.from_bytes(data[1:7], byteorder="little")
+        has_queued_events = bool(packed & 0x01)
+        timestamp = (packed >> 1) & 0x7FFFFFFFFFFF  # 47 bits
+
+        event_count = struct.unpack("<I", data[7:11])[0]
+        boot_id = struct.unpack("<I", data[11:15])[0]
+        api_version = data[15]
+
+        return cls(
+            has_queued_events=has_queued_events,
+            timestamp=timestamp,
+            event_count=event_count,
+            boot_id=boot_id,
+            api_version=api_version,
+        )
+
+
+@dataclass
 class TwistButtonEventNotification:
     """Twist button event notification containing multiple V2 events."""
 
@@ -1441,18 +1494,12 @@ class UpdateTwistPositionRequest:
 class AckButtonEventsTwistRequest:
     """Acknowledge button events for Twist.
 
-    Sent to acknowledge received button events and request more.
+    Per spec: opcode (1 byte) + event_count (4 bytes, u32 LE).
+    The event_count is the press_counter from the last processed event.
     """
 
-    per_mode_event_counts: list[int]  # 13 u32 values (one per mode)
+    event_count: int  # press_counter from last processed event
 
     def to_bytes(self) -> bytes:
         """Serialize to bytes."""
-        if len(self.per_mode_event_counts) != 13:
-            raise ValueError("Twist requires exactly 13 event counts")
-
-        payload = bytearray([TWIST_OPCODE_ACK_BUTTON_EVENTS])
-        for count in self.per_mode_event_counts:
-            payload.extend(struct.pack("<I", count))
-
-        return bytes(payload)
+        return struct.pack("<BI", TWIST_OPCODE_ACK_BUTTON_EVENTS, self.event_count)

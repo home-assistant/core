@@ -31,6 +31,7 @@ from ..const import (
     PushTwistMode,
 )
 from ..flic_protocol import (
+    InitButtonEventsResponseV2,
     InitButtonEventsTwistRequest,
     TwistButtonEventNotification,
     TwistEventNotification,
@@ -88,6 +89,8 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         self._twist_packet_counter: int = 0
         self._push_twist_mode = push_twist_mode
         self._multi_mode_tracker: MultiModeRotateTracker | None = None
+        self._last_event_count: int = 0
+        self._last_boot_id: int = 0
 
     @property
     def service_uuid(self) -> str:
@@ -124,6 +127,8 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         super().reset_state()
         self._twist_mode_index = 0
         self._twist_packet_counter = 0
+        self._last_event_count = 0
+        self._last_boot_id = 0
 
     async def full_verify_pairing(
         self,
@@ -387,8 +392,8 @@ class TwistProtocolHandler(DeviceProtocolHandler):
 
         request_msg = InitButtonEventsTwistRequest(
             mode_configs=mode_configs,
-            event_count=0,
-            boot_id=0,
+            event_count=self._last_event_count,
+            boot_id=self._last_boot_id,
             api_version=2,
         )
         request = request_msg.to_bytes()
@@ -406,10 +411,25 @@ class TwistProtocolHandler(DeviceProtocolHandler):
                 wait_for_opcode(TWIST_OPCODE_INIT_BUTTON_EVENTS_RESPONSE),
                 timeout=COMMAND_TIMEOUT,
             )
-            _LOGGER.debug(
-                "Twist button events initialized (response: %d bytes)",
-                len(response),
-            )
+
+            try:
+                init_response = InitButtonEventsResponseV2.from_bytes(response)
+                self._last_event_count = init_response.event_count
+                self._last_boot_id = init_response.boot_id
+                _LOGGER.debug(
+                    "Twist button events initialized: has_queued=%s, "
+                    "event_count=%d, boot_id=%d, api_version=%d",
+                    init_response.has_queued_events,
+                    init_response.event_count,
+                    init_response.boot_id,
+                    init_response.api_version,
+                )
+            except ValueError as err:
+                _LOGGER.debug(
+                    "Could not parse InitButtonEventsResponse (%d bytes): %s",
+                    len(response),
+                    err,
+                )
         except TimeoutError:
             _LOGGER.warning(
                 "No response to InitButtonEventsTwistRequest, continuing anyway"
