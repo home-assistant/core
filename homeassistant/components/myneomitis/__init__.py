@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+import aiohttp
 import pyaxencoapi
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,15 +47,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
     try:
         await api.login(email, password)
         await api.connect_websocket()
-        _LOGGER.debug("MyNeomitis: Successfully connected to Login/WebSocket")
+        _LOGGER.debug("Successfully connected to Login/WebSocket")
 
         # Retrieve the user's devices
         devices: list[dict[str, Any]] = await api.get_devices()
 
-    except (TimeoutError, ConnectionError) as err:
-        raise ConfigEntryNotReady(
-            f"MyNeomitis: Error connecting to API/WebSocket: {err}"
-        ) from err
+    except aiohttp.ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed, please update your credentials"
+            ) from err
+        raise ConfigEntryNotReady(f"Error connecting to API: {err}") from err
+    except (TimeoutError, ConnectionError, aiohttp.ClientError) as err:
+        raise ConfigEntryNotReady(f"Error connecting to API/WebSocket: {err}") from err
 
     entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=devices)
 
@@ -89,7 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) 
             await entry.runtime_data.api.disconnect_websocket()
         except (TimeoutError, ConnectionError) as err:
             _LOGGER.error(
-                "MyNeomitis: Error while disconnecting WebSocket for %s: %s",
+                "Error while disconnecting WebSocket for %s: %s",
                 entry.entry_id,
                 err,
             )

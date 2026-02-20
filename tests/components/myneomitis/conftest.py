@@ -5,12 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.myneomitis.const import (
-    CONF_REFRESH_TOKEN,
-    CONF_USER_ID,
-    DOMAIN,
-)
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.components.myneomitis.const import CONF_USER_ID, DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -50,8 +46,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "password123",
-            CONF_TOKEN: "tok",
-            CONF_REFRESH_TOKEN: "rtok",
             CONF_USER_ID: "user-123",
         },
         unique_id="user-123",

@@ -8,10 +8,10 @@ from pyaxencoapi import PyAxencoAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REFRESH_TOKEN, CONF_USER_ID, DOMAIN
+from .const import CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +60,6 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: email,
                         CONF_PASSWORD: password,
-                        CONF_TOKEN: api.token,
-                        CONF_REFRESH_TOKEN: api.refresh_token,
                         CONF_USER_ID: api.user_id,
                     },
                 )

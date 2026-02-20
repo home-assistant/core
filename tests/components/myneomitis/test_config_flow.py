@@ -6,13 +6,9 @@ from aiohttp import ClientConnectionError, ClientError, ClientResponseError, Req
 import pytest
 
 from homeassistant.components.frontend import URL
-from homeassistant.components.myneomitis.const import (
-    CONF_REFRESH_TOKEN,
-    CONF_USER_ID,
-    DOMAIN,
-)
+from homeassistant.components.myneomitis.const import CONF_USER_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -60,8 +56,6 @@ async def test_user_flow_success(
     assert result["data"] == {
         CONF_EMAIL: TEST_EMAIL,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_TOKEN: "tok",
-        CONF_REFRESH_TOKEN: "rtok",
         CONF_USER_ID: "user-123",
     }
     assert result["result"].unique_id == "user-123"

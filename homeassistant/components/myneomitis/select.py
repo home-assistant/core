@@ -21,8 +21,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MODELES = ["EWS"]
-SUB_MODELES = ["UFH"]
+SUPPORTED_MODELS: frozenset[str] = frozenset({"EWS"})
+SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"UFH"})
 
 PRESET_MODE_MAP = {
     "comfort": 1,
@@ -117,7 +117,7 @@ async def async_setup_entry(
     select_entities = [
         _create_entity(device)
         for device in devices
-        if device["model"] in MODELES or device["model"] in SUB_MODELES
+        if device["model"] in SUPPORTED_MODELS | SUPPORTED_SUB_MODELS
     ]
 
     async_add_entities(select_entities)
@@ -154,8 +154,6 @@ class MyNeoSelect(SelectEntity):
             current_mode
         )
 
-        self._program = device.get("program", {}).get("data", {})
-
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
@@ -170,10 +168,6 @@ class MyNeoSelect(SelectEntity):
 
         if "connected" in new_state:
             self._attr_available = new_state["connected"]
-
-        if "program" in new_state:
-            new_data = new_state["program"].get("data", {})
-            self._program.update(new_data)
 
         # Check for state updates using the description's state_key
         state_key = self.entity_description.state_key
@@ -191,7 +185,7 @@ class MyNeoSelect(SelectEntity):
         mode_code = self.entity_description.preset_mode_map.get(option)
 
         if mode_code is None:
-            _LOGGER.warning("MyNeomitis : Unknown mode selected: %s", option)
+            _LOGGER.warning("Unknown mode selected: %s", option)
             return
 
         await self._api.set_device_mode(self._device["_id"], mode_code)

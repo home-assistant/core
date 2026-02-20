@@ -59,7 +59,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: done
+  dynamic-devices: todo
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
