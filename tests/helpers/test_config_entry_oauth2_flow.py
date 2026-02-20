@@ -17,7 +17,6 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
@@ -472,11 +471,11 @@ async def test_abort_discovered_multiple(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_body", "error_reason"),
+    ("status_code", "error_body", "error_reason", "expected_detail"),
     [
-        (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized"),
-        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized"),
-        (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed"),
+        (HTTPStatus.UNAUTHORIZED, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.NOT_FOUND, {}, "oauth_unauthorized", "unknown error"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, {}, "oauth_failed", "unknown error"),
         (
             HTTPStatus.BAD_REQUEST,
             {
@@ -485,6 +484,7 @@ async def test_abort_discovered_multiple(
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
             "oauth_unauthorized",
+            "Request was missing the 'redirect_uri' parameter.",
         ),
     ],
 )
@@ -498,6 +498,7 @@ async def test_abort_if_oauth_token_error(
     status_code: HTTPStatus,
     error_body: dict[str, Any],
     error_reason: str,
+    expected_detail: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Check error when obtaining an oauth token."""
@@ -547,7 +548,7 @@ async def test_abort_if_oauth_token_error(
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert (
-        f"Token request for {TEST_DOMAIN} failed ({status_code}): {json_dumps(error_body)}"
+        f"Token request for {TEST_DOMAIN} failed ({status_code}): {expected_detail}"
         in caplog.text
     )
 

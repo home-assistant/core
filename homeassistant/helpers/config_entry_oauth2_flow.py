@@ -15,6 +15,7 @@ import base64
 from collections.abc import Awaitable, Callable
 import hashlib
 from http import HTTPStatus
+import json
 import logging
 import secrets
 import time
@@ -247,15 +248,18 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         try:
             resp = await session.post(self.token_url, data=data)
             if resp.status >= 400:
+                error_body = ""
                 try:
                     error_body = await resp.text()
-                except ClientError, UnicodeDecodeError:
-                    error_body = ""
+                    error_data = json.loads(error_body)
+                    detail = error_data.get("error_description") or "unknown error"
+                except ClientError, json.JSONDecodeError, ValueError:
+                    detail = error_body[:200] if error_body else "unknown error"
                 _LOGGER.debug(
                     "Token request for %s failed (%s): %s",
                     self.domain,
                     resp.status,
-                    error_body or "unknown",
+                    detail,
                 )
             resp.raise_for_status()
         except ClientResponseError as err:
