@@ -102,7 +102,7 @@
     },
     "select": {
       "pipeline": {
-        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "name": "Assistant{index}",
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
