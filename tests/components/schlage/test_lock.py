@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 from pyschlage.code import AccessCode
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.components.schlage.const import (
@@ -123,6 +124,38 @@ async def test_add_code_service(
     assert isinstance(call_args, AccessCode)
     assert call_args.name == "test_user"
     assert call_args.code == "1234"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "abc",
+        "123",
+        "123456789",
+        "12ab",
+    ],
+    ids=["non_digits", "too_short", "too_long", "mixed"],
+)
+async def test_add_code_service_invalid_code(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    code: str,
+) -> None:
+    """Test add_code service rejects invalid PIN codes."""
+    mock_lock.access_codes = {}
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "test_user",
+                "code": code,
+            },
+            blocking=True,
+        )
 
 
 async def test_add_code_service_duplicate_name(
