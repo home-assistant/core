@@ -1271,7 +1271,7 @@ CONF_ZHA_ALARM_SCHEMA = vol.Schema(
         vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
         vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
         vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
-        vol.Required(CONF_ALARM_EXIT_DELAY_AWAY, default=30): cv.positive_int,
+        vol.Required(CONF_ALARM_EXIT_DELAY_AWAY, default=0): cv.positive_int,
         vol.Required(CONF_ALARM_EXIT_DELAY_HOME, default=0): cv.positive_int,
         vol.Required(CONF_ALARM_EXIT_DELAY_NIGHT, default=0): cv.positive_int,
     }

@@ -116,6 +116,7 @@ ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
+ATTR_ARM_MODE = "arm_mode"
 
 BINDINGS = "bindings"
 
@@ -129,6 +130,8 @@ SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
 SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
+SERVICE_SET_ENTRY_DELAY = "set_entry_delay"
+SERVICE_SET_EXIT_DELAY = "set_exit_delay"
 IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
@@ -243,6 +246,19 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             vol.Optional(ATTR_MANUFACTURER): vol.All(
                 vol.Coerce(int), vol.Range(min=-1)
             ),
+        }
+    ),
+    SERVICE_SET_ENTRY_DELAY: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+            vol.Required(ATTR_DURATION): cv.positive_int,
+        }
+    ),
+    SERVICE_SET_EXIT_DELAY: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+            vol.Required(ATTR_DURATION): cv.positive_int,
+            vol.Required(ATTR_ARM_MODE): vol.In(["away", "home", "night"]),
         }
     ),
 }
@@ -1569,6 +1585,121 @@ def async_load_api(hass: HomeAssistant) -> None:
         SERVICE_WARNING_DEVICE_WARN,
         warning_device_warn,
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
+    async def set_entry_delay(service: ServiceCall) -> None:
+        """Set entry delay on alarm keypad."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        duration: int = service.data[ATTR_DURATION]
+        
+        _LOGGER.info("Setting entry delay on %s for %d seconds", ieee, duration)
+        
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is None:
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
+        
+        # Find the IAS ACE cluster handler
+        from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_ACE  # noqa: PLC0415
+        
+        ias_ace_cluster_handler = None
+        for endpoint in zha_device.endpoints.values():
+            if hasattr(endpoint, "client_cluster_handlers_by_name"):
+                ias_ace_cluster_handler = endpoint.client_cluster_handlers_by_name.get(
+                    CLUSTER_HANDLER_IAS_ACE
+                )
+                if ias_ace_cluster_handler:
+                    break
+        
+        if ias_ace_cluster_handler is None:
+            raise ValueError(
+                f"Device {ieee!s} does not have an IAS ACE cluster handler"
+            )
+        
+        # Start entry delay on the cluster handler
+        ias_ace_cluster_handler.start_entry_delay(duration)
+        
+        _LOGGER.debug(
+            "Entry delay set on %s for %d seconds",
+            str(ieee),
+            duration,
+        )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_ENTRY_DELAY,
+        set_entry_delay,
+        schema=SERVICE_SCHEMAS[SERVICE_SET_ENTRY_DELAY],
+    )
+
+    async def set_exit_delay(service: ServiceCall) -> None:
+        """Set exit delay on alarm keypad."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        duration: int = service.data[ATTR_DURATION]
+        arm_mode: str = service.data[ATTR_ARM_MODE]
+        
+        _LOGGER.info(
+            "Setting exit delay on %s for %d seconds (mode: %s)",
+            ieee,
+            duration,
+            arm_mode,
+        )
+        
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is None:
+            raise ValueError(f"Device with IEEE {ieee!s} not found")
+        
+        # Find the IAS ACE cluster handler
+        from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_ACE  # noqa: PLC0415
+        from zigpy.zcl.clusters.security import IasAce  # noqa: PLC0415
+        
+        ias_ace_cluster_handler = None
+        for endpoint in zha_device.endpoints.values():
+            if hasattr(endpoint, "client_cluster_handlers_by_name"):
+                ias_ace_cluster_handler = endpoint.client_cluster_handlers_by_name.get(
+                    CLUSTER_HANDLER_IAS_ACE
+                )
+                if ias_ace_cluster_handler:
+                    break
+        
+        if ias_ace_cluster_handler is None:
+            raise ValueError(
+                f"Device {ieee!s} does not have an IAS ACE cluster handler"
+            )
+        
+        # Map arm_mode string to ArmMode and temporarily override the delay
+        arm_mode_map = {
+            "away": (IasAce.ArmMode.Arm_All_Zones, "exit_delay_away"),
+            "home": (IasAce.ArmMode.Arm_Day_Home_Only, "exit_delay_home"),
+            "night": (IasAce.ArmMode.Arm_Night_Sleep_Only, "exit_delay_night"),
+        }
+        arm_mode_enum, delay_attr = arm_mode_map[arm_mode]
+        
+        # Temporarily override the configured delay
+        original_delay = getattr(ias_ace_cluster_handler, delay_attr)
+        setattr(ias_ace_cluster_handler, delay_attr, duration)
+        
+        try:
+            # Simulate arm command (same as when physical keypad arms)
+            # This will send arm_response and emit all the proper events
+            ias_ace_cluster_handler.arm(arm_mode_enum, ias_ace_cluster_handler.panel_code, 0)
+        finally:
+            # Restore original delay
+            setattr(ias_ace_cluster_handler, delay_attr, original_delay)
+        
+        _LOGGER.debug(
+            "Exit delay set on %s for %d seconds (mode: %s)",
+            str(ieee),
+            duration,
+            arm_mode,
+        )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_EXIT_DELAY,
+        set_exit_delay,
+        schema=SERVICE_SCHEMAS[SERVICE_SET_EXIT_DELAY],
     )
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
