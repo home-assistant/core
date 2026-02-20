@@ -277,10 +277,8 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         ):
             case (0, True):
                 self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-                self.__dict__.pop("supported_features", None)
             case (FanEntityFeature.PRESET_MODE, False):
                 self._attr_supported_features &= ~FanEntityFeature.PRESET_MODE
-                self.__dict__.pop("supported_features", None)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

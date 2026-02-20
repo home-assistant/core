@@ -530,7 +530,7 @@ async def test_supported_features(
 
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
-            ProgramKey.UNKNOWN,
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
             options=[],
         )
     )
@@ -547,7 +547,7 @@ async def test_supported_features(
                             timestamp=0,
                             level="",
                             handling="",
-                            value=ProgramKey.UNKNOWN.value,
+                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
                         )
                     ]
                 ),
@@ -559,6 +559,43 @@ async def test_supported_features(
     state = hass.states.get(entity_id)
     assert state
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & expected_fan_feature
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Enumeration",
+                )
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO.value,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & expected_fan_feature
 
 
 @pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
