@@ -131,6 +131,7 @@ homeassistant.components.bring.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
+homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
@@ -532,6 +533,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.system_health.*
 homeassistant.components.system_log.*
 homeassistant.components.systemmonitor.*
+homeassistant.components.systemnexa2.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tailwind.*

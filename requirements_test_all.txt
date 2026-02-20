@@ -1889,7 +1889,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.2.1
+pyliebherrhomeapi==0.3.0
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2147,7 +2147,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==4.2.0
+python-bsblan==4.2.1
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2224,6 +2224,9 @@ python-roborock==4.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
+
+# homeassistant.components.systemnexa2
+python-sn2==0.4.0
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
@@ -2512,6 +2515,9 @@ starlink-grpc-core==1.2.3
 
 # homeassistant.components.statsd
 statsd==3.2.1
+
+# homeassistant.components.trane
+steamloop==1.2.0
 
 # homeassistant.components.steam_online
 steamodd==4.21
