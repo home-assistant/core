@@ -1,6 +1,6 @@
 """Test __init__.py for School Holiday integration."""
 
-from datetime import date, timedelta
+from datetime import date
 from unittest.mock import patch
 
 import pytest
@@ -8,13 +8,7 @@ import pytest
 from homeassistant.components.school_holiday.coordinator import SchoolHolidayCoordinator
 from homeassistant.core import HomeAssistant
 
-from .conftest import (
-    TEST_COUNTRY,
-    TEST_REGION,
-    TEST_SUMMER_HOLIDAY_END,
-    TEST_SUMMER_HOLIDAY_NAME,
-    TEST_SUMMER_HOLIDAY_START,
-)
+from .conftest import TEST_COUNTRY, TEST_REGION
 
 from tests.common import MockConfigEntry
 
@@ -39,12 +33,12 @@ async def test_coordinator_update_data(
                         {
                             "vacations": [
                                 {
-                                    "type": TEST_SUMMER_HOLIDAY_NAME,
+                                    "type": "Summer Holiday",
                                     "regions": [
                                         {
                                             "region": TEST_REGION,
-                                            "startdate": TEST_SUMMER_HOLIDAY_START,
-                                            "enddate": TEST_SUMMER_HOLIDAY_END,
+                                            "startdate": "2026-07-18",
+                                            "enddate": "2026-08-30",
                                         }
                                     ],
                                     "compulsorydates": True,
@@ -72,6 +66,9 @@ async def test_coordinator_update_data(
         async def __aexit__(self, *_):
             return None
 
+        def close(self):
+            pass
+
     with patch(
         "homeassistant.components.school_holiday.coordinator.aiohttp.ClientSession",
         return_value=MockSession(),
@@ -79,11 +76,10 @@ async def test_coordinator_update_data(
         data = await coordinator._async_update_data()
 
         assert len(data) == 1
-        assert data[0]["summary"] == TEST_SUMMER_HOLIDAY_NAME
-        assert data[0]["start"].isoformat() == TEST_SUMMER_HOLIDAY_START
-        # Add 1 day to the end date to make it inclusive, as done in the coordinator.
-        end = date.fromisoformat(TEST_SUMMER_HOLIDAY_END) + timedelta(days=1)
-        assert data[0]["end"] == end
+        assert data[0]["summary"] == "Summer Holiday"
+        assert data[0]["start"].isoformat() == "2026-07-18"
+        # Add 1 day to the end date to make it inclusive, as done by the coordinator.
+        assert data[0]["end"] == date(2026, 8, 31)
 
 
 @pytest.mark.asyncio

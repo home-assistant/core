@@ -1,39 +1,69 @@
 """Fixtures for School Holiday integration tests."""
 
+from datetime import date
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components.school_holiday.utils import generate_unique_id
-from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
+from homeassistant.components.school_holiday.const import (
+    CONF_CALENDAR_NAME,
+    CONF_SENSOR_NAME,
+    DOMAIN,
+)
+from homeassistant.const import CONF_COUNTRY, CONF_REGION
 
 from tests.common import MockConfigEntry
 
-DOMAIN = "school_holiday"
+TEST_SENSOR_NAME = "School Holiday Sensor"
+TEST_CALENDAR_NAME = "School Holiday Calendar"
 
-TEST_CALENDAR_NAME = "School Holiday"
 TEST_COUNTRY = "The Netherlands"
 TEST_REGION = "Midden"
-
-TEST_SPRING_BREAK_DESCRIPTION = f"Spring Break for the region {TEST_REGION}."
-TEST_SPRING_BREAK_END = "2026-02-22"
-TEST_SPRING_BREAK_NAME = "Spring Break"
-TEST_SPRING_BREAK_START = "2026-02-14"
-
-TEST_SUMMER_HOLIDAY_DESCRIPTION = None
-TEST_SUMMER_HOLIDAY_END = "2026-08-30"
-TEST_SUMMER_HOLIDAY_NAME = "Summer Holiday"
-TEST_SUMMER_HOLIDAY_START = "2026-07-18"
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=TEST_CALENDAR_NAME,
+        title=TEST_SENSOR_NAME,
         domain=DOMAIN,
         data={
-            CONF_NAME: TEST_CALENDAR_NAME,
+            CONF_SENSOR_NAME: TEST_SENSOR_NAME,
+            CONF_CALENDAR_NAME: TEST_CALENDAR_NAME,
             CONF_COUNTRY: TEST_COUNTRY,
             CONF_REGION: TEST_REGION,
         },
-        unique_id=generate_unique_id(TEST_COUNTRY, TEST_REGION),
     )
+
+
+@pytest.fixture
+def mock_school_holiday_data() -> list[dict]:
+    """Return mock school holiday data."""
+    return [
+        {
+            "summary": "Spring Break",
+            "start": date(2026, 2, 14),
+            "end": date(2026, 2, 22),
+            "description": "A week's holiday for school and college students in March or April.",
+        },
+        {
+            "summary": "Summer Holiday",
+            "start": date(2026, 7, 18),
+            "end": date(2026, 8, 30),
+            "description": None,
+        },
+    ]
+
+
+@pytest.fixture
+def mock_api_response(mock_school_holiday_data):
+    """Mock the API response for school holidays."""
+    with patch(
+        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator._async_update_data"
+    ) as mock_update:
+
+        async def return_school_holidays():
+            return mock_school_holiday_data
+
+        mock_update.side_effect = return_school_holidays
+        yield

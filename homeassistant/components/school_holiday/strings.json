@@ -8,6 +8,15 @@
       "required": "This field is required."
     },
     "step": {
+      "calendar": {
+        "data": {
+          "calendar_name": "Calendar name"
+        },
+        "data_description": {
+          "calendar_name": "The name for this calendar."
+        },
+        "description": "Choose a name for your new calendar."
+      },
       "region": {
         "data": {
           "region": "Region"
@@ -20,13 +29,25 @@
       "user": {
         "data": {
           "country": "Country",
-          "name": "Calendar name"
+          "sensor_name": "Sensor name"
         },
         "data_description": {
           "country": "The country for which to show school holidays.",
-          "name": "The name for this school holidays calendar."
+          "sensor_name": "The name for this sensor."
         },
-        "description": "Choose a name for your new calendar and select a country."
+        "description": "Choose a name for your new sensor and select a country."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "school_holiday_sensor": {
+        "name": "School Holiday Sensor"
+      }
+    },
+    "calendar": {
+      "school_holiday_calendar": {
+        "name": "School Holiday Calendar"
       }
     }
   }

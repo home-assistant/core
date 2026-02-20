@@ -3,19 +3,17 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any
 
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import UPDATE_INTERVAL_HOURS
+from .const import LOGGER, SCAN_INTERVAL
 from .utils import clean_string, create_calendar_event, ensure_date
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
@@ -29,9 +27,9 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.region = region
         super().__init__(
             hass,
-            logger=_LOGGER,
+            logger=LOGGER,
             name="School Holiday",
-            update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
+            update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
 
@@ -42,28 +40,30 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
         country_method = country_methods.get(self.country)
         if country_method:
-            _LOGGER.debug("Retrieving school holidays for country '%s'", self.country)
+            LOGGER.debug("Retrieving school holidays for %s", self.country)
             return await country_method()
 
-        _LOGGER.exception("Country '%s' is invalid", self.country)
+        LOGGER.error("Country '%s' is invalid", self.country)
         return []
 
     async def _get_school_holidays_nl(self) -> list[dict[str, Any]]:
-        url = "https://opendata.rijksoverheid.nl/v1/sources/rijksoverheid/infotypes/SchoolHoliday?output=json"
+        """Retrieve school holidays for The Netherlands."""
+        url = "https://opendata.rijksoverheid.nl/v1/sources/rijksoverheid/infotypes/schoolholidays?output=json"
         events: list[dict[str, Any]] = []
+        session = async_get_clientsession(self.hass)
 
-        _LOGGER.debug("Retrieving school holidays from '%s'", url)
         try:
-            async with (
-                aiohttp.ClientSession() as session,
-                session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response,
-            ):
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
                 if response.status != 200:
-                    return []
+                    raise UpdateFailed(
+                        f"Failed to retrieve school holidays: HTTP {response.status}"
+                    )
 
                 data = await response.json()
-        except aiohttp.ClientError, TimeoutError:
-            return []
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise UpdateFailed(f"Failed to retrieve school holidays: {err}") from err
 
         try:
             all_contents = []
@@ -84,7 +84,7 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                         [(vacation, content) for vacation in vacations]
                     )
 
-            school_holiday = []
+            school_holidays = []
             for vacation, content in all_vacations:
                 summary = vacation.get("type").strip()
                 regions = vacation.get("regions", [])
@@ -101,9 +101,9 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
                     notice = item_notices.get(id(content)) if use_notice else None
 
-                    school_holiday.append((summary, region_data, notice))
+                    school_holidays.append((summary, region_data, notice))
 
-            for summary, region_data, notice in school_holiday:
+            for summary, region_data, notice in school_holidays:
                 start_date = region_data.get("startdate")
                 end_date = region_data.get("enddate")
                 if not start_date or not end_date:
@@ -121,7 +121,7 @@ class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                     end,
                     description,
                 )
-        except KeyError, TypeError, ValueError:
-            return []
+        except (KeyError, TypeError, ValueError) as err:
+            raise UpdateFailed(f"Failed to parse school holidays data: {err}") from err
 
         return events

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
 
+from .const import LOGGER
 from .coordinator import SchoolHolidayCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-_PLATFORMS: list[Platform] = [Platform.CALENDAR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR]
 
 type SchoolHolidayConfigEntry = ConfigEntry[SchoolHolidayCoordinator]
 
@@ -19,8 +17,8 @@ type SchoolHolidayConfigEntry = ConfigEntry[SchoolHolidayCoordinator]
 async def async_setup_entry(
     hass: HomeAssistant, entry: SchoolHolidayConfigEntry
 ) -> bool:
-    """Setup the School Holiday integration."""
-    _LOGGER.debug("Starting setup of School Holiday integration")
+    """Set up the School Holiday integration."""
+    LOGGER.debug("Starting setup of School Holiday integration")
     coordinator = SchoolHolidayCoordinator(
         hass,
         entry.data[CONF_COUNTRY],
@@ -29,7 +27,6 @@ async def async_setup_entry(
     )
 
     # Test the connection before setting up platforms.
-    # This will raise ConfigEntryNotReady if the API is unavailable.
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

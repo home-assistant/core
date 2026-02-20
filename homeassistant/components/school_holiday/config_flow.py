@@ -7,10 +7,18 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_COUNTRY, CONF_REGION
 
-from .const import COUNTRIES, DOMAIN, REGIONS
-from .utils import generate_unique_id
+from .const import (
+    CONF_CALENDAR_NAME,
+    CONF_SENSOR_NAME,
+    COUNTRIES,
+    DEFAULT_CALENDAR_NAME,
+    DEFAULT_SENSOR_NAME,
+    DOMAIN,
+    INTEGRATION_NAME,
+    REGIONS,
+)
 
 
 class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,32 +30,34 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self._name: str = ""
+        self._sensor_name: str = ""
         self._country: str = ""
+        self._region: str = ""
+        self._calendar_name: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Enter calendar name and select country."""
+        """Enter sensor name and select country."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            name = user_input.get(CONF_NAME, "").strip()
-            if not name:
-                errors[CONF_NAME] = "required"
+            sensor_name = user_input.get(CONF_SENSOR_NAME, "").strip()
+            if not sensor_name:
+                errors[CONF_SENSOR_NAME] = "required"
 
             country = user_input.get(CONF_COUNTRY)
             if not country:
                 errors[CONF_COUNTRY] = "required"
 
             if not errors:
-                self._name = str(name)
+                self._sensor_name = str(sensor_name)
                 self._country = str(country)
                 return await self.async_step_region()
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME): str,
+                vol.Required(CONF_SENSOR_NAME, default=DEFAULT_SENSOR_NAME): str,
                 vol.Required(CONF_COUNTRY): vol.In(COUNTRIES),
             }
         )
@@ -88,19 +98,8 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Assert that region is a string for type safety.
                 if TYPE_CHECKING:
                     assert isinstance(region, str)
-                await self.async_set_unique_id(
-                    generate_unique_id(self._country, region)
-                )
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=self._name,
-                    data={
-                        CONF_NAME: self._name,
-                        CONF_COUNTRY: self._country,
-                        CONF_REGION: region,
-                    },
-                )
+                self._region = region
+                return await self.async_step_calendar()
 
         data_schema = vol.Schema(
             {
@@ -110,6 +109,51 @@ class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="region",
+            data_schema=data_schema,
+            description_placeholders={},
+            errors=errors,
+        )
+
+    async def async_step_calendar(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Enter calendar name."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            calendar_name = user_input.get(CONF_CALENDAR_NAME, "").strip()
+            if not calendar_name:
+                errors[CONF_CALENDAR_NAME] = "required"
+
+            if not errors:
+                # Prevent duplicate configurations for the same country/region.
+                self._async_abort_entries_match(
+                    {
+                        CONF_COUNTRY: self._country,
+                        CONF_REGION: self._region,
+                    }
+                )
+
+                self._calendar_name = calendar_name
+
+                return self.async_create_entry(
+                    title=INTEGRATION_NAME,
+                    data={
+                        CONF_SENSOR_NAME: self._sensor_name,
+                        CONF_COUNTRY: self._country,
+                        CONF_REGION: self._region,
+                        CONF_CALENDAR_NAME: self._calendar_name,
+                    },
+                )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_CALENDAR_NAME, default=DEFAULT_CALENDAR_NAME): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="calendar",
             data_schema=data_schema,
             description_placeholders={},
             errors=errors,
