@@ -206,6 +206,22 @@ DHW_SENSORS = [
 
 ENERGY_SENSORS = [
     WeHeatSensorEntityDescription(
+        translation_key="electricity_used",
+        key="electricity_used",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output",
+        key="energy_output",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_output,
+    ),
+    WeHeatSensorEntityDescription(
         translation_key="electricity_used_heating",
         key="electricity_used_heating",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,

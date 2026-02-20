@@ -36,6 +36,9 @@
       "dhw_flow_volume": {
         "default": "mdi:pump"
       },
+      "electricity_used": {
+        "default": "mdi:flash"
+      },
       "electricity_used_cooling": {
         "default": "mdi:flash"
       },
@@ -46,6 +49,9 @@
         "default": "mdi:flash"
       },
       "electricity_used_heating": {
+        "default": "mdi:flash"
+      },
+      "energy_output": {
         "default": "mdi:flash"
       },
       "energy_output_cooling": {
