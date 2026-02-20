@@ -38,66 +38,18 @@ UFH_DEVICE = {
 }
 
 
-async def test_create_entity_with_relais_device(
+async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyaxenco_client: AsyncMock,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that EWS device with relayMode creates relais entity."""
-    mock_pyaxenco_client.get_devices.return_value = [RELAIS_DEVICE]
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_create_entity_with_pilote_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that EWS device without relayMode creates pilote entity."""
-    mock_pyaxenco_client.get_devices.return_value = [PILOTE_DEVICE]
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_create_entity_with_ufh_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that UFH device creates UFH entity."""
-    mock_pyaxenco_client.get_devices.return_value = [UFH_DEVICE]
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_setup_entry_filters_unsupported_devices(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyaxenco_client: AsyncMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that async_setup_entry filters out unsupported device models."""
+    """Test all select entities are created for supported devices."""
     mock_pyaxenco_client.get_devices.return_value = [
+        RELAIS_DEVICE,
         PILOTE_DEVICE,
+        UFH_DEVICE,
         {
             "_id": "unsupported",
             "name": "Unsupported Device",
@@ -112,7 +64,6 @@ async def test_setup_entry_filters_unsupported_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

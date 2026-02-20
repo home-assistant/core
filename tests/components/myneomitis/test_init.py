@@ -53,9 +53,8 @@ async def test_unload_entry_success(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    assert result is True
     mock_pyaxenco_client.disconnect_websocket.assert_awaited_once()
 
 

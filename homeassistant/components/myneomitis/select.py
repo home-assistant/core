@@ -157,9 +157,10 @@ class MyNeoSelect(SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            self._api.register_listener(self._device["_id"], self.handle_ws_update)
-        )
+        if unsubscribe := self._api.register_listener(
+            self._device["_id"], self.handle_ws_update
+        ):
+            self.async_on_remove(unsubscribe)
 
     def handle_ws_update(self, new_state: dict[str, Any]) -> None:
         """Handle WebSocket updates for the device."""
