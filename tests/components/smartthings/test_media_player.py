@@ -365,7 +365,7 @@ async def test_vd_capability_select_source(
         SERVICE_SELECT_SOURCE,
         {
             ATTR_ENTITY_ID: "media_player.tv_samsung_8_series_49",
-            ATTR_INPUT_SOURCE: "HDMI1",
+            ATTR_INPUT_SOURCE: "hdmi1",
         },
         blocking=True,
     )
@@ -392,7 +392,7 @@ async def test_vd_capability_source_update(
     assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
         state.attributes[ATTR_SUPPORTED_FEATURES]
     )
-    assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI1"
+    assert state.attributes[ATTR_INPUT_SOURCE] == "hdmi1"
 
     # Update source to dtv
     await trigger_update(
