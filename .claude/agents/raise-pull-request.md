@@ -33,30 +33,13 @@ git diff dev..HEAD --name-only | grep -E "^tests/.*\.py$" || echo "NO_TESTS_CHAN
 git diff dev..HEAD --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANGED"
 ```
 
+From the file paths, extract the **integration domain** from `homeassistant/components/{integration}/` or `tests/components/{integration}/`.
+
 **Track results:**
 - `TESTS_CHANGED`: true if test files were added or modified
 - `MANIFEST_CHANGED`: true if manifest.json was modified
 
-## Step 2: Identify Integration and PR Metadata
-
-From the file paths, identify:
-- **Integration domain**: Extract from `homeassistant/components/{integration}/` or `tests/components/{integration}/`
-- **PR title format**: Write a release-note-style summary of the change. The title becomes the release notes entry, so it should be a complete sentence fragment describing what changed in imperative mood.
-
-**PR Title Examples by Type:**
-| Type | Example titles |
-|------|----------------|
-| Bugfix | `Fix Hikvision NVR binary sensors not being detected` |
-| | `Fix JSON serialization of time objects in anthropic tool results` |
-| | `Fix config flow bug in Tesla Fleet` |
-| Dependency | `Bump eheimdigital to 1.5.0` |
-| | `Bump python-otbr-api to 2.7.1` |
-| New feature | `Add asyncio-level timeout to Backblaze B2 uploads` |
-| | `Add Nettleie optimization option` |
-| Code quality | `Add exception translations to Teslemetry` |
-| | `Improve test coverage of Tesla Fleet` |
-
-## Step 3: Run Code Quality Checks
+## Step 2: Run Code Quality Checks
 
 Run `prek` to perform code quality checks (formatting, linting, hassfest, etc.) on the changed files:
 
@@ -68,6 +51,17 @@ prek run
 - `PREK_PASSED`: true if `prek run` exits with code 0
 
 **If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://developers.home-assistant.io/docs/development_environment.**
+
+## Step 3: Stage Any Changes from Checks
+
+If `prek` made any formatting or generated file changes, stage and commit them as a separate commit:
+
+```bash
+git status --porcelain
+# If changes exist:
+git add -A
+git commit -m "Apply prek formatting and generated file updates"
+```
 
 ## Step 4: Run Tests
 
@@ -88,7 +82,26 @@ pytest tests/components/{integration} \
 
 **If tests fail, STOP and report the failures to the user. Do not proceed with PR creation.**
 
-## Step 5: Verify Development Checklist
+## Step 5: Identify PR Metadata
+
+Write a release-note-style PR title summarizing the change. The title becomes the release notes entry, so it should be a complete sentence fragment describing what changed in imperative mood.
+
+**PR Title Examples by Type:**
+| Type | Example titles |
+|------|----------------|
+| Bugfix | `Fix Hikvision NVR binary sensors not being detected` |
+| | `Fix JSON serialization of time objects in anthropic tool results` |
+| | `Fix config flow bug in Tesla Fleet` |
+| Dependency | `Bump eheimdigital to 1.5.0` |
+| | `Bump python-otbr-api to 2.7.1` |
+| New feature | `Add asyncio-level timeout to Backblaze B2 uploads` |
+| | `Add Nettleie optimization option` |
+| Code quality | `Add exception translations to Teslemetry` |
+| | `Improve test coverage of Tesla Fleet` |
+| | `Revert bthome-ble back to 3.16.0 to fix missing data` |
+| | `Change device class to energy_storage for some enphase_envoy battery entities` |
+
+## Step 6: Verify Development Checklist
 
 Check each item from the [development checklist](https://developers.home-assistant.io/docs/development_checklist/):
 
@@ -104,7 +117,7 @@ Check each item from the [development checklist](https://developers.home-assista
 - `REQUIREMENTS_UPDATED`: true if requirements_all.txt was regenerated (or `MANIFEST_CHANGED` is false, making it not applicable)
 - `CHECKLIST_PASSED`: true if all items above pass
 
-## Step 6: Determine Type of Change
+## Step 7: Determine Type of Change
 
 Select exactly ONE based on the changes. Mark the selected type with `[x]` and all others with `[ ]` (space):
 
@@ -123,7 +136,7 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 
 **Important:** All seven type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
-## Step 7: Determine Checkbox States
+## Step 8: Determine Checkbox States
 
 Based on the verification steps above, determine checkbox states:
 
@@ -143,7 +156,7 @@ Based on the verification steps above, determine checkbox states:
 | Dependency changelog linked | Tick if dependency changelog linked in PR description (or not applicable) |
 | Any generated code has been carefully reviewed | Leave unchecked for the contributor to review and set manually |
 
-## Step 8: Breaking Change Section
+## Step 9: Breaking Change Section
 
 **If `CHANGE_TYPE` is NOT "Breaking change" or "Deprecation": REMOVE the entire "## Breaking change" section from the PR body (including the heading).**
 
@@ -151,17 +164,6 @@ If `CHANGE_TYPE` IS "Breaking change" or "Deprecation", keep the `## Breaking ch
 - What breaks
 - How users can fix it
 - Why it was necessary
-
-## Step 9: Stage Any Changes from Checks
-
-If `prek` made any formatting or generated file changes, stage and commit them as a separate commit:
-
-```bash
-git status --porcelain
-# If changes exist:
-git add -A
-git commit -m "Apply prek formatting and generated file updates"
-```
 
 ## Step 10: Push Branch and Create PR
 
@@ -191,9 +193,9 @@ Use any HTML comments (`<!-- ... -->`) in the template as guidance to understand
 
 1. **Breaking change section**: If the type is NOT "Breaking change" or "Deprecation", remove the entire `## Breaking change` section (heading and body). Otherwise, describe what breaks, how users can fix it, and why.
 2. **Proposed change section**: Fill in a description of the change extracted from commit messages.
-3. **Type of change**: Check exactly ONE checkbox matching the determined type from Step 6. Leave all others unchecked.
+3. **Type of change**: Check exactly ONE checkbox matching the determined type from Step 7. Leave all others unchecked.
 4. **Additional information**: Fill in any related issue numbers if known.
-5. **Checklist**: Check boxes based on the verification results from Steps 3-5 and the conditions in Step 7. Leave manual-verification boxes unchecked for the contributor.
+5. **Checklist**: Check boxes based on the conditions in Step 8. Leave manual-verification boxes unchecked for the contributor.
 
 **Important:** Preserve all template structure, options, and link references exactly as they appear in the file — only modify checkbox states and fill in content sections.
 
