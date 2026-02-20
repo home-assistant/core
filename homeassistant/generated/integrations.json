@@ -7046,7 +7046,7 @@
       "name": "Tilt",
       "integrations": {
         "tilt_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Tilt Hydrometer BLE"
@@ -7072,7 +7072,7 @@
     },
     "todoist": {
       "name": "Todoist",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7084,7 +7084,7 @@
     },
     "tolo": {
       "name": "TOLO Sauna",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7102,7 +7102,7 @@
     },
     "toon": {
       "name": "Toon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7177,7 +7177,7 @@
       "name": "Trafikverket",
       "integrations": {
         "trafikverket_camera": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Trafikverket Camera"
