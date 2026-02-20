@@ -544,7 +544,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 list(self._custom_name_to_source_code.keys()),
             )
             raise ValueError(f"Unknown source: {source}")
-        source_code = self._custom_name_to_source_code.get(source, source)
+
+        source_code = self._custom_name_to_source_code[source]
         command = f"SI {source_code}"
         _LOGGER.info(
             "Sending source command: %s -> %s (command: %s)",
