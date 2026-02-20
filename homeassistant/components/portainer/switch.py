@@ -255,7 +255,10 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_"
+            f"{self.device_name}_{entity_description.key}"
+        )
 
     @property
     def is_on(self) -> bool | None:
