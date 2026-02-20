@@ -242,18 +242,20 @@ async def async_setup_entry(
 
     bms: Final = config_entry.runtime_data
     mac: Final = format_mac(config_entry.unique_id)
+    entities: list[SensorEntity] = []
     for descr in SENSOR_TYPES:
         if descr.key == ATTR_RSSI:
-            async_add_entities([RSSISensor(bms, descr, mac)])
+            entities.append(RSSISensor(bms, descr, mac))
             continue
         if descr.key == ATTR_LQ:
-            async_add_entities([LQSensor(bms, descr, mac)])
+            entities.append(LQSensor(bms, descr, mac))
             continue
         if descr.optional and descr.key not in bms.data:
             continue
-        async_add_entities([BMSSensor(bms, descr, mac)])
+        entities.append(BMSSensor(bms, descr, mac))
 
-
+    if entities:
+        async_add_entities(entities)
 class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     """The generic BMS sensor implementation."""
 
