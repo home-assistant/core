@@ -14,6 +14,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
@@ -28,6 +29,11 @@ POWER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.POWER,)
 POWER_USAGE_UNITS: dict[str, tuple[UnitOfPower, ...]] = {
     sensor.SensorDeviceClass.POWER: tuple(UnitOfPower)
 }
+VOLUME_FLOW_RATE_DEVICE_CLASSES = (sensor.SensorDeviceClass.VOLUME_FLOW_RATE,)
+VOLUME_FLOW_RATE_UNITS: dict[str, tuple[UnitOfVolumeFlowRate, ...]] = {
+    sensor.SensorDeviceClass.VOLUME_FLOW_RATE: tuple(UnitOfVolumeFlowRate)
+}
+VOLUME_FLOW_RATE_UNIT_ERROR = "entity_unexpected_unit_volume_flow_rate"
 
 ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
@@ -108,6 +114,12 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     if issue_type == WATER_PRICE_UNIT_ERROR:
         return {
             "price_units": ", ".join(f"{currency}{unit}" for unit in WATER_PRICE_UNITS),
+        }
+    if issue_type == VOLUME_FLOW_RATE_UNIT_ERROR:
+        return {
+            "flow_rate_units": ", ".join(
+                VOLUME_FLOW_RATE_UNITS[sensor.SensorDeviceClass.VOLUME_FLOW_RATE]
+            ),
         }
     return None
 
@@ -590,6 +602,21 @@ def _validate_gas_source(
             )
         )
 
+    if stat_rate := source.get("stat_rate"):
+        wanted_statistics_metadata.add(stat_rate)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_power_stat,
+                hass,
+                statistics_metadata,
+                stat_rate,
+                VOLUME_FLOW_RATE_DEVICE_CLASSES,
+                VOLUME_FLOW_RATE_UNITS,
+                VOLUME_FLOW_RATE_UNIT_ERROR,
+                source_result,
+            )
+        )
+
 
 def _validate_water_source(
     hass: HomeAssistant,
@@ -646,6 +673,21 @@ def _validate_water_source(
                 _async_validate_auto_generated_cost_entity,
                 hass,
                 source["stat_energy_from"],
+                source_result,
+            )
+        )
+
+    if stat_rate := source.get("stat_rate"):
+        wanted_statistics_metadata.add(stat_rate)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_power_stat,
+                hass,
+                statistics_metadata,
+                stat_rate,
+                VOLUME_FLOW_RATE_DEVICE_CLASSES,
+                VOLUME_FLOW_RATE_UNITS,
+                VOLUME_FLOW_RATE_UNIT_ERROR,
                 source_result,
             )
         )
