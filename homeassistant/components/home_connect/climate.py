@@ -77,7 +77,7 @@ async def async_setup_entry(
     entry: HomeConnectConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Home Connect select entities."""
+    """Set up the Home Connect climate entities."""
     setup_home_connect_entry(
         hass,
         entry,
@@ -175,7 +175,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     def update_native_value(self) -> None:
-        """Set the  HVAC Mode and preset mode values."""
+        """Set the HVAC Mode and preset mode values."""
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
         program_key = cast(ProgramKey, event.value) if event else None
         self._attr_hvac_mode = (

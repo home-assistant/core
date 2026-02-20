@@ -136,7 +136,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize(("appliance"), ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
 async def test_connected_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -800,7 +800,7 @@ async def test_fan_mode_feature_supported(
 
 @pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
 @pytest.mark.parametrize(
-    ("program_keys"),
+    "program_keys",
     [
         [ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO],
         [
