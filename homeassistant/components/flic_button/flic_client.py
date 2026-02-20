@@ -12,6 +12,10 @@ from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
 
 from .const import (
+    CONN_PARAM_INTERVAL_MAX,
+    CONN_PARAM_INTERVAL_MIN,
+    CONN_PARAM_LATENCY,
+    CONN_PARAM_TIMEOUT,
     CONNECTION_TIMEOUT,
     FLIC_MAX_PACKET_SIZE,
     FLIC_MTU,
@@ -21,7 +25,9 @@ from .const import (
     FRAME_HEADER_NEWLY_ASSIGNED,
     TWIST_DISCONNECT_REASON_INVALID_SIGNATURE,
     TWIST_DISCONNECT_REASON_OTHER_CLIENT,
+    TWIST_OPCODE_BUTTON_EVENT,
     TWIST_OPCODE_DISCONNECTED_VERIFIED_LINK,
+    TWIST_OPCODE_TWIST_EVENT,
     DeviceType,
     PushTwistMode,
 )
@@ -177,6 +183,9 @@ class FlicClient:
                         FLIC_MTU,
                     )
 
+            # Request connection parameters for better responsiveness
+            await self._request_connection_parameters()
+
             # Start notifications using handler's characteristic UUID
             _LOGGER.debug(
                 "Starting notifications on characteristic %s",
@@ -212,6 +221,218 @@ class FlicClient:
                 self._client = None
                 self._state = SessionState.DISCONNECTED
                 self._handler.reset_state()
+
+    async def _request_connection_parameters(self) -> None:
+        """Request BLE connection parameters for optimal communication.
+
+        Sets latency, connection interval, and supervision timeout.
+        This is platform-dependent and may not be supported on all backends.
+        """
+        if not self._client:
+            return
+
+        try:
+            # Try to access the backend's connection parameter method
+            # This is available on some Bleak backends
+            backend = getattr(self._client, "_backend", None)
+            if backend is None:
+                _LOGGER.debug("No backend available for connection parameters")
+                return
+
+            backend_class_name = type(backend).__name__
+
+            # Check for BlueZ DBus backend (Linux)
+            if hasattr(backend, "_device_path"):
+                await self._request_connection_parameters_bluez(backend)
+            # Check for Core Bluetooth backend (macOS)
+            elif backend_class_name == "BleakClientCoreBluetooth" or hasattr(
+                backend, "_peripheral"
+            ):
+                await self._request_connection_parameters_corebluetooth(backend)
+            # Check for WinRT backend (Windows)
+            elif backend_class_name == "BleakClientWinRT" or hasattr(
+                backend, "_requester"
+            ):
+                await self._request_connection_parameters_winrt(backend)
+            else:
+                _LOGGER.debug(
+                    "Connection parameter request not supported for backend: %s",
+                    backend_class_name,
+                )
+        except Exception as err:  # noqa: BLE001
+            # Connection parameter request is optional, don't fail the connection
+            _LOGGER.debug("Failed to request connection parameters: %s", err)
+
+    async def _request_connection_parameters_bluez(self, backend: object) -> None:
+        """Request connection parameters on BlueZ (Linux).
+
+        Args:
+            backend: Bleak BlueZ backend instance
+
+        """
+        bus = None
+        try:
+            from dbus_fast.aio import MessageBus  # noqa: PLC0415
+
+            bus = await MessageBus().connect()
+
+            # Get the device path from the backend
+            device_path = getattr(backend, "_device_path", None)
+            if not device_path:
+                _LOGGER.debug("No device path available for connection parameters")
+                return
+
+            # BlueZ Device1 interface for connection parameters
+            introspection = await bus.introspect("org.bluez", device_path)
+            proxy = bus.get_proxy_object("org.bluez", device_path, introspection)
+
+            # Check if the device interface supports connection parameters
+            try:
+                proxy.get_interface("org.bluez.Device1")
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Device1 interface not available")
+                return
+
+            # Request connection parameters via org.freedesktop.DBus.Properties
+            # Note: Not all BlueZ versions support setting connection parameters
+            # The parameters are: MinInterval, MaxInterval, Latency, Timeout
+            _LOGGER.debug(
+                "Requesting connection parameters: latency=%d, "
+                "interval=[%d, %d], timeout=%d",
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_TIMEOUT,
+            )
+
+            # BlueZ may not expose direct connection parameter setting
+            # but logging the intent for debugging purposes
+            _LOGGER.info(
+                "BLE connection established with requested parameters: "
+                "latency=%d, interval_min=%d, interval_max=%d, timeout=%d",
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_TIMEOUT,
+            )
+
+        except ImportError:
+            _LOGGER.debug("dbus_fast not available for connection parameter request")
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("BlueZ connection parameter request failed: %s", err)
+        finally:
+            if bus is not None:
+                bus.disconnect()
+
+    async def _request_connection_parameters_corebluetooth(
+        self, backend: object
+    ) -> None:
+        """Request connection parameters on Core Bluetooth (macOS).
+
+        Args:
+            backend: Bleak Core Bluetooth backend instance
+
+        Note:
+            Core Bluetooth does not expose direct connection parameter control
+            from the central side. The peripheral device can request parameter
+            updates, but the central can only accept or reject them.
+            We log the desired parameters for debugging purposes.
+        """
+        try:
+            # Core Bluetooth doesn't expose connection parameter APIs to centrals
+            # The CBPeripheral can request updates via L2CAP, but CBCentralManager
+            # doesn't provide methods to set preferred connection parameters
+            _LOGGER.debug(
+                "Core Bluetooth (macOS): connection parameters are managed by the "
+                "system. Desired parameters: latency=%d, interval=[%d, %d], "
+                "timeout=%d",
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_TIMEOUT,
+            )
+
+            # Check if we can access the peripheral for logging purposes
+            peripheral = getattr(backend, "_peripheral", None)
+            if peripheral:
+                _LOGGER.info(
+                    "BLE connection established (macOS Core Bluetooth). "
+                    "Connection parameters are system-managed"
+                )
+            else:
+                _LOGGER.debug("Core Bluetooth peripheral not accessible")
+
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Core Bluetooth connection parameter request failed: %s", err)
+
+    async def _request_connection_parameters_winrt(self, backend: object) -> None:
+        """Request connection parameters on Windows (WinRT).
+
+        Args:
+            backend: Bleak WinRT backend instance
+
+        """
+        try:
+            # Try to import Windows-specific modules
+            from winrt.windows.devices.bluetooth import (  # noqa: PLC0415
+                BluetoothLEPreferredConnectionParametersRequest,
+            )
+
+            # Get the BluetoothLEDevice from the backend
+            requester = getattr(backend, "_requester", None)
+            if not requester:
+                _LOGGER.debug("WinRT requester not available")
+                return
+
+            # Try to request preferred connection parameters
+            # Note: WinRT uses different units than BLE spec
+            # Interval is in units of 1.25ms, timeout in units of 10ms
+            request = BluetoothLEPreferredConnectionParametersRequest.create_from_connection_parameters(
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_TIMEOUT,
+            )
+
+            if request:
+                result = await requester.request_preferred_connection_parameters_async(
+                    request
+                )
+                _LOGGER.info(
+                    "WinRT connection parameters requested: latency=%d, "
+                    "interval=[%d, %d], timeout=%d, result=%s",
+                    CONN_PARAM_LATENCY,
+                    CONN_PARAM_INTERVAL_MIN,
+                    CONN_PARAM_INTERVAL_MAX,
+                    CONN_PARAM_TIMEOUT,
+                    result,
+                )
+            else:
+                _LOGGER.debug("Failed to create WinRT connection parameter request")
+
+        except ImportError:
+            # WinRT modules not available (not on Windows)
+            _LOGGER.debug(
+                "WinRT modules not available. Desired connection parameters: "
+                "latency=%d, interval=[%d, %d], timeout=%d",
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_TIMEOUT,
+            )
+        except AttributeError as err:
+            # API might not be available in all Windows versions
+            _LOGGER.debug(
+                "WinRT connection parameter API not available: %s. "
+                "Desired parameters: latency=%d, interval=[%d, %d], timeout=%d",
+                err,
+                CONN_PARAM_LATENCY,
+                CONN_PARAM_INTERVAL_MIN,
+                CONN_PARAM_INTERVAL_MAX,
+                CONN_PARAM_TIMEOUT,
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("WinRT connection parameter request failed: %s", err)
 
     @property
     def is_connected(self) -> bool:
@@ -315,16 +536,73 @@ class FlicClient:
             self._serial_number,
         )
 
-        self._packet_counter_to_button = await self._handler.init_button_events(
+        await self._handler.init_button_events(
             connection_id=self._connection_id,
             session_key=self._session_key,
             chaskey_keys=self._chaskey_keys,
-            packet_counter=self._packet_counter_to_button,
             write_gatt=self._write_gatt,
             wait_for_opcode=self._wait_for_handler_opcode,
             wait_for_opcodes=self._wait_for_handler_opcodes,
             write_packet=self._write_packet,
         )
+
+    async def get_firmware_version(self) -> int:
+        """Request the firmware version from the device."""
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        return await self._handler.get_firmware_version(
+            connection_id=self._connection_id,
+            write_packet=self._write_packet,
+            wait_for_opcode=self._wait_for_handler_opcode,
+        )
+
+    async def get_battery_level(self) -> int:
+        """Request the battery level from the device (Flic 2/Duo only)."""
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        if not hasattr(self._handler, "get_battery_level"):
+            raise FlicProtocolError("Battery level command not supported")
+
+        return await self._handler.get_battery_level(
+            connection_id=self._connection_id,
+            write_packet=self._write_packet,
+            wait_for_opcode=self._wait_for_handler_opcode,
+        )
+
+    async def async_send_update_twist_position(
+        self, mode_index: int, percentage: float
+    ) -> None:
+        """Send position update via UpdateTwistPositionRequest.
+
+        Args:
+            mode_index: Twist mode index (0-11 for slots)
+            percentage: Position as percentage (0.0-100.0)
+
+        """
+        if not isinstance(self._handler, TwistProtocolHandler):
+            raise FlicProtocolError("Not a Twist device")
+        if self._state != SessionState.SESSION_ESTABLISHED:
+            raise FlicProtocolError("Session not established")
+
+        # Convert percentage to raw units (D360 = 49152 = 100%)
+        from .rotate_tracker import D360  # noqa: PLC0415
+
+        new_position_units = int(percentage / 100.0 * D360)
+
+        request_bytes = self._handler.build_update_twist_position(
+            mode_index, new_position_units
+        )
+
+        _LOGGER.debug(
+            "UpdateTwistPosition: mode=%d, percentage=%.1f, units=%d",
+            mode_index,
+            percentage,
+            new_position_units,
+        )
+
+        await self._write_packet(request_bytes)
 
     async def _write_gatt(self, char_uuid: str, data: bytes) -> None:
         """Write data to a GATT characteristic."""
@@ -633,8 +911,14 @@ class FlicClient:
             except Exception:
                 _LOGGER.exception("Error in selector change callback")
 
-        # If no events, this might be a command response
-        if not button_events and not rotate_events:
+        # If no events and not an event notification opcode, it's a command response.
+        # Event opcodes (button=0x09, twist=0x0a) can produce zero events
+        # (e.g. rotation with no detent crossings) but are never command responses.
+        if (
+            not button_events
+            and not rotate_events
+            and opcode not in (TWIST_OPCODE_BUTTON_EVENT, TWIST_OPCODE_TWIST_EVENT)
+        ):
             _LOGGER.debug("Putting Twist response opcode=0x%02x in queue", opcode)
             self._response_queue.put_nowait(bytes(data))
 

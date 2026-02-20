@@ -18,6 +18,10 @@ from ..const import (
     TWIST_OPCODE_FULL_VERIFY_FAIL_RESPONSE,
     TWIST_OPCODE_FULL_VERIFY_RESPONSE_1,
     TWIST_OPCODE_FULL_VERIFY_RESPONSE_2,
+    TWIST_OPCODE_GET_BATTERY_LEVEL_REQUEST,
+    TWIST_OPCODE_GET_BATTERY_LEVEL_RESPONSE,
+    TWIST_OPCODE_GET_FIRMWARE_VERSION_REQUEST,
+    TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE,
     TWIST_OPCODE_INIT_BUTTON_EVENTS_RESPONSE,
     TWIST_OPCODE_QUICK_VERIFY_RESPONSE,
     TWIST_OPCODE_TWIST_EVENT,
@@ -36,11 +40,11 @@ from ..flic_protocol import (
     TwistModeConfig,
     TwistQuickVerifyRequest,
     TwistQuickVerifyResponse,
+    UpdateTwistPositionRequest,
 )
 from ..flic_security import (
     chaskey_16_bytes,
     chaskey_generate_subkeys,
-    chaskey_with_dir_and_counter,
     derive_full_verify_keys,
     generate_x25519_keypair,
     verify_ed25519_signature_with_variant,
@@ -335,12 +339,11 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         connection_id: int,
         session_key: bytes | None,
         chaskey_keys: list[int] | None,
-        packet_counter: int,
         write_gatt: WriteGattFn,
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> int:
+    ) -> None:
         """Initialize button events for Flic Twist."""
         self._multi_mode_tracker = MultiModeRotateTracker()
 
@@ -390,23 +393,13 @@ class TwistProtocolHandler(DeviceProtocolHandler):
         )
         request = request_msg.to_bytes()
 
-        # Add MAC if session is established
-        if session_key and chaskey_keys:
-            mac = chaskey_with_dir_and_counter(
-                chaskey_keys,
-                direction=1,  # client-to-button
-                counter=packet_counter,
-                data=request,
-            )
-            request = request + mac
-            packet_counter += 1
-
         _LOGGER.debug(
             "Sending InitButtonEventsTwistRequest (%d bytes)",
             len(request),
         )
 
-        await write_gatt(self.write_char_uuid, request)
+        authenticated = session_key is not None and chaskey_keys is not None
+        await write_packet(request, authenticated)
 
         try:
             response = await asyncio.wait_for(
@@ -422,7 +415,38 @@ class TwistProtocolHandler(DeviceProtocolHandler):
                 "No response to InitButtonEventsTwistRequest, continuing anyway"
             )
 
-        return packet_counter
+    async def get_firmware_version(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the firmware version from a Flic Twist device."""
+        request = struct.pack("<B", TWIST_OPCODE_GET_FIRMWARE_VERSION_REQUEST)
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        return struct.unpack("<I", response[1:5])[0]
+
+    async def get_battery_level(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the battery level from a Flic Twist device."""
+        request = struct.pack("<B", TWIST_OPCODE_GET_BATTERY_LEVEL_REQUEST)
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(TWIST_OPCODE_GET_BATTERY_LEVEL_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [opcode:1][battery_level:2]
+        return struct.unpack("<H", response[1:3])[0]
 
     def handle_notification(
         self,
@@ -500,8 +524,8 @@ class TwistProtocolHandler(DeviceProtocolHandler):
                     event.twist_mode_index,
                 )
 
-                # Emit selector change event for modes 1-12
-                if 1 <= event.twist_mode_index <= 12:
+                # Emit selector change event for slot modes (0-11)
+                if event.twist_mode_index < 12:
                     events.append(
                         ButtonEvent(
                             event_type=EVENT_TYPE_SELECTOR_CHANGED,
@@ -532,6 +556,42 @@ class TwistProtocolHandler(DeviceProtocolHandler):
 
         return events, selector_change
 
+    def build_update_twist_position(
+        self, mode_index: int, desired_position: int
+    ) -> bytes:
+        """Build an UpdateTwistPositionRequest.
+
+        The device displays position as (absolute_position - min).
+        To make it show desired_position, we set:
+            new_min = absolute_position - desired_position
+
+        Args:
+            mode_index: Twist mode index (0-11 for slots)
+            desired_position: Desired display position in raw units (0-49152)
+
+        Returns:
+            Serialized request bytes ready for _write_packet
+
+        """
+        absolute_position = 0
+        if self._multi_mode_tracker is not None:
+            absolute_position = self._multi_mode_tracker.get_absolute_position(
+                mode_index
+            )
+
+        new_min = absolute_position - desired_position
+
+        if self._multi_mode_tracker is not None:
+            # Update local min to match what the device will have
+            self._multi_mode_tracker.set_mode_min(mode_index, new_min)
+
+        request = UpdateTwistPositionRequest(
+            twist_mode_index=mode_index,
+            new_min=new_min,
+            num_received_update_packets=self._twist_packet_counter,
+        )
+        return request.to_bytes()
+
     def _parse_twist_rotation_event(self, event_data: bytes) -> list[RotateEvent]:
         """Parse Twist rotation event."""
         events: list[RotateEvent] = []
@@ -549,19 +609,27 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             return events
 
         _LOGGER.debug(
-            "Twist rotation: mode=%d, total_delta=%d, min=%d, max=%d, counter=%d",
+            "TwistEventNotification: mode_index=%d, total_delta=%d, "
+            "min_delta=%d, max_delta=%d, hub_counter=%d, "
+            "min_update_was_top=%s, hub_update_too_old=%s",
             notification.twist_mode_index,
             notification.total_delta,
             notification.min_delta,
             notification.max_delta,
             notification.last_hub_packet_counter,
+            notification.last_min_update_was_top,
+            notification.last_hub_update_packet_too_old,
         )
 
         self._twist_packet_counter += 1
 
         # Apply rotation to the specific mode's tracker
         result = self._multi_mode_tracker.apply(
-            notification.twist_mode_index, notification.total_delta
+            notification.twist_mode_index,
+            notification.total_delta,
+            notification.min_delta,
+            notification.max_delta,
+            notification.last_min_update_was_top,
         )
 
         # Get mode percentage for slot entity updates

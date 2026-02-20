@@ -103,12 +103,11 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
         connection_id: int,
         session_key: bytes | None,
         chaskey_keys: list[int] | None,
-        packet_counter: int,
         write_gatt: WriteGattFn,
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> int:
+    ) -> None:
         """Initialize button events for Flic Duo."""
         self._connection_id = connection_id
         self._duo_parser_state = DuoParserState()
@@ -167,8 +166,6 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
 
         # Enable push twist (rotation) events
         await self._init_push_twist_events(write_packet)
-
-        return packet_counter
 
     async def _init_push_twist_events(self, write_packet: WritePacketFn) -> None:
         """Initialize push twist (rotation) events for Flic Duo."""

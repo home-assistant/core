@@ -90,7 +90,7 @@ EVENT_TYPE_ROTATE_COUNTER_CLOCKWISE: Final = "rotate_counter_clockwise"
 EVENT_TYPE_SELECTOR_CHANGED: Final = "selector_changed"
 
 # Twist slot position changed event types (one per slot, modes 0-11)
-EVENT_TYPE_SLOT_CHANGED: Final = [f"slot_{i}_changed" for i in range(12)]
+EVENT_TYPE_SLOT_CHANGED: Final = [f"slot_{i}_changed" for i in range(1, 13)]
 
 # Duo dial position changed event type
 EVENT_TYPE_DUO_DIAL_CHANGED: Final = "duo_dial_changed"
@@ -107,21 +107,29 @@ PAIRING_TIMEOUT: Final = 60
 CONNECTION_TIMEOUT: Final = 30
 COMMAND_TIMEOUT: Final = 10
 
+# BLE connection parameters
+# These are requested after establishing the BLE connection
+CONN_PARAM_LATENCY: Final = 17  # Slave latency (connection events peripheral can skip)
+CONN_PARAM_INTERVAL_MIN: Final = 80  # Min interval (units of 1.25ms = 100ms)
+CONN_PARAM_INTERVAL_MAX: Final = 90  # Max interval (units of 1.25ms = 112.5ms)
+CONN_PARAM_TIMEOUT: Final = 800  # Supervision timeout (units of 10ms = 8000ms)
+
 # Protocol opcodes - from official Flic 2 SDK
 # Request opcodes (OpcodeToFlic)
 OPCODE_FULL_VERIFY_REQUEST_1: Final = 0
 OPCODE_FULL_VERIFY_REQUEST_2: Final = 2  # FULL_VERIFY_REQUEST_2_WITHOUT_APP_TOKEN
 OPCODE_QUICK_VERIFY_REQUEST: Final = 5
 OPCODE_GET_FIRMWARE_VERSION_REQUEST: Final = 8
+OPCODE_GET_BATTERY_LEVEL_REQUEST: Final = 20
 OPCODE_INIT_BUTTON_EVENTS_REQUEST: Final = 23  # INIT_BUTTON_EVENTS_LIGHT_REQUEST
 
 # Response opcodes (OpcodeFromFlic)
 OPCODE_FULL_VERIFY_RESPONSE_1: Final = 0
 OPCODE_FULL_VERIFY_RESPONSE_2: Final = 1
+OPCODE_GET_FIRMWARE_VERSION_RESPONSE: Final = 5
 OPCODE_QUICK_VERIFY_RESPONSE: Final = 8
 OPCODE_BUTTON_EVENT: Final = 12  # BUTTON_EVENT_NOTIFICATION
-# Note: Battery level is provided in FullVerifyResponse2 during pairing.
-# The Flic protocol does NOT have a battery level request opcode.
+OPCODE_GET_BATTERY_LEVEL_RESPONSE: Final = 20
 
 # Button event types for Flic 2 (non-Duo) from SDK ButtonEventNotificationItem
 # These are encoded in 4 bits with extended types for UP events
@@ -164,27 +172,30 @@ TWIST_OPCODE_QUICK_VERIFY_REQUEST: Final = 0x05
 TWIST_OPCODE_INIT_BUTTON_EVENTS: Final = 0x0C  # 12, with 13 config items
 TWIST_OPCODE_ACK_BUTTON_EVENTS: Final = 0x0D  # 13
 TWIST_OPCODE_UPDATE_TWIST_POS: Final = 0x0E  # 14
+TWIST_OPCODE_GET_FIRMWARE_VERSION_REQUEST: Final = 0x07
+TWIST_OPCODE_GET_BATTERY_LEVEL_REQUEST: Final = 0x11  # 17
 
 # Twist opcodes (Device → Host)
 TWIST_OPCODE_FULL_VERIFY_RESPONSE_1: Final = 0x00
 TWIST_OPCODE_FULL_VERIFY_RESPONSE_2: Final = 0x01
 TWIST_OPCODE_FULL_VERIFY_FAIL_RESPONSE: Final = 0x02  # Failure with reason
+TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE: Final = 0x04
 TWIST_OPCODE_QUICK_VERIFY_NEGATIVE: Final = 0x05
 TWIST_OPCODE_QUICK_VERIFY_RESPONSE: Final = 0x06
 TWIST_OPCODE_DISCONNECTED_VERIFIED_LINK: Final = 0x07  # Disconnect with reason
 TWIST_OPCODE_INIT_BUTTON_EVENTS_RESPONSE: Final = 0x08
 TWIST_OPCODE_BUTTON_EVENT: Final = 0x09  # 9
 TWIST_OPCODE_TWIST_EVENT: Final = 0x0A  # 10
+TWIST_OPCODE_GET_BATTERY_LEVEL_RESPONSE: Final = 0x10  # 16
 
 # Twist disconnect reasons
 TWIST_DISCONNECT_REASON_INVALID_SIGNATURE: Final = 0
 TWIST_DISCONNECT_REASON_OTHER_CLIENT: Final = 1
 
 # Twist mode indices
-TWIST_MODE_FREE_ROTATION: Final = 0  # Free rotation mode
-TWIST_MODE_SELECTOR_1: Final = 1  # Selector position 1
-TWIST_MODE_SELECTOR_11: Final = 11  # Selector position 11
-TWIST_MODE_PUSH_TWIST: Final = 12  # Push+twist mode (hold button while rotating)
+TWIST_MODE_SLOT_FIRST: Final = 0  # First slot (Slot 1)
+TWIST_MODE_SLOT_LAST: Final = 11  # Last slot (Slot 12)
+TWIST_MODE_SLOT_CHANGING: Final = 12  # Slot-changing mode (selecting active slot)
 
 # Options constants
 CONF_PUSH_TWIST_MODE: Final = "push_twist_mode"

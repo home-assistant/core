@@ -17,7 +17,7 @@ class RotateResult:
     angle_degrees: float  # 0..360
     selector_index: int  # 0..11
     total_turns: float  # accumulated revolutions (+/-)
-    detent_crossings: int  # number of 4096-boundaries crossed this packet (+/-)
+    detent_crossings: int  # number of percentage-boundaries crossed this packet (+/-)
     current_detent_crossings: int
     acceleration_multiplier: float  # 1.0 - 100.0, increases with faster rotation
     rpm: float  # revolutions per minute (positive = clockwise, negative = counter-clockwise)
@@ -68,6 +68,20 @@ class RotateTracker:
     def accumulated_units(self) -> int:
         """Return the accumulated units (raw position)."""
         return self._acc_units
+
+    def set_accumulated_units(self, units: int) -> None:
+        """Set the accumulated units directly.
+
+        Resets direction and backlash buffer since the position is being
+        externally overridden.
+
+        Args:
+            units: New raw position in units
+
+        """
+        self._acc_units = units
+        self._current_direction = 0
+        self._reverse_buffer = 0
 
     def clamp_accumulated_units(self, min_units: int, max_units: int) -> None:
         """Clamp accumulated units to a range.
@@ -153,12 +167,16 @@ class RotateTracker:
             if delta != 0:
                 self._current_direction = 1 if delta > 0 else -1
 
+        # Compute integer percentage before and after to detect 1% increments.
+        # Use unclamped position so events fire even when clamped at 0/100%.
+        prev_pct = (prev * 100) // self._full_range_units
+        new_pct = (self._acc_units * 100) // self._full_range_units
+
         # Clamp position if configured (for Duo dial mode)
         if self._clamp_position:
             self._acc_units = max(0, min(self._full_range_units, self._acc_units))
 
-        # Calculate detent crossings
-        raw_detent_crossings = self._detent_crossings_between(prev, self._acc_units)
+        raw_detent_crossings = new_pct - prev_pct
         detent_crossings = 0 if suppress_for_backlash else raw_detent_crossings
         self._current_detent_crossings += detent_crossings
 
@@ -217,29 +235,6 @@ class RotateTracker:
             backlash_suppressed=suppress_for_backlash,
         )
 
-    def _detent_crossings_between(self, a: int, b: int) -> int:
-        """Count detent boundaries crossed between two positions.
-
-        Uses the unbounded accumulator; returns positive for forward, negative for backward.
-        """
-        if a == b:
-            return 0
-        step = UNITS_PER_SLICE // 2
-        lo = min(a, b)
-        hi = max(a, b)
-        k_lo = self._floor_div(lo, step)
-        k_hi = self._floor_div(hi, step)
-        crossings = k_hi - k_lo
-        return crossings if a <= b else -crossings
-
-    def _floor_div(self, a: int, b: int) -> int:
-        """Floor division that handles negative numbers correctly."""
-        q = a // b
-        r = a % b
-        if r != 0 and (a < 0) != (b < 0):
-            q -= 1
-        return q
-
     def _floor_mod(self, a: int, m: int) -> int:
         """Floor modulo that always returns a non-negative result."""
         r = a % m
@@ -249,49 +244,92 @@ class RotateTracker:
 class MultiModeRotateTracker:
     """Track rotation for all 13 Twist modes independently.
 
+    Mirrors the SDK's position/min model:
+    - position: absolute accumulated rotation (unbounded)
+    - min: lower boundary, adjusted from min_delta/max_delta in notifications
+    - bounded_position = position - min (always in [0, D360])
+
     Each Flic Twist has 13 modes:
-    - Modes 0-11: Individual slot positions (each tracks 0-360 degrees)
-    - Mode 12: Push-twist mode (rotation selects which slot 0-11 is active)
+    - Modes 0-11: Individual slot positions (bounded to 0-D360)
+    - Mode 12: Slot-changing mode (free rotation to select active slot)
     """
 
     def __init__(self) -> None:
         """Initialize trackers for all 13 modes."""
         self._trackers: list[RotateTracker] = [RotateTracker() for _ in range(13)]
+        self._positions: list[int] = [0] * 13  # absolute position per mode
+        self._mins: list[int] = [0] * 13  # min boundary per mode
         self._received_packet_count: int = 0
 
-    def apply(self, mode_index: int, delta: int) -> RotateResult:
-        """Apply rotation delta to specific mode tracker.
-
-        For slot modes (0-11), the accumulated units are clamped to 0-D360
-        so the position stays within 0-100% and doesn't require excessive
-        rotation to return from the limits.
+    def apply(
+        self,
+        mode_index: int,
+        total_delta: int,
+        min_delta: int = 0,
+        max_delta: int = 0,
+        last_min_update_was_top: bool = False,
+    ) -> RotateResult:
+        """Apply rotation delta using the SDK's position/min tracking.
 
         Args:
             mode_index: The twist mode index (0-12)
-            delta: Rotation delta in units
+            total_delta: Total rotation delta from TwistEventNotification
+            min_delta: Minimum intermediate delta (for min boundary updates)
+            max_delta: Maximum intermediate delta (for min boundary updates)
+            last_min_update_was_top: Controls order of boundary checks
 
         Returns:
             RotateResult with updated state for this mode
 
         """
         self._received_packet_count += 1
-        if 0 <= mode_index < 13:
-            tracker = self._trackers[mode_index]
-            result = tracker.apply(delta)
-            # Clamp slot modes (0-11) to 0-D360 range (0-100%)
-            # Mode 12 (push-twist selector) is not clamped
-            if mode_index < 12:
-                tracker.clamp_accumulated_units(0, D360)
-            return result
-        # Fallback to mode 0 for out-of-range indices
-        return self._trackers[0].apply(delta)
+        if not 0 <= mode_index < 13:
+            mode_index = 0
+
+        # Update absolute position (unbounded)
+        new_position = self._positions[mode_index] + total_delta
+
+        # Update min boundary for slot modes (0-11) using SDK logic
+        current_min = self._mins[mode_index]
+        if mode_index < 12:
+            bottom = new_position - min_delta
+            top = new_position - max_delta
+
+            if last_min_update_was_top:
+                current_min = min(current_min, bottom)
+                if top > current_min + D360:
+                    current_min = top - D360
+            else:
+                if top > current_min + D360:
+                    current_min = top - D360
+                current_min = min(current_min, bottom)
+
+            # Final bounds check
+            if new_position < current_min:
+                current_min = new_position
+            elif new_position > current_min + D360:
+                current_min = new_position - D360
+
+            self._mins[mode_index] = current_min
+
+        self._positions[mode_index] = new_position
+
+        # Compute bounded position (display value)
+        bounded = new_position - self._mins[mode_index]
+
+        # Use bounded delta for RotateTracker (detent crossings, velocity)
+        tracker = self._trackers[mode_index]
+        old_acc = tracker.accumulated_units
+        bounded_delta = bounded - old_acc
+        result = tracker.apply(bounded_delta)
+        # Keep tracker in sync with bounded position
+        if tracker.accumulated_units != bounded:
+            tracker.set_accumulated_units(bounded)
+
+        return result
 
     def get_mode_percentage(self, mode_index: int) -> float:
-        """Get current position as 0-100% for a mode, clamped.
-
-        For slot modes (0-11), the percentage is clamped between 0 and 100
-        rather than wrapping around. This means rotating past 100% stays at 100%,
-        and rotating below 0% stays at 0%.
+        """Get bounded position as 0-100% for a mode.
 
         Args:
             mode_index: The twist mode index (0-12)
@@ -301,28 +339,43 @@ class MultiModeRotateTracker:
 
         """
         if 0 <= mode_index < 13:
-            tracker = self._trackers[mode_index]
-            # Use accumulated units and clamp to 0-100% range
-            # D360 units = one full rotation = 100%
-            raw_percentage = (tracker.accumulated_units / D360) * 100.0
+            bounded = self._positions[mode_index] - self._mins[mode_index]
+            raw_percentage = (bounded / D360) * 100.0
             return max(0.0, min(100.0, raw_percentage))
         return 0.0
 
-    def get_mode_position(self, mode_index: int) -> int:
-        """Get raw accumulated units for a mode.
+    def get_absolute_position(self, mode_index: int) -> int:
+        """Get absolute (unbounded) position for a mode.
 
-        Used for UpdateTwistPosInd to sync host state with device.
+        Used to compute new_min in UpdateTwistPositionRequest.
 
         Args:
             mode_index: The twist mode index (0-12)
 
         Returns:
-            Raw accumulated units value
+            Absolute accumulated position value
 
         """
         if 0 <= mode_index < 13:
-            return self._trackers[mode_index].accumulated_units
+            return self._positions[mode_index]
         return 0
+
+    def set_mode_min(self, mode_index: int, new_min: int) -> None:
+        """Set min boundary for a mode.
+
+        Called after sending UpdateTwistPositionRequest to keep local
+        state in sync with the device.
+
+        Args:
+            mode_index: The twist mode index (0-12)
+            new_min: New min boundary value
+
+        """
+        if 0 <= mode_index < 13:
+            self._mins[mode_index] = new_min
+            # Update tracker to match new bounded position
+            bounded = self._positions[mode_index] - new_min
+            self._trackers[mode_index].set_accumulated_units(bounded)
 
     @property
     def received_packet_count(self) -> int:

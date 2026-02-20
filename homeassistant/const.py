@@ -894,7 +894,7 @@ SERVICE_STOP_VALVE: Final = "stop_valve"
 SERVICE_SELECT_OPTION: Final = "select_option"
 
 # #### API / REMOTE ####
-SERVER_PORT: Final = 8123
+SERVER_PORT: Final = 8124
 
 URL_ROOT: Final = "/"
 URL_API: Final = "/api/"

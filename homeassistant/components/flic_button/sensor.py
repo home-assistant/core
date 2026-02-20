@@ -12,10 +12,49 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry
+from .const import DeviceType
 from .coordinator import FlicCoordinator
 from .entity import FlicButtonEntity
 
 PARALLEL_UPDATES = 0
+
+# Piecewise linear discharge curves: (voltage, percentage) pairs sorted by voltage.
+# CR2032 coin cell (Flic 2) and rechargeable (Duo) — from firmware formula.
+_DISCHARGE_CURVE_COIN_CELL: tuple[tuple[float, int], ...] = (
+    (2.1, 0),
+    (2.44, 6),
+    (2.74, 18),
+    (2.9, 42),
+    (3.0, 100),
+)
+
+# 2x AAA alkaline (Flic Twist) operates in a 1.8-3.2V range.
+_DISCHARGE_CURVE_AAA: tuple[tuple[float, int], ...] = (
+    (1.8, 0),
+    (2.0, 5),
+    (2.4, 10),
+    (2.6, 25),
+    (2.8, 50),
+    (3.0, 80),
+    (3.2, 100),
+)
+
+
+def _voltage_to_percentage(voltage: float, curve: tuple[tuple[float, int], ...]) -> int:
+    """Convert voltage to percentage using piecewise linear interpolation."""
+    if voltage <= curve[0][0]:
+        return curve[0][1]
+    if voltage >= curve[-1][0]:
+        return curve[-1][1]
+
+    for i in range(1, len(curve)):
+        v_low, p_low = curve[i - 1]
+        v_high, p_high = curve[i]
+        if voltage <= v_high:
+            fraction = (voltage - v_low) / (v_high - v_low)
+            return int(p_low + fraction * (p_high - p_low))
+
+    return curve[-1][1]
 
 
 async def async_setup_entry(
@@ -54,12 +93,13 @@ class FlicBatterySensor(FlicButtonEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        # Get voltage from coordinator data
         voltage = self.coordinator.data.get("battery_voltage")
         if voltage is None:
             return None
 
-        # Convert voltage to percentage
-        # Flic 2 battery voltage ranges from approximately 3.0V (empty) to 3.6V (full)
-        # Using linear approximation
-        return min(100, max(0, int((voltage - 3.0) / 0.6 * 100)))
+        curve = (
+            _DISCHARGE_CURVE_AAA
+            if self.coordinator.device_type == DeviceType.TWIST
+            else _DISCHARGE_CURVE_COIN_CELL
+        )
+        return _voltage_to_percentage(voltage, curve)
