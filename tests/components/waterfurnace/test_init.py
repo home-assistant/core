@@ -8,6 +8,7 @@ from homeassistant.components.waterfurnace.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -40,10 +41,12 @@ async def test_setup_multi_device(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, dict)
-    assert len(mock_config_entry.runtime_data) == 2
-    assert "TEST_GWID_12345" in mock_config_entry.runtime_data
-    assert "TEST_GWID_67890" in mock_config_entry.runtime_data
+
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(devices) == 2
 
 
 async def test_migrate_unique_id(
