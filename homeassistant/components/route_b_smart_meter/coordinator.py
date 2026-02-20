@@ -148,7 +148,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             try:
                 self._reopen()
                 return self._get_data()
-            except MomongaNeedToReopen as error:
+            except MomongaError as error:
                 last_error = error
                 if attempt < MAX_REOPEN_ATTEMPTS:
                     time.sleep(REOPEN_BACKOFF_SECONDS)
