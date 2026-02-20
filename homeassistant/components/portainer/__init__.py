@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
-from pyportainer import Portainer
+from pyportainer import Portainer, PortainerImageWatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,9 +14,11 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -31,6 +34,7 @@ _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.BUTTON,
+    Platform.UPDATE,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -50,12 +54,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
     )
+    watcher = PortainerImageWatcher(client, interval=timedelta(hours=3))
 
-    coordinator = PortainerCoordinator(hass, entry, client)
+    coordinator = PortainerCoordinator(hass, entry, client, watcher)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    @callback
+    def _start_watcher(_event: Event) -> None:
+        """Start the image watcher in the event loop."""
+        watcher.start()
+
+    @callback
+    def _stop_watcher(_event: Event) -> None:
+        """Stop the image watcher in the event loop."""
+        watcher.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start_watcher)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
 
     return True
 
@@ -68,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Unload a config entry."""
+    entry.runtime_data.watcher.stop()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 

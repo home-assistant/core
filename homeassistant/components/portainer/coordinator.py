@@ -18,9 +18,12 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    LocalImageInformation,
+    PortainerImageUpdateStatus,
 )
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
+from pyportainer.watcher import PortainerImageWatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -55,8 +58,11 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
+    container_inspect: DockerInspect
+    local_image: LocalImageInformation
     stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
+    image_status: PortainerImageUpdateStatus | None = None
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -69,6 +75,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         hass: HomeAssistant,
         config_entry: PortainerConfigEntry,
         portainer: Portainer,
+        watcher: PortainerImageWatcher,
     ) -> None:
         """Initialize the Portainer Data Update Coordinator."""
         super().__init__(
@@ -79,6 +86,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.portainer = portainer
+        self.watcher = watcher
 
         self.known_endpoints: set[int] = set()
         self.known_containers: set[tuple[int, str]] = set()
@@ -171,10 +179,32 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         if prev_endpoint
                         else None
                     )
+
+                    container_inspect = await self.portainer.inspect_container(
+                        endpoint.id, container.id
+                    )
+                    local_image = await self.portainer.get_image(
+                        endpoint.id, str(container_inspect.image)
+                    )
+
+                    # Periododically check if Portainer Watcher has results for this container's image
+                    image_status = (
+                        result.status
+                        if (
+                            result := self.watcher.results.get(
+                                (endpoint.id, container.id)
+                            )
+                        )
+                        else None
+                    )
+
                     container_map[container_name] = PortainerContainerData(
                         container=container,
+                        container_inspect=container_inspect,
+                        local_image=local_image,
                         stats=None,
                         stats_pre=prev_container.stats if prev_container else None,
+                        image_status=image_status,
                     )
 
                 # Separately fetch stats for running containers

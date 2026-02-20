@@ -1,14 +1,15 @@
 """Common fixtures for the portainer tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    LocalImageInformation,
 )
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 import pytest
 
@@ -40,7 +41,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_portainer_client() -> Generator[AsyncMock]:
+def mock_portainer_watcher() -> Generator[MagicMock]:
+    """Mock PortainerImageWatcher with no results by default."""
+    with patch(
+        "homeassistant.components.portainer.PortainerImageWatcher", autospec=True
+    ) as mock_watcher_class:
+        watcher = mock_watcher_class.return_value
+        watcher.results = {}
+        yield watcher
+
+
+@pytest.fixture
+def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncMock]:
     """Mock Portainer client with dynamic exception injection support."""
     with (
         patch(
@@ -72,9 +84,16 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.docker_system_df.return_value = DockerSystemDF.from_dict(
             load_json_value_fixture("docker_system_df.json", DOMAIN)
         )
+        client.inspect_container.return_value = DockerInspect.from_dict(
+            load_json_value_fixture("container_inspect.json", DOMAIN)
+        )
+        client.get_image.return_value = LocalImageInformation.from_dict(
+            load_json_value_fixture("local_image_information.json", DOMAIN)
+        )
 
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
+        client.container_recreate = AsyncMock(return_value=None)
 
         yield client
 

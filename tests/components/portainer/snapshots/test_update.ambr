@@ -1,0 +1,306 @@
+# serializer version: 1
+# name: test_update_entities[update.focused_einstein-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.focused_einstein',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'container_image_update',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_container_image_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities[update.focused_einstein-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'friendly_name': 'focused_einstein',
+      'in_progress': False,
+      'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': 'focused_einstein',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.focused_einstein',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_entities[update.funny_chatelet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.funny_chatelet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'container_image_update',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_image_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities[update.funny_chatelet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'friendly_name': 'funny_chatelet',
+      'in_progress': False,
+      'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': 'funny_chatelet',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.funny_chatelet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_entities[update.practical_morse-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.practical_morse',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'container_image_update',
+    'unique_id': 'portainer_test_entry_123_practical_morse_container_image_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities[update.practical_morse-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'friendly_name': 'practical_morse',
+      'in_progress': False,
+      'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': 'practical_morse',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.practical_morse',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_entities[update.serene_banach-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.serene_banach',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'container_image_update',
+    'unique_id': 'portainer_test_entry_123_serene_banach_container_image_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities[update.serene_banach-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'friendly_name': 'serene_banach',
+      'in_progress': False,
+      'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': 'serene_banach',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.serene_banach',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_entities[update.stoic_turing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.stoic_turing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'container_image_update',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_container_image_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities[update.stoic_turing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/portainer/icon.png',
+      'friendly_name': 'stoic_turing',
+      'in_progress': False,
+      'installed_version': 'sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': 'stoic_turing',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.stoic_turing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
