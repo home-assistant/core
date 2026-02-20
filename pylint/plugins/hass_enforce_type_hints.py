@@ -711,6 +711,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="icon",
         return_type=["str", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="entity_picture",
