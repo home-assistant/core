@@ -857,6 +857,7 @@ async def test_web_search(
     )
     # Don't test the prompt because it's not deterministic
     assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
 @pytest.mark.parametrize(

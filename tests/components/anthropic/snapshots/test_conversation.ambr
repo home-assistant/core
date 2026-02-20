@@ -818,3 +818,111 @@
     }),
   ])
 # ---
+# name: test_web_search.1
+  list([
+    dict({
+      'content': "What's on the news today?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': "To get today's news, I'll perform a web search",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'query': "today's news",
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': '2 days ago',
+              'title': "Today's News - Example.com",
+              'type': 'web_search_result',
+              'url': 'https://www.example.com/todays-news',
+            }),
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Breaking News - NewsSite.com',
+              'type': 'web_search_result',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "Great! All clear, let's reply to the user!",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': '''
+            Here's what I found on the web about today's news:
+            1. New Home Assistant release
+            2. Something incredible happened
+            Those are the main headlines making news today.
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+  
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'This release iterates on some of the features we introduced in the last couple of releases, but also...',
+              'encrypted_index': 'AAA==',
+              'title': 'Home Assistant Release',
+              'type': 'web_search_result_location',
+              'url': 'https://www.example.com/todays-news',
+            }),
+          ]),
+          'text': '',
+          'type': 'text',
+        }),
+        dict({
+          'text': '',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Breaking news from around the world today includes major events in technology, politics, and culture...',
+              'encrypted_index': 'AQE=',
+              'title': 'Breaking News',
+              'type': 'web_search_result_location',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+            dict({
+              'cited_text': 'Well, this happened...',
+              'encrypted_index': 'AgI=',
+              'title': 'Breaking News',
+              'type': 'web_search_result_location',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+          ]),
+          'text': '',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
