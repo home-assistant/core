@@ -2,17 +2,17 @@
 
 DOMAIN = "indevolt"
 
-# API write/read keys for energy and real-time control modes
-ENERGY_MODE_READ_KEY = "7101"
-ENERGY_MODE_WRITE_KEY = "47005"
-REALTIME_ACTION_KEY = "47015"
+# Default configurations
+DEFAULT_PORT = 8080
 
 # Config entry fields
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_GENERATION = "generation"
 
-# Default values
-DEFAULT_PORT = 8080
+# API write/read keys for energy and real-time control modes
+ENERGY_MODE_READ_KEY = "7101"
+ENERGY_MODE_WRITE_KEY = "47005"
+REALTIME_ACTION_KEY = "47015"
 
 # API key fields
 SENSOR_KEYS = {
@@ -111,6 +111,14 @@ SENSOR_KEYS = {
     ],
 }
 
+# The map of Energy Modes and associated API values
+ENERGY_MODES = {
+    "self_consumed_prioritized": 1,
+    "real_time_control": 4,
+    "charge_discharge_schedule": 5,
+}
+
+# The map of Power Limits per device generation
 POWER_LIMITS = {
     1: {"max_discharge_power": 800, "max_charge_power": 1200},
     2: {"max_discharge_power": 2400, "max_charge_power": 2400},
