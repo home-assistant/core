@@ -299,6 +299,31 @@ async def test_water_heater_no_sensors(
     assert state.attributes.get("temperature") is None
 
 
+async def test_current_operation_non_int_value(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test current_operation returns None when operating_mode value is not an int."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    # Set operating_mode to a non-None object with a non-int value
+    mock_operating_mode = MagicMock()
+    mock_operating_mode.value = "some_string"
+    mock_bsblan.hot_water_state.return_value.operating_mode = mock_operating_mode
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("current_operation") is None
+
+
 @pytest.mark.parametrize(
     ("fixture_name", "test_description"),
     [
