@@ -273,7 +273,7 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, list[int | float]] | None:
         """Return entity specific state attributes, e.g. cell voltages."""
-        if self.entity_description.attr_fn:
+        if self.coordinator.data and self.entity_description.attr_fn:
             return self.entity_description.attr_fn(self.coordinator.data)
 
         return None
@@ -281,7 +281,10 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        if self.coordinator.data:
+            return self.entity_description.value_fn(self.coordinator.data)
+
+        return None
 
 
 class RSSISensor(SensorEntity):
@@ -310,7 +313,6 @@ class RSSISensor(SensorEntity):
         self._attr_available = self._bms.rssi is not None
 
         LOGGER.debug("%s: RSSI value: %i dBm", self._bms.name, self._attr_native_value)
-        self.async_write_ha_state()
 
 
 class LQSensor(SensorEntity):
@@ -336,4 +338,3 @@ class LQSensor(SensorEntity):
         self._attr_native_value = self._bms.link_quality
 
         LOGGER.debug("%s: Link quality: %i %%", self._bms.name, self._attr_native_value)
-        self.async_write_ha_state()
