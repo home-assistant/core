@@ -41,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
     CoreState,
     Event,
     EventStateChangedData,
@@ -261,6 +262,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._cycle_timer = dt_util.utcnow() - self.cycle_cooldown
         self._cycle_callback: CALLBACK_TYPE | None = None
         self._check_callback: CALLBACK_TYPE | None = None
+        # Context used to detect our own toggles
+        self._context: Context | None = None
+        self._last_context_id: str | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._hvac_mode = initial_hvac_mode
@@ -515,22 +519,24 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 self._check_switch_initial_state(), eager_start=True
             )
 
-        # Update cycle timer timestamp on toggle of switch
-        # if event.context.id == self._last_context_id:
-        # origin == LOCAL, user_id == None parent == None
-        # if user_id isn't None, a user triggered it somehow
-        # if parent isn't None, then a script or automation triggered it
-        _LOGGER.debug(
-            (
-                "Switch toggled from %s to %s"
-                # f" (origin:{event.origin}, id:{event.context.id}, parent:{event.context.parent_id}, user:{event.context.user_id})"
-            ),
-            old_state.state if old_state else "unknown",
-            new_state.state if new_state else "unknown",
-        )
+        # Update cycle timer timestamp on toggle
         self._cycle_timer = new_state.last_changed
-        # TO-DO do we log a warning that the switch changed state (can we detect if it wasn't us that did it)?
-        # TO-DO do we also clear any timers set?
+
+        # Clear any lingering timers if the state change didn't originate from us
+        origin_id = getattr(event.context, "id", None)
+        if origin_id != self._last_context_id:
+            _LOGGER.debug("External switch change detected, clearing timers")
+            if self._check_callback:
+                try:
+                    self._check_callback()
+                finally:
+                    self._check_callback = None
+            if self._cycle_callback:
+                try:
+                    self._cycle_callback()
+                finally:
+                    self._cycle_callback = None
+            self._last_context_id = None
         self.async_write_ha_state()
 
     @callback
@@ -587,7 +593,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
                     # Make sure it's past the `min_cycle_duration` before turning off
-                    if self._cycle_timer + self.min_cycle_duration <= now:
+                    if self._cycle_timer + self.min_cycle_duration <= now or force:
                         _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                         await self._async_heater_turn_off()
                     elif self._check_callback is None:
@@ -609,7 +615,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     await self._async_heater_turn_on(keepalive=True)
             elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
                 # Make sure it's past the `cycle_cooldown` before turning on
-                if self._cycle_timer + self.cycle_cooldown <= now:
+                if self._cycle_timer + self.cycle_cooldown <= now or force:
                     _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                     await self._async_heater_turn_on()
                 elif self._check_callback is None:
@@ -640,6 +646,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_heater_turn_on(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        # Create a new context for this service call so we can identify
+        # the resulting state change event as originating from us
+        self._context = Context()
+        self._last_context_id = self._context.id
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
@@ -666,6 +676,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_heater_turn_off(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
+        # Create a new context for this service call so we can identify
+        # the resulting state change event as originating from us
+        self._context = Context()
+        self._last_context_id = self._context.id
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )

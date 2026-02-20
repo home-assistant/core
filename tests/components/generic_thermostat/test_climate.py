@@ -540,6 +540,38 @@ async def test_temp_change_heater_on_outside_tolerance(hass: HomeAssistant) -> N
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+async def test_external_toggle_resets_min_cycle(hass: HomeAssistant) -> None:
+    """Test that an external toggle cancels the min_cycle scheduled check."""
+    # Set up thermostat with min cycle duration and cooldown
+    await _setup_thermostat_with_min_cycle_duration(hass, False, HVACMode.HEAT)
+
+    fake_changed = datetime.datetime.now(dt_util.UTC)
+    # Perform initial actions at the same frozen time so the cycle timer is recent
+    with freeze_time(fake_changed):
+        # Start with switch on and record service call registrations
+        calls = _setup_switch(hass, True)
+
+        # Cause condition to try to turn off (inside min cycle)
+        await common.async_set_temperature(hass, 25)
+        _setup_sensor(hass, 30)
+        await hass.async_block_till_done()
+
+        # No service calls should have been made because we're within min_cycle
+        assert len(calls) == 0
+
+    # Simulate an external toggle shortly after (resets internals)
+    with freeze_time(fake_changed + datetime.timedelta(minutes=1)):
+        hass.states.async_set(ENT_SWITCH, STATE_OFF)
+        await hass.async_block_till_done()
+
+    # Advance past the original min_cycle; since callbacks were cancelled by
+    # the external toggle, no automatic turn_off should occur
+    async_fire_time_changed(hass, fake_changed + datetime.timedelta(minutes=11))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
 @pytest.mark.usefixtures("setup_comp_2")
 async def test_temp_change_heater_off_within_tolerance(hass: HomeAssistant) -> None:
     """Test if temperature change doesn't turn off within tolerance."""
@@ -795,7 +827,9 @@ async def _setup_thermostat_with_min_cycle_duration(
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "ac_mode": ac_mode,
+                # cycle_cooldown ensures switch stays off for n minutes
                 "cycle_cooldown": datetime.timedelta(minutes=10),
+                # min_cycle_duration only ensures switch stays on for n minutes
                 "min_cycle_duration": datetime.timedelta(minutes=10),
                 "initial_hvac_mode": initial_hvac_mode,
             }
@@ -886,31 +920,6 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def _setup_thermostat_with_cycle_cooldown_only(
-    hass: HomeAssistant, ac_mode: bool, initial_hvac_mode: HVACMode
-):
-    """Initialize components."""
-    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
-    assert await async_setup_component(
-        hass,
-        CLIMATE_DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test",
-                "cold_tolerance": 0.3,
-                "hot_tolerance": 0.3,
-                "heater": ENT_SWITCH,
-                "target_sensor": ENT_SENSOR,
-                "ac_mode": ac_mode,
-                "min_cycle_duration": datetime.timedelta(minutes=10),
-                "initial_hvac_mode": initial_hvac_mode,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-
 @pytest.mark.parametrize(
     (
         "ac_mode",
@@ -922,9 +931,9 @@ async def _setup_thermostat_with_cycle_cooldown_only(
         "expected_triggered_service_call",
     ),
     [
-        (True, HVACMode.OFF, False, 30, 25, HVACMode.COOL, SERVICE_TURN_ON),
+        (True, HVACMode.COOL, False, 30, 25, HVACMode.COOL, SERVICE_TURN_ON),
         (True, HVACMode.COOL, True, 25, 30, HVACMode.OFF, SERVICE_TURN_OFF),
-        (False, HVACMode.OFF, False, 25, 30, HVACMode.HEAT, SERVICE_TURN_ON),
+        (False, HVACMode.HEAT, False, 25, 30, HVACMode.HEAT, SERVICE_TURN_ON),
         (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
     ],
 )
@@ -940,7 +949,7 @@ async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_
 ) -> None:
     """Test if mode change toggles heating/cooling despite minimum cycle."""
     # Given
-    await _setup_thermostat_with_cycle_cooldown_only(hass, ac_mode, initial_hvac_mode)
+    await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
 
     # When
@@ -976,6 +985,7 @@ async def setup_comp_7(hass: HomeAssistant) -> None:
                 "target_sensor": ENT_SENSOR,
                 "ac_mode": True,
                 "min_cycle_duration": datetime.timedelta(minutes=15),
+                # cycle_cooldown ensures switch stays off for n minutes
                 "cycle_cooldown": datetime.timedelta(minutes=15),
                 "keep_alive": datetime.timedelta(minutes=10),
                 "initial_hvac_mode": HVACMode.COOL,
@@ -1051,6 +1061,7 @@ async def setup_comp_8(hass: HomeAssistant) -> None:
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "min_cycle_duration": datetime.timedelta(minutes=15),
+                # cycle_cooldown ensures switch stays off for n minutes
                 "cycle_cooldown": datetime.timedelta(minutes=15),
                 "keep_alive": datetime.timedelta(minutes=10),
                 "initial_hvac_mode": HVACMode.HEAT,
@@ -1110,6 +1121,143 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     assert call.data["entity_id"] == ENT_SWITCH
 
 
+async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
+    """Test that max_cycle_duration forces the heater off after the duration."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "max_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, False)
+    # Ensure sensor indicates below target so heater will turn on
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+
+    # Heater should have been turned on
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.service == SERVICE_TURN_ON
+
+    # Advance time to trigger max cycle shut-off
+    test_time = datetime.datetime.now(dt_util.UTC)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    # One additional turn_off call should have occurred
+    assert len(calls) == 2
+    assert calls[1].service == SERVICE_TURN_OFF
+
+
+async def test_external_toggle_resets_scheduled_callbacks(hass: HomeAssistant) -> None:
+    """Test that an external switch change cancels scheduled callbacks."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "max_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    calls = _setup_switch(hass, False)
+    # Trigger heater to turn on
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Simulate an external toggle event shortly after (resets internals)
+    test_time = datetime.datetime.now(dt_util.UTC)
+    async_fire_time_changed(hass, test_time)
+    with freeze_time(test_time + datetime.timedelta(minutes=1)):
+        hass.states.async_set(ENT_SWITCH, STATE_ON)
+        await hass.async_block_till_done()
+
+    # Advance past the original max duration; since callbacks were cancelled by
+    # the external toggle, no automatic turn_off should occur
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=11))
+    await hass.async_block_till_done()
+
+    # Only the original turn_on call should be present
+    assert len(calls) == 1
+
+
+async def test_default_cycle_cooldown_allows_immediate_restart(
+    hass: HomeAssistant,
+) -> None:
+    """Test default `cycle_cooldown` allows immediate restart when omitted."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    # Do not provide `cycle_cooldown` here; default should be zero timedelta
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Start with the switch ON so the thermostat can issue a turn_off
+    calls = _setup_switch(hass, True)
+
+    # Trigger off
+    _setup_sensor(hass, 30)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_OFF
+
+    # Reflect the physical device change (services are not changing state in
+    # this test harness). Update the entity to OFF so the thermostat sees the
+    # device as inactive and can attempt to turn it on again.
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Immediately trigger on again; with default cooldown=0 this should be allowed
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].service == SERVICE_TURN_ON
+
+
 @pytest.fixture
 async def setup_comp_9(hass: HomeAssistant) -> None:
     """Initialize components."""
@@ -1126,6 +1274,7 @@ async def setup_comp_9(hass: HomeAssistant) -> None:
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "min_cycle_duration": datetime.timedelta(minutes=15),
+                # cycle_cooldown ensures switch stays off for n minutes
                 "cycle_cooldown": datetime.timedelta(minutes=15),
                 "keep_alive": datetime.timedelta(minutes=10),
                 "precision": 0.1,
