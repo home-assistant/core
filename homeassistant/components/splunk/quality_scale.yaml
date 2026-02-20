@@ -107,10 +107,7 @@ rules:
     status: exempt
     comment: |
       Integration does not create entities.
-  exception-translations:
-    status: todo
-    comment: |
-      Consider adding exception translations for user-facing errors beyond the current strings.json error section to provide more detailed translated error messages.
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

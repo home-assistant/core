@@ -303,6 +303,23 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "american_standard": {
+      "name": "American Standard",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
+        }
+      }
+    },
     "amp_motorization": {
       "name": "AMP Motorization",
       "integration_type": "virtual",
@@ -4526,12 +4543,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "nexia": {
-      "name": "Nexia/American Standard/Trane",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "nexity": {
       "name": "Nexity Eug\u00e9nie",
       "integration_type": "virtual",
@@ -7182,6 +7193,23 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Trafikverket Weather Station"
+        }
+      }
+    },
+    "trane": {
+      "name": "Trane",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
         }
       }
     },

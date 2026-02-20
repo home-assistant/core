@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of the thermostat"
+        },
+        "description": "Put the thermostat in pairing mode (Menu > Settings > Network > Advanced Setup > Remote Connection > Pair). The thermostat must have a static IP address assigned."
+      }
+    }
+  },
+  "device": {
+    "thermostat": {
+      "name": "Thermostat ({host})"
+    }
+  },
+  "entity": {
+    "switch": {
+      "hold": {
+        "name": "Hold"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed with thermostat"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to thermostat"
+    }
+  }
+}
