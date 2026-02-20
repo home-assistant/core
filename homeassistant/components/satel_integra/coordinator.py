@@ -17,7 +17,7 @@ from .const import ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
-PARTITION_UPDATE_DEBOUNCE_DELAY = 0.1
+PARTITION_UPDATE_DEBOUNCE_DELAY = 0.15
 
 
 @dataclass
