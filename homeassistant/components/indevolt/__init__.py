@@ -77,7 +77,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         mode = ENERGY_MODES[mode_str]
 
         await asyncio.gather(
-            *(coordinator.switch_energy_mode(mode) for coordinator in coordinators)
+            *(
+                coordinator.async_switch_energy_mode(mode)
+                for coordinator in coordinators
+            )
         )
 
     async def charge(call: ServiceCall) -> None:
@@ -98,7 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
                 # Validate target SOC against emergency SOC threshold
-                emergency_soc = coordinator.data.get("6105", 10)
+                emergency_soc = await coordinator.async_get_emergency_soc()
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
@@ -134,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     _raise_power_exceeds_max(power, max_power, coordinator.generation)
 
                 # Validate target SOC against emergency SOC threshold
-                emergency_soc = coordinator.data.get("6105", 10)
+                emergency_soc = await coordinator.async_get_emergency_soc()
                 if target_soc < emergency_soc:
                     _raise_soc_below_emergency(target_soc, emergency_soc)
 
@@ -164,11 +167,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+    hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, "discharge", discharge, schema=CHARGE_SERVICE_SCHEMA
     )
-    hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, "change_energy_mode", set_mode, schema=CHANGE_MODE_SERVICE_SCHEMA
     )

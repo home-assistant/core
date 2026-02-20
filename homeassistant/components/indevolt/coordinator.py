@@ -28,6 +28,8 @@ from .const import (
     SENSOR_KEYS,
 )
 
+EMERGENCY_SOC_READ_KEY = "6105"
+
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 30
 
@@ -95,7 +97,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (ClientError, ConnectionError, OSError) as err:
             raise HomeAssistantError(f"Device push failed: {err}") from err
 
-    async def switch_energy_mode(self, target_mode: int) -> bool:
+    async def async_switch_energy_mode(self, target_mode: int) -> bool:
         """Attempt to switch device to given energy mode."""
         current_mode = self.data.get(ENERGY_MODE_READ_KEY)
 
@@ -131,6 +133,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_execute_realtime_action(self, action: list[int]) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
-        if await self.switch_energy_mode(ENERGY_MODES["real_time_control"]):
-            await self.async_push_data(REALTIME_ACTION_KEY, action)
-            await self.async_request_refresh()
+        await self.async_switch_energy_mode(ENERGY_MODES["real_time_control"])
+        await self.async_push_data(REALTIME_ACTION_KEY, action)
+        await self.async_request_refresh()
+
+    async def async_get_emergency_soc(self) -> int:
+        """Get the emergency SOC value."""
+        return self.data.get(EMERGENCY_SOC_READ_KEY, 10)

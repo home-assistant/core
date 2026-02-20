@@ -217,7 +217,8 @@ async def test_service_change_mode_current_mode_unavailable(
     await setup_integration(hass, mock_config_entry)
 
     # Remove current energy mode key from coordinator data
-    mock_indevolt.fetch_data.return_value.pop(ENERGY_MODE_READ_KEY, None)
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data.pop(ENERGY_MODE_READ_KEY, None)
 
     # Mock call with current energy mode unavailable
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -245,7 +246,8 @@ async def test_service_change_mode_outdoor_portable(
     await setup_integration(hass, mock_config_entry)
 
     # Force outdoor/portable mode
-    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = 0
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data[ENERGY_MODE_READ_KEY] = 0
 
     # Mock call with current energy mode unavailable
     with pytest.raises(HomeAssistantError) as exc_info:
