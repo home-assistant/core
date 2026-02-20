@@ -114,7 +114,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             host, port, base_path, use_tls = _parse_address(user_input[CONF_HOST])
         except ValueError:
-            errors["base"] = "cannot_connect"
+            errors["base"] = "invalid_url"
             return await self._show_setup_form(errors)
 
         self._async_abort_entries_match(
