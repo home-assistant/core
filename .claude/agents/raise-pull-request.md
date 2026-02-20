@@ -85,7 +85,6 @@ pytest tests/components/{integration} \
 
 **Track results:**
 - `TESTS_PASSED`: true if pytest exits with code 0
-- `TESTS_EXIST`: true if test files exist for this integration
 
 **If tests fail, STOP and report the failures to the user. Do not proceed with PR creation.**
 
