@@ -174,13 +174,14 @@ async def test_climate_fan(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
             {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
             blocking=True,
         )
+    assert err.value.translation_key == "service_not_supported"
 
     state = hass.states.get("climate.hallway")
     assert "fan_mode" not in state.attributes
@@ -255,13 +256,14 @@ async def test_climate_swing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
             {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_MODE: "fixedtop"},
             blocking=True,
         )
+    assert err.value.translation_key == "service_not_supported"
 
     state = hass.states.get("climate.hallway")
     assert "swing_mode" not in state.attributes
@@ -341,7 +343,7 @@ async def test_climate_horizontal_swing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_HORIZONTAL_MODE,
@@ -351,6 +353,7 @@ async def test_climate_horizontal_swing(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_not_supported"
 
     state = hass.states.get("climate.hallway")
     assert "swing_horizontal_mode" not in state.attributes
@@ -465,13 +468,14 @@ async def test_climate_temperatures(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+    assert err.value.translation_key == "service_not_supported"
 
     state = hass.states.get("climate.hallway")
     assert "temperature" not in state.attributes

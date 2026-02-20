@@ -1,6 +1,5 @@
 """Test todo entity notification action of the Bring! integration."""
 
-import re
 from unittest.mock import AsyncMock
 
 from bring_api import BringNotificationType, BringRequestException
@@ -15,7 +14,7 @@ from homeassistant.components.bring.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -63,10 +62,7 @@ async def test_send_notification_exception(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
     mock_bring_client.notify.side_effect = BringRequestException
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to send push notification for Bring! due to a connection error, try again later",
-    ):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PUSH_NOTIFICATION,
@@ -76,6 +72,7 @@ async def test_send_notification_exception(
             target={ATTR_ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
+    assert err.value.translation_key == "notify_request_failed"
 
 
 async def test_send_notification_service_validation_error(
@@ -91,12 +88,7 @@ async def test_send_notification_service_validation_error(
 
     assert bring_config_entry.state is ConfigEntryState.LOADED
     mock_bring_client.notify.side_effect = ValueError
-    with pytest.raises(
-        HomeAssistantError,
-        match=re.escape(
-            "This action requires field item, please enter a valid value for item"
-        ),
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PUSH_NOTIFICATION,
@@ -104,3 +96,5 @@ async def test_send_notification_service_validation_error(
             target={ATTR_ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
+    assert err.value.translation_key == "notify_missing_argument"
+    assert err.value.translation_placeholders == {"field": "item"}

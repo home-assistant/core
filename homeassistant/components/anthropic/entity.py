@@ -599,6 +599,7 @@ class AnthropicBaseLLMEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -770,7 +771,7 @@ class AnthropicBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.messages.create(**model_args)
 

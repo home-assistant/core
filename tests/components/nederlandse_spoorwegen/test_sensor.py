@@ -1,7 +1,9 @@
 """Test the Nederlandse Spoorwegen sensor."""
 
 from collections.abc import Generator
+from datetime import date, datetime
 from unittest.mock import AsyncMock, patch
+import zoneinfo
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -207,4 +209,173 @@ async def test_sensor_with_custom_time_parsing(
     assert (
         route_name.lower() in friendly_name
         or route_name.replace(" ", "_").lower() in state.entity_id
+    )
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_time_filtering(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+) -> None:
+    """Test that the time-based window filter correctly filters trips.
+
+    This test verifies that:
+    1. Trips BEFORE the configured time are filtered out
+    2. Trips AT or AFTER the configured time are included
+    3. The filtering is based on time-only (ignoring date)
+    """
+    # Create a config entry with a route that has time set to 16:00
+    # Test frozen at: 2025-09-15 14:30 UTC = 16:30 Amsterdam time
+    # The fixture includes trips at the following times:
+    # 16:24/16:25 (trip 0) - FILTERED OUT (departed before 16:30 now)
+    # 16:34/16:35 (trip 1) - INCLUDED (>= 16:00 configured time AND > 16:30 now)
+    # With time=16:00, only future trips at or after 16:00 are included
+    config_entry = MockConfigEntry(
+        title=INTEGRATION_TITLE,
+        data={CONF_API_KEY: API_KEY},
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_NAME: "Afternoon commute",
+                    CONF_FROM: "Ams",
+                    CONF_TO: "Rot",
+                    CONF_VIA: "Ht",
+                    CONF_TIME: "16:00",
+                },
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title="Afternoon Route",
+                unique_id=None,
+                subentry_id="test_route_time_filter",
+            ),
+        ],
+    )
+
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done()
+
+    # Should create sensors for the route
+    sensor_states = hass.states.async_all("sensor")
+    assert len(sensor_states) == 13
+
+    # Find the actual departure time sensor and next departure sensor
+    actual_departure_sensor = hass.states.get("sensor.afternoon_commute_departure")
+    next_departure_sensor = hass.states.get("sensor.afternoon_commute_next_departure")
+
+    assert actual_departure_sensor is not None, "Actual departure sensor not found"
+    assert actual_departure_sensor.state != STATE_UNKNOWN
+
+    # The sensor state is a UTC timestamp, convert it to Amsterdam time
+    ams_tz = zoneinfo.ZoneInfo("Europe/Amsterdam")
+
+    departure_dt = datetime.fromisoformat(actual_departure_sensor.state)
+    departure_local = departure_dt.astimezone(ams_tz)
+
+    hour = departure_local.hour
+    minute = departure_local.minute
+    # Verify first trip: is NOT before 16:00 (i.e., filtered trips are excluded)
+    assert hour >= 16, (
+        f"Expected first trip at or after 16:00 Amsterdam time, but got {hour}:{minute:02d}. "
+        "This means trips before the configured time were NOT filtered out by the time window filter."
+    )
+
+    # Verify next trip also passes the filter
+    assert next_departure_sensor is not None, "Next departure sensor not found"
+    next_departure_dt = datetime.fromisoformat(next_departure_sensor.state)
+    next_departure_local = next_departure_dt.astimezone(ams_tz)
+
+    next_hour = next_departure_local.hour
+    next_minute = next_departure_local.minute
+
+    # Verify next trip is also at or after 16:00
+    assert next_hour >= 16, (
+        f"Expected next trip at or after 16:00 Amsterdam time, but got {next_hour}:{next_minute:02d}. "
+        "This means the window filter is not applied consistently to all trips."
+    )
+
+    # Verify next trip is after the first trip
+    assert (next_hour, next_minute) > (hour, minute), (
+        f"Expected next trip ({next_hour}:{next_minute:02d}) to be after first trip ({hour}:{minute:02d})"
+    )
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_time_filtering_next_day(
+    hass: HomeAssistant,
+    mock_tomorrow_trips_nsapi: AsyncMock,
+) -> None:
+    """Test that time filtering automatically rolls over to next day when time is in past.
+
+    This test verifies the day boundary logic:
+    1. When configured time is >1 hour in the past, coordinator queries tomorrow's trips
+    2. The API is called with tomorrow's date + configured time
+    3. This ensures users get their morning commute trips even when configured in evening
+
+    Example: It's 16:30 (4:30 PM), user configured 08:00 (8:00 AM) for morning commute.
+    Instead of showing no trips (since 08:00 already passed today), we show tomorrow's 08:00 trips.
+    """
+    # Current time: 16:30 Amsterdam (14:30 UTC frozen)
+    # Configured time: 08:00 (8.5 hours in the past, >1 hour threshold)
+    # Expected behavior: Query tomorrow (2025-09-16) at 08:00
+    config_entry = MockConfigEntry(
+        title=INTEGRATION_TITLE,
+        data={CONF_API_KEY: API_KEY},
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_NAME: "Morning commute",
+                    CONF_FROM: "Ams",
+                    CONF_TO: "Rot",
+                    CONF_VIA: "Ht",
+                    CONF_TIME: "08:00",
+                },
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title="Morning Route",
+                unique_id=None,
+                subentry_id="test_route_morning",
+            ),
+        ],
+    )
+
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done()
+
+    # Should create sensors for the route
+    sensor_states = hass.states.async_all("sensor")
+    assert len(sensor_states) == 13
+
+    # Find the actual departure sensor
+    actual_departure_sensor = hass.states.get("sensor.morning_commute_departure")
+
+    assert actual_departure_sensor is not None, "Actual departure sensor not found"
+
+    # The sensor should have a valid trip
+    assert actual_departure_sensor.state != STATE_UNKNOWN, (
+        "Expected to have trips from tomorrow when configured time is in the past"
+    )
+
+    # Verify the first trip is tomorrow morning at or after 08:00
+    # The fixture has trips at 08:24, 08:34 on 2025-09-16 (tomorrow)
+    departure_dt = datetime.fromisoformat(actual_departure_sensor.state)
+    ams_tz = zoneinfo.ZoneInfo("Europe/Amsterdam")
+    departure_local = departure_dt.astimezone(ams_tz)
+
+    departure_hour = departure_local.hour
+    departure_minute = departure_local.minute
+    departure_date = departure_local.date()
+
+    # Verify trip is at or after 08:00 morning time
+    assert 8 <= departure_hour < 12, (
+        f"Expected morning trip (08:00-11:59) but got {departure_hour}:{departure_minute:02d}. "
+        "This means the rollover to tomorrow logic is not working correctly."
+    )
+
+    # Verify trip is from tomorrow (2025-09-16)
+    expected_date = date(2025, 9, 16)
+    assert departure_date == expected_date, (
+        f"Expected trip from tomorrow (2025-09-16) but got {departure_date}. "
+        "The coordinator should query tomorrow's trips when configured time is >1 hour in the past."
     )

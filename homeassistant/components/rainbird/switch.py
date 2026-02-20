@@ -72,7 +72,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
             )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         return {"zone": self._zone}
 
@@ -115,6 +115,6 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._zone in self.coordinator.data.active_zones
