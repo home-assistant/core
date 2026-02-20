@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import INetConfigEntry
@@ -95,7 +95,7 @@ class INetMediaPlayer(MediaPlayerEntity):
             manufacturer="Busch-Jaeger",
             model="8216 UP iNet Radio",
             sw_version=radio.sw_version or None,
-            connections={("mac", format_mac(radio.mac))} if radio.mac else set(),
+            connections={(CONNECTION_NETWORK_MAC, radio.mac)} if radio.mac else set(),
         )
         self._update_attrs()
 
