@@ -112,11 +112,7 @@ rules:
     status: exempt
     comment: |
       Integration does not create entities.
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      Consider adding reconfiguration flow to allow users to update host, port, entity filter, and SSL settings without deleting and re-adding the config entry.
-
+  reconfiguration-flow: done
   # Platinum
   async-dependency:
     status: todo
