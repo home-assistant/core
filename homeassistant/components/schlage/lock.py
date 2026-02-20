@@ -122,10 +122,10 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         codes = await self._async_fetch_access_codes()
         if not codes:
             # NOTE: codes is either `None` or a dict, return early if it's
-            # `None` to avoid unnecessary processing
+            # `None` or an empty dict to avoid unnecessary processing
             return
 
-        # NOTE: Past this line, codes is a a dict (possibly empty)
+        # NOTE: Past this line, codes is a non-empty dict
 
         normalized = self._normalize_code_name(name)
         code_id_to_delete = next(

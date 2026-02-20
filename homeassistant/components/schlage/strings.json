@@ -76,7 +76,7 @@
         },
         "name": {
           "description": "Name for PIN code. Must be case insensitively unique to lock.",
-          "name": "PIN Name"
+          "name": "PIN name"
         }
       },
       "name": "Add PIN code"
@@ -86,7 +86,7 @@
       "fields": {
         "name": {
           "description": "Name of PIN code to delete.",
-          "name": "PIN Name"
+          "name": "PIN name"
         }
       },
       "name": "Delete PIN code"
