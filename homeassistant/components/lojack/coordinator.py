@@ -43,6 +43,17 @@ class LoJackVehicleData:
     timestamp: datetime | str | None
 
 
+def get_device_name(vehicle: LoJackVehicleData) -> str:
+    """Get a human-readable name for a vehicle."""
+    if vehicle.year and vehicle.make and vehicle.model:
+        return f"{vehicle.year} {vehicle.make} {vehicle.model}"
+    if vehicle.make and vehicle.model:
+        return f"{vehicle.make} {vehicle.model}"
+    if vehicle.name:
+        return vehicle.name
+    return "Vehicle"
+
+
 def _safe_float(value: Any) -> float | None:
     """Safely convert a value to float."""
     if value is None:

@@ -11,24 +11,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry
-from .coordinator import LoJackCoordinator, LoJackVehicleData
+from .coordinator import LoJackCoordinator, LoJackVehicleData, get_device_name
 from .const import (
     ATTR_ADDRESS,
     ATTR_HEADING,
     ATTR_LAST_POLLED,
     DOMAIN,
 )
-
-
-def _get_device_name(vehicle: LoJackVehicleData) -> str:
-    """Get device name for entity naming."""
-    if vehicle.year and vehicle.make and vehicle.model:
-        return f"{vehicle.year} {vehicle.make} {vehicle.model}"
-    if vehicle.make and vehicle.model:
-        return f"{vehicle.make} {vehicle.model}"
-    if vehicle.name:
-        return vehicle.name
-    return "Vehicle"
 
 
 async def async_setup_entry(
@@ -64,13 +53,14 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         """Initialize the device tracker."""
         super().__init__(coordinator)
         self._device_id = vehicle.device_id
+        self._device_name = get_device_name(vehicle)
 
         self._attr_unique_id = vehicle.device_id
 
         # Device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.device_id)},
-            name=_get_device_name(vehicle),
+            name=self._device_name,
             manufacturer="Spireon LoJack",
             model=f"{vehicle.make} {vehicle.model}"
             if vehicle.make and vehicle.model
