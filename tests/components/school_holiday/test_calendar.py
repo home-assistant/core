@@ -1,12 +1,10 @@
-"""Test calendar platform for School Holidays integration."""
+"""Test calendar platform for School Holiday integration."""
 
 from datetime import date
 from unittest.mock import MagicMock
 
-from homeassistant.components.school_holidays.calendar import (
-    SchoolHolidaysCalendarEntity,
-)
-from homeassistant.components.school_holidays.utils import generate_unique_id
+from homeassistant.components.school_holiday.calendar import SchoolHolidayCalendarEntity
+from homeassistant.components.school_holiday.utils import generate_unique_id
 
 from .conftest import (
     TEST_CALENDAR_NAME,
@@ -25,7 +23,7 @@ from .conftest import (
 
 def test_calendar_entity_attributes() -> None:
     """Test calendar entity attributes initialization."""
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         None, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -36,7 +34,7 @@ def test_calendar_entity_attributes() -> None:
 
 def test_calendar_entity_unique_id() -> None:
     """Test that calendar entity has a unique ID."""
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         None, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -46,7 +44,7 @@ def test_calendar_entity_unique_id() -> None:
 
 def test_calendar_entity_has_entity_name() -> None:
     """Test that calendar entity has entity name enabled."""
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         None, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -58,7 +56,7 @@ def test_calendar_events_empty() -> None:
     coordinator = MagicMock()
     coordinator.data = []
 
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -84,7 +82,7 @@ def test_calendar_events_with_data() -> None:
         },
     ]
 
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -107,7 +105,7 @@ def test_calendar_available_with_coordinator() -> None:
     coordinator = MagicMock()
     coordinator.last_update_success = True
 
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 
@@ -119,7 +117,7 @@ def test_calendar_unavailable_with_failed_coordinator() -> None:
     coordinator = MagicMock()
     coordinator.last_update_success = False
 
-    entity = SchoolHolidaysCalendarEntity(
+    entity = SchoolHolidayCalendarEntity(
         coordinator, TEST_CALENDAR_NAME, TEST_COUNTRY, TEST_REGION
     )
 

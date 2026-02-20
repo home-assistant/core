@@ -614,7 +614,7 @@ FLOWS = {
         "satel_integra",
         "saunum",
         "schlage",
-        "school_holidays",
+        "school_holiday",
         "scrape",
         "screenlogic",
         "season",

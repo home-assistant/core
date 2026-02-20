@@ -1,4 +1,4 @@
-"""Calendar platform for the School Holidays integration."""
+"""Calendar platform for the School Holiday integration."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SchoolHolidaysConfigEntry
-from .coordinator import SchoolHolidaysCoordinator
+from . import SchoolHolidayConfigEntry
+from .coordinator import SchoolHolidayCoordinator
 from .utils import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,32 +20,32 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: SchoolHolidaysConfigEntry,
+    entry: SchoolHolidayConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Setup the School Holidays calendar."""
+    """Setup the School Holiday calendar."""
     coordinator = entry.runtime_data
     country = str(entry.data.get(CONF_COUNTRY))
     region = str(entry.data.get(CONF_REGION))
     name = str(entry.data.get(CONF_NAME))
 
     async_add_entities(
-        [SchoolHolidaysCalendarEntity(coordinator, name, country, region)], True
+        [SchoolHolidayCalendarEntity(coordinator, name, country, region)], True
     )
 
 
-class SchoolHolidaysCalendarEntity(
-    CoordinatorEntity[SchoolHolidaysCoordinator], CalendarEntity
+class SchoolHolidayCalendarEntity(
+    CoordinatorEntity[SchoolHolidayCoordinator], CalendarEntity
 ):
-    """Representation of the School Holidays calendar."""
+    """Representation of the School Holiday calendar."""
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:school"
-    _attr_translation_key = "school_holidays"
+    _attr_translation_key = "school_holiday"
 
     def __init__(
         self,
-        coordinator: SchoolHolidaysCoordinator,
+        coordinator: SchoolHolidayCoordinator,
         name: str | None,
         country: str,
         region: str,

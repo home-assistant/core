@@ -1,13 +1,11 @@
-"""Test __init__.py for School Holidays integration."""
+"""Test __init__.py for School Holiday integration."""
 
 from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.school_holidays.coordinator import (
-    SchoolHolidaysCoordinator,
-)
+from homeassistant.components.school_holiday.coordinator import SchoolHolidayCoordinator
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -26,7 +24,7 @@ async def test_coordinator_update_data(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test coordinator data update."""
-    coordinator = SchoolHolidaysCoordinator(
+    coordinator = SchoolHolidayCoordinator(
         hass, TEST_COUNTRY, TEST_REGION, mock_config_entry
     )
 
@@ -75,7 +73,7 @@ async def test_coordinator_update_data(
             return None
 
     with patch(
-        "homeassistant.components.school_holidays.coordinator.aiohttp.ClientSession",
+        "homeassistant.components.school_holiday.coordinator.aiohttp.ClientSession",
         return_value=MockSession(),
     ):
         data = await coordinator._async_update_data()
@@ -93,7 +91,7 @@ async def test_coordinator_invalid_country(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test coordinator with invalid country."""
-    coordinator = SchoolHolidaysCoordinator(
+    coordinator = SchoolHolidayCoordinator(
         hass, "Invalid Country", "Region", mock_config_entry
     )
 

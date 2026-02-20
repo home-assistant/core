@@ -5985,8 +5985,8 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "school_holidays": {
-      "name": "School Holidays",
+    "school_holiday": {
+      "name": "School Holiday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

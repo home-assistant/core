@@ -1,4 +1,4 @@
-"""Coordinator for the School Holidays integration."""
+"""Coordinator for the School Holiday integration."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from .utils import clean_string, create_calendar_event, ensure_date
 _LOGGER = logging.getLogger(__name__)
 
 
-class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+class SchoolHolidayCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator to update the calendar at the specified interval."""
 
     def __init__(
@@ -30,7 +30,7 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         super().__init__(
             hass,
             logger=_LOGGER,
-            name="School Holidays",
+            name="School Holiday",
             update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
             config_entry=config_entry,
         )
@@ -49,7 +49,7 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         return []
 
     async def _get_school_holidays_nl(self) -> list[dict[str, Any]]:
-        url = "https://opendata.rijksoverheid.nl/v1/sources/rijksoverheid/infotypes/schoolholidays?output=json"
+        url = "https://opendata.rijksoverheid.nl/v1/sources/rijksoverheid/infotypes/SchoolHoliday?output=json"
         events: list[dict[str, Any]] = []
 
         _LOGGER.debug("Retrieving school holidays from '%s'", url)
@@ -84,7 +84,7 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                         [(vacation, content) for vacation in vacations]
                     )
 
-            school_holidays = []
+            school_holiday = []
             for vacation, content in all_vacations:
                 summary = vacation.get("type").strip()
                 regions = vacation.get("regions", [])
@@ -101,9 +101,9 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
                     notice = item_notices.get(id(content)) if use_notice else None
 
-                    school_holidays.append((summary, region_data, notice))
+                    school_holiday.append((summary, region_data, notice))
 
-            for summary, region_data, notice in school_holidays:
+            for summary, region_data, notice in school_holiday:
                 start_date = region_data.get("startdate")
                 end_date = region_data.get("enddate")
                 if not start_date or not end_date:

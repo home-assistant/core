@@ -1,4 +1,4 @@
-"""Test config flow for School Holidays integration."""
+"""Test config flow for School Holiday integration."""
 
 import pytest
 

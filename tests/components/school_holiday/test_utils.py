@@ -1,10 +1,10 @@
-"""Test utils.py for School Holidays integration."""
+"""Test utils.py for School Holiday integration."""
 
 from datetime import date
 
 import pytest
 
-from homeassistant.components.school_holidays import utils
+from homeassistant.components.school_holiday import utils
 
 from .conftest import (
     TEST_SPRING_BREAK_DESCRIPTION,

@@ -1,4 +1,4 @@
-"""Config flow for the School Holidays integration."""
+"""Config flow for the School Holiday integration."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from .const import COUNTRIES, DOMAIN, REGIONS
 from .utils import generate_unique_id
 
 
-class SchoolHolidaysConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for School Holidays."""
+class SchoolHolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for School Holiday."""
 
     VERSION = 1
     MINOR_VERSION = 0

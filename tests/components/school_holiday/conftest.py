@@ -1,15 +1,15 @@
-"""Fixtures for School Holidays integration tests."""
+"""Fixtures for School Holiday integration tests."""
 
 import pytest
 
-from homeassistant.components.school_holidays.utils import generate_unique_id
+from homeassistant.components.school_holiday.utils import generate_unique_id
 from homeassistant.const import CONF_COUNTRY, CONF_NAME, CONF_REGION
 
 from tests.common import MockConfigEntry
 
-DOMAIN = "school_holidays"
+DOMAIN = "school_holiday"
 
-TEST_CALENDAR_NAME = "School Holidays"
+TEST_CALENDAR_NAME = "School Holiday"
 TEST_COUNTRY = "The Netherlands"
 TEST_REGION = "Midden"
 

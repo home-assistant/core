@@ -1,4 +1,4 @@
-"""Utility functions for the School Holidays integration."""
+"""Utility functions for the School Holiday integration."""
 
 from datetime import date, datetime
 import logging

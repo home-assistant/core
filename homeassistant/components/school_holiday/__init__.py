@@ -1,4 +1,4 @@
-"""The School Holidays integration."""
+"""The School Holiday integration."""
 
 from __future__ import annotations
 
@@ -8,20 +8,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import SchoolHolidaysCoordinator
+from .coordinator import SchoolHolidayCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
-type SchoolHolidaysConfigEntry = ConfigEntry[SchoolHolidaysCoordinator]
+type SchoolHolidayConfigEntry = ConfigEntry[SchoolHolidayCoordinator]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: SchoolHolidaysConfigEntry
+    hass: HomeAssistant, entry: SchoolHolidayConfigEntry
 ) -> bool:
-    """Setup the School Holidays integration."""
-    _LOGGER.debug("Starting setup of School Holidays integration")
-    coordinator = SchoolHolidaysCoordinator(
+    """Setup the School Holiday integration."""
+    _LOGGER.debug("Starting setup of School Holiday integration")
+    coordinator = SchoolHolidayCoordinator(
         hass,
         entry.data[CONF_COUNTRY],
         entry.data[CONF_REGION],
@@ -39,5 +39,5 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload the School Holidays integration."""
+    """Unload the School Holiday integration."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

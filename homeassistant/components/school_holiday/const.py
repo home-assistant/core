@@ -3,7 +3,7 @@
 COUNTRIES = [
     "The Netherlands",
 ]
-DOMAIN = "school_holidays"
+DOMAIN = "school_holiday"
 REGIONS = {
     "The Netherlands": ["Midden", "Noord", "Zuid"],
 }

@@ -1,4 +1,4 @@
-"""Test __init__.py for School Holidays integration."""
+"""Test __init__.py for School Holiday integration."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -18,7 +18,7 @@ async def test_async_setup_entry(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.school_holidays.coordinator.SchoolHolidaysCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator.async_config_entry_first_refresh",
         return_value=AsyncMock(),
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -35,7 +35,7 @@ async def test_async_unload_entry(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.school_holidays.coordinator.SchoolHolidaysCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.school_holiday.coordinator.SchoolHolidayCoordinator.async_config_entry_first_refresh",
         return_value=AsyncMock(),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
