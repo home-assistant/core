@@ -1954,7 +1954,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "template",
     "tesla_fleet",
     "tesla_wall_connector",
-    "teslemetry",
     "tessie",
     "tfiac",
     "thermobeacon",
