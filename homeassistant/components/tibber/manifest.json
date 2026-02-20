@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials", "recorder"],
   "documentation": "https://www.home-assistant.io/integrations/tibber",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["tibber"],
   "requirements": ["pyTibber==0.35.0"]
