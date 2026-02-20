@@ -398,7 +398,7 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=1,
+                node_id=matter_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,
@@ -433,7 +433,7 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=1,
+                node_id=matter_node.node_id,
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,
