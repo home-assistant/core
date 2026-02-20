@@ -219,7 +219,6 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         key=ATTR_RSSI,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key=ATTR_RSSI,
         value_fn=lambda data: None,  # RSSI is handled in a separate class
     ),
     BmsEntityDescription(

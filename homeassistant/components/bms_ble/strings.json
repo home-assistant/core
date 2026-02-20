@@ -44,9 +44,6 @@
       "min_cell_voltage": {
         "name": "Lowest cell voltage"
       },
-      "rssi": {
-        "name": "RSSI"
-      },
       "runtime": {
         "name": "Runtime"
       }
