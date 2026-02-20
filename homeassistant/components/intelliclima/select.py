@@ -1,7 +1,7 @@
 """Select platform for IntelliClima VMC."""
 
-from pyintelliclima.intelliclima_types import IntelliClimaECO
 from pyintelliclima.const import FanMode, FanSpeed
+from pyintelliclima.intelliclima_types import IntelliClimaECO
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
