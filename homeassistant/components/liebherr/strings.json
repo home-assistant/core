@@ -51,10 +51,10 @@
       "bio_fresh_plus": {
         "name": "BioFresh-Plus",
         "state": {
-          "minus_two_minus_two": "-2|-2",
-          "minus_two_zero": "-2|0",
-          "zero_minus_two": "0|-2",
-          "zero_zero": "0|0"
+          "minus_two_minus_two": "-2°C | -2°C",
+          "minus_two_zero": "-2°C | 0°C",
+          "zero_minus_two": "0°C | -2°C",
+          "zero_zero": "0°C | 0°C"
         }
       },
       "bio_fresh_plus_bottom_zone": {
