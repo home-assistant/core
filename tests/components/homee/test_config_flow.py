@@ -254,19 +254,24 @@ async def test_zeroconf_confirm_errors(
 
 
 @pytest.mark.parametrize(
-    ("ip", "reason"),
-    [(HOMEE_IP, "already_configured"), ("192.168.1.171", "2nd_ip_address")],
+    ("ip", "connected", "reason"),
+    [
+        (HOMEE_IP, True, "already_configured"),
+        ("192.168.1.171", True, "2nd_ip_address"),
+        ("192.168.1.171", False, "already_configured"),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     ip: str,
+    connected: bool,
     reason: str,
 ) -> None:
     """Test zeroconf discovery flow when already configured."""
     mock_config_entry.runtime_data = AsyncMock()
-    mock_config_entry.runtime_data.connected = True
+    mock_config_entry.runtime_data.connected = connected
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
