@@ -11,20 +11,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import (
     TEST_ACCURACY,
     TEST_ADDRESS,
-    TEST_BATTERY_VOLTAGE,
-    TEST_COLOR,
     TEST_DEVICE_ID,
     TEST_DEVICE_NAME,
-    TEST_ENGINE_HOURS,
     TEST_HEADING,
     TEST_LATITUDE,
-    TEST_LICENSE_PLATE,
     TEST_LONGITUDE,
     TEST_MAKE,
     TEST_MODEL,
-    TEST_ODOMETER,
     TEST_PASSWORD,
-    TEST_SPEED,
     TEST_TIMESTAMP,
     TEST_USERNAME,
     TEST_VIN,
@@ -66,11 +60,6 @@ def mock_device() -> MagicMock:
     device.make = TEST_MAKE
     device.model = TEST_MODEL
     device.year = TEST_YEAR
-    device.color = TEST_COLOR
-    device.license_plate = TEST_LICENSE_PLATE
-    device.odometer = TEST_ODOMETER
-    device.location = {}
-    device.request_fresh_location = AsyncMock(return_value=TEST_TIMESTAMP)
     return device
 
 
@@ -81,10 +70,7 @@ def mock_location() -> MagicMock:
     location.latitude = TEST_LATITUDE
     location.longitude = TEST_LONGITUDE
     location.accuracy = TEST_ACCURACY
-    location.speed = TEST_SPEED
     location.heading = TEST_HEADING
-    location.battery_voltage = TEST_BATTERY_VOLTAGE
-    location.engine_hours = TEST_ENGINE_HOURS
     location.address = TEST_ADDRESS
     location.timestamp = TEST_TIMESTAMP
     return location

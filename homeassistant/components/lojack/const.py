@@ -12,9 +12,6 @@ LOGGER = logging.getLogger(__package__)
 # Default polling interval (in minutes)
 DEFAULT_UPDATE_INTERVAL: Final = 5
 
-# Thresholds
-MOVEMENT_SPEED_THRESHOLD: Final = 0.5  # mph - minimum speed to consider vehicle moving
-
 # Extra state attributes for device tracker
 ATTR_ADDRESS: Final = "address"
 ATTR_HEADING: Final = "heading"

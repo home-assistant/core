@@ -49,9 +49,15 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Vehicles are tied to the user account. Changes require integration reload.
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
+  entity-category:
+    status: exempt
+    comment: The device tracker entity does not require a category.
+  entity-device-class:
+    status: exempt
+    comment: TrackerEntity uses source_type rather than device_class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The device tracker entity is the primary entity and should be enabled by default.
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
