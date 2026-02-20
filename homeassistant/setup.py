@@ -7,6 +7,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
+from dataclasses import dataclass
 from enum import StrEnum
 from functools import partial
 import logging.handlers
@@ -688,6 +689,26 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
+_WAIT_PHASES: set[SetupPhases] = {
+    SetupPhases.WAIT_BASE_PLATFORM_SETUP,
+    SetupPhases.WAIT_IMPORT_PLATFORMS,
+    SetupPhases.WAIT_IMPORT_PACKAGES,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class DomainSetupBreakdown:
+    """Elapsed setup time breakdown for a domain."""
+
+    setup: float
+    wait: float
+
+    @property
+    def total(self) -> float:
+        """Return the total per-domain setup time."""
+        return self.setup + self.wait
+
+
 @singleton.singleton(_DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
@@ -823,6 +844,65 @@ def async_get_setup_timings(hass: core.HomeAssistant) -> dict[str, float]:
         domain_timings[domain] = total_top_level + group_max
 
     return domain_timings
+
+
+@callback
+def async_get_setup_timings_breakdown(
+    hass: core.HomeAssistant,
+) -> dict[str, DomainSetupBreakdown]:
+    """Return elapsed setup timing breakdown for each integration.
+
+    total: same semantics as async_get_setup_timings()
+    setup: elapsed time attributed to non-wait phases
+    wait: elapsed time attributed to WAIT_* phases (absolute value)
+    """
+    setup_time = _setup_times(hass)
+    domain_breakdowns: dict[str, DomainSetupBreakdown] = {}
+
+    def _split(phases: Mapping[SetupPhases, float]) -> tuple[float, float]:
+        """Return (setup, wait) elapsed seconds for a phase mapping."""
+        setup_secs = 0.0
+        wait_secs = 0.0
+
+        for phase, value in phases.items():
+            if phase in _WAIT_PHASES:
+                wait_secs += abs(value)
+            elif value > 0:
+                setup_secs += value
+
+        return setup_secs, wait_secs
+
+    for domain, timings in setup_time.items():
+        # top-level (__init__.py) timings
+        top_level: Mapping[SetupPhases, float] = timings.get(None, {})
+        tl_setup, tl_wait = _split(top_level)
+
+        # groups (config entries/platforms) run in parallel
+        max_group_setup = 0.0
+        max_group_wait = 0.0
+        max_group_total = 0.0
+
+        for group, group_timings in timings.items():
+            if group is None:
+                continue
+
+            g_setup, g_wait = _split(group_timings)
+            g_total = g_setup + g_wait
+
+            if g_total > max_group_total:
+                max_group_total = g_total
+                max_group_setup = g_setup
+                max_group_wait = g_wait
+
+        domain_setup = tl_setup + max_group_setup
+        domain_wait = tl_wait + max_group_wait
+
+        domain_breakdowns[domain] = DomainSetupBreakdown(
+            setup=domain_setup,
+            wait=domain_wait,
+        )
+
+    return domain_breakdowns
 
 
 @callback
