@@ -284,10 +284,11 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
-        if self.coordinator.data:
-            return self.entity_description.value_fn(self.coordinator.data)
-
-        return None
+        return (
+            self.entity_description.value_fn(self.coordinator.data)
+            if self.coordinator.data
+            else None
+        )
 
 
 class RSSISensor(SensorEntity):
