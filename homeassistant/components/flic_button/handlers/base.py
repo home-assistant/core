@@ -163,26 +163,40 @@ class DeviceProtocolHandler(ABC):
         connection_id: int,
         session_key: bytes | None,
         chaskey_keys: list[int] | None,
-        packet_counter: int,
         write_gatt: WriteGattFn,
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> int:
+    ) -> None:
         """Initialize button event delivery.
 
         Args:
             connection_id: Current connection ID
             session_key: Session key (for authenticated packets)
             chaskey_keys: Chaskey subkeys for MAC
-            packet_counter: Current packet counter
             write_gatt: Function to write to GATT characteristic
             wait_for_opcode: Function to wait for a specific opcode
             wait_for_opcodes: Function to wait for one of multiple opcodes
             write_packet: Function to write authenticated packets
 
+        """
+
+    @abstractmethod
+    async def get_firmware_version(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the firmware version from the device.
+
+        Args:
+            connection_id: Current connection ID
+            write_packet: Function to write authenticated packets
+            wait_for_opcode: Function to wait for a specific opcode
+
         Returns:
-            Updated packet counter
+            Firmware version as an integer
 
         """
 

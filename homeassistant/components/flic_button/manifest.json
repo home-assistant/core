@@ -11,12 +11,12 @@
       "service_uuid": "00c90000-2cbd-4f2a-a725-5ccd960ffb7d"
     }
   ],
-  "codeowners": ["@https://github.com/50ButtonsEach"],
+  "codeowners": ["@50ButtonsEach"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/flic_button",
   "integration_type": "device",
   "iot_class": "local_push",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": []
 }

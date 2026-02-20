@@ -39,18 +39,18 @@
       "rotate_clockwise": "{subtype} rotated clockwise",
       "rotate_counter_clockwise": "{subtype} rotated counter-clockwise",
       "selector_changed": "{subtype} selector changed",
-      "slot_0_changed": "Slot 1 position changed",
-      "slot_10_changed": "Slot 11 position changed",
-      "slot_11_changed": "Slot 12 position changed",
-      "slot_1_changed": "Slot 2 position changed",
-      "slot_2_changed": "Slot 3 position changed",
-      "slot_3_changed": "Slot 4 position changed",
-      "slot_4_changed": "Slot 5 position changed",
-      "slot_5_changed": "Slot 6 position changed",
-      "slot_6_changed": "Slot 7 position changed",
-      "slot_7_changed": "Slot 8 position changed",
-      "slot_8_changed": "Slot 9 position changed",
-      "slot_9_changed": "Slot 10 position changed",
+      "slot_10_changed": "Slot 10 position changed",
+      "slot_11_changed": "Slot 11 position changed",
+      "slot_12_changed": "Slot 12 position changed",
+      "slot_1_changed": "Slot 1 position changed",
+      "slot_2_changed": "Slot 2 position changed",
+      "slot_3_changed": "Slot 3 position changed",
+      "slot_4_changed": "Slot 4 position changed",
+      "slot_5_changed": "Slot 5 position changed",
+      "slot_6_changed": "Slot 6 position changed",
+      "slot_7_changed": "Slot 7 position changed",
+      "slot_8_changed": "Slot 8 position changed",
+      "slot_9_changed": "Slot 9 position changed",
       "swipe_down": "{subtype} swiped down",
       "swipe_left": "{subtype} swiped left",
       "swipe_right": "{subtype} swiped right",
@@ -132,41 +132,41 @@
       "big_dial": {
         "name": "Big Button Rotate"
       },
-      "slot_0": {
+      "slot_1": {
         "name": "Slot 1 position"
       },
-      "slot_1": {
-        "name": "Slot 2 position"
-      },
       "slot_10": {
-        "name": "Slot 11 position"
+        "name": "Slot 10 position"
       },
       "slot_11": {
+        "name": "Slot 11 position"
+      },
+      "slot_12": {
         "name": "Slot 12 position"
       },
       "slot_2": {
-        "name": "Slot 3 position"
+        "name": "Slot 2 position"
       },
       "slot_3": {
-        "name": "Slot 4 position"
+        "name": "Slot 3 position"
       },
       "slot_4": {
-        "name": "Slot 5 position"
+        "name": "Slot 4 position"
       },
       "slot_5": {
-        "name": "Slot 6 position"
+        "name": "Slot 5 position"
       },
       "slot_6": {
-        "name": "Slot 7 position"
+        "name": "Slot 6 position"
       },
       "slot_7": {
-        "name": "Slot 8 position"
+        "name": "Slot 7 position"
       },
       "slot_8": {
-        "name": "Slot 9 position"
+        "name": "Slot 8 position"
       },
       "slot_9": {
-        "name": "Slot 10 position"
+        "name": "Slot 9 position"
       },
       "small_dial": {
         "name": "Small Button Rotate"

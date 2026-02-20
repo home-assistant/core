@@ -18,6 +18,10 @@ from ..const import (
     OPCODE_FULL_VERIFY_REQUEST_2,
     OPCODE_FULL_VERIFY_RESPONSE_1,
     OPCODE_FULL_VERIFY_RESPONSE_2,
+    OPCODE_GET_BATTERY_LEVEL_REQUEST,
+    OPCODE_GET_BATTERY_LEVEL_RESPONSE,
+    OPCODE_GET_FIRMWARE_VERSION_REQUEST,
+    OPCODE_GET_FIRMWARE_VERSION_RESPONSE,
     OPCODE_INIT_BUTTON_EVENTS_REQUEST,
     OPCODE_INIT_BUTTON_EVENTS_RESPONSE_WITH_BOOT_ID,
     OPCODE_INIT_BUTTON_EVENTS_RESPONSE_WITHOUT_BOOT_ID,
@@ -324,12 +328,11 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
         connection_id: int,
         session_key: bytes | None,
         chaskey_keys: list[int] | None,
-        packet_counter: int,
         write_gatt: WriteGattFn,
         wait_for_opcode: WaitForOpcodeFn,
         wait_for_opcodes: WaitForOpcodesFn,
         write_packet: WritePacketFn,
-    ) -> int:
+    ) -> None:
         """Initialize button events for Flic 2."""
         self._connection_id = connection_id
 
@@ -369,7 +372,42 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
         except TimeoutError:
             _LOGGER.warning("No response to InitButtonEventsRequest, continuing anyway")
 
-        return packet_counter
+    async def get_firmware_version(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the firmware version from a Flic 2/Duo device."""
+        request = struct.pack(
+            "<BB", connection_id & 0x1F, OPCODE_GET_FIRMWARE_VERSION_REQUEST
+        )
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(OPCODE_GET_FIRMWARE_VERSION_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        return struct.unpack("<I", response[2:6])[0]
+
+    async def get_battery_level(
+        self,
+        connection_id: int,
+        write_packet: WritePacketFn,
+        wait_for_opcode: WaitForOpcodeFn,
+    ) -> int:
+        """Request and return the battery level from a Flic 2/Duo device."""
+        request = struct.pack(
+            "<BB", connection_id & 0x1F, OPCODE_GET_BATTERY_LEVEL_REQUEST
+        )
+        await write_packet(request, True)
+
+        response = await asyncio.wait_for(
+            wait_for_opcode(OPCODE_GET_BATTERY_LEVEL_RESPONSE),
+            timeout=COMMAND_TIMEOUT,
+        )
+        # Response: [header:1][opcode:1][battery_level:2]
+        return struct.unpack("<H", response[2:4])[0]
 
     def handle_notification(
         self,

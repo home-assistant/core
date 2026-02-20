@@ -435,7 +435,7 @@ class QuickVerifyResponse:
 class BatteryLevelResponse:
     """Battery level response."""
 
-    battery_level: int  # 0-1024, voltage = level * 3.6 / 1024.0
+    battery_level: int  # 0..1024, voltage = level * 3.6 / 1024.0
 
     @classmethod
     def from_bytes(cls, data: bytes) -> BatteryLevelResponse:
@@ -973,9 +973,8 @@ class TwistModeConfig:
     """Configuration for a single Twist mode (one of 13 modes).
 
     Modes:
-        0: Free rotation mode
-        1-11: Selector positions
-        12: Push+twist mode (hold button while rotating)
+        0-11: Individual slot positions
+        12: Slot-changing mode (free rotation to select active slot)
     """
 
     led_mode: int  # 0-3 (6 bits used in protocol)
@@ -983,7 +982,7 @@ class TwistModeConfig:
     has_double_click: bool
     extra_leds_after: int  # 0-15 (4 bits)
     position: int  # 0..49152 (current rotation position)
-    timeout_seconds: int  # 0-255, 255=infinite
+    timeout_seconds: int  # 0..255, 255=infinite
 
     def to_bytes(self) -> bytes:
         """Serialize mode config to bytes.
@@ -1236,9 +1235,8 @@ class InitButtonEventsTwistRequest:
     Matches SDK's InitButtonEventsRequestV2 format.
 
     Twist has 13 twist modes, each with its own configuration:
-    - Mode 0: Free rotation
-    - Modes 1-11: Selector positions
-    - Mode 12: Push+twist (rotation while button held)
+    - Modes 0-11: Individual slot positions
+    - Mode 12: Slot-changing mode (free rotation to select active slot)
     """
 
     mode_configs: list[TwistModeConfig]  # Must be exactly 13 items
@@ -1331,7 +1329,7 @@ class TwistEventNotification:
     - last_known_hub_packet_counter: u16
     """
 
-    twist_mode_index: int  # 0=free, 1-11=selector, 12=push-twist
+    twist_mode_index: int  # 0-11=slots, 12=slot-changing
     total_delta: int  # 24-bit signed: total rotation since last event
     min_delta: int  # 24-bit signed: minimum rotation in this period
     max_delta: int  # 24-bit signed: maximum rotation in this period

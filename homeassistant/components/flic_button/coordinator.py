@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import logging
 from typing import Any
 
 from bleak import BleakError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -26,6 +29,9 @@ from .flic_client import FlicClient, FlicProtocolError
 from .handlers import DeviceCapabilities, DeviceProtocolHandler
 
 _LOGGER = logging.getLogger(__name__)
+
+SLOT_STORE_VERSION = 1
+SLOT_SAVE_DELAY = 5  # seconds to debounce slot value saves
 
 SIGNAL_BUTTON_EVENT = f"{DOMAIN}_button_event_{{0}}"
 SIGNAL_ROTATE_EVENT = f"{DOMAIN}_rotate_event_{{0}}"
@@ -102,8 +108,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             battery_level: Battery level from pairing (0-1024)
 
         """
-        # Disable polling - battery level is only available during pairing
-        # The Flic protocol does not support requesting battery level in a session
+        # Disable polling - battery level is fetched on each connection via command
         super().__init__(
             hass,
             _LOGGER,
@@ -116,6 +121,14 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._connected = False
         self._reconnect_lock = asyncio.Lock()
         self._battery_level = battery_level
+        self._firmware_version: int | None = None
+
+        # Slot value persistence (Twist devices)
+        self._slot_values: dict[int, float] = {}
+        self._slot_store: Store[dict[str, Any]] = Store(
+            hass, SLOT_STORE_VERSION, f"{DOMAIN}.{config_entry.entry_id}.slots"
+        )
+        self._slot_save_unsub: CALLBACK_TYPE | None = None
 
         # Set up button event callback
         self.client.on_button_event = self._handle_button_event
@@ -125,9 +138,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Set initial data with battery level from pairing
         if battery_level is not None:
-            # Convert raw battery level (0-1024) to voltage
-            voltage = battery_level * 3.6 / 1024.0
-            self.data = {"battery_voltage": voltage}
+            self.data = {"battery_voltage": self._raw_to_voltage(battery_level)}
         else:
             self.data = {}
 
@@ -181,6 +192,21 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return if the coordinator is connected to the button."""
         return self._connected
 
+    def _raw_to_voltage(self, battery_level: int) -> float:
+        """Convert raw battery level to voltage.
+
+        Twist returns millivolts directly (2 AAA batteries).
+        Flic 2/Duo return a 10-bit ADC value (0-1024, 3.6V reference).
+        """
+        if self.is_twist:
+            return battery_level / 1000.0
+        return battery_level * 3.6 / 1024.0
+
+    @property
+    def firmware_version(self) -> int | None:
+        """Return the firmware version of the device."""
+        return self._firmware_version
+
     @property
     def device_id(self) -> str | None:
         """Get device ID from registry."""
@@ -191,6 +217,60 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             identifiers={(DOMAIN, self.client.address)}
         )
         return device.id if device else None
+
+    async def async_load_slot_values(self) -> None:
+        """Load persisted slot values from storage."""
+        data = await self._slot_store.async_load()
+        if data and "slots" in data:
+            self._slot_values = {int(k): float(v) for k, v in data["slots"].items()}
+            _LOGGER.debug(
+                "Loaded %d persisted slot values for %s",
+                len(self._slot_values),
+                self.client.address,
+            )
+
+    def get_slot_value(self, mode_index: int) -> float:
+        """Get the persisted value for a slot."""
+        return self._slot_values.get(mode_index, 0.0)
+
+    @callback
+    def set_slot_value(self, mode_index: int, percentage: float) -> None:
+        """Set and persist a slot value."""
+        self._slot_values[mode_index] = percentage
+        self._schedule_slot_save()
+
+    @callback
+    def _schedule_slot_save(self) -> None:
+        """Schedule a debounced save of slot values."""
+        if self._slot_save_unsub is not None:
+            self._slot_save_unsub()
+        self._slot_save_unsub = async_call_later(
+            self.hass, SLOT_SAVE_DELAY, self._async_save_slot_values
+        )
+
+    async def _async_save_slot_values(self, _now: datetime | None = None) -> None:
+        """Save slot values to storage."""
+        self._slot_save_unsub = None
+        await self._slot_store.async_save(
+            {"slots": {str(k): v for k, v in self._slot_values.items()}}
+        )
+
+    async def _async_restore_slot_positions(self) -> None:
+        """Restore persisted slot positions to the device after reconnect."""
+        if not self.is_twist or not self._slot_values:
+            return
+
+        for mode_index, percentage in self._slot_values.items():
+            if percentage == 0.0:
+                continue
+            try:
+                await self.async_update_twist_position(mode_index, percentage)
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug(
+                    "Failed to restore slot %d position to %.1f%%",
+                    mode_index,
+                    percentage,
+                )
 
     async def async_connect(self) -> None:
         """Connect to button and authenticate."""
@@ -203,10 +283,53 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Initialize button events
             await self.client.init_button_events()
 
+            # Request battery level (non-fatal on failure)
+            try:
+                battery_level = await self.client.get_battery_level()
+                voltage = self._raw_to_voltage(battery_level)
+                self.data = {"battery_voltage": voltage}
+                _LOGGER.info(
+                    "Battery level for %s: raw=%d, voltage=%.3fV",
+                    self.client.address,
+                    battery_level,
+                    voltage,
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Failed to retrieve battery level from %s, using stored value",
+                    self.client.address,
+                )
+
+            # Request firmware version (non-fatal on failure)
+            try:
+                self._firmware_version = await self.client.get_firmware_version()
+                _LOGGER.debug(
+                    "Firmware version for %s: %d",
+                    self.client.address,
+                    self._firmware_version,
+                )
+                device_registry = dr.async_get(self.hass)
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, self.client.address)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device.id,
+                        sw_version=str(self._firmware_version),
+                    )
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Failed to retrieve firmware version from %s",
+                    self.client.address,
+                )
+
             self._connected = True
             _LOGGER.info(
                 "Successfully connected to Flic button %s", self.client.address
             )
+
+            # Restore persisted slot positions to the device
+            await self._async_restore_slot_positions()
 
         except (TimeoutError, BleakError, FlicProtocolError) as err:
             self._connected = False
@@ -217,6 +340,13 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_disconnect(self) -> None:
         """Disconnect from button."""
+        # Cancel pending save timer and flush slot values to disk
+        if self._slot_save_unsub is not None:
+            self._slot_save_unsub()
+            self._slot_save_unsub = None
+        if self._slot_values:
+            await self._async_save_slot_values()
+
         self._connected = False
         await self.client.disconnect()
 
@@ -328,6 +458,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         mode_percentage = event_data.get("mode_percentage")
 
         # For modes 0-11: update slot number entity with position percentage
+        # Modes 0-11 are the 12 slots, mode 12 is the slot-changing mode
         if (
             twist_mode_index is not None
             and 0 <= twist_mode_index <= 11
@@ -336,6 +467,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug(
                 "Slot %d position update: %.1f%%", twist_mode_index, mode_percentage
             )
+            self.set_slot_value(twist_mode_index, mode_percentage)
             async_dispatcher_send(
                 self.hass,
                 format_slot_dispatcher_name(self.client.address, twist_mode_index),
@@ -354,7 +486,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
             )
 
-        # For mode 12 (push_twist): update selector entity with which slot is selected
+        # For mode 12 (slot-changing): update selector entity with which slot is selected
         if twist_mode_index == 12 and selector_index is not None:
             _LOGGER.debug("Push-twist selector update: slot %d", selector_index)
             async_dispatcher_send(
@@ -374,16 +506,26 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    async def async_update_twist_position(
+        self, mode_index: int, percentage: float
+    ) -> None:
+        """Update a twist slot position and send to the device.
+
+        Args:
+            mode_index: Twist mode index (0-11 for slots)
+            percentage: Position as percentage (0.0-100.0)
+
+        """
+        await self.client.async_send_update_twist_position(mode_index, percentage)
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Return stored battery data.
 
-        Note: The Flic protocol does not support requesting battery level
-        in an established session. Battery level is only available during
-        the initial pairing (FullVerifyResponse2).
+        Battery level is fetched via the GET_BATTERY_LEVEL command
+        during connection setup. No periodic polling is needed.
 
         Returns:
-            Dictionary with battery voltage (from pairing)
+            Dictionary with battery voltage
 
         """
-        # Return stored data - no polling needed or possible
         return self.data or {}

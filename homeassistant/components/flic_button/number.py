@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -49,7 +48,6 @@ class TwistSlotNumber(FlicButtonEntity, NumberEntity):
     _attr_native_max_value = 100.0
     _attr_native_step = 0.1
     _attr_mode = NumberMode.SLIDER
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: FlicCoordinator, mode_index: int) -> None:
         """Initialize the slot number entity.
@@ -61,10 +59,10 @@ class TwistSlotNumber(FlicButtonEntity, NumberEntity):
         """
         super().__init__(coordinator)
         self._mode_index = mode_index
-        self._attr_native_value: float = 0.0
+        self._attr_native_value: float = coordinator.get_slot_value(mode_index)
 
-        # Translation key for entity name (slot_0 through slot_11)
-        self._attr_translation_key = f"slot_{mode_index}"
+        # Translation key for entity name (slot_1 through slot_12)
+        self._attr_translation_key = f"slot_{mode_index + 1}"
 
         # Unique ID
         self._attr_unique_id = f"{coordinator.client.address}-slot-{mode_index}"
@@ -94,11 +92,19 @@ class TwistSlotNumber(FlicButtonEntity, NumberEntity):
         self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
-        """Handle user setting value (read-only, no-op).
+        """Set the twist slot position and send to device.
 
-        This entity is read-only - it reflects the physical dial position.
-        User cannot change it from Home Assistant.
+        Sends an UpdateTwistPositionRequest to the Flic Twist hardware
+        to update its tracked position for this slot.
+
+        Args:
+            value: The new position as percentage (0.0-100.0)
+
         """
+        await self.coordinator.async_update_twist_position(self._mode_index, value)
+        self._attr_native_value = value
+        self.coordinator.set_slot_value(self._mode_index, value)
+        self.async_write_ha_state()
 
 
 class DuoDialNumber(FlicButtonEntity, NumberEntity):

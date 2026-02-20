@@ -92,6 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     coordinator = FlicCoordinator(hass, client, entry, serial_number, battery_level)
     entry.runtime_data = coordinator
 
+    # Load persisted slot values for Twist devices
+    await coordinator.async_load_slot_values()
+
     # Try to connect if device is currently available
     if ble_device:
         try:
