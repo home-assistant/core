@@ -92,9 +92,10 @@ async def test_bluetooth_discovery(
     )  # address is used as name by Bleak if name is not available
 
     # BluetoothServiceInfoBleak contains BMS type as details to BLEDevice, see bms_advertisement
+    bms_entries: Final = hass.config_entries.async_entries(DOMAIN)
+    assert len(bms_entries) == 1, f"Expected 1 BMS entry, got {len(bms_entries)}"
     assert (
-        hass.config_entries.async_entries()[1].data["type"]
-        == f"aiobmsble.bms.{advertisement.device.details}"
+        bms_entries[0].data["type"] == f"aiobmsble.bms.{advertisement.device.details}"
     )
 
 
