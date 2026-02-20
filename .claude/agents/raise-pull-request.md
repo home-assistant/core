@@ -33,6 +33,10 @@ git diff dev..HEAD --name-only | grep -E "^tests/.*\.py$" || echo "NO_TESTS_CHAN
 git diff dev..HEAD --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANGED"
 ```
 
+**Track results:**
+- `TESTS_CHANGED`: true if test files were added or modified
+- `MANIFEST_CHANGED`: true if manifest.json was modified
+
 ## Step 2: Identify Integration and PR Metadata
 
 From the file paths, identify:
@@ -92,9 +96,14 @@ Check each item from the [development checklist](https://developers.home-assista
 | Item | How to verify |
 |------|---------------|
 | External libraries on PyPI | Check manifest.json requirements - all should be PyPI packages |
-| Dependencies in requirements_all.txt | Run `python -m script.gen_requirements_all` if manifest changed |
+| Dependencies in requirements_all.txt | Run `python -m script.gen_requirements_all` if `MANIFEST_CHANGED` is true |
 | Codeowners updated | If this is a new integration, ensure its `manifest.json` includes a `codeowners` field with one or more GitHub usernames |
 | No commented out code | Visually scan the diff for blocks of commented-out code |
+
+**Track results:**
+- `NO_COMMENTED_CODE`: true if no blocks of commented-out code found in the diff
+- `REQUIREMENTS_UPDATED`: true if requirements_all.txt was regenerated (or `MANIFEST_CHANGED` is false, making it not applicable)
+- `CHECKLIST_PASSED`: true if all items above pass
 
 ## Step 6: Determine Type of Change
 
@@ -110,6 +119,9 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 | Breaking change | Removes or changes existing functionality |
 | Code quality | Only refactoring or test additions, no functional change |
 
+**Track results:**
+- `CHANGE_TYPE`: the selected type (e.g., "Bugfix", "New feature", "Code quality", etc.)
+
 **Important:** All seven type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
 ## Step 7: Determine Checkbox States
@@ -121,22 +133,22 @@ Based on the verification steps above, determine checkbox states:
 | The code change is tested and works locally | Tick only if `TESTS_PASSED` is true |
 | Local tests pass | Tick only if `TESTS_PASSED` is true |
 | I understand the code I am submitting and can explain how it works | Leave unchecked for the contributor to review and set manually |
-| There is no commented out code | Tick after verifying in Step 5 |
-| Development checklist | Tick only if all Step 5 items pass |
+| There is no commented out code | Tick only if `NO_COMMENTED_CODE` is true |
+| Development checklist | Tick only if `CHECKLIST_PASSED` is true |
 | Perfect PR recommendations | Tick only if the PR affects a single integration or closely related modules, represents one primary type of change, and has a clear, self-contained scope |
 | Formatted using Ruff | Tick only if `PREK_PASSED` is true |
-| Tests have been added | Tick only if, after inspecting the diff, tests were added or updated to exercise the new or changed functionality (not only cosmetic test changes) |
+| Tests have been added | Tick only if `TESTS_CHANGED` is true AND the changes exercise new or changed functionality (not only cosmetic test changes) |
 | Documentation added/updated | Tick if documentation PR created (or not applicable) |
 | Manifest file fields filled out | Tick if `PREK_PASSED` is true (or not applicable) |
-| Dependencies in requirements_all.txt | Tick if requirements_all.txt updated (or not applicable) |
+| Dependencies in requirements_all.txt | Tick only if `REQUIREMENTS_UPDATED` is true |
 | Dependency changelog linked | Tick if dependency changelog linked in PR description (or not applicable) |
 | Any generated code has been carefully reviewed | Leave unchecked for the contributor to review and set manually |
 
 ## Step 8: Breaking Change Section
 
-**If Type is NOT "Breaking change" or "Deprecation": REMOVE the entire "## Breaking change" section from the PR body (including the heading).**
+**If `CHANGE_TYPE` is NOT "Breaking change" or "Deprecation": REMOVE the entire "## Breaking change" section from the PR body (including the heading).**
 
-If it IS breaking or deprecation, keep the `## Breaking change` section and describe:
+If `CHANGE_TYPE` IS "Breaking change" or "Deprecation", keep the `## Breaking change` section and describe:
 - What breaks
 - How users can fix it
 - Why it was necessary
