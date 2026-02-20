@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.inet.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -19,8 +21,22 @@ def _mock_manager_with_radio(radio: MagicMock) -> MagicMock:
     manager.start = AsyncMock()
     manager.stop = AsyncMock()
     manager.connect = AsyncMock(return_value=radio)
-    manager.discover = AsyncMock()
     manager.radios = {radio.ip: radio}
+
+    _callbacks: list = []
+
+    def _register_discovery_callback(cb):
+        _callbacks.append(cb)
+        return lambda: _callbacks.remove(cb)
+
+    manager.register_discovery_callback = _register_discovery_callback
+
+    async def _discover():
+        for cb in _callbacks:
+            cb(radio)
+
+    manager.discover = _discover
+
     return manager
 
 
@@ -30,6 +46,7 @@ def _mock_manager_no_radios() -> MagicMock:
     manager.start = AsyncMock()
     manager.stop = AsyncMock()
     manager.discover = AsyncMock()
+    manager.register_discovery_callback = MagicMock(return_value=lambda: None)
     manager.radios = {}
     return manager
 
@@ -148,10 +165,22 @@ async def test_discovery_flow_manual_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (TimeoutError("No response"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_connection_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
+) -> None:
     """Test connection failure shows error and allows recovery."""
     manager_fail = _mock_manager_no_radios()
-    manager_fail.connect = AsyncMock(side_effect=TimeoutError("No response"))
+    manager_fail.connect = AsyncMock(side_effect=side_effect)
 
     with patch(
         "homeassistant.components.inet.config_flow.RadioManager",
@@ -175,7 +204,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
 
     # Recover with correct host
     radio = _create_mock_radio()
@@ -233,50 +262,3 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_unknown_error(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test unknown error during connection."""
-    manager_discover = _mock_manager_no_radios()
-    manager_fail = _mock_manager_no_radios()
-    manager_fail.connect = AsyncMock(side_effect=RuntimeError("Unexpected"))
-
-    with patch(
-        "homeassistant.components.inet.config_flow.RadioManager",
-        return_value=manager_discover,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "manual"
-
-    with patch(
-        "homeassistant.components.inet.config_flow.RadioManager",
-        return_value=manager_fail,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Recover
-    radio = _create_mock_radio()
-    manager_ok = _mock_manager_with_radio(radio)
-
-    with patch(
-        "homeassistant.components.inet.config_flow.RadioManager",
-        return_value=manager_ok,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(mock_setup_entry.mock_calls) == 1

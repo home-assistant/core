@@ -83,14 +83,11 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during connection")
             errors["base"] = "unknown"
         else:
-            unique_id = radio.unique_id
-            title = radio.name or f"iNet Radio ({host})"
-
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(radio.unique_id)
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
             return self.async_create_entry(
-                title=title,
+                title=radio.name or f"iNet Radio ({host})",
                 data={CONF_HOST: host},
             )
         finally:
@@ -105,14 +102,22 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discover_radios(self) -> dict[str, str]:
         """Discover radios on the network using broadcast."""
         manager = RadioManager()
+        discovered: dict[str, str] = {}
+        discovery_event = asyncio.Event()
+
+        def _on_discovery(radio: Any) -> None:
+            discovered[radio.ip] = radio.name
+            discovery_event.set()
+
         try:
             await manager.start()
+            manager.register_discovery_callback(_on_discovery)
             await manager.discover()
-            await asyncio.sleep(DISCOVERY_TIMEOUT)
-        except OSError:
-            _LOGGER.debug("Discovery failed", exc_info=True)
-            return {}
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                await discovery_event.wait()
+        except OSError, TimeoutError:
+            _LOGGER.debug("Discovery failed or timed out", exc_info=True)
         finally:
             await manager.stop()
 
-        return {ip: radio.name for ip, radio in manager.radios.items()}
+        return discovered
