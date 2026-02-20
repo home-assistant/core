@@ -125,7 +125,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             # `None` to avoid unnecessary processing
             return
 
-        # NOTE: Past this line, codes is a non-empty dict
+        # NOTE: Past this line, codes is a a dict (possibly empty)
 
         normalized = self._normalize_code_name(name)
         code_id_to_delete = next(
