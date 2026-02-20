@@ -343,8 +343,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
                 Attribute.SUPPORTED_INPUT_SOURCES_MAP,
             )
-            if sources_map:
-                return [source["id"] for source in sources_map]
+            if not sources_map:
+                return None
+            return [source["id"] for source in sources_map]
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
