@@ -1459,27 +1459,28 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
                 f"Device {ieee!s} does not have an IAS ACE cluster handler"
             )
 
-        # Map arm_mode string to ArmMode and temporarily override the delay
+        # Map arm_mode to target panel status and notification type
         arm_mode_map = {
-            "away": (IasAce.ArmMode.Arm_All_Zones, "exit_delay_away"),
-            "home": (IasAce.ArmMode.Arm_Day_Home_Only, "exit_delay_home"),
-            "night": (IasAce.ArmMode.Arm_Night_Sleep_Only, "exit_delay_night"),
+            "away": (
+                IasAce.PanelStatus.Armed_Away,
+                IasAce.ArmNotification.All_Zones_Armed,
+            ),
+            "home": (
+                IasAce.PanelStatus.Armed_Stay,
+                IasAce.ArmNotification.Only_Day_Home_Zones_Armed,
+            ),
+            "night": (
+                IasAce.PanelStatus.Armed_Night,
+                IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed,
+            ),
         }
-        arm_mode_enum, delay_attr = arm_mode_map[arm_mode]
+        target_panel_status, armed_notification = arm_mode_map[arm_mode]
 
-        # Temporarily override the configured delay
-        original_delay = getattr(ias_ace_cluster_handler, delay_attr)
-        setattr(ias_ace_cluster_handler, delay_attr, duration)
+        # Start exit delay directly without mutating cluster handler state
+        ias_ace_cluster_handler.start_exit_delay(duration, target_panel_status)
 
-        try:
-            # Simulate arm command (same as when physical keypad arms)
-            # This will send arm_response and emit all the proper events
-            ias_ace_cluster_handler.arm(
-                arm_mode_enum, ias_ace_cluster_handler.panel_code, 0
-            )
-        finally:
-            # Restore original delay
-            setattr(ias_ace_cluster_handler, delay_attr, original_delay)
+        # Notify keypad with arm response
+        await ias_ace_cluster_handler.arm_response(armed_notification)
 
         _LOGGER.debug(
             "Exit delay set on %s for %d seconds (mode: %s)",

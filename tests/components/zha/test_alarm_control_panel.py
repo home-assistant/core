@@ -430,8 +430,12 @@ async def test_set_exit_delay_service(
     assert ias_ace_ch is not None, "IAS ACE cluster handler not found"
 
     # Test exit delay for "away" mode
-    original_away_delay = ias_ace_ch.exit_delay_away
-    with patch.object(ias_ace_ch, "arm") as mock_arm:
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
         await hass.services.async_call(
             "zha",
             "set_exit_delay",
@@ -443,15 +447,20 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_arm.assert_called_once_with(
-            security.IasAce.ArmMode.Arm_All_Zones, ias_ace_ch.panel_code, 0
+        mock_start_exit_delay.assert_called_once_with(
+            60, security.IasAce.PanelStatus.Armed_Away
         )
-        # Verify delay was restored after service call
-        assert ias_ace_ch.exit_delay_away == original_away_delay
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.All_Zones_Armed
+        )
 
     # Test exit delay for "home" mode
-    original_home_delay = ias_ace_ch.exit_delay_home
-    with patch.object(ias_ace_ch, "arm") as mock_arm:
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
         await hass.services.async_call(
             "zha",
             "set_exit_delay",
@@ -463,14 +472,20 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_arm.assert_called_once_with(
-            security.IasAce.ArmMode.Arm_Day_Home_Only, ias_ace_ch.panel_code, 0
+        mock_start_exit_delay.assert_called_once_with(
+            90, security.IasAce.PanelStatus.Armed_Stay
         )
-        assert ias_ace_ch.exit_delay_home == original_home_delay
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.Only_Day_Home_Zones_Armed
+        )
 
     # Test exit delay for "night" mode
-    original_night_delay = ias_ace_ch.exit_delay_night
-    with patch.object(ias_ace_ch, "arm") as mock_arm:
+    with (
+        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
+        patch.object(
+            ias_ace_ch, "arm_response", new_callable=AsyncMock
+        ) as mock_arm_response,
+    ):
         await hass.services.async_call(
             "zha",
             "set_exit_delay",
@@ -482,10 +497,12 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_arm.assert_called_once_with(
-            security.IasAce.ArmMode.Arm_Night_Sleep_Only, ias_ace_ch.panel_code, 0
+        mock_start_exit_delay.assert_called_once_with(
+            30, security.IasAce.PanelStatus.Armed_Night
         )
-        assert ias_ace_ch.exit_delay_night == original_night_delay
+        mock_arm_response.assert_called_once_with(
+            security.IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed
+        )
 
     # Test error when device doesn't exist
     with pytest.raises(ServiceValidationError) as exc_info:
