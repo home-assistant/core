@@ -29,7 +29,7 @@ async def setup_intelliclima_select_only(
     mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
 ) -> AsyncGenerator[None]:
-    """Set up IntelliClima integration with only the binary select platform."""
+    """Set up IntelliClima integration with only the select platform."""
     with (
         patch("homeassistant.components.intelliclima.PLATFORMS", [Platform.SELECT]),
     ):
