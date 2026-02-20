@@ -108,7 +108,10 @@ def mock_manager(mock_radio: MagicMock) -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.inet.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch("homeassistant.components.inet.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.inet.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         yield mock_setup_entry

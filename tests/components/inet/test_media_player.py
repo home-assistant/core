@@ -1,6 +1,6 @@
 """Test the iNet Radio media player platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -40,13 +40,8 @@ async def init_integration(
 ) -> None:
     """Set up the iNet integration for testing."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.inet._async_get_manager",
-        return_value=mock_manager,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("init_integration")
