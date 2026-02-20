@@ -186,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
         hass.async_create_task(client.keepalive())
         hass.async_create_task(client.update())
 
-    async_at_started(hass, _started)
+    entry.async_on_unload(async_at_started(hass, _started))
 
     # Forward to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
