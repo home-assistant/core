@@ -1,4 +1,8 @@
 {
+  "common": {
+    "data_description_host": "Enter your AdGuard Home address.\n\nExamples:\n- `{example_host}`\n- `{example_host_port}`\n- `{example_ip_port}`\n- `{example_url}`\n\nIf you do not enter a port, port `{default_port}` is used.\nIf you do not enter `https://`, `http://` is used.",
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -14,17 +18,16 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "host": "Address",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your AdGuard Home."
+          "host": "[%key:component::adguard::common::data_description_host%]",
+          "verify_ssl": "[%key:component::adguard::common::data_description_verify_ssl%]"
         },
-        "description": "Set up your AdGuard Home instance to allow monitoring and control."
+        "description": "Set up your AdGuard Home instance."
       }
     }
   },

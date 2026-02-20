@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import SplitResult, urlsplit
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -20,6 +22,42 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DOMAIN
+
+DEFAULT_PORT = 3000
+DEFAULT_BASE_PATH = "/control"
+
+
+def _parse_address(address: str) -> tuple[str, int, str, bool]:
+    """Parse user provided address into host, port, path, and TLS mode."""
+    normalized_address = address.strip()
+    split_result: SplitResult
+
+    if "://" in normalized_address:
+        split_result = urlsplit(normalized_address)
+        if split_result.scheme not in {"http", "https"}:
+            raise ValueError
+        tls = split_result.scheme == "https"
+        port = split_result.port or (443 if tls else 80)
+    else:
+        split_result = urlsplit(f"//{normalized_address}")
+        tls = False
+        port = split_result.port or DEFAULT_PORT
+
+    if (
+        not split_result.hostname
+        or split_result.username
+        or split_result.password
+        or split_result.query
+        or split_result.fragment
+    ):
+        raise ValueError
+
+    return (
+        split_result.hostname,
+        port,
+        split_result.path or DEFAULT_BASE_PATH,
+        tls,
+    )
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -35,13 +73,18 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "example_host": "adguard.local",
+                "example_host_port": "adguard.local:3000",
+                "example_ip_port": "192.168.1.10:3000",
+                "example_url": "https://adguard.example.com",
+                "default_port": str(DEFAULT_PORT),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=3000): vol.Coerce(int),
                     vol.Optional(CONF_USERNAME): str,
                     vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_SSL, default=True): bool,
                     vol.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
@@ -66,22 +109,32 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-        )
-
         errors = {}
+
+        try:
+            host, port, base_path, use_tls = _parse_address(user_input[CONF_HOST])
+        except ValueError:
+            errors["base"] = "cannot_connect"
+            return await self._show_setup_form(errors)
+
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: host,
+                CONF_PORT: port,
+            }
+        )
 
         session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
 
         username: str | None = user_input.get(CONF_USERNAME)
         password: str | None = user_input.get(CONF_PASSWORD)
         adguard = AdGuardHome(
-            user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
+            host,
+            base_path=base_path,
+            port=port,
             username=username,
             password=password,
-            tls=user_input[CONF_SSL],
+            tls=use_tls,
             verify_ssl=user_input[CONF_VERIFY_SSL],
             session=session,
         )
@@ -93,12 +146,13 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
-            title=user_input[CONF_HOST],
+            title=host,
             data={
-                CONF_HOST: user_input[CONF_HOST],
+                CONF_HOST: host,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_SSL: user_input[CONF_SSL],
+                CONF_PATH: base_path,
+                CONF_PORT: port,
+                CONF_SSL: use_tls,
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
             },
@@ -145,6 +199,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             title=self._hassio_discovery["addon"],
             data={
                 CONF_HOST: self._hassio_discovery[CONF_HOST],
+                CONF_PATH: DEFAULT_BASE_PATH,
                 CONF_PORT: self._hassio_discovery[CONF_PORT],
                 CONF_PASSWORD: None,
                 CONF_SSL: False,
