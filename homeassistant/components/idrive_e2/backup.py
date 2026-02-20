@@ -329,14 +329,14 @@ class IDriveE2BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await cast(Any, self._client).list_objects_v2(Bucket=self._bucket)
-
-        # Filter for metadata files only
-        metadata_files = [
-            obj
-            for obj in response.get("Contents", [])
-            if obj["Key"].endswith(".metadata.json")
-        ]
+        paginator = self._client.get_paginator("list_objects_v2")
+        metadata_files: list[dict[str, Any]] = []
+        async for page in paginator.paginate(Bucket=self._bucket):
+            metadata_files.extend(
+                obj
+                for obj in page.get("Contents", [])
+                if obj["Key"].endswith(".metadata.json")
+            )
 
         for metadata_file in metadata_files:
             try:

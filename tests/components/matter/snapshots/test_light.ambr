@@ -591,7 +591,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light-entry]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -612,7 +612,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_onoff_light',
+    'entity_id': 'light.mock_onoff_light_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -635,7 +635,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -655,7 +655,7 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_onoff_light',
+    'entity_id': 'light.mock_onoff_light_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
