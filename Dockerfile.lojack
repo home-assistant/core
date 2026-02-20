@@ -1,0 +1,11 @@
+FROM ghcr.io/home-assistant/home-assistant:dev
+
+# Install the lojack-api dependency
+RUN pip install --no-cache-dir lojack-api==0.7.1
+
+# Copy the lojack integration
+COPY homeassistant/components/lojack/ /usr/src/homeassistant/homeassistant/components/lojack/
+
+# Patch generated files to register the lojack integration
+COPY patch_generated.py /tmp/patch_generated.py
+RUN python3 /tmp/patch_generated.py && rm /tmp/patch_generated.py

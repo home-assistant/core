@@ -91,8 +91,9 @@ async def test_device_tracker_without_location(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    # Without location data, device name falls back to device.name
-    state = hass.states.get("device_tracker.my_car")
+    # Without location data the entity is still created; year/make/model are
+    # present in the fixture so the name resolves to "2021 Honda Accord".
+    state = hass.states.get("device_tracker.2021_honda_accord")
     assert state is not None
 
 

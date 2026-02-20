@@ -122,7 +122,7 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
         self._last_rate_limit = datetime.now(tz=UTC)
         retry_after = self._extract_retry_after(err)
 
-        if retry_after:
+        if retry_after is not None:
             new_interval = timedelta(seconds=retry_after)
             LOGGER.warning(
                 "API rate limited: respecting Retry-After=%s seconds",
@@ -154,24 +154,31 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
             devices = await self.client.list_devices()
         except AuthenticationError:
             LOGGER.info("Token expired, refreshing...")
+            old_client = self.client
             try:
-                self.client = await LoJackClient.create(self._username, self._password)
+                new_client = await LoJackClient.create(self._username, self._password)
+                self.client = new_client
                 self.update_interval = self._default_update_interval
                 devices = await self.client.list_devices()
             except Exception as refresh_err:
                 raise ConfigEntryAuthFailed(
                     f"Failed to refresh token: {refresh_err}"
                 ) from refresh_err
+            finally:
+                try:
+                    await old_client.close()
+                except Exception:  # noqa: BLE001 - Best-effort cleanup
+                    LOGGER.debug("Error closing previous client during token refresh", exc_info=True)
         except ApiError as err:
             if self._is_rate_limited(err):
                 self._handle_rate_limit(err)
-                raise UpdateFailed(f"Rate limited by LoJack API: {err}") from err
-            raise UpdateFailed(f"Error fetching LoJack data: {err}") from err
+                raise UpdateFailed(f"Rate limited by API: {err}") from err
+            raise UpdateFailed(f"Error fetching data: {err}") from err
         except Exception as err:
             if self._is_rate_limited(err):
                 self._handle_rate_limit(err)
-                raise UpdateFailed(f"Rate limited by LoJack API: {err}") from err
-            raise UpdateFailed(f"Error fetching LoJack data: {err}") from err
+                raise UpdateFailed(f"Rate limited by API: {err}") from err
+            raise UpdateFailed(f"Error fetching data: {err}") from err
 
         vehicles_data: dict[str, LoJackVehicleData] = {}
 
