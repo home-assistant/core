@@ -253,7 +253,10 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_AUTH_DATA_SCHEMA,
+                self._get_reauth_entry().data,
+            ),
             errors=errors,
         )
 
