@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
@@ -83,7 +84,7 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during connection")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(radio.unique_id)
+            await self.async_set_unique_id(format_mac(radio.mac))
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
             return self.async_create_entry(

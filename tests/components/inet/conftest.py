@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_MAC = "78:c4:0e:01:22:f4"
-MOCK_UNIQUE_ID = "78c40e0122f4"
+MOCK_UNIQUE_ID = "78:c4:0e:01:22:f4"
 MOCK_NAME = "Living Room Radio"
 
 
