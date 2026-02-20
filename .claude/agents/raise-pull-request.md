@@ -2,24 +2,6 @@
 name: raise-pull-request
 description: |
   Use this agent when creating a pull request for the Home Assistant core repository after completing implementation work. This agent automates the PR creation process including running tests, formatting checks, and proper checkbox handling.
-
-  <example>
-  Context: The user has completed implementation work and wants to create a PR.
-  user: "Create a PR for these changes"
-  assistant: "I'll use the raise-pull-request agent to create a properly formatted pull request."
-  <commentary>
-  Since the user wants to create a PR for Home Assistant core, use the raise-pull-request agent.
-  </commentary>
-  </example>
-
-  <example>
-  Context: The user has finished a feature and wants to submit it upstream.
-  user: "Submit this to home-assistant/core"
-  assistant: "Let me use the raise-pull-request agent to create the pull request with proper formatting."
-  <commentary>
-  The user wants to submit changes to the Home Assistant core repo, so use the raise-pull-request agent.
-  </commentary>
-  </example>
 model: inherit
 color: green
 tools: Read, Bash, Grep, Glob
@@ -67,8 +49,8 @@ From the file paths, identify:
 | | `Bump python-otbr-api to 2.7.1` |
 | New feature | `Add asyncio-level timeout to Backblaze B2 uploads` |
 | | `Add Nettleie optimization option` |
-| Code quality | `Revert bthome-ble back to 3.16.0 to fix missing data` |
-| | `Change device class to energy_storage for some enphase_envoy battery entities` |
+| Code quality | `Add exception translations to Teslemetry` |
+| | `Improve test coverage of Tesla Fleet` |
 
 ## Step 3: Run Code Quality Checks
 
@@ -81,7 +63,7 @@ prek run
 **Track results:**
 - `PREK_PASSED`: true if `prek run` exits with code 0
 
-**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation.**
+**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://developers.home-assistant.io/docs/development_environment.**
 
 ## Step 4: Run Tests
 
@@ -94,10 +76,6 @@ pytest tests/components/{integration} \
   --timeout=60 \
   --durations-min=1 \
   --durations=0 \
-  --numprocesses=auto \
-  --durations-min=1 \
-  --durations=0 \
-  --numprocesses=auto \
   -q
 ```
 
