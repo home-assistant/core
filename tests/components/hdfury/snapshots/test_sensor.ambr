@@ -1,0 +1,687 @@
+# serializer version: 1
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio output',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio output',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audout',
+    'unique_id': '000123456789_AUDOUT',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Audio output',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bitstream 48kHz',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_tx0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio TX0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio TX0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aud0',
+    'unique_id': '000123456789_AUD0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Audio TX0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_tx0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bitstream 48kHz',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_tx1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio TX1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio TX1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aud1',
+    'unique_id': '000123456789_AUD1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_audio_tx1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Audio TX1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_audio_tx1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bitstream 48kHz',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_earc_arc_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_earc_arc_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'eARC/ARC status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'eARC/ARC status',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'earcrx',
+    'unique_id': '000123456789_EARCRX',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_earc_arc_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 eARC/ARC status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_earc_arc_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eARC/ARC not active',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_aud-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_aud',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID AUD',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID AUD',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sink2',
+    'unique_id': '000123456789_SINK2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_aud-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID AUD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_aud',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Bose CineMate: 4K60 420 ',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_auda-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_auda',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID AUDA',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID AUDA',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'edida2',
+    'unique_id': '000123456789_EDIDA2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_auda-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID AUDA',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_auda',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DD, DTS, LPCM 7.1 96kHz 24b',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_tx0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID TX0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID TX0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sink0',
+    'unique_id': '000123456789_SINK0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID TX0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_tx0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'LG TV SSCR2: 4K120 444 FRL6 VRR DSC ALLM DV HDR10 HLG',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_tx1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID TX1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID TX1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sink1',
+    'unique_id': '000123456789_SINK1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_tx1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID TX1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_tx1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Signify FCD: 4K60 444 DV HDR10+ HLG',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_txa0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID TXA0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID TXA0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'edida0',
+    'unique_id': '000123456789_EDIDA0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID TXA0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_txa0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MAT Atmos, DD Atmos, DD, DTS:X+IMAX, DTSHD, DTS, LPCM 2.0 192kHz 24b',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_txa1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'EDID TXA1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EDID TXA1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'edida1',
+    'unique_id': '000123456789_EDIDA1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_edid_txa1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 EDID TXA1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_edid_txa1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'DD, DTS, LPCM 2.0 48kHz 24b',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_input_rx0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input RX0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input RX0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rx0',
+    'unique_id': '000123456789_RX0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Input RX0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_input_rx0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4K59.937 593MHz 422 BT2020 12b 2.2',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_input_rx1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input RX1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input RX1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rx1',
+    'unique_id': '000123456789_RX1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_input_rx1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Input RX1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_input_rx1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no signal',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_output_tx0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output TX0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Output TX0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tx0',
+    'unique_id': '000123456789_TX0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Output TX0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_output_tx0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4K59.937 593MHz 422 BT2020 12b 2.2',
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hdfury_vrroom_02_output_tx1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output TX1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Output TX1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tx1',
+    'unique_id': '000123456789_TX1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.hdfury_vrroom_02_output_tx1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Output TX1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hdfury_vrroom_02_output_tx1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4K59.937 593MHz 422 BT2020 12b 2.2',
+  })
+# ---

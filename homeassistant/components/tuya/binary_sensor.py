@@ -107,6 +107,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="feeding",
             on_value="feeding",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     DeviceCategory.DGNBJ: (
         TuyaBinarySensorEntityDescription(
@@ -468,12 +473,16 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         """Return true if sensor is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
-            return
-        self.async_write_ha_state()
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )

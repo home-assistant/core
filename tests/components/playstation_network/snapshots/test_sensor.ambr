@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -20,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bronze trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -38,6 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Bronze trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -53,7 +57,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -69,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gold trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -87,6 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Gold trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -118,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -151,7 +160,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -167,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -185,6 +197,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Next level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -216,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online ID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -319,6 +334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -358,7 +374,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -374,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platinum trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -392,6 +411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Platinum trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -407,7 +427,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -423,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Silver trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -441,6 +464,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Silver trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -456,7 +480,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -472,6 +498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trophy level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -490,6 +517,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Trophy level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_trophy_level',
@@ -504,7 +532,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -520,6 +550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bronze trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -538,6 +569,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Bronze trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -553,7 +585,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -569,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gold trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -587,6 +622,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Gold trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -618,6 +654,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -651,7 +688,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -667,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -685,6 +725,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Next level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -716,6 +757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -764,6 +806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online ID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -820,6 +863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -859,7 +903,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -875,6 +921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platinum trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -893,6 +940,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Platinum trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -908,7 +956,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -924,6 +974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Silver trophies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -942,6 +993,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Silver trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -957,7 +1009,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -973,6 +1027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trophy level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -991,6 +1046,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Trophy level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_trophy_level',

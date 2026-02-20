@@ -1,4 +1,104 @@
 # serializer version: 1
+# name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping_81-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping 81',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping 81',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping_81-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_wifi_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -20,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,6 +248,106 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping_81-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping 81',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping 81',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping_81-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_wifi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -166,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -291,6 +497,106 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping_81-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping 81',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping 81',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping_81-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_wifi_2_4ghz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -312,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -410,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -458,6 +767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Call deflection 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -489,7 +799,107 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping_81-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mock Title Port forward Test Port Mapping 81',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check-network',
+    'original_name': 'Mock Title Port forward Test Port Mapping 81',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-port_forward_test_port_mapping_81',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping_81-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'icon': 'mdi:check-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_switch_setup[fc_data3][switch.mock_title_wi_fi_mywifi-entry]
@@ -513,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi MyWifi',
     'options': dict({
     }),
     'original_device_class': None,
@@ -562,6 +973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,

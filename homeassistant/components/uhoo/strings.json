@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your uHoo API key. You can find this in your uHoo account settings."
+        },
+        "description": "Enter your uHoo API key to connect.",
+        "title": "Connect to uHoo"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mold_index": {
+        "name": "Mold index"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "virus_index": {
+        "name": "Virus index"
+      },
+      "volatile_organic_compounds": {
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      }
+    }
+  }
+}
