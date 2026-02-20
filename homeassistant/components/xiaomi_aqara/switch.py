@@ -158,7 +158,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self._data_key == "status":
             return "mdi:power-plug"
