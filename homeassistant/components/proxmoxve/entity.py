@@ -4,11 +4,24 @@ from __future__ import annotations
 
 from typing import Any
 
+from yarl import URL
+
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ProxmoxCoordinator, ProxmoxNodeData
+
+
+def _proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
+    """Return the base URL for the Proxmox VE."""
+    data = coordinator.config_entry.data
+    return URL.build(
+        scheme="https",
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+    )
 
 
 class ProxmoxCoordinatorEntity(CoordinatorEntity[ProxmoxCoordinator]):
@@ -36,6 +49,9 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
             },
             name=node_data.node.get("node", str(self.device_id)),
             model="Node",
+            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+                f"v1:0:=node/{node_data.node['node']}"
+            ),
         )
 
     @property
@@ -66,6 +82,9 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="VM",
+            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+                f"v1:0:=qemu/{vm_data['vmid']}"
+            ),
             via_device=(
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
@@ -112,6 +131,9 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="Container",
+            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+                f"v1:0:=lxc/{container_data['vmid']}"
+            ),
             via_device=(
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",

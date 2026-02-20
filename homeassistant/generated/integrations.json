@@ -257,7 +257,7 @@
         "aws_s3": {
           "integration_type": "service",
           "config_flow": true,
-          "iot_class": "cloud_push",
+          "iot_class": "cloud_polling",
           "name": "AWS S3"
         },
         "fire_tv": {
@@ -302,6 +302,23 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "american_standard": {
+      "name": "American Standard",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
+        }
+      }
     },
     "amp_motorization": {
       "name": "AMP Motorization",
@@ -3137,8 +3154,9 @@
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "inkbird": {
       "name": "INKBIRD",
@@ -4529,12 +4547,6 @@
       "name": "Neurio energy",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
-    "nexia": {
-      "name": "Nexia/American Standard/Trane",
-      "integration_type": "hub",
-      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nexity": {
@@ -6296,7 +6308,7 @@
     },
     "slimproto": {
       "name": "SlimProto (Squeezebox players)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6769,6 +6781,12 @@
       "iot_class": "local_push",
       "single_config_entry": true
     },
+    "systemnexa2": {
+      "name": "System Nexa 2",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "tado": {
       "name": "Tado",
       "integration_type": "hub",
@@ -7181,6 +7199,23 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Trafikverket Weather Station"
+        }
+      }
+    },
+    "trane": {
+      "name": "Trane",
+      "integrations": {
+        "nexia": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Nexia/American Standard/Trane"
+        },
+        "trane": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Trane Local"
         }
       }
     },
