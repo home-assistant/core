@@ -6,7 +6,7 @@ from datetime import datetime
 import io
 import logging
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
 
@@ -126,15 +126,31 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         if rotation % 360 == 0:
             return raw
 
-        if self._rotated_cache is not None and self._rotated_cache_rotation == rotation:
+        # Return cached rotated image if available
+        if (
+            self._rotated_cache is not None
+            and self._rotated_cache_rotation == rotation
+        ):
             return self._rotated_cache
 
-        img = Image.open(io.BytesIO(raw))
-        img = img.rotate(rotation, expand=True)
+        try:
+            img = Image.open(io.BytesIO(raw))
+            img = img.rotate(rotation, expand=True)
 
-        out = io.BytesIO()
-        img.save(out, format="PNG")
+            out = io.BytesIO()
+            img.save(out, format="PNG")
 
-        self._rotated_cache = out.getvalue()
-        self._rotated_cache_rotation = rotation
-        return self._rotated_cache
+            self._rotated_cache = out.getvalue()
+            self._rotated_cache_rotation = rotation
+
+            return self._rotated_cache
+
+        except (OSError, UnidentifiedImageError) as err:
+            _LOGGER.debug(
+                "Failed to rotate Roborock map image: %s. Returning original image.",
+                err,
+            )
+            # Do not cache failed rotation
+            self._rotated_cache = None
+            self._rotated_cache_rotation = None
+            return raw
