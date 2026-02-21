@@ -58,28 +58,41 @@ DEFAULT_NAME = "ADS Light"
 DEFAULT_MIN_BRIGHTNESS = 0
 DEFAULT_MAX_BRIGHTNESS = 255
 
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
-        vol.Optional(CONF_MIN_BRIGHTNESS, default=DEFAULT_MIN_BRIGHTNESS): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_MAX_BRIGHTNESS, default=DEFAULT_MAX_BRIGHTNESS): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_ADS_VAR_COLOR_TEMP_KELVIN): cv.string,
-        vol.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
-        vol.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
-        vol.Optional(CONF_ADS_VAR_RED): cv.string,
-        vol.Optional(CONF_ADS_VAR_GREEN): cv.string,
-        vol.Optional(CONF_ADS_VAR_BLUE): cv.string,
-        vol.Optional(CONF_ADS_VAR_WHITE): cv.string,
-        vol.Optional(CONF_ADS_VAR_HUE): cv.string,
-        vol.Optional(CONF_ADS_VAR_SATURATION): cv.string,
-        vol.Optional(CONF_ADS_VAR_COLOR_MODE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+
+def _validate_brightness_range(config: ConfigType) -> ConfigType:
+    """Ensure min_brightness <= max_brightness and both are non-negative."""
+    min_b = config.get(CONF_MIN_BRIGHTNESS, DEFAULT_MIN_BRIGHTNESS)
+    max_b = config.get(CONF_MAX_BRIGHTNESS, DEFAULT_MAX_BRIGHTNESS)
+    if min_b > max_b:
+        raise vol.Invalid("min_brightness must be less than or equal to max_brightness")
+    return config
+
+
+PLATFORM_SCHEMA = vol.All(
+    LIGHT_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_ADS_VAR): cv.string,
+            vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
+            vol.Optional(CONF_MIN_BRIGHTNESS, default=DEFAULT_MIN_BRIGHTNESS): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+            vol.Optional(CONF_MAX_BRIGHTNESS, default=DEFAULT_MAX_BRIGHTNESS): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+            vol.Optional(CONF_ADS_VAR_COLOR_TEMP_KELVIN): cv.string,
+            vol.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
+            vol.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+            vol.Optional(CONF_ADS_VAR_RED): cv.string,
+            vol.Optional(CONF_ADS_VAR_GREEN): cv.string,
+            vol.Optional(CONF_ADS_VAR_BLUE): cv.string,
+            vol.Optional(CONF_ADS_VAR_WHITE): cv.string,
+            vol.Optional(CONF_ADS_VAR_HUE): cv.string,
+            vol.Optional(CONF_ADS_VAR_SATURATION): cv.string,
+            vol.Optional(CONF_ADS_VAR_COLOR_MODE): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }
+    ),
+    _validate_brightness_range,
 )
 
 
@@ -108,6 +121,8 @@ def _map_color_mode(raw: int) -> ColorMode:
       Bit 4 (16) – RGB
       Bit 5 (32) – white channel
     RGBW is indicated by bits 4 and 5 set simultaneously (value 48).
+    When only bit 5 is set, BRIGHTNESS is returned because ColorMode.WHITE
+    must not be the only supported mode (Home Assistant requirement).
     """
     if (raw & 16) and (raw & 32):
         return ColorMode.RGBW
@@ -116,6 +131,9 @@ def _map_color_mode(raw: int) -> ColorMode:
     if raw & 8:
         return ColorMode.HS
     if raw & 32:
+        # ColorMode.WHITE must not be the only supported mode; use BRIGHTNESS when only bit 5 set.
+        if not (raw & 16) and not (raw & 8) and not (raw & 4):
+            return ColorMode.BRIGHTNESS
         return ColorMode.WHITE
     if raw & 4:
         return ColorMode.COLOR_TEMP
@@ -281,7 +299,7 @@ class AdsLight(AdsEntity, LightEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+        """Register device notifications; plc_datatype must match the PLC symbol."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_brightness is not None:
@@ -366,7 +384,10 @@ class AdsLight(AdsEntity, LightEntity):
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
-        """Return the hue and saturation color value [float, float]."""
+        """Return the hue and saturation color value [float, float].
+
+        Expects the PLC to use hue 0–360 degrees and saturation 0–100 percent.
+        """
         hue = self._state_dict[STATE_KEY_HUE]
         saturation = self._state_dict[STATE_KEY_SATURATION]
         if hue is not None and saturation is not None:
@@ -424,7 +445,12 @@ class AdsLight(AdsEntity, LightEntity):
         return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on or set specific values."""
+        """Turn the light on or set specific values.
+
+        Each entry is (ads_var_name, value, plc_datatype). The PLC must declare
+        variables with matching types: BOOL (on/off), UINT (brightness, kelvin,
+        hue, saturation, color_mode), USINT (red, green, blue, white 0-255).
+        """
         to_write: list[tuple[str, Any, Any]] = []
 
         to_write.append((self._ads_var, True, pyads.PLCTYPE_BOOL))
