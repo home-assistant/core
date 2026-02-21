@@ -170,7 +170,7 @@ async def test_adam_restore_state_climate(
                 State("climate.bathroom", "heat"),
                 PlugwiseClimateExtraStoredData(
                     last_active_schedule="Badkamer",
-                    previous_action_mode=None,
+                    previous_action_mode="heating",
                 ).as_dict(),
             ),
         ],
