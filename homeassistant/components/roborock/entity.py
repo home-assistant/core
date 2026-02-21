@@ -143,7 +143,7 @@ class RoborockCoordinatedEntityB01Q7(
         coordinator: RoborockB01Q7UpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
-        super().__init__(coordinator=coordinator)
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
         RoborockEntity.__init__(
             self,
             unique_id=unique_id,
@@ -164,7 +164,7 @@ class RoborockCoordinatedEntityB01Q10(
         coordinator: RoborockB01Q10UpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
-        super().__init__(coordinator=coordinator)
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
         RoborockEntity.__init__(
             self,
             unique_id=unique_id,
