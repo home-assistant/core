@@ -25,13 +25,13 @@
       },
       "reauth_captcha": {
         "data": {
-          "captcha_code": "CAPTCHA code"
+          "captcha_code": "[%key:component::eufy_security::config::step::captcha::data::captcha_code%]"
         },
         "data_description": {
-          "captcha_code": "Enter the CAPTCHA code shown in the image above."
+          "captcha_code": "[%key:component::eufy_security::config::step::captcha::data_description::captcha_code%]"
         },
-        "description": "{captcha_img}",
-        "title": "CAPTCHA verification"
+        "description": "[%key:component::eufy_security::config::step::captcha::description%]",
+        "title": "[%key:component::eufy_security::config::step::captcha::title%]"
       },
       "reauth_confirm": {
         "data": {
@@ -57,13 +57,13 @@
       },
       "reconfigure_captcha": {
         "data": {
-          "captcha_code": "CAPTCHA code"
+          "captcha_code": "[%key:component::eufy_security::config::step::captcha::data::captcha_code%]"
         },
         "data_description": {
           "captcha_code": "[%key:component::eufy_security::config::step::captcha::data_description::captcha_code%]"
         },
-        "description": "{captcha_img}",
-        "title": "CAPTCHA verification"
+        "description": "[%key:component::eufy_security::config::step::captcha::description%]",
+        "title": "[%key:component::eufy_security::config::step::captcha::title%]"
       },
       "user": {
         "data": {

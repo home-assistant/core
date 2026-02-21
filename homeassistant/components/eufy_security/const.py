@@ -26,6 +26,7 @@ CONF_PRIVATE_KEY: Final = "private_key"
 CONF_SERVER_PUBLIC_KEY: Final = "server_public_key"
 
 # RTSP streaming credentials (configured via options flow)
+CONF_RTSP_CREDENTIALS: Final = "rtsp_credentials"
 CONF_RTSP_USERNAME: Final = "rtsp_username"
 CONF_RTSP_PASSWORD: Final = "rtsp_password"
 

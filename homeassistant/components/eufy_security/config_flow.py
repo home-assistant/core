@@ -25,6 +25,7 @@ from .const import (
     CONF_API_BASE,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
     CONF_PRIVATE_KEY,
+    CONF_RTSP_CREDENTIALS,
     CONF_RTSP_PASSWORD,
     CONF_RTSP_USERNAME,
     CONF_SERVER_PUBLIC_KEY,
@@ -546,7 +547,7 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         # Store camera list and existing credentials
         self._camera_serials = list(cameras.keys())
         self._rtsp_credentials = dict(
-            self.config_entry.options.get("rtsp_credentials", {})
+            self.config_entry.options.get(CONF_RTSP_CREDENTIALS, {})
         )
         self._camera_index = 0
 
@@ -564,7 +565,7 @@ class EufySecurityOptionsFlowHandler(OptionsFlow):
         if self._camera_index >= len(self._camera_serials):
             # All cameras configured, save and exit
             return self.async_create_entry(
-                title="", data={"rtsp_credentials": self._rtsp_credentials}
+                title="", data={CONF_RTSP_CREDENTIALS: self._rtsp_credentials}
             )
 
         serial = self._camera_serials[self._camera_index]

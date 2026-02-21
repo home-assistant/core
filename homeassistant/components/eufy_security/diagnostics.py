@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_RTSP_CREDENTIALS, CONF_RTSP_PASSWORD, CONF_RTSP_USERNAME
 from .coordinator import EufySecurityConfigEntry
 
 TO_REDACT = {
@@ -20,9 +21,9 @@ TO_REDACT = {
     "ip_address",
     "cover_path",
     "pic_url",
-    "rtsp_username",
-    "rtsp_password",
-    "rtsp_credentials",
+    CONF_RTSP_USERNAME,
+    CONF_RTSP_PASSWORD,
+    CONF_RTSP_CREDENTIALS,
 }
 
 

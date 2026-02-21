@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_API_BASE,
     CONF_PRIVATE_KEY,
+    CONF_RTSP_CREDENTIALS,
     CONF_SERVER_PUBLIC_KEY,
     CONF_TOKEN,
     CONF_TOKEN_EXPIRATION,
@@ -90,11 +91,11 @@ async def async_setup_entry(
             _LOGGER.debug("Could not restore crypto state, will re-authenticate")
 
     if needs_auth:
-        # Authenticate to get fresh ECDH encryption keys
-        # (The v2 API uses encrypted responses that require session-specific keys)
+        # Authenticate and get device info in one try/catch block
         try:
             _LOGGER.debug("Authenticating with Eufy Security API")
             await api.async_authenticate()
+            await api.async_update_device_info()
         except CaptchaRequiredError as err:
             # CAPTCHA required - trigger reauth flow so user can solve it
             _LOGGER.warning(
@@ -121,37 +122,11 @@ async def async_setup_entry(
                 translation_key="cannot_connect",
             ) from err
 
-        # Get device info with the authenticated session
-        try:
-            await api.async_update_device_info()
-        except InvalidCredentialsError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except CaptchaRequiredError as err:
-            # Token expired/invalid and CAPTCHA is required - trigger reauth
-            _LOGGER.warning("CAPTCHA required, triggering reauthentication")
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except CannotConnectError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-        except EufySecurityError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-
     coordinator = EufySecurityCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     # Set per-camera RTSP credentials from options
-    rtsp_credentials = entry.options.get("rtsp_credentials", {})
+    rtsp_credentials = entry.options.get(CONF_RTSP_CREDENTIALS, {})
     _LOGGER.debug("RTSP credentials from options: %s", list(rtsp_credentials.keys()))
     for serial, camera in api.cameras.items():
         camera_creds = rtsp_credentials.get(serial, {})
