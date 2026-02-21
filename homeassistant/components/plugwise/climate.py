@@ -263,16 +263,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             return
 
         current_schedule = self.device.get("select_schedule")
-        if current_schedule is None and hvac_mode != HVACMode.AUTO:
-            await self.coordinator.api.set_regulation_mode(hvac_mode.value)
+        if current_schedule is None and hvac_mode != HVACMode.AUTO and self._previous_action_mode:
+            await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
             return
 
         if hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.COOL or hvac_mode == HVACMode.HEAT_COOL:
             if self.hvac_mode == HVACMode.OFF:
-                if current_schedule == "off":
-                    await self.coordinator.api.set_regulation_mode(hvac_mode.value)
-                else:
-                    await self.coordinator.api.set_regulation_mode(hvac_mode.value)
+                if current_schedule == "off" and self._previous_action_mode:
+                    await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
+                elif self._previous_action_mode:
+                    await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
                     await self.coordinator.api.set_schedule_state(self._location, STATE_OFF, current_schedule)
             if self.hvac_mode == HVACMode.AUTO:
                 await self.coordinator.api.set_schedule_state(self._location, STATE_OFF, current_schedule)
