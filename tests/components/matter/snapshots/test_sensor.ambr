@@ -200,14 +200,14 @@
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -215,6 +215,7 @@
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -1955,7 +1956,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pi_heating_demand',
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2010,7 +2011,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2793,7 +2794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSource-47-12',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2853,7 +2854,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3138,7 +3139,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3195,7 +3196,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3252,7 +3253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3309,7 +3310,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -4772,6 +4773,283 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Smart CO sensor Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_battery_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_replacement_description',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart CO sensor Battery type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_battery_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'AA',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Smart CO sensor Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_co_sensor_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon monoxide',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-CarbonMonoxideSensor-1036-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Smart CO sensor Carbon monoxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_time_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_time_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time remaining',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time remaining',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_time_remaining',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-1-PowerSourceBatTimeRemaining-47-13',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_time_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Smart CO sensor Time remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_time_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5043,6 +5321,169 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_motion_sensor_time_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smoke_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Smoke sensor Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smoke_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94',
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smoke_sensor_battery_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_replacement_description',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smoke sensor Battery type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smoke_sensor_battery_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'CR123A',
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smoke_sensor_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[heiman_smoke_detector][sensor.smoke_sensor_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Smoke sensor Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smoke_sensor_battery_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6743,6 +7184,842 @@
     'state': '28.3',
   })
 # ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_activated_carbon_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activated carbon filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activated carbon filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activated_carbon_filter_condition',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Air Purifier Activated carbon filter condition',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_activated_carbon_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'extremely_poor',
+        'very_poor',
+        'poor',
+        'fair',
+        'good',
+        'moderate',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_air_quality',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Air quality',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_quality',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-AirQuality-91-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Air Purifier Air quality',
+      'options': list([
+        'extremely_poor',
+        'very_poor',
+        'poor',
+        'fair',
+        'good',
+        'moderate',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_air_quality',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_carbon_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon dioxide',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon dioxide',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonDioxideSensor-1037-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_dioxide',
+      'friendly_name': 'Mock Air Purifier Carbon dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_carbon_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon monoxide',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonMonoxideSensor-1036-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Mock Air Purifier Carbon monoxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_hepa_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HEPA filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HEPA filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hepa_filter_condition',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterCondition-113-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Air Purifier HEPA filter condition',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_hepa_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-4-HumiditySensor-1029-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Mock Air Purifier Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_nitrogen_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Nitrogen dioxide',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
+      'friendly_name': 'Mock Air Purifier Nitrogen dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_ozone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ozone',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
+    'original_icon': None,
+    'original_name': 'Ozone',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-OzoneConcentrationSensor-1045-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'ozone',
+      'friendly_name': 'Mock Air Purifier Ozone',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_pm1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
+    'original_icon': None,
+    'original_name': 'PM1',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm1',
+      'friendly_name': 'Mock Air Purifier PM1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_pm1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'Mock Air Purifier PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM2.5',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'Mock Air Purifier PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-3-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Air Purifier Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-ThermostatLocalTemperature-513-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Air Purifier Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TVOC level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'TVOC level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tvoc_level',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensorLevel-1070-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Air Purifier TVOC level',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
+    'original_icon': None,
+    'original_name': 'Volatile organic compounds parts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensor-1070-0',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volatile_organic_compounds_parts',
+      'friendly_name': 'Mock Air Purifier Volatile organic compounds parts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
 # name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7322,7 +8599,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -7482,7 +8759,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unique_id': '00000000000004D2-0000000000000011-MatterNodeDevice-1-FlowSensor-1028-0',
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
@@ -7535,7 +8812,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7587,7 +8864,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7639,7 +8916,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -7657,7 +8934,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-entry]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7691,65 +8968,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-1-HumiditySensor-1029-0',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Mock Humidity Sensor Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-state]
+# name: test_sensors[mock_humidity_sensor][sensor.mock_humidity_sensor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -7986,7 +9209,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
+    'unique_id': '00000000000004D2-0000000000000016-MatterNodeDevice-1-LightSensor-1024-0',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -8004,778 +9227,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.3',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_activated_carbon_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Activated carbon filter condition',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Activated carbon filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'activated_carbon_filter_condition',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Air Purifier Activated carbon filter condition',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_activated_carbon_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'extremely_poor',
-        'very_poor',
-        'poor',
-        'fair',
-        'good',
-        'moderate',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_air_quality',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Air quality',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Air quality',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'air_quality',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-AirQuality-91-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_air_quality-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Air Purifier Air quality',
-      'options': list([
-        'extremely_poor',
-        'very_poor',
-        'poor',
-        'fair',
-        'good',
-        'moderate',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_air_quality',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'good',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_carbon_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Carbon dioxide',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon dioxide',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonDioxideSensor-1037-0',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Mock Air Purifier Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_carbon_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_carbon_monoxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Carbon monoxide',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon monoxide',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonMonoxideSensor-1036-0',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_carbon_monoxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Mock Air Purifier Carbon monoxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_carbon_monoxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_hepa_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'HEPA filter condition',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'HEPA filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hepa_filter_condition',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterCondition-113-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_hepa_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Air Purifier HEPA filter condition',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_hepa_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-4-HumiditySensor-1029-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Mock Air Purifier Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '50.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_nitrogen_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Nitrogen dioxide',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Nitrogen dioxide',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Air Purifier Nitrogen dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_nitrogen_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_ozone',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Ozone',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
-    'original_icon': None,
-    'original_name': 'Ozone',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-OzoneConcentrationSensor-1045-0',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_ozone-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'ozone',
-      'friendly_name': 'Mock Air Purifier Ozone',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_ozone',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_pm1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM1',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
-    'original_icon': None,
-    'original_name': 'PM1',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
-    'unit_of_measurement': 'μg/m³',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm1',
-      'friendly_name': 'Mock Air Purifier PM1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_pm1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_pm10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM10',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
-    'original_icon': None,
-    'original_name': 'PM10',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
-    'unit_of_measurement': 'μg/m³',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm10',
-      'friendly_name': 'Mock Air Purifier PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_pm10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_pm2_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM2.5',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
-    'original_icon': None,
-    'original_name': 'PM2.5',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
-    'unit_of_measurement': 'μg/m³',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_pm2_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm25',
-      'friendly_name': 'Mock Air Purifier PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_pm2_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-3-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Air Purifier Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-ThermostatLocalTemperature-513-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Air Purifier Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.0',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Volatile organic compounds parts',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
-    'original_icon': None,
-    'original_name': 'Volatile organic compounds parts',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensor-1070-0',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Mock Air Purifier Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_air_purifier_volatile_organic_compounds_parts',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.0',
   })
 # ---
 # name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-entry]
@@ -9096,7 +9547,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9157,7 +9608,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -9217,7 +9668,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9274,7 +9725,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9331,7 +9782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unique_id': '00000000000004D2-000000000000001F-MatterNodeDevice-1-PressureSensor-1027-0',
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
@@ -9392,7 +9843,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_control_mode',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpControlMode-512-33',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpControlMode-512-33',
     'unit_of_measurement': None,
   })
 # ---
@@ -9452,7 +9903,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-FlowSensor-1028-0',
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
@@ -9508,7 +9959,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PressureSensor-1027-0',
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
@@ -9562,7 +10013,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_speed',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpSpeed-512-20',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -9618,7 +10069,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9675,7 +10126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9735,7 +10186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -9795,7 +10246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -9855,7 +10306,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -9915,7 +10366,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9972,7 +10423,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000026-MatterNodeDevice-1-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -10400,7 +10851,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_close_time',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -10500,7 +10951,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
     'unit_of_measurement': '%',
   })
 # ---
@@ -10555,7 +11006,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -11490,7 +11941,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11553,7 +12004,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11613,7 +12064,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -11673,7 +12124,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11732,7 +12183,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_error',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
     'unit_of_measurement': None,
   })
 # ---
@@ -11795,7 +12246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalState-96-4',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalState-96-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -11859,7 +12310,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -11971,7 +12422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -12031,7 +12482,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAState-152-2',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ESAState-152-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -12095,7 +12546,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_opt_out_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAOptOutState-152-7',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ESAOptOutState-152-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -12153,7 +12604,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_percentage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
     'unit_of_measurement': '%',
   })
 # ---
@@ -12212,7 +12663,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12272,7 +12723,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'estimated_heat_required',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12329,7 +12780,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_volume',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -12389,7 +12840,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12407,169 +12858,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230.0',
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smoke_sensor_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Smoke sensor Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smoke_sensor_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '94',
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smoke_sensor_battery_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery type',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_replacement_description',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smoke sensor Battery type',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smoke_sensor_battery_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'CR123A',
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smoke_sensor_battery_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Battery voltage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[smoke_detector][sensor.smoke_sensor_battery_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smoke sensor Battery voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smoke_sensor_battery_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_sensors[switchbot_k11_plus][sensor.k11_operational_error-entry]
@@ -12768,7 +13056,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-HumiditySensor-1029-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -12825,7 +13113,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -12882,7 +13170,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -12939,7 +13227,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12996,7 +13284,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

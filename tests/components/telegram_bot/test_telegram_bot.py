@@ -646,14 +646,14 @@ async def test_webhook_endpoint_generates_telegram_command_event(
     assert isinstance(events[0].context, Context)
 
 
-async def test_webhook_endpoint_generates_telegram_callback_event(
+async def test_webhook_callback_inline_query(
     hass: HomeAssistant,
     webhook_bot,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
 ) -> None:
-    """POST to the configured webhook endpoint and assert fired `telegram_callback` event."""
+    """Test callback query triggered by inline query."""
     client = await hass_client()
     events = async_capture_events(hass, "telegram_callback")
 
@@ -670,6 +670,47 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+    assert isinstance(events[0].context, Context)
+
+
+async def test_webhook_callback_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    hass_client: ClientSessionGenerator,
+    update_callback_inline_keyboard,
+    mock_generate_secret_token,
+) -> None:
+    """Test callback query triggered by inline keyboard button."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_callback")
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        json=update_callback_inline_keyboard,
+        headers={"X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token},
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert (
+        events[0].data["chat_id"]
+        == update_callback_inline_keyboard["callback_query"]["message"]["chat"]["id"]
+    )
+    expected_message = {
+        **update_callback_inline_keyboard["callback_query"]["message"],
+        "delete_chat_photo": False,
+        "group_chat_created": False,
+        "supergroup_chat_created": False,
+        "channel_chat_created": False,
+    }
+    assert events[0].data["message"] == expected_message
+    assert events[0].data["data"] == "/command arg1 arg2"
+    assert events[0].data["command"] == "/command"
+    assert events[0].data["args"] == ["arg1", "arg2"]
     assert isinstance(events[0].context, Context)
 
 
@@ -1079,7 +1120,8 @@ async def test_send_message_config_entry_error(
         )
 
     await hass.async_block_till_done()
-    assert err.value.translation_key == "missing_config_entry"
+    assert err.value.translation_key == "entry_not_loaded"
+    assert err.value.translation_placeholders == {"telegram_bot": "Mock Title"}
 
 
 async def test_delete_message(
@@ -1206,7 +1248,7 @@ async def test_edit_message_media(
     mock.assert_called_once()
     assert mock.call_args[1]["media"].__class__.__name__ == expected_media_class
     assert mock.call_args[1]["media"].caption == "mock caption"
-    assert mock.call_args[1]["parse_mode"] == PARSER_MD
+    assert mock.call_args[1]["media"].parse_mode == PARSER_MD
     assert mock.call_args[1]["chat_id"] == 123456
     assert mock.call_args[1]["message_id"] == 12345
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(

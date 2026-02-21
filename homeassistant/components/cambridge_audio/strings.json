@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "number": {
+      "room_correction_intensity": {
+        "name": "Room correction intensity"
+      }
+    },
     "select": {
       "audio_output": {
         "name": "Audio output"
@@ -62,6 +67,9 @@
       },
       "pre_amp": {
         "name": "Pre-Amp"
+      },
+      "room_correction": {
+        "name": "Room correction"
       }
     }
   },
