@@ -1,7 +1,7 @@
 """Tests for Roborock vacuums."""
 
 from typing import Any
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from roborock import RoborockException
@@ -183,9 +183,19 @@ async def test_v1_refreshes_status_after_command(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test v1 commands trigger an immediate status refresh."""
+    """Test v1 commands refresh status before coordinator refresh request."""
     assert fake_vacuum.v1_properties is not None
+    coordinator = setup_entry.runtime_data.v1[0]
     previous_refresh_count = fake_vacuum.v1_properties.status.refresh.call_count
+
+    async def _assert_status_refreshed_first() -> None:
+        assert (
+            fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
+        )
+
+    coordinator.async_request_refresh = AsyncMock(
+        side_effect=_assert_status_refreshed_first
+    )
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
@@ -194,6 +204,7 @@ async def test_v1_refreshes_status_after_command(
         blocking=True,
     )
 
+    assert coordinator.async_request_refresh.call_count == 1
     assert fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
 
 
