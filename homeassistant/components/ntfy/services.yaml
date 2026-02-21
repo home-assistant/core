@@ -113,26 +113,23 @@ publish:
                   options:
                     - value: view
                       label: Open website/app
-                    - value: broadcast
-                      label: Send Android broadcast
                     - value: http
                       label: Send HTTP request
+                    - value: broadcast
+                      label: Send Android broadcast
                   translation_key: action_type
                   mode: dropdown
             label:
               selector:
                 text:
               required: true
+            clear:
+              selector:
+                boolean:
             url:
               selector:
                 text:
                   type: url
-            intent:
-              selector:
-                text:
-            extras:
-              selector:
-                object:
             method:
               selector:
                 select:
@@ -149,9 +146,12 @@ publish:
               selector:
                 text:
                   multiline: true
-            clear:
+            intent:
               selector:
-                boolean:
+                text:
+            extras:
+              selector:
+                object:
     sequence_id:
       required: false
       selector:
