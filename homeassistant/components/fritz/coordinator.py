@@ -48,9 +48,10 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
+    SCAN_INTERVAL,
     MeshRoles,
 )
-from .helpers import _ha_is_stopping
+from .helpers import ha_is_stopping
 from .models import (
     ConnectionInfo,
     Device,
@@ -159,7 +160,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
         self._devices: dict[str, FritzDevice] = {}
@@ -551,7 +552,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Scan for new network devices."""
 
         if self.hass.is_stopping:
-            _ha_is_stopping("scan devices")
+            ha_is_stopping("scan devices")
             return
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
@@ -726,7 +727,7 @@ class AvmWrapper(FritzBoxTools):
         """Return service details."""
 
         if self.hass.is_stopping:
-            _ha_is_stopping(f"{service_name}/{action_name}")
+            ha_is_stopping(f"{service_name}/{action_name}")
             return {}
 
         if f"{service_name}{service_suffix}" not in self.connection.services:

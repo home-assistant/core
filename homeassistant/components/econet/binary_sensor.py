@@ -74,6 +74,6 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)
