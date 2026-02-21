@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 from roborock import RoborockCategory, RoborockException
 from roborock.data import HomeDataDevice, HomeDataProduct
+from roborock.data.b01_q10 import B01_Q10_DP
+from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -590,6 +592,40 @@ async def test_q10_registry_entries(
     assert device_entry.model == "roborock.vacuum.ss07"
 
 
+async def test_q10_unload_closes_subscription(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test unloading Q10 closes the subscription loop."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert q10_config_entry.state is not None
+
+    # Ensure the coordinator has started the Q10 subscription loop first.
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert await hass.config_entries.async_unload(q10_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert q10_fake_device.b01_q10_properties.close.call_count == 1
+
+
 @pytest.mark.parametrize(
     ("service", "api_method", "service_params", "expected_activity"),
     [
@@ -633,9 +669,13 @@ async def test_q10_state_changing_commands(
     )
 
     api = q10_fake_device.b01_q10_properties
-    api_call = getattr(api.vacuum, api_method)
-    assert api_call.call_count == 1
-    assert api_call.call_args[0] == ()
+    if service == SERVICE_START:
+        assert api.vacuum.start_clean.call_count == 1
+        assert api.vacuum.start_clean.call_args[0] == ()
+    else:
+        api_call = getattr(api.vacuum, api_method)
+        assert api_call.call_count == 1
+        assert api_call.call_args[0] == ()
 
     # Force coordinator refresh to get updated state
     await hass.async_block_till_done()
@@ -740,6 +780,43 @@ async def test_q10_clean_spot_command(
     # Q10 starts cleaning using vacuum.start_clean
     api = q10_fake_device.b01_q10_properties
     assert api.vacuum.start_clean.call_count == 1
+
+
+async def test_q10_start_uses_resume_when_paused(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test Q10 start sends resume command when vacuum is paused."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = q10_config_entry.runtime_data.b01[0]
+    if isinstance(coordinator.data, dict):
+        coordinator.data[B01_Q10_DP.STATUS] = YXDeviceState.PAUSE_STATE.code
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+        blocking=True,
+    )
+
+    api = q10_fake_device.b01_q10_properties
+    assert api.command.send.call_count == 1
+    assert api.command.send.call_args.kwargs == {
+        "command": B01_Q10_DP.RESUME,
+        "params": {},
+    }
 
 
 async def test_q10_send_command_not_supported(
