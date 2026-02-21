@@ -523,6 +523,7 @@
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
           "zones": "Zones"
+          "map_rotation": "Map rotation"
         },
         "data_description": {
           "charger": "Show the charger on the map.",
