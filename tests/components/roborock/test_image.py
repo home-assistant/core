@@ -1,18 +1,42 @@
+"""Test Roborock Image platform."""
+
 from __future__ import annotations
 
+import copy
 import io
-from datetime import datetime
-from types import SimpleNamespace
-from unittest.mock import MagicMock
+from datetime import timedelta
+from http import HTTPStatus
+import logging
+from unittest.mock import patch
 
-from PIL import Image
 import pytest
+from PIL import Image
+from roborock import MultiMapsList, RoborockException
+from roborock.data import RoborockStateCode
+from roborock.devices.traits.v1.map_content import MapContent
 
+from homeassistant.components.roborock.const import (
+    CONF_MAP_ROTATION,
+    V1_LOCAL_NOT_CLEANING_INTERVAL,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
-from homeassistant.components.roborock.const import CONF_MAP_ROTATION
-from homeassistant.components.roborock.image import RoborockMap
+from .conftest import FakeDevice, make_home_trait
+from .mock_data import (
+    HOME_DATA,
+    MAP_DATA,
+    MULTI_MAP_LIST,
+    MULTI_MAP_LIST_NO_MAP_NAMES,
+    ROOM_MAPPING,
+    STATUS,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _png_bytes(width: int, height: int) -> bytes:
@@ -22,116 +46,140 @@ def _png_bytes(width: int, height: int) -> bytes:
     return buf.getvalue()
 
 
-def _coordinator(hass: HomeAssistant):
-    """Minimal coordinator-like object for RoborockCoordinatedEntityV1."""
-    coord = SimpleNamespace()
-    coord.hass = hass
-    coord.duid_slug = "test_duid"
-    coord.last_home_update = datetime.utcnow()
-
-    # CoordinatorEntity expects async_add_listener to exist
-    coord.async_add_listener = lambda _cb: (lambda: None)
-
-    return coord
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.IMAGE]
 
 
-@pytest.mark.asyncio
-async def test_roborock_map_rotation_90(hass: HomeAssistant) -> None:
-    raw = _png_bytes(10, 20)
+async def test_floorplan_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Test floor plan map image is correctly set up."""
+    assert len(hass.states.async_all("image")) == 4
 
-    config_entry = MagicMock()
-    config_entry.options = {CONF_MAP_ROTATION: 90}
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
 
-    home_trait = MagicMock()
-    home_trait.home_map_content = {1: SimpleNamespace(image_content=raw)}
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body is not None
+    assert body == b"\x89PNG-001"
 
-    entity = RoborockMap(
-        config_entry=config_entry,
-        coordinator=_coordinator(hass),
-        home_trait=home_trait,
-        map_flag=1,
-        map_name="Test Map",
+    now = dt_util.utcnow() + timedelta(minutes=61)
+
+    for fake_vacuum in fake_devices:
+        if fake_vacuum.v1_properties is None:
+            continue
+        fake_vacuum.v1_properties.status.in_cleaning = 1
+        fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-002"
+
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        assert resp.status == HTTPStatus.OK
+
+
+async def test_floorplan_image_rotation(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test map rotation option rotates the served image."""
+    setup_entry.options = {CONF_MAP_ROTATION: 90}
+
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    rotated = Image.open(io.BytesIO(body))
+    assert rotated.size == (20, 10)
+
+
+async def test_fail_updating_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that we handle failing getting the image after it has already been setup."""
+    client = await hass_client()
+
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+    fake_vacuum.v1_properties.home.refresh.side_effect = RoborockException
+    fake_vacuum.v1_properties.status.in_cleaning = 1
+
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+
+@pytest.mark.parametrize(
+    ("multi_maps_list", "expected_entity_ids"),
+    [
+        (
+            MULTI_MAP_LIST,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                "image.roborock_s7_maxv_downstairs",
+                "image.roborock_s7_maxv_upstairs",
+            },
+        ),
+        (
+            MULTI_MAP_LIST_NO_MAP_NAMES,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                "image.roborock_s7_maxv_map_0",
+                "image.roborock_s7_maxv_map_1",
+            },
+        ),
+    ],
+)
+async def test_image_entity_naming(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    multi_maps_list: MultiMapsList,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test entity naming when no map name is set."""
+    fake_vacuum.v1_properties.home = make_home_trait(
+        map_info=multi_maps_list.map_info or [],
+        current_map=STATUS.current_map,
+        room_mapping=ROOM_MAPPING,
+        rooms=HOME_DATA.rooms,
     )
 
-    rotated = await entity.async_image()
-    assert rotated is not None
-    assert rotated != raw
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    img = Image.open(io.BytesIO(rotated))
-    assert img.size == (20, 10)
-
-
-@pytest.mark.asyncio
-async def test_roborock_map_rotation_0_returns_raw(hass: HomeAssistant) -> None:
-    raw = _png_bytes(12, 34)
-
-    config_entry = MagicMock()
-    config_entry.options = {CONF_MAP_ROTATION: 0}
-
-    home_trait = MagicMock()
-    home_trait.home_map_content = {1: SimpleNamespace(image_content=raw)}
-
-    entity = RoborockMap(
-        config_entry=config_entry,
-        coordinator=_coordinator(hass),
-        home_trait=home_trait,
-        map_flag=1,
-        map_name="Test Map",
-    )
-
-    out = await entity.async_image()
-    assert out == raw
-
-
-@pytest.mark.asyncio
-async def test_roborock_map_cache_invalidation_on_map_change(hass: HomeAssistant) -> None:
-    raw1 = _png_bytes(10, 20)
-    raw2 = _png_bytes(30, 40)
-
-    config_entry = MagicMock()
-    config_entry.options = {CONF_MAP_ROTATION: 90}
-
-    home_trait = MagicMock()
-    home_trait.home_map_content = {1: SimpleNamespace(image_content=raw1)}
-
-    coord = _coordinator(hass)
-
-    entity = RoborockMap(
-        config_entry=config_entry,
-        coordinator=coord,
-        home_trait=home_trait,
-        map_flag=1,
-        map_name="Test Map",
-    )
-
-    rotated1 = await entity.async_image()
-    img1 = Image.open(io.BytesIO(rotated1))
-    assert img1.size == (20, 10)
-
-    # Update map content and simulate coordinator update
-    home_trait.home_map_content[1].image_content = raw2
-    entity._handle_coordinator_update()
-
-    rotated2 = await entity.async_image()
-    img2 = Image.open(io.BytesIO(rotated2))
-    assert img2.size == (40, 30)
-
-
-@pytest.mark.asyncio
-async def test_roborock_map_missing_flag_raises(hass: HomeAssistant) -> None:
-    config_entry = MagicMock()
-    config_entry.options = {CONF_MAP_ROTATION: 90}
-
-    home_trait = MagicMock()
-    home_trait.home_map_content = {}  # no map_flag present
-
-    entity = RoborockMap(
-        config_entry=config_entry,
-        coordinator=_coordinator(hass),
-        home_trait=home_trait,
-        map_flag=1,
-        map_name="Test Map",
-    )
-
-    with pytest.raises(HomeAssistantError):
-        await entity.async_image()
+    assert {
+        state.entity_id for state in hass.states.async_all("image")
+    } == expected_entity_ids
