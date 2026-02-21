@@ -114,30 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
-        # Check if the error is due to rate limiting
-        error_msg = str(err)
-        if (
-            "Rate limit" in error_msg
-            or "Bucket for item=home_data" in error_msg
-            or "result is None" in error_msg
-            or "no data returned" in error_msg
-            or "API returned no data" in error_msg
-        ):
-            raise ConfigEntryNotReady(
-                "API rate limit exceeded or no data returned",
-                translation_domain=DOMAIN,
-                translation_key="api_rate_limit",
-            ) from err
-        # Check if the error is due to None response (often caused by rate limiting)
-        if (
-            "unexpected type: None" in error_msg
-            or "result was an unexpected type" in error_msg
-        ):
-            raise ConfigEntryNotReady(
-                "API rate limit exceeded or no data returned",
-                translation_domain=DOMAIN,
-                translation_key="api_rate_limit",
-            ) from err
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
             translation_domain=DOMAIN,
