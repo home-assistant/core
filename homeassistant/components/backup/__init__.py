@@ -16,7 +16,6 @@ from .agent import (
     BackupAgent,
     BackupAgentError,
     BackupAgentPlatformProtocol,
-    BackupAgentSupportedFeature,
     LocalBackupAgent,
 )
 from .config import BackupConfig, CreateBackupParametersDict
@@ -42,6 +41,7 @@ from .manager import (
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
@@ -56,7 +56,6 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
-    "BackupAgentSupportedFeature",
     "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",
@@ -77,6 +76,7 @@ __all__ = [
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
+    "UploadBackupEvent",
     "WrittenBackup",
     "async_get_manager",
     "suggested_filename",

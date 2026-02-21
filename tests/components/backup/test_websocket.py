@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgentError,
-    BackupAgentSupportedFeature,
     BackupNotFound,
     BackupReaderWriterError,
     Folder,
@@ -4141,49 +4140,3 @@ async def test_can_decrypt_on_download_get_backup_returns_none(
         "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
         in caplog.text
     )
-
-
-async def test_agents_upload_progress_no_uploads(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test getting upload progress when no uploads are active."""
-    mock_agents = await setup_backup_integration(
-        hass, with_hassio=False, remote_agents=["test.remote"]
-    )
-
-    # Feature enabled but no upload in progress
-    agent = mock_agents["test.remote"]
-    agent.supported_features = BackupAgentSupportedFeature.UPLOAD_PROGRESS
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id({"type": "backup/agents/upload_progress"})
-    result = await client.receive_json()
-    assert result["success"]
-    assert result["result"] == {"agent_upload_progress": {}}
-
-
-async def test_agents_upload_progress_with_active_upload(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test getting upload progress with an active upload."""
-    mock_agents = await setup_backup_integration(
-        hass, with_hassio=False, remote_agents=["test.remote"]
-    )
-
-    # Simulate an active upload with progress
-    agent = mock_agents["test.remote"]
-    agent.supported_features = BackupAgentSupportedFeature.UPLOAD_PROGRESS
-    agent._upload_backup_size = 1000
-    agent._attr_upload_bytes_done = 500
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id({"type": "backup/agents/upload_progress"})
-    result = await client.receive_json()
-    assert result["success"]
-    assert result["result"] == {"agent_upload_progress": {"test.remote": 50.0}}

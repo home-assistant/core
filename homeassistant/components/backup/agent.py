@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import abc
 from collections.abc import AsyncIterator, Callable, Coroutine
-from enum import IntFlag
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -13,12 +12,6 @@ from propcache.api import cached_property
 from homeassistant.core import HomeAssistant, callback
 
 from .models import AgentBackup, BackupAgentError
-
-
-class BackupAgentSupportedFeature(IntFlag):
-    """Supported features of a backup agent."""
-
-    UPLOAD_PROGRESS = 1
 
 
 class BackupAgentUnreachableError(BackupAgentError):
@@ -34,32 +27,6 @@ class BackupAgent(abc.ABC):
     domain: str
     name: str
     unique_id: str
-    supported_features: BackupAgentSupportedFeature = BackupAgentSupportedFeature(0)
-    _upload_backup_size: int = 0
-    _attr_upload_bytes_done: int = 0
-
-    @property
-    def upload_progress(self) -> float | None:
-        """Return the upload progress as a percentage.
-
-        Returns None if the agent does not support upload progress or if
-        no upload is in progress.
-        """
-        if BackupAgentSupportedFeature.UPLOAD_PROGRESS not in self.supported_features:
-            return None
-        if not self._upload_backup_size:
-            return None
-        return round(self._attr_upload_bytes_done / self._upload_backup_size * 100, 2)
-
-    def start_upload_progress(self, backup_size: int) -> None:
-        """Initialize upload progress tracking."""
-        self._upload_backup_size = backup_size
-        self._attr_upload_bytes_done = 0
-
-    def reset_upload_progress(self) -> None:
-        """Reset upload progress tracking."""
-        self._upload_backup_size = 0
-        self._attr_upload_bytes_done = 0
 
     @cached_property
     def agent_id(self) -> str:
@@ -86,12 +53,14 @@ class BackupAgent(abc.ABC):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: Callable[[int], None] | None = None,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
         :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
+        :param on_progress: A callback to report the number of uploaded bytes.
         """
 
     @abc.abstractmethod

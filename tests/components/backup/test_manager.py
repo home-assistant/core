@@ -3705,28 +3705,3 @@ async def test_manager_not_blocked_after_restore(
         "next_automatic_backup_additional": False,
         "state": "idle",
     }
-
-
-async def test_upload_sets_agent_progress(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    generate_backup_id: MagicMock,
-) -> None:
-    """Test that upload to agents calls start/reset upload progress."""
-    agent_ids = [LOCAL_AGENT_ID, "test.remote"]
-    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
-
-    ws_client = await hass_ws_client(hass)
-
-    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
-        await ws_client.send_json_auto_id(
-            {"type": "backup/generate", "agent_ids": agent_ids}
-        )
-        result = await ws_client.receive_json()
-        assert result["success"] is True
-
-        await hass.async_block_till_done()
-
-    remote_agent = mock_agents["test.remote"]
-    remote_agent.start_upload_progress.assert_called_once()
-    remote_agent.reset_upload_progress.assert_called_once()

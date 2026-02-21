@@ -255,6 +255,15 @@ class BlockedEvent(ManagerStateEvent):
     manager_state: BackupManagerState = BackupManagerState.BLOCKED
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class UploadBackupEvent(ManagerStateEvent):
+    """Backup agent upload progress event."""
+
+    agent_id: str
+    uploaded_bytes: int
+    total_bytes: int
+
+
 class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
@@ -583,14 +592,24 @@ class BackupManager:
                     backup, protected=should_encrypt, size=streamer.size()
                 )
             agent = self.backup_agents[agent_id]
-            agent.start_upload_progress(_backup.size)
-            try:
-                await agent.async_upload_backup(
-                    open_stream=open_stream_func,
-                    backup=_backup,
+
+            @callback
+            def on_upload_progress(uploaded_bytes: int) -> None:
+                """Handle upload progress."""
+                self.async_on_backup_event(
+                    UploadBackupEvent(
+                        manager_state=self.state,
+                        agent_id=agent_id,
+                        uploaded_bytes=uploaded_bytes,
+                        total_bytes=_backup.size,
+                    )
                 )
-            finally:
-                agent.reset_upload_progress()
+
+            await agent.async_upload_backup(
+                open_stream=open_stream_func,
+                backup=_backup,
+                on_progress=on_upload_progress,
+            )
             if streamer:
                 await streamer.wait()
 
