@@ -4,7 +4,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "json_api_disabled": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants.",
-      "no_serial_number": "Device does not provide a serial number"
+      "no_serial_number": "Device does not provide a serial number",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The device does not match the previous device"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -15,6 +17,17 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::nrgkick::config::step::user_auth::data_description::password%]",
+          "username": "[%key:component::nrgkick::config::step::user_auth::data_description::username%]"
+        },
+        "description": "Reauthenticate with your NRGkick device.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
