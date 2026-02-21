@@ -87,12 +87,14 @@ def mock_api() -> Generator[MagicMock]:
 
         # Mock cheapest duration methods
         # For day period (6-18), cheapest 2.5h window would be starting at hour 6
-        # Average of hours 6, 7, and half of 8: (0.26 + 0.27 + 0.28*0.5) / 2.5 = 0.266
-        mock_api_instance.get_cheapest_duration_day.return_value = (0.266, 6)
+        # Average of hours 6, 7, and half of 8 in Cent/kWh:
+        # (26.0 + 27.0 + 28.0 * 0.5) / 2.5 = 26.6 Cent/kWh
+        mock_api_instance.get_cheapest_duration_day.return_value = (26.6, 6)
 
         # For night period (18-6), cheapest 2.5h window would be early morning
-        # Average of hours 0, 1, and half of 2 tomorrow: (0.25 + 0.26 + 0.27*0.5) / 2.5 = 0.258
-        mock_api_instance.get_cheapest_duration_night.return_value = (0.258, 0)
+        # Average of hours 0, 1, and half of 2 tomorrow in Cent/kWh:
+        # (25.0 + 26.0 + 27.0 * 0.5) / 2.5 = 25.8 Cent/kWh
+        mock_api_instance.get_cheapest_duration_night.return_value = (25.8, 0)
 
         mock_api_class.return_value = mock_api_instance
         yield mock_api_instance
