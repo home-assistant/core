@@ -119,8 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="home_data_fail",
         ) from err
     except Exception as err:
+        _LOGGER.exception("Unexpected error while setting up Roborock device manager")
         raise ConfigEntryNotReady(
-            f"Unexpected error: {err}",
+            "Unexpected error while setting up Roborock device manager",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
