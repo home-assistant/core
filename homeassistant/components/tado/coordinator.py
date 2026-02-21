@@ -23,6 +23,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "geofence": {},
             "zone": {},
         }
+        self.is_x = False
 
     @property
     def fallback(self) -> str:
@@ -96,6 +98,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
+        self.is_x = getattr(getattr(self._tado, "_http", None), "is_x_line", False)
+
+        if self.is_x:
+            # In PyTado 0.19.2, get_zones() returns raw dicts with roomId/roomName
+            for z in self.zones:
+                z["type"] = z.get("type", TYPE_HEATING)
+                z["name"] = z.get("roomName", z.get("name"))
+                z["id"] = z.get("roomId", z.get("id"))
 
         devices = await self._async_update_devices()
         zones = await self._async_update_zones()
@@ -135,16 +145,42 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         return await self.hass.async_add_executor_job(self._update_device_info, devices)
 
-    def _update_device_info(self, devices: list[dict[str, Any]]) -> dict[str, dict]:
+    def _update_device_info(self, devices: list[Any]) -> dict[str, dict]:
         """Update the device data from Tado."""
         mapped_devices: dict[str, dict] = {}
-        for device in devices:
-            device_short_serial_no = device["shortSerialNo"]
+        
+        # PyTado sometimes returns nested lists for custom/X setups
+        def _flatten(items):
+            for item in items:
+                if isinstance(item, list):
+                    yield from _flatten(item)
+                else:
+                    yield item
+
+        for raw_device in _flatten(devices):
+            # PyTado 0.19 returns Pydantic Device objects for TadoX and raw dicts for pre-X
+            if isinstance(raw_device, dict):
+                device: dict[str, Any] = raw_device
+            elif hasattr(raw_device, "model_dump"):
+                # Pydantic v2 model (Device, etc.)
+                device = raw_device.model_dump()
+            else:
+                raise UpdateFailed(f"Unexpected device type from Tado API: {type(raw_device)}")
+
+            device["is_x"] = self.is_x
+            if self.is_x:
+                # PyTado 0.19.2 TadoX uses serialNo or serialNumber
+                device_short_serial_no = device.get("serialNo") or device.get("serialNumber", "")
+            else:
+                device_short_serial_no = device.get("shortSerialNo", "")
             _LOGGER.debug("Updating device %s", device_short_serial_no)
             try:
-                if (
+                if self.is_x:
+                    # PyTado 0.19.2 uses camelCase keys in the raw dict
+                    device[TEMP_OFFSET] = device.get("temperatureOffset", 0)
+                elif (
                     INSIDE_TEMPERATURE_MEASUREMENT
-                    in device["characteristics"]["capabilities"]
+                    in device.get("characteristics", {}).get("capabilities", [])
                 ):
                     _LOGGER.debug(
                         "Updating temperature offset for device %s",
@@ -172,14 +208,21 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             zone_states_call = await self.hass.async_add_executor_job(
                 self._tado.get_zone_states
             )
-            zone_states = zone_states_call["zoneStates"]
+            # In PyTado 0.19.2, TadoX get_zone_states() returns a raw list of dicts;
+            # pre-X returns {"zoneStates": {zone_id: state}}
+            if self.is_x:
+                zone_states = zone_states_call
+            else:
+                zone_states = zone_states_call["zoneStates"]
         except RequestException as err:
             _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
         mapped_zones: dict[int, dict] = {}
         for zone in zone_states:
-            mapped_zones[int(zone)] = await self._update_zone(int(zone))
+            # TadoX: zone is a dict with "id"; pre-X: zone is the zone id string
+            zone_id = int(zone["id"] if self.is_x else zone)
+            mapped_zones[zone_id] = await self._update_zone(zone_id)
 
         return mapped_zones
 
@@ -188,6 +231,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
+            # In PyTado 0.19.2, get_zone_state() returns a TadoXZone/TadoZone adapter
+            # for both Tado X and pre-X — use it uniformly.
             data = await self.hass.async_add_executor_job(
                 self._tado.get_zone_state, zone_id
             )
@@ -218,6 +263,15 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
+
+        if self.is_x:
+            # self.zones is now a list of normalised dicts {id, name, type}
+            zone_type = TYPE_HEATING
+            for zone in self.zones:
+                if zone["id"] == zone_id:
+                    zone_type = zone.get("type", TYPE_HEATING)
+                    break
+            return {"type": zone_type, "canSetTemperature": False}
 
         try:
             return await self.hass.async_add_executor_job(

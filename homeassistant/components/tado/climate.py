@@ -23,7 +23,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -66,6 +71,8 @@ from .const import (
     TADO_TO_HA_OFFSET_MAP,
     TADO_TO_HA_SWING_MODE_MAP,
     TADO_VERTICAL_SWING_SETTING,
+    TADO_X_DEFAULT_MAX_TEMP,
+    TADO_X_DEFAULT_MIN_TEMP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -222,16 +229,21 @@ async def create_climate_entity(
     if heat_temperatures is None and "temperatures" in capabilities:
         heat_temperatures = capabilities["temperatures"]
 
-    if cool_temperatures is None and heat_temperatures is None:
+    if cool_temperatures is None and heat_temperatures is None and not getattr(tado, "is_x", False):
         _LOGGER.debug("Not adding zone %s since it has no temperatures", name)
         return None
 
-    heat_min_temp = None
-    heat_max_temp = None
-    heat_step = None
-    cool_min_temp = None
-    cool_max_temp = None
-    cool_step = None
+    heat_min_temp: float | None = None
+    heat_max_temp: float | None = None
+    heat_step: float | None = None
+    cool_min_temp: float | None = None
+    cool_max_temp: float | None = None
+    cool_step: float | None = None
+
+    if getattr(tado, "is_x", False):
+        heat_min_temp = TADO_X_DEFAULT_MIN_TEMP
+        heat_max_temp = TADO_X_DEFAULT_MAX_TEMP
+        heat_step = PRECISION_HALVES
 
     if heat_temperatures is not None:
         heat_min_temp = float(heat_temperatures["celsius"]["min"])
@@ -304,7 +316,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._attr_unique_id = f"{zone_type} {zone_id} {coordinator.home_id}"
 
         self._device_info = device_info
-        self._device_id = self._device_info["shortSerialNo"]
+        self._device_id = (
+            self._device_info["serialNumber"]
+            if getattr(self._tado, "is_x", False)
+            else self._device_info["shortSerialNo"]
+        )
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._attr_hvac_modes = supported_hvac_modes
@@ -355,16 +371,21 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._tado_geofence_data = self._tado.data["geofence"]
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
 
-        # Assign offset values to mapped attributes
-        for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
-            if (
-                self._device_id in self._tado.data["device"]
-                and offset_key
-                in self._tado.data["device"][self._device_id][TEMP_OFFSET]
-            ):
-                self._tado_zone_temp_offset[attr] = self._tado.data["device"][
-                    self._device_id
-                ][TEMP_OFFSET][offset_key]
+        if getattr(self._tado, "is_x", False):
+            self._tado_zone_temp_offset["offset_celsius"] = self._tado.data["device"][
+                self._device_id
+            ][TEMP_OFFSET]
+        else:
+            # Assign offset values to mapped attributes
+            for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
+                if (
+                    self._device_id in self._tado.data["device"]
+                    and offset_key
+                    in self._tado.data["device"][self._device_id][TEMP_OFFSET]
+                ):
+                    self._tado_zone_temp_offset[attr] = self._tado.data["device"][
+                        self._device_id
+                    ][TEMP_OFFSET][offset_key]
 
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action

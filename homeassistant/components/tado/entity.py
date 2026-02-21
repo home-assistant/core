@@ -26,25 +26,38 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
         """Initialize a Tado device."""
         super().__init__(coordinator)
         self._device_info = device_info
-        self.device_name = device_info["serialNo"]
-        self.device_id = device_info["shortSerialNo"]
-        via_device: tuple[str, str] | None = None
-        if device_info["deviceType"] not in TADO_BRIDGE_MODELS:
-            for device in coordinator.data["device"].values():
-                if device["deviceType"] in TADO_BRIDGE_MODELS:
-                    via_device = (DOMAIN, device["shortSerialNo"])
-                    break
+        if device_info.get("is_x"):
+            self.device_name = device_info["serialNumber"]
+            self.device_id = device_info["serialNumber"]
+            self._attr_device_info = DeviceInfo(
+                configuration_url=f"https://app.tado.com/en/main/settings/home/rooms-and-devices/device/{self.device_name}",
+                identifiers={(DOMAIN, self.device_id)},
+                name=self.device_name,
+                manufacturer=DEFAULT_NAME,
+                sw_version=device_info["firmwareVersion"],
+                model=device_info["type"],
+                via_device=(DOMAIN, device_info["serialNumber"]),
+            )
+        else:
+            self.device_name = device_info["serialNo"]
+            self.device_id = device_info["shortSerialNo"]
+            via_device: tuple[str, str] | None = None
+            if device_info["deviceType"] not in TADO_BRIDGE_MODELS:
+                for device in coordinator.data["device"].values():
+                    if device["deviceType"] in TADO_BRIDGE_MODELS:
+                        via_device = (DOMAIN, device["shortSerialNo"])
+                        break
 
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
-            identifiers={(DOMAIN, self.device_id)},
-            name=self.device_name,
-            manufacturer=DEFAULT_NAME,
-            sw_version=device_info["currentFwVersion"],
-            model=device_info["deviceType"],
-        )
-        if via_device:
-            self._attr_device_info["via_device"] = via_device
+            self._attr_device_info = DeviceInfo(
+                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
+                identifiers={(DOMAIN, self.device_id)},
+                name=self.device_name,
+                manufacturer=DEFAULT_NAME,
+                sw_version=device_info["currentFwVersion"],
+                model=device_info["deviceType"],
+            )
+            if via_device:
+                self._attr_device_info["via_device"] = via_device
 
 
 class TadoHomeEntity(TadoCoordinatorEntity):

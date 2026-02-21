@@ -22,6 +22,8 @@ from .const import (
     CONDITIONS_MAP,
     SENSOR_DATA_CATEGORY_GEOFENCE,
     SENSOR_DATA_CATEGORY_WEATHER,
+    TADO_LINE_X,
+    TADO_PRE_LINE_X,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
     TYPE_HOT_WATER,
@@ -173,19 +175,29 @@ AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
 )
 
 ZONE_SENSORS = {
-    TYPE_HEATING: [
-        TEMPERATURE_ENTITY_DESCRIPTION,
-        HUMIDITY_ENTITY_DESCRIPTION,
-        TADO_MODE_ENTITY_DESCRIPTION,
-        HEATING_ENTITY_DESCRIPTION,
-    ],
-    TYPE_AIR_CONDITIONING: [
-        TEMPERATURE_ENTITY_DESCRIPTION,
-        HUMIDITY_ENTITY_DESCRIPTION,
-        TADO_MODE_ENTITY_DESCRIPTION,
-        AC_ENTITY_DESCRIPTION,
-    ],
-    TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
+    TADO_LINE_X: {
+        TYPE_HEATING: [
+            TEMPERATURE_ENTITY_DESCRIPTION,
+            HUMIDITY_ENTITY_DESCRIPTION,
+            HEATING_ENTITY_DESCRIPTION,
+        ],
+        TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
+    },
+    TADO_PRE_LINE_X: {
+        TYPE_HEATING: [
+            TEMPERATURE_ENTITY_DESCRIPTION,
+            HUMIDITY_ENTITY_DESCRIPTION,
+            TADO_MODE_ENTITY_DESCRIPTION,
+            HEATING_ENTITY_DESCRIPTION,
+        ],
+        TYPE_AIR_CONDITIONING: [
+            TEMPERATURE_ENTITY_DESCRIPTION,
+            HUMIDITY_ENTITY_DESCRIPTION,
+            TADO_MODE_ENTITY_DESCRIPTION,
+            AC_ENTITY_DESCRIPTION,
+        ],
+        TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
+    },
 }
 
 
@@ -199,6 +211,7 @@ async def async_setup_entry(
     tado = entry.runtime_data
     zones = tado.zones
     entities: list[SensorEntity] = []
+    tado_line = TADO_LINE_X if getattr(tado, "is_x", False) else TADO_PRE_LINE_X
 
     # Create home sensors
     entities.extend(
@@ -211,14 +224,18 @@ async def async_setup_entry(
     # Create zone sensors
     for zone in zones:
         zone_type = zone["type"]
-        if zone_type not in ZONE_SENSORS:
-            _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
+        if zone_type not in ZONE_SENSORS[tado_line]:
+            _LOGGER.warning(
+                "Unknown or unsupported zone type skipped: %s, tado line: %s",
+                zone_type,
+                tado_line,
+            )
             continue
 
         entities.extend(
             [
                 TadoZoneSensor(tado, zone["name"], zone["id"], entity_description)
-                for entity_description in ZONE_SENSORS[zone_type]
+                for entity_description in ZONE_SENSORS[tado_line][zone_type]
             ]
         )
 

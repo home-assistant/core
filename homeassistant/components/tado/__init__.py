@@ -76,8 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     def create_tado_instance() -> tuple[Tado, str]:
         """Create a Tado instance, this time with a previously obtained refresh token."""
         tado = Tado(
-            saved_refresh_token=entry.data[CONF_REFRESH_TOKEN],
-            user_agent=f"{APPLICATION_NAME}/{HA_VERSION}",
+            saved_refresh_token=entry.data[CONF_REFRESH_TOKEN]
         )
         return tado, tado.device_activation_status()
 
@@ -99,17 +98,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     # Pre-register the bridge device to ensure it exists before other devices reference it
     device_registry = dr.async_get(hass)
-    for device in coordinator.data["device"].values():
-        if device["deviceType"] in TADO_BRIDGE_MODELS:
-            _LOGGER.debug("Pre-registering Tado bridge: %s", device["shortSerialNo"])
+    for device_id, device in coordinator.data["device"].items():
+        device_type = device.get("deviceType", device.get("type"))
+        if device_type in TADO_BRIDGE_MODELS:
+            serial_no = device.get("serialNo", device.get("serialNumber", device_id))
+            short_serial_no = device.get("shortSerialNo", device_id)
+            fw_version = device.get("currentFwVersion", device.get("firmwareVersion", ""))
+            
+            _LOGGER.debug("Pre-registering Tado bridge: %s", short_serial_no)
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device["shortSerialNo"])},
+                identifiers={(DOMAIN, short_serial_no)},
                 manufacturer="Tado",
-                model=device["deviceType"],
-                name=device["serialNo"],
-                sw_version=device["currentFwVersion"],
-                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
+                model=device_type,
+                name=serial_no,
+                sw_version=fw_version,
+                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{serial_no}",
             )
 
     entry.runtime_data = coordinator

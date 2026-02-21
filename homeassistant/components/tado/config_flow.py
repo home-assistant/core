@@ -42,6 +42,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     login_task: asyncio.Task | None = None
     refresh_token: str | None = None
     tado: Tado | None = None
+    tado_device_url: str | None = None
+    user_code: str | None = None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -71,8 +73,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Error while initiating Tado")
                 return self.async_abort(reason="cannot_connect")
             assert self.tado is not None
-            tado_device_url = self.tado.device_verification_url()
-            user_code = URL(tado_device_url).query["user_code"]
+            self.tado_device_url = self.tado.device_verification_url()
+            self.user_code = URL(self.tado_device_url).query["user_code"]
 
         async def _wait_for_login() -> None:
             """Wait for the user to login."""
@@ -108,8 +110,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             progress_action="wait_for_device",
             description_placeholders={
-                "url": tado_device_url,
-                "code": user_code,
+                "url": self.tado_device_url,
+                "code": self.user_code,
             },
             progress_task=self.login_task,
         )

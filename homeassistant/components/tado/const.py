@@ -225,6 +225,11 @@ HA_TERMINATION_DURATION = "default_overlay_seconds"
 
 TADO_DEFAULT_MIN_TEMP = 5
 TADO_DEFAULT_MAX_TEMP = 40
+TADO_X_DEFAULT_MIN_TEMP = 5.5
+TADO_X_DEFAULT_MAX_TEMP = 30
+
+TADO_LINE_X = "is_x"
+TADO_PRE_LINE_X = "not_is_x"
 # Constants for service calls
 SERVICE_ADD_METER_READING = "add_meter_reading"
 CONF_CONFIG_ENTRY = "config_entry"
