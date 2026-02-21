@@ -33,7 +33,6 @@ CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 CONF_ALARM_EXIT_DELAY_AWAY = "alarm_exit_delay_away"
 CONF_ALARM_EXIT_DELAY_HOME = "alarm_exit_delay_home"
 CONF_ALARM_EXIT_DELAY_NIGHT = "alarm_exit_delay_night"
-CONF_ALARM_ENTRY_DELAY = "alarm_entry_delay"
 
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"

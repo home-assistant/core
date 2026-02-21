@@ -177,14 +177,6 @@ CONFIG_WITH_ALARM_OPTIONS = {
                 "required": True,
                 "default": 0,
             },
-            {
-                "type": "integer",
-                "valueMin": 0,
-                "valueMax": 255,
-                "name": "alarm_entry_delay",
-                "required": True,
-                "default": 0,
-            },
         ],
     },
     "data": {
@@ -205,7 +197,6 @@ CONFIG_WITH_ALARM_OPTIONS = {
             "alarm_exit_delay_away": 0,
             "alarm_exit_delay_home": 0,
             "alarm_exit_delay_night": 0,
-            "alarm_entry_delay": 0,
         },
     },
 }

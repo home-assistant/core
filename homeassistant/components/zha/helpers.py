@@ -146,7 +146,6 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_SUCCESS,
     CONF_ALARM_ARM_REQUIRES_CODE,
-    CONF_ALARM_ENTRY_DELAY,
     CONF_ALARM_EXIT_DELAY_AWAY,
     CONF_ALARM_EXIT_DELAY_HOME,
     CONF_ALARM_EXIT_DELAY_NIGHT,
@@ -1281,9 +1280,6 @@ CONF_ZHA_ALARM_SCHEMA = vol.Schema(
         vol.Required(CONF_ALARM_EXIT_DELAY_NIGHT, default=0): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=255)
         ),
-        vol.Required(CONF_ALARM_ENTRY_DELAY, default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
-        ),
     }
 )
 
@@ -1355,7 +1351,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         exit_delay_away=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_AWAY),
         exit_delay_home=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_HOME),
         exit_delay_night=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_NIGHT),
-        entry_delay=ha_acp_options.get(CONF_ALARM_ENTRY_DELAY),
     )
     coord_config: CoordinatorConfiguration = CoordinatorConfiguration(
         path=app_config[CONF_DEVICE][CONF_DEVICE_PATH],

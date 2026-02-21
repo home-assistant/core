@@ -151,7 +151,6 @@
   "config_panel": {
     "zha_alarm_options": {
       "alarm_arm_requires_code": "Code required for arming actions",
-      "alarm_entry_delay": "Default entry delay (seconds, 0 to disable, can be overridden by zha.set_entry_delay service)",
       "alarm_exit_delay_away": "Default exit delay for away mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",
       "alarm_exit_delay_home": "Default exit delay for home mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",
       "alarm_exit_delay_night": "Default exit delay for night mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",

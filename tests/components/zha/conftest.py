@@ -218,7 +218,6 @@ async def config_entry_fixture() -> MockConfigEntry:
                     zha_const.CONF_ALARM_EXIT_DELAY_AWAY: 0,
                     zha_const.CONF_ALARM_EXIT_DELAY_HOME: 0,
                     zha_const.CONF_ALARM_EXIT_DELAY_NIGHT: 0,
-                    zha_const.CONF_ALARM_ENTRY_DELAY: 0,
                 },
             }
         },
