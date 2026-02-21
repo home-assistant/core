@@ -16,6 +16,11 @@ REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
 # Option Flow steps
 DRAWABLES = "drawables"
 
+# Map options
+CONF_MAP_ROTATION = "map_rotation"
+MAP_ROTATION_OPTIONS = (0, 90, 180, 270)
+DEFAULT_MAP_ROTATION = 0
+
 DEFAULT_DRAWABLES = {
     Drawable.CHARGER: True,
     Drawable.CLEANED_AREA: False,

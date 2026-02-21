@@ -3,6 +3,9 @@
 from datetime import datetime
 import logging
 
+import io
+from PIL import Image
+
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
 
@@ -15,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
+from .const import CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +76,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self._home_trait = home_trait
         self.map_flag = map_flag
         self.cached_map: bytes | None = None
+        self._rotated_cache: bytes | None = None
+        self._rotated_cache_key: tuple[int, int] | None = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     async def async_added_to_hass(self) -> None:
@@ -97,12 +103,37 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             return
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
+            self._rotated_cache = None
+            self._rotated_cache_key = None
             self._attr_image_last_updated = self.coordinator.last_home_update
 
         super()._handle_coordinator_update()
-
+    
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:
             raise HomeAssistantError("Map flag not found in coordinator maps")
-        return map_content.image_content
+
+        raw = map_content.image_content
+        rotation = int(self.config_entry.options.get(CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION))
+
+        # Keine Rotation nötig
+        if rotation % 360 == 0:
+            return raw
+
+        cache_key = (rotation, hash(raw))
+
+         # Cache verwenden
+        if self._rotated_cache is not None and self._rotated_cache_key == cache_key:
+            return self._rotated_cache
+
+        #  Rotieren
+        img = Image.open(io.BytesIO(raw))
+        img = img.rotate(rotation, expand=True)
+
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+
+        self._rotated_cache = out.getvalue()
+        self._rotated_cache_key = cache_key
+        return self._rotated_cache

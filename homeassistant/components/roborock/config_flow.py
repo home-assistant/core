@@ -47,6 +47,9 @@ from .const import (
     DOMAIN,
     DRAWABLES,
     REGION_OPTIONS,
+    CONF_MAP_ROTATION,           # <<< NEU
+    MAP_ROTATION_OPTIONS,        # <<< NEU
+    DEFAULT_MAP_ROTATION,        # <<< NEU
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -243,7 +246,10 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
-            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
+            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND) 
+            # Rotation speichern (als int)
+            rotation = int(user_input.pop(CONF_MAP_ROTATION))
+            self.options[CONF_MAP_ROTATION] = rotation
             self.options.setdefault(DRAWABLES, {}).update(user_input)
             return self.async_create_entry(title="", data=self.options)
         data_schema = {}
@@ -262,6 +268,21 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
                 default=self.config_entry.options.get(CONF_SHOW_BACKGROUND, False),
             )
         ] = bool
+        data_schema[
+            vol.Required(
+                CONF_MAP_ROTATION,
+                default=str(
+                    self.config_entry.options.get(
+                        CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION
+                    )
+                ),
+            )
+        ] = SelectSelector(
+            SelectSelectorConfig(
+                options=[str(v) for v in MAP_ROTATION_OPTIONS],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
         return self.async_show_form(
             step_id=DRAWABLES,
             data_schema=vol.Schema(data_schema),
