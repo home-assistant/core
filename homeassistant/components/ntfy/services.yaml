@@ -118,6 +118,8 @@ publish:
                       label: Send HTTP request
                     - value: broadcast
                       label: Send Android broadcast
+                    - value: copy
+                      label: Copy to clipboard
                   translation_key: action_type
                   mode: dropdown
             label:
