@@ -148,6 +148,7 @@ FLOWS = {
         "directv",
         "discord",
         "discovergy",
+        "dk_fuelprices",
         "dlink",
         "dlna_dmr",
         "dlna_dms",

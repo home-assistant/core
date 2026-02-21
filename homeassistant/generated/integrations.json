@@ -1391,6 +1391,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "dk_fuelprices": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dlink": {
       "name": "D-Link Wi-Fi Smart Plugs",
       "integration_type": "device",
@@ -8235,6 +8240,7 @@
     "cpuspeed",
     "demo",
     "derivative",
+    "dk_fuelprices",
     "emulated_roku",
     "energenie_power_sockets",
     "filesize",
