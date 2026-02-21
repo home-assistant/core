@@ -198,8 +198,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             if info := await self._async_validate_credentials(
                 self._pending_host,
                 errors,
-                username=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
@@ -207,8 +207,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         CONF_HOST: self._pending_host,
-                        CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
 
@@ -238,17 +238,14 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             if info := await self._async_validate_credentials(
                 reauth_entry.data[CONF_HOST],
                 errors,
-                username=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
             ):
                 await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={
-                        CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    },
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(
@@ -284,8 +281,9 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store discovery info for the confirmation step.
         self._discovered_host = discovery_info.host
         # Fallback: device_name -> model_type -> "NRGkick".
-        self._discovered_name = device_name or model_type or "NRGkick"
-        self.context["title_placeholders"] = {"name": self._discovered_name}
+        discovered_name = device_name or model_type or "NRGkick"
+        self._discovered_name = discovered_name
+        self.context["title_placeholders"] = {"name": discovered_name}
 
         # If JSON API is disabled, guide the user through enabling it.
         if json_api_enabled != "1":
