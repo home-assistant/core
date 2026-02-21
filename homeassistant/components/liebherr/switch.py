@@ -2,35 +2,26 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from pyliebherrhomeapi import (
-    LiebherrConnectionError,
-    LiebherrTimeoutError,
-    ToggleControl,
-    ZonePosition,
+from pyliebherrhomeapi import ToggleControl, ZonePosition
+from pyliebherrhomeapi.const import (
+    CONTROL_NIGHT_MODE,
+    CONTROL_PARTY_MODE,
+    CONTROL_SUPER_COOL,
+    CONTROL_SUPER_FROST,
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import ZONE_POSITION_MAP, LiebherrEntity
 
 PARALLEL_UPDATES = 1
-REFRESH_DELAY = 5
-
-# Control names from the API
-CONTROL_SUPERCOOL = "supercool"
-CONTROL_SUPERFROST = "superfrost"
-CONTROL_PARTY_MODE = "partymode"
-CONTROL_NIGHT_MODE = "nightmode"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,21 +46,21 @@ class LiebherrDeviceSwitchEntityDescription(LiebherrSwitchEntityDescription):
 
 
 ZONE_SWITCH_TYPES: dict[str, LiebherrZoneSwitchEntityDescription] = {
-    CONTROL_SUPERCOOL: LiebherrZoneSwitchEntityDescription(
-        key="supercool",
-        translation_key="supercool",
-        control_name=CONTROL_SUPERCOOL,
-        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_supercool(
+    CONTROL_SUPER_COOL: LiebherrZoneSwitchEntityDescription(
+        key="super_cool",
+        translation_key="super_cool",
+        control_name=CONTROL_SUPER_COOL,
+        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_super_cool(
             device_id=coordinator.device_id,
             zone_id=zone_id,
             value=value,
         ),
     ),
-    CONTROL_SUPERFROST: LiebherrZoneSwitchEntityDescription(
-        key="superfrost",
-        translation_key="superfrost",
-        control_name=CONTROL_SUPERFROST,
-        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_superfrost(
+    CONTROL_SUPER_FROST: LiebherrZoneSwitchEntityDescription(
+        key="super_frost",
+        translation_key="super_frost",
+        control_name=CONTROL_SUPER_FROST,
+        set_fn=lambda coordinator, zone_id, value: coordinator.client.set_super_frost(
             device_id=coordinator.device_id,
             zone_id=zone_id,
             value=value,
@@ -127,7 +118,7 @@ async def async_setup_entry(
                     )
                 )
 
-            # Device-wide switches (Party Mode, Night Mode)
+            # Device-wide switches (PartyMode, NightMode)
             elif device_desc := DEVICE_SWITCH_TYPES.get(control.name):
                 entities.append(
                     LiebherrDeviceSwitch(
@@ -144,7 +135,6 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
 
     entity_description: LiebherrSwitchEntityDescription
     _zone_id: int | None = None
-    _optimistic_state: bool | None = None
 
     def __init__(
         self,
@@ -171,16 +161,9 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        if self._optimistic_state is not None:
-            return self._optimistic_state
         if TYPE_CHECKING:
             assert self._toggle_control is not None
         return self._toggle_control.value
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._optimistic_state = None
-        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
@@ -205,21 +188,7 @@ class LiebherrDeviceSwitch(LiebherrEntity, SwitchEntity):
 
     async def _async_set_value(self, value: bool) -> None:
         """Set the switch value."""
-        try:
-            await self._async_call_set_fn(value)
-        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        # Track expected state locally to avoid mutating shared coordinator data
-        self._optimistic_state = value
-        self.async_write_ha_state()
-
-        await asyncio.sleep(REFRESH_DELAY)
-        await self.coordinator.async_request_refresh()
+        await self._async_send_command(self._async_call_set_fn(value))
 
 
 class LiebherrZoneSwitch(LiebherrDeviceSwitch):

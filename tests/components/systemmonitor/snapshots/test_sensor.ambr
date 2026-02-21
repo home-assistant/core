@@ -1,5 +1,15 @@
 # serializer version: 1
-# name: test_sensor[System Monitor Battery - attributes]
+# name: test_sensor[sensor.system_monitor_another_fan_fan_speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor another-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[sensor.system_monitor_another_fan_fan_speed - state]
+  '1300'
+# ---
+# name: test_sensor[sensor.system_monitor_battery - attributes]
   ReadOnlyDict({
     'device_class': 'battery',
     'friendly_name': 'System Monitor Battery',
@@ -7,20 +17,30 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Battery - state]
+# name: test_sensor[sensor.system_monitor_battery - state]
   '93'
 # ---
-# name: test_sensor[System Monitor Battery empty - attributes]
+# name: test_sensor[sensor.system_monitor_battery_empty - attributes]
   ReadOnlyDict({
     'device_class': 'timestamp',
     'friendly_name': 'System Monitor Battery empty',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Battery empty - state]
+# name: test_sensor[sensor.system_monitor_battery_empty - state]
   '2024-02-24T19:37:00+00:00'
 # ---
-# name: test_sensor[System Monitor Disk free / - attributes]
+# name: test_sensor[sensor.system_monitor_cpu_fan_fan_speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor cpu-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[sensor.system_monitor_cpu_fan_fan_speed - state]
+  '1200'
+# ---
+# name: test_sensor[sensor.system_monitor_disk_free - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk free /',
@@ -28,10 +48,10 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Disk free / - state]
+# name: test_sensor[sensor.system_monitor_disk_free - state]
   '200.0'
 # ---
-# name: test_sensor[System Monitor Disk free /media/share - attributes]
+# name: test_sensor[sensor.system_monitor_disk_free_media_share - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk free /media/share',
@@ -39,40 +59,40 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Disk free /media/share - state]
+# name: test_sensor[sensor.system_monitor_disk_free_media_share - state]
   '200.0'
 # ---
-# name: test_sensor[System Monitor Disk usage / - attributes]
+# name: test_sensor[sensor.system_monitor_disk_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk usage / - state]
+# name: test_sensor[sensor.system_monitor_disk_usage - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Disk usage /home/notexist/ - attributes]
+# name: test_sensor[sensor.system_monitor_disk_usage_home_notexist - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /home/notexist/',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk usage /home/notexist/ - state]
+# name: test_sensor[sensor.system_monitor_disk_usage_home_notexist - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Disk usage /media/share - attributes]
+# name: test_sensor[sensor.system_monitor_disk_usage_media_share - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /media/share',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Disk usage /media/share - state]
+# name: test_sensor[sensor.system_monitor_disk_usage_media_share - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Disk use / - attributes]
+# name: test_sensor[sensor.system_monitor_disk_use - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk use /',
@@ -80,10 +100,10 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Disk use / - state]
+# name: test_sensor[sensor.system_monitor_disk_use - state]
   '300.0'
 # ---
-# name: test_sensor[System Monitor Disk use /media/share - attributes]
+# name: test_sensor[sensor.system_monitor_disk_use_media_share - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk use /media/share',
@@ -91,81 +111,81 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Disk use /media/share - state]
+# name: test_sensor[sensor.system_monitor_disk_use_media_share - state]
   '300.0'
 # ---
-# name: test_sensor[System Monitor IPv4 address eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_ipv4_address_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor IPv4 address eth0',
   })
 # ---
-# name: test_sensor[System Monitor IPv4 address eth0 - state]
+# name: test_sensor[sensor.system_monitor_ipv4_address_eth0 - state]
   '192.168.1.1'
 # ---
-# name: test_sensor[System Monitor IPv4 address eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_ipv4_address_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor IPv4 address eth1',
   })
 # ---
-# name: test_sensor[System Monitor IPv4 address eth1 - state]
+# name: test_sensor[sensor.system_monitor_ipv4_address_eth1 - state]
   '192.168.10.1'
 # ---
-# name: test_sensor[System Monitor IPv6 address eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_ipv6_address_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor IPv6 address eth0',
   })
 # ---
-# name: test_sensor[System Monitor IPv6 address eth0 - state]
+# name: test_sensor[sensor.system_monitor_ipv6_address_eth0 - state]
   '2a00:1f:2103:3a01:3333:2222:1111:0000'
 # ---
-# name: test_sensor[System Monitor IPv6 address eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_ipv6_address_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor IPv6 address eth1',
   })
 # ---
-# name: test_sensor[System Monitor IPv6 address eth1 - state]
+# name: test_sensor[sensor.system_monitor_ipv6_address_eth1 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor Last boot - attributes]
+# name: test_sensor[sensor.system_monitor_last_boot - attributes]
   ReadOnlyDict({
     'device_class': 'timestamp',
     'friendly_name': 'System Monitor Last boot',
   })
 # ---
-# name: test_sensor[System Monitor Last boot - state]
+# name: test_sensor[sensor.system_monitor_last_boot - state]
   '2024-02-24T15:00:00+00:00'
 # ---
-# name: test_sensor[System Monitor Load (1 min) - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (1 min)',
-    'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-  })
-# ---
-# name: test_sensor[System Monitor Load (1 min) - state]
-  '1'
-# ---
-# name: test_sensor[System Monitor Load (15 min) - attributes]
+# name: test_sensor[sensor.system_monitor_load_15_min - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (15 min)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (15 min) - state]
+# name: test_sensor[sensor.system_monitor_load_15_min - state]
   '3'
 # ---
-# name: test_sensor[System Monitor Load (5 min) - attributes]
+# name: test_sensor[sensor.system_monitor_load_1_min - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor Load (1 min)',
+    'icon': 'mdi:cpu-64-bit',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[sensor.system_monitor_load_1_min - state]
+  '1'
+# ---
+# name: test_sensor[sensor.system_monitor_load_5_min - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (5 min)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (5 min) - state]
+# name: test_sensor[sensor.system_monitor_load_5_min - state]
   '2'
 # ---
-# name: test_sensor[System Monitor Memory free - attributes]
+# name: test_sensor[sensor.system_monitor_memory_free - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Memory free',
@@ -173,20 +193,20 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Memory free - state]
+# name: test_sensor[sensor.system_monitor_memory_free - state]
   '40.0'
 # ---
-# name: test_sensor[System Monitor Memory usage - attributes]
+# name: test_sensor[sensor.system_monitor_memory_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Memory usage',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Memory usage - state]
+# name: test_sensor[sensor.system_monitor_memory_usage - state]
   '40.0'
 # ---
-# name: test_sensor[System Monitor Memory use - attributes]
+# name: test_sensor[sensor.system_monitor_memory_use - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Memory use',
@@ -194,10 +214,10 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Memory use - state]
+# name: test_sensor[sensor.system_monitor_memory_use - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Network in eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_network_in_eth0 - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network in eth0',
@@ -205,10 +225,10 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Network in eth0 - state]
+# name: test_sensor[sensor.system_monitor_network_in_eth0 - state]
   '100.0'
 # ---
-# name: test_sensor[System Monitor Network in eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_network_in_eth1 - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network in eth1',
@@ -216,10 +236,10 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Network in eth1 - state]
+# name: test_sensor[sensor.system_monitor_network_in_eth1 - state]
   '200.0'
 # ---
-# name: test_sensor[System Monitor Network out eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_network_out_eth0 - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network out eth0',
@@ -227,10 +247,10 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Network out eth0 - state]
+# name: test_sensor[sensor.system_monitor_network_out_eth0 - state]
   '100.0'
 # ---
-# name: test_sensor[System Monitor Network out eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_network_out_eth1 - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network out eth1',
@@ -238,10 +258,10 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Network out eth1 - state]
+# name: test_sensor[sensor.system_monitor_network_out_eth1 - state]
   '200.0'
 # ---
-# name: test_sensor[System Monitor Network throughput in eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_network_throughput_in_eth0 - attributes]
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput in eth0',
@@ -249,10 +269,10 @@
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
-# name: test_sensor[System Monitor Network throughput in eth0 - state]
+# name: test_sensor[sensor.system_monitor_network_throughput_in_eth0 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor Network throughput in eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_network_throughput_in_eth1 - attributes]
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput in eth1',
@@ -260,10 +280,10 @@
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
-# name: test_sensor[System Monitor Network throughput in eth1 - state]
+# name: test_sensor[sensor.system_monitor_network_throughput_in_eth1 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor Network throughput out eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_network_throughput_out_eth0 - attributes]
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput out eth0',
@@ -271,10 +291,10 @@
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
-# name: test_sensor[System Monitor Network throughput out eth0 - state]
+# name: test_sensor[sensor.system_monitor_network_throughput_out_eth0 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor Network throughput out eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_network_throughput_out_eth1 - attributes]
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput out eth1',
@@ -282,64 +302,64 @@
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
-# name: test_sensor[System Monitor Network throughput out eth1 - state]
+# name: test_sensor[sensor.system_monitor_network_throughput_out_eth1 - state]
   'unknown'
 # ---
-# name: test_sensor[System Monitor Open file descriptors pip - attributes]
+# name: test_sensor[sensor.system_monitor_open_file_descriptors_pip - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Open file descriptors pip',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Open file descriptors pip - state]
+# name: test_sensor[sensor.system_monitor_open_file_descriptors_pip - state]
   '15'
 # ---
-# name: test_sensor[System Monitor Open file descriptors python3 - attributes]
+# name: test_sensor[sensor.system_monitor_open_file_descriptors_python3 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Open file descriptors python3',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Open file descriptors python3 - state]
+# name: test_sensor[sensor.system_monitor_open_file_descriptors_python3 - state]
   '42'
 # ---
-# name: test_sensor[System Monitor Packets in eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_packets_in_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth0',
     'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
-# name: test_sensor[System Monitor Packets in eth0 - state]
+# name: test_sensor[sensor.system_monitor_packets_in_eth0 - state]
   '50'
 # ---
-# name: test_sensor[System Monitor Packets in eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_packets_in_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth1',
     'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
-# name: test_sensor[System Monitor Packets in eth1 - state]
+# name: test_sensor[sensor.system_monitor_packets_in_eth1 - state]
   '150'
 # ---
-# name: test_sensor[System Monitor Packets out eth0 - attributes]
+# name: test_sensor[sensor.system_monitor_packets_out_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets out eth0',
     'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
-# name: test_sensor[System Monitor Packets out eth0 - state]
+# name: test_sensor[sensor.system_monitor_packets_out_eth0 - state]
   '50'
 # ---
-# name: test_sensor[System Monitor Packets out eth1 - attributes]
+# name: test_sensor[sensor.system_monitor_packets_out_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets out eth1',
     'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
-# name: test_sensor[System Monitor Packets out eth1 - state]
+# name: test_sensor[sensor.system_monitor_packets_out_eth1 - state]
   '150'
 # ---
-# name: test_sensor[System Monitor Processor temperature - attributes]
+# name: test_sensor[sensor.system_monitor_processor_temperature - attributes]
   ReadOnlyDict({
     'device_class': 'temperature',
     'friendly_name': 'System Monitor Processor temperature',
@@ -347,10 +367,10 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[System Monitor Processor temperature - state]
+# name: test_sensor[sensor.system_monitor_processor_temperature - state]
   '50.0'
 # ---
-# name: test_sensor[System Monitor Processor use - attributes]
+# name: test_sensor[sensor.system_monitor_processor_use - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Processor use',
     'icon': 'mdi:cpu-64-bit',
@@ -358,10 +378,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Processor use - state]
+# name: test_sensor[sensor.system_monitor_processor_use - state]
   '10'
 # ---
-# name: test_sensor[System Monitor Swap free - attributes]
+# name: test_sensor[sensor.system_monitor_swap_free - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Swap free',
@@ -369,20 +389,20 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Swap free - state]
+# name: test_sensor[sensor.system_monitor_swap_free - state]
   '40.0'
 # ---
-# name: test_sensor[System Monitor Swap usage - attributes]
+# name: test_sensor[sensor.system_monitor_swap_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Swap usage',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[System Monitor Swap usage - state]
+# name: test_sensor[sensor.system_monitor_swap_usage - state]
   '60.0'
 # ---
-# name: test_sensor[System Monitor Swap use - attributes]
+# name: test_sensor[sensor.system_monitor_swap_use - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Swap use',
@@ -390,26 +410,6 @@
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor[System Monitor Swap use - state]
+# name: test_sensor[sensor.system_monitor_swap_use - state]
   '60.0'
-# ---
-# name: test_sensor[System Monitor another-fan fan speed - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor another-fan fan speed',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensor[System Monitor another-fan fan speed - state]
-  '1300'
-# ---
-# name: test_sensor[System Monitor cpu-fan fan speed - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor cpu-fan fan speed',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensor[System Monitor cpu-fan fan speed - state]
-  '1200'
 # ---

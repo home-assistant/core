@@ -1,6 +1,5 @@
 """Test methods in backup_restore."""
 
-from collections.abc import Generator
 import json
 from pathlib import Path
 import tarfile
@@ -11,39 +10,36 @@ import pytest
 
 from homeassistant import backup_restore
 
-from .common import get_test_config_dir
+from .common import get_fixture_path
 
 
-@pytest.fixture(autouse=True)
-def remove_restore_result_file() -> Generator[None]:
-    """Remove the restore result file."""
-    yield
-    Path(get_test_config_dir(".HA_RESTORE_RESULT")).unlink(missing_ok=True)
-
-
-def restore_result_file_content() -> dict[str, Any] | None:
+def restore_result_file_content(config_dir: Path) -> dict[str, Any] | None:
     """Return the content of the restore result file."""
     try:
-        return json.loads(
-            Path(get_test_config_dir(".HA_RESTORE_RESULT")).read_text("utf-8")
-        )
+        return json.loads((config_dir / ".HA_RESTORE_RESULT").read_text("utf-8"))
     except FileNotFoundError:
         return None
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "content", "expected"),
+    ("restore_config", "expected", "restore_result"),
     [
-        (FileNotFoundError, "", None),
-        (None, "", None),
         (
+            "restore1.json",  # Empty file, so JSONDecodeError is expected
             None,
-            '{"path": "test"}',
-            None,
+            {
+                "success": False,
+                "error": "Expecting value: line 1 column 1 (char 0)",
+                "error_type": "JSONDecodeError",
+            },
         ),
         (
+            "restore2.json",  # File missing the 'password' key, so KeyError is expected
             None,
-            '{"path": "test", "password": "psw", "remove_after_restore": false, "restore_database": false, "restore_homeassistant": true}',
+            {"success": False, "error": "'password'", "error_type": "KeyError"},
+        ),
+        (
+            "restore3.json",  # Valid file
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password="psw",
@@ -51,10 +47,10 @@ def restore_result_file_content() -> dict[str, Any] | None:
                 restore_database=False,
                 restore_homeassistant=True,
             ),
+            None,
         ),
         (
-            None,
-            '{"path": "test", "password": null, "remove_after_restore": true, "restore_database": true, "restore_homeassistant": false}',
+            "restore4.json",  # Valid file
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
                 password=None,
@@ -62,128 +58,180 @@ def restore_result_file_content() -> dict[str, Any] | None:
                 restore_database=True,
                 restore_homeassistant=False,
             ),
+            None,
         ),
     ],
 )
 def test_reading_the_instruction_contents(
-    side_effect: Exception | None,
-    content: str,
+    restore_config: str,
     expected: backup_restore.RestoreBackupFileContent | None,
+    restore_result: dict[str, Any] | None,
+    tmp_path: Path,
 ) -> None:
     """Test reading the content of the .HA_RESTORE file."""
-    with (
-        mock.patch(
-            "pathlib.Path.read_text",
-            return_value=content,
-            side_effect=side_effect,
-        ),
-        mock.patch("pathlib.Path.unlink", autospec=True) as unlink_mock,
-    ):
-        config_path = Path(get_test_config_dir())
-        read_content = backup_restore.restore_backup_file_content(config_path)
-        assert read_content == expected
-        unlink_mock.assert_called_once_with(
-            config_path / ".HA_RESTORE", missing_ok=True
-        )
+    get_fixture_path(f"core/backup_restore/{restore_config}", None).copy(
+        tmp_path / ".HA_RESTORE"
+    )
+    restore_file_path = tmp_path / ".HA_RESTORE"
+    assert restore_file_path.exists()
+
+    read_content = backup_restore.restore_backup_file_content(tmp_path)
+    assert read_content == expected
+    assert not restore_file_path.exists()
+    assert restore_result_file_content(tmp_path) == restore_result
 
 
-def test_restoring_backup_that_does_not_exist() -> None:
+def test_reading_the_instruction_contents_missing(tmp_path: Path) -> None:
+    """Test reading the content of the .HA_RESTORE file when it is missing."""
+    assert not (tmp_path / ".HA_RESTORE").exists()
+
+    read_content = backup_restore.restore_backup_file_content(tmp_path)
+    assert read_content is None
+    assert not (tmp_path / ".HA_RESTORE").exists()
+    assert restore_result_file_content(tmp_path) is None
+
+
+@pytest.mark.parametrize(
+    ("restore_config"),
+    [
+        "restore3.json",
+        "restore4.json",
+    ],
+)
+def test_restoring_backup_that_does_not_exist(
+    restore_config: str, tmp_path: Path
+) -> None:
     """Test restoring a backup that does not exist."""
-    backup_file_path = Path(get_test_config_dir("backups", "test"))
+    get_fixture_path(f"core/backup_restore/{restore_config}", None).copy(
+        tmp_path / ".HA_RESTORE"
+    )
+    restore_file_path = tmp_path / ".HA_RESTORE"
+    assert restore_file_path.exists()
     with (
-        mock.patch(
-            "homeassistant.backup_restore.restore_backup_file_content",
-            return_value=backup_restore.RestoreBackupFileContent(
-                backup_file_path=backup_file_path,
-                password=None,
-                remove_after_restore=False,
-                restore_database=True,
-                restore_homeassistant=True,
-            ),
-        ),
-        mock.patch("pathlib.Path.read_text", side_effect=FileNotFoundError),
-        pytest.raises(
-            ValueError, match=f"Backup file {backup_file_path} does not exist"
-        ),
+        pytest.raises(ValueError, match="Backup file test does not exist"),
     ):
-        assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
-    assert restore_result_file_content() == {
-        "error": f"Backup file {backup_file_path} does not exist",
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is False
+    assert restore_result_file_content(tmp_path) == {
+        "error": "Backup file test does not exist",
         "error_type": "ValueError",
         "success": False,
     }
 
 
-def test_restoring_backup_when_instructions_can_not_be_read() -> None:
+@pytest.mark.parametrize(
+    ("restore_config", "restore_result"),
+    [
+        (
+            "restore1.json",  # Empty file, so JSONDecodeError is expected
+            {
+                "success": False,
+                "error": "Expecting value: line 1 column 1 (char 0)",
+                "error_type": "JSONDecodeError",
+            },
+        ),
+        (
+            "restore2.json",  # File missing the 'password' key, so KeyError is expected
+            {"success": False, "error": "'password'", "error_type": "KeyError"},
+        ),
+    ],
+)
+def test_restoring_backup_when_instructions_can_not_be_read(
+    restore_config: str, restore_result: dict[str, Any], tmp_path: Path
+) -> None:
     """Test restoring a backup when instructions can not be read."""
-    with (
-        mock.patch(
-            "homeassistant.backup_restore.restore_backup_file_content",
-            return_value=None,
-        ),
-    ):
-        assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
-    assert restore_result_file_content() is None
+    get_fixture_path(f"core/backup_restore/{restore_config}", None).copy(
+        tmp_path / ".HA_RESTORE"
+    )
+    restore_file_path = tmp_path / ".HA_RESTORE"
+    assert restore_file_path.exists()
+    assert backup_restore.restore_backup(tmp_path.as_posix()) is False
+    assert not restore_file_path.exists()
+    assert restore_result_file_content(tmp_path) == restore_result
 
 
-def test_restoring_backup_that_is_not_a_file() -> None:
+def test_restoring_backup_when_instructions_missing(tmp_path: Path) -> None:
+    """Test restoring a backup when instructions are missing."""
+    restore_file_path = tmp_path / ".HA_RESTORE"
+    assert not restore_file_path.exists()
+    assert backup_restore.restore_backup(tmp_path.as_posix()) is False
+    assert not restore_file_path.exists()
+    assert restore_result_file_content(tmp_path) is None
+
+
+@pytest.mark.parametrize(
+    ("restore_config"),
+    [
+        "restore3.json",
+        "restore4.json",
+    ],
+)
+def test_restoring_backup_that_is_not_a_file(
+    restore_config: str, tmp_path: Path
+) -> None:
     """Test restoring a backup that is not a file."""
-    backup_file_path = Path(get_test_config_dir("backups", "test"))
+    backup_file_path = tmp_path / "test"
+    restore_file_path = tmp_path / ".HA_RESTORE"
+
+    # Set up restore file to point to a file within the temporary directory
+    restore_config = json.load(
+        get_fixture_path(f"core/backup_restore/{restore_config}", None).open(
+            "r", encoding="utf-8"
+        )
+    )
+    restore_config["path"] = backup_file_path.as_posix()
+    json.dump(restore_config, restore_file_path.open("w", encoding="utf-8"))
+    assert restore_file_path.exists()
+
+    # Create a directory at the backup file path to simulate the backup file not being a file
+    backup_file_path.mkdir(exist_ok=True)
+
     with (
-        mock.patch(
-            "homeassistant.backup_restore.restore_backup_file_content",
-            return_value=backup_restore.RestoreBackupFileContent(
-                backup_file_path=backup_file_path,
-                password=None,
-                remove_after_restore=False,
-                restore_database=True,
-                restore_homeassistant=True,
-            ),
-        ),
-        mock.patch("pathlib.Path.exists", return_value=True),
-        mock.patch("pathlib.Path.is_file", return_value=False),
-        pytest.raises(
-            ValueError, match=f"Backup file {backup_file_path} does not exist"
-        ),
+        pytest.raises(IsADirectoryError, match="\\[Errno 21\\] Is a directory"),
     ):
-        assert backup_restore.restore_backup(Path(get_test_config_dir())) is False
-    assert restore_result_file_content() == {
-        "error": f"Backup file {backup_file_path} does not exist",
-        "error_type": "ValueError",
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is False
+    restore_result = restore_result_file_content(tmp_path)
+    assert restore_result == {
+        "error": mock.ANY,
+        "error_type": "IsADirectoryError",
         "success": False,
     }
+    assert restore_result["error"].startswith("[Errno 21] Is a directory:")
 
 
-def test_aborting_for_older_versions() -> None:
+@pytest.mark.parametrize(
+    ("restore_config"),
+    [
+        "restore3.json",
+        "restore4.json",
+    ],
+)
+def test_aborting_for_older_versions(restore_config: str, tmp_path: Path) -> None:
     """Test that we abort for older versions."""
-    config_dir = Path(get_test_config_dir())
-    backup_file_path = Path(config_dir, "backups", "test.tar")
+    backup_file_path = tmp_path / "backup_from_future.tar"
+    restore_file_path = tmp_path / ".HA_RESTORE"
 
-    def _patched_path_read_text(path: Path, **kwargs):
-        return '{"homeassistant": {"version": "9999.99.99"}, "compressed": false}'
+    # Set up restore file to point to a file within the temporary directory
+    restore_config = json.load(
+        get_fixture_path(f"core/backup_restore/{restore_config}", None).open(
+            "r", encoding="utf-8"
+        )
+    )
+    restore_config["path"] = backup_file_path.as_posix()
+    json.dump(restore_config, restore_file_path.open("w", encoding="utf-8"))
+    assert restore_file_path.exists()
+
+    get_fixture_path("core/backup_restore/backup_from_future.tar", None).copy_into(
+        tmp_path
+    )
 
     with (
-        mock.patch(
-            "homeassistant.backup_restore.restore_backup_file_content",
-            return_value=backup_restore.RestoreBackupFileContent(
-                backup_file_path=backup_file_path,
-                password=None,
-                remove_after_restore=False,
-                restore_database=True,
-                restore_homeassistant=True,
-            ),
-        ),
-        mock.patch("securetar.SecureTarFile"),
-        mock.patch("homeassistant.backup_restore.TemporaryDirectory"),
-        mock.patch("pathlib.Path.read_text", _patched_path_read_text),
-        mock.patch("homeassistant.backup_restore.HA_VERSION", "2013.09.17"),
         pytest.raises(
             ValueError,
             match="You need at least Home Assistant version 9999.99.99 to restore this backup",
         ),
     ):
-        assert backup_restore.restore_backup(config_dir) is True
-    assert restore_result_file_content() == {
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
+    assert restore_result_file_content(tmp_path) == {
         "error": (
             "You need at least Home Assistant version 9999.99.99 to restore this backup"
         ),
@@ -195,10 +243,9 @@ def test_aborting_for_older_versions() -> None:
 @pytest.mark.parametrize(
     (
         "restore_backup_content",
-        "expected_removed_files",
-        "expected_removed_directories",
-        "expected_copied_files",
-        "expected_copied_trees",
+        "expected_kept_files",
+        "expected_restored_files",
+        "expected_directories_after_restore",
     ),
     [
         (
@@ -209,15 +256,9 @@ def test_aborting_for_older_versions() -> None:
                 restore_database=True,
                 restore_homeassistant=True,
             ),
-            (
-                ".HA_RESTORE",
-                ".HA_VERSION",
-                "home-assistant_v2.db",
-                "home-assistant_v2.db-wal",
-            ),
-            ("tmp_backups", "www"),
-            (),
-            ("data",),
+            {"backups/test.tar"},
+            {"home-assistant_v2.db", "home-assistant_v2.db-wal"},
+            {"backups"},
         ),
         (
             backup_restore.RestoreBackupFileContent(
@@ -227,10 +268,9 @@ def test_aborting_for_older_versions() -> None:
                 remove_after_restore=False,
                 restore_homeassistant=True,
             ),
-            (".HA_RESTORE", ".HA_VERSION"),
-            ("tmp_backups", "www"),
-            (),
-            ("data",),
+            {"backups/test.tar", "home-assistant_v2.db", "home-assistant_v2.db-wal"},
+            set(),
+            {"backups"},
         ),
         (
             backup_restore.RestoreBackupFileContent(
@@ -240,109 +280,124 @@ def test_aborting_for_older_versions() -> None:
                 remove_after_restore=False,
                 restore_homeassistant=False,
             ),
-            ("home-assistant_v2.db", "home-assistant_v2.db-wal"),
-            (),
-            ("home-assistant_v2.db", "home-assistant_v2.db-wal"),
-            (),
+            {".HA_RESTORE", ".HA_VERSION", "backups/test.tar"},
+            {"home-assistant_v2.db", "home-assistant_v2.db-wal"},
+            {"backups", "tmp_backups", "www"},
         ),
     ],
 )
-def test_removal_of_current_configuration_when_restoring(
+def test_restore_backup(
     restore_backup_content: backup_restore.RestoreBackupFileContent,
-    expected_removed_files: tuple[str, ...],
-    expected_removed_directories: tuple[str, ...],
-    expected_copied_files: tuple[str, ...],
-    expected_copied_trees: tuple[str, ...],
+    expected_kept_files: set[str],
+    expected_restored_files: set[str],
+    expected_directories_after_restore: set[str],
+    tmp_path: Path,
 ) -> None:
-    """Test that we are removing the current configuration directory."""
-    config_dir = Path(get_test_config_dir())
-    restore_backup_content.backup_file_path = Path(config_dir, "backups", "test.tar")
-    mock_config_dir = [
-        {"path": Path(config_dir, ".HA_RESTORE"), "is_file": True},
-        {"path": Path(config_dir, ".HA_VERSION"), "is_file": True},
-        {"path": Path(config_dir, "home-assistant_v2.db"), "is_file": True},
-        {"path": Path(config_dir, "home-assistant_v2.db-wal"), "is_file": True},
-        {"path": Path(config_dir, "backups"), "is_file": False},
-        {"path": Path(config_dir, "tmp_backups"), "is_file": False},
-        {"path": Path(config_dir, "www"), "is_file": False},
-    ]
+    """Test restoring a backup.
 
-    def _patched_path_read_text(path: Path, **kwargs):
-        return '{"homeassistant": {"version": "2013.09.17"}, "compressed": false}'
+    This includes checking that expected files are kept, restored, and
+    that we are cleaning up the current configuration directory.
+    """
+    backup_file_path = tmp_path / "backups" / "test.tar"
 
-    def _patched_path_is_file(path: Path, **kwargs):
-        return [x for x in mock_config_dir if x["path"] == path][0]["is_file"]
+    def get_files(path: Path) -> set[str]:
+        """Get all files under path."""
+        return {str(f.relative_to(path)) for f in path.rglob("*")}
 
-    def _patched_path_is_dir(path: Path, **kwargs):
-        return not [x for x in mock_config_dir if x["path"] == path][0]["is_file"]
+    existing_dirs = {
+        "backups",
+        "tmp_backups",
+        "www",
+    }
+    existing_files = {
+        ".HA_RESTORE",
+        ".HA_VERSION",
+        "home-assistant_v2.db",
+        "home-assistant_v2.db-wal",
+    }
+
+    for d in existing_dirs:
+        (tmp_path / d).mkdir(exist_ok=True)
+    for f in existing_files:
+        (tmp_path / f).write_text("before_restore")
+
+    get_fixture_path(
+        "core/backup_restore/empty_backup_database_included.tar", None
+    ).copy(backup_file_path)
+
+    files_before_restore = get_files(tmp_path)
+    assert files_before_restore == {
+        ".HA_RESTORE",
+        ".HA_VERSION",
+        "backups",
+        "backups/test.tar",
+        "home-assistant_v2.db",
+        "home-assistant_v2.db-wal",
+        "tmp_backups",
+        "www",
+    }
+    kept_files_data = {}
+    for file in expected_kept_files:
+        kept_files_data[file] = (tmp_path / file).read_bytes()
+
+    restore_backup_content.backup_file_path = backup_file_path
 
     with (
         mock.patch(
             "homeassistant.backup_restore.restore_backup_file_content",
             return_value=restore_backup_content,
         ),
-        mock.patch("securetar.SecureTarFile"),
-        mock.patch("homeassistant.backup_restore.TemporaryDirectory") as temp_dir_mock,
-        mock.patch("homeassistant.backup_restore.HA_VERSION", "2013.09.17"),
-        mock.patch("pathlib.Path.read_text", _patched_path_read_text),
-        mock.patch("pathlib.Path.is_file", _patched_path_is_file),
-        mock.patch("pathlib.Path.is_dir", _patched_path_is_dir),
-        mock.patch(
-            "pathlib.Path.iterdir",
-            return_value=[x["path"] for x in mock_config_dir],
-        ),
-        mock.patch("pathlib.Path.unlink", autospec=True) as unlink_mock,
-        mock.patch("shutil.copy") as copy_mock,
-        mock.patch("shutil.copytree") as copytree_mock,
-        mock.patch("shutil.rmtree") as rmtree_mock,
     ):
-        temp_dir_mock.return_value.__enter__.return_value = "tmp"
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
 
-        assert backup_restore.restore_backup(config_dir) is True
+    files_after_restore = get_files(tmp_path)
+    assert (
+        files_after_restore
+        == {".HA_RESTORE_RESULT"}
+        | expected_kept_files
+        | expected_restored_files
+        | expected_directories_after_restore
+    )
 
-        tmp_ha = Path("tmp", "homeassistant")
-        assert copy_mock.call_count == len(expected_copied_files)
-        copied_files = {Path(call.args[0]) for call in copy_mock.mock_calls}
-        assert copied_files == {Path(tmp_ha, "data", f) for f in expected_copied_files}
+    for d in expected_directories_after_restore:
+        assert (tmp_path / d).is_dir()
+    for file in expected_kept_files:
+        assert (tmp_path / file).read_bytes() == kept_files_data[file]
+    for file in expected_restored_files:
+        assert (tmp_path / file).read_bytes() == b"restored_from_backup"
 
-        assert copytree_mock.call_count == len(expected_copied_trees)
-        copied_trees = {Path(call.args[0]) for call in copytree_mock.mock_calls}
-        assert copied_trees == {Path(tmp_ha, t) for t in expected_copied_trees}
-
-        assert unlink_mock.call_count == len(expected_removed_files)
-        removed_files = {Path(call.args[0]) for call in unlink_mock.mock_calls}
-        assert removed_files == {Path(config_dir, f) for f in expected_removed_files}
-
-        assert rmtree_mock.call_count == len(expected_removed_directories)
-        removed_directories = {Path(call.args[0]) for call in rmtree_mock.mock_calls}
-        assert removed_directories == {
-            Path(config_dir, d) for d in expected_removed_directories
-        }
-    assert restore_result_file_content() == {
+    assert restore_result_file_content(tmp_path) == {
         "error": None,
         "error_type": None,
         "success": True,
     }
 
 
-def test_extracting_the_contents_of_a_backup_file() -> None:
-    """Test extracting the contents of a backup file."""
-    config_dir = Path(get_test_config_dir())
-    backup_file_path = Path(config_dir, "backups", "test.tar")
+def test_restore_backup_filter_files(tmp_path: Path) -> None:
+    """Test filtering dangerous files when restoring a backup."""
+    backup_file_path = tmp_path / "backups" / "test.tar"
+    backup_file_path.parent.mkdir()
+    get_fixture_path(
+        "core/backup_restore/empty_backup_database_included.tar", None
+    ).copy(backup_file_path)
 
-    def _patched_path_read_text(path: Path, **kwargs):
-        return '{"homeassistant": {"version": "2013.09.17"}, "compressed": false}'
+    with (
+        tarfile.open(backup_file_path, "r") as outer_tar,
+        tarfile.open(
+            fileobj=outer_tar.extractfile("homeassistant.tar.gz"), mode="r|gz"
+        ) as inner_tar,
+    ):
+        member_names = {member.name for member in inner_tar.getmembers()}
+        assert member_names == {
+            ".",
+            "../bad_file_with_parent_link",
+            "/bad_absolute_file",
+            "data",
+            "data/home-assistant_v2.db",
+            "data/home-assistant_v2.db-wal",
+        }
 
-    getmembers_mock = mock.MagicMock(
-        return_value=[
-            tarfile.TarInfo(name="../data/test"),
-            tarfile.TarInfo(name="data"),
-            tarfile.TarInfo(name="data/.HA_VERSION"),
-            tarfile.TarInfo(name="data/.storage"),
-            tarfile.TarInfo(name="data/www"),
-        ]
-    )
-    extractall_mock = mock.MagicMock()
+    real_extractone = tarfile.TarFile._extract_one
 
     with (
         mock.patch(
@@ -356,41 +411,38 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
             ),
         ),
         mock.patch(
-            "tarfile.open",
-            return_value=mock.MagicMock(
-                getmembers=getmembers_mock,
-                extractall=extractall_mock,
-                __iter__=lambda x: iter(getmembers_mock.return_value),
-            ),
-        ),
-        mock.patch("homeassistant.backup_restore.TemporaryDirectory"),
-        mock.patch("pathlib.Path.read_text", _patched_path_read_text),
-        mock.patch("pathlib.Path.is_file", return_value=False),
-        mock.patch("pathlib.Path.iterdir", return_value=[]),
-        mock.patch("shutil.copytree"),
+            "tarfile.TarFile._extract_one", autospec=True, wraps=real_extractone
+        ) as extractone_mock,
     ):
-        assert backup_restore.restore_backup(config_dir) is True
-        assert extractall_mock.call_count == 2
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
 
-        assert {
-            member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
-        } == {"data", "data/.HA_VERSION", "data/.storage", "data/www"}
-    assert restore_result_file_content() == {
+    # Check the unsafe files are not extracted, and that the safe files are extracted
+    extracted_files = {call.args[1].name for call in extractone_mock.mock_calls}
+    assert extracted_files == {
+        "./backup.json",  # From the outer tar
+        "homeassistant.tar.gz",  # From the outer tar
+        ".",
+        "data",
+        "data/home-assistant_v2.db",
+        "data/home-assistant_v2.db-wal",
+    }
+    assert restore_result_file_content(tmp_path) == {
         "error": None,
         "error_type": None,
         "success": True,
     }
 
 
-@pytest.mark.parametrize(
-    ("remove_after_restore", "unlink_calls"), [(True, 1), (False, 0)]
-)
+@pytest.mark.parametrize(("remove_after_restore"), [True, False])
 def test_remove_backup_file_after_restore(
-    remove_after_restore: bool, unlink_calls: int
+    remove_after_restore: bool, tmp_path: Path
 ) -> None:
     """Test removing a backup file after restore."""
-    config_dir = Path(get_test_config_dir())
-    backup_file_path = Path(config_dir, "backups", "test.tar")
+    backup_file_path = tmp_path / "backups" / "test.tar"
+    backup_file_path.parent.mkdir()
+    get_fixture_path(
+        "core/backup_restore/empty_backup_database_included.tar", None
+    ).copy(backup_file_path)
 
     with (
         mock.patch(
@@ -403,14 +455,10 @@ def test_remove_backup_file_after_restore(
                 restore_homeassistant=True,
             ),
         ),
-        mock.patch("homeassistant.backup_restore._extract_backup"),
-        mock.patch("pathlib.Path.unlink", autospec=True) as mock_unlink,
     ):
-        assert backup_restore.restore_backup(config_dir) is True
-    assert mock_unlink.call_count == unlink_calls
-    for call in mock_unlink.mock_calls:
-        assert call.args[0] == backup_file_path
-    assert restore_result_file_content() == {
+        assert backup_restore.restore_backup(tmp_path.as_posix()) is True
+    assert backup_file_path.exists() == (not remove_after_restore)
+    assert restore_result_file_content(tmp_path) == {
         "error": None,
         "error_type": None,
         "success": True,
