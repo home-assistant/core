@@ -468,7 +468,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     targets = _build_targets(service)
 
     service_responses: JsonValueType = []
-    errors: list[tuple[HomeAssistantError, str]] = []
+    errors: list[tuple[Exception, str]] = []
 
     # invoke the service for each target
     for target_config_entry, target_chat_id, target_notify_entity_id in targets:
@@ -495,7 +495,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
 
                 assert isinstance(service_responses, list)
                 service_responses.extend(formatted_responses)
-        except HomeAssistantError as ex:
+        except (HomeAssistantError, TelegramError) as ex:
             target = target_notify_entity_id or str(target_chat_id)
             errors.append((ex, target))
 

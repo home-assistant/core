@@ -798,6 +798,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
             self.async_start_reauth(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
@@ -815,13 +816,14 @@ class ConfigEntry[_DataT = Any]:
             )
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
                 wait_time,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(

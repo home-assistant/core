@@ -215,16 +215,21 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self._dpcode_wrapper = dpcode_wrapper
         self._attr_event_types = dpcode_wrapper.options
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
-    ) -> None:
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
         if self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
         ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
-            return
+            return False
 
         event_type, event_attributes = event_data
         self._trigger_event(event_type, event_attributes)
-        self.async_write_ha_state()
+        return True

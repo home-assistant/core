@@ -112,7 +112,7 @@ class IGloLamp(LightEntity):
         return self._lamp.effect_list()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._lamp.state()["on"]
 
