@@ -24,6 +24,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -47,7 +48,12 @@ from homeassistant.util.json import load_json_object
 
 from .const import (
     ATTR_ACTION,
+    ATTR_ACTIONS,
+    ATTR_REQUIRE_INTERACTION,
     ATTR_TAG,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
+    ATTR_URGENCY,
     ATTR_VAPID_EMAIL,
     ATTR_VAPID_PRV_KEY,
     ATTR_VAPID_PUB_KEY,
@@ -69,13 +75,11 @@ ATTR_AUTH = "auth"
 ATTR_P256DH = "p256dh"
 ATTR_EXPIRATIONTIME = "expirationTime"
 
-ATTR_ACTIONS = "actions"
 ATTR_TYPE = "type"
 ATTR_URL = "url"
 ATTR_DISMISS = "dismiss"
 ATTR_PRIORITY = "priority"
 DEFAULT_PRIORITY = "normal"
-ATTR_TTL = "ttl"
 DEFAULT_TTL = 86400
 
 DEFAULT_BADGE = "/static/images/notification-badge.png"
@@ -605,26 +609,55 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     _key = "device"
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message to a device."""
-        timestamp = int(time.time())
-        tag = str(uuid.uuid4())
+        """Send a message to a device via notify.send_message action."""
+        await self._webpush(
+            title=title or ATTR_TITLE_DEFAULT,
+            message=message,
+            badge=DEFAULT_BADGE,
+            icon=DEFAULT_ICON,
+        )
 
-        payload: dict[str, Any] = {
-            "badge": DEFAULT_BADGE,
-            "body": message,
-            "icon": DEFAULT_ICON,
-            ATTR_TAG: tag,
-            ATTR_TITLE: title or ATTR_TITLE_DEFAULT,
-            "timestamp": timestamp * 1000,
-            ATTR_DATA: {
+    async def send_push_notification(self, **kwargs: Any) -> None:
+        """Send a message to a device via html5.send_message action."""
+        await self._webpush(**kwargs)
+        self._async_record_notification()
+
+    async def _webpush(self, **kwargs: Any) -> None:
+        """Shared internal helper to push messages."""
+
+        timestamp = (
+            int(cast(datetime, kwargs.pop(ATTR_TIMESTAMP)).timestamp())
+            if ATTR_TIMESTAMP in kwargs
+            else int(time.time())
+        )
+        payload: dict[str, Any] = kwargs
+        if ATTR_MESSAGE in kwargs:
+            kwargs["body"] = kwargs.pop(ATTR_MESSAGE)
+
+        payload.setdefault(ATTR_TAG, str(uuid.uuid4()))
+        payload[ATTR_TIMESTAMP] = timestamp * 1000
+
+        urgency = payload.pop(ATTR_URGENCY, None)
+
+        if ATTR_REQUIRE_INTERACTION in payload:
+            payload["requireInteraction"] = payload.pop(ATTR_REQUIRE_INTERACTION)
+
+        ttl = (
+            int(cast(timedelta, payload.pop(ATTR_TTL)).total_seconds())
+            if ATTR_TTL in payload
+            else DEFAULT_TTL
+        )
+
+        payload.setdefault(ATTR_DATA, {}).update(
+            {
                 ATTR_JWT: add_jwt(
                     timestamp,
                     self.target,
-                    tag,
+                    payload[ATTR_TAG],
                     self.registration["subscription"]["keys"]["auth"],
                 )
-            },
-        }
+            }
+        )
 
         endpoint = urlparse(self.registration["subscription"]["endpoint"])
         vapid_claims = {
@@ -639,6 +672,8 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
                 json.dumps(payload),
                 self.config_entry.data[ATTR_VAPID_PRV_KEY],
                 vapid_claims,
+                ttl=ttl,
+                headers={"Urgency": urgency} if urgency else None,
                 aiohttp_session=self.session,
             )
             cast(ClientResponse, response).raise_for_status()
