@@ -66,6 +66,7 @@ def mock_egauge_client() -> Generator[MagicMock]:
                 name="Temp", type=RegisterType.TEMPERATURE, idx=2, did=None
             ),
             "L1": RegisterInfo(name="L1", type=RegisterType.VOLTAGE, idx=3, did=None),
+            "S1": RegisterInfo(name="S1", type=RegisterType.CURRENT, idx=4, did=None),
         }
 
         # Dynamic measurements
