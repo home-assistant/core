@@ -9,8 +9,7 @@ import logging
 from typing import Any, TypeVar
 
 from propcache.api import cached_property
-from roborock import B01Props
-from roborock.data import HomeDataScene
+from roborock.data import B01Props, HomeDataScene
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
@@ -594,47 +593,97 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        self._started = False
+        self._update_hook_installed = False
         self._last_mqtt_data: dict[B01_Q10_DP, Any] = {}
+        self._mqtt_data_received = asyncio.Event()
+        self._original_update_from_dps: Any | None = None
+        self._missing_initial_data_logged = False
+
+        if device_status := self._normalize_q10_device_status(
+            device.device_info.device_status
+        ):
+            self._last_mqtt_data.update(device_status)
+
+    @staticmethod
+    def _normalize_q10_device_status(
+        raw_status: dict[Any, Any] | None,
+    ) -> dict[B01_Q10_DP, Any]:
+        """Convert HomeData device status keys to Q10 DPS enum keys."""
+        if not raw_status:
+            return {}
+
+        normalized_status: dict[B01_Q10_DP, Any] = {}
+        for key, value in raw_status.items():
+            try:
+                code = int(key)
+            except TypeError, ValueError:
+                continue
+
+            if (dps_key := B01_Q10_DP.from_code_optional(code)) is None:
+                continue
+
+            normalized_status[dps_key] = value
+        return normalized_status
 
     async def _async_update_data(
         self,
     ) -> B01Props | dict[B01_Q10_DP, Any]:
-        # Start the subscribe loop on first update
-        if not self._started:
+        if not self._update_hook_installed:
             # Wrap status.update_from_dps to capture raw MQTT data
             original_update = self.api.status.update_from_dps
+            self._original_update_from_dps = original_update
 
-            def update_wrapper(decoded_dps: dict) -> None:
+            def update_wrapper(decoded_dps: dict[Any, Any]) -> None:
                 """Capture MQTT data and call original."""
                 self._last_mqtt_data.update(decoded_dps)
+                self._mqtt_data_received.set()
                 original_update(decoded_dps)
 
             # Replace method to intercept MQTT data before StatusTrait filtering
             setattr(self.api.status, "update_from_dps", update_wrapper)
-            await self.api.start()
-            self._started = True
+            self._update_hook_installed = True
 
         try:
+            had_data_before_refresh = bool(self._last_mqtt_data)
+            self._mqtt_data_received.clear()
+
             # Request fresh data from the device
             await self.api.refresh()
-            # Give the device time to respond via MQTT
-            await asyncio.sleep(1)
+
+            try:
+                await asyncio.wait_for(
+                    self._mqtt_data_received.wait(),
+                    timeout=5 if not had_data_before_refresh else 2,
+                )
+            except TimeoutError:
+                if not had_data_before_refresh:
+                    if not self._missing_initial_data_logged:
+                        _LOGGER.debug(
+                            "No Q10 MQTT data received yet, waiting for next refresh"
+                        )
+                        self._missing_initial_data_logged = True
+                    return {}
+
+                _LOGGER.debug("No new Q10 MQTT data received, using last known data")
 
             # Return the last MQTT data received (stored by the subscribe loop)
             data = self._last_mqtt_data.copy() if self._last_mqtt_data else {}
-
-            if not data:
-                _LOGGER.warning("No Q10 MQTT data received yet")
         except RoborockException as ex:
             _LOGGER.debug("Failed to update Q10 data: %s", ex)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
-        if not data:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            )
         return data
+
+    async def async_shutdown(self) -> None:
+        """Shut down coordinator and Q10 subscriptions."""
+        if self._original_update_from_dps is not None:
+            setattr(self.api.status, "update_from_dps", self._original_update_from_dps)
+            self._original_update_from_dps = None
+
+        if self._update_hook_installed:
+            await self.api.close()
+            self._update_hook_installed = False
+
+        await super().async_shutdown()
