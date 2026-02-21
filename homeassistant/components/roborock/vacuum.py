@@ -484,8 +484,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.LOCATE
-        | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
         | VacuumEntityFeature.CLEAN_SPOT
