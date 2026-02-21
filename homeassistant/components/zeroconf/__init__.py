@@ -31,7 +31,6 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
@@ -359,9 +358,9 @@ def _async_setup_homeassistant_service_updaters(
         _hass: HomeAssistant, _component: str
     ) -> None:
         from homeassistant.components.cloud import (  # noqa: PLC0415
-            SIGNAL_CLOUD_CONNECTION_STATE,
             CloudConnectionState,
             async_is_connected,
+            async_listen_connection_change,
         )
 
         @callback
@@ -369,9 +368,7 @@ def _async_setup_homeassistant_service_updaters(
             hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
 
         state.listeners.append(
-            async_dispatcher_connect(
-                hass, SIGNAL_CLOUD_CONNECTION_STATE, _handle_cloud_state
-            )
+            async_listen_connection_change(hass, _handle_cloud_state)
         )
 
         if async_is_connected(hass):

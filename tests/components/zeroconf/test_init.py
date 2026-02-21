@@ -29,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
@@ -1729,15 +1728,14 @@ async def test_homeassistant_service_updates_on_cloud_signal(
     external_url = "https://remote.example"
 
     fake_cloud = ModuleType("homeassistant.components.cloud")
-    fake_signal = "cloud_signal"
     connection = {"connected": False}
+    cloud_listener: Any = None
 
     class FakeCloudState(Enum):
         CLOUD_CONNECTED = "cloud_connected"
         CLOUD_DISCONNECTED = "cloud_disconnected"
 
     fake_cloud.CloudConnectionState = FakeCloudState
-    fake_cloud.SIGNAL_CLOUD_CONNECTION_STATE = fake_signal
 
     class FakeCloudNotAvailable(Exception):
         """Placeholder cloud error."""
@@ -1752,6 +1750,13 @@ async def test_homeassistant_service_updates_on_cloud_signal(
         return connection["connected"]
 
     fake_cloud.async_is_connected = fake_async_is_connected
+
+    def fake_async_listen_connection_change(_hass: HomeAssistant, target: Any) -> Any:
+        nonlocal cloud_listener
+        cloud_listener = target
+        return MagicMock()
+
+    fake_cloud.async_listen_connection_change = fake_async_listen_connection_change
 
     with (
         patch.dict(sys.modules, {"homeassistant.components.cloud": fake_cloud}),
@@ -1772,10 +1777,11 @@ async def test_homeassistant_service_updates_on_cloud_signal(
         assert _get_property(initial_info, "external_url") == ""
         assert _get_property(initial_info, "base_url") == hass.config.internal_url
         assert mock_async_zeroconf.async_update_service.await_count == 0
+        assert cloud_listener is not None
 
         connection["connected"] = True
         hass.config.external_url = external_url
-        async_dispatcher_send(hass, fake_signal, FakeCloudState.CLOUD_CONNECTED)
+        cloud_listener(FakeCloudState.CLOUD_CONNECTED)
         await hass.async_block_till_done()
 
         assert mock_async_zeroconf.async_update_service.await_count >= 1
@@ -1787,11 +1793,7 @@ async def test_homeassistant_service_updates_on_cloud_signal(
 
         connection["connected"] = False
         hass.config.external_url = None
-        async_dispatcher_send(
-            hass,
-            fake_signal,
-            FakeCloudState.CLOUD_DISCONNECTED,
-        )
+        cloud_listener(FakeCloudState.CLOUD_DISCONNECTED)
         await hass.async_block_till_done()
 
         assert mock_async_zeroconf.async_update_service.await_count >= 2
