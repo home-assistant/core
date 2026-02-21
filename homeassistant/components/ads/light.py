@@ -372,7 +372,9 @@ class AdsLight(AdsEntity, LightEntity):
         """Return the brightness of the light (0–255)."""
         ads_brightness = self._state_dict[STATE_KEY_BRIGHTNESS]
         if ads_brightness is not None:
-            return max(0, min(255, self._scale_brightness_from_ads(int(ads_brightness))))
+            return max(
+                0, min(255, self._scale_brightness_from_ads(int(ads_brightness)))
+            )
         return None
 
     @property
@@ -448,14 +450,19 @@ class AdsLight(AdsEntity, LightEntity):
 
         if self._ads_var_brightness is not None and ATTR_BRIGHTNESS in kwargs:
             to_write.append(
-                (self._ads_var_brightness, self._scale_brightness_to_ads(kwargs[ATTR_BRIGHTNESS]))
+                (
+                    self._ads_var_brightness,
+                    self._scale_brightness_to_ads(kwargs[ATTR_BRIGHTNESS]),
+                )
             )
 
         if (
             self._ads_var_color_temp_kelvin is not None
             and ATTR_COLOR_TEMP_KELVIN in kwargs
         ):
-            to_write.append((self._ads_var_color_temp_kelvin, kwargs[ATTR_COLOR_TEMP_KELVIN]))
+            to_write.append(
+                (self._ads_var_color_temp_kelvin, kwargs[ATTR_COLOR_TEMP_KELVIN])
+            )
 
         if (
             self._ads_var_hue is not None
