@@ -397,7 +397,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     content_details = ContentDetails()
     content_details.add_citation_detail()
     input_usage: Usage | None = None
-    first_block: bool
+    first_block: bool = True
 
     async for response in stream:
         LOGGER.debug("Received response: %s", response)
