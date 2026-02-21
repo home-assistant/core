@@ -72,7 +72,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
+from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, VOLUME_STEP
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -218,7 +218,7 @@ async def test_squeezebox_volume_up(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume + TEST_VOLUME_STEP)
+        str(configured_player.volume + VOLUME_STEP)
     )
 
 
@@ -234,7 +234,7 @@ async def test_squeezebox_volume_down(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume - TEST_VOLUME_STEP)
+        str(configured_player.volume - VOLUME_STEP)
     )
 
 
