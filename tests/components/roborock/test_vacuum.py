@@ -13,11 +13,15 @@ from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.coordinator import (
+    RoborockB01Q10UpdateCoordinator,
+)
 from homeassistant.components.roborock.services import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
+from homeassistant.components.roborock.vacuum import _get_q10_status, _get_q10_wind_name
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
@@ -33,6 +37,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, create_b01_q10_trait, set_trait_attributes
@@ -432,6 +437,47 @@ async def test_q7_send_command(
     assert q7_vacuum_api.send.call_count == 1
     # send is called with command as first argument and params as second
     assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
+
+
+async def test_q7_map_services_not_supported(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test map-related services are not supported for Q7."""
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "x": 1, "y": 2},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -878,6 +924,192 @@ async def test_q10_send_command_not_supported(
             {ATTR_ENTITY_ID: Q10_ENTITY_ID, "command": "test_command"},
             blocking=True,
         )
+
+
+async def test_q10_map_services_not_supported(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test map-related services are not supported for Q10."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="This command is not supported for this device model",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 1, "y": 2},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("raw_data", "expected_status", "expected_fan"),
+    [
+        ({}, None, None),
+        (
+            {B01_Q10_DP.STATUS: -1, B01_Q10_DP.FAN_LEVEL: -1},
+            YXDeviceState.UNKNOWN,
+            "Unknown",
+        ),
+    ],
+)
+def test_q10_helper_mappings(
+    raw_data: dict[Any, Any],
+    expected_status: YXDeviceState | None,
+    expected_fan: str | None,
+) -> None:
+    """Test Q10 helper mappings for unknown and missing values."""
+    assert _get_q10_status(raw_data) is expected_status
+    assert _get_q10_wind_name(raw_data) == expected_fan
+
+
+async def test_q10_coordinator_timeout_without_initial_data(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test Q10 coordinator returns empty data when no status update arrives yet."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator: RoborockB01Q10UpdateCoordinator = (
+        q10_config_entry.runtime_data.b01_q10[0]
+    )
+    assert coordinator.device is not None
+
+    coordinator._last_mqtt_data = {}
+    coordinator._missing_initial_data_logged = False
+
+    async def _raise_timeout(waiter: Any, timeout: float) -> None:
+        waiter.close()
+        raise TimeoutError
+
+    with patch(
+        "homeassistant.components.roborock.coordinator.asyncio.wait_for",
+        side_effect=_raise_timeout,
+    ):
+        result = await coordinator._async_update_data()
+
+    assert result == {}
+    assert coordinator._missing_initial_data_logged
+
+
+async def test_q10_coordinator_timeout_with_cached_data(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test Q10 coordinator keeps cached data when no new update arrives."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator: RoborockB01Q10UpdateCoordinator = (
+        q10_config_entry.runtime_data.b01_q10[0]
+    )
+    coordinator._last_mqtt_data = {B01_Q10_DP.STATUS: YXDeviceState.STANDBY_STATE.code}
+
+    async def _raise_timeout(waiter: Any, timeout: float) -> None:
+        waiter.close()
+        raise TimeoutError
+
+    with patch(
+        "homeassistant.components.roborock.coordinator.asyncio.wait_for",
+        side_effect=_raise_timeout,
+    ):
+        result = await coordinator._async_update_data()
+
+    assert result
+    assert result[B01_Q10_DP.STATUS] == YXDeviceState.STANDBY_STATE.code
+
+
+async def test_q10_coordinator_refresh_error_is_update_failed(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test Q10 coordinator wraps refresh errors as UpdateFailed."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator: RoborockB01Q10UpdateCoordinator = (
+        q10_config_entry.runtime_data.b01_q10[0]
+    )
+    coordinator.api.refresh.side_effect = RoborockException("boom")
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+def test_q10_normalize_device_status_handles_empty_and_invalid() -> None:
+    """Test Q10 status normalization handles empty and invalid keys."""
+    assert RoborockB01Q10UpdateCoordinator._normalize_q10_device_status(None) == {}
+    assert (
+        RoborockB01Q10UpdateCoordinator._normalize_q10_device_status(
+            {"invalid": 1, object(): 2}
+        )
+        == {}
+    )
 
 
 @pytest.mark.parametrize(
