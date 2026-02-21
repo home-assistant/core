@@ -548,6 +548,36 @@ async def test_q7_activity_none_status(
     assert vacuum.state == "unknown"
 
 
+async def test_q7_coordinator_refresh_error_is_update_failed(
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test Q7 coordinator wraps query errors as UpdateFailed."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+
+    coordinator = setup_entry.runtime_data.b01_q7[0]
+    fake_q7_vacuum.b01_q7_properties.query_values.side_effect = RoborockException(
+        "boom"
+    )
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_q7_coordinator_none_data_is_update_failed(
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test Q7 coordinator raises UpdateFailed when query returns no data."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+
+    coordinator = setup_entry.runtime_data.b01_q7[0]
+    fake_q7_vacuum.b01_q7_properties._props_data = None
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
 # Tests for RoborockQ10Vacuum
 
 Q10_ENTITY_ID = "vacuum.roborock_q10_s5"
