@@ -44,13 +44,13 @@
       "message": "API error: {error}"
     },
     "config_entry_not_loaded": {
-      "message": "Config entry is not loaded"
+      "message": "This integration instance is not currently loaded"
     },
     "connection_error": {
       "message": "Connection error: {error}"
     },
     "no_config_entry": {
-      "message": "No config entry found for Green Planet Energy integration"
+      "message": "No matching integration instance was found"
     },
     "no_data_available": {
       "message": "No price data available for the requested duration and time range"
