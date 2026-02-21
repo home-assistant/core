@@ -353,7 +353,7 @@ async def test_send_sticker_partial_error(
     assert mock_send_sticker.call_count == 2
     assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {
-        "errors": "`entity_id` notify.mock_title_mock_chat_1: Action failed. mock network error\n`entity_id` notify.mock_title_mock_chat_2: Action failed. mock network error"
+        "errors": "`entity_id` notify.mock_title_mock_chat_1: mock network error\n`entity_id` notify.mock_title_mock_chat_2: mock network error"
     }
 
 
@@ -364,7 +364,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     ) as mock_bot:
         mock_bot.side_effect = NetworkError("mock network error")
 
-        with pytest.raises(HomeAssistantError) as err:
+        with pytest.raises(TelegramError) as err:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_STICKER,
@@ -377,8 +377,8 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     await hass.async_block_till_done()
 
     mock_bot.assert_called_once()
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "action_failed"
+    assert err.typename == "NetworkError"
+    assert err.value.message == "mock network error"
 
 
 async def test_send_message_with_invalid_inline_keyboard(
@@ -2264,7 +2264,7 @@ async def test_download_file_when_bot_failed_to_get_file(
             "homeassistant.components.telegram_bot.bot.Bot.get_file",
             AsyncMock(side_effect=TelegramError("failed to get file")),
         ),
-        pytest.raises(HomeAssistantError) as err,
+        pytest.raises(TelegramError) as err,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -2273,7 +2273,9 @@ async def test_download_file_when_bot_failed_to_get_file(
             blocking=True,
         )
     await hass.async_block_till_done()
-    assert err.value.translation_key == "action_failed"
+
+    assert err.typename == "TelegramError"
+    assert err.value.message == "failed to get file"
 
 
 async def test_download_file_when_empty_file_path(
