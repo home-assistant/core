@@ -51,7 +51,10 @@
   },
   "exceptions": {
     "bms_com_fail": {
-      "message": "BMS communication failed: {err_msg}"
+      "message": "BMS communication failed: {err_msg}, signal {rssi} dBm."
+    },
+    "bms_com_fail_rssi": {
+      "message": "BMS communication failed: {err_msg}, try to improve signal strength of {rssi} dBm!"
     },
     "bms_timeout": {
       "message": "BMS communication timed out."
