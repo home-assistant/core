@@ -185,7 +185,6 @@ async def test_floorplan_image_rotation_invalid_value_falls_back_to_raw(
     body = await resp.read()
     img = Image.open(io.BytesIO(body))
     assert img.size == (10, 20)
-
 async def test_floorplan_image_rotation_out_of_range_falls_back_to_raw(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
