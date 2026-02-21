@@ -13,15 +13,15 @@ import httpx
 from httpx import URL, Request, Response
 import pytest
 
-from homeassistant.components.anthropic.const import DATA_REPAIR_DEFER_RELOAD, DOMAIN
+from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
@@ -82,52 +82,6 @@ async def test_init_auth_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_deferred_update(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test that update is deferred."""
-    for subentry in mock_config_entry.subentries.values():
-        if subentry.subentry_type == "conversation":
-            conversation_subentry = subentry
-        elif subentry.subentry_type == "ai_task_data":
-            ai_task_subentry = subentry
-
-    old_client = mock_config_entry.runtime_data
-
-    # Set deferred update
-    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
-        DATA_REPAIR_DEFER_RELOAD, set()
-    )
-    defer_reload_entries.add(mock_config_entry.entry_id)
-
-    # Update the conversation subentry
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        conversation_subentry,
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
-    )
-    await hass.async_block_till_done()
-
-    # Verify that the entry is not reloaded yet
-    assert mock_config_entry.runtime_data is old_client
-
-    # Clear deferred update
-    defer_reload_entries.discard(mock_config_entry.entry_id)
-
-    # Update the AI Task subentry
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        ai_task_subentry,
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
-    )
-    await hass.async_block_till_done()
-
-    # Verify that the entry is reloaded
-    assert mock_config_entry.runtime_data is not old_client
 
 
 async def test_downgrade_from_v3_to_v2(
