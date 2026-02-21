@@ -89,7 +89,7 @@ async def test_remove_config_entry_device(
     container_id: str,
     expected_result: bool,
 ) -> None:
-    """Test manually removing an stale device."""
+    """Test manually removing a stale device."""
     assert await async_setup_component(hass, "config", {})
     mock_config_entry.add_to_hass(hass)
 
