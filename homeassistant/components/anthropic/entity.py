@@ -522,7 +522,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 else:
                     current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
-                if response.index or response.delta.text.strip():
+                if response.delta.text:
                     content_details.citation_details[-1].length += len(
                         response.delta.text
                     )
