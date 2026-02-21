@@ -5,7 +5,7 @@
       "no_devices_found": "No supported devices found via Bluetooth.",
       "not_supported": "Device is not supported."
     },
-    "flow_title": "Setup {name} ({id}) as {model}",
+    "flow_title": "Set up {name} ({id}) as {model}",
     "step": {
       "bluetooth_confirm": {
         "description": "Do you want to set up {name} ({id})?"
