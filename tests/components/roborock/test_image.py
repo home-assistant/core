@@ -165,6 +165,67 @@ async def test_floorplan_image_rotation_cache_changes_on_rotation_change(
     # Ensure output changed (cache updated)
     assert body_180 != body_90
 
+async def test_floorplan_image_rotation_invalid_value_falls_back_to_raw(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test invalid rotation value falls back to raw image."""
+    setup_entry.options = {CONF_MAP_ROTATION: "invalid"}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    img = Image.open(io.BytesIO(body))
+    assert img.size == (10, 20)
+
+async def test_floorplan_image_rotation_out_of_range_falls_back_to_raw(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test unsupported rotation value falls back to raw image."""
+    setup_entry.options = {CONF_MAP_ROTATION: 45}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = _png_bytes(10, 20)
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    img = Image.open(io.BytesIO(body))
+    assert img.size == (10, 20)
+
+async def test_floorplan_image_rotation_corrupt_image_returns_original_bytes(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test corrupt image data returns original bytes when rotation fails."""
+    setup_entry.options = {CONF_MAP_ROTATION: 90}
+
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.map_content
+    fake_vacuum.v1_properties.map_content.image_content = b"not-a-valid-png"
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    body = await resp.read()
+    assert body == b"not-a-valid-png"
 
 async def test_fail_updating_image(
     hass: HomeAssistant,
