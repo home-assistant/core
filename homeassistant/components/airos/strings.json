@@ -162,6 +162,9 @@
     },
     "key_data_missing": {
       "message": "Key data not returned from device"
+    },
+    "reboot_failed": {
+      "message": "Device did not accept reboot request, try again or inspect the device web interface"
     }
   }
 }

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -53,15 +54,16 @@ async def test_reboot_button_press_fail(
     entity_id = "button.nanostation_5ac_ap_name_reboot_device"
     mock_airos_client.reboot.return_value = False
 
-    await hass.services.async_call(
-        "button",
-        "press",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
     mock_airos_client.reboot.assert_awaited_once()
-    assert "Unable" in caplog.text
+    assert "failed to initiate" in caplog.text
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -86,26 +88,30 @@ async def test_reboot_button_press_exceptions(
 
     mock_airos_client.login.side_effect = exception
 
-    await hass.services.async_call(
-        "button",
-        "press",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
     mock_airos_client.reboot.assert_not_awaited()
-    assert "Failed to reboot device" in caplog.text
+    assert "Failed to send" in caplog.text
 
     mock_airos_client.login.side_effect = None
     mock_airos_client.reboot.side_effect = exception
 
-    await hass.services.async_call(
-        "button",
-        "press",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
     mock_airos_client.reboot.assert_awaited_once()
-    assert "Failed to reboot device" in caplog.text
+    assert "Failed to send" in caplog.text
 
     mock_airos_client.reboot.side_effect = None
 

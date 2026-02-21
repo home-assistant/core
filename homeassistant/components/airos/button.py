@@ -12,9 +12,10 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import DOMAIN, AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,16 +36,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS button from a config entry."""
-    async_add_entities(
-        [AirOSRebootButton(config_entry.runtime_data)], update_before_add=False
-    )
+    async_add_entities([AirOSRebootButton(config_entry.runtime_data)])
 
 
 class AirOSRebootButton(AirOSEntity, ButtonEntity):
     """Button to reboot device."""
 
     _attr_has_entity_name = True
-    _attr_device_class = ButtonDeviceClass.RESTART
 
     entity_description: ButtonEntityDescription
 
@@ -65,9 +63,16 @@ class AirOSRebootButton(AirOSEntity, ButtonEntity):
             await self.coordinator.airos_device.login()
             result = await self.coordinator.airos_device.reboot()
 
-        except AirOSDataMissingError, AirOSDeviceConnectionError:
-            _LOGGER.exception("Failed to reboot device")
-
+        except (AirOSDataMissingError, AirOSDeviceConnectionError) as err:
+            _LOGGER.exception("Failed to send reboot request to device")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
         else:
             if not result:
-                _LOGGER.error("Unable to reboot device")
+                _LOGGER.error("Device indicates it failed to initiate reboot")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="reboot_failed",
+                ) from None
