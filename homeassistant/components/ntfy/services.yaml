@@ -108,6 +108,7 @@ publish:
           translation_key: actions
           fields:
             action:
+              required: true
               selector:
                 select:
                   options:

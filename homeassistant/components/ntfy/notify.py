@@ -34,7 +34,6 @@ from .services import (
     ATTR_ATTACH_FILE,
     ATTR_FILENAME,
     ATTR_SEQUENCE_ID,
-    MAX_ACTIONS_ALLOWED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,13 +114,11 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
 
         actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
         if actions:
-            if len(actions) > MAX_ACTIONS_ALLOWED:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="too_many_actions",
-                )
             params["actions"] = [
-                ACTIONS_MAP[action.pop(ATTR_ACTION)](**action) for action in actions
+                ACTIONS_MAP[action[ATTR_ACTION]](
+                    **{k: v for k, v in action.items() if k != ATTR_ACTION}
+                )
+                for action in actions
             ]
 
         msg = Message(topic=self.topic, **params)

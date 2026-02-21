@@ -73,20 +73,20 @@ ACTION_SCHEMA = vol.Schema(
 )
 VIEW_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION): vol.All(str, "view"),
+        vol.Required(ATTR_ACTION): vol.All(str, "view"),
         vol.Required(ATTR_URL): vol.All(vol.Url(), vol.Coerce(URL)),
     }
 )
 BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION): vol.All(str, "broadcast"),
+        vol.Required(ATTR_ACTION): vol.All(str, "broadcast"),
         vol.Optional(ATTR_INTENT): cv.string,
         vol.Optional(ATTR_EXTRAS): dict[str, str],
     }
 )
 HTTP_SCHEMA = VIEW_SCHEMA.extend(
     {
-        vol.Optional(ATTR_ACTION): vol.All(str, "http"),
+        vol.Required(ATTR_ACTION): vol.All(str, "http"),
         vol.Optional(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_HEADERS): dict[str, str],
         vol.Optional(ATTR_BODY): cv.string,
