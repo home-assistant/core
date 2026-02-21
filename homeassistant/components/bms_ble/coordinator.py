@@ -143,7 +143,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="bms_com_fail_rssi"
-                if not rssi or rssi < LOW_RSSI
+                if rssi is not None and rssi < LOW_RSSI
                 else "bms_com_fail",
                 translation_placeholders={
                     "rssi": f"{rssi}" if rssi is not None else "--",
