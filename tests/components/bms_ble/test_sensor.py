@@ -22,7 +22,7 @@ from homeassistant.components.bms_ble.const import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE
+from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import async_update_entity
 import homeassistant.util.dt as dt_util
@@ -92,18 +92,18 @@ async def test_update(
     }
     assert data == {
         f"{DEV_NAME}_{ATTR_VOLTAGE}": "12",
-        f"{DEV_NAME}_battery": "unknown",
+        f"{DEV_NAME}_battery": STATE_UNKNOWN,
         f"{DEV_NAME}_{ATTR_TEMPERATURE}": "27.182",
         f"{DEV_NAME}_{ATTR_CURRENT}": "1.5",
-        f"{DEV_NAME}_stored_energy": "unknown",
-        f"{DEV_NAME}_{ATTR_CYCLES}": "unknown",
-        f"{DEV_NAME}_{ATTR_DELTA_VOLTAGE}": "unknown",
+        f"{DEV_NAME}_stored_energy": STATE_UNKNOWN,
+        f"{DEV_NAME}_{ATTR_CYCLES}": STATE_UNKNOWN,
+        f"{DEV_NAME}_{ATTR_DELTA_VOLTAGE}": STATE_UNKNOWN,
         f"{DEV_NAME}_{ATTR_LQ}": "0",
-        f"{DEV_NAME}_highest_cell_voltage": "unknown",
-        f"{DEV_NAME}_lowest_cell_voltage": "unknown",
+        f"{DEV_NAME}_highest_cell_voltage": STATE_UNKNOWN,
+        f"{DEV_NAME}_lowest_cell_voltage": STATE_UNKNOWN,
         f"{DEV_NAME}_{ATTR_POWER}": "18.0",
-        f"{DEV_NAME}_signal_strength": "unknown",
-        f"{DEV_NAME}_{ATTR_RUNTIME}": "unknown",
+        f"{DEV_NAME}_signal_strength": STATE_UNKNOWN,
+        f"{DEV_NAME}_{ATTR_RUNTIME}": STATE_UNKNOWN,
     }
 
     monkeypatch.setattr(f"{bms_class}.async_update", patch_async_update)
@@ -129,15 +129,15 @@ async def test_update(
         f"{DEV_NAME}_battery": "42",
         f"{DEV_NAME}_{ATTR_TEMPERATURE}": "43.86",
         f"{DEV_NAME}_{ATTR_CURRENT}": "0",
-        f"{DEV_NAME}_stored_energy": "unknown",
-        f"{DEV_NAME}_{ATTR_CYCLES}": "unknown",
+        f"{DEV_NAME}_stored_energy": STATE_UNKNOWN,
+        f"{DEV_NAME}_{ATTR_CYCLES}": STATE_UNKNOWN,
         f"{DEV_NAME}_{ATTR_DELTA_VOLTAGE}": "0.123",
         f"{DEV_NAME}_{ATTR_LQ}": "66",  # initial update + one UPDATE_INTERVAL
         f"{DEV_NAME}_highest_cell_voltage": "3.123",
         f"{DEV_NAME}_lowest_cell_voltage": "3",
-        f"{DEV_NAME}_{ATTR_POWER}": "unknown",
+        f"{DEV_NAME}_{ATTR_POWER}": STATE_UNKNOWN,
         f"{DEV_NAME}_signal_strength": "-61",
-        f"{DEV_NAME}_{ATTR_RUNTIME}": "unknown",
+        f"{DEV_NAME}_{ATTR_RUNTIME}": STATE_UNKNOWN,
     }
 
     # check that attributes to sensors were updated
