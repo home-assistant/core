@@ -242,10 +242,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
 
 async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
     """Handle removal of a config entry."""
+    if (runtime_data := entry.runtime_data) is None:
+        return
+
     # Clear external statistics for all energy sites
     statistic_ids = [
         f"{DOMAIN}:{energy_site.id}_{key}"
-        for energy_site in entry.runtime_data.energysites
+        for energy_site in runtime_data.energysites
         for key in ENERGY_HISTORY_FIELDS
     ]
 

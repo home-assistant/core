@@ -58,6 +58,26 @@ ENDPOINTS = [
 ]
 
 
+def _get_last_statistics_for_statistic_ids(
+    hass: HomeAssistant,
+    statistic_ids: list[str],
+) -> dict[str, list[dict[str, Any]]]:
+    """Return the latest long-term statistics for each statistic ID."""
+    return {
+        statistic_id: stats
+        for statistic_id in statistic_ids
+        if (
+            stats := get_last_statistics(
+                hass,
+                1,
+                statistic_id,
+                True,
+                {"sum"},
+            ).get(statistic_id)
+        )
+    }
+
+
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
@@ -305,6 +325,14 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         site_id = self.api.energy_site_id
         recorder = get_instance(self.hass)
+        statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
+
+        # Fetch all existing last statistics in a single executor call.
+        last_stats = await recorder.async_add_executor_job(
+            _get_last_statistics_for_statistic_ids,
+            self.hass,
+            statistic_ids,
+        )
 
         for key in ENERGY_HISTORY_FIELDS:
             statistic_id = f"{DOMAIN}:{site_id}_{key}"
@@ -319,12 +347,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             )
 
-            # Get the last recorded statistic to determine where to start
-            last_stat = await recorder.async_add_executor_job(
-                get_last_statistics, self.hass, 1, statistic_id, True, {"sum"}
-            )
+            existing_stats = last_stats.get(statistic_id)
 
-            if not last_stat:
+            if not existing_stats:
                 # First time - start from scratch
                 LOGGER.debug(
                     "Inserting statistics for %s for the first time", statistic_id
@@ -332,8 +357,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 last_stats_time = None
                 running_sum = 0.0
             else:
-                last_stats_time = last_stat[statistic_id][0]["start"]
-                running_sum = cast(float, last_stat[statistic_id][0].get("sum", 0.0))
+                latest_stat = existing_stats[0]
+                last_stats_time = latest_stat["start"]
+                running_sum = cast(float, latest_stat.get("sum", 0.0))
 
             statistics: list[StatisticData] = []
             seen_starts: set[float] = set()
@@ -348,7 +374,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                     continue
 
                 # Normalize to top of the hour (statistics require minutes=0, seconds=0)
-                start = parsed_time.replace(minute=0, second=0, microsecond=0)
+                start = dt_util.as_utc(parsed_time).replace(
+                    minute=0, second=0, microsecond=0
+                )
 
                 start_ts = start.timestamp()
                 if start_ts in seen_starts:
