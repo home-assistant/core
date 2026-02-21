@@ -280,12 +280,12 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             if self.hvac_mode == HVACMode.OFF and self._previous_action_mode:
                 await api.set_regulation_mode(self._previous_action_mode)
 
-                if current_schedule != "off":
+                if current_schedule is not None and current_schedule != "off":
                     await api.set_schedule_state(
                         self._location, STATE_OFF, current_schedule
                     )
 
-            elif self.hvac_mode == HVACMode.AUTO:
+            elif self.hvac_mode == HVACMode.AUTO and current_schedule is not None:
                 await api.set_schedule_state(
                     self._location, STATE_OFF, current_schedule
                 )
