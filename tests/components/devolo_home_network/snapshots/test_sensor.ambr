@@ -33,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected PLC devices',
     'options': dict({
     }),
     'original_device_class': None,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected Wi-Fi clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,6 +135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart of the device',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -181,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Neighboring Wi-Fi networks',
     'options': dict({
     }),
     'original_device_class': None,
@@ -231,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -284,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

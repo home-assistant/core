@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
@@ -14,11 +14,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.hass_dict import HassKey
 
-from . import OnkyoConfigEntry
 from .const import (
     DOMAIN,
     LEGACY_HDMI_OUTPUT_MAPPING,
@@ -31,10 +31,15 @@ from .const import (
     VolumeResolution,
 )
 from .receiver import ReceiverManager
-from .services import DATA_MP_ENTITIES
 from .util import get_meaning
 
+if TYPE_CHECKING:
+    from . import OnkyoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
+
+
+DATA_MP_ENTITIES: HassKey[dict[str, dict[Zone, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 
 SUPPORTED_FEATURES_BASE = (
@@ -95,7 +100,7 @@ async def async_setup_entry(
     entry: OnkyoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MediaPlayer for config entry."""
+    """Set up media player platform for config entry."""
     data = entry.runtime_data
 
     manager = data.manager
@@ -103,6 +108,12 @@ async def async_setup_entry(
 
     entities: dict[Zone, OnkyoMediaPlayer] = {}
     all_entities[entry.entry_id] = entities
+
+    @callback
+    def del_mp_entities() -> None:
+        del all_entities[entry.entry_id]
+
+    entry.async_on_unload(del_mp_entities)
 
     volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
@@ -114,6 +125,12 @@ async def async_setup_entry(
             for entity in entities.values():
                 if entity.enabled:
                     await entity.query_state()
+
+    async def disconnect_callback() -> None:
+        for entity in entities.values():
+            if entity.enabled:
+                entity.cancel_tasks()
+                entity.async_write_ha_state()
 
     async def update_callback(message: Status) -> None:
         if isinstance(message, status.Raw):
@@ -146,6 +163,7 @@ async def async_setup_entry(
             async_add_entities([zone_entity])
 
     manager.callbacks.connect.append(connect_callback)
+    manager.callbacks.disconnect.append(disconnect_callback)
     manager.callbacks.update.append(update_callback)
 
 
@@ -225,13 +243,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         await self.query_state()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel the tasks when the entity is removed."""
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
-        if self._query_av_info_task is not None:
-            self._query_av_info_task.cancel()
-            self._query_av_info_task = None
+        """Entity will be removed from hass."""
+        self.cancel_tasks()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._manager.connected
 
     async def query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
@@ -246,6 +264,15 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
+
+    def cancel_tasks(self) -> None:
+        """Cancel the tasks."""
+        if self._query_state_task is not None:
+            self._query_state_task.cancel()
+            self._query_state_task = None
+        if self._query_av_info_task is not None:
+            self._query_av_info_task.cancel()
+            self._query_av_info_task = None
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""

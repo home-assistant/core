@@ -1,9 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "client_supports_hair_pinning": {
-        "default": "mdi:wan"
-      },
       "client_supports_ipv6": {
         "default": "mdi:wan"
       },

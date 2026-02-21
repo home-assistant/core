@@ -7,6 +7,7 @@ from functools import lru_cache, partial
 import logging
 import os
 import pathlib
+import shutil
 from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
@@ -25,7 +26,7 @@ from homeassistant.const import (
     EVENT_PANELS_UPDATED,
     EVENT_THEMES_UPDATED,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
@@ -36,11 +37,16 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .storage import async_setup_frontend_storage
+from .pr_download import download_pr_artifact
+from .storage import (
+    async_setup_frontend_storage,
+    async_system_store as async_system_store,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "frontend"
+CONF_NAME_DARK = "name_dark"
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
@@ -51,6 +57,10 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
+CONF_DEVELOPMENT_PR = "development_pr"
+CONF_GITHUB_TOKEN = "github_token"
+
+DEV_ARTIFACTS_DIR = "development_artifacts"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -129,6 +139,8 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Inclusive(CONF_DEVELOPMENT_PR, "development_pr"): cv.positive_int,
+                vol.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
                 vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
@@ -421,6 +433,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
+    dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
+
+    pr_cache_dir = pathlib.Path(hass.config.cache_path(DOMAIN, DEV_ARTIFACTS_DIR))
+    if not dev_pr_number and pr_cache_dir.exists():
+        try:
+            await hass.async_add_executor_job(shutil.rmtree, pr_cache_dir)
+            _LOGGER.debug("Cleaned up frontend development artifacts")
+        except OSError as err:
+            _LOGGER.warning(
+                "Could not clean up frontend development artifacts: %s", err
+            )
+
+    # Priority: development_repo > development_pr > integrated
+    if repo_path and dev_pr_number:
+        _LOGGER.warning(
+            "Both development_repo and development_pr are specified for frontend. "
+            "Using development_repo, remove development_repo to use "
+            "automatic PR download"
+        )
+        dev_pr_number = None
+
+    if dev_pr_number:
+        github_token: str = conf[CONF_GITHUB_TOKEN]
+
+        try:
+            dev_pr_dir = await download_pr_artifact(
+                hass, dev_pr_number, github_token, pr_cache_dir
+            )
+            repo_path = str(dev_pr_dir)
+            _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
+        except HomeAssistantError as err:
+            _LOGGER.error(
+                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                dev_pr_number,
+                err,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception(
+                "Unexpected error downloading PR #%s, "
+                "falling back to the integrated frontend",
+                dev_pr_number,
+            )
+
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
 
@@ -458,6 +513,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Shopping list panel was replaced by todo panel in 2023.11
     hass.http.register_redirect("/shopping-list", "/todo")
 
+    # Developer tools moved to config panel in 2026.2
+    for url in (
+        "/developer-tools",
+        "/developer-tools/yaml",
+        "/developer-tools/state",
+        "/developer-tools/action",
+        "/developer-tools/template",
+        "/developer-tools/event",
+        "/developer-tools/statistics",
+        "/developer-tools/assist",
+        "/developer-tools/debug",
+    ):
+        hass.http.register_redirect(url, f"/config{url}")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(
@@ -491,14 +560,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_built_in_panel(hass, "profile")
 
-    async_register_built_in_panel(
-        hass,
-        "developer-tools",
-        require_admin=True,
-        sidebar_title="developer_tools",
-        sidebar_icon="mdi:hammer",
-    )
-
     @callback
     def async_change_listener(
         resource_type: str,
@@ -524,6 +585,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
+
+
+def _validate_selected_theme(theme: str) -> str:
+    """Validate that a user selected theme is a valid theme."""
+    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
+        return theme
+    hass = async_get_hass()
+    if theme not in hass.data[DATA_THEMES]:
+        raise vol.Invalid(f"Theme {theme} not found")
+    return theme
 
 
 async def _async_setup_themes(
@@ -569,27 +640,32 @@ async def _async_setup_themes(
     @callback
     def set_theme(call: ServiceCall) -> None:
         """Set backend-preferred theme."""
-        name = call.data[CONF_NAME]
-        mode = call.data.get("mode", "light")
 
-        if (
-            name not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name not in hass.data[DATA_THEMES]
-        ):
-            _LOGGER.warning("Theme %s not found", name)
-            return
+        def _update_hass_theme(theme: str, light: bool) -> None:
+            theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
+            if theme == VALUE_NO_THEME:
+                to_set = DEFAULT_THEME if light else None
+            else:
+                _LOGGER.info(
+                    "Theme %s set as default %s theme",
+                    theme,
+                    "light" if light else "dark",
+                )
+                to_set = theme
+            hass.data[theme_key] = to_set
 
-        light_mode = mode == "light"
-
-        theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
-
-        if name == VALUE_NO_THEME:
-            to_set = DEFAULT_THEME if light_mode else None
+        name = call.data.get(CONF_NAME)
+        if name is not None and CONF_MODE in call.data:
+            mode = call.data.get("mode", "light")
+            light_mode = mode == "light"
+            _update_hass_theme(name, light_mode)
         else:
-            _LOGGER.info("Theme %s set as default %s theme", name, mode)
-            to_set = name
+            name_dark = call.data.get(CONF_NAME_DARK)
+            if name:
+                _update_hass_theme(name, True)
+            if name_dark:
+                _update_hass_theme(name_dark, False)
 
-        hass.data[theme_key] = to_set
         store.async_delay_save(
             lambda: {
                 DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
@@ -624,11 +700,13 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Schema(
+        vol.All(
             {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_MODE): vol.Any("dark", "light"),
-            }
+                vol.Optional(CONF_NAME): _validate_selected_theme,
+                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
+                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
+            },
+            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 
