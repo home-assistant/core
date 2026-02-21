@@ -4,7 +4,11 @@ import logging
 from typing import Any
 
 from roborock.data import B01Props, RoborockStateCode, SCWindMapping, WorkStatusMapping
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
+from roborock.data.b01_q10.b01_q10_code_mappings import (
+    B01_Q10_DP,
+    YXDeviceState,
+    YXFanLevel,
+)
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 import voluptuous as vol
@@ -79,37 +83,40 @@ Q7_STATE_CODE_TO_STATE = {
 }
 
 
-def _get_q10_status(data: dict[Any, Any] | B01Props) -> WorkStatusMapping | None:
-    """Get status from Q10 or Q7 data."""
-    if isinstance(data, B01Props):
-        # Q7 data - B01Props object
-        return data.status
+Q10_STATE_CODE_TO_STATE = {
+    YXDeviceState.SLEEP_STATE: VacuumActivity.IDLE,
+    YXDeviceState.STANDBY_STATE: VacuumActivity.IDLE,
+    YXDeviceState.CLEANING_STATE: VacuumActivity.CLEANING,
+    YXDeviceState.TO_CHARGE_STATE: VacuumActivity.RETURNING,
+    YXDeviceState.REMOTEING_STATE: VacuumActivity.CLEANING,
+    YXDeviceState.CHARGING_STATE: VacuumActivity.DOCKED,
+    YXDeviceState.PAUSE_STATE: VacuumActivity.PAUSED,
+    YXDeviceState.FAULT_STATE: VacuumActivity.ERROR,
+    YXDeviceState.UPGRADE_STATE: VacuumActivity.DOCKED,
+    YXDeviceState.DUSTING: VacuumActivity.DOCKED,
+    YXDeviceState.ROBOT_SWEEPING: VacuumActivity.CLEANING,
+    YXDeviceState.ROBOT_MOPING: VacuumActivity.CLEANING,
+    YXDeviceState.ROBOT_SWEEP_AND_MOPING: VacuumActivity.CLEANING,
+    YXDeviceState.ROBOT_TRANSITIONING: VacuumActivity.RETURNING,
+    YXDeviceState.ROBOT_WAIT_CHARGE: VacuumActivity.RETURNING,
+}
+
+
+def _get_q10_status(data: dict[Any, Any]) -> YXDeviceState | None:
+    """Get status from Q10 data."""
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
     status_code = data.get(B01_Q10_DP.STATUS)
     if status_code is None:
         return None
 
-    # Map YXDeviceState codes to WorkStatusMapping
-    # Status mapping from Q10 device codes to WorkStatusMapping
-    status_map = {
-        1: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEPING
-        2: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_MOPING
-        3: WorkStatusMapping.WAITING_FOR_ORDERS,  # STANDBY_STATE (idle)
-        4: WorkStatusMapping.SWEEP_MOPING,  # ROBOT_SWEEP_AND_MOPING
-        5: WorkStatusMapping.SWEEP_MOPING,  # CLEANING_STATE
-        6: WorkStatusMapping.DOCKING,  # TO_CHARGE_STATE (returning to dock)
-        8: WorkStatusMapping.CHARGING,  # CHARGING_STATE
-        10: WorkStatusMapping.PAUSED,  # PAUSE_STATE
-    }
-
-    return status_map.get(status_code, WorkStatusMapping.WAITING_FOR_ORDERS)
+    for state in YXDeviceState:
+        if state.code == status_code:
+            return state
+    return None
 
 
-def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
-    """Get wind/fan speed name from Q10 or Q7 data."""
-    if isinstance(data, B01Props):
-        # Q7 data - B01Props object
-        return data.wind_name
+def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
+    """Get wind/fan speed name from Q10 data."""
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
     fan_level = data.get(B01_Q10_DP.FAN_LEVEL)
     if fan_level is not None:
@@ -360,15 +367,18 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        status = _get_q10_status(self.coordinator.data)
-        if status is not None:
-            return Q7_STATE_CODE_TO_STATE.get(status)
-        return None
+        data = self.coordinator.data
+        if not isinstance(data, B01Props) or data.status is None:
+            return None
+        return Q7_STATE_CODE_TO_STATE.get(data.status)
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return _get_q10_wind_name(self.coordinator.data)
+        data = self.coordinator.data
+        if not isinstance(data, B01Props):
+            return None
+        return data.wind_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -538,20 +548,34 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        status = _get_q10_status(self.coordinator.data)
+        data = self.coordinator.data
+        if isinstance(data, B01Props):
+            return None
+        status = _get_q10_status(data)
         if status is not None:
-            return Q7_STATE_CODE_TO_STATE.get(status)
+            return Q10_STATE_CODE_TO_STATE.get(status)
         return None
 
     @property
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
-        return _get_q10_wind_name(self.coordinator.data)
+        data = self.coordinator.data
+        if isinstance(data, B01Props):
+            return None
+        return _get_q10_wind_name(data)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
-            await self.coordinator.api.vacuum.start_clean()
+            data = self.coordinator.data
+            status = _get_q10_status(data) if not isinstance(data, B01Props) else None
+            if status is YXDeviceState.PAUSE_STATE:
+                await self.coordinator.api.command.send(
+                    command=B01_Q10_DP.RESUME,
+                    params={},
+                )
+            else:
+                await self.coordinator.api.vacuum.start_clean()
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
