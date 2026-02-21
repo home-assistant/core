@@ -75,12 +75,14 @@ def mock_egauge_client() -> Generator[MagicMock]:
             "Solar": -2500.0,
             "Temp": 45.0,
             "L1": 123.4,
+            "S1": 1.2,
         }
         client.get_current_counters.return_value = {
             "Grid": 450000000.0,  # 125 kWh in Ws
             "Solar": 315000000.0,  # 87.5 kWh in Ws
             "Temp": 0.0,
             "L1": 12345678.0,
+            "S1": 12345.0,
         }
 
         yield client
