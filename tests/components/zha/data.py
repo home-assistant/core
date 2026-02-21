@@ -156,6 +156,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             {
                 "type": "integer",
                 "valueMin": 0,
+                "valueMax": 255,
                 "name": "alarm_exit_delay_away",
                 "required": True,
                 "default": 0,
@@ -163,6 +164,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             {
                 "type": "integer",
                 "valueMin": 0,
+                "valueMax": 255,
                 "name": "alarm_exit_delay_home",
                 "required": True,
                 "default": 0,
@@ -170,6 +172,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             {
                 "type": "integer",
                 "valueMin": 0,
+                "valueMax": 255,
                 "name": "alarm_exit_delay_night",
                 "required": True,
                 "default": 0,
@@ -177,6 +180,7 @@ CONFIG_WITH_ALARM_OPTIONS = {
             {
                 "type": "integer",
                 "valueMin": 0,
+                "valueMax": 255,
                 "name": "alarm_entry_delay",
                 "required": True,
                 "default": 0,
