@@ -59,7 +59,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 ATTR_MANUFACTURER: MANUFACTURER,
                 CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
             },
-            errors={},
+
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

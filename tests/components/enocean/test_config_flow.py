@@ -182,28 +182,19 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_dongle_path"
 
 
-@pytest.mark.parametrize(
-    ("usb_discovery_info", "device"),
-    [
-        (
-            UsbServiceInfo(
-                device="/dev/enocean0",
-                pid="6001",
-                vid="0403",
-                serial_number="1234",
-                description="USB 300",
-                manufacturer="EnOcean GmbH",
-            ),
-            "/dev/enocean0",
-        ),
-    ],
-)
 async def test_usb_discovery(
     hass: HomeAssistant,
-    usb_discovery_info: UsbServiceInfo,
-    device: str,
 ) -> None:
     """Test usb discovery success path."""
+    usb_discovery_info = UsbServiceInfo(
+        device="/dev/enocean0",
+        pid="6001",
+        vid="0403",
+        serial_number="1234",
+        description="USB 300",
+        manufacturer="EnOcean GmbH",
+    )
+    device = "/dev/enocean0"
     # test discovery step
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
