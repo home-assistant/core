@@ -792,6 +792,34 @@ async def test_q10_locate_command_not_supported(
         )
 
 
+async def test_q10_state_unknown_status_maps_to_unknown(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+    q10_fake_device: FakeDevice,
+) -> None:
+    """Test that UNKNOWN Q10 status maps to Home Assistant unknown state."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
+    ):
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    q10_fake_device.b01_q10_properties.status.update_from_dps(
+        {B01_Q10_DP.STATUS: YXDeviceState.UNKNOWN.code}
+    )
+    await hass.async_block_till_done()
+
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == "unknown"
+
+
 async def test_q10_set_fan_speed_command(
     hass: HomeAssistant,
     q10_config_entry: MockConfigEntry,
