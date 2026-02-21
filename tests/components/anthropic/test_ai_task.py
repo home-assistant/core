@@ -227,6 +227,63 @@ async def test_generate_structured_data_legacy_extended_thinking(
     assert mock_create_stream.call_args.kwargs.copy() == snapshot
 
 
+@freeze_time("2026-01-01 12:00:00")
+async def test_generate_structured_data_legacy_extra_text_block(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test AI Task structured data generation with legacy method and extra text block."""
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["Let's use the tool to respond"],
+            ),
+            *create_content_block(1, ["Sure!"]),
+            *create_tool_use_block(
+                2,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_task",
+                ['{"charac', 'ters": ["Mario', '", "Luigi"]}'],
+            ),
+        ),
+    ]
+
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            subentry,
+            data={
+                "chat_model": "claude-sonnet-4-0",
+                "thinking_budget": 1500,
+            },
+        )
+
+    result = await ai_task.async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.claude_ai_task",
+        instructions="Generate test data",
+        structure=vol.Schema(
+            {
+                vol.Required("characters"): selector.selector(
+                    {
+                        "text": {
+                            "multiple": True,
+                        }
+                    }
+                )
+            },
+        ),
+    )
+
+    assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_create_stream.call_args.kwargs.copy() == snapshot
+
+
 async def test_generate_invalid_structured_data_legacy(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

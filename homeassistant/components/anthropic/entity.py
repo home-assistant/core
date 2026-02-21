@@ -136,11 +136,11 @@ class ContentDetails:
     redacted_thinking: str | None = None
 
     def has_content(self) -> bool:
-        """Check if there is any content."""
+        """Check if there is any text content."""
         return any(detail.length > 0 for detail in self.citation_details)
 
     def __bool__(self) -> bool:
-        """Check if there is any content or citations."""
+        """Check if there is any thinking content or citations."""
         return (
             self.thinking_signature is not None
             or self.redacted_thinking is not None
@@ -417,7 +417,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
-                    if first_block or content_details:
+                    if first_block or content_details.has_content():
                         if content_details:
                             content_details.delete_empty()
                             yield {"native": content_details}
