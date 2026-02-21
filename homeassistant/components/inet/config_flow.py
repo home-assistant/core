@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from inet_control import RadioManager
 import voluptuous as vol
@@ -12,6 +13,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN
 
@@ -31,6 +37,8 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_radios: dict[str, str] = {}
+        self._host: str | None = None
+        self._name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -71,6 +79,52 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_MANUAL_SCHEMA,
         )
 
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle SSDP discovery."""
+        if not discovery_info.ssdp_location or not (
+            host := urlparse(discovery_info.ssdp_location).hostname
+        ):
+            return self.async_abort(reason="cannot_connect")
+
+        serial = discovery_info.upnp.get(ATTR_UPNP_SERIAL)
+        if not serial:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(format_mac(serial))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        manager = RadioManager()
+        try:
+            await manager.start()
+            await manager.connect(host, timeout=5.0)
+        except OSError, TimeoutError:
+            return self.async_abort(reason="cannot_connect")
+        finally:
+            await manager.stop()
+
+        self._host = host
+        self._name = discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+        self.context["title_placeholders"] = {"name": self._name or host}
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation of SSDP discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._name or f"iNet Radio ({self._host})",
+                data={CONF_HOST: self._host},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={"name": self._name or self._host or ""},
+        )
+
     async def _async_validate_and_create(self, host: str) -> ConfigFlowResult:
         """Validate connection and create config entry."""
         errors: dict[str, str] = {}
@@ -78,19 +132,39 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await manager.start()
             radio = await manager.connect(host, timeout=5.0)
+
+            if not radio.mac:
+                mac_received = asyncio.Event()
+
+                def _on_update() -> None:
+                    if radio.mac:
+                        mac_received.set()
+
+                unsub = radio.register_callback(_on_update)
+                try:
+                    async with asyncio.timeout(3.0):
+                        await mac_received.wait()
+                except TimeoutError:
+                    pass
+                finally:
+                    unsub()
         except TimeoutError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception during connection")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(format_mac(radio.mac))
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+            mac_or_serial = radio.serial or radio.mac
+            if not mac_or_serial:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(format_mac(mac_or_serial))
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-            return self.async_create_entry(
-                title=radio.name or f"iNet Radio ({host})",
-                data={CONF_HOST: host},
-            )
+                return self.async_create_entry(
+                    title=radio.name or f"iNet Radio ({host})",
+                    data={CONF_HOST: host},
+                )
         finally:
             await manager.stop()
 
