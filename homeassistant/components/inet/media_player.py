@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import INetConfigEntry
-from .const import DOMAIN
+from .const import CONF_MODEL_DESCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class INetMediaPlayer(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)},
             name=radio.name or f"iNet Radio ({radio.ip})",
             manufacturer="Busch-Jaeger",
-            model="8216 UP iNet Radio",
+            model=entry.data.get(CONF_MODEL_DESCRIPTION),
             sw_version=radio.sw_version or None,
             connections={(CONNECTION_NETWORK_MAC, radio.mac)} if radio.mac else set(),
         )

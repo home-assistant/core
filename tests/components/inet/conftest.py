@@ -15,6 +15,7 @@ MOCK_MAC = "78:c4:0e:01:22:f4"
 MOCK_SERIAL = "78C40E0122F4"
 MOCK_UNIQUE_ID = "78:c4:0e:01:22:f4"
 MOCK_NAME = "Living Room Radio"
+MOCK_MODEL_DESCRIPTION = "Busch-Jaeger Internet Radio 8216U"
 
 
 def _create_mock_radio(

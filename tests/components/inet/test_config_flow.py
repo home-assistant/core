@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.inet.const import DOMAIN
+from homeassistant.components.inet.const import CONF_MODEL_DESCRIPTION, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -15,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_DESCRIPTION,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
@@ -22,6 +23,7 @@ from homeassistant.helpers.service_info.ssdp import (
 
 from .conftest import (
     MOCK_HOST,
+    MOCK_MODEL_DESCRIPTION,
     MOCK_NAME,
     MOCK_SERIAL,
     MOCK_UNIQUE_ID,
@@ -307,6 +309,7 @@ MOCK_SSDP_DISCOVERY = SsdpServiceInfo(
         ATTR_UPNP_FRIENDLY_NAME: MOCK_NAME,
         ATTR_UPNP_MANUFACTURER: "Busch-Jaeger",
         ATTR_UPNP_MODEL_NAME: "Radio iNet",
+        ATTR_UPNP_MODEL_DESCRIPTION: MOCK_MODEL_DESCRIPTION,
         ATTR_UPNP_SERIAL: MOCK_SERIAL,
     },
 )
@@ -335,7 +338,10 @@ async def test_ssdp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_NAME
-    assert result["data"] == {CONF_HOST: MOCK_HOST}
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_MODEL_DESCRIPTION: MOCK_MODEL_DESCRIPTION,
+    }
     assert result["result"].unique_id == MOCK_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 

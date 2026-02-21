@@ -15,11 +15,12 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_DESCRIPTION,
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
 
-from .const import DOMAIN
+from .const import CONF_MODEL_DESCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_radios: dict[str, str] = {}
         self._host: str | None = None
         self._name: str | None = None
+        self._model: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -106,6 +108,7 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._host = host
         self._name = discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+        self._model = discovery_info.upnp.get(ATTR_UPNP_MODEL_DESCRIPTION)
         self.context["title_placeholders"] = {"name": self._name or host}
         return await self.async_step_confirm()
 
@@ -114,9 +117,13 @@ class INetConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of SSDP discovery."""
         if user_input is not None:
+            assert self._host is not None
+            entry_data: dict[str, str] = {CONF_HOST: self._host}
+            if self._model:
+                entry_data[CONF_MODEL_DESCRIPTION] = self._model
             return self.async_create_entry(
                 title=self._name or f"iNet Radio ({self._host})",
-                data={CONF_HOST: self._host},
+                data=entry_data,
             )
 
         self._set_confirm_only()
