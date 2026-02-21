@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Create ISO timestamp for start time
         # Determine if we should use today or tomorrow's date
-        start_time = dt_util.start_of_local_day().replace(
+        start_time = dt_util.start_of_local_day(now).replace(
             hour=start_hour_result, minute=0, second=0, microsecond=0
         )
 
