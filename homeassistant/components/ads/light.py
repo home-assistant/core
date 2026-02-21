@@ -252,18 +252,20 @@ class AdsLight(AdsEntity, LightEntity):
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
 
-        # Pick the richest supported mode as the static default (used as fallback)
+        # Pick the richest supported mode as the static default (used as fallback).
+        # The preferred order is deterministic so the result is stable across restarts.
+        self._attr_color_mode = ColorMode.ONOFF
         for preferred in (
             ColorMode.RGBW,
             ColorMode.RGB,
             ColorMode.HS,
             ColorMode.COLOR_TEMP,
+            ColorMode.BRIGHTNESS,
+            ColorMode.ONOFF,
         ):
             if preferred in self._attr_supported_color_modes:
                 self._attr_color_mode = preferred
                 break
-        else:
-            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
         # Color temperature range is only relevant when the CT channel is configured
         if ads_var_color_temp_kelvin is not None:
@@ -367,14 +369,10 @@ class AdsLight(AdsEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of the light (0–255).
-
-        The raw ADS value is scaled from the configured PLC range to the
-        Home Assistant range (0–255).
-        """
+        """Return the brightness of the light (0–255)."""
         ads_brightness = self._state_dict[STATE_KEY_BRIGHTNESS]
         if ads_brightness is not None:
-            return self._scale_brightness_from_ads(int(ads_brightness))
+            return max(0, min(255, self._scale_brightness_from_ads(int(ads_brightness))))
         return None
 
     @property
@@ -445,33 +443,19 @@ class AdsLight(AdsEntity, LightEntity):
         return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on or set specific values.
-
-        Each entry is (ads_var_name, value, plc_datatype). The PLC must declare
-        variables with matching types: BOOL (on/off), UINT (brightness, kelvin,
-        hue, saturation, color_mode), USINT (red, green, blue, white 0-255).
-        """
-        to_write: list[tuple[str, Any, Any]] = []
-
-        to_write.append((self._ads_var, True, pyads.PLCTYPE_BOOL))
+        """Turn the light on or set specific values."""
+        to_write: list[tuple[str, Any]] = [(self._ads_var, True)]
 
         if self._ads_var_brightness is not None and ATTR_BRIGHTNESS in kwargs:
-            ads_brightness = self._scale_brightness_to_ads(kwargs[ATTR_BRIGHTNESS])
             to_write.append(
-                (self._ads_var_brightness, ads_brightness, pyads.PLCTYPE_UINT)
+                (self._ads_var_brightness, self._scale_brightness_to_ads(kwargs[ATTR_BRIGHTNESS]))
             )
 
         if (
             self._ads_var_color_temp_kelvin is not None
             and ATTR_COLOR_TEMP_KELVIN in kwargs
         ):
-            to_write.append(
-                (
-                    self._ads_var_color_temp_kelvin,
-                    kwargs[ATTR_COLOR_TEMP_KELVIN],
-                    pyads.PLCTYPE_UINT,
-                )
-            )
+            to_write.append((self._ads_var_color_temp_kelvin, kwargs[ATTR_COLOR_TEMP_KELVIN]))
 
         if (
             self._ads_var_hue is not None
@@ -479,8 +463,8 @@ class AdsLight(AdsEntity, LightEntity):
             and ATTR_HS_COLOR in kwargs
         ):
             h, s = kwargs[ATTR_HS_COLOR]
-            to_write.append((self._ads_var_hue, int(h), pyads.PLCTYPE_UINT))
-            to_write.append((self._ads_var_saturation, int(s), pyads.PLCTYPE_UINT))
+            to_write.append((self._ads_var_hue, int(h)))
+            to_write.append((self._ads_var_saturation, int(s)))
 
         if (
             self._ads_var_red is not None
@@ -491,27 +475,23 @@ class AdsLight(AdsEntity, LightEntity):
                 r, g, b, w = kwargs[ATTR_RGBW_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r), pyads.PLCTYPE_USINT),
-                        (self._ads_var_green, int(g), pyads.PLCTYPE_USINT),
-                        (self._ads_var_blue, int(b), pyads.PLCTYPE_USINT),
-                        (self._ads_var_white, int(w), pyads.PLCTYPE_USINT),
+                        (self._ads_var_red, int(r)),
+                        (self._ads_var_green, int(g)),
+                        (self._ads_var_blue, int(b)),
+                        (self._ads_var_white, int(w)),
                     ]
                 )
             elif ATTR_RGB_COLOR in kwargs:
                 r, g, b = kwargs[ATTR_RGB_COLOR]
                 to_write.extend(
                     [
-                        (self._ads_var_red, int(r), pyads.PLCTYPE_USINT),
-                        (self._ads_var_green, int(g), pyads.PLCTYPE_USINT),
-                        (self._ads_var_blue, int(b), pyads.PLCTYPE_USINT),
+                        (self._ads_var_red, int(r)),
+                        (self._ads_var_green, int(g)),
+                        (self._ads_var_blue, int(b)),
                     ]
                 )
 
-        if len(to_write) == 1:
-            var, value, plc_type = to_write[0]
-            self._ads_hub.write_by_name(var, value, plc_type)
-        else:
-            self._ads_hub.write_list_by_name(to_write)
+        self._ads_hub.write_list_by_name(to_write)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""

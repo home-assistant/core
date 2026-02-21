@@ -63,18 +63,17 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
 
-    def write_list_by_name(self, items: list[tuple[str, Any, Any]]) -> None:
+    def write_list_by_name(self, items: list[tuple[str, Any]]) -> None:
         """Write multiple values in one ADS transaction so they apply in the same PLC cycle.
 
-        Uses pyads write_list_by_name. Separate write_by_name calls could span
-        multiple cycles. Items are (name, value, plc_datatype); only name and
-        value are passed to pyads; datatypes come from the PLC symbol cache.
-        PLC variables must be declared as the expected types (BOOL, UINT, USINT).
+        Uses pyads write_list_by_name so all values land in the same PLC cycle.
+        Separate write_by_name calls could span multiple cycles. Data types are
+        inferred from the PLC symbol cache; PLC variables must be declared with
+        the expected types (BOOL, UINT, USINT).
         """
         with self._lock:
             try:
-                data = {name: value for (name, value, _dtype) in items}
-                self._client.write_list_by_name(data)
+                self._client.write_list_by_name(dict(items))
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing list: %s", err)
 
