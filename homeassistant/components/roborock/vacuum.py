@@ -479,7 +479,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
-    # Q10 uses YXFanLevel: quiet, normal, strong, max, super
     _attr_fan_speed_list = [
         YXFanLevel.QUIET.value.capitalize(),
         YXFanLevel.NORMAL.value.capitalize(),
