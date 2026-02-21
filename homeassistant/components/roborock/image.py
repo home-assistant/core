@@ -125,7 +125,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         out = io.BytesIO()
         img.save(out, format="PNG")
         return out.getvalue()
-    
     async def async_image(self) -> bytes | None:
         """Return the map image."""
         if (map_content := self._map_content) is None:
