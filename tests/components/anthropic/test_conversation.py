@@ -8,7 +8,6 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
-    ThinkingBlock,
     WebSearchResultBlock,
 )
 from freezegun import freeze_time
@@ -689,7 +688,7 @@ async def test_extended_thinking_tool_call(
                 [
                     "The user asked me to",
                     " call a test function.",
-                    "Is it a test? What",
+                    " Is it a test? What",
                     " would the function",
                     " do? Would it violate",
                     " any privacy or security",
@@ -802,10 +801,14 @@ async def test_web_search(
             ),
             *create_content_block(
                 6,
-                ["Here's what I found on the web about today's news:\n", "1. "],
+                ["Here's what I found on the web about today's news:\n"],
             ),
             *create_content_block(
                 7,
+                ["1. "],
+            ),
+            *create_content_block(
+                8,
                 ["New Home Assistant release"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -817,9 +820,9 @@ async def test_web_search(
                     )
                 ],
             ),
-            *create_content_block(8, ["\n2. "]),
+            *create_content_block(9, ["\n2. "]),
             *create_content_block(
-                9,
+                10,
                 ["Something incredible happened"],
                 citations=[
                     CitationsWebSearchResultLocation(
@@ -839,7 +842,7 @@ async def test_web_search(
                 ],
             ),
             *create_content_block(
-                10, ["\nThose are the main headlines making news today."]
+                11, ["\nThose are the main headlines making news today."]
             ),
         )
     ]
@@ -946,9 +949,7 @@ async def test_web_search(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
                 thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
-                native=ThinkingBlock(
-                    signature="ErU/V+ayA==", thinking="", type="thinking"
-                ),
+                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
                         id="srvtoolu_12345ABC",

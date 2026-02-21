@@ -8,12 +8,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),
@@ -66,12 +61,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),
@@ -129,6 +119,11 @@
       }),
       dict({
         'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': "Let's use the tool to respond",
+            'type': 'thinking',
+          }),
           dict({
             'text': '{"characters": ["Mario", "Luigi"]}',
             'type': 'text',
@@ -193,12 +188,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': '{"characters": ["Mario", "Luigi"]}',
-            'type': 'text',
-          }),
-        ]),
+        'content': '{"characters": ["Mario", "Luigi"]}',
         'role': 'assistant',
       }),
     ]),

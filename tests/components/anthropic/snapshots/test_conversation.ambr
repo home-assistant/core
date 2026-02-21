@@ -37,12 +37,7 @@
         'role': 'user',
       }),
       dict({
-        'content': list([
-          dict({
-            'text': 'Hello, how can I help you today?',
-            'type': 'text',
-          }),
-        ]),
+        'content': 'Hello, how can I help you today?',
         'role': 'assistant',
       }),
     ]),
@@ -136,25 +131,26 @@
       'agent_id': 'conversation.claude_conversation',
       'content': None,
       'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
-      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
       'role': 'assistant',
-      'thinking_content': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
-      'tool_calls': None,
-    }),
-    dict({
-      'agent_id': 'conversation.claude_conversation',
-      'content': None,
-      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
-      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
-      'role': 'assistant',
-      'thinking_content': None,
+      'thinking_content': 'The user asked me to call a test function. Is it a test? What would the function do? Would it violate any privacy or security policies?',
       'tool_calls': None,
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'Certainly, calling it now!',
       'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
-      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
       'role': 'assistant',
       'thinking_content': "Okay, let's give it a shot. Will I pass the test?",
       'tool_calls': list([
@@ -197,7 +193,7 @@
       'content': list([
         dict({
           'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
-          'thinking': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
+          'thinking': 'The user asked me to call a test function. Is it a test? What would the function do? Would it violate any privacy or security policies?',
           'type': 'thinking',
         }),
         dict({
@@ -235,12 +231,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'I have successfully called the function',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'I have successfully called the function',
       'role': 'assistant',
     }),
   ])
@@ -252,12 +243,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -269,12 +255,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'A donut is a torus.',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'A donut is a torus.',
       'role': 'assistant',
     }),
     dict({
@@ -282,12 +263,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -325,12 +301,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -376,12 +347,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -436,12 +402,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Should I add milk to the shopping list?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Should I add milk to the shopping list?',
       'role': 'assistant',
     }),
     dict({
@@ -449,12 +410,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -566,12 +522,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -609,12 +560,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'It is currently 2:30 PM.',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'It is currently 2:30 PM.',
       'role': 'assistant',
     }),
     dict({
@@ -622,12 +568,7 @@
       'role': 'user',
     }),
     dict({
-      'content': list([
-        dict({
-          'text': 'Yes, I am sure!',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Yes, I am sure!',
       'role': 'assistant',
     }),
   ])
@@ -644,7 +585,12 @@
       'agent_id': 'conversation.claude_conversation',
       'content': None,
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -653,7 +599,12 @@
       'agent_id': 'conversation.claude_conversation',
       'content': None,
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -662,7 +613,12 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'How can I help you today?',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -715,7 +671,12 @@
       'agent_id': 'conversation.claude_conversation',
       'content': "To get today's news, I'll perform a web search",
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
       'role': 'assistant',
       'thinking_content': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
       'tool_calls': list([
@@ -758,12 +719,15 @@
       'agent_id': 'conversation.claude_conversation',
       'content': '''
         Here's what I found on the web about today's news:
-        1. New Home Assistant release
-        2. Something incredible happened
-        Those are the main headlines making news today.
+  
       ''',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
       'role': 'assistant',
       'thinking_content': "Great! All clear, let's reply to the user!",
       'tool_calls': None,
@@ -771,8 +735,9 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': '''
-        
-  
+        1. New Home Assistant release
+        2. Something incredible happened
+        Those are the main headlines making news today.
       ''',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': dict({
@@ -787,7 +752,7 @@
                 'url': 'https://www.example.com/todays-news',
               }),
             ]),
-            'index': 54,
+            'index': 3,
             'length': 26,
           }),
           dict({
@@ -807,10 +772,12 @@
                 'url': 'https://www.newssite.com/breaking-news',
               }),
             ]),
-            'index': 84,
+            'index': 33,
             'length': 29,
           }),
         ]),
+        'redacted_thinking': None,
+        'thinking_signature': None,
       }),
       'role': 'assistant',
       'thinking_content': None,
@@ -871,17 +838,12 @@
         dict({
           'text': '''
             Here's what I found on the web about today's news:
-            1. New Home Assistant release
-            2. Something incredible happened
-            Those are the main headlines making news today.
+  
           ''',
           'type': 'text',
         }),
         dict({
-          'text': '''
-            
-  
-          ''',
+          'text': '1. ',
           'type': 'text',
         }),
         dict({
@@ -894,11 +856,14 @@
               'url': 'https://www.example.com/todays-news',
             }),
           ]),
-          'text': '',
+          'text': 'New Home Assistant release',
           'type': 'text',
         }),
         dict({
-          'text': '',
+          'text': '''
+            
+            2. 
+          ''',
           'type': 'text',
         }),
         dict({
@@ -918,7 +883,14 @@
               'url': 'https://www.newssite.com/breaking-news',
             }),
           ]),
-          'text': '',
+          'text': 'Something incredible happened',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+            Those are the main headlines making news today.
+          ''',
           'type': 'text',
         }),
       ]),
