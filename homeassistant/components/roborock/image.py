@@ -65,6 +65,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     ) -> None:
         """Initialize a Roborock map."""
         map_name = map_name or f"Map {map_flag}"
+        # Note: Map names are not a valid unique id since they can be changed
+        # in the roborock app. This should be migrated to use map flag for
+        # the unique id.
         unique_id = f"{coordinator.duid_slug}_map_{map_name}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
@@ -105,7 +108,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             self._attr_image_last_updated = self.coordinator.last_home_update
 
         super()._handle_coordinator_update()
-    
+
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:
