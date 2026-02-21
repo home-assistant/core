@@ -605,4 +605,3 @@ async def test_set_exit_delay_service_no_ias_ace(
             },
             blocking=True,
         )
-    await hass.async_block_till_done()
