@@ -243,8 +243,9 @@ async def _mock_orphaned_device(
 ) -> DeviceEntry:
     await init_integration(hass, mock_config_entry)
 
-    removed_device = "lpc-nct6687d-0"
+    removed_device = "gpu-nvidia-0"
     previous_data = mock_lhm_client.get_data.return_value
+    assert removed_device in previous_data.main_device_ids_and_names
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
         computer_name=mock_lhm_client.get_data.return_value.computer_name,

@@ -64,7 +64,8 @@ def mock_growatt_v1_api():
             "chargePowerCommand": 50,  # 50% charge power - read by number entity
             "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
             "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
-            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid) - read by number entity
+            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC - read by number entity
         }
 
         # Called by MIN device coordinator during refresh

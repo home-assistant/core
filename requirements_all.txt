@@ -339,7 +339,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.7.0
+aiontfy==0.8.0
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -410,7 +410,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.12.1
+aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.0
@@ -562,7 +562,7 @@ asyncinotify==4.2.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.6.0
+asyncsleepiq==1.7.0
 
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
@@ -1180,10 +1180,10 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.13.0
+hass-nabucasa==1.15.0
 
 # homeassistant.components.splunk
-hass-splunk==0.1.1
+hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1256,6 +1256,9 @@ huum==0.8.1
 # homeassistant.components.hyperion
 hyperion-py==0.7.6
 
+# homeassistant.components.hypontech
+hyponcloud==0.3.0
+
 # homeassistant.components.iammeter
 iammeter==0.2.1
 
@@ -1269,7 +1272,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==12.1.3
+ical==13.2.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1278,7 +1281,7 @@ icalendar==6.3.1
 icmplib==3.0
 
 # homeassistant.components.idasen_desk
-idasen-ha==2.6.3
+idasen-ha==2.6.4
 
 # homeassistant.components.idrive_e2
 idrive-e2-client==0.1.1
@@ -1303,6 +1306,9 @@ imgw_pib==2.0.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.12
+
+# homeassistant.components.indevolt
+indevolt-api==1.2.3
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1671,7 +1677,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.2
+onedrive-personal-sdk==0.1.4
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1782,6 +1788,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
+# homeassistant.components.powerfox_local
 powerfox==2.1.0
 
 # homeassistant.components.prana
@@ -1855,6 +1862,9 @@ py-nextbusnext==2.3.0
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.mta
+py-nymta==0.4.0
+
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
@@ -1905,6 +1915,9 @@ pyW800rf32==0.4
 
 # homeassistant.components.ccm15
 py_ccm15==0.1.2
+
+# homeassistant.components.html5
+py_vapid==1.9.4
 
 # homeassistant.components.ads
 pyads==3.4.0
@@ -2167,7 +2180,7 @@ pyituran==0.1.5
 pyjvcprojector==2.0.1
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.0.2
+pykaleidescape==1.1.1
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2209,13 +2222,13 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.2.1
+pyliebherrhomeapi==0.3.0
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.0.0
+pylitterbot==2025.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.26.0
@@ -2355,7 +2368,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.23
+pyportainer==1.0.27
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2382,7 +2395,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.0.1
+pyrainbird==6.0.5
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0
@@ -2458,7 +2471,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.2
+pysmartthings==3.5.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2515,7 +2528,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==4.2.0
+python-bsblan==4.2.1
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2623,6 +2636,9 @@ python-roborock==4.14.0
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
 
+# homeassistant.components.systemnexa2
+python-sn2==0.4.0
+
 # homeassistant.components.snoo
 python-snoo==0.8.3
 
@@ -2648,7 +2664,7 @@ python-xbox==0.1.3
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.4.1
+pythonkuma==0.5.0
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2694,7 +2710,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.29
+pyvlx==0.2.30
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2974,6 +2990,9 @@ starlink-grpc-core==1.2.3
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.trane
+steamloop==1.2.0
+
 # homeassistant.components.steam_online
 steamodd==4.21
 
@@ -3018,6 +3037,9 @@ tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.12
+
+# homeassistant.components.teltonika
+teltasync==0.1.3
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
@@ -3174,7 +3196,7 @@ venstarcolortouch==0.21
 viaggiatreno_ha==0.2.4
 
 # homeassistant.components.victron_ble
-victron-ble-ha-parser==0.4.9
+victron-ble-ha-parser==0.4.10
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
@@ -3262,7 +3284,7 @@ wyoming==1.7.2
 xiaomi-ble==1.6.0
 
 # homeassistant.components.knx
-xknx==3.14.0
+xknx==3.15.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
