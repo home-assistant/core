@@ -442,8 +442,9 @@ async def test_reauth_flow_success(
     [
         (TeltonikaAuthenticationError("Invalid credentials"), "invalid_auth"),
         (TeltonikaConnectionError("Connection failed"), "cannot_connect"),
+        (ValueError("Unexpected error"), "unknown"),
     ],
-    ids=["invalid_auth", "cannot_connect"],
+    ids=["invalid_auth", "cannot_connect", "unexpected_exception"],
 )
 async def test_reauth_flow_errors_with_recovery(
     hass: HomeAssistant,
