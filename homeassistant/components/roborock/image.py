@@ -182,3 +182,4 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             self._rotated_cache = None
             self._rotated_cache_rotation = None
             return raw
+        
