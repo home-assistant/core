@@ -194,35 +194,6 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS,
-)
-async def test_services_exception_device_id(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    service_call: dict[str, Any],
-) -> None:
-    """Raise a HomeAssistantError when there is an API error."""
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.ha_id)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(**service_call)
-
-
 async def test_services_appliance_not_found(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

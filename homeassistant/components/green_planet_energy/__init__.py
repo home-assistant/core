@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         return {
             "duration": duration,
-            "average_price": round(avg_price, 4),
+            "average_price": round(avg_price / 100, 4),
             "start_time": start_time.isoformat(),
             "hours_until_start": round(hours_until_start, 1),
             "time_range": time_range,

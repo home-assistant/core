@@ -23,8 +23,6 @@ CONF_WEB_SEARCH_REGION = "region"
 CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 
-DATA_REPAIR_DEFER_RELOAD = "repair_defer_reload"
-
 DEFAULT = {
     CONF_CHAT_MODEL: "claude-haiku-4-5",
     CONF_MAX_TOKENS: 3000,
@@ -48,6 +46,15 @@ NON_ADAPTIVE_THINKING_MODELS = [
     "claude-opus-4-5",
     "claude-sonnet-4-5",
     "claude-haiku-4-5",
+    "claude-opus-4-1",
+    "claude-opus-4-0",
+    "claude-opus-4-20250514",
+    "claude-sonnet-4-0",
+    "claude-sonnet-4-20250514",
+    "claude-3",
+]
+
+UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
     "claude-opus-4-1",
     "claude-opus-4-0",
     "claude-opus-4-20250514",

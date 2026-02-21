@@ -10,6 +10,10 @@ from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -130,11 +134,14 @@ async def test_number(
     # update device value with failed attribute report
     cluster.PLUGGED_ATTR_READS["present_value"] = 40.0
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {"entity_id": entity_id},
+        blocking=True,
     )
     assert hass.states.get(entity_id).state == "40.0"
     assert "present_value" in cluster.read_attributes.call_args[0][0]
