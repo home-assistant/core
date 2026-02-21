@@ -1,6 +1,6 @@
 """Test the Anthropic config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from anthropic import (
     APIConnectionError,
@@ -108,8 +108,8 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "anthropic.resources.models.AsyncModels.retrieve",
-        return_value=Mock(display_name="Claude 3.5 Sonnet"),
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
