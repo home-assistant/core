@@ -13,6 +13,7 @@ CONF_USER_DATA = "user_data"
 CONF_SHOW_BACKGROUND = "show_background"
 CONF_REGION = "region"
 REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
+# Option Flow steps
 DRAWABLES = "drawables"
 CONF_MAP_ROTATION = "map_rotation"
 MAP_ROTATION_OPTIONS = (0, 90, 180, 270)
@@ -49,6 +50,7 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
+# This can be lowered in the future if we do not receive rate limiting issues.
 IMAGE_CACHE_INTERVAL = timedelta(seconds=30)
 
 MAP_SLEEP = 3
