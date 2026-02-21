@@ -79,6 +79,7 @@ async def test_setup_creates_initial_subentry_and_coordinator(
         TEST_STATION,
         TEST_PRODUCTS,
         subentry_id,
+        updated_entry,
     )
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
 

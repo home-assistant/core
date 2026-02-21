@@ -9,10 +9,28 @@ from pybraendstofpriser.exceptions import ProductNotFoundError
 import pytest
 
 from homeassistant.components.dk_fuelprices.api import APIClient
+from homeassistant.components.dk_fuelprices.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
+
+from tests.common import MockConfigEntry
+
+
+def _create_client(hass: HomeAssistant) -> APIClient:
+    """Create an API client with a mock config entry."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    return APIClient(
+        hass,
+        TEST_API_KEY,
+        TEST_COMPANY,
+        TEST_STATION,
+        {"Blyfri95": True, "Diesel": False},
+        "station_1",
+        config_entry,
+    )
 
 
 def _client_error(status: int) -> ClientResponseError:
@@ -30,14 +48,7 @@ async def test_api_client_update_success(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test coordinator updates prices and timestamp."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True, "Diesel": False},
-        "station_1",
-    )
+    client = _create_client(hass)
 
     client._api.get_prices.return_value = {
         "station": {
@@ -60,14 +71,7 @@ async def test_api_client_update_last_update_none(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test coordinator handles missing timestamp."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True},
-        "station_1",
-    )
+    client = _create_client(hass)
 
     client._api.get_prices.return_value = {
         "station": {
@@ -87,14 +91,7 @@ async def test_api_client_setup_populates_products(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test _async_setup repopulates selected products."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True, "Diesel": False},
-        "station_1",
-    )
+    client = _create_client(hass)
     client.products = {}
 
     await client._async_setup()
@@ -106,14 +103,7 @@ async def test_api_client_product_not_found_raises_entry_error(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test ProductNotFoundError is mapped to ConfigEntryError."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True},
-        "station_1",
-    )
+    client = _create_client(hass)
     client._api.get_prices.side_effect = ProductNotFoundError("missing")
 
     with pytest.raises(ConfigEntryError):
@@ -124,14 +114,7 @@ async def test_api_client_unauthorized_raises_auth_failed(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test HTTP 401 is mapped to ConfigEntryAuthFailed."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True},
-        "station_1",
-    )
+    client = _create_client(hass)
     client._api.get_prices.side_effect = _client_error(401)
 
     with pytest.raises(ConfigEntryAuthFailed):
@@ -142,14 +125,7 @@ async def test_api_client_other_http_error_raises_entry_error(
     hass: HomeAssistant, mock_braendstofpriser
 ) -> None:
     """Test non-401 HTTP errors are mapped to ConfigEntryError."""
-    client = APIClient(
-        hass,
-        TEST_API_KEY,
-        TEST_COMPANY,
-        TEST_STATION,
-        {"Blyfri95": True},
-        "station_1",
-    )
+    client = _create_client(hass)
     client._api.get_prices.side_effect = _client_error(500)
 
     with pytest.raises(ConfigEntryError):

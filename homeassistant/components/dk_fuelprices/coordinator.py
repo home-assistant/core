@@ -10,6 +10,7 @@ from aiohttp import ClientResponseError
 from pybraendstofpriser import Braendstofpriser
 from pybraendstofpriser.exceptions import ProductNotFoundError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -32,6 +33,7 @@ class APIClient(DataUpdateCoordinator[None]):
         station: dict[str, Any],
         products: dict[str, bool],
         subentry_id: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the API client."""
         super().__init__(
@@ -39,6 +41,7 @@ class APIClient(DataUpdateCoordinator[None]):
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
 
         self._api = Braendstofpriser(api_key)

@@ -73,6 +73,7 @@ async def _setup(
             station,
             products,
             subentry_id,
+            config_entry,
         )
         runtime_data[subentry_id] = coordinator
 

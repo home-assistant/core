@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -33,6 +34,8 @@ SENSORS = [
         name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-outline",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

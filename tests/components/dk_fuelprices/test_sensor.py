@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import cast
 from unittest.mock import patch
 
+from homeassistant.components.dk_fuelprices.api import APIClient
 from homeassistant.components.dk_fuelprices.const import DOMAIN
 from homeassistant.components.dk_fuelprices.sensor import (
     SENSORS,
@@ -200,7 +201,7 @@ async def test_sensor_updates_value_only_when_new_value_is_not_none() -> None:
     )
 
     sensor = BraendstofpriserSensor(
-        coordinator, "Blyfri95", "Blyfri95", price_description
+        cast(APIClient, coordinator), "Blyfri95", "Blyfri95", price_description
     )
     with patch.object(sensor, "schedule_update_ha_state") as schedule_mock:
         assert sensor.native_value == 14.29
