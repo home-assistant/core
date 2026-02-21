@@ -37,15 +37,15 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.atag.dhw.temperature
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return current operation."""
         operation = self.coordinator.atag.dhw.current_operation
-        return operation if operation in self.operation_list else STATE_OFF
+        return operation if operation in OPERATION_LIST else STATE_OFF
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -53,7 +53,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
             self.async_write_ha_state()
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the setpoint if water demand, otherwise return base temp (comfort level)."""
         return self.coordinator.atag.dhw.target_temperature
 

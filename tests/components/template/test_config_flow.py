@@ -236,8 +236,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
         ),
         (
@@ -458,8 +458,8 @@ async def test_config_flow(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "update",
@@ -734,8 +734,8 @@ async def test_config_flow_device(
             {"state": "{{ states('select.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
         ),
         (
@@ -1306,7 +1306,7 @@ async def test_config_flow_preview_template_error(
     [
         (
             "sensor",
-            "{{ states('sensor.one') }}",
+            "{{ 1.0 / states('sensor.one') | float(0.0) }}",
             {"unit_of_measurement": "°C"},
         ),
     ],
@@ -1350,14 +1350,7 @@ async def test_config_flow_preview_bad_state(
     assert msg["result"] is None
 
     msg = await client.receive_json()
-    assert msg["event"] == {
-        "error": (
-            "Sensor None has device class 'None', state class 'None' unit '°C' "
-            "and suggested precision 'None' thus indicating it has a numeric "
-            "value; however, it has the non-numeric value: 'unknown' (<class "
-            "'str'>)"
-        ),
-    }
+    assert msg["event"] == {"error": "ZeroDivisionError: division by zero"}
 
 
 @pytest.mark.parametrize(
@@ -1606,8 +1599,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "switch",
