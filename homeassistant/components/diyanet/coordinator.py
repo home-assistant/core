@@ -1,7 +1,7 @@
 """Coordinator for Diyanet integration."""
 
 from collections.abc import Callable
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -15,6 +15,9 @@ from .api import DiyanetApiClient, DiyanetConnectionError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Retry interval when fetches fail: retry every 5 minutes until successful
+RETRY_INTERVAL = timedelta(minutes=5)
 
 
 class DiyanetCoordinator(DataUpdateCoordinator[dict]):
@@ -32,7 +35,7 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=None,
+            update_interval=None,  # Only update via scheduled task at 00:05
             config_entry=config_entry,
         )
         self.client = client
@@ -43,6 +46,8 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
         )
         self._loaded_from_cache = False
         self._force_refresh = False
+        self._consecutive_failures = 0
+        self._first_fetch_complete = False
 
     async def async_setup(self) -> None:
         """Set up the coordinator with daily updates at 00:05."""
@@ -122,6 +127,12 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
                 if cached_payload is not None and cached_dt == today:
                     _LOGGER.debug("Using cached prayer times for today")
                     self._loaded_from_cache = True
+                    self._first_fetch_complete = True
+                    # Reset failure counter on successful cache use
+                    if self._consecutive_failures > 0:
+                        _LOGGER.info("Prayer times are now available (using cache)")
+                        self._consecutive_failures = 0
+                        self.update_interval = None  # Back to scheduled updates only
                     return cached_payload
         else:
             _LOGGER.debug("Force refresh requested, skipping cache")
@@ -131,9 +142,39 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
             _LOGGER.debug("Fetching prayer times for location %s", self.location_id)
             data = await self.client.get_prayer_times(self.location_id)
         except DiyanetConnectionError as err:
+            # Track consecutive failures and increase retry frequency
+            self._consecutive_failures += 1
+            _LOGGER.warning(
+                "Failed to fetch prayer times (attempt %d): %s",
+                self._consecutive_failures,
+                err,
+            )
+            # Increase update frequency on failures (up to RETRY_INTERVAL)
+            if self._consecutive_failures == 1:
+                _LOGGER.info(
+                    "Prayer times unavailable, switching to fast retry mode (%s interval)",
+                    RETRY_INTERVAL,
+                )
+            self.update_interval = RETRY_INTERVAL
+
+            # If we haven't successfully fetched real data yet, return empty data
+            # This allows retries to continue until data is available
+            if not self._first_fetch_complete:
+                _LOGGER.debug(
+                    "Fetch failed but no real data yet; returning empty data and will retry"
+                )
+                return {}
+
+            # If we have successfully fetched before, then failures are real errors
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
             _LOGGER.debug("Prayer times updated successfully, saving to cache")
+            # Reset failure counter and update interval on successful fetch
+            if self._consecutive_failures > 0:
+                _LOGGER.info("Prayer times are now available")
+                self._consecutive_failures = 0
+            self.update_interval = None  # Back to scheduled updates only
+            self._first_fetch_complete = True
             # Save in wrapper format with ISO cache date for robust comparisons
             await self._store.async_save(
                 {"cache_date": today.isoformat(), "data": data}
