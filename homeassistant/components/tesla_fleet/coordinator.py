@@ -25,6 +25,7 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
 )
 from homeassistant.components.recorder.statistics import (
+    StatisticsRow,
     async_add_external_statistics,
     get_last_statistics,
 )
@@ -61,7 +62,7 @@ ENDPOINTS = [
 def _get_last_statistics_for_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: list[str],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, list[StatisticsRow]]:
     """Return the latest long-term statistics for each statistic ID."""
     return {
         statistic_id: stats

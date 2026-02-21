@@ -75,7 +75,9 @@ async def test_remove_entry_without_runtime_data(
     normal_config_entry: MockConfigEntry,
 ) -> None:
     """Test remove entry when runtime_data is not set."""
-    with patch("homeassistant.components.tesla_fleet.get_recorder_instance") as mock_get_recorder:
+    with patch(
+        "homeassistant.components.tesla_fleet.get_recorder_instance"
+    ) as mock_get_recorder:
         await async_remove_entry(hass, normal_config_entry)
 
     mock_get_recorder.assert_not_called()
