@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ntfy",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "loggers": ["aionfty"],
+  "loggers": ["aiontfy"],
   "quality_scale": "platinum",
-  "requirements": ["aiontfy==0.7.0"]
+  "requirements": ["aiontfy==0.8.0"]
 }
