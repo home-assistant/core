@@ -1,5 +1,8 @@
 {
   "services": {
+    "set_curfew": {
+      "service": "mdi:clock-outline"
+    },
     "set_lock_state": {
       "service": "mdi:lock"
     },

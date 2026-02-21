@@ -42,7 +42,11 @@ async def async_setup_entry(
             EntityType.FELAQUA,
         ]:
             entities.append(DeviceConnectivity(surepy_entity.id, coordinator))
-        elif surepy_entity.type == EntityType.PET:
+        # curfew added for flaps
+        if surepy_entity.type in [EntityType.CAT_FLAP, EntityType.PET_FLAP]:
+            entities.append(CurfewEnabled(surepy_entity.id, coordinator))
+
+        if surepy_entity.type == EntityType.PET:
             entities.append(Pet(surepy_entity.id, coordinator))
         elif surepy_entity.type == EntityType.HUB:
             entities.append(Hub(surepy_entity.id, coordinator))
@@ -145,3 +149,34 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             hub_rssi = state.get("signal", {}).get("hub_rssi")
             if hub_rssi is not None:
                 self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"
+
+
+class CurfewEnabled(SurePetcareBinarySensor):
+    """Sure Petcare Curfew Enabled."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+    ) -> None:
+        """Initialize a Sure Petcare Curfew Enabled sensor."""
+        super().__init__(surepetcare_id, coordinator)
+        self._attr_name = f"{self._device_name} Curfew Enabled"
+        self._attr_unique_id = f"{self._device_id}-curfew-enabled"
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        status = surepy_entity.raw_data()["status"]
+        mode = status.get("locking", {}).get("mode", {})
+
+        enabled = True
+        # If mode is 0 then curfew is disabled
+        if mode == 0:
+            enabled = False
+
+        # Check if curfew is enabled (has an 'enabled' field)
+        self._attr_is_on = enabled

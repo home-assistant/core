@@ -51,7 +51,13 @@ MOCK_CAT_FLAP = {
     "parent": {"product_id": 1, "id": HUB_ID},
     "status": {
         "battery": 6.4,
-        "locking": {"mode": 0},
+        "locking": {
+            "mode": 4,
+            "curfew": {
+                "lock_time": "22:00",
+                "unlock_time": "07:00",
+            },
+        },
         "learn_mode": 0,
         "signal": {"device_rssi": 65, "hub_rssi": 64},
         "online": True,
@@ -66,7 +72,30 @@ MOCK_PET_FLAP = {
     "parent": {"product_id": 1, "id": HUB_ID},
     "status": {
         "battery": 6.4,
-        "locking": {"mode": 0},
+        "locking": {
+            "mode": 4,
+            "curfew": {
+                "lock_time": "20:00",
+                "unlock_time": "08:00",
+            },
+        },
+        "learn_mode": 0,
+        "signal": {"device_rssi": 70, "hub_rssi": 65},
+        "online": True,
+    },
+}
+
+MOCK_PET_FLAP_NO_CURFEW = {
+    "id": 18976,
+    "product_id": 3,
+    "household_id": HOUSEHOLD_ID,
+    "name": "Pet Flap - No Curfew",
+    "parent": {"product_id": 1, "id": HUB_ID},
+    "status": {
+        "battery": 6.4,
+        "locking": {
+            "mode": 0,
+        },
         "learn_mode": 0,
         "signal": {"device_rssi": 70, "hub_rssi": 65},
         "online": True,
@@ -82,6 +111,13 @@ MOCK_PET = {
 }
 
 MOCK_API_DATA = {
-    "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
+    "devices": [
+        MOCK_HUB,
+        MOCK_CAT_FLAP,
+        MOCK_PET_FLAP,
+        MOCK_FEEDER,
+        MOCK_FELAQUA,
+        MOCK_PET_FLAP_NO_CURFEW,
+    ],
     "pets": [MOCK_PET],
 }
