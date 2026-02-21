@@ -16,18 +16,6 @@
   },
   "entity": {
     "sensor": {
-      "cheapest_2_5h_day_price": {
-        "name": "Cheapest {duration}h day price {time_range}"
-      },
-      "cheapest_2_5h_day_time": {
-        "name": "Cheapest {duration}h day time {time_range}"
-      },
-      "cheapest_2_5h_night_price": {
-        "name": "Cheapest {duration}h night price {time_range}"
-      },
-      "cheapest_2_5h_night_time": {
-        "name": "Cheapest {duration}h night time {time_range}"
-      },
       "current_price": {
         "name": "Current price"
       },
@@ -55,8 +43,37 @@
     "api_error": {
       "message": "API error: {error}"
     },
+    "config_entry_not_loaded": {
+      "message": "Config entry is not loaded"
+    },
     "connection_error": {
       "message": "Connection error: {error}"
+    },
+    "no_config_entry": {
+      "message": "No config entry found for Green Planet Energy integration"
+    },
+    "no_data_available": {
+      "message": "No price data available for the requested duration and time range"
+    }
+  },
+  "services": {
+    "get_cheapest_duration": {
+      "description": "Find the cheapest time window for a specific duration based on electricity prices.",
+      "fields": {
+        "duration": {
+          "description": "Duration in hours for which to find the cheapest time window.",
+          "name": "Duration"
+        },
+        "entity_id": {
+          "description": "Any Green Planet Energy sensor entity (used to identify the integration instance).",
+          "name": "Entity"
+        },
+        "time_range": {
+          "description": "Time range to search within.",
+          "name": "Time range"
+        }
+      },
+      "name": "Get cheapest duration"
     }
   }
 }

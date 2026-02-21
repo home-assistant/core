@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["greenplanet-energy-api==0.1.5"],
+  "requirements": ["greenplanet-energy-api==0.1.7"],
   "single_config_entry": true
 }
