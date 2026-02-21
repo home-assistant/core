@@ -770,7 +770,6 @@ async def test_web_search(
     ]
     mock_create_stream.return_value = [
         (
-            # Anthropic API sometimes adds this, not sure why. We remove it.
             *create_thinking_block(
                 0,
                 [
