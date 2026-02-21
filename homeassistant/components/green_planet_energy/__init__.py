@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -103,9 +105,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         # Create ISO timestamp for start time
+        # Determine if we should use today or tomorrow's date
         start_time = dt_util.start_of_local_day().replace(
-            hour=start_hour_result, minute=0, second=0
+            hour=start_hour_result, minute=0, second=0, microsecond=0
         )
+
+        # Check if the calculated time is in the past
+        # If so, it must be tomorrow (happens for night hours 0-5 or day hours when outside day period)
+        if start_time < now:
+            start_time = start_time + timedelta(days=1)
 
         # Calculate hours until start
         hours_until_start = (start_time - now).total_seconds() / 3600
