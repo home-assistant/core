@@ -29,7 +29,7 @@ async def test_migration_to_unique_ids(
     legacy_config_entry_v1.add_to_hass(hass)
 
     # Set up devices with legacy device ID
-    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
+    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "motherboard"]
     for device_id in legacy_device_ids:
         device_registry.async_get_or_create(
             config_entry_id=legacy_config_entry_v1.entry_id,

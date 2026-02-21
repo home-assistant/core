@@ -200,14 +200,14 @@
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -215,6 +215,7 @@
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -1955,7 +1956,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pi_heating_demand',
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-ThermostatPIHeatingDemand-513-8',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2010,7 +2011,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2793,7 +2794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSource-47-12',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2853,7 +2854,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3138,7 +3139,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3195,7 +3196,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3252,7 +3253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3309,7 +3310,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5360,7 +5361,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSource-47-12',
     'unit_of_measurement': '%',
   })
 # ---
@@ -5412,7 +5413,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_replacement_description',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
 # ---
@@ -5469,7 +5470,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -7544,14 +7545,14 @@
     'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'nitrogen_dioxide',
+    'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -7559,6 +7560,7 @@
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'Mock Air Purifier Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -7899,6 +7901,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.0',
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TVOC level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'TVOC level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tvoc_level',
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensorLevel-1070-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_tvoc_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Air Purifier TVOC level',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+        'critical',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_air_purifier_tvoc_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_volatile_organic_compounds_parts-entry]
@@ -8534,7 +8599,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -8694,7 +8759,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unique_id': '00000000000004D2-0000000000000011-MatterNodeDevice-1-FlowSensor-1028-0',
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
@@ -8747,7 +8812,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8799,7 +8864,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8851,7 +8916,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -8903,7 +8968,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000015-MatterNodeDevice-1-HumiditySensor-1029-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -9144,7 +9209,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
+    'unique_id': '00000000000004D2-0000000000000016-MatterNodeDevice-1-LightSensor-1024-0',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -9482,7 +9547,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -9543,7 +9608,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -9603,7 +9668,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9660,7 +9725,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9717,7 +9782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unique_id': '00000000000004D2-000000000000001F-MatterNodeDevice-1-PressureSensor-1027-0',
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
@@ -9778,7 +9843,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_control_mode',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpControlMode-512-33',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpControlMode-512-33',
     'unit_of_measurement': None,
   })
 # ---
@@ -9838,7 +9903,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-FlowSensor-1028-0',
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
@@ -9894,7 +9959,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PressureSensor-1027-0',
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
@@ -9948,7 +10013,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_speed',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpSpeed-512-20',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -10004,7 +10069,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -10061,7 +10126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -10121,7 +10186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -10181,7 +10246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -10241,7 +10306,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -10301,7 +10366,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000022-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -10358,7 +10423,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000026-MatterNodeDevice-1-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -10786,7 +10851,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_close_time',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -10886,7 +10951,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
     'unit_of_measurement': '%',
   })
 # ---
@@ -10941,7 +11006,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-000000000000002D-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -11876,7 +11941,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -11939,7 +12004,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_current',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11999,7 +12064,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rms_voltage',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12059,7 +12124,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12118,7 +12183,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_error',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
     'unit_of_measurement': None,
   })
 # ---
@@ -12181,7 +12246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalState-96-4',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-OperationalState-96-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -12245,7 +12310,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12357,7 +12422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -12417,7 +12482,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAState-152-2',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ESAState-152-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -12481,7 +12546,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_opt_out_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAOptOutState-152-7',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ESAOptOutState-152-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -12539,7 +12604,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_percentage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
     'unit_of_measurement': '%',
   })
 # ---
@@ -12598,7 +12663,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12658,7 +12723,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'estimated_heat_required',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12715,7 +12780,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_volume',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -12775,7 +12840,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12991,7 +13056,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-HumiditySensor-1029-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -13048,7 +13113,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unique_id': '00000000000004D2-0000000000000031-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -13105,7 +13170,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -13162,7 +13227,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -13219,7 +13284,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

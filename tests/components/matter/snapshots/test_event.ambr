@@ -1664,7 +1664,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000013-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1728,7 +1728,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-1-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1794,7 +1794,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000012-MatterNodeDevice-2-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
