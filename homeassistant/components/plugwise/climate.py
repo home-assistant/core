@@ -269,7 +269,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         if hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.COOL:
             if self.hvac_mode == HVACMode.OFF:
-                if current_schedule is None or current_schedule == "off":
+                if current_schedule == "off":
                     await self.coordinator.api.set_regulation_mode(hvac_mode.value)
                 else:
                     await self.coordinator.api.set_regulation_mode(hvac_mode.value)
