@@ -255,13 +255,17 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
     SERVICE_SET_ENTRY_DELAY: vol.Schema(
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_DURATION): cv.positive_int,
+            vol.Required(ATTR_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
         }
     ),
     SERVICE_SET_EXIT_DELAY: vol.Schema(
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_DURATION): cv.positive_int,
+            vol.Required(ATTR_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
             vol.Required(ATTR_ARM_MODE): vol.In(["away", "home", "night"]),
         }
     ),
@@ -1292,7 +1296,7 @@ async def websocket_change_channel(
     connection.send_result(msg[ID])
 
 
-def _get_ias_wd_cluster_handler(zha_device):
+def _get_ias_wd_cluster_handler(zha_device: Device) -> Any | None:
     """Get the IASWD cluster handler for a device."""
     cluster_handlers = {
         ch.name: ch
@@ -1302,7 +1306,7 @@ def _get_ias_wd_cluster_handler(zha_device):
     return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
 
 
-def _get_ias_ace_cluster_handler(zha_device):
+def _get_ias_ace_cluster_handler(zha_device: Device) -> Any | None:
     """Get the IAS ACE cluster handler for a device."""
     for endpoint in zha_device.endpoints.values():
         if hasattr(endpoint, "client_cluster_handlers_by_name"):
@@ -1412,7 +1416,7 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
         ieee: EUI64 = service.data[ATTR_IEEE]
         duration: int = service.data[ATTR_DURATION]
 
-        _LOGGER.info("Setting entry delay on %s for %d seconds", ieee, duration)
+        _LOGGER.debug("Setting entry delay on %s for %d seconds", ieee, duration)
 
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is None:
@@ -1442,7 +1446,7 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
         duration: int = service.data[ATTR_DURATION]
         arm_mode: str = service.data[ATTR_ARM_MODE]
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Setting exit delay on %s for %d seconds (mode: %s)",
             ieee,
             duration,
@@ -1745,3 +1749,5 @@ def async_unload_api(hass: HomeAssistant) -> None:
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)
+    hass.services.async_remove(DOMAIN, SERVICE_SET_ENTRY_DELAY)
+    hass.services.async_remove(DOMAIN, SERVICE_SET_EXIT_DELAY)
