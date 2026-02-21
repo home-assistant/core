@@ -13,7 +13,6 @@ from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
-    RoborockRateLimit,
 )
 from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
@@ -112,11 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="mqtt_unauthorized",
-        ) from err
-    except RoborockRateLimit as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="api_rate_limit",
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
