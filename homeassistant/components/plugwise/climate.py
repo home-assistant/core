@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
@@ -286,6 +287,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 self._last_active_schedule = desired_schedule
             elif desired_schedule == "off":
                 desired_schedule = self._last_active_schedule
+
+            if not desired_schedule:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=ERROR_NO_SCHEDULE,
+                )
+
             if self.hvac_mode == HVACMode.OFF and self._previous_action_mode:
                 await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
                 await self.coordinator.api.set_schedule_state(self._location, STATE_ON, desired_schedule)
