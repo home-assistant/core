@@ -143,23 +143,24 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             rotation = int(raw_rotation)
         except (TypeError, ValueError):
             _LOGGER.debug(
-                "Invalid map rotation value %s, falling back to 0",
+                "Invalid map rotation value %s, falling back to %s",
                 raw_rotation,
+                DEFAULT_MAP_ROTATION,
             )
-            rotation = 0
+            rotation = DEFAULT_MAP_ROTATION
 
         if rotation not in MAP_ROTATION_OPTIONS:
             _LOGGER.debug(
-                "Unsupported map rotation %s, allowed values: %s. Falling back to 0.",
+                "Unsupported map rotation %s, allowed values: %s, falling back to %s",
                 rotation,
                 MAP_ROTATION_OPTIONS,
+                DEFAULT_MAP_ROTATION,
             )
-            rotation = 0
+            rotation = DEFAULT_MAP_ROTATION
 
-        if rotation == 0:
+        if rotation == DEFAULT_MAP_ROTATION:
             return raw
-
-        # Cache check
+        
         if (
             self._rotated_cache is not None
             and self._rotated_cache_rotation == rotation
@@ -178,7 +179,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
         except (OSError, UnidentifiedImageError) as err:
             _LOGGER.debug(
-                "Failed to rotate Roborock map image: %s. Returning original image.",
+                "Failed to rotate Roborock map image: %s, returning original image",
                 err,
             )
             self._rotated_cache = None
