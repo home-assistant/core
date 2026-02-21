@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -129,7 +130,8 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 retry_after,
             )
         else:
-            new_interval = min(self.update_interval * 2, MAX_UPDATE_INTERVAL)
+            current_interval = self.update_interval or self._default_update_interval
+            new_interval = min(current_interval * 2, MAX_UPDATE_INTERVAL)
             LOGGER.warning(
                 "API rate limited: increasing update interval to %s",
                 new_interval,
@@ -160,9 +162,13 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 self.client = new_client
                 self.update_interval = self._default_update_interval
                 devices = await self.client.list_devices()
-            except Exception as refresh_err:
+            except AuthenticationError as refresh_err:
                 raise ConfigEntryAuthFailed(
                     f"Failed to refresh token: {refresh_err}"
+                ) from refresh_err
+            except Exception as refresh_err:
+                raise UpdateFailed(
+                    f"Error fetching data after token refresh: {refresh_err}"
                 ) from refresh_err
             finally:
                 try:
@@ -180,54 +186,61 @@ class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
                 raise UpdateFailed(f"Rate limited by API: {err}") from err
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
-        vehicles_data: dict[str, LoJackVehicleData] = {}
+        # Fetch all vehicle locations concurrently to reduce latency and
+        # lower the chance of hitting per-request rate limits.
+        results = await asyncio.gather(
+            *[self._fetch_vehicle_data(device) for device in devices],
+        )
 
-        for device in devices:
-            device_id = getattr(device, "id", None)
-            if not device_id:
-                continue
+        return {
+            vehicle.device_id: vehicle
+            for vehicle in results
+            if vehicle is not None
+        }
 
-            # Get latest location
-            try:
-                location = await device.get_location()
-            except Exception:  # noqa: BLE001 - Location fetch can fail for many reasons
-                location = None
+    async def _fetch_vehicle_data(self, device: Any) -> LoJackVehicleData | None:
+        """Fetch data for a single vehicle device."""
+        device_id = getattr(device, "id", None)
+        if not device_id:
+            return None
 
-            # Build vehicle data
-            vehicle = LoJackVehicleData(
-                device_id=str(device_id),
-                name=getattr(device, "name", None),
-                vin=getattr(device, "vin", None),
-                make=getattr(device, "make", None),
-                model=getattr(device, "model", None),
-                year=str(getattr(device, "year", "") or ""),
-                latitude=_safe_float(getattr(location, "latitude", None))
-                if location
-                else None,
-                longitude=_safe_float(getattr(location, "longitude", None))
-                if location
-                else None,
-                accuracy=_safe_float(getattr(location, "accuracy", None))
-                if location
-                else None,
-                address=getattr(location, "address", None) if location else None,
-                heading=_safe_float(getattr(location, "heading", None))
-                if location
-                else None,
-                timestamp=getattr(location, "timestamp", None) if location else None,
-            )
+        try:
+            location = await device.get_location()
+        except Exception:  # noqa: BLE001 - Location fetch can fail for many reasons
+            location = None
 
-            vehicles_data[str(device_id)] = vehicle
+        vehicle = LoJackVehicleData(
+            device_id=str(device_id),
+            name=getattr(device, "name", None),
+            vin=getattr(device, "vin", None),
+            make=getattr(device, "make", None),
+            model=getattr(device, "model", None),
+            year=str(getattr(device, "year", "") or ""),
+            latitude=_safe_float(getattr(location, "latitude", None))
+            if location
+            else None,
+            longitude=_safe_float(getattr(location, "longitude", None))
+            if location
+            else None,
+            accuracy=_safe_float(getattr(location, "accuracy", None))
+            if location
+            else None,
+            address=getattr(location, "address", None) if location else None,
+            heading=_safe_float(getattr(location, "heading", None))
+            if location
+            else None,
+            timestamp=getattr(location, "timestamp", None) if location else None,
+        )
 
-            LOGGER.debug(
-                "Location data for device %s: lat=%s, lon=%s, accuracy=%s, "
-                "heading=%s, timestamp=%s",
-                device_id,
-                vehicle.latitude,
-                vehicle.longitude,
-                vehicle.accuracy,
-                vehicle.heading,
-                vehicle.timestamp,
-            )
+        LOGGER.debug(
+            "Location data for device %s: lat=%s, lon=%s, accuracy=%s, "
+            "heading=%s, timestamp=%s",
+            device_id,
+            vehicle.latitude,
+            vehicle.longitude,
+            vehicle.accuracy,
+            vehicle.heading,
+            vehicle.timestamp,
+        )
 
-        return vehicles_data
+        return vehicle

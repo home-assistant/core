@@ -49,8 +49,6 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    _username: str | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -84,7 +82,6 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle reauthorization."""
-        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -92,14 +89,11 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthorization confirmation."""
         errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
-            if self._username is None:
-                return self.async_abort(reason="unknown")
-
             try:
-                user_input[CONF_USERNAME] = self._username
+                user_input[CONF_USERNAME] = reauth_entry.data[CONF_USERNAME]
                 await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
