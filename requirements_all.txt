@@ -410,7 +410,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.12.1
+aiostreammagic==2.13.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.1.0
@@ -562,7 +562,7 @@ asyncinotify==4.2.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.6.0
+asyncsleepiq==1.7.0
 
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
@@ -1182,7 +1182,7 @@ hanna-cloud==0.0.7
 hass-nabucasa==1.15.0
 
 # homeassistant.components.splunk
-hass-splunk==0.1.1
+hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1307,7 +1307,7 @@ imgw_pib==2.0.1
 incomfort-client==0.6.12
 
 # homeassistant.components.indevolt
-indevolt-api==1.1.2
+indevolt-api==1.2.3
 
 # homeassistant.components.inet
 inet-control==1.0.0
@@ -1787,6 +1787,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
+# homeassistant.components.powerfox_local
 powerfox==2.1.0
 
 # homeassistant.components.prana
@@ -1861,7 +1862,7 @@ py-nextbusnext==2.3.0
 py-nightscout==1.2.2
 
 # homeassistant.components.mta
-py-nymta==0.3.4
+py-nymta==0.4.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2178,7 +2179,7 @@ pyituran==0.1.5
 pyjvcprojector==2.0.1
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.0.2
+pykaleidescape==1.1.1
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2220,7 +2221,7 @@ pylgnetcast==0.3.9
 pylibrespot-java==0.1.1
 
 # homeassistant.components.liebherr
-pyliebherrhomeapi==0.2.1
+pyliebherrhomeapi==0.3.0
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2366,7 +2367,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.23
+pyportainer==1.0.27
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2393,7 +2394,7 @@ pyqwikswitch==0.93
 pyrail==0.4.1
 
 # homeassistant.components.rainbird
-pyrainbird==6.0.1
+pyrainbird==6.0.5
 
 # homeassistant.components.playstation_network
 pyrate-limiter==3.9.0
@@ -2469,7 +2470,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.1
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.2
+pysmartthings==3.5.3
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2526,7 +2527,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==4.2.0
+python-bsblan==4.2.1
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2634,6 +2635,9 @@ python-roborock==4.14.0
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
 
+# homeassistant.components.systemnexa2
+python-sn2==0.4.0
+
 # homeassistant.components.snoo
 python-snoo==0.8.3
 
@@ -2659,7 +2663,7 @@ python-xbox==0.1.3
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.4.1
+pythonkuma==0.5.0
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2985,6 +2989,9 @@ starlink-grpc-core==1.2.3
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.trane
+steamloop==1.2.0
+
 # homeassistant.components.steam_online
 steamodd==4.21
 
@@ -3029,6 +3036,9 @@ tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.12
+
+# homeassistant.components.teltonika
+teltasync==0.1.3
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
