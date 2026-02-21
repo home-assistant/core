@@ -16,10 +16,12 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "service_user_name": "Service name"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Freebox router."
+          "host": "The hostname or IP address of your Freebox router.",
+          "service_user_name": "The name you want the Freebox to remember this instance"
         }
       }
     }

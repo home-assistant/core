@@ -34,6 +34,7 @@ def mock_path():
     with (
         patch("homeassistant.components.freebox.router.Path"),
         patch("homeassistant.components.freebox.router.os.makedirs"),
+        patch("homeassistant.components.freebox.router.read_device_name_from_file"),
     ):
         yield
 
