@@ -60,11 +60,11 @@ DEFAULT_MAX_BRIGHTNESS = 255
 
 
 def _validate_brightness_range(config: ConfigType) -> ConfigType:
-    """Ensure min_brightness <= max_brightness and both are non-negative."""
+    """Ensure 0 <= min_brightness < max_brightness."""
     min_b = config.get(CONF_MIN_BRIGHTNESS, DEFAULT_MIN_BRIGHTNESS)
     max_b = config.get(CONF_MAX_BRIGHTNESS, DEFAULT_MAX_BRIGHTNESS)
-    if min_b > max_b:
-        raise vol.Invalid("min_brightness must be less than or equal to max_brightness")
+    if min_b >= max_b:
+        raise vol.Invalid("min_brightness must be less than max_brightness")
     return config
 
 
