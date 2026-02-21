@@ -83,6 +83,26 @@ async def test_remove_entry_without_runtime_data(
     mock_get_recorder.assert_not_called()
 
 
+async def test_remove_entry_clears_statistics(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test remove entry clears external statistics for energy sites."""
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.tesla_fleet.get_recorder_instance"
+    ) as mock_get_recorder:
+        await async_remove_entry(hass, normal_config_entry)
+
+    mock_get_recorder.return_value.async_clear_statistics.assert_called_once()
+    cleared_ids = mock_get_recorder.return_value.async_clear_statistics.call_args[0][0]
+    # Verify statistic IDs are generated for all energy sites and fields
+    assert any("123456" in sid for sid in cleared_ids)
+    assert any("solar_energy_exported" in sid for sid in cleared_ids)
+
+
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_init_error(
     hass: HomeAssistant,
