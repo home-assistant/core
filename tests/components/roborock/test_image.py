@@ -86,7 +86,9 @@ async def test_floorplan_image(
         "homeassistant.components.roborock.coordinator.dt_util.utcnow",
         return_value=now,
     ):
+        # This should call parse_map twice as the both devices are in cleaning.
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
         await hass.async_block_till_done()
 
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
@@ -95,7 +97,8 @@ async def test_floorplan_image(
         assert resp.status == HTTPStatus.OK
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
         assert resp.status == HTTPStatus.OK
-        _ = await resp.read()
+    body = await resp.read()
+    assert body is not None
 
 
 @pytest.mark.parametrize(
@@ -185,10 +188,10 @@ async def test_fail_updating_image(
         return_value=now,
     ):
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
         await hass.async_block_till_done()
 
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-
     # The map should load fine from the coordinator, but it should not update the
     # last_updated timestamp.
     assert resp.ok
@@ -213,7 +216,8 @@ async def test_map_status_change(
 
     _LOGGER.debug("First image fetch complete")
 
-    # Trigger a status update which detects the state has changed and updates the map
+    # Call a second time. This interval does not directly trigger a map update, but does
+    # trigger a status update which detects the state has changed and updates the map
     now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
 
     assert fake_vacuum.v1_properties
@@ -230,14 +234,15 @@ async def test_map_status_change(
         return_value=now,
     ):
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
         await hass.async_block_till_done()
 
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
 
-    assert resp.status == HTTPStatus.OK
-    body = await resp.read()
-    assert body is not None
-    assert body != old_body
+        assert resp.status == HTTPStatus.OK
+        body = await resp.read()
+        assert body is not None
+        assert body != old_body
 
 
 @pytest.mark.parametrize(
