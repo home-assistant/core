@@ -342,7 +342,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.7.0
+aiontfy==0.8.0
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -2227,7 +2227,7 @@ pyliebherrhomeapi==0.3.0
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.0.0
+pylitterbot==2025.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.26.0
@@ -2367,7 +2367,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.23
+pyportainer==1.0.27
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
