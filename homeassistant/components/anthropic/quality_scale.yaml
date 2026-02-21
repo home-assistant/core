@@ -16,7 +16,6 @@ rules:
       * Make `mock_setup_entry` a separate fixture
       * Use the mock_config_entry fixture in `test_duplicate_entry`
       * `test_duplicate_entry`: Patch `homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list`
-      * Fix docstring and name for `test_form_invalid_auth` (does not only test auth)
       * In `test_form_invalid_auth`, make sure the test run until CREATE_ENTRY to test that the flow is able to recover
   config-flow: done
   dependency-transparency: done

@@ -219,8 +219,8 @@ async def test_creating_conversation_subentry_not_loaded(
         ),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
-    """Test we handle invalid auth."""
+async def test_api_error(hass: HomeAssistant, side_effect, error) -> None:
+    """Test that we handle API errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
