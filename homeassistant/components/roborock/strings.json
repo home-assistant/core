@@ -522,7 +522,7 @@
           "show_background": "Show background",
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
-          "zones": "Zones"
+          "zones": "Zones",
           "map_rotation": "Map rotation"
         },
         "data_description": {
