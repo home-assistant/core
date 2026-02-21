@@ -21,6 +21,7 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
+from homeassistant.components.tesla_fleet import async_remove_entry
 from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
@@ -67,6 +68,17 @@ async def test_load_unload(
     await hass.async_block_till_done()
     assert normal_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hasattr(normal_config_entry, "runtime_data")
+
+
+async def test_remove_entry_without_runtime_data(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test remove entry when runtime_data is not set."""
+    with patch("homeassistant.components.tesla_fleet.get_recorder_instance") as mock_get_recorder:
+        await async_remove_entry(hass, normal_config_entry)
+
+    mock_get_recorder.assert_not_called()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
