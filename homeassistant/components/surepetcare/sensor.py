@@ -115,7 +115,10 @@ class Felaqua(SurePetcareEntity, SensorEntity):
 
 
 class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
-    """Sensor for the last flap device id used by the pet (only if the last status is from a flap update)."""
+    """Sensor for the last flap device id used by the pet.
+
+    Note: Will be unknown if the last status is not from a flap update.
+    """
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
@@ -138,7 +141,10 @@ class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
 
 
 class PetLastSeenUser(SurePetcareEntity, SensorEntity):
-    """Sensor for the last user id that manually changed the pet location (only if the last status is from a manual update)."""
+    """Sensor for the last user id that manually changed the pet location.
+
+    Note: Will be unknown if the last status is not from a manual update.
+    """
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
