@@ -33,10 +33,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
-    RoborockDataUpdateCoordinatorB01,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
@@ -526,7 +527,7 @@ class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
 
     def __init__(
         self,
-        coordinator: RoborockDataUpdateCoordinatorB01,
+        coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
         description: RoborockSensorDescriptionB01,
     ) -> None:
         """Initialize the entity."""

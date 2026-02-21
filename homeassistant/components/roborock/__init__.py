@@ -44,7 +44,6 @@ from .coordinator import (
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
-    RoborockDataUpdateCoordinatorB01,
     RoborockWashingMachineUpdateCoordinator,
     RoborockWetDryVacUpdateCoordinator,
 )
@@ -154,7 +153,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     b01_coords = [
         coord
         for coord in coordinators
-        if isinstance(coord, RoborockDataUpdateCoordinatorB01)
+        if isinstance(
+            coord,
+            RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
+        )
     ]
     if len(v1_coords) + len(a01_coords) + len(b01_coords) == 0:
         raise ConfigEntryNotReady(
@@ -235,7 +237,8 @@ def build_setup_functions(
         Any,
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
-        | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator
         | None,
     ]
 ]:
@@ -243,7 +246,8 @@ def build_setup_functions(
     coordinators: list[
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
-        | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator
     ] = []
     for device in devices:
         _LOGGER.debug("Creating device %s: %s", device.name, device)
@@ -285,11 +289,13 @@ def build_setup_functions(
 async def setup_coordinator(
     coordinator: RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
-    | RoborockDataUpdateCoordinatorB01,
+    | RoborockB01Q7UpdateCoordinator
+    | RoborockB01Q10UpdateCoordinator,
 ) -> (
     RoborockDataUpdateCoordinator
     | RoborockDataUpdateCoordinatorA01
-    | RoborockDataUpdateCoordinatorB01
+    | RoborockB01Q7UpdateCoordinator
+    | RoborockB01Q10UpdateCoordinator
     | None
 ):
     """Set up a single coordinator."""

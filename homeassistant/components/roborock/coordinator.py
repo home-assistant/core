@@ -66,14 +66,15 @@ class RoborockCoordinators:
 
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
-    b01: list[RoborockDataUpdateCoordinatorB01]
+    b01: list[RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator]
 
     def values(
         self,
     ) -> list[
         RoborockDataUpdateCoordinator
         | RoborockDataUpdateCoordinatorA01
-        | RoborockDataUpdateCoordinatorB01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator
     ]:
         """Return all coordinators."""
         return self.v1 + self.a01 + self.b01
@@ -487,10 +488,8 @@ class RoborockWetDryVacUpdateCoordinator(
             ) from ex
 
 
-class RoborockDataUpdateCoordinatorB01(
-    DataUpdateCoordinator[B01Props | dict[B01_Q10_DP, Any]]
-):
-    """Class to manage fetching data from the API for B01 devices."""
+class RoborockB01Q7UpdateCoordinator(DataUpdateCoordinator[B01Props]):
+    """Coordinator for B01 Q7 devices."""
 
     config_entry: RoborockConfigEntry
 
@@ -499,6 +498,7 @@ class RoborockDataUpdateCoordinatorB01(
         hass: HomeAssistant,
         config_entry: RoborockConfigEntry,
         device: RoborockDevice,
+        api: Q7PropertiesApi,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -516,35 +516,6 @@ class RoborockDataUpdateCoordinatorB01(
             model=device.product.model,
             sw_version=device.device_info.fv,
         )
-
-    @cached_property
-    def duid(self) -> str:
-        """Get the unique id of the device as specified by Roborock."""
-        return self._device.duid
-
-    @cached_property
-    def duid_slug(self) -> str:
-        """Get the slug of the duid."""
-        return slugify(self.duid)
-
-    @property
-    def device(self) -> RoborockDevice:
-        """Get the RoborockDevice."""
-        return self._device
-
-
-class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
-    """Coordinator for B01 Q7 devices."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: RoborockConfigEntry,
-        device: RoborockDevice,
-        api: Q7PropertiesApi,
-    ) -> None:
-        """Initialize."""
-        super().__init__(hass, config_entry, device)
         self.api = api
         self.request_protocols: list[RoborockB01Props] = [
             RoborockB01Props.STATUS,
@@ -560,6 +531,21 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.WATER,
             RoborockB01Props.MODE,
         ]
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+    @property
+    def device(self) -> RoborockDevice:
+        """Get the RoborockDevice."""
+        return self._device
 
     async def _async_update_data(
         self,
@@ -580,8 +566,10 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         return data
 
 
-class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
+class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any]]):
     """Coordinator for B01 Q10 devices."""
+
+    config_entry: RoborockConfigEntry
 
     def __init__(
         self,
@@ -591,7 +579,21 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
         api: Q10PropertiesApi,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, config_entry, device)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=A01_UPDATE_INTERVAL,
+        )
+        self._device = device
+        self.device_info = DeviceInfo(
+            name=device.name,
+            identifiers={(DOMAIN, device.duid)},
+            manufacturer="Roborock",
+            model=device.product.model,
+            sw_version=device.device_info.fv,
+        )
         self.api = api
         self._update_hook_installed = False
         self._last_mqtt_data: dict[B01_Q10_DP, Any] = {}
@@ -603,6 +605,21 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             device.device_info.device_status
         ):
             self._last_mqtt_data.update(device_status)
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+    @property
+    def device(self) -> RoborockDevice:
+        """Get the RoborockDevice."""
+        return self._device
 
     @staticmethod
     def _normalize_q10_device_status(
@@ -627,7 +644,7 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
 
     async def _async_update_data(
         self,
-    ) -> B01Props | dict[B01_Q10_DP, Any]:
+    ) -> dict[B01_Q10_DP, Any]:
         if not self._update_hook_installed:
             # Wrap status.update_from_dps to capture raw MQTT data
             original_update = self.api.status.update_from_dps
