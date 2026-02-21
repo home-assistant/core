@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -144,7 +145,23 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             )
             is not None
         ):
-            self._attr_color_mode = color_modes[0]
+            # check if light supports color temperature, then choose color_mode depending on the light color
+            if ColorMode.RGB in color_modes and ColorMode.COLOR_TEMP in color_modes:
+                if color := self.coordinator.data.state.segments[self._segment].color:
+                    color_primary = cast(tuple[int, int, int, int], color.primary)
+                    if (
+                        color_primary[0] == 0
+                        and color_primary[1] == 0
+                        and color_primary[2] == 0
+                        and color_primary[3] > 0
+                    ) or (
+                        color_primary[0] == color_primary[1]
+                        and color_primary[1] == color_primary[2]
+                        and color_primary[3] == 0
+                    ):
+                        self._attr_color_mode = ColorMode.COLOR_TEMP
+
+            self._attr_color_mode = self._attr_color_mode or color_modes[0]
             self._attr_supported_color_modes = set(color_modes)
 
     @property
@@ -167,6 +184,27 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if not (color := self.coordinator.data.state.segments[self._segment].color):
             return None
         return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """WLED Plateau Logic: drop_point = 0.5 * blend_factor."""
+        state = self.coordinator.data.state
+        seg = state.segments[self._segment]
+        if not (color := seg.color) or not color.primary:
+            return None
+
+        r, g, b = color.primary[:3]
+        w_brightness = color.primary[3] if len(color.primary) > 3 else 0
+        cct = seg.cct
+
+        if cct <= 127:
+            ww = (cct * w_brightness) // 127
+            cw = w_brightness
+        else:
+            ww = w_brightness
+            cw = ((255 - cct) * w_brightness) // 128
+
+        return (r, g, b, ww, cw)
 
     @property
     def color_temp_kelvin(self) -> int | None:
@@ -238,12 +276,60 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
         if ATTR_RGB_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if (
+                self._attr_supported_color_modes
+                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+            ):
+                data[ATTR_CCT] = 127
+                # tell HA to display light RGB color in the interface
+                self._attr_color_mode = ColorMode.RGB
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if (
+                self._attr_supported_color_modes
+                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+            ):
+                data[ATTR_CCT] = 127
+                # tell HA to display light RGBW color in the interface
+                self._attr_color_mode = ColorMode.RGBW
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_RGBWW_COLOR in kwargs:
+            # HA sends: (Red, Green, Blue, ColdWhite, WarmWhite)
+            r, g, b, cw, ww = kwargs[ATTR_RGBWW_COLOR]
+
+            w_brightness = max(cw, ww)
+
+            if w_brightness == 0:
+                cct = 0
+            elif ww == w_brightness:
+                cct = (cw * 127) // w_brightness
+            else:
+                cct = 255 - ((ww * 128) // w_brightness)
+
+            data[ATTR_COLOR_PRIMARY] = (r, g, b, w_brightness)
+            data[ATTR_CCT] = cct
+
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            if (
+                self._attr_supported_color_modes
+                and ColorMode.RGB in self._attr_supported_color_modes
+            ):
+                data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
+                # tell HA to display light CCT temperature color in the interface
+                self._attr_color_mode = ColorMode.COLOR_TEMP
+
+            if self._attr_supported_color_modes and (
+                ColorMode.RGBW in self._attr_supported_color_modes
+                or ColorMode.RGBWW in self._attr_supported_color_modes
+            ):
+                data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
+
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
