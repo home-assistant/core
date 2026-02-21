@@ -258,7 +258,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1.2',
   })
 # ---
 # name: test_sensors[sensor.egauge_home_solar_energy-entry]
