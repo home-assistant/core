@@ -35,7 +35,6 @@ remove:
         text:
 
 set_entry_delay:
-  target:
   fields:
     ieee:
       required: true
@@ -52,7 +51,6 @@ set_entry_delay:
           unit_of_measurement: seconds
 
 set_exit_delay:
-  target:
   fields:
     ieee:
       required: true
