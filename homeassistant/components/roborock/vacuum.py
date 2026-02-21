@@ -11,18 +11,15 @@ from roborock.data.b01_q10.b01_q10_code_mappings import (
 )
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -32,11 +29,6 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
 )
 from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
-from .services import (
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,39 +120,6 @@ def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
 
 
 PARALLEL_UPDATES = 0
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Roborock vacuum platform."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        GET_MAPS_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_maps.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_vacuum_current_position.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-        cv.make_entity_service_schema(
-            {
-                vol.Required("x"): vol.Coerce(int),
-                vol.Required("y"): vol.Coerce(int),
-            },
-        ),
-        RoborockVacuum.async_set_vacuum_goto_position.__name__,
-        supports_response=SupportsResponse.NONE,
-    )
-
-    return True
 
 
 async def async_setup_entry(
@@ -368,17 +327,14 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         data = self.coordinator.data
-        if not isinstance(data, B01Props) or data.status is None:
+        if data.status is None:
             return None
         return Q7_STATE_CODE_TO_STATE.get(data.status)
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        data = self.coordinator.data
-        if not isinstance(data, B01Props):
-            return None
-        return data.wind_name
+        return self.coordinator.data.wind_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
