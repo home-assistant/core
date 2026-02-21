@@ -70,7 +70,6 @@ async def test_init_fail(
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_unload_entry(
     monkeypatch: pytest.MonkeyPatch,
-    bms_fixture: str,
     bool_fixture: bool,
     bt_discovery: BluetoothServiceInfoBleak,
     hass: HomeAssistant,
@@ -81,12 +80,12 @@ async def test_unload_entry(
     # first load entry (see test_async_setup_entry)
     inject_bluetooth_service_info_bleak(hass, bt_discovery)
 
-    cfg: MockConfigEntry = mock_config(bms=bms_fixture)
+    cfg: MockConfigEntry = mock_config()
     cfg.add_to_hass(hass)
 
-    bms_module: Final[str] = f"aiobmsble.bms.{bms_fixture}"
-    monkeypatch.setattr(f"{bms_module}.BMS.device_info", mock_devinfo_min)
-    monkeypatch.setattr(f"{bms_module}.BMS.async_update", mock_update_min)
+    bms_class: Final[str] = "aiobmsble.bms.dummy_bms.BMS"
+    monkeypatch.setattr(f"{bms_class}.device_info", mock_devinfo_min)
+    monkeypatch.setattr(f"{bms_class}.async_update", mock_update_min)
 
     async def mock_coord_shutdown(_self) -> None:
         trace_fct["shutdown_called"] = True

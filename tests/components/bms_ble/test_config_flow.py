@@ -192,10 +192,10 @@ async def test_device_not_supported(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_already_configured(bms_fixture: str, hass: HomeAssistant) -> None:
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test that same device cannot be added twice."""
 
-    cfg: MockConfigEntry = mock_config(bms_fixture)
+    cfg: MockConfigEntry = mock_config()
     cfg.add_to_hass(hass)
 
     await hass.config_entries.async_setup(cfg.entry_id)
@@ -206,7 +206,7 @@ async def test_already_configured(bms_fixture: str, hass: HomeAssistant) -> None
         context={"source": SOURCE_USER},
         data={
             CONF_ADDRESS: "cc:cc:cc:cc:cc:cc",
-            "type": "aiobmsble.bms.ogt_bms",
+            "type": "aiobmsble.bms.dummy_bms",
         },
     )
     assert result.get("type") == FlowResultType.ABORT
