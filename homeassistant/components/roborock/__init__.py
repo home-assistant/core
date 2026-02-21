@@ -134,15 +134,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     )
     entry.async_on_unload(shutdown_roborock)
 
-    try:
-        devices = await device_manager.get_devices()
-        _LOGGER.debug("Device manager found %d devices", len(devices))
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Failed to get devices: {err}",
-            translation_domain=DOMAIN,
-            translation_key="no_coordinators",
-        ) from err
+    devices = await device_manager.get_devices()
+    _LOGGER.debug("Device manager found %d devices", len(devices))
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, devices, user_data),
