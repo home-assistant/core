@@ -79,6 +79,7 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
         device.turn_on = AsyncMock()
         device.turn_off = AsyncMock()
         device.toggle = AsyncMock()
+        device.set_brightness = AsyncMock()
         mock_device.is_device_supported = MagicMock(return_value=(True, ""))
         mock_device.initiate_device = AsyncMock(return_value=device)
 
@@ -122,4 +123,76 @@ def mock_zeroconf_discovery_info():
         port=80,
         type="_systemnexa2._tcp.local.",
         properties={"id": "test_device_id", "model": "Test Model", "version": "1.0.0"},
+    )
+
+
+@pytest.fixture
+def mock_dimmable_device() -> Generator[MagicMock]:
+    """Mock a dimmable System Nexa 2 device."""
+    with (
+        patch(
+            "homeassistant.components.systemnexa2.coordinator.Device", autospec=True
+        ) as mock_device,
+        patch(
+            "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
+        ),
+    ):
+        device = mock_device.return_value
+        device.info_data = InformationData(
+            name="Test Dimmable Device",
+            model="Test Dimmable Model",
+            unique_id="test_dimmable_device_id",
+            sw_version="Test Model Version",
+            hw_version="Test HW Version",
+            wifi_dbm=-50,
+            wifi_ssid="Test WiFi SSID",
+            dimmable=True,  # This is a dimmable device
+        )
+
+        # Create mock OnOffSettings
+        mock_setting_led = MagicMock(spec=OnOffSetting)
+        mock_setting_led.name = "Led"
+        mock_setting_led.enable = AsyncMock()
+        mock_setting_led.disable = AsyncMock()
+        mock_setting_led.is_enabled = MagicMock(return_value=True)
+
+        device.settings = [mock_setting_led]
+        device.get_info = AsyncMock()
+        device.get_info.return_value = InformationUpdate(information=device.info_data)
+
+        # Mock connect to also send initial state update
+        async def mock_connect():
+            """Mock connect that sends initial state."""
+            # Get the callback that was registered
+            if mock_device.initiate_device.call_args:
+                on_update = mock_device.initiate_device.call_args.kwargs.get(
+                    "on_update"
+                )
+                if on_update:
+                    await on_update(StateChange(state=0.5))  # 50% brightness
+
+        device.connect = AsyncMock(side_effect=mock_connect)
+        device.disconnect = AsyncMock()
+        device.turn_on = AsyncMock()
+        device.turn_off = AsyncMock()
+        device.toggle = AsyncMock()
+        device.set_brightness = AsyncMock()
+        mock_device.is_device_supported = MagicMock(return_value=(True, ""))
+        mock_device.initiate_device = AsyncMock(return_value=device)
+
+        yield mock_device
+
+
+@pytest.fixture
+def mock_dimmable_config_entry() -> MockConfigEntry:
+    """Return a mock config entry for a dimmable device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_dimmable_device_id",
+        data={
+            CONF_HOST: "10.0.0.101",
+            CONF_NAME: "Test Dimmable Device",
+            CONF_DEVICE_ID: "test_dimmable_device_id",
+            CONF_MODEL: "Test Dimmable Model",
+        },
     )

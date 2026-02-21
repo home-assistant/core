@@ -193,7 +193,7 @@ async def test_coordinator_connection_status(
     # Find the callback that was registered with the device
     update_callback = find_update_callback(mock_system_nexa_2_device)
 
-    # Initially, the relay switch should be off (state=1.0 from fixture)
+    # Initially, the relay switch should be on (state=1.0 from fixture)
     state = hass.states.get("switch.test_device_relay_1")
     assert state is not None
     assert state.state == STATE_ON
