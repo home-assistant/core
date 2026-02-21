@@ -70,6 +70,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     ) -> None:
         """Initialize a Roborock map."""
         map_name = map_name or f"Map {map_flag}"
+        # Map names are not a valid unique id since they can be changed in the Roborock app.
+        # This should be migrated to use map flag for the unique id.
         unique_id = f"{coordinator.duid_slug}_map_{map_name}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
@@ -125,6 +127,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         out = io.BytesIO()
         img.save(out, format="PNG")
         return out.getvalue()
+    
     async def async_image(self) -> bytes | None:
         """Return the map image."""
         if (map_content := self._map_content) is None:
