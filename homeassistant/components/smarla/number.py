@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from pysmarlaapi.federwiege.classes import Property
+from pysmarlaapi.federwiege.services.classes import Property
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

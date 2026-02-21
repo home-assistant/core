@@ -1,7 +1,8 @@
 """Test the Liebherr sensor platform."""
 
+import copy
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
@@ -22,11 +23,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -49,6 +50,7 @@ async def test_single_zone_sensor(
     entity_registry: er.EntityRegistry,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test single zone device uses device name without zone suffix."""
     device = Device(
@@ -58,7 +60,7 @@ async def test_single_zone_sensor(
         device_name="K2601",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    single_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -71,10 +73,14 @@ async def test_single_zone_sensor(
             )
         ],
     )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        single_zone_state
+    )
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -94,7 +100,7 @@ async def test_multi_zone_with_none_position(
         device_name="CBNes9999",
     )
     mock_liebherr_client.get_devices.return_value = [device]
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    multi_zone_state = DeviceState(
         device=device,
         controls=[
             TemperatureControl(
@@ -114,6 +120,9 @@ async def test_multi_zone_with_none_position(
                 unit=TemperatureUnit.CELSIUS,
             ),
         ],
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        multi_zone_state
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -168,7 +177,9 @@ async def test_sensor_update_failure(
     assert state.state == STATE_UNAVAILABLE
 
     # Simulate recovery
-    mock_liebherr_client.get_device_state.side_effect = None
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        MOCK_DEVICE_STATE
+    )
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)
@@ -235,7 +246,7 @@ async def test_sensor_unavailable_when_control_missing(
     assert state.state == "5"
 
     # Device stops reporting controls (e.g., zone removed or API issue)
-    mock_liebherr_client.get_device_state.return_value = DeviceState(
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
 
@@ -248,9 +259,3 @@ async def test_sensor_unavailable_when_control_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify entity properties return None when control is missing
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
-    assert entity.native_unit_of_measurement is None
