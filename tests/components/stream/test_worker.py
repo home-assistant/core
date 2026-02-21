@@ -23,6 +23,7 @@ import threading
 from unittest.mock import MagicMock, patch
 
 import av
+from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
 import numpy as np
 import pytest
 
@@ -32,7 +33,6 @@ from homeassistant.components.stream.const import (
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_SEGMENT_DURATION,
-    DECODER_TO_CODEC,
     DOMAIN,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
@@ -211,43 +211,6 @@ class FakePyAvContainer:
         return
 
 
-class _FakeAvOutputStream:
-    """A fake output stream for testing."""
-
-    def __init__(self, capture_packets, template_name) -> None:
-        """Initialize the fake output stream."""
-        self.capture_packets = capture_packets
-        self.template_name = template_name
-        self.type = "ignored-type"
-        self.time_base = None
-        self.width = None
-        self.height = None
-        self.pix_fmt = None
-        self.sample_rate = None
-        self.channels = None
-
-        class FakeCodecContext:
-            extradata = None
-
-        self.codec_context = FakeCodecContext()
-
-    def close(self):
-        """Close the stream."""
-
-    def mux(self, packet):
-        """Mux a packet."""
-        _LOGGER.debug("Muxed packet: %s", packet)
-        self.capture_packets.append(packet)
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"FakeAvOutputStream<{self.template_name}>"
-
-    def name(self) -> str:
-        """Return stream name."""
-        return "avc1"
-
-
 class FakePyAvBuffer:
     """Holds outputs of the decoded stream for tests to assert on results."""
 
@@ -258,21 +221,30 @@ class FakePyAvBuffer:
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
 
-    def _create_fake_output_stream(self, template_name):
-        """Create a fake output stream for the given template name."""
-        if template_name == AUDIO_STREAM_FORMAT:
-            return _FakeAvOutputStream(self.audio_packets, template_name)
-        return _FakeAvOutputStream(self.video_packets, template_name)
-
-    def add_stream(self, codec):
-        """Create an output stream for decoder-only codec remapping."""
-        # Map codec back to stream type for test purposes
-        template_name = AUDIO_STREAM_FORMAT if codec == "aac" else VIDEO_STREAM_FORMAT
-        return self._create_fake_output_stream(template_name)
-
-    def add_stream_from_template(self, template):
+    def add_stream_from_template(self, template, **kwargs):
         """Create an output buffer that captures packets for test to examine."""
-        return self._create_fake_output_stream(template.name)
+
+        class FakeAvOutputStream:
+            def __init__(self, capture_packets) -> None:
+                self.capture_packets = capture_packets
+                self.type = "ignored-type"
+
+            def close(self):
+                return
+
+            def mux(self, packet):
+                _LOGGER.debug("Muxed packet: %s", packet)
+                self.capture_packets.append(packet)
+
+            def __str__(self) -> str:
+                return f"FakeAvOutputStream<{template.name}>"
+
+            def name(self) -> str:
+                return "avc1"
+
+        if template.name == AUDIO_STREAM_FORMAT:
+            return FakeAvOutputStream(self.audio_packets)
+        return FakeAvOutputStream(self.video_packets)
 
     def mux(self, packet):
         """Capture a packet for tests to examine."""
@@ -1121,112 +1093,37 @@ async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> N
         ).all()
 
 
-class TestAddStream:
-    """Tests for StreamMuxer._add_stream decoder-only codec remapping."""
+def test_add_stream_from_template_happy_path() -> None:
+    """Test add_stream_from_template returns stream directly on success."""
+    template = MagicMock(spec=av.VideoStream)
+    expected_stream = MagicMock(spec=av.VideoStream)
+    container = MagicMock()
+    container.add_stream_from_template.return_value = expected_stream
 
-    def test_libdav1d_maps_to_av1(self) -> None:
-        """Test libdav1d is mapped to av1 in DECODER_TO_CODEC."""
-        assert DECODER_TO_CODEC["libdav1d"] == "av1"
+    result = StreamMuxer._add_stream_from_template(container, template)
 
-    def test_normal_codec_uses_template(self) -> None:
-        """Test normal codecs delegate to add_stream_from_template."""
+    assert result is expected_stream
+    container.add_stream_from_template.assert_called_once_with(template)
 
-        class FakeContainer:
-            def __init__(self) -> None:
-                self.template_used = False
 
-            def add_stream(self, codec: str) -> None:
-                raise AssertionError("add_stream should not be called")
+def test_add_stream_from_template_decoder_only_fallback() -> None:
+    """Test decoder-only codecs fall back to opaque=True.
 
-            def add_stream_from_template(self, template: MagicMock) -> MagicMock:
-                self.template_used = True
-                return template
+    When a video stream uses a decoder-only codec like libdav1d (AV1),
+    add_stream_from_template raises UnknownCodecError because no matching
+    encoder exists. The worker retries with opaque=True to bypass the
+    encoder lookup.
+    """
+    template = MagicMock(spec=av.VideoStream)
+    expected_stream = MagicMock(spec=av.VideoStream)
+    container = MagicMock()
+    container.add_stream_from_template.side_effect = [
+        UnknownCodecError("libdav1d"),
+        expected_stream,
+    ]
 
-        template = MagicMock()
-        template.codec_context.name = "h264"
+    result = StreamMuxer._add_stream_from_template(container, template)
 
-        container = FakeContainer()
-        result = StreamMuxer._add_stream(container, template)
-
-        assert container.template_used
-        assert result is template
-
-    def test_video_stream_properties_copied(self) -> None:
-        """Test libdav1d video stream copies all required properties."""
-        template = MagicMock(spec=av.VideoStream)
-        template.codec_context.name = "libdav1d"
-        template.codec_context.extradata = b"\x00\x01\x02"
-        template.time_base = VIDEO_TIME_BASE
-        template.width = 1920
-        template.height = 1080
-        template.pix_fmt = "yuv420p"
-
-        output_stream = MagicMock(spec=av.VideoStream)
-        output_stream.codec_context = MagicMock()
-
-        container = MagicMock(spec=av.container.OutputContainer)
-        container.add_stream.return_value = output_stream
-
-        result = StreamMuxer._add_stream(container, template)
-
-        container.add_stream.assert_called_once_with("av1")
-        assert result is output_stream
-        assert output_stream.time_base == VIDEO_TIME_BASE
-        assert output_stream.width == 1920
-        assert output_stream.height == 1080
-        assert output_stream.pix_fmt == "yuv420p"
-        assert output_stream.codec_context.extradata == b"\x00\x01\x02"
-
-    def test_audio_branch_copies_audio_properties(self) -> None:
-        """Test audio stream branch copies sample_rate and channels.
-
-        This test deliberately uses libdav1d (a video-only codec) with an
-        av.audio.AudioStream to trigger codec remapping and exercise the
-        non-VideoStream (audio properties) branch. This setup is artificial
-        and would not occur in production, but ensures coverage of the audio
-        branch logic.
-        """
-        template = MagicMock(spec=av.audio.AudioStream)
-        template.codec_context.name = "libdav1d"
-        template.codec_context.extradata = None
-        template.time_base = fractions.Fraction(1, AUDIO_SAMPLE_RATE)
-        template.sample_rate = 48000
-        template.channels = 2
-
-        output_stream = MagicMock(spec=av.audio.AudioStream)
-        output_stream.codec_context = MagicMock()
-
-        container = MagicMock(spec=av.container.OutputContainer)
-        container.add_stream.return_value = output_stream
-
-        result = StreamMuxer._add_stream(container, template)
-
-        container.add_stream.assert_called_once_with("av1")
-        assert result is output_stream
-        assert output_stream.time_base == fractions.Fraction(1, AUDIO_SAMPLE_RATE)
-        assert output_stream.sample_rate == 48000
-        assert output_stream.channels == 2
-
-    def test_extradata_skipped_when_none(self) -> None:
-        """Test extradata assignment is skipped when template.extradata is None."""
-        template = MagicMock(spec=av.VideoStream)
-        template.codec_context.name = "libdav1d"
-        template.codec_context.extradata = None  # Falsy - should skip assignment
-        template.time_base = VIDEO_TIME_BASE
-        template.width = 1920
-        template.height = 1080
-        template.pix_fmt = "yuv420p"
-
-        output_stream = MagicMock(spec=av.VideoStream)
-        # Use a sentinel to detect if extradata was written
-        sentinel = object()
-        output_stream.codec_context = MagicMock()
-        output_stream.codec_context.extradata = sentinel
-
-        container = MagicMock(spec=av.container.OutputContainer)
-        container.add_stream.return_value = output_stream
-
-        StreamMuxer._add_stream(container, template)
-
-        # Verify extradata was NOT overwritten
-        assert output_stream.codec_context.extradata is sentinel
+    assert result is expected_stream
+    assert container.add_stream_from_template.call_count == 2
+    container.add_stream_from_template.assert_called_with(template, opaque=True)
