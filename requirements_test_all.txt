@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.57.0
+PyViCare==2.58.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -2017,7 +2017,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.27
+pyportainer==1.0.28
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2223,7 +2223,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.14.0
+python-roborock==4.15.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
