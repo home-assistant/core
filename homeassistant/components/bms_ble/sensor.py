@@ -254,8 +254,7 @@ async def async_setup_entry(
             continue
         entities.append(BMSSensor(bms, descr, mac))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
