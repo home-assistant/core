@@ -19,7 +19,7 @@ type BTBmsConfigEntry = ConfigEntry[BTBmsCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bool:
     """Set up BT Battery Management System from a config entry."""
-    LOGGER.debug("Setup of %s", repr(entry))
+    LOGGER.debug("Setup of %r", entry)
 
     if entry.unique_id is None:
         raise ConfigEntryError(
@@ -62,7 +62,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: BTBmsConfigEntry) -> bo
     unload_ok: Final = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
     )
-    LOGGER.debug("Unloaded config entry: %s, ok? %s!", entry.unique_id, str(unload_ok))
+    LOGGER.debug("Unloaded config entry: %s, ok? %s!", entry.unique_id, unload_ok)
 
     if unload_ok and getattr(entry, "runtime_data", None) is not None:
         await entry.runtime_data.async_shutdown()
