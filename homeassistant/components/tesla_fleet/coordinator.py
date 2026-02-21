@@ -410,7 +410,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 try:
                     async_add_external_statistics(self.hass, metadata, statistics)
                 except HomeAssistantError as err:
-                    LOGGER.debug(
+                    LOGGER.warning(
                         "Unable to add external statistics for %s: %s",
                         statistic_id,
                         err,
