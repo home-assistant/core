@@ -123,7 +123,7 @@ def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
         # Map YXFanLevel code to value (e.g., "quiet", "normal", "strong", "max")
         for yx_fan in YXFanLevel:
             if yx_fan.code == fan_level:
-                return yx_fan.value
+                return yx_fan.value.capitalize()
     return None
 
 
@@ -525,11 +525,11 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     _attr_name = None
     # Q10 uses YXFanLevel: quiet, normal, strong, max, super
     _attr_fan_speed_list = [
-        YXFanLevel.QUIET.value,
-        YXFanLevel.NORMAL.value,
-        YXFanLevel.STRONG.value,
-        YXFanLevel.MAX.value,
-        YXFanLevel.SUPER.value,
+        YXFanLevel.QUIET.value.capitalize(),
+        YXFanLevel.NORMAL.value.capitalize(),
+        YXFanLevel.STRONG.value.capitalize(),
+        YXFanLevel.MAX.value.capitalize(),
+        YXFanLevel.SUPER.value.capitalize(),
     ]
     coordinator: RoborockB01Q10UpdateCoordinator
 
@@ -676,7 +676,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            fan_level = YXFanLevel.from_value(fan_speed)
+            fan_level = YXFanLevel.from_value(fan_speed.casefold())
             await self.coordinator.api.command.send(
                 command=B01_Q10_DP.FAN_LEVEL,
                 params=fan_level.code,
