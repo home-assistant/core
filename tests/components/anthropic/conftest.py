@@ -166,6 +166,16 @@ async def setup_ha(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setup entry."""
+    with patch(
+        "homeassistant.components.anthropic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 

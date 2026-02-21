@@ -47,7 +47,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -55,15 +55,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with (
-        patch(
-            "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.anthropic.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -784,6 +778,7 @@ async def test_creating_ai_task_subentry_advanced(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test we can reauthenticate."""
     # Pretend we already set up a config entry.
@@ -799,15 +794,9 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with (
-        patch(
-            "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.anthropic.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

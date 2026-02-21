@@ -10,10 +10,7 @@ rules:
       Integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      * Make `mock_setup_entry` a separate fixture
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
