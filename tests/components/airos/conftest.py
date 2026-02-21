@@ -45,8 +45,9 @@ def mock_airos_client(
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
     client = mock_airos_class.return_value
-    client.status.return_value = ap_fixture
-    client.login.return_value = True
+    client.status = AsyncMock(return_value=ap_fixture)
+    client.login = AsyncMock(return_value=True)
+    client.reboot = AsyncMock(return_value=True)
     return client
 
 

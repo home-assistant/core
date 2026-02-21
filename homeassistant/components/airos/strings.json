@@ -88,6 +88,11 @@
         "name": "PPPoE link"
       }
     },
+    "button": {
+      "reboot_device": {
+        "name": "Reboot device"
+      }
+    },
     "sensor": {
       "host_cpuload": {
         "name": "CPU load"
