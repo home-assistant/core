@@ -1835,11 +1835,11 @@ async def test_homeassistant_service_updates_on_config_change(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_homeassistant_service_reregisters_on_location_change(
+async def test_homeassistant_service_updates_on_location_change(
     hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
-    """Ensure Zeroconf re-registers when the instance name changes."""
-    hass.config.location_name = "Maison"
+    """Ensure Zeroconf updates when the location name changes."""
+    hass.config.location_name = "Home"
     assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1847,20 +1847,20 @@ async def test_homeassistant_service_reregisters_on_location_change(
 
     assert mock_async_zeroconf.async_register_service.await_count == 1
     initial_info = mock_async_zeroconf.async_register_service.await_args_list[0].args[0]
-    assert _get_property(initial_info, "location_name") == "Maison"
-    assert initial_info.name.startswith("Maison")
+    assert _get_property(initial_info, "location_name") == "Home"
+    assert initial_info.name.startswith("Home")
 
-    hass.config.location_name = "Nouvelle Maison"
+    hass.config.location_name = "New Home"
     hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {})
     await hass.async_block_till_done()
 
-    assert mock_async_zeroconf.async_unregister_service.await_count == 1
-    assert mock_async_zeroconf.async_register_service.await_count == 2
-    assert mock_async_zeroconf.async_update_service.await_count == 0
+    assert mock_async_zeroconf.async_unregister_service.await_count == 0
+    assert mock_async_zeroconf.async_register_service.await_count == 1
+    assert mock_async_zeroconf.async_update_service.await_count >= 1
 
-    updated_info = mock_async_zeroconf.async_register_service.await_args_list[1].args[0]
-    assert _get_property(updated_info, "location_name") == "Nouvelle Maison"
-    assert updated_info.name.startswith("Nouvelle Maison")
+    updated_info = mock_async_zeroconf.async_update_service.await_args_list[-1].args[0]
+    assert _get_property(updated_info, "location_name") == "New Home"
+    assert updated_info.name == initial_info.name
 
 
 @pytest.mark.parametrize(

@@ -255,16 +255,6 @@ def _get_property(properties: Mapping[Any, Any], key: str) -> Any:
     return bytes_mapping.get(key.encode())
 
 
-def _get_location_name(properties: Mapping[Any, Any]) -> str | None:
-    """Return the `location_name` property as string when available."""
-    value = _get_property(properties, "location_name")
-    if isinstance(value, str):
-        return value
-    if isinstance(value, bytes):
-        return value.decode()
-    return None
-
-
 @callback
 def _async_cleanup_homeassistant_service_state(hass: HomeAssistant) -> None:
     """Remove listeners tracking the Home Assistant Zeroconf service."""
@@ -319,15 +309,6 @@ async def _async_refresh_homeassistant_service(
     """Refresh the Zeroconf announcement for this Home Assistant instance."""
     async with state.lock:
         new_info = await _async_build_service_info(hass, state.uuid)
-
-        previous_location = _get_location_name(state.info.properties)
-        current_location = _get_location_name(new_info.properties)
-
-        if previous_location != current_location:
-            await state.aio_zc.async_unregister_service(state.info)
-            await state.aio_zc.async_register_service(new_info, allow_name_change=True)
-            state.info = new_info
-            return
 
         if new_info.name != state.info.name:
             new_info.name = state.info.name
