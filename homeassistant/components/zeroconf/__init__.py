@@ -318,6 +318,26 @@ async def _async_refresh_homeassistant_service(
 
 
 @callback
+def _async_schedule_homeassistant_service_refresh(
+    hass: HomeAssistant, state: _HomeAssistantServiceState
+) -> None:
+    """Schedule service refresh and log unexpected failures."""
+    task = hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+
+    @callback
+    def _log_refresh_failure(done_task: asyncio.Task[None]) -> None:
+        if done_task.cancelled():
+            return
+        if exc := done_task.exception():
+            _LOGGER.exception(
+                "Unexpected error while refreshing Home Assistant service announcement",
+                exc_info=exc,
+            )
+
+    task.add_done_callback(_log_refresh_failure)
+
+
+@callback
 def _async_setup_homeassistant_service_updaters(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str, info: AsyncServiceInfo
 ) -> None:
@@ -329,7 +349,7 @@ def _async_setup_homeassistant_service_updaters(
 
     @callback
     def _handle_core_config_update(_: Event) -> None:
-        hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+        _async_schedule_homeassistant_service_refresh(hass, state)
 
     state.listeners.append(
         hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _handle_core_config_update)
@@ -346,14 +366,14 @@ def _async_setup_homeassistant_service_updaters(
 
         @callback
         def _handle_cloud_state(_: CloudConnectionState) -> None:
-            hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+            _async_schedule_homeassistant_service_refresh(hass, state)
 
         state.listeners.append(
             async_listen_connection_change(hass, _handle_cloud_state)
         )
 
         if async_is_connected(hass):
-            hass.async_create_task(_async_refresh_homeassistant_service(hass, state))
+            _async_schedule_homeassistant_service_refresh(hass, state)
 
     async_when_setup_or_start(hass, "cloud", _async_setup_cloud_listener)
 
