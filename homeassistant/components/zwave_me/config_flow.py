@@ -38,7 +38,7 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "-cc2b-3b61-1898181b9950"
             ),
             "local_url": "ws://192.168.1.39:8083",
-            "add_on_url": "ws://127.0.0.1:8083",
+            "app_url": "ws://127.0.0.1:8083",
             "find_url": "wss://find.z-wave.me",
             "remote_url": "wss://87.250.250.242:8083",
         }
