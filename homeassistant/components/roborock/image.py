@@ -17,7 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION
+from .const import (
+    CONF_MAP_ROTATION,
+    DEFAULT_MAP_ROTATION,
+    MAP_ROTATION_OPTIONS,
+)
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
@@ -119,11 +123,29 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             raise HomeAssistantError("Map flag not found in coordinator maps")
 
         raw = map_content.image_content
-        rotation = int(
-            self.config_entry.options.get(CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION)
+
+        raw_rotation = self.config_entry.options.get(
+            CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION
         )
 
-        if rotation % 360 == 0:
+        try:
+            rotation = int(raw_rotation)
+        except (TypeError, ValueError):
+            _LOGGER.debug(
+                "Invalid map rotation value %s, falling back to 0",
+                raw_rotation,
+            )
+            rotation = 0
+
+        if rotation not in MAP_ROTATION_OPTIONS:
+            _LOGGER.debug(
+                "Unsupported map rotation %s, allowed values: %s. Falling back to 0.",
+                rotation,
+                MAP_ROTATION_OPTIONS,
+            )
+            rotation = 0
+
+        if rotation == 0:
             return raw
 
         # Return cached rotated image if available
