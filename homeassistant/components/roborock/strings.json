@@ -70,6 +70,9 @@
       }
     },
     "button": {
+      "empty_dustbin": {
+        "name": "Empty dustbin"
+      },
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
@@ -92,7 +95,10 @@
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
+          "bothwork": "Vacuum and mop",
           "mop": "Mop only",
+          "onlymop": "Mop only",
+          "onlysweep": "Vacuum only",
           "vac_and_mop": "Vacuum and mop",
           "vacuum": "Vacuum only"
         }
@@ -414,6 +420,9 @@
       "dnd_switch": {
         "name": "Do not disturb"
       },
+      "not_disturb": {
+        "name": "Do not disturb"
+      },
       "off_peak_switch": {
         "name": "Off-peak charging"
       },
@@ -447,11 +456,15 @@
               "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
+              "normal": "Normal",
               "off": "[%key:common::state::off%]",
               "quiet": "Quiet",
+              "quite": "Quiet",
               "silent": "Silent",
               "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
+              "strong": "Strong",
+              "super": "Super",
               "turbo": "Turbo"
             }
           }
@@ -460,8 +473,14 @@
     }
   },
   "exceptions": {
+    "api_rate_limit": {
+      "message": "API rate limit exceeded. Roborock limits requests to 3 per minute for home data. Please wait a few minutes before retrying."
+    },
     "command_failed": {
       "message": "Error while calling {command}"
+    },
+    "command_not_supported": {
+      "message": "This command is not supported for this device model"
     },
     "home_data_fail": {
       "message": "Failed to get Roborock home data"

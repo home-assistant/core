@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
@@ -18,8 +19,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockEntityV1
+from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01, RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,19 +78,46 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    async_add_entities(
-        [
-            RoborockSwitch(
-                f"{description.key}_{coordinator.duid_slug}",
-                coordinator,
-                description,
-                trait,
-            )
-            for coordinator in config_entry.runtime_data.v1
-            for description in SWITCH_DESCRIPTIONS
-            if (trait := description.trait(coordinator.properties_api)) is not None
-        ]
+    coordinators = config_entry.runtime_data
+
+    # V1 switches
+    entities: list[RoborockSwitch | RoborockQ10Switch] = [
+        RoborockSwitch(
+            f"{description.key}_{coordinator.duid_slug}",
+            coordinator,
+            description,
+            trait,
+        )
+        for coordinator in coordinators.v1
+        for description in SWITCH_DESCRIPTIONS
+        if (trait := description.trait(coordinator.properties_api)) is not None
+    ]
+
+    # Q10 switches (only for RoborockB01Q10UpdateCoordinator)
+    entities.extend(
+        RoborockQ10Switch(
+            f"child_lock_{coordinator.duid_slug}",
+            coordinator,
+            B01_Q10_DP.CHILD_LOCK,
+            "child_lock",
+            "mdi:lock-outline",
+        )
+        for coordinator in coordinators.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
+    entities.extend(
+        RoborockQ10Switch(
+            f"not_disturb_{coordinator.duid_slug}",
+            coordinator,
+            B01_Q10_DP.NOT_DISTURB,
+            "not_disturb",
+            "mdi:bell-off",
+        )
+        for coordinator in coordinators.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+    )
+
+    async_add_entities(entities)
 
 
 class RoborockSwitch(RoborockEntityV1, SwitchEntity):
@@ -137,3 +169,56 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._trait.is_on
+
+
+class RoborockQ10Switch(RoborockCoordinatedEntityB01, SwitchEntity):
+    """Roborock Q10 switch entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        dp_code: B01_Q10_DP,
+        translation_key: str,
+        icon: str | None = None,
+    ) -> None:
+        """Initialize the Q10 switch."""
+        super().__init__(unique_id, coordinator)
+        self._dp_code = dp_code
+        self._attr_translation_key = translation_key
+        if icon:
+            self._attr_icon = icon
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if switch is on."""
+        if isinstance(self.coordinator.data, dict):
+            value = self.coordinator.data.get(self._dp_code)
+            if value is not None:
+                return bool(value)
+        return None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        try:
+            await self.coordinator.api.command.send(self._dp_code, 1)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err
+        await self.coordinator.async_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        try:
+            await self.coordinator.api.command.send(self._dp_code, 0)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err
+        await self.coordinator.async_refresh()
