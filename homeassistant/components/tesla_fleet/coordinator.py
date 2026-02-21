@@ -324,6 +324,29 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         if not time_series:
             return
 
+        # Pre-parse and deduplicate timestamps once for all fields
+        parsed_periods: list[tuple[datetime, float, dict[str, Any]]] = []
+        seen_starts: set[float] = set()
+        for period in time_series:
+            timestamp_str = period.get("timestamp")
+            if not timestamp_str:
+                continue
+            parsed_time = dt_util.parse_datetime(timestamp_str)
+            if parsed_time is None:
+                continue
+            # Normalize to top of the hour (statistics require minutes=0, seconds=0)
+            start = dt_util.as_utc(parsed_time).replace(
+                minute=0, second=0, microsecond=0
+            )
+            start_ts = start.timestamp()
+            if start_ts in seen_starts:
+                continue
+            seen_starts.add(start_ts)
+            parsed_periods.append((start, start_ts, period))
+
+        if not parsed_periods:
+            return
+
         site_id = self.api.energy_site_id
         recorder = get_instance(self.hass)
         statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
@@ -337,7 +360,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         for key in ENERGY_HISTORY_FIELDS:
             statistic_id = f"{DOMAIN}:{site_id}_{key}"
-
             metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
@@ -347,7 +369,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             )
-
             existing_stats = last_stats.get(statistic_id)
 
             if not existing_stats:
@@ -363,27 +384,8 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 running_sum = cast(float, latest_stat.get("sum", 0.0))
 
             statistics: list[StatisticData] = []
-            seen_starts: set[float] = set()
 
-            for period in time_series:
-                timestamp_str = period.get("timestamp")
-                if not timestamp_str:
-                    continue
-
-                parsed_time = dt_util.parse_datetime(timestamp_str)
-                if parsed_time is None:
-                    continue
-
-                # Normalize to top of the hour (statistics require minutes=0, seconds=0)
-                start = dt_util.as_utc(parsed_time).replace(
-                    minute=0, second=0, microsecond=0
-                )
-
-                start_ts = start.timestamp()
-                if start_ts in seen_starts:
-                    continue
-                seen_starts.add(start_ts)
-
+            for start, start_ts, period in parsed_periods:
                 # Skip if we already have this statistic
                 if last_stats_time is not None and start_ts <= last_stats_time:
                     continue
