@@ -411,6 +411,7 @@ async def test_validate_credentials_false(
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful reauth flow."""
@@ -447,6 +448,7 @@ async def test_reauth_flow_success(
 async def test_reauth_flow_errors_with_recovery(
     hass: HomeAssistant,
     mock_teltasync_client: MagicMock,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_error: str,
