@@ -118,13 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
-    except Exception as err:
-        _LOGGER.exception("Unexpected error while setting up Roborock device manager")
-        raise ConfigEntryNotReady(
-            "Unexpected error while setting up Roborock device manager",
-            translation_domain=DOMAIN,
-            translation_key="home_data_fail",
-        ) from err
 
     async def shutdown_roborock(_: Event | None = None) -> None:
         await asyncio.gather(device_manager.close(), cache.flush())
