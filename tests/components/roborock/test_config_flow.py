@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_MAP_ROTATION,
     CONF_REGION,
     DOMAIN,
     DRAWABLES,
@@ -224,17 +225,27 @@ async def test_options_flow_drawables(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == DRAWABLES
+
+        # Ensure the rotation option is part of the schema
+        assert CONF_MAP_ROTATION in result["data_schema"].schema
+
         with patch(
             "homeassistant.components.roborock.async_setup_entry", return_value=True
         ) as mock_setup:
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
-                user_input={Drawable.PREDICTED_PATH: True},
+                user_input={
+                    Drawable.PREDICTED_PATH: True,
+                    # SelectSelector typically returns strings; config_flow casts to int
+                    CONF_MAP_ROTATION: "90",
+                },
             )
             await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert mock_roborock_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
+        assert mock_roborock_entry.options[CONF_MAP_ROTATION] == 90
+        assert isinstance(mock_roborock_entry.options[CONF_MAP_ROTATION], int)
         assert len(mock_setup.mock_calls) == 1
 
 
@@ -348,9 +359,7 @@ async def test_discovery_not_setup(
     hass: HomeAssistant,
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
-    with (
-        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
-    ):
+    with patch("homeassistant.components.roborock.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -428,7 +437,6 @@ async def test_config_flow_with_region(
             mock_client.request_code_v4 = AsyncMock(return_value=None)
             mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
 
-            # base_url is awaited in config_flow, so it needs to be an awaitable
             future_base_url = asyncio.Future()
             future_base_url.set_result("https://usiot.roborock.com")
             mock_client.base_url = future_base_url
@@ -437,7 +445,6 @@ async def test_config_flow_with_region(
                 result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "us"}
             )
 
-            # Check that the client was initialized with the correct base_url
             mock_client_cls.assert_called_with(
                 USER_EMAIL,
                 base_url="https://usiot.roborock.com",
