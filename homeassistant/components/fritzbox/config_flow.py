@@ -4,35 +4,54 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import ipaddress
-from typing import Any, Self
-from urllib.parse import urlparse
+from typing import TYPE_CHECKING, Any, Self
 
 from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
-from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+from .const import DEFAULT_URL, DEFAULT_USERNAME, DEFAULT_VERIFY_SSL, DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.URL)
+        ),
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
 DATA_SCHEMA_CONFIRM = vol.Schema(
     {
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -46,22 +65,25 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a AVM FRITZ!SmartHome config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     _name: str
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str | None = None
+        self._url: str | None = None
         self._password: str | None = None
         self._username: str | None = None
+        self._verify_ssl: bool = DEFAULT_VERIFY_SSL
 
     def _get_entry(self, name: str) -> ConfigFlowResult:
         return self.async_create_entry(
             title=name,
             data={
-                CONF_HOST: self._host,
+                CONF_HOST: self._url,
                 CONF_PASSWORD: self._password,
                 CONF_USERNAME: self._username,
+                CONF_VERIFY_SSL: self._verify_ssl,
             },
         )
 
@@ -72,7 +94,10 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
     def _try_connect(self) -> str:
         """Try to connect and check auth."""
         fritzbox = Fritzhome(
-            host=self._host, user=self._username, password=self._password
+            host=self._url,
+            user=self._username,
+            password=self._password,
+            ssl_verify=self._verify_ssl,
         )
         try:
             fritzbox.login()
@@ -93,12 +118,13 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-            self._host = user_input[CONF_HOST]
-            self._name = str(user_input[CONF_HOST])
+            self._url = user_input[CONF_URL]
+            self._verify_ssl = user_input[CONF_VERIFY_SSL]
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
+            self._name = str(self._url)
+
+            self._async_abort_entries_match({CONF_HOST: self._url})
 
             result = await self.async_try_connect()
 
@@ -116,39 +142,41 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        host = urlparse(discovery_info.ssdp_location).hostname
-        assert isinstance(host, str)
+        self._url = discovery_info.upnp[ATTR_UPNP_PRESENTATION_URL]
+        representation_url = URL(self._url)
+
+        if TYPE_CHECKING:
+            assert isinstance(representation_url.host, str)
 
         if (
-            ipaddress.ip_address(host).version == 6
-            and ipaddress.ip_address(host).is_link_local
+            ipaddress.ip_address(representation_url.host).version == 6
+            and ipaddress.ip_address(representation_url.host).is_link_local
         ):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
             uuid = uuid.removeprefix("uuid:")
             await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: host})
+            self._abort_if_unique_id_configured({CONF_HOST: self._url})
 
-        self._host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
 
         # update old and user-configured config entries
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == host:
+            if entry.data[CONF_HOST] == self._url:
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
-        self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or host)
+        self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._url)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return other_flow._url == self._url  # noqa: SLF001
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -178,7 +206,8 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        self._host = entry_data[CONF_HOST]
+        self._url = entry_data[CONF_HOST]
+        self._verify_ssl = entry_data[CONF_VERIFY_SSL]
         self._name = str(entry_data[CONF_HOST])
         self._username = entry_data[CONF_USERNAME]
 
@@ -199,8 +228,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
-                    data={
-                        CONF_HOST: self._host,
+                    data_updates={
                         CONF_PASSWORD: self._password,
                         CONF_USERNAME: self._username,
                     },
@@ -226,31 +254,37 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        self._url = reconfigure_entry.data[CONF_HOST]
+        self._verify_ssl = reconfigure_entry.data[CONF_VERIFY_SSL]
+        self._username = reconfigure_entry.data[CONF_USERNAME]
+        self._password = reconfigure_entry.data[CONF_PASSWORD]
 
         if user_input is not None:
-            self._host = user_input[CONF_HOST]
-
-            reconfigure_entry = self._get_reconfigure_entry()
-            self._username = reconfigure_entry.data[CONF_USERNAME]
-            self._password = reconfigure_entry.data[CONF_PASSWORD]
+            self._url = user_input[CONF_URL]
+            self._verify_ssl = user_input[CONF_VERIFY_SSL]
 
             result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data_updates={CONF_HOST: self._host},
+                    data_updates={
+                        CONF_HOST: self._url,
+                        CONF_VERIFY_SSL: self._verify_ssl,
+                    },
                 )
             errors["base"] = result
 
-        host = self._get_reconfigure_entry().data[CONF_HOST]
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=host): str,
+                    vol.Required(CONF_URL, default=self._url): str,
+                    vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
-            description_placeholders={"name": host},
+            description_placeholders={"name": self._url},
             errors=errors,
         )

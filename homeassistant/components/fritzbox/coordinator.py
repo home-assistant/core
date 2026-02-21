@@ -10,7 +10,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -63,6 +63,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             host=self.config_entry.data[CONF_HOST],
             user=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
+            ssl_verify=self.config_entry.data[CONF_VERIFY_SSL],
         )
 
         try:

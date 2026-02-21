@@ -1,4 +1,8 @@
 {
+  "common": {
+    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your FRITZ!Box.",
+    "data_desc_url": "The URL of your FRITZ!Box."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -31,21 +35,25 @@
       },
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "url": "[%key:component::fritzbox::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::fritzbox::common::data_desc_ssl_verify%]"
         },
         "description": "Update your configuration information for {name}."
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router."
+          "url": "[%key:component::fritzbox::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::fritzbox::common::data_desc_ssl_verify%]"
         },
         "description": "Enter your FRITZ!Box information."
       }

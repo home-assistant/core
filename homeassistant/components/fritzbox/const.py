@@ -15,8 +15,9 @@ ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 COLOR_MODE: Final = "1"
 COLOR_TEMP_MODE: Final = "4"
 
-DEFAULT_HOST: Final = "fritz.box"
+DEFAULT_URL: Final = "http://fritz.box"
 DEFAULT_USERNAME: Final = "admin"
+DEFAULT_VERIFY_SSL: Final = True
 
 DOMAIN: Final = "fritzbox"
 

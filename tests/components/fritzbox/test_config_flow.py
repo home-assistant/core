@@ -3,7 +3,6 @@
 import dataclasses
 from unittest import mock
 from unittest.mock import Mock, patch
-from urllib.parse import urlparse
 
 from pyfritzhome import LoginError
 import pytest
@@ -11,11 +10,19 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
@@ -24,33 +31,41 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
-MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_DATA = {
+    CONF_URL: "http://10.0.0.1",
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_VERIFY_SSL: False,
+}
 MOCK_SSDP_DATA = {
     "ip4_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://10.0.0.1:12345/test",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://10.0.0.1",
         },
     ),
     "ip6_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://[1234::1]:12345/test",
+        ssdp_location="http://[1234::1]:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://[1234::1]",
         },
     ),
     "ip6_invalid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://[fe80::1%1]:12345/test",
+        ssdp_location="http://[fe80::1%1]:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "https://[fe80::1%1]",
         },
     ),
 }
@@ -78,10 +93,11 @@ async def test_user(hass: HomeAssistant, fritz: Mock) -> None:
         result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "10.0.0.1"
-    assert result["data"][CONF_HOST] == "10.0.0.1"
+    assert result["title"] == "http://10.0.0.1"
+    assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is False
     assert not result["result"].unique_id
 
 
@@ -125,7 +141,12 @@ async def test_user_already_configured(hass: HomeAssistant, fritz: Mock) -> None
 
 async def test_reauth_success(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -149,7 +170,12 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow with authentication failure."""
     fritz().login.side_effect = LoginError("Boom")
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -172,7 +198,12 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow but no connection found."""
     fritz().login.side_effect = OSError("Boom")
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -192,12 +223,13 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reconfigure flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
-
-    assert mock_config.data[CONF_HOST] == "10.0.0.1"
-    assert mock_config.data[CONF_USERNAME] == "fake_user"
-    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -205,28 +237,28 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+    assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
 async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reconfigure flow with failure."""
     fritz().login.side_effect = [OSError("Boom"), None]
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
-
-    assert mock_config.data[CONF_HOST] == "10.0.0.1"
-    assert mock_config.data[CONF_USERNAME] == "fake_user"
-    assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -234,9 +266,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -244,16 +274,15 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+    assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
 @pytest.mark.parametrize(
@@ -287,9 +316,10 @@ async def test_ssdp(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_FAKE_NAME
-    assert result["data"][CONF_HOST] == urlparse(test_data.ssdp_location).hostname
+    assert result["data"][CONF_HOST] == test_data.upnp[ATTR_UPNP_PRESENTATION_URL]
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 
 
@@ -309,10 +339,11 @@ async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock) -> None:
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "10.0.0.1"
-    assert result["data"][CONF_HOST] == "10.0.0.1"
+    assert result["title"] == "http://10.0.0.1"
+    assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 
 
