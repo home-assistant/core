@@ -208,6 +208,7 @@ async def test_creating_conversation_subentry_not_loaded(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_api_error(hass: HomeAssistant, side_effect, error) -> None:
     """Test that we handle API errors."""
     result = await hass.config_entries.flow.async_init(
