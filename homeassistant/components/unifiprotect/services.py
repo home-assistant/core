@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, cast
 
@@ -269,26 +270,34 @@ def _async_get_ptz_camera(call: ServiceCall) -> Camera:
     return camera
 
 
+async def _async_ptz_command(
+    func: Callable[..., Coroutine[Any, Any, Any]], **kwargs: Any
+) -> Any:
+    """Execute a PTZ command with error handling."""
+    try:
+        return await func(**kwargs)
+    except (ClientError, ValidationError) as err:
+        _LOGGER.debug("Error calling UniFi Protect PTZ command: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
+
+
 async def ptz_goto_preset(call: ServiceCall) -> None:
     """Move a PTZ camera to a preset position."""
     camera = _async_get_ptz_camera(call)
     preset_name: str = call.data[ATTR_PRESET]
 
     if preset_name.lower() == "home":
-        await camera.ptz_goto_preset_public(slot=-1)
+        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
         return
 
-    try:
-        presets = await camera.get_ptz_presets()
-    except (ClientError, ValidationError) as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="service_error",
-        ) from err
+    presets = await _async_ptz_command(camera.get_ptz_presets)
 
     for preset in presets:
         if preset.name == preset_name:
-            await camera.ptz_goto_preset_public(slot=preset.slot)
+            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
             return
 
     raise ServiceValidationError(

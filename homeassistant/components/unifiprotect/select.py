@@ -190,6 +190,7 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
+    """Set the liveview for a viewer."""
     liveview = obj.api.bootstrap.liveviews[liveview_id]
     await obj.set_liveview(liveview)
 
@@ -495,9 +496,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         if self.device.active_patrol_slot is not None:
             # A patrol is running - show which one
             slot_str = str(self.device.active_patrol_slot)
-            self._attr_current_option = self._unifi_to_hass_options.get(
-                slot_str, PTZ_PATROL_STOP
-            )
+            self._attr_current_option = self._unifi_to_hass_options.get(slot_str)
         else:
             # No patrol running - show Stop
             self._attr_current_option = PTZ_PATROL_STOP

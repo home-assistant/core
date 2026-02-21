@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from uiprotect.data import Camera, Chime, Color, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
-from uiprotect.exceptions import BadRequest
+from uiprotect.exceptions import BadRequest, ClientError
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_MESSAGE,
@@ -457,6 +457,93 @@ async def test_ptz_goto_preset_not_ptz_camera(
     camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
 
     with pytest.raises(ServiceValidationError, match="does not support PTZ"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service when get_ptz_presets raises ClientError."""
+    ptz_camera.get_ptz_presets.side_effect = ClientError("Connection failed")
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_preset_public_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service when ptz_goto_preset_public raises ClientError."""
+    ptz_camera.get_ptz_presets.return_value = _make_presets()
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with (
+        patch_ufp_method(
+            ptz_camera,
+            "ptz_goto_preset_public",
+            new_callable=AsyncMock,
+            side_effect=ClientError("Connection failed"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+            blocking=True,
+        )
+
+
+async def test_ptz_goto_home_preset_client_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset service with home preset when ptz_goto_preset_public raises ClientError."""
+    ptz_camera.get_ptz_patrols.return_value = []
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    with (
+        patch_ufp_method(
+            ptz_camera,
+            "ptz_goto_preset_public",
+            new_callable=AsyncMock,
+            side_effect=ClientError("Connection failed"),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
@@ -131,8 +132,12 @@ class ProtectData:
 
     async def async_load_ptz_patrols(self) -> None:
         """Load PTZ patrols for all PTZ cameras."""
-        for camera in self.get_cameras():
-            await self.async_load_ptz_patrols_for_camera(camera)
+        await asyncio.gather(
+            *(
+                self.async_load_ptz_patrols_for_camera(camera)
+                for camera in self.get_cameras()
+            )
+        )
 
     async def async_load_ptz_patrols_for_camera(self, camera: Camera) -> None:
         """Load PTZ patrols for a specific camera."""
