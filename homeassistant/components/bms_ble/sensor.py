@@ -43,6 +43,7 @@ from .const import (
     ATTR_POWER,
     ATTR_RSSI,
     ATTR_RUNTIME,
+    ATTR_TEMP_SENSORS,
     DOMAIN,
     LOGGER,
 )
@@ -98,13 +99,11 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     ),
     BmsEntityDescription(
         attr_fn=lambda data: (
-            {"temperature_sensors": data.get("temp_values", [])}
+            {ATTR_TEMP_SENSORS: data.get("temp_values", [])}
             if "temp_values" in data
-            else (
-                {"temperature_sensors": [data.get("temperature", 0.0)]}
-                if "temperature" in data
-                else {}
-            )
+            else {ATTR_TEMP_SENSORS: [data.get("temperature", 0.0)]}
+            if "temperature" in data
+            else {}
         ),
         device_class=SensorDeviceClass.TEMPERATURE,
         key=ATTR_TEMPERATURE,
@@ -219,7 +218,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         key=ATTR_RSSI,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: None,  # RSSI is handled in a separate class
+        value_fn=lambda data: None,
     ),
     BmsEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -228,7 +227,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ATTR_LQ,
-        value_fn=lambda data: None,  # LQ is handled in a separate class
+        value_fn=lambda data: None,
     ),
 ]
 
