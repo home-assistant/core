@@ -73,7 +73,7 @@ class SisyphusLight(LightEntity):
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the table is on."""
         return not self._table.is_sleeping
 

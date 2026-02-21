@@ -1,5 +1,7 @@
 """Support for Meteoclimatic weather service."""
 
+from typing import TYPE_CHECKING
+
 from meteoclimatic import Condition
 
 from homeassistant.components.weather import WeatherEntity
@@ -47,56 +49,49 @@ class MeteoclimaticWeather(
     def __init__(self, coordinator: MeteoclimaticUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
-        self._unique_id = self.coordinator.data["station"].code
-        self._name = self.coordinator.data["station"].name
+        self._attr_unique_id = self.coordinator.data["station"].code
+        self._attr_name = self.coordinator.data["station"].name
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        unique_id = self.coordinator.config_entry.unique_id
+        if TYPE_CHECKING:
+            assert unique_id is not None
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=self.coordinator.name,
         )
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(self.coordinator.data["weather"].condition)
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data["weather"].temp_current
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data["weather"].humidity_current
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data["weather"].pressure_current
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data["weather"].wind_current
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self.coordinator.data["weather"].wind_bearing

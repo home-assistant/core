@@ -1,13 +1,16 @@
 """Test KNX number."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import NumberSchema
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import mock_restore_cache_with_extra_data
@@ -106,3 +109,101 @@ async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) 
     await knx.receive_write(test_passive_address, (0x4E, 0xDE))
     state = hass.states.get("number.test")
     assert state.state == "9000.96"
+
+
+@pytest.mark.parametrize(
+    ("knx_config", "set_value", "expected_telegram", "expected_state"),
+    [
+        (
+            {
+                "ga_sensor": {
+                    "write": "1/1/1",
+                    "dpt": "5.001",  # percentU8
+                },
+            },
+            50.0,
+            (0x80,),
+            {
+                "state": "50",
+                "device_class": None,
+                "unit_of_measurement": "%",
+                "min": 0,
+                "max": 100,
+                "step": 1,
+            },
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "write": "1/1/1",
+                    "dpt": "9.001",  # temperature 2 byte float
+                    "passive": [],
+                },
+                "sync_state": True,
+                "respond_to_read": True,
+            },
+            21.5,
+            (0x0C, 0x33),
+            {
+                "state": "21.5",
+                "device_class": "temperature",  # from DPT
+                "unit_of_measurement": "°C",
+                "min": -273.0,
+                "max": 670760.0,
+                "step": 0.01,
+            },
+        ),
+    ],
+)
+async def test_number_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+    set_value: float,
+    expected_telegram: tuple[int, ...],
+    expected_state: dict[str, Any],
+) -> None:
+    """Test creating a number entity."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.NUMBER,
+        entity_data={"name": "test"},
+        knx_data=knx_config,
+    )
+    # set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.test", "value": set_value},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", expected_telegram)
+    knx.assert_state("number.test", **expected_state)
+
+
+async def test_number_ui_load(knx: KNXTestKit) -> None:
+    """Test loading number entities from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_number.json")
+
+    await knx.assert_read("2/0/0", response=(0x0B, 0xB8))  # 3000
+    knx.assert_state(
+        "number.test_simple",
+        "0",  # 0 is default value
+        unit_of_measurement="%",  # from DPT
+        device_class=None,  # default values
+        mode="auto",
+        min=0,
+        max=100,
+        step=1,
+    )
+    knx.assert_state(
+        "number.test_options",
+        "3000",
+        unit_of_measurement="kW",
+        device_class="power",
+        min=3000,
+        max=5000,
+        step=100,
+        mode="slider",
+    )

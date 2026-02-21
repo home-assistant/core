@@ -38,6 +38,9 @@
       "port_bandwidth_tx": {
         "default": "mdi:upload"
       },
+      "port_link_speed": {
+        "default": "mdi:speedometer"
+      },
       "wlan_clients": {
         "default": "mdi:account-multiple"
       }
