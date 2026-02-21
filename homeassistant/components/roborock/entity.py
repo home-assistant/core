@@ -114,8 +114,10 @@ class RoborockCoordinatedEntityV1(
             await self.coordinator.properties_api.status.refresh()
         except RoborockException as err:
             _LOGGER.debug("Failed to refresh status after command: %s", err)
+        else:
+            self.async_write_ha_state()
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
         return res
 
 
