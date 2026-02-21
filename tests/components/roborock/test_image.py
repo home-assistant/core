@@ -164,7 +164,6 @@ async def test_floorplan_image_rotation_cache_changes_on_rotation_change(
 
     # Ensure output changed (cache updated)
     assert body_180 != body_90
-
 async def test_floorplan_image_rotation_invalid_value_falls_back_to_raw(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
