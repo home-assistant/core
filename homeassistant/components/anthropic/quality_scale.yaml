@@ -14,7 +14,6 @@ rules:
     status: todo
     comment: |
       * Make `mock_setup_entry` a separate fixture
-      * Use the mock_config_entry fixture in `test_duplicate_entry`
   config-flow: done
   dependency-transparency: done
   docs-actions:
