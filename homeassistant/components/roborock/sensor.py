@@ -34,14 +34,13 @@ from homeassistant.helpers.typing import StateType
 
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
-    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
-    RoborockCoordinatedEntityB01,
+    RoborockCoordinatedEntityB01Q7,
     RoborockCoordinatedEntityV1,
     RoborockEntity,
 )
@@ -422,16 +421,12 @@ async def async_setup_entry(
         for description in A01_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
     )
-    for coordinator in coordinators.b01:
-        if not isinstance(coordinator.data, B01Props):
-            continue
-
-        b01_data = coordinator.data
-        entities.extend(
-            RoborockSensorEntityB01(coordinator, description)
-            for description in Q7_B01_SENSOR_DESCRIPTIONS
-            if description.value_fn(b01_data) is not None
-        )
+    entities.extend(
+        RoborockSensorEntityB01Q7(coordinator, description)
+        for coordinator in coordinators.b01_q7
+        for description in Q7_B01_SENSOR_DESCRIPTIONS
+        if description.value_fn(coordinator.data) is not None
+    )
     async_add_entities(entities)
 
 
@@ -520,14 +515,14 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
         return self.coordinator.data[self.entity_description.data_protocol]
 
 
-class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
-    """Representation of a B01 Roborock sensor."""
+class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
+    """Representation of a B01 Q7 Roborock sensor."""
 
     entity_description: RoborockSensorDescriptionB01
 
     def __init__(
         self,
-        coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
+        coordinator: RoborockB01Q7UpdateCoordinator,
         description: RoborockSensorDescriptionB01,
     ) -> None:
         """Initialize the entity."""
@@ -537,8 +532,4 @@ class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        data = self.coordinator.data
-        if not isinstance(data, B01Props):
-            return None
-
-        return self.entity_description.value_fn(data)
+        return self.entity_description.value_fn(self.coordinator.data)

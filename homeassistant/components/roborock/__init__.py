@@ -150,21 +150,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         for coord in coordinators
         if isinstance(coord, RoborockDataUpdateCoordinatorA01)
     ]
-    b01_coords = [
+    b01_q7_coords = [
         coord
         for coord in coordinators
-        if isinstance(
-            coord,
-            RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
-        )
+        if isinstance(coord, RoborockB01Q7UpdateCoordinator)
     ]
-    if len(v1_coords) + len(a01_coords) + len(b01_coords) == 0:
+    b01_q10_coords = [
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+    ]
+    if len(v1_coords) + len(a01_coords) + len(b01_q7_coords) + len(b01_q10_coords) == 0:
         raise ConfigEntryNotReady(
             "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords, b01_coords)
+    entry.runtime_data = RoborockCoordinators(
+        v1_coords, a01_coords, b01_q7_coords, b01_q10_coords
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

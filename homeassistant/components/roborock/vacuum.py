@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from roborock.data import B01Props, RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import (
     B01_Q10_DP,
     YXDeviceState,
@@ -28,7 +28,11 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
-from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityB01Q7,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockCoordinatedEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,13 +137,11 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+        for coordinator in config_entry.runtime_data.b01_q7
     )
     async_add_entities(
         RoborockQ10Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01
-        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
+        for coordinator in config_entry.runtime_data.b01_q10
     )
 
 
@@ -288,7 +290,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         }
 
 
-class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     """Representation of a Roborock Q7/Q10 vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -312,7 +314,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntityB01.__init__(
+        RoborockCoordinatedEntityB01Q7.__init__(
             self,
             coordinator.duid_slug,
             coordinator,
@@ -462,7 +464,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         )
 
 
-class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
@@ -494,7 +496,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntityB01.__init__(
+        RoborockCoordinatedEntityB01Q10.__init__(
             self,
             coordinator.duid_slug,
             coordinator,
@@ -504,8 +506,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         data = self.coordinator.data
-        if isinstance(data, B01Props):
-            return None
         status = _get_q10_status(data)
         if status is not None:
             return Q10_STATE_CODE_TO_STATE.get(status)
@@ -514,16 +514,12 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
-        data = self.coordinator.data
-        if isinstance(data, B01Props):
-            return None
-        return _get_q10_wind_name(data)
+        return _get_q10_wind_name(self.coordinator.data)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
-            data = self.coordinator.data
-            status = _get_q10_status(data) if not isinstance(data, B01Props) else None
+            status = _get_q10_status(self.coordinator.data)
             if status is YXDeviceState.PAUSE_STATE:
                 await self.coordinator.api.command.send(
                     command=B01_Q10_DP.RESUME,

@@ -131,16 +131,37 @@ class RoborockCoordinatedEntityA01(
         self._attr_unique_id = unique_id
 
 
-class RoborockCoordinatedEntityB01(
-    CoordinatorEntity[RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator],
+class RoborockCoordinatedEntityB01Q7(
+    CoordinatorEntity[RoborockB01Q7UpdateCoordinator],
     RoborockEntity,
 ):
-    """Representation of coordinated Roborock Entity."""
+    """Representation of coordinated Roborock Q7 entity."""
 
     def __init__(
         self,
         unique_id: str,
-        coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
+        coordinator: RoborockB01Q7UpdateCoordinator,
+    ) -> None:
+        """Initialize the coordinated Roborock Device."""
+        super().__init__(coordinator=coordinator)
+        RoborockEntity.__init__(
+            self,
+            unique_id=unique_id,
+            device_info=coordinator.device_info,
+        )
+        self._attr_unique_id = unique_id
+
+
+class RoborockCoordinatedEntityB01Q10(
+    CoordinatorEntity[RoborockB01Q10UpdateCoordinator],
+    RoborockEntity,
+):
+    """Representation of coordinated Roborock Q10 entity."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockB01Q10UpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         super().__init__(coordinator=coordinator)

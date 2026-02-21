@@ -366,7 +366,7 @@ async def test_q7_state_changing_commands(
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -492,7 +492,7 @@ async def test_q7_activity_none_status(
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -829,7 +829,7 @@ async def test_q10_start_uses_resume_when_paused(
         await hass.config_entries.async_setup(q10_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    coordinator = q10_config_entry.runtime_data.b01[0]
+    coordinator = q10_config_entry.runtime_data.b01_q10[0]
     if isinstance(coordinator.data, dict):
         coordinator.data[B01_Q10_DP.STATUS] = YXDeviceState.PAUSE_STATE.code
 

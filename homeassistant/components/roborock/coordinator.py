@@ -67,7 +67,8 @@ class RoborockCoordinators:
 
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
-    b01: list[RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator]
+    b01_q7: list[RoborockB01Q7UpdateCoordinator]
+    b01_q10: list[RoborockB01Q10UpdateCoordinator]
 
     def values(
         self,
@@ -78,7 +79,7 @@ class RoborockCoordinators:
         | RoborockB01Q10UpdateCoordinator
     ]:
         """Return all coordinators."""
-        return self.v1 + self.a01 + self.b01
+        return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
