@@ -77,7 +77,7 @@ async def test_get_cheapest_duration_full_day(
     mock_api,
 ) -> None:
     """Test get_cheapest_duration service with full_day time range."""
-    mock_api.get_cheapest_duration.return_value = (0.250, 12)
+    mock_api.get_cheapest_duration.return_value = (25.0, 12)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -109,7 +109,7 @@ async def test_get_cheapest_duration_default_time_range(
     mock_api,
 ) -> None:
     """Test get_cheapest_duration service with default time range."""
-    mock_api.get_cheapest_duration.return_value = (0.250, 10)
+    mock_api.get_cheapest_duration.return_value = (25.0, 10)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -186,7 +186,7 @@ async def test_get_cheapest_duration_past_start_time(
 ) -> None:
     """Test service handles start times that are in the past (tomorrow)."""
     # Mock returns hour 6, but we're at hour 20, so result should be tomorrow
-    mock_api.get_cheapest_duration_day.return_value = (0.266, 6)
+    mock_api.get_cheapest_duration_day.return_value = (26.6, 6)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
