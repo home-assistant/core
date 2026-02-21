@@ -2,12 +2,6 @@
 
 get_cheapest_duration:
   fields:
-    entity_id:
-      required: true
-      example: "sensor.green_planet_energy_current_price"
-      selector:
-        entity:
-          integration: green_planet_energy
     duration:
       required: true
       example: 2.5

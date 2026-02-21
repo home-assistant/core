@@ -64,10 +64,6 @@
           "description": "Duration in hours for which to find the cheapest time window.",
           "name": "Duration"
         },
-        "entity_id": {
-          "description": "Any Green Planet Energy sensor entity (used to identify the integration instance).",
-          "name": "Entity"
-        },
         "time_range": {
           "description": "Time range to search within.",
           "name": "Time range"

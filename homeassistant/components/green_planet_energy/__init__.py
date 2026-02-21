@@ -7,7 +7,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ENTITY_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -40,7 +40,6 @@ TIME_RANGE_FULL_DAY = "full_day"
 
 SERVICE_GET_CHEAPEST_DURATION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_DURATION): vol.All(
             vol.Coerce(float), vol.Range(min=0.5, max=24)
         ),
