@@ -16,7 +16,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
@@ -261,32 +260,37 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         if hvac_mode == HVACMode.OFF:
             await self.coordinator.api.set_regulation_mode(hvac_mode.value)
-        else:
-            current = self.device.get("select_schedule")
-            desired = current
+            return
 
-            # Capture the last valid schedule
-            if desired and desired != "off":
-                self._last_active_schedule = desired
-            elif desired == "off":
-                desired = self._last_active_schedule
+        current_schedule = self.device.get("select_schedule")
+        if current_schedule is None and hvac_mode != HVACMode.AUTO:
+            await self.coordinator.api.set_regulation_mode(hvac_mode.value)
+            return
 
-            # Enabling HVACMode.AUTO requires a previously set schedule for saving and restoring
-            if hvac_mode == HVACMode.AUTO and not desired:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key=ERROR_NO_SCHEDULE,
-                )
+        if hvac_mode == HVACMode.HEAT or hvac_mode == HVACMode.COOL:
+            if self.hvac_mode == HVACMode.OFF:
+                if current_schedule is None or current_schedule == "off":
+                    await self.coordinator.api.set_regulation_mode(hvac_mode.value)
+                else:
+                    await self.coordinator.api.set_regulation_mode(hvac_mode.value)
+                    await self.coordinator.api.set_schedule_state(self._location, STATE_OFF, current_schedule)
+            if self.hvac_mode == HVACMode.AUTO:
+                await self.coordinator.api.set_schedule_state(self._location, STATE_OFF, current_schedule)
 
-            await self.coordinator.api.set_schedule_state(
-                self._location,
-                STATE_ON if hvac_mode == HVACMode.AUTO else STATE_OFF,
-                desired,
-            )
+        if hvac_mode == HVACMode.AUTO:
+            # current_schedule is not None and hvac_mode != HVACMode.AUTO
+            # current_schedule is None and hvac_mode == HVACMode.AUTO
+            desired_schedule = current_schedule
+            # Collect the active schedule or set the last active schedule
+            if desired_schedule and desired_schedule != "off":
+                self._last_active_schedule = desired_schedule
+            elif desired_schedule == "off":
+                desired_schedule = self._last_active_schedule
             if self.hvac_mode == HVACMode.OFF and self._previous_action_mode:
-                await self.coordinator.api.set_regulation_mode(
-                    self._previous_action_mode
-                )
+                await self.coordinator.api.set_regulation_mode(self._previous_action_mode)
+                await self.coordinator.api.set_schedule_state(self._location, STATE_ON, desired_schedule)
+            elif self._previous_action_mode:
+                await self.coordinator.api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
