@@ -47,6 +47,7 @@ from homeassistant.components.backup.manager import (
     ReceiveBackupStage,
     ReceiveBackupState,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from homeassistant.components.backup.util import password_to_key
@@ -3705,3 +3706,53 @@ async def test_manager_not_blocked_after_restore(
         "next_automatic_backup_additional": False,
         "state": "idle",
     }
+
+
+async def test_upload_progress_event(
+    hass: HomeAssistant,
+    generate_backup_id: MagicMock,
+) -> None:
+    """Test that upload progress events are fired when an agent reports progress."""
+    agent_ids = [LOCAL_AGENT_ID, "test.remote"]
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+
+    remote_agent = mock_agents["test.remote"]
+    original_side_effect = remote_agent.async_upload_backup.side_effect
+
+    async def upload_with_progress(**kwargs: Any) -> None:
+        """Upload and report progress."""
+        if on_progress := kwargs.get("on_progress"):
+            on_progress(500)
+            on_progress(1000)
+        await original_side_effect(**kwargs)
+
+    remote_agent.async_upload_backup.side_effect = upload_with_progress
+
+    manager = hass.data[DATA_MANAGER]
+    received_events: list[UploadBackupEvent] = []
+    manager.async_subscribe_events(
+        lambda event: (
+            received_events.append(event)
+            if isinstance(event, UploadBackupEvent)
+            else None
+        )
+    )
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await manager.async_create_backup(
+            agent_ids=agent_ids,
+            include_addons=None,
+            include_all_addons=False,
+            include_database=True,
+            include_folders=None,
+            include_homeassistant=True,
+            name=None,
+            password=None,
+        )
+
+    assert len(received_events) == 2
+    assert received_events[0].agent_id == "test.remote"
+    assert received_events[0].uploaded_bytes == 500
+    assert received_events[1].agent_id == "test.remote"
+    assert received_events[1].uploaded_bytes == 1000
+    assert all(e.total_bytes > 0 for e in received_events)
