@@ -905,9 +905,9 @@ async def test_q10_start_uses_resume_when_paused(
         await hass.config_entries.async_setup(q10_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    coordinator = q10_config_entry.runtime_data.b01_q10[0]
-    if isinstance(coordinator.data, dict):
-        coordinator.data[B01_Q10_DP.STATUS] = YXDeviceState.PAUSE_STATE.code
+    q10_fake_device.b01_q10_properties.status.data[B01_Q10_DP.STATUS] = (
+        YXDeviceState.PAUSE_STATE.code
+    )
 
     await hass.services.async_call(
         Platform.VACUUM,
@@ -1030,13 +1030,13 @@ def test_q10_helper_mappings(
     assert _get_q10_wind_name(raw_data) == expected_fan
 
 
-async def test_q10_coordinator_timeout_without_initial_data(
+async def test_q10_coordinator_refresh_returns_trait_status_data(
     hass: HomeAssistant,
     q10_config_entry: MockConfigEntry,
     q10_device_manager: AsyncMock,
     q10_platforms: list[Platform],
 ) -> None:
-    """Test Q10 coordinator returns empty data when no status update arrives yet."""
+    """Test Q10 coordinator returns normalized data from status trait."""
     with (
         patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
         patch(
@@ -1050,59 +1050,40 @@ async def test_q10_coordinator_timeout_without_initial_data(
     coordinator: RoborockB01Q10UpdateCoordinator = (
         q10_config_entry.runtime_data.b01_q10[0]
     )
-    assert coordinator.device is not None
+    coordinator.api.refresh = AsyncMock()
+    coordinator.api.status.data = {B01_Q10_DP.STATUS: YXDeviceState.PAUSE_STATE.code}
 
-    coordinator._last_mqtt_data = {}
-    coordinator._missing_initial_data_logged = False
+    result = await coordinator._async_update_data()
 
-    async def _raise_timeout(waiter: Any, timeout: float) -> None:
-        waiter.close()
-        raise TimeoutError
+    assert result == {B01_Q10_DP.STATUS: YXDeviceState.PAUSE_STATE.code}
 
-    with patch(
-        "homeassistant.components.roborock.coordinator.asyncio.wait_for",
-        side_effect=_raise_timeout,
+
+async def test_q10_coordinator_refresh_with_empty_status_returns_empty(
+    hass: HomeAssistant,
+    q10_config_entry: MockConfigEntry,
+    q10_device_manager: AsyncMock,
+    q10_platforms: list[Platform],
+) -> None:
+    """Test Q10 coordinator returns empty data when status trait has no values."""
+    with (
+        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
+        patch(
+            "homeassistant.components.roborock.create_device_manager",
+            return_value=q10_device_manager,
+        ),
     ):
-        result = await coordinator._async_update_data()
+        await hass.config_entries.async_setup(q10_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator: RoborockB01Q10UpdateCoordinator = (
+        q10_config_entry.runtime_data.b01_q10[0]
+    )
+    coordinator.api.refresh = AsyncMock()
+    coordinator.api.status.data = {}
+
+    result = await coordinator._async_update_data()
 
     assert result == {}
-    assert coordinator._missing_initial_data_logged
-
-
-async def test_q10_coordinator_timeout_with_cached_data(
-    hass: HomeAssistant,
-    q10_config_entry: MockConfigEntry,
-    q10_device_manager: AsyncMock,
-    q10_platforms: list[Platform],
-) -> None:
-    """Test Q10 coordinator keeps cached data when no new update arrives."""
-    with (
-        patch("homeassistant.components.roborock.PLATFORMS", q10_platforms),
-        patch(
-            "homeassistant.components.roborock.create_device_manager",
-            return_value=q10_device_manager,
-        ),
-    ):
-        await hass.config_entries.async_setup(q10_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    coordinator: RoborockB01Q10UpdateCoordinator = (
-        q10_config_entry.runtime_data.b01_q10[0]
-    )
-    coordinator._last_mqtt_data = {B01_Q10_DP.STATUS: YXDeviceState.STANDBY_STATE.code}
-
-    async def _raise_timeout(waiter: Any, timeout: float) -> None:
-        waiter.close()
-        raise TimeoutError
-
-    with patch(
-        "homeassistant.components.roborock.coordinator.asyncio.wait_for",
-        side_effect=_raise_timeout,
-    ):
-        result = await coordinator._async_update_data()
-
-    assert result
-    assert result[B01_Q10_DP.STATUS] == YXDeviceState.STANDBY_STATE.code
 
 
 async def test_q10_coordinator_refresh_error_is_update_failed(

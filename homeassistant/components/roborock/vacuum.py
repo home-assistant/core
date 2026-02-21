@@ -1,5 +1,6 @@
 """Support for Roborock vacuum class."""
 
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -17,7 +18,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -121,6 +122,16 @@ def _get_q10_wind_name(data: dict[Any, Any]) -> str | None:
             if yx_fan.code == fan_level:
                 return yx_fan.value.capitalize()
     return None
+
+
+def _get_q10_data(
+    coordinator: RoborockB01Q10UpdateCoordinator,
+) -> dict[B01_Q10_DP, Any]:
+    """Get normalized Q10 status data from the status trait."""
+    status_data = coordinator.get_q10_status_data()
+    if status_data:
+        return status_data
+    return coordinator.data
 
 
 PARALLEL_UPDATES = 0
@@ -489,6 +500,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         YXFanLevel.SUPER.value.capitalize(),
     ]
     coordinator: RoborockB01Q10UpdateCoordinator
+    _status_listener_unsubscribe: Callable[[], None] | None
 
     def __init__(
         self,
@@ -501,11 +513,34 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
             coordinator.duid_slug,
             coordinator,
         )
+        self._status_listener_unsubscribe = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register listener for trait status updates."""
+        await super().async_added_to_hass()
+        if self._status_listener_unsubscribe is None:
+            self._status_listener_unsubscribe = (
+                self.coordinator.api.status.add_update_listener(
+                    self._handle_q10_status_update
+                )
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister listener for trait status updates."""
+        if self._status_listener_unsubscribe is not None:
+            self._status_listener_unsubscribe()
+            self._status_listener_unsubscribe = None
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def _handle_q10_status_update(self, _decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+        """Handle updates pushed by the Q10 status trait."""
+        self.schedule_update_ha_state()
 
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        data = self.coordinator.data
+        data = _get_q10_data(self.coordinator)
         status = _get_q10_status(data)
         if status is not None:
             return Q10_STATE_CODE_TO_STATE.get(status)
@@ -514,12 +549,12 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
-        return _get_q10_wind_name(self.coordinator.data)
+        return _get_q10_wind_name(_get_q10_data(self.coordinator))
 
     async def async_start(self) -> None:
         """Start the vacuum."""
         try:
-            status = _get_q10_status(self.coordinator.data)
+            status = _get_q10_status(_get_q10_data(self.coordinator))
             if status is YXDeviceState.PAUSE_STATE:
                 await self.coordinator.api.command.send(
                     command=B01_Q10_DP.RESUME,

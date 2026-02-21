@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar
@@ -597,15 +595,6 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
             sw_version=device.device_info.fv,
         )
         self.api = api
-        self._last_mqtt_data: dict[B01_Q10_DP, Any] = {}
-        self._mqtt_data_received = asyncio.Event()
-        self._status_update_unsubscribe: Callable[[], None] | None = None
-        self._missing_initial_data_logged = False
-
-        if device_status := self._normalize_q10_device_status(
-            device.device_info.device_status
-        ):
-            self._last_mqtt_data.update(device_status)
 
     @cached_property
     def duid(self) -> str:
@@ -632,6 +621,10 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
 
         normalized_status: dict[B01_Q10_DP, Any] = {}
         for key, value in raw_status.items():
+            if isinstance(key, B01_Q10_DP):
+                normalized_status[key] = value
+                continue
+
             try:
                 code = int(key)
             except TypeError, ValueError:
@@ -643,60 +636,49 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
             normalized_status[dps_key] = value
         return normalized_status
 
-    def _handle_status_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:
-        """Handle status updates received from the Q10 status listener."""
-        self._last_mqtt_data.update(decoded_dps)
-        self._mqtt_data_received.set()
+    @staticmethod
+    def _to_q10_dps_value(value: Any) -> Any:
+        """Convert Q10 status trait values to raw DPS values."""
+        if hasattr(value, "code"):
+            return value.code
+        return value
+
+    def get_q10_status_data(self) -> dict[B01_Q10_DP, Any]:
+        """Return Q10 status as a DPS-keyed dictionary."""
+        status_data: dict[B01_Q10_DP, Any] = {}
+        try:
+            for field in fields(self.api.status):
+                if (dps_key := field.metadata.get("dps")) is None:
+                    continue
+
+                if (value := getattr(self.api.status, field.name)) is None:
+                    continue
+
+                status_data[dps_key] = self._to_q10_dps_value(value)
+        except TypeError:
+            # Test doubles may not be dataclass instances.
+            pass
+
+        if status_data:
+            return status_data
+
+        return self._normalize_q10_device_status(getattr(self.api.status, "data", None))
 
     async def _async_update_data(
         self,
     ) -> dict[B01_Q10_DP, Any]:
-        if self._status_update_unsubscribe is None:
-            self._status_update_unsubscribe = self.api.status.add_update_listener(
-                self._handle_status_update
-            )
-
         try:
-            had_data_before_refresh = bool(self._last_mqtt_data)
-            self._mqtt_data_received.clear()
-
-            # Request fresh data from the device
             await self.api.refresh()
-
-            try:
-                await asyncio.wait_for(
-                    self._mqtt_data_received.wait(),
-                    timeout=5 if not had_data_before_refresh else 2,
-                )
-            except TimeoutError:
-                if not had_data_before_refresh:
-                    if not self._missing_initial_data_logged:
-                        _LOGGER.debug(
-                            "No Q10 MQTT data received yet, waiting for next refresh"
-                        )
-                        self._missing_initial_data_logged = True
-                    return {}
-
-                _LOGGER.debug("No new Q10 MQTT data received, using last known data")
-
-            # Return the last MQTT data received (stored by the subscribe loop)
-            data = self._last_mqtt_data.copy() if self._last_mqtt_data else {}
         except RoborockException as ex:
             _LOGGER.debug("Failed to update Q10 data: %s", ex)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
-        return data
+        return self.get_q10_status_data()
 
     async def async_shutdown(self) -> None:
         """Shut down coordinator and Q10 subscriptions."""
-        has_status_listener = self._status_update_unsubscribe is not None
-        if self._status_update_unsubscribe is not None:
-            self._status_update_unsubscribe()
-            self._status_update_unsubscribe = None
-
-        if has_status_listener:
-            await self.api.close()
+        await self.api.close()
 
         await super().async_shutdown()
