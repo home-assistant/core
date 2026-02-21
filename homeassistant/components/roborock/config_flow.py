@@ -47,9 +47,9 @@ from .const import (
     DOMAIN,
     DRAWABLES,
     REGION_OPTIONS,
-    CONF_MAP_ROTATION,           # <<< NEU
-    MAP_ROTATION_OPTIONS,        # <<< NEU
-    DEFAULT_MAP_ROTATION,        # <<< NEU
+    CONF_MAP_ROTATION,
+    MAP_ROTATION_OPTIONS,
+    DEFAULT_MAP_ROTATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -246,8 +246,7 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
-            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND) 
-            # Rotation speichern (als int)
+            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
             rotation = int(user_input.pop(CONF_MAP_ROTATION))
             self.options[CONF_MAP_ROTATION] = rotation
             self.options.setdefault(DRAWABLES, {}).update(user_input)
