@@ -153,6 +153,9 @@ publish:
             extras:
               selector:
                 object:
+            value:
+              selector:
+                text:
     sequence_id:
       required: false
       selector:

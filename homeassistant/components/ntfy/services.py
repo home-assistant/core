@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Any
 
-from aiontfy import BroadcastAction, HttpAction, ViewAction
+from aiontfy import BroadcastAction, CopyAction, HttpAction, ViewAction
 import voluptuous as vol
 from yarl import URL
 
@@ -48,10 +48,13 @@ ATTR_EXTRAS = "extras"
 ATTR_METHOD = "method"
 ATTR_HEADERS = "headers"
 ATTR_BODY = "body"
+ATTR_VALUE = "value"
+ATTR_COPY = "copy"
 ACTIONS_MAP = {
     ATTR_VIEW: ViewAction,
     ATTR_BROADCAST: BroadcastAction,
     ATTR_HTTP: HttpAction,
+    ATTR_COPY: CopyAction,
 }
 MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
 
@@ -92,6 +95,12 @@ HTTP_SCHEMA = VIEW_SCHEMA.extend(
         vol.Optional(ATTR_BODY): cv.string,
     }
 )
+COPY_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ACTION): vol.All(str, "copy"),
+        vol.Required(ATTR_VALUE): cv.string,
+    }
+)
 
 SERVICE_PUBLISH_SCHEMA = vol.All(
     cv.make_entity_service_schema(
@@ -123,7 +132,7 @@ SERVICE_PUBLISH_SCHEMA = vol.All(
                     max=MAX_ACTIONS_ALLOWED,
                     msg="Too many actions defined. A maximum of 3 is supported",
                 ),
-                [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA)],
+                [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
             ),
         }
     ),

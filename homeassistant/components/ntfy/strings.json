@@ -355,6 +355,10 @@
         "url": {
           "description": "URL to open for the 'view' action or to request for the 'http' action",
           "name": "URL"
+        },
+        "value": {
+          "description": "Value to copy to clipboard when the 'copy' action is triggered",
+          "name": "Value"
         }
       }
     },
