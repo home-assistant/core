@@ -65,9 +65,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     ) -> None:
         """Initialize a Roborock map."""
         map_name = map_name or f"Map {map_flag}"
-        # Note: Map names are not a valid unique id since they can be changed
-        # in the roborock app. This should be migrated to use map flag for
-        # the unique id.
         unique_id = f"{coordinator.duid_slug}_map_{map_name}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
@@ -117,17 +114,14 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         raw = map_content.image_content
         rotation = int(self.config_entry.options.get(CONF_MAP_ROTATION, DEFAULT_MAP_ROTATION))
 
-        # Keine Rotation nötig
         if rotation % 360 == 0:
             return raw
 
         cache_key = (rotation, hash(raw))
 
-         # Cache verwenden
         if self._rotated_cache is not None and self._rotated_cache_key == cache_key:
             return self._rotated_cache
 
-        #  Rotieren
         img = Image.open(io.BytesIO(raw))
         img = img.rotate(rotation, expand=True)
 
