@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 import logging
 import pathlib
@@ -164,16 +164,31 @@ def create_b01_q10_trait() -> Mock:
     # Add StatusTrait for sensor testing (moved before command definitions)
     status_trait = AsyncMock()
     status_trait.data = deepcopy(Q10_STATUS_DATA)
+    status_update_listeners: list[Callable[[dict], None]] = []
 
     async def status_refresh_side_effect():
         return status_trait.data
+
+    def add_update_listener_side_effect(
+        callback: Callable[[dict], None],
+    ) -> Callable[[], None]:
+        status_update_listeners.append(callback)
+
+        def remove_listener() -> None:
+            if callback in status_update_listeners:
+                status_update_listeners.remove(callback)
+
+        return remove_listener
 
     # Mock update_from_dps to simulate MQTT data reception
     def update_from_dps_side_effect(decoded_dps: dict) -> None:
         """Simulate receiving MQTT data."""
         status_trait.data.update(decoded_dps)
+        for callback in status_update_listeners:
+            callback(decoded_dps)
 
     status_trait.refresh = AsyncMock(side_effect=status_refresh_side_effect)
+    status_trait.add_update_listener = Mock(side_effect=add_update_listener_side_effect)
     status_trait.update_from_dps = Mock(side_effect=update_from_dps_side_effect)
     q10_trait.status = status_trait
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -595,10 +596,9 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
             sw_version=device.device_info.fv,
         )
         self.api = api
-        self._update_hook_installed = False
         self._last_mqtt_data: dict[B01_Q10_DP, Any] = {}
         self._mqtt_data_received = asyncio.Event()
-        self._original_update_from_dps: Any | None = None
+        self._status_update_unsubscribe: Callable[[], None] | None = None
         self._missing_initial_data_logged = False
 
         if device_status := self._normalize_q10_device_status(
@@ -642,23 +642,18 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
             normalized_status[dps_key] = value
         return normalized_status
 
+    def _handle_status_update(self, decoded_dps: dict[B01_Q10_DP, Any]) -> None:
+        """Handle status updates received from the Q10 status listener."""
+        self._last_mqtt_data.update(decoded_dps)
+        self._mqtt_data_received.set()
+
     async def _async_update_data(
         self,
     ) -> dict[B01_Q10_DP, Any]:
-        if not self._update_hook_installed:
-            # Wrap status.update_from_dps to capture raw MQTT data
-            original_update = self.api.status.update_from_dps
-            self._original_update_from_dps = original_update
-
-            def update_wrapper(decoded_dps: dict[Any, Any]) -> None:
-                """Capture MQTT data and call original."""
-                self._last_mqtt_data.update(decoded_dps)
-                self._mqtt_data_received.set()
-                original_update(decoded_dps)
-
-            # Replace method to intercept MQTT data before StatusTrait filtering
-            setattr(self.api.status, "update_from_dps", update_wrapper)
-            self._update_hook_installed = True
+        if self._status_update_unsubscribe is None:
+            self._status_update_unsubscribe = self.api.status.add_update_listener(
+                self._handle_status_update
+            )
 
         try:
             had_data_before_refresh = bool(self._last_mqtt_data)
@@ -695,12 +690,12 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[dict[B01_Q10_DP, Any
 
     async def async_shutdown(self) -> None:
         """Shut down coordinator and Q10 subscriptions."""
-        if self._original_update_from_dps is not None:
-            setattr(self.api.status, "update_from_dps", self._original_update_from_dps)
-            self._original_update_from_dps = None
+        has_status_listener = self._status_update_unsubscribe is not None
+        if self._status_update_unsubscribe is not None:
+            self._status_update_unsubscribe()
+            self._status_update_unsubscribe = None
 
-        if self._update_hook_installed:
+        if has_status_listener:
             await self.api.close()
-            self._update_hook_installed = False
 
         await super().async_shutdown()
