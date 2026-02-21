@@ -339,7 +339,7 @@ aionanoleaf2==1.0.2
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.7.0
+aiontfy==0.8.0
 
 # homeassistant.components.nut
 aionut==4.3.4
