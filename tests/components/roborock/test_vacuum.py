@@ -178,6 +178,25 @@ async def test_failed_user_command(
         )
 
 
+async def test_v1_refreshes_status_after_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test v1 commands trigger an immediate status refresh."""
+    assert fake_vacuum.v1_properties is not None
+    previous_refresh_count = fake_vacuum.v1_properties.status.refresh.call_count
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
+
+
 async def test_get_maps(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
