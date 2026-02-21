@@ -117,6 +117,15 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
         super()._handle_coordinator_update()
 
+    def _rotate_image(self, raw: bytes, rotation: int) -> bytes:
+        """Rotate image in executor thread."""
+        img = Image.open(io.BytesIO(raw))
+        img = img.rotate(rotation, expand=True)
+
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+        return out.getvalue()
+    
     async def async_image(self) -> bytes | None:
         """Return the map image."""
         if (map_content := self._map_content) is None:
@@ -148,7 +157,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         if rotation == 0:
             return raw
 
-        # Return cached rotated image if available
+        # Cache check
         if (
             self._rotated_cache is not None
             and self._rotated_cache_rotation == rotation
@@ -156,23 +165,20 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             return self._rotated_cache
 
         try:
-            img = Image.open(io.BytesIO(raw))
-            img = img.rotate(rotation, expand=True)
+            rotated = await self.hass.async_add_executor_job(
+                self._rotate_image, raw, rotation
+            )
 
-            out = io.BytesIO()
-            img.save(out, format="PNG")
-
-            self._rotated_cache = out.getvalue()
+            self._rotated_cache = rotated
             self._rotated_cache_rotation = rotation
 
-            return self._rotated_cache
+            return rotated
 
         except (OSError, UnidentifiedImageError) as err:
             _LOGGER.debug(
                 "Failed to rotate Roborock map image: %s. Returning original image.",
                 err,
             )
-            # Do not cache failed rotation
             self._rotated_cache = None
             self._rotated_cache_rotation = None
             return raw
