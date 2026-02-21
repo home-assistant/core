@@ -332,7 +332,7 @@ async def test_adam_climate_off_mode_change(
         },
         blocking=True,
     )
-    assert mock_smile_adam_jip.set_schedule_state.call_count == 1
+    assert mock_smile_adam_jip.set_schedule_state.call_count == 0
     assert mock_smile_adam_jip.set_regulation_mode.call_count == 1
     mock_smile_adam_jip.set_regulation_mode.assert_called_with("heating")
 
@@ -348,7 +348,7 @@ async def test_adam_climate_off_mode_change(
         },
         blocking=True,
     )
-    assert mock_smile_adam_jip.set_schedule_state.call_count == 1
+    assert mock_smile_adam_jip.set_schedule_state.call_count == 0
     assert mock_smile_adam_jip.set_regulation_mode.call_count == 2
     mock_smile_adam_jip.set_regulation_mode.assert_called_with("off")
 
@@ -364,7 +364,7 @@ async def test_adam_climate_off_mode_change(
         },
         blocking=True,
     )
-    assert mock_smile_adam_jip.set_schedule_state.call_count == 1
+    assert mock_smile_adam_jip.set_schedule_state.call_count == 0
     assert mock_smile_adam_jip.set_regulation_mode.call_count == 2
 
 
