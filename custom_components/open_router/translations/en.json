@@ -1,0 +1,99 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unknown error occurred",
+      "model_required": "Please select a model"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "An OpenRouter API key"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "Failed to connect",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "unknown": "Unknown error occurred",
+        "reconfigure_successful": "AI task updated successfully"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "user": "Add AI task"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "Model"
+          },
+          "data_description": {
+            "chat_model": "The model to use for the AI task"
+          },
+          "description": "Configure the AI task"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "cannot_connect": "Failed to connect",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "unknown": "Unknown error occurred",
+        "reconfigure_successful": "Conversation agent updated successfully"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "name": "Name",
+            "prompt": "Prompt"
+          },
+          "data_description": {
+            "name": "The name of this conversation agent"
+          },
+          "sections": {
+            "section_model": {
+              "name": "Model",
+              "data": {
+                "chat_model": "Model"
+              },
+              "data_description": {
+                "chat_model": "The model to use for the conversation agent"
+              }
+            },
+            "section_options": {
+              "name": "Options",
+              "data": {
+                "enable_assist": "Enable Assist",
+                "web_search": "Enable web search"
+              },
+              "data_description": {
+                "enable_assist": "Allow the model to control Home Assistant",
+                "web_search": "Allow the model to search the web for answers"
+              }
+            }
+          }
+        },
+        "providers": {
+          "data": {
+            "provider": "Provider"
+          },
+          "description": "Select providers in order of priority. First selected = highest priority.\nLeave empty to use the default providers.",
+          "title": "Provider Selection"
+        }
+      }
+    }
+  }
+}
