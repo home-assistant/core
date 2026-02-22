@@ -268,6 +268,7 @@ async def test_adam_3_climate_entity_attributes(
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.OFF,
         HVACMode.AUTO,
+        HVACMode.HEAT,
         HVACMode.COOL,
     ]
     data = mock_smile_adam_heat_cool.async_update.return_value
@@ -289,6 +290,7 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.OFF,
             HVACMode.AUTO,
             HVACMode.HEAT,
+            HVACMode.COOL,
         ]
 
     data = mock_smile_adam_heat_cool.async_update.return_value
@@ -309,6 +311,7 @@ async def test_adam_3_climate_entity_attributes(
         assert state.attributes[ATTR_HVAC_MODES] == [
             HVACMode.OFF,
             HVACMode.AUTO,
+            HVACMode.HEAT,
             HVACMode.COOL,
         ]
 
@@ -329,6 +332,7 @@ async def test_adam_3_climate_entity_attributes(
         assert state.attributes[ATTR_HVAC_MODES] == [
             HVACMode.OFF,
             HVACMode.AUTO,
+            HVACMode.HEAT,
             HVACMode.COOL,
         ]
         # Test setting regulation_mode to cooling, from off
