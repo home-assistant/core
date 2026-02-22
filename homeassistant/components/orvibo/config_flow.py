@@ -135,7 +135,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.discovery_task.done():
             try:
                 self.discovery_task.result()  # propagate any errors
-            except (S20Exception, OSError) as err:  # pragma: no cover
+            except (S20Exception, OSError) as err:
                 _LOGGER.debug("Discovery task failed: %s", err)
             self.discovery_task = None
             return self.async_show_progress_done(
