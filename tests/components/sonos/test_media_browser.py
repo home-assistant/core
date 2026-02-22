@@ -126,8 +126,64 @@ def test_get_media_multisegment_album_id_uses_album_segment() -> None:
     assert music_library.get_music_library_information.call_args.args == ("albums",)
     assert music_library.get_music_library_information.call_args.kwargs == {
         "search_term": "Abbey Road",
-        "full_album_art_uri": True
+        "full_album_art_uri": True,
     }
+
+
+def test_get_media_multisegment_album_id_prefers_exact_item_id_match() -> None:
+    """Test multi-match disambiguation prefers exact `item_id`."""
+    music_library = MagicMock()
+    exact_item = MockMusicServiceItem(
+        "Abbey Road (Remaster)",
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+    )
+    music_library.get_music_library_information.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road",
+            "A:ALBUM/Abbey%20Road/Someone%20Else",
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+        ),
+        exact_item,
+    ]
+
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is exact_item
+
+
+def test_get_media_multisegment_album_id_falls_back_to_exact_title_match() -> None:
+    """Test multi-match disambiguation falls back to exact title match."""
+    music_library = MagicMock()
+    title_match_item = MockMusicServiceItem(
+        "Abbey Road",
+        "A:ALBUM/Abbey%20Road/The%20Beatles%20(Remaster)",
+        "A:ALBUM",
+        "object.container.album.musicAlbum",
+    )
+    music_library.get_music_library_information.return_value = [
+        MockMusicServiceItem(
+            "Abbey Road (Live)",
+            "A:ALBUM/Abbey%20Road/The%20Beatles%20(Live)",
+            "A:ALBUM",
+            "object.container.album.musicAlbum",
+        ),
+        title_match_item,
+    ]
+
+    result = get_media(
+        music_library,
+        "A:ALBUM/Abbey%20Road/The%20Beatles",
+        "album",
+    )
+
+    assert result is title_match_item
 
 
 async def test_browse_media_root(
