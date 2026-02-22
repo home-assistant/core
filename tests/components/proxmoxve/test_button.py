@@ -128,7 +128,6 @@ async def test_vm_buttons(
     """Test pressing a ProxmoxVE VM action button triggers the correct API call."""
     await setup_integration(hass, mock_config_entry)
 
-    # Warm up the cache so the resource mock is addressable.
     mock_proxmox_client._node_mock.qemu(vmid)
     method_mock = getattr(mock_proxmox_client._qemu_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
@@ -162,7 +161,6 @@ async def test_container_buttons(
     """Test pressing a ProxmoxVE container action button triggers the correct API call."""
     await setup_integration(hass, mock_config_entry)
 
-    # Warm up the cache so the resource mock is addressable.
     mock_proxmox_client._node_mock.lxc(vmid)
     method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
     pre_calls = len(method_mock.mock_calls)
@@ -217,9 +215,21 @@ async def test_node_buttons_exceptions(
             AuthenticationError("auth failed"),
         ),
         (
-            "button.vm_web_stop",
+            "button.vm_web_start",
             100,
-            "stop",
+            "start",
+            SSLError("ssl error"),
+        ),
+        (
+            "button.vm_web_hibernate",
+            100,
+            "hibernate",
+            ConnectTimeout("timeout"),
+        ),
+        (
+            "button.vm_web_reset",
+            100,
+            "reset",
             ResourceException(500, "error", {}),
         ),
     ],
@@ -258,6 +268,18 @@ async def test_vm_buttons_exceptions(
             200,
             "start",
             AuthenticationError("auth failed"),
+        ),
+        (
+            "button.ct_nginx_start",
+            200,
+            "start",
+            SSLError("ssl error"),
+        ),
+        (
+            "button.ct_nginx_restart",
+            200,
+            "restart",
+            ConnectTimeout("timeout"),
         ),
         (
             "button.ct_nginx_stop",
