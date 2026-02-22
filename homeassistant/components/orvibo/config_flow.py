@@ -163,14 +163,11 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if _chosen_host == host:
                     self.chosen_switch[CONF_HOST] = host
                     self.chosen_switch[CONF_MAC] = _format_mac(data[CONF_MAC])
-
-                await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} ({host})", data=self.chosen_switch
-                )
-
+                    await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=f"{DEFAULT_NAME} ({host})", data=self.chosen_switch
+                    )
         _LOGGER.debug("discovered switches: %s", self._discovered_switches)
 
         _options = {
