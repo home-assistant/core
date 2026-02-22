@@ -183,6 +183,7 @@ class SupervisorBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: Callable[[int], None],
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
