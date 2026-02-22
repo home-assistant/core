@@ -122,20 +122,28 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
+        # 1️⃣  Start discovery if we haven't started yet
         if not self.discovery_task:
             self.discovery_task = self.hass.async_create_task(self._async_discover())
-
-        if self.discovery_task.done():
-            self.discovery_task.cancel()
-            self.discovery_task = None
-
-            return self.async_show_progress_done(
-                next_step_id="choose_switch"
-                if self._discovered_switches
-                else "discovery_failed"
+            # Always show a progress view first so HA can schedule the task
+            return self.async_show_progress(
+                step_id="start_discovery",
+                progress_action="start_discovery",
+                progress_task=self.discovery_task,
             )
-
+        # 2️⃣  If discovery is done, finish up
+        if self.discovery_task.done():
+            try:
+                self.discovery_task.result()  # propagate any errors
+            except (S20Exception, OSError) as err:  # pragma: no cover
+                _LOGGER.debug("Discovery task failed: %s", err)
+            self.discovery_task = None
+            return self.async_show_progress_done(
+                next_step_id=(
+                    "choose_switch" if self._discovered_switches else "discovery_failed"
+                )
+            )
+        # 3️⃣  Discovery still running → keep progress UI
         return self.async_show_progress(
             step_id="start_discovery",
             progress_action="start_discovery",
