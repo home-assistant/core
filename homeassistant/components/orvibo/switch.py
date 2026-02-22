@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
             [
                 {
                     vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_MAC): cv.string,
+                    vol.Required(CONF_MAC): cv.string,
                 }
             ],
         )
@@ -85,7 +85,7 @@ async def async_setup_platform(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"eyaml_deprecation_{switch.get('mac').replace(':', '').lower()}",
+            f"yaml_deprecation_{switch.get('mac').replace(':', '').lower()}",
             breaks_in_ha_version="2026.5.0",
             is_fixable=False,
             is_persistent=True,

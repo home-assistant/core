@@ -33,6 +33,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Orvibo S20 switches."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize an instance of the S20 config flow."""
@@ -40,7 +41,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_switches: dict[str, dict[str, Any]] = {}
         self.chosen_switch: dict[str, Any] = {}
 
-    async def _async_discover(self):
+    async def _async_discover(self) -> None:
         async def _filter_discovered_switches(
             switches: dict[str, dict[str, Any]],
         ) -> dict[str, dict[str, Any]]:

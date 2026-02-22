@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "Unable to connect to the S20 switch",
+      "invalid_mac": "Invalid MAC address format"
     },
     "error": {
       "cannot_connect": "Unable to connect to the S20 switch",
@@ -60,10 +62,10 @@
   "issues": {
     "yaml_deprecation": {
       "description": "The device (MAC: {mac}, Host: {host}) is configured in configuration.yaml. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
-      "title": "Legacy YAML configuration detected {host}."
+      "title": "Legacy YAML configuration detected {host}"
     },
     "yaml_deprecation_import_issue": {
-      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. Please try reloading the integration, or removing the YAML block from configuration.yaml and creating the entry using the UI.",
+      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. 1) Check the error logs for details, 2) Remove the YAML block from configuration.yaml, 3) Restart Home Assistant, 4) Add the device using the UI configuration flow.",
       "title": "Legacy YAML configuration import issue for {host}"
     }
   }

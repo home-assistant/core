@@ -4,7 +4,6 @@ import asyncio
 from unittest.mock import patch
 
 from orvibo.s20 import S20Exception
-import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_user_menu_display(hass: HomeAssistant) -> None:
     """Initial step displays the user menu correctly."""
     result = await hass.config_entries.flow.async_init(
@@ -28,7 +26,6 @@ async def test_user_menu_display(hass: HomeAssistant) -> None:
     assert set(result["menu_options"]) == {"start_discovery", "edit"}
 
 
-@pytest.mark.asyncio
 async def test_edit_flow_valid_input(
     hass: HomeAssistant, mock_s20, mock_setup_entry
 ) -> None:
@@ -53,7 +50,6 @@ async def test_edit_flow_valid_input(
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
 
 
-@pytest.mark.asyncio
 async def test_edit_flow_invalid_mac(hass: HomeAssistant) -> None:
     """Invalid MAC input shows error in edit step."""
     result = await hass.config_entries.flow.async_init(
@@ -72,7 +68,6 @@ async def test_edit_flow_invalid_mac(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "invalid_mac"
 
 
-@pytest.mark.asyncio
 async def test_edit_flow_connection_error(hass: HomeAssistant, mock_s20) -> None:
     """Connection failure in edit step results in form error."""
     mock_s20.side_effect = S20Exception("Connection failed")
@@ -94,7 +89,6 @@ async def test_edit_flow_connection_error(hass: HomeAssistant, mock_s20) -> None
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.asyncio
 async def test_discovery_success(
     hass: HomeAssistant, mock_discover, mock_setup_entry
 ) -> None:
@@ -128,7 +122,6 @@ async def test_discovery_success(
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
 
 
-@pytest.mark.asyncio
 async def test_discovery_no_devices(hass: HomeAssistant, mock_discover) -> None:
     """Discovery with no found devices should go to discovery_failed."""
     mock_discover.return_value = {}
@@ -149,7 +142,6 @@ async def test_discovery_no_devices(hass: HomeAssistant, mock_discover) -> None:
     assert result["step_id"] == "discovery_failed"
 
 
-@pytest.mark.asyncio
 async def test_import_flow_success(
     hass: HomeAssistant, mock_s20, mock_setup_entry
 ) -> None:
@@ -165,7 +157,6 @@ async def test_import_flow_success(
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
 
 
-@pytest.mark.asyncio
 async def test_import_flow_connection_error(hass: HomeAssistant, mock_s20) -> None:
     """Import flow should abort if connection fails."""
     mock_s20.side_effect = S20Exception("Connection failed")
@@ -180,7 +171,6 @@ async def test_import_flow_connection_error(hass: HomeAssistant, mock_s20) -> No
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.asyncio
 async def test_discover_skips_existing_and_invalid_mac(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_discover
 ) -> None:
@@ -216,7 +206,6 @@ async def test_discover_skips_existing_and_invalid_mac(
     assert "192.168.1.11" not in dropdown_options
 
 
-@pytest.mark.asyncio
 async def test_start_discovery_shows_progress(hass: HomeAssistant) -> None:
     """Test polling the flow while discovery is still in progress."""
     result = await hass.config_entries.flow.async_init(
@@ -241,7 +230,6 @@ async def test_start_discovery_shows_progress(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 async def test_discovery_flow_task_exception(
     hass: HomeAssistant, mock_discover
 ) -> None:
