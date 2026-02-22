@@ -373,7 +373,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
 
 class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
-    """Representation of a Roborock Q7/Q10 vacuum."""
+    """Representation of a Roborock Q7 vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
