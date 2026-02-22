@@ -60,6 +60,7 @@ async def test_async_join_players(hass: HomeAssistant, create_player) -> None:
     player_2 = await create_player("player_2")
 
     await player_1.async_join_players([player_1.entity_id, player_2.entity_id])
+    await hass.async_block_till_done()
 
     player_1.atv.audio.set_output_devices.assert_called_with(
         "player_1-output-device-id", "player_2-output-device-id"
@@ -76,6 +77,8 @@ async def test_async_join_players_throws(hass: HomeAssistant, create_player) -> 
         await player_1.async_join_players(
             [player_1.entity_id, player_2.entity_id, "non-existing-entity-id"]
         )
+
+    await hass.async_block_till_done()
 
     # we still expect the valid entities to be captured and joined
     player_1.atv.audio.set_output_devices.assert_called_with(

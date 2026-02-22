@@ -722,10 +722,6 @@ class AppleTvMediaPlayer(
             else:
                 unmapped_entities.append(entity_id)
 
-        # This will be updated automatically when atv calls outputdevices_update()
-        # do we really want to update this optimistically?
-        self._attr_group_members = mapped_entities
-
         await atv.audio.set_output_devices(
             # Need to check typing with pyatv.
             # The method is defined with list[str] for each arg:
