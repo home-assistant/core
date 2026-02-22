@@ -488,8 +488,9 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            fan_level = SCWindMapping.from_value(fan_speed)
-            await self.coordinator.api.set_fan_speed(fan_level)
+            await self.coordinator.api.set_fan_speed(
+                SCWindMapping.from_value(fan_speed)
+            )
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
