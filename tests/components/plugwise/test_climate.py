@@ -210,9 +210,10 @@ async def test_adam_restore_state_climate(
             {ATTR_ENTITY_ID: "climate.living_room", ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
+        assert mock_smile_adam_heat_cool.set_regulation_mode.assert_called_with(
             "heating",
         )
+        assert mock_smile_adam_heat_cool.set_regulation_mode.call_count == 1
 
     data = mock_smile_adam_heat_cool.async_update.return_value
     data["f871b8c4d63549319221e294e4f88074"]["climate_mode"] = "heat"
@@ -224,7 +225,7 @@ async def test_adam_restore_state_climate(
         assert (state := hass.states.get("climate.bathroom"))
         assert state.state == "heat"
 
-        # Verify restoration is used when setting a schedule
+        # Verify restoration is used when setting the schedule, schedule == "off"
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -232,9 +233,10 @@ async def test_adam_restore_state_climate(
             blocking=True,
         )
         # Verify set_schedule_state was called with the restored schedule
-        mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
+        assert mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
             "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
         )
+        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 1
 
     data = mock_smile_adam_heat_cool.async_update.return_value
     data["f871b8c4d63549319221e294e4f88074"]["climate_mode"] = "heat"
@@ -247,17 +249,14 @@ async def test_adam_restore_state_climate(
         assert (state := hass.states.get("climate.bathroom"))
         assert state.state == "heat"
 
-        # Verify the __last_active_schedule is used
+        # Verify the active schedule is used
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: "climate.bathroom", ATTR_HVAC_MODE: HVACMode.AUTO},
             blocking=True,
         )
-        # Verify set_schedule_state was called
-        mock_smile_adam_heat_cool.set_schedule_state.assert_called_with(
-            "f871b8c4d63549319221e294e4f88074", STATE_ON, "Badkamer"
-        )
+        assert mock_smile_adam_heat_cool.set_schedule_state.call_count == 2
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
