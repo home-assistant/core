@@ -20,7 +20,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_LANG): vol.In(SUPPORT_LANG
 class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pico TTS."""
 
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
