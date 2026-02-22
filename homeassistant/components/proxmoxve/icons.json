@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "button": {
+      "hibernate": {
+        "default": "mdi:power-sleep"
+      },
+      "reset": {
+        "default": "mdi:restart"
+      },
+      "restart": {
+        "default": "mdi:restart"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    }
+  }
+}
