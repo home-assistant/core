@@ -36,7 +36,7 @@ class ProxmoxNodeButtonNodeEntityDescription(ButtonEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProxmoxNodeButtonVMEntityDescription(ButtonEntityDescription):
+class ProxmoxVMButtonEntityDescription(ButtonEntityDescription):
     """Class to hold Proxmox VM button description."""
 
     press_action: Callable[[ProxmoxCoordinator, str, str], None]
@@ -85,8 +85,8 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
     ),
 )
 
-VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
-    ProxmoxNodeButtonVMEntityDescription(
+VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
+    ProxmoxVMButtonEntityDescription(
         key="start",
         translation_key="start",
         press_action=lambda coordinator, node, vmid: (
@@ -94,7 +94,7 @@ VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    ProxmoxNodeButtonVMEntityDescription(
+    ProxmoxVMButtonEntityDescription(
         key="stop",
         translation_key="stop",
         press_action=lambda coordinator, node, vmid: (
@@ -102,7 +102,7 @@ VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    ProxmoxNodeButtonVMEntityDescription(
+    ProxmoxVMButtonEntityDescription(
         key="restart",
         translation_key="restart",
         press_action=lambda coordinator, node, vmid: (
@@ -111,7 +111,7 @@ VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
     ),
-    ProxmoxNodeButtonVMEntityDescription(
+    ProxmoxVMButtonEntityDescription(
         key="hibernate",
         translation_key="hibernate",
         press_action=lambda coordinator, node, vmid: (
@@ -119,7 +119,7 @@ VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    ProxmoxNodeButtonVMEntityDescription(
+    ProxmoxVMButtonEntityDescription(
         key="reset",
         translation_key="reset",
         press_action=lambda coordinator, node, vmid: (
@@ -129,8 +129,8 @@ VM_BUTTONS: tuple[ProxmoxNodeButtonVMEntityDescription, ...] = (
     ),
 )
 
-CONTAINER_BUTTONS: tuple[ProxmoxNodeButtonContainerEntityDescription, ...] = (
-    ProxmoxNodeButtonContainerEntityDescription(
+CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
+    ProxmoxContainerButtonEntityDescription(
         key="start",
         translation_key="start",
         press_action=lambda coordinator, node, vmid: (
@@ -138,7 +138,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxNodeButtonContainerEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    ProxmoxNodeButtonContainerEntityDescription(
+    ProxmoxContainerButtonEntityDescription(
         key="stop",
         translation_key="stop",
         press_action=lambda coordinator, node, vmid: (
@@ -146,7 +146,7 @@ CONTAINER_BUTTONS: tuple[ProxmoxNodeButtonContainerEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    ProxmoxNodeButtonContainerEntityDescription(
+    ProxmoxContainerButtonEntityDescription(
         key="restart",
         translation_key="restart",
         press_action=lambda coordinator, node, vmid: (
@@ -290,12 +290,12 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
     """Represents a Proxmox VM button entity."""
 
-    entity_description: ProxmoxNodeButtonVMEntityDescription
+    entity_description: ProxmoxVMButtonEntityDescription
 
     def __init__(
         self,
         coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeButtonVMEntityDescription,
+        entity_description: ProxmoxVMButtonEntityDescription,
         vm_data: dict[str, Any],
         node_data: ProxmoxNodeData,
     ) -> None:
