@@ -10,13 +10,11 @@ import voluptuous as vol
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
+from .const import DOMAIN, SUPPORT_LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
-)
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_LANG): vol.In(SUPPORT_LANGUAGES)})
 
 
 class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
