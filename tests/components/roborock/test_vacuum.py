@@ -208,6 +208,28 @@ async def test_v1_refreshes_status_after_command(
     assert fake_vacuum.v1_properties.status.refresh.call_count > previous_refresh_count
 
 
+async def test_v1_status_refresh_failure_still_requests_coordinator_refresh(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test v1 command flow continues when status refresh fails."""
+    assert fake_vacuum.v1_properties is not None
+    coordinator = setup_entry.runtime_data.v1[0]
+
+    fake_vacuum.v1_properties.status.refresh.side_effect = RoborockException()
+    coordinator.async_request_refresh = AsyncMock()
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert coordinator.async_request_refresh.call_count == 1
+
+
 async def test_get_maps(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
